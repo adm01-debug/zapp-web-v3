@@ -45,16 +45,25 @@ Deno.serve(async (req: Request) => {
     for (const conn of instances) {
       const diag: Record<string, unknown> = { instance: conn.instance_id };
 
-      // 2a. Check instance status
+      // 2a. Check instance status - try multiple endpoints
       try {
-        const statusRes = await fetch(`${evolutionUrl}/instance/fetchInstances?instanceName=${conn.instance_id}`, {
+        let state = 'unknown';
+        // Try v2 endpoint first
+        const statusRes = await fetch(`${evolutionUrl}/instance/connect/${conn.instance_id}`, {
           headers: { apikey: evolutionKey },
           signal: AbortSignal.timeout(10000),
         });
-        const statusData = await statusRes.json();
-        const inst = Array.isArray(statusData) ? statusData[0] : statusData;
-        diag.connectionState = inst?.instance?.status || inst?.state || 'unknown';
-        diag.statusOk = statusRes.ok;
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          state = statusData?.instance?.state || statusData?.state || 'unknown';
+        }
+        // Fallback: use DB status if API unreachable
+        if (state === 'unknown') {
+          const dbConn = (connections || []).find((c: Record<string, unknown>) => c.instance_id === conn.instance_id);
+          state = dbConn?.status === 'connected' ? 'open' : (dbConn?.status || 'unknown');
+        }
+        diag.connectionState = state;
+        diag.statusOk = state === 'open' || state === 'connected';
       } catch (e) {
         diag.connectionState = 'error';
         diag.statusError = e instanceof Error ? e.message : 'timeout';
