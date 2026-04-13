@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useOfflineCache } from '@/hooks/useOfflineCache';
 import { useMessages } from '@/hooks/useMessages';
 import { useRealtimeMessages, ConversationWithMessages, ConversationContact } from '@/hooks/useRealtimeMessages';
+import { useExternalConversations, useExternalMessages } from '@/hooks/useExternalEvolution';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
@@ -10,11 +11,25 @@ import { toast } from 'sonner';
 
 const log = getLogger('useRealtimeInbox');
 
+// Feature flag: use external evolution DB as data source
+const USE_EXTERNAL_DB = true;
+
 export function useRealtimeInbox() {
-  const {
-    conversations, loading, error, sendMessage, markAsRead, refetch,
-    newMessageNotification, dismissNotification, setSelectedContact, setSoundEnabled,
-  } = useRealtimeMessages();
+  // Local DB source (original)
+  const localRealtime = useRealtimeMessages();
+  // External DB source (FATOR X)
+  const externalData = useExternalConversations();
+
+  // Select source based on flag
+  const conversations = USE_EXTERNAL_DB ? externalData.conversations : localRealtime.conversations;
+  const loading = USE_EXTERNAL_DB ? externalData.loading : localRealtime.loading;
+  const error = USE_EXTERNAL_DB ? externalData.error : localRealtime.error;
+  const refetch = USE_EXTERNAL_DB ? externalData.refetch : localRealtime.refetch;
+
+  // These features only available on local for now
+  const { sendMessage, markAsRead } = localRealtime;
+  const { newMessageNotification, dismissNotification, setSelectedContact, setSoundEnabled } = localRealtime;
+
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [selectedContactFallback, setSelectedContactFallback] = useState<ConversationContact | null>(null);
   const [showDetails, setShowDetails] = useState(true);
@@ -28,14 +43,18 @@ export function useRealtimeInbox() {
 
   const { conversations: cachedConversations, usingCache } = useOfflineCache(conversations, loading);
 
-  const {
-    messages: selectedMessages,
-    loading: selectedMessagesLoading,
-    refetch: refetchSelectedMessages,
-  } = useMessages({
-    contactId: selectedContactId,
-    enabled: Boolean(selectedContactId),
+  // External messages for selected contact (by remote_jid)
+  const externalMsgs = useExternalMessages(USE_EXTERNAL_DB ? selectedContactId : null);
+
+  // Local messages (fallback)
+  const localMsgs = useMessages({
+    contactId: USE_EXTERNAL_DB ? null : selectedContactId,
+    enabled: !USE_EXTERNAL_DB && Boolean(selectedContactId),
   });
+
+  const selectedMessages = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
+  const selectedMessagesLoading = USE_EXTERNAL_DB ? externalMsgs.loading : localMsgs.loading;
+  const refetchSelectedMessages = USE_EXTERNAL_DB ? externalMsgs.refetch : localMsgs.refetch;
 
   // Listen for open-contact-chat events
   useEffect(() => {
