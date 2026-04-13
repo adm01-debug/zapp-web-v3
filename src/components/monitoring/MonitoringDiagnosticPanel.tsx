@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Stethoscope, CheckCircle2, XCircle, AlertTriangle, Loader2, Wrench, Clock, TrendingUp, Radio } from 'lucide-react';
+import { Stethoscope, CheckCircle2, XCircle, AlertTriangle, Loader2, Wrench, Clock, TrendingUp, Radio, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import type { DiagnosticResult } from './hooks/useEvolutionMonitoring';
@@ -58,21 +58,50 @@ interface CheckItem {
   action?: { label: string; onClick: () => void };
 }
 
+function exportDiagnostic(diagnostic: DiagnosticResult) {
+  const lines: string[] = [
+    `=== RELATÓRIO DIAGNÓSTICO EVOLUTION API ===`,
+    `Data: ${new Date(diagnostic.timestamp).toLocaleString('pt-BR')}`,
+    `Score: ${diagnostic.overallHealth.score}/100 (${diagnostic.overallHealth.status})`,
+    ``,
+  ];
+  diagnostic.diagnostics.forEach(d => {
+    lines.push(`--- Instância: ${d.instance} ---`);
+    lines.push(`  Conexão: ${d.connectionState}`);
+    lines.push(`  Webhook: ${d.webhookSeverity}${d.webhookIssue ? ` — ${d.webhookIssue}` : ''}`);
+    if (d.webhook) {
+      lines.push(`  URL: ${d.webhook.url}`);
+      lines.push(`  Eventos: ${d.webhook.eventsCount} configurados`);
+      if (d.webhook.missingCritical?.length) lines.push(`  Ausentes: ${d.webhook.missingCritical.join(', ')}`);
+    }
+    if (d.messageFlow) {
+      lines.push(`  Fluxo: ↓${d.messageFlow.lastHour.incoming} ↑${d.messageFlow.lastHour.outgoing} (${d.messageFlow.flowHealth})`);
+    }
+    if (d.autoFix) lines.push(`  Auto-fix: ${d.autoFix.applied ? 'Aplicado ✅' : 'Falhou ❌'}`);
+    lines.push('');
+  });
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `diagnostico-evolution-${new Date().toISOString().slice(0, 10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnostic, onReconfigureWebhook, reconfiguring }: Props) {
-  // Build checklist from diagnostic
   const buildChecklist = (): CheckItem[] => {
     if (!diagnostic) return [];
     const items: CheckItem[] = [];
 
     diagnostic.diagnostics.forEach(d => {
-      // Connection check
       items.push({
         label: `Conexão ${d.instance}`,
         status: d.connectionState === 'open' ? 'ok' : 'error',
         detail: d.connectionState === 'open' ? 'Conectado e operacional' : `Estado: ${d.connectionState}`,
       });
 
-      // Webhook URL check
       if (d.webhook) {
         items.push({
           label: `Webhook URL (${d.instance})`,
@@ -81,7 +110,6 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
           action: !d.webhook.urlCorrect ? { label: 'Corrigir', onClick: () => onReconfigureWebhook(d.instance) } : undefined,
         });
 
-        // Webhook events check
         const missing = d.webhook.missingCritical?.length || 0;
         items.push({
           label: `Eventos (${d.instance})`,
@@ -91,7 +119,6 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
         });
       }
 
-      // Message flow check
       if (d.messageFlow) {
         items.push({
           label: `Fluxo de Mensagens`,
@@ -111,7 +138,6 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
 
   return (
     <div className="space-y-4">
-      {/* Actions */}
       <div className="flex gap-3 flex-wrap">
         <Button onClick={() => onRunDiagnostic(false)} disabled={diagnosing} variant="outline">
           {diagnosing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Stethoscope className="w-4 h-4 mr-2" />}
@@ -122,16 +148,20 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
           Diagnóstico + Auto-Fix
         </Button>
         {diagnostic && (
-          <div className="flex items-center gap-2 ml-auto text-xs text-muted-foreground">
-            <Clock className="w-3.5 h-3.5" />
-            <span>Último: {new Date(diagnostic.timestamp).toLocaleString('pt-BR')}</span>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => exportDiagnostic(diagnostic)}>
+              <Download className="w-3.5 h-3.5 mr-1" />Exportar
+            </Button>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" />
+              {new Date(diagnostic.timestamp).toLocaleString('pt-BR')}
+            </span>
           </div>
         )}
       </div>
 
       {diagnostic && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Score + Checklist */}
           <div className="space-y-4">
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
               <Card>
@@ -145,7 +175,6 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
               </Card>
             </motion.div>
 
-            {/* Per-instance details */}
             {diagnostic.diagnostics.map((d, i) => {
               const sev = severityConfig[d.webhookSeverity] || severityConfig.error;
               const SevIcon = sev.icon;
@@ -176,7 +205,6 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
             })}
           </div>
 
-          {/* Checklist */}
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card className="h-fit">
               <CardHeader className="pb-3">
