@@ -147,16 +147,66 @@ export async function getContactByPhone(
   phone: string,
   connectionId: string
 ): Promise<{ id: string; avatar_url: string | null; assigned_to: string | null; name: string | null } | null> {
-  const phonesVariants = [phone, `+${phone}`, phone.replace(/^\+/, '')];
-  const uniquePhones = [...new Set(phonesVariants)];
+  const phonesVariants = generatePhoneVariants(phone);
   const { data } = await supabase
     .from('contacts')
     .select('id, avatar_url, assigned_to, name')
-    .in('phone', uniquePhones)
+    .in('phone', phonesVariants)
     .eq('whatsapp_connection_id', connectionId)
     .limit(1)
     .maybeSingle();
+  
+  // If not found with connection filter, try without it (contact may belong to another connection)
+  if (!data) {
+    const { data: anyConnection } = await supabase
+      .from('contacts')
+      .select('id, avatar_url, assigned_to, name')
+      .in('phone', phonesVariants)
+      .limit(1)
+      .maybeSingle();
+    if (anyConnection) {
+      // Update the contact's connection to the current one
+      await supabase.from('contacts')
+        .update({ whatsapp_connection_id: connectionId, updated_at: new Date().toISOString() })
+        .eq('id', anyConnection.id);
+      console.log(`[CONTACT] Found contact ${anyConnection.id} via phone variant, relinked to connection ${connectionId}`);
+      return anyConnection;
+    }
+  }
+  
   return data;
+}
+
+/**
+ * Generate phone number variants to handle Brazilian 9th digit discrepancy.
+ * WhatsApp/Evolution may use numbers with or without the 9th digit for mobile numbers.
+ * E.g., 5564984450900 (with 9) vs 556484450900 (without 9)
+ */
+export function generatePhoneVariants(phone: string): string[] {
+  const clean = phone.replace(/\D/g, '').replace(/^\+/, '');
+  const variants = new Set<string>([clean, `+${clean}`, phone]);
+  
+  // Brazilian number handling (country code 55)
+  if (clean.startsWith('55') && clean.length >= 12) {
+    const ddd = clean.substring(2, 4);
+    const rest = clean.substring(4);
+    
+    // If has 9th digit (9 digits after DDD = total 13 with country code)
+    if (clean.length === 13 && rest.startsWith('9')) {
+      // Add variant WITHOUT 9th digit
+      const without9 = `55${ddd}${rest.substring(1)}`;
+      variants.add(without9);
+    }
+    
+    // If missing 9th digit (8 digits after DDD = total 12 with country code)
+    if (clean.length === 12) {
+      // Add variant WITH 9th digit
+      const with9 = `55${ddd}9${rest}`;
+      variants.add(with9);
+    }
+  }
+  
+  return [...variants];
 }
 
 export async function fetchProfilePicFromApi(instance: string, phone: string): Promise<string | null> {

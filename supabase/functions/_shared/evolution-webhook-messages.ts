@@ -3,6 +3,7 @@
 import {
   isRecord, normalizePhone, resolveEventJid,
   getConnectionByInstance, getContactByPhone, fetchProfilePicFromApi, persistProfilePicture,
+  generatePhoneVariants,
 } from "./evolution-helpers.ts";
 import { persistMediaToStorage, persistMediaViaApi, parseMessageContent } from "./evolution-media.ts";
 
@@ -113,10 +114,10 @@ export async function handleIncomingMessage(
       phone, name: (data.pushName as string) || phone, avatar_url: avatarUrl, whatsapp_connection_id: connection.id,
     }).select('id, avatar_url, assigned_to, name').single();
     if (insertErr && insertErr.code === '23505') {
-      // Duplicate phone — contact exists with another connection; fetch it and update connection
-      const phonesVariants = [phone, `+${phone}`, phone.replace(/^\+/, '')];
+      // Duplicate phone — contact exists with another connection; fetch with 9th digit variants
+      const phonesVariants = generatePhoneVariants(phone);
       const { data: existing } = await supabase.from('contacts').select('id, avatar_url, assigned_to, name')
-        .in('phone', [...new Set(phonesVariants)]).limit(1).maybeSingle();
+        .in('phone', phonesVariants).limit(1).maybeSingle();
       if (existing) {
         contact = existing;
         await supabase.from('contacts').update({ whatsapp_connection_id: connection.id, updated_at: new Date().toISOString() }).eq('id', existing.id);
