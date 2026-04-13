@@ -2,6 +2,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export interface DiagnosticResult {
+  timestamp: string;
+  diagnostics: Array<{
+    instance: string;
+    connectionState: string;
+    webhookSeverity: string;
+    webhookIssue?: string;
+    webhook?: { url: string; eventsCount: number; missingCritical: string[]; urlCorrect: boolean };
+    messageFlow?: { lastHour: { incoming: number; outgoing: number; total: number }; flowHealth: string };
+    autoFix?: { applied: boolean };
+  }>;
+  overallHealth: { score: number; status: string };
+}
+
 export interface ConnectionInfo {
   id: string;
   instance_id: string;
@@ -221,10 +235,32 @@ export function useEvolutionMonitoring() {
     }
   };
 
+  const runDiagnostic = async (autoFix = false) => {
+    setDiagnosing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('webhook-diagnostic', {
+        method: 'POST',
+        body: { action: autoFix ? 'auto-fix' : 'full-diagnostic' },
+      });
+      if (error) throw error;
+      setDiagnostic(data as DiagnosticResult);
+      if (autoFix) {
+        toast.success('Diagnóstico + auto-fix concluído!');
+        await fetchData();
+      } else {
+        toast.success('Diagnóstico concluído!');
+      }
+    } catch {
+      toast.error('Erro no diagnóstico');
+    } finally {
+      setDiagnosing(false);
+    }
+  };
+
   return {
     connections, healthLogs, loading, refreshing, webhookTest, webhookConfig,
-    messageStats, reconfiguring,
+    messageStats, reconfiguring, diagnostic, diagnosing,
     runHealthCheck, testWebhookDelivery, checkWebhookConfig, reconfigureWebhook,
-    refetch: fetchData,
+    runDiagnostic, refetch: fetchData,
   };
 }
