@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Activity, Wifi, Webhook, RefreshCw, Loader2, Stethoscope } from 'lucide-react';
+import { Activity, Wifi, Webhook, RefreshCw, Loader2, Stethoscope, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEvolutionMonitoring } from './hooks/useEvolutionMonitoring';
 import { MonitoringStatsCards } from './MonitoringStatsCards';
@@ -9,6 +9,7 @@ import { MonitoringConnectionsList } from './MonitoringConnectionsList';
 import { MonitoringWebhookPanel } from './MonitoringWebhookPanel';
 import { MonitoringHealthLogs } from './MonitoringHealthLogs';
 import { MonitoringDiagnosticPanel } from './MonitoringDiagnosticPanel';
+import { MonitoringEventTimeline } from './MonitoringEventTimeline';
 
 export function EvolutionMonitoringDashboard() {
   const {
@@ -46,7 +47,14 @@ export function EvolutionMonitoringDashboard() {
       </div>
 
       <MonitoringStatsCards connections={connections} messageStats={messageStats} />
-      <MonitoringMessageChart messageStats={messageStats} />
+
+      {/* Chart + Timeline side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <MonitoringMessageChart messageStats={messageStats} />
+        </div>
+        <MonitoringEventTimeline />
+      </div>
 
       <Tabs defaultValue="connections" className="space-y-4">
         <TabsList>
