@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Activity, Wifi, Webhook, RefreshCw, Stethoscope, Timer, Bell, BellOff, CalendarDays, BarChart3, Clock } from 'lucide-react';
+import { Activity, Wifi, Webhook, RefreshCw, Stethoscope, Timer, Bell, BellOff, CalendarDays, BarChart3, Clock, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEvolutionMonitoring } from './hooks/useEvolutionMonitoring';
 import type { TimePeriod } from './hooks/useEvolutionMonitoring';
