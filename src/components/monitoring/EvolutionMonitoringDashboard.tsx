@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Activity, Wifi, Webhook, RefreshCw, Loader2 } from 'lucide-react';
+import { Activity, Wifi, Webhook, RefreshCw, Loader2, Stethoscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEvolutionMonitoring } from './hooks/useEvolutionMonitoring';
 import { MonitoringStatsCards } from './MonitoringStatsCards';
@@ -8,12 +8,14 @@ import { MonitoringMessageChart } from './MonitoringMessageChart';
 import { MonitoringConnectionsList } from './MonitoringConnectionsList';
 import { MonitoringWebhookPanel } from './MonitoringWebhookPanel';
 import { MonitoringHealthLogs } from './MonitoringHealthLogs';
+import { MonitoringDiagnosticPanel } from './MonitoringDiagnosticPanel';
 
 export function EvolutionMonitoringDashboard() {
   const {
     connections, healthLogs, loading, refreshing, webhookTest, webhookConfig,
-    messageStats, reconfiguring,
+    messageStats, reconfiguring, diagnostic, diagnosing,
     runHealthCheck, testWebhookDelivery, checkWebhookConfig, reconfigureWebhook,
+    runDiagnostic,
   } = useEvolutionMonitoring();
 
   if (loading) {
@@ -43,17 +45,14 @@ export function EvolutionMonitoringDashboard() {
         </Button>
       </div>
 
-      {/* Stats */}
       <MonitoringStatsCards connections={connections} messageStats={messageStats} />
-
-      {/* Chart */}
       <MonitoringMessageChart messageStats={messageStats} />
 
-      {/* Tabs */}
       <Tabs defaultValue="connections" className="space-y-4">
         <TabsList>
           <TabsTrigger value="connections"><Wifi className="w-4 h-4 mr-1.5" />Conexões</TabsTrigger>
           <TabsTrigger value="webhook"><Webhook className="w-4 h-4 mr-1.5" />Webhook</TabsTrigger>
+          <TabsTrigger value="diagnostic"><Stethoscope className="w-4 h-4 mr-1.5" />Diagnóstico</TabsTrigger>
           <TabsTrigger value="health-logs"><Activity className="w-4 h-4 mr-1.5" />Health Logs</TabsTrigger>
         </TabsList>
 
@@ -74,6 +73,14 @@ export function EvolutionMonitoringDashboard() {
             reconfiguring={reconfiguring}
             onTest={testWebhookDelivery}
             onReconfigure={reconfigureWebhook}
+          />
+        </TabsContent>
+
+        <TabsContent value="diagnostic">
+          <MonitoringDiagnosticPanel
+            diagnostic={diagnostic}
+            diagnosing={diagnosing}
+            onRunDiagnostic={runDiagnostic}
           />
         </TabsContent>
 
