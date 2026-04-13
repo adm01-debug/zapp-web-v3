@@ -1,6 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+export type TimePeriod = '1h' | '6h' | '12h' | '24h' | '7d';
+
+const periodMs: Record<TimePeriod, number> = {
+  '1h': 60 * 60 * 1000,
+  '6h': 6 * 60 * 60 * 1000,
+  '12h': 12 * 60 * 60 * 1000,
+  '24h': 24 * 60 * 60 * 1000,
+  '7d': 7 * 24 * 60 * 60 * 1000,
+};
+
+const periodBuckets: Record<TimePeriod, number> = {
+  '1h': 6, '6h': 6, '12h': 12, '24h': 24, '7d': 7,
+};
 
 export interface DiagnosticResult {
   timestamp: string;
@@ -55,6 +69,13 @@ export interface WebhookConfig {
   configured: boolean;
 }
 
+export interface UptimeInfo {
+  percentage: number;
+  totalChecks: number;
+  healthyChecks: number;
+  lastDowntime: string | null;
+}
+
 export function useEvolutionMonitoring() {
   const [connections, setConnections] = useState<ConnectionInfo[]>([]);
   const [healthLogs, setHealthLogs] = useState<HealthLog[]>([]);
@@ -66,39 +87,77 @@ export function useEvolutionMonitoring() {
   const [reconfiguring, setReconfiguring] = useState(false);
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [diagnosing, setDiagnosing] = useState(false);
+  const [period, setPeriod] = useState<TimePeriod>('12h');
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [countdown, setCountdown] = useState(30);
+  const [uptime, setUptime] = useState<UptimeInfo>({ percentage: 0, totalChecks: 0, healthyChecks: 0, lastDowntime: null });
+  const countdownRef = useRef(30);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (selectedPeriod?: TimePeriod) => {
     try {
+      const p = selectedPeriod || period;
       const now = new Date();
-      const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+      const since = new Date(now.getTime() - periodMs[p]);
 
       const [connRes, logsRes, msgRes] = await Promise.all([
         supabase.from('whatsapp_connections').select('id, instance_id, phone_number, status, health_status, health_response_ms, last_health_check, updated_at'),
-        supabase.from('connection_health_logs').select('*').order('checked_at', { ascending: false }).limit(100),
-        supabase.from('messages').select('sender, created_at').gte('created_at', twelveHoursAgo.toISOString()).order('created_at', { ascending: true }),
+        supabase.from('connection_health_logs').select('*').order('checked_at', { ascending: false }).limit(200),
+        supabase.from('messages').select('sender, created_at').gte('created_at', since.toISOString()).order('created_at', { ascending: true }),
       ]);
 
       if (connRes.data) setConnections(connRes.data);
-      if (logsRes.data) setHealthLogs(logsRes.data);
+      if (logsRes.data) {
+        setHealthLogs(logsRes.data);
+
+        // Calculate uptime from health logs (24h)
+        const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const recentLogs = logsRes.data.filter(l => new Date(l.checked_at) >= dayAgo);
+        const healthyStatuses = ['connected', 'healthy'];
+        const healthy = recentLogs.filter(l => healthyStatuses.includes(l.status));
+        const lastFail = recentLogs.find(l => !healthyStatuses.includes(l.status));
+
+        setUptime({
+          percentage: recentLogs.length > 0 ? Math.round((healthy.length / recentLogs.length) * 1000) / 10 : 100,
+          totalChecks: recentLogs.length,
+          healthyChecks: healthy.length,
+          lastDowntime: lastFail?.checked_at || null,
+        });
+      }
 
       if (msgRes.data) {
         const incoming = msgRes.data.filter(m => m.sender === 'contact').length;
         const outgoing = msgRes.data.filter(m => m.sender === 'agent').length;
 
-        // Build hourly buckets
+        const bucketCount = periodBuckets[p];
+        const bucketSize = periodMs[p] / bucketCount;
         const buckets: Record<string, { incoming: number; outgoing: number }> = {};
-        for (let i = 11; i >= 0; i--) {
-          const h = new Date(now.getTime() - i * 60 * 60 * 1000);
-          const key = `${h.getHours().toString().padStart(2, '0')}:00`;
+
+        for (let i = bucketCount - 1; i >= 0; i--) {
+          const bucketTime = new Date(now.getTime() - i * bucketSize);
+          let key: string;
+          if (p === '7d') {
+            key = `${bucketTime.getDate().toString().padStart(2, '0')}/${(bucketTime.getMonth() + 1).toString().padStart(2, '0')}`;
+          } else {
+            key = `${bucketTime.getHours().toString().padStart(2, '0')}:00`;
+          }
           buckets[key] = { incoming: 0, outgoing: 0 };
         }
 
         msgRes.data.forEach(m => {
-          const h = new Date(m.created_at);
-          const key = `${h.getHours().toString().padStart(2, '0')}:00`;
-          if (buckets[key]) {
-            if (m.sender === 'contact') buckets[key].incoming++;
-            else buckets[key].outgoing++;
+          const mTime = new Date(m.created_at);
+          // Find which bucket
+          const bucketKeys = Object.keys(buckets);
+          let targetKey: string | null = null;
+
+          if (p === '7d') {
+            targetKey = `${mTime.getDate().toString().padStart(2, '0')}/${(mTime.getMonth() + 1).toString().padStart(2, '0')}`;
+          } else {
+            targetKey = `${mTime.getHours().toString().padStart(2, '0')}:00`;
+          }
+
+          if (targetKey && buckets[targetKey]) {
+            if (m.sender === 'contact') buckets[targetKey].incoming++;
+            else buckets[targetKey].outgoing++;
           }
         });
 
@@ -110,16 +169,33 @@ export function useEvolutionMonitoring() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [period]);
 
-  // Initial fetch + polling
+  // Countdown timer
+  useEffect(() => {
+    if (!autoRefresh) return;
+    countdownRef.current = 30;
+    setCountdown(30);
+
+    const tick = setInterval(() => {
+      countdownRef.current -= 1;
+      setCountdown(countdownRef.current);
+      if (countdownRef.current <= 0) {
+        countdownRef.current = 30;
+        setCountdown(30);
+        fetchData();
+      }
+    }, 1000);
+
+    return () => clearInterval(tick);
+  }, [autoRefresh, fetchData]);
+
+  // Initial fetch
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
   }, [fetchData]);
 
-  // Realtime subscription for connections
+  // Realtime subscription
   useEffect(() => {
     const channel = supabase
       .channel('monitoring-connections')
@@ -132,6 +208,11 @@ export function useEvolutionMonitoring() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
+  }, [fetchData]);
+
+  const changePeriod = useCallback((p: TimePeriod) => {
+    setPeriod(p);
+    fetchData(p);
   }, [fetchData]);
 
   const runHealthCheck = async () => {
@@ -261,7 +342,8 @@ export function useEvolutionMonitoring() {
 
   return {
     connections, healthLogs, loading, refreshing, webhookTest, webhookConfig,
-    messageStats, reconfiguring, diagnostic, diagnosing,
+    messageStats, reconfiguring, diagnostic, diagnosing, uptime,
+    period, changePeriod, autoRefresh, setAutoRefresh, countdown,
     runHealthCheck, testWebhookDelivery, checkWebhookConfig, reconfigureWebhook,
     runDiagnostic, refetch: fetchData,
   };
