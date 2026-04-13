@@ -24,7 +24,7 @@ export function useRealtimeInbox() {
   const conversations = USE_EXTERNAL_DB ? externalData.conversations : localRealtime.conversations;
   const loading = USE_EXTERNAL_DB ? externalData.loading : localRealtime.loading;
   const error = USE_EXTERNAL_DB ? externalData.error : localRealtime.error;
-  const refetch = USE_EXTERNAL_DB ? externalData.refetch : localRealtime.refetch;
+  const refetch = USE_EXTERNAL_DB ? (() => { externalData.refetch(); }) : localRealtime.refetch;
 
   // These features only available on local for now
   const { sendMessage, markAsRead } = localRealtime;
