@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 const log = getLogger('useRealtimeInbox');
 
 // Feature flag: use external evolution DB as data source
-const USE_EXTERNAL_DB = true;
+const USE_EXTERNAL_DB = false;
 
 export function useRealtimeInbox() {
   // Local DB source (original)
