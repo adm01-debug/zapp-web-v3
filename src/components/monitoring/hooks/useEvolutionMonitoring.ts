@@ -51,7 +51,7 @@ export function useEvolutionMonitoring() {
 
   return {
     connections, healthLogs, loading, messageStats, uptime,
-    sparklines, instanceUptimes, notificationsEnabled, requestNotifications,
+    sparklines, instanceUptimes, notificationsEnabled, soundEnabled, setSoundEnabled, requestNotifications,
     period, changePeriod, autoRefresh, setAutoRefresh, countdown,
     ...actions, refetch: fetchData,
   };
