@@ -64,6 +64,8 @@ export function useEvolutionMonitoring() {
   const [webhookConfig, setWebhookConfig] = useState<WebhookConfig | null>(null);
   const [messageStats, setMessageStats] = useState<MessageStats>({ incoming: 0, outgoing: 0, total: 0, hourlyData: [] });
   const [reconfiguring, setReconfiguring] = useState(false);
+  const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
+  const [diagnosing, setDiagnosing] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
