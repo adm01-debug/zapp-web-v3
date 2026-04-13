@@ -87,7 +87,7 @@ export function useEvolutionMonitoring() {
 
         // Build hourly buckets
         const buckets: Record<string, { incoming: number; outgoing: number }> = {};
-        for (let i = 5; i >= 0; i--) {
+        for (let i = 11; i >= 0; i--) {
           const h = new Date(now.getTime() - i * 60 * 60 * 1000);
           const key = `${h.getHours().toString().padStart(2, '0')}:00`;
           buckets[key] = { incoming: 0, outgoing: 0 };
