@@ -1,10 +1,10 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Activity, Wifi, Webhook, RefreshCw, Stethoscope, Timer, Bell, BellOff, CalendarDays, BarChart3 } from 'lucide-react';
+import { Activity, Wifi, Webhook, RefreshCw, Stethoscope, Timer, Bell, BellOff, CalendarDays, BarChart3, Clock, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEvolutionMonitoring } from './hooks/useEvolutionMonitoring';
 import type { TimePeriod } from './hooks/useEvolutionMonitoring';
@@ -36,7 +36,7 @@ function StatusSemaphore({ connections }: { connections: { status: string }[] })
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="relative flex h-3 w-3 cursor-default">
+        <span className="relative flex h-3 w-3 cursor-default" role="status" aria-label={label}>
           <span className={cn('animate-ping absolute inline-flex h-full w-full rounded-full opacity-50', color)} />
           <span className={cn('relative inline-flex rounded-full h-3 w-3', color)} />
         </span>
@@ -46,11 +46,25 @@ function StatusSemaphore({ connections }: { connections: { status: string }[] })
   );
 }
 
+function LastUpdatedBadge() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <span className="text-[10px] text-muted-foreground/60 tabular-nums hidden md:inline-flex items-center gap-1">
+      <Clock className="w-3 h-3" />
+      {now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+    </span>
+  );
+}
+
 export function EvolutionMonitoringDashboard() {
   const {
     connections, healthLogs, loading, refreshing, webhookTest, webhookConfig,
     messageStats, reconfiguring, diagnostic, diagnosing, uptime,
-    sparklines, instanceUptimes, notificationsEnabled, requestNotifications,
+    sparklines, instanceUptimes, notificationsEnabled, soundEnabled, setSoundEnabled, requestNotifications,
     period, changePeriod, autoRefresh, setAutoRefresh, countdown,
     runHealthCheck, testWebhookDelivery, checkWebhookConfig, reconfigureWebhook,
     runDiagnostic,
@@ -72,9 +86,10 @@ export function EvolutionMonitoringDashboard() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
+  if (loading) return <DashboardSkeleton />;
+
+  const activeConns = connections.filter(c => c.status === 'connected').length;
+  const errLogs = healthLogs.filter(l => !['connected', 'healthy'].includes(l.status)).length;
 
   return (
     <div className="space-y-5" role="main" aria-label="Painel de monitoramento Evolution API">
@@ -86,8 +101,9 @@ export function EvolutionMonitoringDashboard() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">Monitor Evolution</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">Monitor Evolution</h1>
               <StatusSemaphore connections={connections} />
+              <LastUpdatedBadge />
             </div>
             <p className="text-sm text-muted-foreground">
               Status, webhook e health checks em tempo real
@@ -104,6 +120,8 @@ export function EvolutionMonitoringDashboard() {
                 key={p.value}
                 variant="ghost"
                 size="sm"
+                role="radio"
+                aria-checked={period === p.value}
                 className={cn('h-7 text-xs px-2.5 rounded-md', period === p.value && 'bg-background shadow-sm')}
                 onClick={() => changePeriod(p.value)}
               >
@@ -113,8 +131,8 @@ export function EvolutionMonitoringDashboard() {
           </div>
 
           {/* Auto-refresh */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground" aria-live="polite" aria-label="Auto-refresh">
-            <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} className="scale-75" />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground" aria-live="polite">
+            <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} className="scale-75" aria-label="Auto-refresh" />
             <div className="flex items-center gap-1">
               <Timer className="w-3 h-3" />
               {autoRefresh ? (
@@ -125,6 +143,27 @@ export function EvolutionMonitoringDashboard() {
             </div>
           </div>
 
+          {/* Sound Alert */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                aria-label={soundEnabled ? 'Desativar som de alerta' : 'Ativar som de alerta'}
+              >
+                {soundEnabled
+                  ? <Volume2 className="w-4 h-4 text-primary" />
+                  : <VolumeX className="w-4 h-4 text-muted-foreground" />
+                }
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">
+              {soundEnabled ? 'Som de alerta ativado' : 'Ativar som de alerta'}
+            </TooltipContent>
+          </Tooltip>
+
           {/* Notifications */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -133,6 +172,7 @@ export function EvolutionMonitoringDashboard() {
                 size="icon"
                 className="h-8 w-8"
                 onClick={requestNotifications}
+                aria-label={notificationsEnabled ? 'Notificações ativadas' : 'Ativar notificações'}
               >
                 {notificationsEnabled
                   ? <Bell className="w-4 h-4 text-emerald-500" />
@@ -145,9 +185,9 @@ export function EvolutionMonitoringDashboard() {
             </TooltipContent>
           </Tooltip>
 
-          <Button onClick={runHealthCheck} disabled={refreshing} variant="outline" size="sm">
+          <Button onClick={runHealthCheck} disabled={refreshing} variant="outline" size="sm" aria-label="Executar health check">
             <RefreshCw className={cn('w-4 h-4 mr-2', refreshing && 'animate-spin')} />
-            {refreshing ? 'Verificando...' : 'Health Check'}
+            <span className="hidden xs:inline">{refreshing ? 'Verificando...' : 'Health Check'}</span>
           </Button>
         </div>
       </div>
@@ -163,13 +203,43 @@ export function EvolutionMonitoringDashboard() {
       </div>
 
       <Tabs defaultValue="connections" className="space-y-4">
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="connections"><Wifi className="w-4 h-4 mr-1.5" />Conexões</TabsTrigger>
-          <TabsTrigger value="webhook"><Webhook className="w-4 h-4 mr-1.5" />Webhook</TabsTrigger>
-          <TabsTrigger value="diagnostic"><Stethoscope className="w-4 h-4 mr-1.5" />Diagnóstico</TabsTrigger>
-          <TabsTrigger value="sla"><BarChart3 className="w-4 h-4 mr-1.5" />SLA</TabsTrigger>
-          <TabsTrigger value="heatmap"><CalendarDays className="w-4 h-4 mr-1.5" />Heatmap</TabsTrigger>
-          <TabsTrigger value="health-logs"><Activity className="w-4 h-4 mr-1.5" />Logs</TabsTrigger>
+        <TabsList className="flex-wrap h-auto gap-1">
+          <TabsTrigger value="connections" className="gap-1.5">
+            <Wifi className="w-4 h-4" />Conexões
+            <Badge variant="secondary" className="h-5 min-w-5 px-1 text-[10px] rounded-full">{activeConns}/{connections.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="webhook" className="gap-1.5">
+            <Webhook className="w-4 h-4" />Webhook
+          </TabsTrigger>
+          <TabsTrigger value="diagnostic" className="gap-1.5">
+            <Stethoscope className="w-4 h-4" />Diagnóstico
+            {diagnostic && (
+              <Badge
+                variant={diagnostic.overallHealth.score >= 80 ? 'default' : 'destructive'}
+                className="h-5 min-w-5 px-1 text-[10px] rounded-full"
+              >
+                {diagnostic.overallHealth.score}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="sla" className="gap-1.5">
+            <BarChart3 className="w-4 h-4" />SLA
+            <Badge
+              variant="outline"
+              className={cn('h-5 min-w-5 px-1 text-[10px] rounded-full', uptime.percentage >= 99 ? 'text-emerald-500 border-emerald-500/30' : 'text-amber-500 border-amber-500/30')}
+            >
+              {uptime.percentage}%
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="heatmap" className="gap-1.5">
+            <CalendarDays className="w-4 h-4" />Heatmap
+          </TabsTrigger>
+          <TabsTrigger value="health-logs" className="gap-1.5">
+            <Activity className="w-4 h-4" />Logs
+            {errLogs > 0 && (
+              <Badge variant="destructive" className="h-5 min-w-5 px-1 text-[10px] rounded-full">{errLogs}</Badge>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="connections">

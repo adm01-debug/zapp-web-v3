@@ -32,12 +32,12 @@ export function ChartSkeleton() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[240px] flex items-end gap-1 px-4">
+        <div className="h-[240px] flex items-end gap-1.5 px-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton
               key={i}
               className="flex-1 rounded-t"
-              style={{ height: `${30 + Math.random() * 60}%` }}
+              style={{ height: `${25 + Math.random() * 65}%` }}
             />
           ))}
         </div>
@@ -71,11 +71,23 @@ export function TimelineSkeleton() {
 export function DashboardSkeleton() {
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-xl" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-52" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-48 rounded-lg" />
+          <Skeleton className="h-8 w-28" />
+        </div>
+      </div>
       <StatsCardsSkeleton />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <ChartSkeleton />
-        </div>
+        <div className="lg:col-span-2"><ChartSkeleton /></div>
         <TimelineSkeleton />
       </div>
     </div>
