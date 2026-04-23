@@ -239,7 +239,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
         isFetchingOlderRef.current = false;
       }
     };
-  }, [onLoadOlder, onCancelLoadOlder, hasMoreOlder, loadingOlder]);
+  }, [onLoadOlder, onCancelLoadOlder, hasMoreOlder, loadingOlder, flagCancelled]);
 
   // Preserve scroll position after older messages prepend
   useEffect(() => {
