@@ -38,6 +38,8 @@ export interface FailedMessagesFilters {
   status?: FailedMessageStatus | null;
   instance?: string | null;
   errorCode?: string | null;
+  /** Filtro adicional por causa raiz canônica (rate_limit, auth, …). */
+  rootCause?: RootCause | null;
   search?: string | null;
   /** Custom range — overrides `hours` when both `from` and `to` are set */
   from?: string | null;
@@ -57,6 +59,12 @@ export interface InstanceAggregate {
   count: number;
 }
 
+export interface RootCauseAggregate {
+  cause: RootCause;
+  count: number;
+  meta: RootCauseMeta;
+}
+
 export interface FailedMessagesAggregates {
   pending: number;
   retrying: number;
@@ -64,6 +72,8 @@ export interface FailedMessagesAggregates {
   successAfterRetryRate: number;
   byErrorCode: ErrorCodeAggregate[];
   byInstance: InstanceAggregate[];
+  /** Agrupamento por causa raiz canônica (sorted desc). */
+  byRootCause: RootCauseAggregate[];
   topInstance: InstanceAggregate | null;
 }
 
