@@ -438,18 +438,20 @@ export default function AdminFailedMessagesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={allVisibleSelected}
-                      onCheckedChange={toggleAll}
-                      aria-label="Selecionar tudo"
-                      data-state={
-                        allVisibleSelected ? 'checked'
-                        : someVisibleSelected ? 'indeterminate'
-                        : 'unchecked'
-                      }
-                    />
-                  </TableHead>
+                  {isAdmin && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        onCheckedChange={toggleAll}
+                        aria-label="Selecionar tudo"
+                        data-state={
+                          allVisibleSelected ? 'checked'
+                          : someVisibleSelected ? 'indeterminate'
+                          : 'unchecked'
+                        }
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>Status</TableHead>
                   <TableHead>Instância</TableHead>
                   <TableHead>Destinatário</TableHead>
@@ -468,13 +470,15 @@ export default function AdminFailedMessagesPage() {
                     className="cursor-pointer"
                     onClick={() => setSelected(row)}
                   >
-                    <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox
-                        checked={selectedIds.has(row.id)}
-                        onCheckedChange={() => toggleOne(row.id)}
-                        aria-label="Selecionar item"
-                      />
-                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(row.id)}
+                          onCheckedChange={() => toggleOne(row.id)}
+                          aria-label="Selecionar item"
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Badge variant={STATUS_VARIANT[row.status]}>
                         {STATUS_LABEL[row.status]}
