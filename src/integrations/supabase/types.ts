@@ -3826,6 +3826,48 @@ export type Database = {
         }
         Relationships: []
       }
+      evolution_retry_metrics: {
+        Row: {
+          action: string
+          attempt_count: number
+          created_at: string
+          final_http_status: number | null
+          final_status: string
+          id: string
+          idempotency_key: string | null
+          instance_name: string | null
+          method: string
+          retry_reasons: Json
+          total_duration_ms: number | null
+        }
+        Insert: {
+          action: string
+          attempt_count: number
+          created_at?: string
+          final_http_status?: number | null
+          final_status: string
+          id?: string
+          idempotency_key?: string | null
+          instance_name?: string | null
+          method: string
+          retry_reasons?: Json
+          total_duration_ms?: number | null
+        }
+        Update: {
+          action?: string
+          attempt_count?: number
+          created_at?: string
+          final_http_status?: number | null
+          final_status?: string
+          id?: string
+          idempotency_key?: string | null
+          instance_name?: string | null
+          method?: string
+          retry_reasons?: Json
+          total_duration_ms?: number | null
+        }
+        Relationships: []
+      }
       failed_messages: {
         Row: {
           created_at: string
@@ -9108,6 +9150,7 @@ export type Database = {
       cleanup_health_log: { Args: never; Returns: undefined }
       cleanup_old_connection_action_log: { Args: never; Returns: undefined }
       cleanup_old_evolution_incidents: { Args: never; Returns: number }
+      cleanup_old_evolution_retry_metrics: { Args: never; Returns: undefined }
       cleanup_old_qr_attempts: { Args: never; Returns: undefined }
       cleanup_old_send_failures: { Args: never; Returns: undefined }
       cleanup_webhook_deliveries: { Args: never; Returns: undefined }

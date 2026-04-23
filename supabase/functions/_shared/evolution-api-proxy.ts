@@ -1,5 +1,5 @@
 // Shared proxy logic for Evolution API edge function
-import { logEvolutionIncident } from "./log-incident.ts";
+import { logRetryMetric, type RetryReason } from './log-retry-metric.ts';
 
 const TIMEOUT_MS = 15000;
 const MAX_RETRIES = 2;
@@ -68,6 +68,15 @@ export async function proxyToEvolution(
   const isIdempotent = method === 'GET' || method === 'PUT' || method === 'DELETE';
   const maxAttempts = isIdempotent ? MAX_RETRIES + 1 : 1;
 
+  // Métricas de retry: derivar `action` curta do path (ex.: '/message/sendText/' → 'sendText')
+  const startedAt = Date.now();
+  const retryReasons: RetryReason[] = [];
+  const actionLabel = (() => {
+    const parts = path.split('/').filter(Boolean);
+    return parts[parts.length - 1] || path;
+  })();
+  let lastHttpStatus: number | null = null;
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       if (attempt > 0) {
@@ -85,10 +94,12 @@ export async function proxyToEvolution(
       const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
       const response = await fetch(fullUrl, { ...opts, signal: controller.signal });
       clearTimeout(timeoutId);
+      lastHttpStatus = response.status;
 
       if (RETRYABLE_STATUSES.has(response.status) && attempt < maxAttempts - 1) {
         console.warn(`[Evolution API] Got ${response.status}, will retry...`);
         lastError = new Error(`HTTP ${response.status}`);
+        retryReasons.push({ attempt: attempt + 1, status: response.status, reason: `http_${response.status}` });
         continue;
       }
 
@@ -114,21 +125,6 @@ export async function proxyToEvolution(
         } else if (response.status === 404) {
           friendlyMessage = 'Instância não encontrada na API Evolution.';
         }
-        // Registrar incidente para 401/403 (silencioso, não bloqueia)
-        if (response.status === 401 || response.status === 403) {
-          logEvolutionIncident({
-            instanceName: instanceInPath ?? 'unknown',
-            incidentType: response.status === 401 ? 'auth_401' : 'auth_403',
-            httpStatus: response.status,
-            source: 'evolution-api-proxy',
-            details: {
-              method,
-              path,
-              friendlyMessage,
-              evolutionResponse: data,
-            },
-          });
-        }
         const errorEnvelope: EvolutionErrorEnvelope = {
           version: EVOLUTION_ENVELOPE_VERSION,
           error: true,
@@ -136,6 +132,16 @@ export async function proxyToEvolution(
           message: friendlyMessage,
           details: data,
         };
+        logRetryMetric({
+          action: actionLabel,
+          method,
+          instance_name: instanceInPath ?? null,
+          attempt_count: attempt + 1,
+          final_status: 'failed',
+          final_http_status: response.status,
+          retry_reasons: retryReasons,
+          total_duration_ms: Date.now() - startedAt,
+        });
         return new Response(JSON.stringify(errorEnvelope), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -148,11 +154,23 @@ export async function proxyToEvolution(
         data && typeof data === 'object' && !Array.isArray(data) && !('version' in (data as Record<string, unknown>))
           ? { version: EVOLUTION_ENVELOPE_VERSION, ...(data as Record<string, unknown>) }
           : data;
+      logRetryMetric({
+        action: actionLabel,
+        method,
+        instance_name: instanceInPath ?? null,
+        attempt_count: attempt + 1,
+        final_status: 'success',
+        final_http_status: response.status,
+        retry_reasons: retryReasons,
+        total_duration_ms: Date.now() - startedAt,
+      });
       return new Response(JSON.stringify(versioned), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
+      const reason = lastError.name === 'AbortError' ? 'timeout' : 'network_error';
+      retryReasons.push({ attempt: attempt + 1, reason });
       if (lastError.name === 'AbortError') {
         lastError = new Error(`Timeout após ${TIMEOUT_MS / 1000}s aguardando a API Evolution`);
       }
@@ -167,6 +185,16 @@ export async function proxyToEvolution(
     message: `Falha ao conectar com a API Evolution: ${lastError?.message || 'Erro desconhecido'}`,
     retries: maxAttempts - 1,
   };
+  logRetryMetric({
+    action: actionLabel,
+    method,
+    instance_name: instanceInPath ?? null,
+    attempt_count: maxAttempts,
+    final_status: 'exhausted',
+    final_http_status: lastHttpStatus,
+    retry_reasons: retryReasons,
+    total_duration_ms: Date.now() - startedAt,
+  });
   return new Response(JSON.stringify(timeoutEnvelope), {
     status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });

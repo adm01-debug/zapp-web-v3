@@ -20,7 +20,6 @@ import {
   handleIncomingMessage, handleOutgoingWhatsAppMessage,
 } from "../_shared/evolution-webhook-messages.ts";
 import { createWebhookValidator } from "../_shared/hmac-validation.ts";
-import { logEvolutionIncident } from "../_shared/log-incident.ts";
 
 const WEBHOOK_SECRET = Deno.env.get('EVOLUTION_WEBHOOK_SECRET') || Deno.env.get('WEBHOOK_SECRET') || '';
 const STRICT_MODE = (Deno.env.get('EVOLUTION_WEBHOOK_STRICT') ?? 'true').toLowerCase() !== 'false';
@@ -55,18 +54,6 @@ serve(async (req) => {
         request_id: requestId, status: 'rejected',
         error_message: result.error ?? 'invalid_signature',
         duration_ms: Date.now() - startedAt,
-      });
-      // Registrar incidente para painel admin (silencioso)
-      logEvolutionIncident({
-        instanceName: 'unknown',
-        incidentType: 'invalid_signature',
-        source: 'evolution-webhook',
-        details: {
-          requestId,
-          reason: result.error ?? 'invalid_signature',
-          signatureFound: result.signatureFound,
-          userAgent: req.headers.get('user-agent') ?? null,
-        },
       });
       return new Response(
         JSON.stringify({ error: 'unauthorized', reason: result.error ?? 'invalid_signature', requestId }),

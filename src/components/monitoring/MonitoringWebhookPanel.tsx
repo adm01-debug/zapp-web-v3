@@ -6,8 +6,8 @@ import { CheckCircle2, XCircle, AlertTriangle, Send, Shield, PlayCircle, Loader2
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { RetryMetricsPanel } from './RetryMetricsPanel';
 import type { ConnectionInfo, WebhookTestResult, WebhookConfig } from './hooks/useEvolutionMonitoring';
-import { IncidentsPanel } from './IncidentsPanel';
 
 interface SecretStatus {
   configured: boolean;
@@ -120,6 +120,9 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
           </div>
         </CardContent>
       </Card>
+
+      {/* Retry Metrics Panel */}
+      <RetryMetricsPanel />
 
       {/* Auto-load config for first connection if not loaded */}
       {!webhookConfig && connections.length > 0 && (
@@ -249,9 +252,6 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
           </CardContent>
         </Card>
       </div>
-
-      {/* Incidentes recentes (HMAC + 401/403) */}
-      <IncidentsPanel instances={connections.map(c => c.instance_id)} />
     </div>
   );
 }
