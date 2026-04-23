@@ -257,9 +257,27 @@ export default function AdminFailedMessagesPage() {
           <CardTitle className="text-sm font-medium">Filtros</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
+          <div className="flex flex-col gap-1 min-w-[220px] flex-1">
+            <label className="text-xs text-muted-foreground">Buscar (JID, código, mensagem)</label>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="ex.: 5511..., ETIMEDOUT, 503"
+                className="pl-8"
+              />
+            </div>
+          </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Janela</label>
-            <Select value={String(hours)} onValueChange={(v) => setHours(Number(v))}>
+            <label className="text-xs text-muted-foreground">
+              Janela {useCustomRange && <span className="text-warning">(ignorada)</span>}
+            </label>
+            <Select
+              value={String(hours)}
+              onValueChange={(v) => setHours(Number(v))}
+              disabled={useCustomRange}
+            >
               <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">Última hora</SelectItem>
@@ -270,6 +288,35 @@ export default function AdminFailedMessagesPage() {
             </Select>
           </div>
           <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">De</label>
+            <Input
+              type="datetime-local"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="w-[200px]"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Até</label>
+            <Input
+              type="datetime-local"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="w-[200px]"
+            />
+          </div>
+          {(customFrom || customTo) && (
+            <div className="flex flex-col gap-1 justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setCustomFrom(''); setCustomTo(''); }}
+              >
+                Limpar datas
+              </Button>
+            </div>
+          )}
+          <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">Status</label>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
               <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
@@ -279,6 +326,20 @@ export default function AdminFailedMessagesPage() {
                 <SelectItem value="retrying">Reprocessando</SelectItem>
                 <SelectItem value="succeeded">Sucesso</SelectItem>
                 <SelectItem value="abandoned">Abandonado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Instância</label>
+            <Select value={instanceFilter} onValueChange={setInstanceFilter}>
+              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {(stats?.by_instance ?? []).map((i) => (
+                  <SelectItem key={i.instance} value={i.instance}>
+                    {i.instance} ({i.count})
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
