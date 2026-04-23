@@ -5,10 +5,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Tables that are large enough that an unfiltered scan reliably hits statement timeout.
+const HEAVY_TABLES = new Set(['evolution_messages', 'evolution_webhook_events'])
+const HEAVY_TABLE_MAX_LIMIT = 200
+const DEFAULT_MAX_LIMIT = 500
+
+// Filter columns that are considered "selective enough" on heavy tables (backed by indexes).
+const HEAVY_TABLE_REQUIRED_FILTERS = new Set(['remote_jid', 'conversation_id', 'instance_name'])
+
+interface ProxyFilter {
+  column: string
+  operator: string
+  value: unknown
+}
+
+function hasHeavyTableFilter(filters: ProxyFilter[] | undefined): boolean {
+  if (!Array.isArray(filters) || filters.length === 0) return false
+  return filters.some((f) => {
+    if (HEAVY_TABLE_REQUIRED_FILTERS.has(f.column)) return true
+    // Time-window filter on created_at (gt/gte) counts as a valid narrowing filter
+    if (f.column === 'created_at' && (f.operator === 'gt' || f.operator === 'gte')) return true
+    return false
+  })
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
+
+  const startedAt = Date.now()
 
   try {
     const url = Deno.env.get('EXTERNAL_SUPABASE_URL')
@@ -25,7 +51,6 @@ Deno.serve(async (req) => {
     })
 
     // Hard cap to fail fast (well below Edge Function 150s + Postgres default).
-    // Returns 504 instead of bubbling Postgres "statement timeout" as a confusing 400.
     const HARD_TIMEOUT_MS = 9000
     const withTimeout = <T>(p: PromiseLike<T>): Promise<T> =>
       Promise.race([
@@ -91,21 +116,38 @@ Deno.serve(async (req) => {
       })
     }
 
+    const isHeavy = HEAVY_TABLES.has(table)
+    const filtersArr: ProxyFilter[] | undefined = Array.isArray(filters) ? filters : undefined
+    const hasNarrowingFilter = hasHeavyTableFilter(filtersArr)
+
+    // Reject heavy queries with no selective filter AND a non-tiny limit
+    if (isHeavy && !hasNarrowingFilter && (limit ?? 50) > 100) {
+      return new Response(
+        JSON.stringify({
+          error: `Heavy table "${table}" requires a filter on remote_jid, conversation_id, instance_name, or a created_at window (gte/gt). Got limit=${limit} with no narrowing filter.`,
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Cap absolute limit
+    const requestedLimit = limit ?? 50
+    const maxAllowed = isHeavy ? HEAVY_TABLE_MAX_LIMIT : DEFAULT_MAX_LIMIT
+    const effectiveLimit = Math.min(requestedLimit, maxAllowed)
+    const effectiveOffset = offset || 0
+
     // 'exact' COUNT is the #1 cause of statement timeouts on large tables.
-    // Force 'planned' (uses pg_class statistics, instant) unless caller explicitly
-    // opts in via countMode='exact' AND uses a tiny limit (<=50) on a filtered query.
     const requestedExact = countMode === 'exact'
-    const tinyLimit = (limit || 50) <= 50
-    const hasFilters = Array.isArray(filters) && filters.length > 0
-    const safeCountMode = requestedExact && tinyLimit && hasFilters
+    const tinyLimit = effectiveLimit <= 50
+    const safeCountMode = requestedExact && tinyLimit && hasNarrowingFilter
       ? 'exact'
       : (countMode ? 'planned' : undefined)
 
     let query = ext.from(table).select(select || '*', { count: safeCountMode as 'exact' | 'planned' | undefined })
 
-    if (filters && Array.isArray(filters)) {
-      for (const f of filters) {
-        query = query.filter(f.column, f.operator, f.value)
+    if (filtersArr) {
+      for (const f of filtersArr) {
+        query = query.filter(f.column, f.operator, f.value as string)
       }
     }
 
@@ -113,8 +155,6 @@ Deno.serve(async (req) => {
       query = query.order(order.column, { ascending: order.ascending ?? true })
     }
 
-    const effectiveLimit = limit || 50
-    const effectiveOffset = offset || 0
     query = query.range(effectiveOffset, effectiveOffset + effectiveLimit - 1)
 
     let queryData: unknown, queryError: { message: string } | null = null, count: number | null = null
@@ -128,8 +168,19 @@ Deno.serve(async (req) => {
       throw e
     }
 
+    const ms = Date.now() - startedAt
+    console.log(JSON.stringify({
+      fn: 'external-db-proxy',
+      table,
+      limit: effectiveLimit,
+      heavy: isHeavy,
+      hasFilter: hasNarrowingFilter,
+      filterCount: filtersArr?.length ?? 0,
+      ms,
+      ok: !queryError,
+    }))
+
     if (queryError) {
-      // Surface Postgres statement timeout as 504 instead of 400 for clarity
       const isTimeout = /statement timeout|canceling statement/i.test(queryError.message)
       return new Response(JSON.stringify({ error: queryError.message }), {
         status: isTimeout ? 504 : 400,
@@ -145,7 +196,7 @@ Deno.serve(async (req) => {
     })
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }

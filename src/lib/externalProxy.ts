@@ -11,6 +11,11 @@ interface ProxySelectParams {
   limit?: number;
   offset?: number;
   countMode?: 'exact' | 'planned' | 'estimated';
+  /**
+   * Optional cursor sugar — pushed into `filters` server-side.
+   * Use for pagination by created_at (gt for forward, lt for older).
+   */
+  cursor?: { column: string; operator: 'gt' | 'lt' | 'gte' | 'lte'; value: string };
 }
 
 interface ProxyMutationParams {
