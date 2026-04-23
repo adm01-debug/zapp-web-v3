@@ -1,76 +1,115 @@
 
 
-## Polimento da Dead-Letter Queue (DLQ) de envios
+## Configuração de retry por instância (sem deploy)
 
-### Estado atual (já existe)
+### Estado atual
 
-- ✅ Tabela `failed_messages` com 15 colunas (status, retry_count, http_status, error_code, error_message, payload, next_attempt_at, etc.)
-- ✅ `enqueueFailedMessage()` chamado pelo proxy em 2 pontos (falha transitória + esgotado)
-- ✅ Edge function `reprocess-failed-messages` com backoff exponencial (60s → 1h)
-- ✅ Hook `useFailedMessages` (filtros por status/instance, realtime, mutations retry/abandon/triggerReprocess)
-- ✅ Painel `DLQPanel` (no monitoring) e página `/admin/failed-messages` (full screen)
+- `useEvolutionApiCore.callApi` aceita `retries`, `baseBackoffMs`, `timeoutMs` por chamada (defaults: 1/3, 250ms, 30s) — mas **nenhum caller passa**.
+- `invokeEvolutionWithRetry` (envios) tem `maxRetries=3`, `baseDelayMs=800`, `maxDelayMs=6000` **hardcoded**.
+- `messageSender.ts` passa `MAX_RETRIES` (constante de módulo).
+- Tabela `global_settings (key, value, description)` já existe e funciona como KV. Sem chaves de retry hoje.
 
-### Gaps reais
+### Solução
 
-1. **Cobertura de enqueue**: `evolutionSendRetry.ts` (envios diretos via SDK fora do proxy) **não** chama enqueue. Mensagens que falham por aí evaporam.
-2. **Sem filtro por motivo**: UI só filtra por status e janela. Não dá pra ver "todas as 429" ou "todos os timeouts".
-3. **Sem agrupamento por causa**: lista flat. Operador precisa olhar 50 linhas pra entender que tem um pico de 503 numa instância só.
-4. **Sem ação em massa**: retry/abandon é 1 por 1. Pico de 30 falhas vira 30 cliques.
-5. **Cobertura ausente em testes**: helper `enqueue-failed-message.ts` sem testes (filtros transient/permanent são frágeis).
+Configuração **por instância** (com fallback global → defaults), persistida em `global_settings`, lida em runtime sem reload.
 
-### Mudanças
+**1. Convenção de chaves em `global_settings`**
 
-**1. `src/lib/evolutionSendRetry.ts`** — propagar enqueue
-- Onde hoje retorna falha final após esgotar retries, chamar uma nova função `enqueueClientFailedMessage(...)` (helper novo no front).
+```
+retry.global.maxRetries           → "3"
+retry.global.baseBackoffMs        → "800"
+retry.global.maxBackoffMs         → "6000"
+retry.global.timeoutMs            → "30000"
+retry.instance.<name>.maxRetries  → "5"      (override opcional)
+retry.instance.<name>.baseBackoffMs ...
+retry.instance.<name>.timeoutMs ...
+```
 
-**2. `src/lib/failedMessagesEnqueue.ts`** (novo)
-- Mesma lógica do helper Deno mas client-side: insere via `supabase.from('failed_messages').insert(...)` quando o usuário tem permissão (RLS já cobre).
-- Filtro idêntico: só POST, só `/message/*`, só erros transitórios (5xx/429/timeout/network).
+Resolução: `instance.<name>.X` ?? `global.X` ?? hardcoded default.
 
-**3. `src/hooks/monitoring/useFailedMessages.ts`** — filtro por motivo + agregado
-- Adicionar `errorCode?: string | null` em `FailedMessagesFilters`. Aplica `.eq('error_code', errorCode)`.
-- Adicionar em `aggregates`:
-  - `byErrorCode: Array<{ code, count, lastAt }>` ordenado desc.
-  - `byInstance: Array<{ instance, count }>` ordenado desc (top 5).
-- Mutation nova: `bulkRetry(ids: string[])` e `bulkAbandon(ids: string[])` — update em batch via `.in('id', ids)`.
+**2. `src/lib/retryConfig.ts`** (novo)
 
-**4. `src/pages/AdminFailedMessagesPage.tsx`** — UI enriquecida
-- Card novo "Top motivos de falha": barras horizontais (mesma estética do `RetryMetricsPanel`) mostrando top 8 `error_code` com contagem.
-- Filtro novo `Select` "Motivo" (gerado dinamicamente a partir de `byErrorCode`).
-- Coluna de seleção (`Checkbox`) na tabela + barra de ações em massa: "Reprocessar selecionados" / "Abandonar selecionados" (com `AlertDialog` antes do abandon).
-- KPI "Top instância afetada" mostrando a #1 de `byInstance`.
+- `RetryConfig = { maxRetries, baseBackoffMs, maxBackoffMs, timeoutMs }`.
+- `DEFAULT_RETRY_CONFIG = { maxRetries: 3, baseBackoffMs: 800, maxBackoffMs: 6000, timeoutMs: 30000 }`.
+- `RANGES`: maxRetries 1–10, baseBackoff 100–10000, maxBackoff 1000–60000, timeout 5000–120000 (validação + clamp).
+- Cache in-memory `Map<instanceName | '_global', RetryConfig>` com TTL 60s.
+- `loadRetryConfig(instanceName?: string): Promise<RetryConfig>`:
+  - Lê 8 keys (`global.*` + `instance.<name>.*`) de `global_settings` numa query com `.in('key', [...])`.
+  - Mescla, valida via `RANGES.clamp(v)`, devolve config final.
+  - Usa cache se válido.
+- `invalidateRetryConfigCache(instanceName?)` — chamado pela UI ao salvar.
+- `getRetryConfigSync(instanceName?)` — devolve do cache OU defaults (não bloqueia render).
 
-**5. `src/components/monitoring/DLQPanel.tsx`** — adaptar
-- Reusar o filtro de motivo e os agregados (sem barras — espaço apertado, só badges clicáveis dos top 3 motivos).
+**3. `src/lib/evolutionSendRetry.ts`** — usar config dinâmica
 
-**6. `supabase/functions/_shared/__tests__/enqueue-failed-message.test.ts`** (novo)
-- Cobre `isTransientFailure`: 200→false, 429→true, 503→true, 400→false, 401→false, timeout→true, network_error→true, undefined→false.
-- Cobre `isSendPath`: `/message/sendText`→true, `/instance/connect`→false.
-- Cobre filtro de método: GET ignorado.
+- Antes do `withRetry(...)`, chamar `await loadRetryConfig(instanceName)`.
+- Substituir hardcodes (800/6000/3) pelos valores da config.
+- Mantém `config.maxRetries` opcional como override por chamada (ainda vence).
+
+**4. `src/hooks/evolution/useEvolutionApiCore.ts`** — usar defaults dinâmicos
+
+- Quando `opts.retries`/`baseBackoffMs`/`timeoutMs` não vierem, ler `getRetryConfigSync(action.instanceName?)` — mas como `callApi` não conhece instância, usar config **global** apenas. Override por chamada continua possível.
+- Disparar `loadRetryConfig()` em background (fire-and-forget) para esquentar cache no primeiro render do hook.
+
+**5. `src/hooks/messaging/useInstanceRetryConfig.ts`** (novo)
+
+- Hook React: `useInstanceRetryConfig(instanceName?)` → `{ config, isLoading, save(partial), reset() }`.
+- `save` faz upsert em `global_settings` para cada chave alterada (uma a uma, dentro de `Promise.all`), valida via `RANGES`, invalida cache, mostra toast.
+- `reset` deleta as `instance.<name>.*` (volta ao global).
+
+**6. `src/components/admin/RetryConfigPanel.tsx`** (novo)
+
+- Card admin-only com:
+  - Select de instância (popular via `evolution_stage_mapping` distinct OU lista hardcoded `['_global', 'wpp2']` — pegar de `whatsapp_connections.instance_id`).
+  - 4 campos com `Slider` + `Input` numérico:
+    - Max retries (1–10)
+    - Base backoff ms (100–10000, step 100)
+    - Max backoff ms (1000–60000, step 500)
+    - Timeout ms (5000–120000, step 1000)
+  - Indicador "herda do global" se a instância não tem override.
+  - Botões: "Salvar", "Restaurar global" (apaga overrides), "Restaurar default" (só visível em `_global`).
+  - Mostra preview do efeito: "1ª tentativa imediata, 2ª em ~800ms, 3ª em ~1600ms, abort em 30s".
+
+**7. Integração**
+
+- Adicionar tab/card `RetryConfigPanel` em `AdminFailedMessagesPage.tsx` no topo (logo abaixo do header) ou em `MonitoringPage` — escolho `AdminFailedMessagesPage` por afinidade temática.
+- Sem migração SQL: `global_settings` já existe e RLS atual cobre admin (assumindo policy existente).
+
+**8. Testes — `src/lib/__tests__/retryConfig.test.ts`**
+
+- `clampToRange`: valores fora dos limites são corrigidos.
+- `loadRetryConfig`: mock supabase → instance override vence global; sem chaves → defaults; cache TTL respeitado.
+- `getRetryConfigSync`: devolve defaults antes de carregar; cacheado depois.
 
 ### Comportamento
 
-| Cenário | Antes | Depois |
-|---|---|---|
-| Pico de 429 numa instância | 20 linhas misturadas | Filtro "429" + barra mostra causa raiz |
-| 30 falhas pra reprocessar | 30 cliques | 1 click "Selecionar todos" + "Reprocessar" |
-| Falha em `evolutionSendRetry` (SDK direto) | Some no vazio | Vai pra DLQ via helper client |
-| Operador quer ver só timeouts | Impossível | Select "Motivo: timeout" |
-| Tabela com 100 itens, 4 codes | Lista plana | Top 4 visualmente proeminente |
+| Cenário | Resultado |
+|---|---|
+| Operador detecta picos de timeout em `wpp2` | Aumenta `timeoutMs` para 60s só nessa instância via UI |
+| Evolution Eco fica boa de novo | Reduz `maxRetries` para 2 via UI, reduzindo carga |
+| Sem nada configurado | Usa hardcoded defaults atuais (sem mudança de comportamento) |
+| Caller passa `{ maxRetries: 5 }` na invocação | Override por chamada vence (back-compat) |
+| 2 abas abertas, admin salva | Cache local da outra aba expira em 60s |
+
+### Compatibilidade
+
+- Zero breaking change. Sem config, comportamento idêntico ao atual.
+- API pública dos hooks/funcs inalterada — só os defaults ficam dinâmicos.
+- Sem nova dependência. Usa `Slider`, `Input`, `Button`, `Select` já existentes.
 
 ### Arquivos editados/criados
 
-- `src/lib/failedMessagesEnqueue.ts` (novo)
-- `src/lib/evolutionSendRetry.ts` (chamada nova)
-- `src/hooks/monitoring/useFailedMessages.ts` (filtro + agregados + bulk mutations)
-- `src/pages/AdminFailedMessagesPage.tsx` (UI nova: gráfico, filtro motivo, seleção em massa)
-- `src/components/monitoring/DLQPanel.tsx` (badges clicáveis de motivo)
-- `supabase/functions/_shared/__tests__/enqueue-failed-message.test.ts` (novo)
+- `src/lib/retryConfig.ts` (novo)
+- `src/lib/__tests__/retryConfig.test.ts` (novo)
+- `src/hooks/messaging/useInstanceRetryConfig.ts` (novo)
+- `src/components/admin/RetryConfigPanel.tsx` (novo)
+- `src/lib/evolutionSendRetry.ts` (usa config dinâmica)
+- `src/hooks/evolution/useEvolutionApiCore.ts` (usa defaults dinâmicos)
+- `src/pages/AdminFailedMessagesPage.tsx` (monta o painel)
 
 ### Fora de escopo
 
-- Não toco em `reprocess-failed-messages` (já funciona, pg_cron a cada 15min).
-- Não muda schema da tabela (todas as colunas necessárias já existem).
-- Sem export CSV (cobertura "Zero Export").
-- Sem alerta automático por pico de DLQ (já existe `check_send_failure_spike` para `send_failures`; DLQ separada por design).
+- Sem propagação para edge functions (proxy server-side mantém defaults — out-of-scope; este plano é client-side). Se quiser depois, mesma convenção de keys funciona lá.
+- Sem histórico de mudanças (audit_logs já capturaria via trigger, mas `global_settings` não tem trigger hoje — não vou criar).
+- Sem rate-limit de saves; UI já tem disabled state durante mutation.
 
