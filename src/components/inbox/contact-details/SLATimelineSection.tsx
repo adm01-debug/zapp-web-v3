@@ -1,12 +1,15 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format, formatDistanceStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   MessageCircle, Reply, Clock, CheckCircle2, RotateCcw, Activity, AlertTriangle,
+  Filter, XCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
@@ -14,6 +17,16 @@ import { useConversationSLATimeline } from '@/hooks/useConversationSLATimeline';
 import { useApplicableSLA } from '@/hooks/useApplicableSLA';
 
 type SLAStatus = 'ok' | 'warning' | 'breached' | 'na';
+type PeriodFilter = '24h' | '7d' | '30d' | 'all';
+
+const FILTER_STORAGE_KEY = 'sla-timeline-filters';
+const ALL_STATUSES: SLAStatus[] = ['ok', 'warning', 'breached', 'na'];
+const PERIOD_MS: Record<PeriodFilter, number> = {
+  '24h': 86_400_000,
+  '7d': 604_800_000,
+  '30d': 2_592_000_000,
+  all: Infinity,
+};
 
 function getSLAStatus(durationMs: number | null, limitMinutes: number): SLAStatus {
   if (durationMs === null) return 'na';
@@ -21,6 +34,12 @@ function getSLAStatus(durationMs: number | null, limitMinutes: number): SLAStatu
   if (durationMs > limitMs) return 'breached';
   if (durationMs > limitMs * 0.7) return 'warning';
   return 'ok';
+}
+
+function isWithinPeriod(date: Date | null, period: PeriodFilter): boolean {
+  if (period === 'all') return true;
+  if (!date) return false;
+  return Date.now() - date.getTime() <= PERIOD_MS[period];
 }
 
 const STATUS_STYLES: Record<SLAStatus, { label: string; className: string }> = {
@@ -93,12 +112,45 @@ interface SLATimelineSectionProps {
   conversation: Conversation;
 }
 
+interface MilestoneEntry {
+  key: string;
+  date: Date | null;
+  status: SLAStatus;
+  alwaysVisible?: boolean;
+  render: (index: number) => JSX.Element;
+}
+
+function loadFilters(): { status: SLAStatus[]; period: PeriodFilter } {
+  try {
+    const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const status = Array.isArray(parsed.status)
+        ? parsed.status.filter((s: string): s is SLAStatus => ALL_STATUSES.includes(s as SLAStatus))
+        : ALL_STATUSES;
+      const period: PeriodFilter = ['24h', '7d', '30d', 'all'].includes(parsed.period) ? parsed.period : 'all';
+      return { status: status.length ? status : ALL_STATUSES, period };
+    }
+  } catch { /* storage unavailable */ }
+  return { status: ALL_STATUSES, period: 'all' };
+}
+
 export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   const { contact, queue, assignedTo } = conversation;
   const remoteJid = useMemo(
     () => (contact.phone ? `${contact.phone}@s.whatsapp.net` : null),
     [contact.phone]
   );
+
+  const initial = useMemo(loadFilters, []);
+  const [statusFilter, setStatusFilter] = useState<SLAStatus[]>(initial.status);
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>(initial.period);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({ status: statusFilter, period: periodFilter }));
+    } catch { /* storage unavailable */ }
+  }, [statusFilter, periodFilter]);
 
   const { data: timeline, isLoading } = useConversationSLATimeline(remoteJid, contact.id);
   const { data: sla } = useApplicableSLA({
@@ -154,23 +206,36 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
       ? `Respondido em ${formatDurationMs(timeline.firstResponseDurationMs)} (limite ${firstResponseLimit}min)`
       : null;
 
-  return (
-    <div role="list" aria-label="Marcos de SLA da conversa" className="relative">
-      <div className="absolute left-[11px] top-3 bottom-3 w-px bg-border/50" />
+  const milestones: MilestoneEntry[] = [];
 
-      {timeline.firstContactAt && (
+  if (timeline.firstContactAt) {
+    milestones.push({
+      key: 'first-contact',
+      date: timeline.firstContactAt,
+      status: 'na',
+      render: (i) => (
         <Milestone
-          index={0}
+          key="first-contact"
+          index={i}
           icon={MessageCircle}
           label="Primeira mensagem do contato"
           timestamp={timeline.firstContactAt}
           iconColor="text-primary"
         />
-      )}
+      ),
+    });
+  }
 
-      {(timeline.firstResponseAt || timeline.isAwaitingFirstResponse) && (
+  if (timeline.firstResponseAt || timeline.isAwaitingFirstResponse) {
+    milestones.push({
+      key: 'first-response',
+      date: timeline.firstResponseAt ?? timeline.firstContactAt,
+      status: firstResponseStatus,
+      alwaysVisible: timeline.isAwaitingFirstResponse,
+      render: (i) => (
         <Milestone
-          index={1}
+          key="first-response"
+          index={i}
           icon={timeline.isAwaitingFirstResponse ? AlertTriangle : Reply}
           label={timeline.isAwaitingFirstResponse ? 'Aguardando primeira resposta' : 'Primeira resposta do agente'}
           timestamp={timeline.firstResponseAt}
@@ -179,22 +244,38 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           pulse={timeline.isAwaitingFirstResponse}
           iconColor={timeline.isAwaitingFirstResponse ? 'text-warning' : 'text-success'}
         />
-      )}
+      ),
+    });
+  }
 
-      {timeline.lastMessageAt && (
+  if (timeline.lastMessageAt) {
+    milestones.push({
+      key: 'last-message',
+      date: timeline.lastMessageAt,
+      status: 'na',
+      render: (i) => (
         <Milestone
-          index={2}
+          key="last-message"
+          index={i}
           icon={Clock}
           label="Última mensagem"
           timestamp={timeline.lastMessageAt}
-          durationLabel={`há ${formatDistanceStrict(timeline.lastMessageAt, new Date(), { locale: ptBR })}`}
+          durationLabel={`há ${formatDistanceStrict(timeline.lastMessageAt!, new Date(), { locale: ptBR })}`}
           iconColor="text-muted-foreground"
         />
-      )}
+      ),
+    });
+  }
 
-      {timeline.closedAt && (
+  if (timeline.closedAt) {
+    milestones.push({
+      key: 'closed',
+      date: timeline.closedAt,
+      status: resolutionStatus,
+      render: (i) => (
         <Milestone
-          index={3}
+          key="closed"
+          index={i}
           icon={CheckCircle2}
           label="Conversa encerrada"
           timestamp={timeline.closedAt}
@@ -206,20 +287,101 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           status={resolutionStatus}
           iconColor="text-success"
         />
-      )}
+      ),
+    });
+  }
 
-      {timeline.reopenedAt && (
+  if (timeline.reopenedAt) {
+    milestones.push({
+      key: 'reopened',
+      date: timeline.reopenedAt,
+      status: 'na',
+      render: (i) => (
         <Milestone
-          index={4}
+          key="reopened"
+          index={i}
           icon={RotateCcw}
           label="Conversa reaberta"
           timestamp={timeline.reopenedAt}
           iconColor="text-warning"
         />
+      ),
+    });
+  }
+
+  const filteredMilestones = milestones.filter(
+    (m) => m.alwaysVisible || (statusFilter.includes(m.status) && isWithinPeriod(m.date, periodFilter))
+  );
+
+  const clearFilters = () => {
+    setStatusFilter(ALL_STATUSES);
+    setPeriodFilter('all');
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg bg-muted/30 p-2 space-y-2">
+        <div className="flex items-center gap-2">
+          <Filter className="w-3 h-3 text-muted-foreground" />
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Filtros</span>
+          <Badge variant="outline" className="ml-auto text-[9px] h-4 px-1.5">
+            {filteredMilestones.length} de {milestones.length}
+          </Badge>
+        </div>
+        <ToggleGroup
+          type="multiple"
+          size="sm"
+          variant="outline"
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v.length ? (v as SLAStatus[]) : ALL_STATUSES)}
+          aria-label="Filtrar marcos por status"
+          className="flex-wrap justify-start gap-1"
+        >
+          <ToggleGroupItem value="ok" className="h-6 px-2 text-[10px] data-[state=on]:bg-success/15 data-[state=on]:text-success">
+            <CheckCircle2 className="w-3 h-3 mr-1" />OK
+          </ToggleGroupItem>
+          <ToggleGroupItem value="warning" className="h-6 px-2 text-[10px] data-[state=on]:bg-warning/15 data-[state=on]:text-warning">
+            <AlertTriangle className="w-3 h-3 mr-1" />Em risco
+          </ToggleGroupItem>
+          <ToggleGroupItem value="breached" className="h-6 px-2 text-[10px] data-[state=on]:bg-destructive/15 data-[state=on]:text-destructive">
+            <XCircle className="w-3 h-3 mr-1" />Violado
+          </ToggleGroupItem>
+          <ToggleGroupItem value="na" className="h-6 px-2 text-[10px]">
+            Outros
+          </ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup
+          type="single"
+          size="sm"
+          variant="outline"
+          value={periodFilter}
+          onValueChange={(v) => v && setPeriodFilter(v as PeriodFilter)}
+          aria-label="Filtrar por período"
+          className="flex-wrap justify-start gap-1"
+        >
+          <ToggleGroupItem value="24h" className="h-6 px-2 text-[10px]">24h</ToggleGroupItem>
+          <ToggleGroupItem value="7d" className="h-6 px-2 text-[10px]">7d</ToggleGroupItem>
+          <ToggleGroupItem value="30d" className="h-6 px-2 text-[10px]">30d</ToggleGroupItem>
+          <ToggleGroupItem value="all" className="h-6 px-2 text-[10px]">Tudo</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      {filteredMilestones.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 py-6 text-center">
+          <p className="text-[11px] text-muted-foreground">Nenhum marco corresponde aos filtros</p>
+          <Button variant="outline" size="sm" className="h-6 text-[10px]" onClick={clearFilters}>
+            Limpar filtros
+          </Button>
+        </div>
+      ) : (
+        <div role="list" aria-label="Marcos de SLA da conversa" className="relative">
+          <div className="absolute left-[11px] top-3 bottom-3 w-px bg-border/50" />
+          {filteredMilestones.map((m, i) => m.render(i))}
+        </div>
       )}
 
       {sla && (
-        <p className="mt-3 pl-8 text-[10px] text-muted-foreground/80 leading-relaxed">
+        <p className="pl-1 text-[10px] text-muted-foreground/80 leading-relaxed">
           Regra aplicada: <span className="text-foreground/80 font-medium">{sla.ruleName}</span>
           {' · '}1ª resposta {sla.firstResponseMinutes}min · Resolução {sla.resolutionMinutes}min
         </p>
