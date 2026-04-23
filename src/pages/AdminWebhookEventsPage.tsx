@@ -9,7 +9,7 @@ import { format, subDays, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Webhook, RefreshCw, Inbox, CheckCircle2, XCircle,
-  Eye, Filter, AlertTriangle,
+  Eye, Filter,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
