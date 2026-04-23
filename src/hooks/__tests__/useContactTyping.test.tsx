@@ -1,26 +1,34 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
-const channelMock = {
-  on: vi.fn().mockReturnThis(),
-  subscribe: vi.fn().mockReturnThis(),
-  unsubscribe: vi.fn(),
-};
-
-const supabaseMock = {
-  channel: vi.fn(() => channelMock),
-  removeChannel: vi.fn(),
-};
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: supabaseMock,
-}));
+vi.mock('@/integrations/supabase/client', () => {
+  const channelMock = {
+    on: vi.fn().mockReturnThis(),
+    subscribe: vi.fn().mockReturnThis(),
+    unsubscribe: vi.fn(),
+  };
+  return {
+    supabase: {
+      channel: vi.fn(() => channelMock),
+      removeChannel: vi.fn(),
+      __channelMock: channelMock,
+    },
+  };
+});
 
 vi.mock('@/lib/logger', () => ({
   getLogger: () => ({ warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() }),
 }));
 
 import { useContactTyping } from '@/hooks/useContactTyping';
+import { supabase } from '@/integrations/supabase/client';
+
+const supabaseMock = supabase as unknown as {
+  channel: ReturnType<typeof vi.fn>;
+  removeChannel: ReturnType<typeof vi.fn>;
+  __channelMock: { on: ReturnType<typeof vi.fn>; subscribe: ReturnType<typeof vi.fn>; unsubscribe: ReturnType<typeof vi.fn> };
+};
+const channelMock = supabaseMock.__channelMock;
 
 describe('useContactTyping', () => {
   beforeEach(() => {
