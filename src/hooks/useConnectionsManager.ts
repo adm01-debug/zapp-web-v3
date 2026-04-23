@@ -161,6 +161,60 @@ export function useConnectionsManager() {
     setPollingInterval(interval);
   }, [getInstanceStatus, pollingInterval]);
 
+  /**
+   * Logs a QR generation attempt to qr_attempts. Returns the inserted attempt id (if successful)
+   * so we can later mark it as expired/error.
+   */
+  const logQrAttempt = async (
+    conn: { id: string; instance_id: string | null; name: string },
+    extra: { error_message?: string | null; status?: 'pending' | 'error' } = {},
+  ): Promise<string | null> => {
+    if (!conn.instance_id) return null;
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from('qr_attempts')
+        .insert({
+          connection_id: conn.id,
+          instance_id: conn.instance_id,
+          connection_name: conn.name,
+          status: extra.status ?? 'pending',
+          requested_by: userData.user?.id ?? null,
+          error_message: extra.error_message ?? null,
+        })
+        .select('id')
+        .single();
+      if (error) {
+        log.warn('Failed to log QR attempt', error);
+        return null;
+      }
+      return data?.id ?? null;
+    } catch (e) {
+      log.warn('Failed to log QR attempt (catch)', e);
+      return null;
+    }
+  };
+
+  /** Mark a previously inserted QR attempt as expired/error. */
+  const updateQrAttempt = async (
+    attemptId: string | null,
+    patch: { status: 'expired' | 'error'; error_message?: string | null },
+  ) => {
+    if (!attemptId) return;
+    try {
+      await supabase
+        .from('qr_attempts')
+        .update({
+          status: patch.status,
+          expired_at: patch.status === 'expired' ? new Date().toISOString() : null,
+          error_message: patch.error_message ?? null,
+        })
+        .eq('id', attemptId);
+    } catch (e) {
+      log.warn('Failed to update QR attempt', e);
+    }
+  };
+
   const handleShowQrCode = async (connection: WhatsAppConnection) => {
     if (!connection.instance_id) {
       toast({ title: 'Erro', description: 'Esta conexão não possui uma instância configurada.', variant: 'destructive' });
@@ -172,17 +226,26 @@ export function useConnectionsManager() {
       status: connection.status === 'connected' ? 'connected' : 'loading',
     });
     if (connection.status !== 'connected') {
+      const attemptId = await logQrAttempt(connection);
       try {
         const result = await connectInstance(connection.instance_id);
         if (result?.qrcode?.base64) {
           setQrCodeDialog((prev) => ({ ...prev, qrCode: result.qrcode.base64, status: 'pending' }));
         }
         startStatusPolling(connection.instance_id, connection.id);
+        // QR codes typically expire after ~60s — auto-mark expired if dialog still pending.
+        setTimeout(() => {
+          setQrCodeDialog((prev) => {
+            if (prev.connectionId === connection.id && prev.status === 'pending') {
+              updateQrAttempt(attemptId, { status: 'expired' });
+            }
+            return prev;
+          });
+        }, 60_000);
       } catch (error: unknown) {
-        setQrCodeDialog((prev) => ({
-          ...prev, status: 'error',
-          errorMessage: error instanceof Error ? error.message : 'Erro ao gerar QR Code',
-        }));
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar QR Code';
+        await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
+        setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage }));
       }
     }
   };
@@ -191,16 +254,24 @@ export function useConnectionsManager() {
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
     setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null }));
+    const attemptId = await logQrAttempt(connection);
     try {
       const result = await connectInstance(connection.instance_id);
       if (result?.qrcode?.base64) {
         setQrCodeDialog((prev) => ({ ...prev, qrCode: result.qrcode.base64, status: 'pending' }));
       }
+      setTimeout(() => {
+        setQrCodeDialog((prev) => {
+          if (prev.connectionId === connection.id && prev.status === 'pending') {
+            updateQrAttempt(attemptId, { status: 'expired' });
+          }
+          return prev;
+        });
+      }, 60_000);
     } catch (error: unknown) {
-      setQrCodeDialog((prev) => ({
-        ...prev, status: 'error',
-        errorMessage: error instanceof Error ? error.message : 'Erro ao atualizar QR Code',
-      }));
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
+      await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
+      setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage }));
     }
   };
 
