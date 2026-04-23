@@ -1,0 +1,310 @@
+/**
+ * useMessagesCursor — paginacao incremental de mensagens (FATOR X)
+ *
+ * Substitui o "fetch loop ate o fim" do `useMessages` por carregamento
+ * cursor-based. A primeira pagina traz `pageSize` mensagens mais recentes;
+ * `loadOlder()` busca a proxima pagina mais antiga usando `created_at` da
+ * mensagem mais antiga ja carregada como cursor (`p_before_date`).
+ *
+ * Mensagens sao mantidas em ordem ASC (mais antigas primeiro), prontas para
+ * renderizacao no chat. Realtime INSERT/UPDATE/DELETE sao aplicados sempre
+ * sobre a "ultima pagina" (mensagens novas entram no fim) via canal
+ * `evolution_messages` filtrado por `remote_jid`.
+ *
+ * Garantias:
+ *  - `inFlightRef` previne chamadas concorrentes a `loadOlder`.
+ *  - `AbortController` permite cancelar fetch in-flight (`cancelLoadOlder`).
+ *  - Dedup por `id` no merge de pagina nova com paginas existentes.
+ *  - Trocar `remoteJid` reseta estado e dispara nova primeira carga.
+ */
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
+import type { EvolutionMessage } from '@/types/evolutionExternal';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('useMessagesCursor');
+
+const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_INSTANCE = 'wpp2';
+
+export interface UseMessagesCursorOptions {
+  remoteJid: string | null;
+  instanceName?: string;
+  pageSize?: number;
+  enabled?: boolean;
+}
+
+export interface UseMessagesCursorReturn {
+  messages: EvolutionMessage[];
+  loading: boolean;
+  loadingOlder: boolean;
+  hasMoreOlder: boolean;
+  error: string | null;
+  loadOlder: () => Promise<void>;
+  cancelLoadOlder: () => void;
+  refetch: () => Promise<void>;
+  addMessage: (message: EvolutionMessage) => void;
+  updateMessage: (id: string, updates: Partial<EvolutionMessage>) => void;
+  removeMessage: (id: string) => void;
+}
+
+function dedupeAndSort(rows: EvolutionMessage[]): EvolutionMessage[] {
+  const seen = new Map<string, EvolutionMessage>();
+  for (const r of rows) seen.set(r.id, r);
+  return Array.from(seen.values()).sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+}
+
+export function useMessagesCursor({
+  remoteJid,
+  instanceName = DEFAULT_INSTANCE,
+  pageSize = DEFAULT_PAGE_SIZE,
+  enabled = true,
+}: UseMessagesCursorOptions): UseMessagesCursorReturn {
+  const [pages, setPages] = useState<EvolutionMessage[][]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [hasMoreOlder, setHasMoreOlder] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const mountedRef = useRef(true);
+  const inFlightRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const oldestCursorRef = useRef<string | null>(null);
+  // Lock current contact identity so async callbacks ignore stale results.
+  const remoteJidRef = useRef<string | null>(remoteJid);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
+    };
+  }, []);
+
+  // Compute flat sorted messages from pages, deduped.
+  const messages = useMemo(() => dedupeAndSort(pages.flat()), [pages]);
+
+  const fetchPage = useCallback(
+    async (beforeDate: string | null): Promise<EvolutionMessage[]> => {
+      if (!isExternalConfigured || !externalSupabase || !remoteJid) return [];
+
+      const controller = new AbortController();
+      abortRef.current?.abort();
+      abortRef.current = controller;
+
+      const builder = externalSupabase.rpc('rpc_list_messages', {
+        p_remote_jid: remoteJid,
+        p_instance: instanceName,
+        p_limit: pageSize,
+        p_before_date: beforeDate,
+      });
+
+      // .abortSignal exists on PostgrestBuilder (Supabase v2). Tipagem dinamica
+      // porque .rpc retorna FilterBuilder cuja tipagem nao expoe abortSignal
+      // diretamente em todas as versoes.
+      const withSignal = (builder as unknown as {
+        abortSignal?: (s: AbortSignal) => typeof builder;
+      }).abortSignal?.(controller.signal) ?? builder;
+
+      const { data, error: rpcError } = await (withSignal as typeof builder);
+      if (controller.signal.aborted) {
+        const e = new Error('Aborted');
+        e.name = 'AbortError';
+        throw e;
+      }
+      if (rpcError) throw rpcError;
+
+      const rows = ((data || []) as EvolutionMessage[]).filter((m) => !!m && !!m.id);
+      // RPC retorna DESC por created_at; convertemos para ASC.
+      return [...rows].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
+    },
+    [remoteJid, instanceName, pageSize],
+  );
+
+  // First-page load (also used by refetch).
+  const loadFirstPage = useCallback(async () => {
+    if (!enabled || !remoteJid) {
+      setPages([]);
+      setHasMoreOlder(false);
+      oldestCursorRef.current = null;
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const rows = await fetchPage(null);
+      if (!mountedRef.current || remoteJidRef.current !== remoteJid) return;
+      setPages(rows.length ? [rows] : []);
+      oldestCursorRef.current = rows[0]?.created_at ?? null;
+      setHasMoreOlder(rows.length === pageSize);
+    } catch (err: unknown) {
+      const e = err as { name?: string; message?: string };
+      if (e?.name === 'AbortError') return;
+      log.error('first page fetch failed', e);
+      if (mountedRef.current) setError(e?.message ?? 'Failed to load messages');
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, [enabled, remoteJid, fetchPage, pageSize]);
+
+  // Reset + first load whenever remoteJid changes.
+  useEffect(() => {
+    remoteJidRef.current = remoteJid;
+    setPages([]);
+    setHasMoreOlder(false);
+    oldestCursorRef.current = null;
+    inFlightRef.current = false;
+    setLoadingOlder(false);
+    if (enabled && remoteJid) {
+      void loadFirstPage();
+    } else {
+      setLoading(false);
+    }
+    // We deliberately depend on the primitives, not loadFirstPage identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remoteJid, instanceName, enabled]);
+
+  const loadOlder = useCallback(async () => {
+    if (!remoteJid || !hasMoreOlder || inFlightRef.current) return;
+    if (!oldestCursorRef.current) return;
+    inFlightRef.current = true;
+    setLoadingOlder(true);
+    const cursor = oldestCursorRef.current;
+    try {
+      const rows = await fetchPage(cursor);
+      if (!mountedRef.current || remoteJidRef.current !== remoteJid) return;
+
+      // Tie-breaker: a RPC pode usar `<` em created_at e pular mensagens com
+      // timestamp identico. Filtramos client-side para garantir somente itens
+      // mais antigos OU iguais ao cursor (dedupe ja remove duplicatas exatas).
+      const cursorMs = new Date(cursor).getTime();
+      const olderOrEq = rows.filter((m) => new Date(m.created_at).getTime() <= cursorMs);
+
+      if (olderOrEq.length > 0) {
+        setPages((prev) => [olderOrEq, ...prev]);
+        oldestCursorRef.current = olderOrEq[0].created_at;
+      }
+      setHasMoreOlder(rows.length === pageSize);
+    } catch (err: unknown) {
+      const e = err as { name?: string; message?: string };
+      if (e?.name === 'AbortError') return;
+      log.error('loadOlder failed', e);
+      if (mountedRef.current) setError(e?.message ?? 'Failed to load older messages');
+    } finally {
+      if (mountedRef.current) setLoadingOlder(false);
+      inFlightRef.current = false;
+    }
+  }, [remoteJid, hasMoreOlder, fetchPage, pageSize]);
+
+  const cancelLoadOlder = useCallback(() => {
+    if (!inFlightRef.current) return;
+    abortRef.current?.abort();
+    inFlightRef.current = false;
+    if (mountedRef.current) setLoadingOlder(false);
+  }, []);
+
+  // Realtime — only set up when configured + enabled + jid present.
+  useEffect(() => {
+    if (!enabled || !remoteJid || !isExternalConfigured || !externalSupabase) return;
+
+    const channel = externalSupabase
+      .channel(`evolution_messages:${remoteJid}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'evolution_messages',
+          filter: `remote_jid=eq.${remoteJid}`,
+        },
+        (payload: { new: EvolutionMessage }) => {
+          const m = payload.new;
+          if (!m || !m.id) return;
+          setPages((prev) => {
+            // Dedup: ignore if already present anywhere.
+            for (const p of prev) {
+              if (p.some((x) => x.id === m.id)) return prev;
+            }
+            // Append to the LAST page (newest bucket); create page if empty.
+            if (prev.length === 0) return [[m]];
+            const last = prev[prev.length - 1];
+            const next = [...prev.slice(0, -1), [...last, m]];
+            return next;
+          });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'evolution_messages',
+          filter: `remote_jid=eq.${remoteJid}`,
+        },
+        (payload: { new: EvolutionMessage }) => {
+          const m = payload.new;
+          if (!m || !m.id) return;
+          setPages((prev) =>
+            prev.map((page) => page.map((x) => (x.id === m.id ? { ...x, ...m } : x))),
+          );
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'evolution_messages',
+          filter: `remote_jid=eq.${remoteJid}`,
+        },
+        (payload: { old: EvolutionMessage }) => {
+          const id = payload.old?.id;
+          if (!id) return;
+          setPages((prev) => prev.map((page) => page.filter((x) => x.id !== id)));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void externalSupabase!.removeChannel(channel);
+    };
+  }, [enabled, remoteJid]);
+
+  const addMessage = useCallback((m: EvolutionMessage) => {
+    setPages((prev) => {
+      for (const p of prev) if (p.some((x) => x.id === m.id)) return prev;
+      if (prev.length === 0) return [[m]];
+      const last = prev[prev.length - 1];
+      return [...prev.slice(0, -1), [...last, m]];
+    });
+  }, []);
+
+  const updateMessage = useCallback((id: string, updates: Partial<EvolutionMessage>) => {
+    setPages((prev) =>
+      prev.map((page) => page.map((x) => (x.id === id ? { ...x, ...updates } : x))),
+    );
+  }, []);
+
+  const removeMessage = useCallback((id: string) => {
+    setPages((prev) => prev.map((page) => page.filter((x) => x.id !== id)));
+  }, []);
+
+  return {
+    messages,
+    loading,
+    loadingOlder,
+    hasMoreOlder,
+    error,
+    loadOlder,
+    cancelLoadOlder,
+    refetch: loadFirstPage,
+    addMessage,
+    updateMessage,
+    removeMessage,
+  };
+}
