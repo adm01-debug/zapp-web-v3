@@ -1,63 +1,48 @@
 
 
-## Testes Deno: `send-sticker` exige `instanceName` e proxy recebe a instância correta
+## Corrigir botão "Reconectar" do banner de desconexão
 
-### Contexto
+### Problema
 
-`evolution-api/index.ts` já implementa `action === 'send-sticker'` chamando `proxy(\`/message/sendSticker/${instance}\`, 'POST', { number, sticker })`, onde `instance = body.instanceName || body.instance`. A suíte atual cobre `send-media`/`send-audio` (`send-media-audio-instance.test.ts`) mas **não** cobre sticker. Vamos adicionar cobertura no mesmo padrão + um teste de integração runtime que stuba `fetch` e confirma a URL final.
+A instância `wpp2` aparece desconectada e o botão **"Reconectar"** do banner topo (`EvolutionDisconnectBanner`) não funciona. Mostra toast de sucesso mas nada acontece no backend.
 
-### Mudança 1 — `supabase/functions/evolution-api/__tests__/send-sticker-instance.test.ts` (novo)
-
-Testes **estáticos** (análise de source via helpers compartilhados):
-
-1. **Path inclui `${instance}`**: extrai bloco `action === 'send-sticker'` (até próximo `action === '`) e valida `assertMatch(block, /\/message\/sendSticker\/\$\{instance\}/)`.
-2. **Usa `proxy()`, não `fetch()` direto**: `assert(!block.includes("fetch("))`.
-3. **Resolve URL privada antes do envio**: `assertMatch(block, /resolvePrivateBucketUrl\(/)` — garante que sticker em bucket privado é assinado.
-4. **Bloco contém `return await proxy(`** — confirma que o handler de fato delega ao proxy compartilhado.
-
-### Mudança 2 — mesmo arquivo, teste de **integração runtime**
-
-Usar `withFetchStub` (já em `_helpers.ts`) para interceptar a chamada real de `proxyToEvolution` e validar a URL construída:
+**Causa raiz**: o componente invoca a edge function com **caminho aninhado inválido**:
 
 ```ts
-Deno.test("proxy receives correct instance in sendSticker URL", leakSafeOpts, async () => {
-  let capturedUrl = "";
-  await withFetchStub(
-    async (input) => {
-      capturedUrl = typeof input === "string" ? input : input.toString();
-      return new Response(JSON.stringify({ key: { id: "msg_1" } }), {
-        status: 200, headers: { "content-type": "application/json" },
-      });
-    },
-    async () => {
-      const res = await proxyToEvolution(
-        URL_BASE, KEY, CORS_DEFAULT,
-        "/message/sendSticker/wpp2", "POST",
-        { number: "5511999999999", sticker: "https://example.com/s.webp" },
-      );
-      await res.text();
-    },
-  );
-  assertEquals(capturedUrl, `${URL_BASE}/message/sendSticker/wpp2`);
+supabase.functions.invoke('evolution-api/instance/connect', {
+  method: 'POST',
+  body: { instanceName: conn.instance_id },
 });
 ```
 
-Variante negativa: chamar com instância vazia/undefined → URL contém `/sendSticker/undefined` → garante que ausência de `instanceName` se manifesta no path (documenta o contrato; o handler em `index.ts` é quem deve validar a presença, não o proxy).
+A edge function se chama apenas `evolution-api` e roteia internamente via `body.action`. O nome `'evolution-api/instance/connect'` não existe → request falha (404), mas o `try/catch` mostra `toast.success` antes de validar `error` corretamente em alguns caminhos, ou o erro é silenciado.
 
-### Mudança 3 — extensão do guard genérico (opcional, defensivo)
+Além disso, mesmo se o `connect` rodasse, ele apenas gera QR code no servidor — o usuário precisa **escanear** o QR. Hoje o banner diz "Escaneie o QR Code na tela de conexões" mas não leva o usuário até lá nem abre o dialog de QR.
 
-Em `send-media-audio-instance.test.ts` já existe um teste "instance é resolvida de `instanceName` com fallback". Não precisa duplicar — o regex `body\.instanceName\s*\|\|\s*body\.instance` cobre todos os handlers, incluindo sticker. Apenas anotar isso no header do novo arquivo.
+### Mudança 1 — `src/components/alerts/EvolutionDisconnectBanner.tsx`
 
-### Mudança 4 — CI
+Substituir `handleReconnect` para:
 
-Nada a alterar. O job `deno-edge-tests` em `.github/workflows/ci.yml` já roda `supabase/functions/evolution-api/__tests__/` recursivamente, então o novo arquivo é incluído automaticamente.
+1. Usar o contrato correto da edge function:
+   ```ts
+   const { data, error } = await supabase.functions.invoke('evolution-api', {
+     body: { action: 'connect', instanceName: conn.instance_id },
+   });
+   ```
+2. Em vez de só mostrar toast, **navegar o usuário para `/connections`** (ou disparar o evento `navigate-view` com detail `'connections'`, padrão já usado em `DegradedQuickActions`) para que ele veja o card e o QR Code apareça.
+3. Tratar erro real: se `error` ou `data?.error === true`, exibir `toast.error` com a mensagem retornada (envelope `EvolutionErrorEnvelope.message`).
+
+### Mudança 2 — Confirmar consistência
+
+Verificação adicional: `MonitoringConnectionsList.reconnectInstance` usa `action: 'restart-instance'` que é diferente — apenas reinicia o processo na Evolution API sem gerar QR. Documentar no comentário que o banner usa `connect` (gera QR) enquanto monitoring usa `restart-instance` (recupera sessão sem rescan), e manter ambos como estão. Sem mudança de código aqui.
 
 ### Verificação
 
-- `supabase--test_edge_functions` filtrando `evolution-api` → todos verdes (incluindo os 4 novos sub-testes de sticker).
-- Confirmar via `--reporter=pretty` que não há leaks (`leakSafeOpts` aplicado no teste runtime, igual aos demais testes que armam `AbortController`).
+1. Recarregar `/#connections` → banner aparece com "wpp2 desconectada".
+2. Clicar **Reconectar** → request a `evolution-api` com `action: 'connect'` retorna `qrcode.base64`, status atualiza para `pending`, usuário é levado para a tela de conexões e o QR Code fica disponível ao clicar **Conectar** no card.
+3. Inspecionar Network: deve haver chamada POST para `/functions/v1/evolution-api` (não `/evolution-api/instance/connect`).
 
 ### Arquivos afetados
 
-- `supabase/functions/evolution-api/__tests__/send-sticker-instance.test.ts` (criado, ~60 linhas)
+- `src/components/alerts/EvolutionDisconnectBanner.tsx` (corrigir invocação + adicionar navegação para `/connections`)
 
