@@ -1,6 +1,6 @@
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Check, CheckCheck, Clock, AlertCircle } from 'lucide-react';
+import { Check, CheckCheck, Clock, AlertCircle, RefreshCw, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat';
 
@@ -16,63 +16,45 @@ export function formatDateSeparator(date: Date): string {
 
 /**
  * WhatsApp-authentic message status icons:
- * - pending: Clock (animated pulse)
+ * - sending/pending: Clock (animated pulse)
+ * - retrying: RefreshCw spinning, warning color
  * - sent: Single check ✓
  * - delivered: Double check ✓✓
  * - read: Double check ✓✓ in blue
- * - failed: Alert circle in red
+ * - failed_auth: ShieldAlert in destructive
+ * - failed/failed_retries: AlertCircle in destructive
  */
 export function MessageStatusIcon({ status, className }: { status: Message['status']; className?: string }) {
   switch (status) {
     case 'sent':
       return (
-        <Check
-          className={cn(
-            'w-[14px] h-[14px] transition-all duration-300 ease-out',
-            className
-          )}
-          strokeWidth={2.5}
-        />
+        <Check className={cn('w-[14px] h-[14px] transition-all duration-300 ease-out', className)} strokeWidth={2.5} />
       );
     case 'delivered':
       return (
-        <CheckCheck
-          className={cn(
-            'w-[14px] h-[14px] transition-all duration-300 ease-out',
-            className
-          )}
-          strokeWidth={2.5}
-        />
+        <CheckCheck className={cn('w-[14px] h-[14px] transition-all duration-300 ease-out', className)} strokeWidth={2.5} />
       );
     case 'read':
       return (
-        <CheckCheck
-          className={cn(
-            'w-[14px] h-[14px] text-[#53bdeb] transition-all duration-500 ease-out',
-            className
-          )}
-          strokeWidth={2.5}
-        />
+        <CheckCheck className={cn('w-[14px] h-[14px] text-[#53bdeb] transition-all duration-500 ease-out', className)} strokeWidth={2.5} />
+      );
+    case 'retrying':
+      return (
+        <RefreshCw className={cn('w-[14px] h-[14px] text-warning animate-spin', className)} strokeWidth={2.5} />
+      );
+    case 'failed_auth':
+      return (
+        <ShieldAlert className={cn('w-[14px] h-[14px] text-destructive', className)} strokeWidth={2.5} />
       );
     case 'failed':
+    case 'failed_retries':
       return (
-        <AlertCircle
-          className={cn(
-            'w-[14px] h-[14px] text-destructive',
-            className
-          )}
-          strokeWidth={2.5}
-        />
+        <AlertCircle className={cn('w-[14px] h-[14px] text-destructive', className)} strokeWidth={2.5} />
       );
+    case 'sending':
     default:
       return (
-        <Clock
-          className={cn(
-            'w-3 h-3 animate-pulse opacity-60',
-            className
-          )}
-          strokeWidth={2}
-        />
+        <Clock className={cn('w-3 h-3 animate-pulse opacity-60', className)} strokeWidth={2} />
       );
   }
 }
