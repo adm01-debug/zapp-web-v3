@@ -50,6 +50,7 @@ function fmtDate(iso: string | null) {
 export function DLQPanel() {
   const [hours, setHours] = useState<number>(24);
   const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
+  const [errorCodeFilter, setErrorCodeFilter] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const {
@@ -63,7 +64,10 @@ export function DLQPanel() {
   } = useFailedMessages({
     hours,
     status: statusFilter === 'all' ? null : statusFilter,
+    errorCode: errorCodeFilter,
   });
+
+  const topReasons = aggregates.byErrorCode.slice(0, 3);
 
   return (
     <Card>
