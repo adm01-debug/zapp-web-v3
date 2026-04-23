@@ -174,6 +174,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
 
   const retryNow = useMutation({
     mutationFn: async (id: string) => {
+      if (!isAdmin) throw new Error(ADMIN_ONLY_MSG);
       const { data, error } = await supabase.rpc('rpc_dlq_retry_now', { p_id: id });
       if (error) throw error;
       return data as boolean;
@@ -190,6 +191,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
 
   const abandon = useMutation({
     mutationFn: async (input: string | { id: string; reason?: string }) => {
+      if (!isAdmin) throw new Error(ADMIN_ONLY_MSG);
       const id = typeof input === 'string' ? input : input.id;
       const reason = typeof input === 'string' ? '' : (input.reason ?? '');
       const { data, error } = await supabase.rpc('rpc_dlq_abandon', { p_id: id, p_reason: reason });
@@ -208,6 +210,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
 
   const bulkRetry = useMutation({
     mutationFn: async (ids: string[]) => {
+      if (!isAdmin) throw new Error(ADMIN_ONLY_MSG);
       if (ids.length === 0) return 0;
       // No bulk RPC for retry — sequential calls, fast since they're just UPDATEs
       let n = 0;
@@ -229,6 +232,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
 
   const bulkAbandon = useMutation({
     mutationFn: async (input: string[] | { ids: string[]; reason?: string }) => {
+      if (!isAdmin) throw new Error(ADMIN_ONLY_MSG);
       const ids = Array.isArray(input) ? input : input.ids;
       const reason = Array.isArray(input) ? '' : (input.reason ?? '');
       if (ids.length === 0) return 0;
