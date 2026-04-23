@@ -199,11 +199,30 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
     return () => { supabase.removeChannel(channel); };
   }, [queryClient]);
 
+  // Helper: best-effort audit log for item-level actions. Never blocks.
+  const logItemAction = async (
+    action: 'retry' | 'abandon' | 'bulk_retry' | 'bulk_abandon',
+    ids: string[],
+    reason?: string,
+  ) => {
+    try {
+      await supabase.rpc('rpc_dlq_log_item_action', {
+        p_action: action,
+        p_ids: ids,
+        p_reason: reason ?? null,
+      });
+      queryClient.invalidateQueries({ queryKey: ['dlq-audit-log'] });
+    } catch (logErr) {
+      console.warn('[dlq] failed to log item action', action, logErr);
+    }
+  };
+
   const retryNow = useMutation({
     mutationFn: async (id: string) => {
       if (!isAdmin) throw new Error(ADMIN_ONLY_MSG);
       const { data, error } = await supabase.rpc('rpc_dlq_retry_now', { p_id: id });
       if (error) throw error;
+      if (data === true) await logItemAction('retry', [id]);
       return data as boolean;
     },
     onSuccess: (ok) => {
@@ -223,6 +242,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       const reason = typeof input === 'string' ? '' : (input.reason ?? '');
       const { data, error } = await supabase.rpc('rpc_dlq_abandon', { p_id: id, p_reason: reason });
       if (error) throw error;
+      if (data === true) await logItemAction('abandon', [id], reason);
       return data as boolean;
     },
     onSuccess: (ok) => {
@@ -241,11 +261,16 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       if (ids.length === 0) return 0;
       // No bulk RPC for retry — sequential calls, fast since they're just UPDATEs
       let n = 0;
+      const succeededIds: string[] = [];
       for (const id of ids) {
         const { data, error } = await supabase.rpc('rpc_dlq_retry_now', { p_id: id });
         if (error) throw error;
-        if (data === true) n += 1;
+        if (data === true) {
+          n += 1;
+          succeededIds.push(id);
+        }
       }
+      if (succeededIds.length > 0) await logItemAction('bulk_retry', succeededIds);
       return n;
     },
     onSuccess: (n) => {
@@ -265,7 +290,9 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       if (ids.length === 0) return 0;
       const { data, error } = await supabase.rpc('rpc_dlq_bulk_abandon', { p_ids: ids, p_reason: reason });
       if (error) throw error;
-      return (data as number) ?? 0;
+      const affected = (data as number) ?? 0;
+      if (affected > 0) await logItemAction('bulk_abandon', ids, reason);
+      return affected;
     },
     onSuccess: (n) => {
       toast.success(`${n} item(s) abandonado(s).`);
@@ -289,8 +316,22 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       if (error) throw error;
       return data as { processed?: number; succeeded?: number; failed?: number; abandoned?: number; message?: string };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       const processed = data?.processed ?? 0;
+      // Persist the result of the reprocess execution for audit trail.
+      try {
+        await supabase.rpc('rpc_dlq_log_reprocess_result', {
+          p_processed: processed,
+          p_succeeded: data?.succeeded ?? 0,
+          p_failed: data?.failed ?? 0,
+          p_abandoned: data?.abandoned ?? 0,
+          p_message: data?.message ?? null,
+          p_source: 'panel',
+        });
+        queryClient.invalidateQueries({ queryKey: ['dlq-audit-log'] });
+      } catch (logErr) {
+        console.warn('[dlq] failed to log reprocess result', logErr);
+      }
       toast.success(processed === 0
         ? (data?.message ?? 'Nenhum item pendente.')
         : `Reprocessamento concluído — ${processed} item(s): ✓${data.succeeded ?? 0} ✗${data.failed ?? 0} ⚠${data.abandoned ?? 0}`
