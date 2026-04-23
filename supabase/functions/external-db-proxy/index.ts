@@ -68,7 +68,10 @@ Deno.serve(async (req) => {
       })
     }
 
-    let query = ext.from(table).select(select || '*', { count: countMode || undefined })
+    // Avoid exact COUNT on large tables — it scans the whole table and hits statement_timeout.
+    // 'planned' uses pg_class estimate (instant); 'estimated' falls back to exact only if planned < threshold.
+    const safeCount = countMode === 'exact' ? 'planned' : (countMode || undefined)
+    let query = ext.from(table).select(select || '*', { count: safeCount as any })
 
     if (filters && Array.isArray(filters)) {
       for (const f of filters) {
@@ -80,7 +83,7 @@ Deno.serve(async (req) => {
       query = query.order(order.column, { ascending: order.ascending ?? true })
     }
 
-    const effectiveLimit = limit || 50
+    const effectiveLimit = Math.min(limit || 50, 500)
     const effectiveOffset = offset || 0
     query = query.range(effectiveOffset, effectiveOffset + effectiveLimit - 1)
 
