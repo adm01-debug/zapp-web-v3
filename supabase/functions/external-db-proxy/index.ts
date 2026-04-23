@@ -20,7 +20,14 @@ Deno.serve(async (req) => {
     }
 
     const ext = createClient(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false }
+      auth: { persistSession: false, autoRefreshToken: false },
+      db: { schema: 'public' },
+      global: {
+        headers: {
+          // Cap server-side statement time to avoid Edge Function 150s timeout cascading
+          'x-statement-timeout': '8000',
+        },
+      },
     })
 
     const body = await req.json()
