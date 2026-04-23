@@ -133,6 +133,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'diagnostics', icon: Compass, label: 'Diagnóstico' },
   { id: 'performance', icon: Cpu, label: 'Performance' },
   { id: 'telemetry', icon: BarChartHorizontal, label: 'Telemetria BD' },
+  { id: 'failed-messages', icon: AlertTriangle, label: 'DLQ — Falhas envio' },
   { id: 'ai-usage', icon: BrainCircuit, label: 'Consumo IA' },
   { id: 'public-api', icon: Code2, label: 'API Pública' },
   { id: 'gmail-webhook', icon: Webhook, label: 'Gmail Webhook' },
