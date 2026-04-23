@@ -1,148 +1,176 @@
 
 ## Objetivo
 
-Implementar **carregamento incremental ao rolar para cima** no chat (infinite scroll reverso), usando cursor por `created_at` e `pageSize` fixo por conversa, com função `loadOlder()` exposta pelo hook e integrada ao `ChatMessagesArea`.
+Adicionar **logs estruturados + contadores de performance** no cliente para chamadas ao FATOR X (`externalSupabase` e `external-db-proxy`), expondo: `durationMs`, `limit` efetivo, filtros aplicados, `recordCount` retornado, e classificação de severidade (ok/slow/very_slow/timeout/error). Permite detectar timeouts e queries lentas em DevTools sem precisar abrir a edge function.
 
 ## Contexto
 
 Hoje:
-- `useMessages` (Lovable Cloud) faz **paginação loop até o fim** (`while hasMore`), carregando TUDO de uma conversa. Em conversas com 5k+ mensagens, isso é lento e consome memória.
-- `scrollLoaderController.ts` já existe como controlador puro para "load older on scroll-to-top" — com throttle, in-flight lock e reverse-cancel. Está testado mas **não há produtor de dados conectado** (callbacks `onLoadOlder`/`hasMoreOlder` ficam stub).
-- `ChatMessagesArea` já consome esse controller (presumido pelos testes), mas sem fonte real de páginas.
-- Domínio FATOR X já tem RPC `rpc_list_messages(p_remote_jid, p_instance, p_limit, p_before_date)` com cursor nativo via `p_before_date`.
+- `externalProxy.ts` chama `supabase.functions.invoke('external-db-proxy')` sem instrumentação client-side. A edge function já registra telemetria server-side em `query_telemetry`, mas o frontend fica cego.
+- `loadOlderMetrics.ts` é o padrão estabelecido: contadores + snapshot exposto em `window.__loadOlderMetrics`. Vamos replicar para o proxy.
+- `useMessagesCursor` (recém-criado) e `useExternalEvolution` chamam RPCs sem timing visível.
+- `getLogger('module')` é o logger estruturado padrão (com correlation IDs).
 
-Lacuna: faltam (1) hook que pagina por cursor, (2) anchoring de scroll após prepend, (3) wiring em `ChatMessagesArea`.
+Lacuna: nenhum ponto único agrega `(operation, table/rpc, durationMs, limit, filters, recordCount, severity)` no cliente.
 
 ## Mudança proposta
 
-### 1. Novo hook: `src/hooks/useMessagesCursor.ts`
+### 1. Novo módulo: `src/lib/clientTelemetry.ts`
 
-Substitui o loop atual em `useMessages` por paginação cursor-based, mantendo realtime.
+Singleton em memória, espelhando o padrão de `loadOlderMetrics`:
 
 ```ts
-interface UseMessagesCursorOptions {
-  remoteJid: string | null;
-  instanceName?: string;        // default 'wpp2'
-  pageSize?: number;            // default 50
-  enabled?: boolean;
+export type Severity = 'ok' | 'slow' | 'very_slow' | 'timeout' | 'error';
+
+export interface QueryEvent {
+  operation: 'select' | 'rpc' | 'insert' | 'update' | 'delete';
+  source: 'externalProxy' | 'externalSupabase' | 'lovableCloud';
+  target: string;             // table name or rpc name
+  durationMs: number;
+  limit: number | null;
+  offset: number | null;
+  filters: Record<string, unknown> | null;
+  recordCount: number | null;
+  severity: Severity;
+  errorMessage?: string;
+  startedAt: number;
 }
 
-interface UseMessagesCursorReturn {
-  messages: Message[];               // ordenadas ASC (mais antigas primeiro)
-  loading: boolean;                  // primeira página
-  loadingOlder: boolean;             // páginas subsequentes
-  hasMoreOlder: boolean;
-  error: string | null;
-  loadOlder: () => Promise<void>;
-  cancelLoadOlder: () => void;       // aborta fetch in-flight
-  refetch: () => Promise<void>;
-  addMessage / updateMessage / removeMessage;  // realtime + optimistic
+export interface TelemetrySnapshot {
+  total: number;
+  bySeverity: Record<Severity, number>;
+  bySource: Record<string, number>;
+  avgDurationMs: number;
+  p95DurationMs: number;
+  recentEvents: QueryEvent[];     // últimos 50
+  slowEvents: QueryEvent[];        // últimos 20 com severity != 'ok'
+}
+
+export function recordQueryEvent(ev: Omit<QueryEvent, 'severity'> & { severity?: Severity }): QueryEvent;
+export function getTelemetrySnapshot(): TelemetrySnapshot;
+export function resetTelemetry(): void;
+export function classifySeverity(durationMs: number, hasError: boolean, isTimeout: boolean): Severity;
+```
+
+Thresholds: `slow >= 1500ms`, `very_slow >= 4000ms`, `timeout` quando o caller marca explicitamente (AbortError com reason `TimeoutError`).
+
+Cada `recordQueryEvent`:
+- Calcula severidade se não passada.
+- Faz log estruturado via `getLogger('clientTelemetry')`:
+  - `ok` → `log.debug`
+  - `slow` → `log.info`
+  - `very_slow` / `timeout` / `error` → `log.warn`
+- Publica snapshot em `window.__queryTelemetry` (espelho do padrão `__loadOlderMetrics`).
+- Mantém `recentEvents` (50) e `slowEvents` (20) com shift quando excede.
+
+### 2. Instrumentar `src/lib/externalProxy.ts`
+
+Envolver a chamada `supabase.functions.invoke` com timing + record:
+
+```ts
+const startedAt = performance.now();
+const filters = body.filters ?? null;
+const limit = body.limit ?? null;
+const offset = body.offset ?? null;
+const target = body.rpcName ?? body.table ?? 'unknown';
+const operation = body.rpcName ? 'rpc' : (body.operation ?? 'select');
+
+try {
+  const result = await supabase.functions.invoke('external-db-proxy', { body, signal });
+  const durationMs = Math.round(performance.now() - startedAt);
+  const recordCount = Array.isArray(result.data?.data) ? result.data.data.length : null;
+  recordQueryEvent({
+    operation, source: 'externalProxy', target,
+    durationMs, limit, offset, filters, recordCount,
+    startedAt,
+  });
+  return result;
+} catch (err) {
+  const durationMs = Math.round(performance.now() - startedAt);
+  const isTimeout = (err as Error)?.name === 'TimeoutError';
+  recordQueryEvent({
+    operation, source: 'externalProxy', target,
+    durationMs, limit, offset, filters, recordCount: null,
+    severity: isTimeout ? 'timeout' : 'error',
+    errorMessage: (err as Error)?.message,
+    startedAt,
+  });
+  throw err;
 }
 ```
 
-**Fluxo interno**:
-- Estado: `pages: Message[][]`, `oldestCursor: string | null` (= `created_at` da mensagem mais antiga já carregada), `hasMoreOlder: boolean`.
-- Primeira carga: `rpc_list_messages(p_remote_jid, p_instance, p_limit=pageSize, p_before_date=null)` → ordena DESC no DB, inverte para ASC no client → preenche `pages[0]`. Define `hasMoreOlder = data.length === pageSize`.
-- `loadOlder()`: 
-  - Guarda contra concorrência via `inFlightRef` + `AbortController`.
-  - Chama `rpc_list_messages(..., p_before_date=oldestCursor)`.
-  - Prepend: `setPages(p => [newer, ...p])`.
-  - Atualiza `oldestCursor` para a nova mensagem mais antiga.
-  - `hasMoreOlder = data.length === pageSize`.
-- `cancelLoadOlder()`: aborta o controller atual; `loadingOlder` volta a `false` sem prepend.
-- Realtime (INSERT/UPDATE/DELETE): aplicado na **última página** (`pages[pages.length - 1]`) — novas mensagens sempre entram no fim.
-- Deduplicação por `id` no merge entre páginas e realtime.
+Sem mudar a API pública — instrumentação puramente passiva.
 
-### 2. Anchoring de scroll após prepend
+### 3. Helper opcional para chamadas diretas: `src/lib/instrumentedExternal.ts`
 
-`scrollLoaderController` já salva `savedScrollHeight` no momento do trigger. Em `ChatMessagesArea`, após o efeito que detecta novo conteúdo no topo:
+Wrapper utilitário para `externalSupabase.rpc(...)` que faz a mesma instrumentação, sem forçar refactor de todos os call sites:
 
 ```ts
-useLayoutEffect(() => {
-  const saved = controller.savedScrollHeight();
-  if (saved !== null && containerRef.current) {
-    const delta = containerRef.current.scrollHeight - saved;
-    if (delta > 0) {
-      containerRef.current.scrollTop = delta;
-      controller.reset(); // ou método dedicado clearSavedHeight()
-    }
-  }
-}, [messages.length]);
+export async function timedRpc<T>(
+  rpcName: string,
+  params: Record<string, unknown>,
+  opts?: { signal?: AbortSignal }
+): Promise<{ data: T | null; error: unknown }> {
+  const startedAt = performance.now();
+  const limit = (params.p_limit as number) ?? null;
+  const offset = (params.p_offset as number) ?? null;
+  // ... mesmo fluxo que o proxy, mas chamando externalSupabase.rpc
+}
 ```
 
-Adicionar método `clearSavedHeight()` ao controller para evitar `reset()` total (que zeraria throttle e lastScrollTop).
+Adoção opcional — pontos críticos (ex.: `useMessagesCursor.fetchPage`) podem migrar incrementalmente.
 
-### 3. Wiring em `ChatMessagesArea` (componente que renderiza mensagens)
+### 4. Pequeno painel admin: `src/pages/admin-telemetria/ClientTelemetryPanel.tsx`
 
-Substituir consumo de `useMessages` por `useMessagesCursor`. Conectar callbacks ao controller existente:
+Aba/seção dentro de `/admin/telemetria` que renderiza:
+- 4 KPI cards reusando `TelemetryStatsCards`: total, slow, very_slow+timeout, avgDurationMs.
+- Tabela dos `slowEvents` (últimos 20) reusando layout de `TelemetryTable` (colunas: quando, source, operation, target, duração, limit, offset, recordCount, severity, erro).
+- Botão "Limpar contadores" → `resetTelemetry()`.
+- Auto-refresh a cada 2s lendo `getTelemetrySnapshot()` (sem network, é puro in-memory).
 
-```ts
-const { messages, loadingOlder, hasMoreOlder, loadOlder, cancelLoadOlder } = 
-  useMessagesCursor({ remoteJid: contact.phone, pageSize: 50 });
+Adicionar tab à página `/admin/telemetria` existente (server-side telemetry vs client-side telemetry side-by-side).
 
-const controller = useMemo(() => createScrollLoaderController({
-  hasMoreOlder: () => hasMoreOlder,
-  isLoadingOlder: () => loadingOlder,
-  onLoadOlder: loadOlder,
-  onCancelLoadOlder: cancelLoadOlder,
-  getScrollHeight: () => containerRef.current?.scrollHeight ?? 0,
-}), [hasMoreOlder, loadingOlder, loadOlder, cancelLoadOlder]);
+### 5. Testes
 
-const onScroll = (e) => controller.onScroll(e.target.scrollTop, /*preloadPx*/ 600);
-```
+`src/lib/__tests__/clientTelemetry.test.ts`:
+1. `classifySeverity` retorna `ok | slow | very_slow` conforme thresholds.
+2. `recordQueryEvent` aplica severity automaticamente quando omitida.
+3. Snapshot mantém apenas últimos 50 em `recentEvents` e 20 em `slowEvents`.
+4. `bySeverity` e `bySource` agregam corretamente.
+5. `p95DurationMs` é calculado sobre os recents.
+6. `resetTelemetry()` zera tudo.
+7. `window.__queryTelemetry` é atualizado após cada record.
 
-Indicador visual no topo: `{loadingOlder && <LoadingSpinner className="py-2" />}`. Quando `!hasMoreOlder && messages.length > 0`, opcional badge "Início da conversa".
-
-### 4. Integração com métricas existentes
-
-`loadOlderMetrics.ts` já existe. Conectar:
-- `recordLoadOlderStarted()` no início de `loadOlder`.
-- `recordLoadOlderCompleted(startedAt, { pageSize, hasMore })` no sucesso.
-- `recordLoadOlderCancelled(startedAt, { reason: 'user_scroll_down' })` quando `cancelLoadOlder` é chamado.
-
-### 5. Migração de `useMessages` (não-quebrante)
-
-Manter `useMessages` atual intacto. Outros consumidores (não-chat) que precisam de TODAS as mensagens continuam usando-o. Apenas `ChatMessagesArea` migra para `useMessagesCursor`. Isso evita riscos em telas como dashboards/exports.
-
-### 6. Testes
-
-`src/hooks/__tests__/useMessagesCursor.test.tsx`:
-1. Primeira carga retorna pageSize mensagens + `hasMoreOlder=true` quando RPC retorna pageSize linhas.
-2. `hasMoreOlder=false` quando RPC retorna < pageSize.
-3. `loadOlder()` chama RPC com `p_before_date` = `created_at` da mais antiga.
-4. Múltiplas chamadas concorrentes a `loadOlder()` resultam em 1 RPC call (in-flight lock).
-5. `cancelLoadOlder()` aborta fetch e zera `loadingOlder`.
-6. Realtime INSERT é aplicado no fim do array, mesmo após múltiplos `loadOlder()`.
-7. Trocar `remoteJid` reseta `pages`, `oldestCursor` e dispara nova primeira carga.
-8. Dedup: mensagem que já existe na página anterior não é duplicada na nova.
-
-`src/components/inbox/chat/__tests__/scrollAnchor.test.ts` (novo, ou ampliar suite existente):
-1. Após prepend com `savedScrollHeight=5000`, scroll é ajustado para `newHeight - 5000`.
-2. `clearSavedHeight()` zera o anchor sem afetar throttle/lastScrollTop.
+`src/lib/__tests__/externalProxy.telemetry.test.ts`:
+1. Sucesso emite evento com `durationMs`, `recordCount`, `severity: 'ok'`.
+2. Erro emite evento com `severity: 'error'` e `errorMessage`.
+3. AbortError com `name=TimeoutError` emite `severity: 'timeout'`.
+4. Filters/limit/offset do body são propagados ao evento.
 
 ## Arquivos
 
 | Ação | Arquivo |
 |---|---|
-| Criar | `src/hooks/useMessagesCursor.ts` |
-| Editar | `src/components/inbox/chat/scrollLoaderController.ts` (adicionar `clearSavedHeight()`) |
-| Editar | `src/components/inbox/chat/ChatMessagesArea.tsx` (consumir novo hook + anchoring) |
-| Criar | `src/hooks/__tests__/useMessagesCursor.test.tsx` |
-| Editar | `src/components/inbox/chat/__tests__/scrollLoaderController.test.ts` (cobrir `clearSavedHeight`) |
+| Criar | `src/lib/clientTelemetry.ts` |
+| Editar | `src/lib/externalProxy.ts` (instrumentar) |
+| Criar | `src/lib/instrumentedExternal.ts` (helper opcional) |
+| Criar | `src/pages/admin-telemetria/ClientTelemetryPanel.tsx` |
+| Editar | `src/pages/admin-telemetria/index.tsx` (adicionar tab/seção) |
+| Criar | `src/lib/__tests__/clientTelemetry.test.ts` |
+| Criar | `src/lib/__tests__/externalProxy.telemetry.test.ts` |
 
 ## Não-objetivos
 
-- Não remover/depreciar `useMessages` — coexistência intencional.
-- Não migrar dashboards/exports/relatórios para o novo hook.
-- Não implementar "jump to date" (cursor para o futuro a partir de uma data) — escopo limitado a "load older".
-- Não tocar em `useExternalEvolution` — esse já tem fluxo próprio de polling.
+- Não enviar telemetria client-side para o backend (manter 100% in-memory; servidor já tem `query_telemetry`).
+- Não migrar todos os call sites para `timedRpc` neste plano — apenas disponibilizar o helper.
+- Não tocar em `useMessages` (Lovable Cloud) — escopo é FATOR X / proxy.
+- Não criar alertas/toasts automáticos — só logs + painel inspecionável.
 
 ## Riscos e mitigações
 
 | Risco | Mitigação |
 |---|---|
-| Mensagens com `created_at` idêntico podem ser puladas no cursor (RPC usa `<` em `before_date`) | Usar tie-breaker — incluir mensagens com `created_at == cursor AND id != cursorId` no merge client-side, dedup por `id`. |
-| Realtime INSERT chega enquanto `loadOlder` está em vôo | Realtime sempre append no fim; loadOlder sempre prepend. Não há colisão. |
-| Anchoring falha em scroll smooth/ios momentum | `useLayoutEffect` roda síncrono antes do paint; ajuste de `scrollTop` sobrescreve momentum. Aceitável. |
-| Trocar de contato durante `loadOlder` em vôo | Hook tem `mountedRef` + abort no cleanup do effect de `remoteJid`. |
-| Usuário com 50k mensagens scrolla até o topo (1000 paginações) | Aceitável — cada página é leve. Memória cresce linearmente; fora do escopo otimizar com windowing aqui (já existe `VirtualizedMessageList`). |
+| Overhead de `performance.now()` em alta frequência | Negligível (<10µs). Sem JSON.stringify no hot path — só ao snapshot. |
+| `window.__queryTelemetry` polui escopo global | Usar prefixo `__` consistente com `__loadOlderMetrics`; documentado como dev-only. |
+| Filtros podem conter PII (ex.: telefone em `remote_jid`) | Painel é admin-only via rota `/admin/telemetria`. Logs respeitam o nível do logger (warn em prod). |
+| P95 sobre janela pequena (50 eventos) é instável | Aceitável — objetivo é diagnóstico ad-hoc, não métrica de produção. |
