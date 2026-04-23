@@ -65,12 +65,18 @@ export async function invokeEvolutionWithRetry<T = unknown>(
     onRetry?: (attempt: number, totalRetries: number, err: unknown) => void;
   } = {}
 ): Promise<EvolutionInvokeResult<T>> {
-  const { maxRetries = 3, onRetry } = config;
+  const { onRetry } = config;
 
   // Snapshot pra DLQ caso falhe definitivamente
   const instanceName = (opts.body?.instance_name ?? opts.body?.instanceName) as string | undefined;
   const remoteJid = (opts.body?.remote_jid ?? opts.body?.number ?? opts.body?.to) as string | undefined;
   const sendPath = `/message/${action}`;
+
+  // Config dinâmica por instância (com fallback global → defaults)
+  const dynCfg = await loadRetryConfig(instanceName);
+  const maxRetries = config.maxRetries ?? dynCfg.maxRetries;
+  const baseDelayMs = dynCfg.baseBackoffMs;
+  const maxDelayMs = dynCfg.maxBackoffMs;
 
   try {
     return await withRetry(
