@@ -750,10 +750,23 @@ export default function AdminFailedMessagesPage() {
           </SheetHeader>
           {selected && (
             <div className="space-y-4 mt-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant={STATUS_VARIANT[selected.status]}>
                   {STATUS_LABEL[selected.status]}
                 </Badge>
+                {(() => {
+                  const cause = classifyRootCause(selected);
+                  const meta = getRootCauseMeta(cause);
+                  return (
+                    <Badge
+                      variant="outline"
+                      className={cn('text-xs', ROOT_CAUSE_TONE_CLASS[meta.tone])}
+                      title={meta.hint}
+                    >
+                      Causa: {meta.label}
+                    </Badge>
+                  );
+                })()}
                 {selected.remote_jid && (
                   <Tooltip>
                     <TooltipTrigger asChild>
