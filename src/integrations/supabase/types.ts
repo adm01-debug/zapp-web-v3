@@ -4396,6 +4396,9 @@ export type Database = {
           created_at: string
           id: string
           instance_name: string
+          investigated_at: string | null
+          investigated_by: string | null
+          investigation_notes: string | null
           paused_by: string | null
           paused_until: string
           reason: string
@@ -4407,6 +4410,9 @@ export type Database = {
           created_at?: string
           id?: string
           instance_name: string
+          investigated_at?: string | null
+          investigated_by?: string | null
+          investigation_notes?: string | null
           paused_by?: string | null
           paused_until: string
           reason: string
@@ -4418,6 +4424,9 @@ export type Database = {
           created_at?: string
           id?: string
           instance_name?: string
+          investigated_at?: string | null
+          investigated_by?: string | null
+          investigation_notes?: string | null
           paused_by?: string | null
           paused_until?: string
           reason?: string
@@ -4901,6 +4910,8 @@ export type Database = {
           contact_id: string | null
           content: string
           created_at: string
+          error_code: string | null
+          error_reason: string | null
           external_id: string | null
           id: string
           is_deleted: boolean | null
@@ -4924,6 +4935,8 @@ export type Database = {
           contact_id?: string | null
           content: string
           created_at?: string
+          error_code?: string | null
+          error_reason?: string | null
           external_id?: string | null
           id?: string
           is_deleted?: boolean | null
@@ -4947,6 +4960,8 @@ export type Database = {
           contact_id?: string | null
           content?: string
           created_at?: string
+          error_code?: string | null
+          error_reason?: string | null
           external_id?: string | null
           id?: string
           is_deleted?: boolean | null
@@ -9408,6 +9423,29 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      mark_pause_investigated: {
+        Args: { p_notes?: string; p_pause_id: string }
+        Returns: {
+          auto_paused: boolean
+          created_at: string
+          id: string
+          instance_name: string
+          investigated_at: string | null
+          investigated_by: string | null
+          investigation_notes: string | null
+          paused_by: string | null
+          paused_until: string
+          reason: string
+          trigger_count: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "instance_processing_pauses"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       match_kb_chunks: {
         Args: {
