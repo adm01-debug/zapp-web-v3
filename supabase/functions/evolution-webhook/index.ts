@@ -20,6 +20,7 @@ import {
   handleIncomingMessage, handleOutgoingWhatsAppMessage,
 } from "../_shared/evolution-webhook-messages.ts";
 import { createWebhookValidator } from "../_shared/hmac-validation.ts";
+import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
 
 const WEBHOOK_SECRET = Deno.env.get('EVOLUTION_WEBHOOK_SECRET') || Deno.env.get('WEBHOOK_SECRET') || '';
 const STRICT_MODE = (Deno.env.get('EVOLUTION_WEBHOOK_STRICT') ?? 'true').toLowerCase() !== 'false';
@@ -46,10 +47,16 @@ serve(async (req) => {
 
   // HMAC validation before reading body as JSON so we can verify on raw text.
   let rawBody: string;
+  // Tenta extrair instância do header (alguns webhooks Evolution mandam) p/ contar falhas
+  // antes mesmo de parsear o body. Cai em 'unknown' se não houver.
+  const headerInstance = req.headers.get('x-evolution-instance') || req.headers.get('x-instance') || null;
+
   if (validateWebhook) {
     const result = await validateWebhook(req);
     if (!result.valid) {
       console.warn(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`);
+      // Auto-pause: conta invalid_signature na janela
+      recordAuthFailureAndMaybePause(supabase, headerInstance ?? 'unknown', 'invalid_signature');
       await auditWebhookEvent(supabase, {
         request_id: requestId, status: 'rejected',
         error_message: result.error ?? 'invalid_signature',
