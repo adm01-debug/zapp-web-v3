@@ -3868,6 +3868,39 @@ export type Database = {
         }
         Relationships: []
       }
+      evolution_send_idempotency: {
+        Row: {
+          created_at: string
+          expires_at: string
+          external_message_id: string | null
+          http_status: number
+          idem_key: string
+          instance_name: string
+          path: string
+          response: Json
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          external_message_id?: string | null
+          http_status?: number
+          idem_key: string
+          instance_name: string
+          path: string
+          response: Json
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          external_message_id?: string | null
+          http_status?: number
+          idem_key?: string
+          instance_name?: string
+          path?: string
+          response?: Json
+        }
+        Relationships: []
+      }
       failed_messages: {
         Row: {
           created_at: string
@@ -9238,6 +9271,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_connection_status_audit: { Args: never; Returns: number }
+      cleanup_evolution_send_idempotency: { Args: never; Returns: number }
       cleanup_expired_challenges: { Args: never; Returns: undefined }
       cleanup_expired_event_keys: { Args: never; Returns: undefined }
       cleanup_failed_messages: { Args: never; Returns: Json }
