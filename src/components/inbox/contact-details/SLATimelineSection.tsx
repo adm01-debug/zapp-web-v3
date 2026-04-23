@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
 import { useConversationSLATimeline } from '@/hooks/useConversationSLATimeline';
 import { useApplicableSLA } from '@/hooks/useApplicableSLA';
+import { useSLAAlerts } from '@/hooks/useSLAAlerts';
 
 type SLAStatus = 'ok' | 'warning' | 'breached' | 'na';
 type PeriodFilter = '24h' | '7d' | '30d' | 'all';
@@ -237,6 +238,17 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
     : timeline.resolutionDurationMs !== null
       ? getSLAStatus(timeline.resolutionDurationMs, resolutionLimit)
       : 'na';
+
+  useSLAAlerts({
+    contactId: contact.id ?? null,
+    contactName: contact.name || contact.phone || 'Contato',
+    scope,
+    firstResponseStatus,
+    resolutionStatus,
+    ruleName: sla?.ruleName ?? null,
+    awaitingMs: timeline.awaitingMs,
+    resolutionDurationMs: timeline.resolutionDurationMs,
+  });
 
   const firstResponseDurationLabel = timeline.isAwaitingFirstResponse
     ? `Aguardando há ${formatDurationMs(timeline.awaitingMs)}`
