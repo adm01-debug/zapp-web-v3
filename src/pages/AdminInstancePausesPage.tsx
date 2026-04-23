@@ -33,6 +33,7 @@ export default function AdminInstancePausesPage() {
   const [instance, setInstance] = useState('wpp2');
   const [minutes, setMinutes] = useState(15);
   const [reason, setReason] = useState('');
+  const [selected, setSelected] = useState<PauseRow | null>(null);
 
   const activeQuery = useQuery({
     queryKey: ['instance-pauses', 'active'],
