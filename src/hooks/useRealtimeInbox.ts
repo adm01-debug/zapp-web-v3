@@ -56,13 +56,18 @@ export function useRealtimeInbox() {
   const selectedMessagesLoading = USE_EXTERNAL_DB ? externalMsgs.loading : localMsgs.loading;
   const refetchSelectedMessages = USE_EXTERNAL_DB ? externalMsgs.refetch : localMsgs.refetch;
 
-  // Pagination (older messages) — only meaningful in external mode for now
-  const loadOlderMessages = useCallback(async () => {
-    if (USE_EXTERNAL_DB) await externalMsgs.loadOlder();
-  }, [externalMsgs]);
-  const cancelLoadOlderMessages = useCallback(() => {
-    if (USE_EXTERNAL_DB) externalMsgs.cancelLoadOlder();
-  }, [externalMsgs]);
+  // Pagination (older messages) — only meaningful in external mode for now.
+  // In local mode, expose undefined for the callbacks so ChatMessagesArea skips
+  // wiring its scroll-trigger effect entirely (avoiding spurious re-renders from
+  // stub callback identities) and the loader UI stays stable.
+  const loadOlderMessages = useMemo(
+    () => (USE_EXTERNAL_DB ? () => externalMsgs.loadOlder() : undefined),
+    [externalMsgs],
+  );
+  const cancelLoadOlderMessages = useMemo(
+    () => (USE_EXTERNAL_DB ? () => externalMsgs.cancelLoadOlder() : undefined),
+    [externalMsgs],
+  );
   const loadingOlderMessages = USE_EXTERNAL_DB ? externalMsgs.loadingOlder : false;
   const hasMoreMessages = USE_EXTERNAL_DB ? externalMsgs.hasMore : false;
 
