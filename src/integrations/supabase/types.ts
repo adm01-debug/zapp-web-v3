@@ -4683,6 +4683,7 @@ export type Database = {
           is_read: boolean | null
           media_url: string | null
           message_type: string
+          request_id: string | null
           sender: string
           status: string | null
           status_updated_at: string | null
@@ -4705,6 +4706,7 @@ export type Database = {
           is_read?: boolean | null
           media_url?: string | null
           message_type?: string
+          request_id?: string | null
           sender: string
           status?: string | null
           status_updated_at?: string | null
@@ -4727,6 +4729,7 @@ export type Database = {
           is_read?: boolean | null
           media_url?: string | null
           message_type?: string
+          request_id?: string | null
           sender?: string
           status?: string | null
           status_updated_at?: string | null
@@ -7346,6 +7349,7 @@ export type Database = {
           error_message: string | null
           id: string
           personalized_message: string | null
+          request_id: string | null
           sent_at: string | null
           status: string
           updated_at: string
@@ -7358,6 +7362,7 @@ export type Database = {
           error_message?: string | null
           id?: string
           personalized_message?: string | null
+          request_id?: string | null
           sent_at?: string | null
           status?: string
           updated_at?: string
@@ -7370,6 +7375,7 @@ export type Database = {
           error_message?: string | null
           id?: string
           personalized_message?: string | null
+          request_id?: string | null
           sent_at?: string | null
           status?: string
           updated_at?: string

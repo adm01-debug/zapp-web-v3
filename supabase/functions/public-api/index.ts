@@ -13,7 +13,8 @@ Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
 
-  const log = new Logger("public-api");
+  const log = new Logger("public-api", req);
+  const requestId = log.getRequestId();
 
   const ip = getClientIP(req);
   const rl = checkRateLimit(`public-api:${ip}`, 60, 60_000);
@@ -109,7 +110,7 @@ Deno.serve(async (req) => {
       return errorResponse('Failed to create contact', 500, req);
     }
 
-    // Insert message
+    // Insert message — stamp request_id for end-to-end tracing.
     const { data: msg, error: msgError } = await supabase
       .from('messages')
       .insert({
@@ -119,6 +120,7 @@ Deno.serve(async (req) => {
         message_type: 'text',
         status: 'sending',
         whatsapp_connection_id: connection.id,
+        request_id: requestId,
       })
       .select()
       .single();
@@ -156,8 +158,8 @@ Deno.serve(async (req) => {
       await supabase.from('messages').update({ status: 'failed' }).eq('id', msg.id);
     }
 
-    log.done(200, { messageId: msg.id });
-    return jsonResponse({ success: true, messageId: msg.id, contactId: contact.id }, 200, req);
+    log.done(200, { messageId: msg.id, requestId });
+    return jsonResponse({ success: true, messageId: msg.id, contactId: contact.id, requestId }, 200, req);
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Internal server error';
     log.error('Unhandled error', { error: msg });

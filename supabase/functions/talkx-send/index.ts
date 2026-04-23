@@ -62,7 +62,8 @@ Deno.serve(async (req) => {
   if (corsResponse) return corsResponse;
 
   const headers = { ...getCorsHeaders(req), "Content-Type": "application/json" };
-  const log = new Logger("talkx-send");
+  const log = new Logger("talkx-send", req);
+  const requestId = log.getRequestId();
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -152,7 +153,7 @@ Deno.serve(async (req) => {
 
       const personalizedMsg = personalize(campaign.message_template, contact as { name: string; nickname?: string; company?: string });
       await supabase.from("talkx_recipients")
-        .update({ personalized_message: personalizedMsg, status: "sending" }).eq("id", recipient.id);
+        .update({ personalized_message: personalizedMsg, status: "sending", request_id: requestId }).eq("id", recipient.id);
 
       try {
         const phone = (contact.phone as string).replace(/\D/g, "");
@@ -226,13 +227,14 @@ Deno.serve(async (req) => {
         .eq("id", campaignId);
     }
 
-    log.done(200, { sent: sentCount, failed: failedCount });
+    log.done(200, { sent: sentCount, failed: failedCount, requestId });
 
     return new Response(
       JSON.stringify({
         success: true, sent: sentCount, failed: failedCount,
         total: eligibleRecipients.length,
         blacklisted: (recipients || []).length - eligibleRecipients.length,
+        requestId,
       }),
       { headers }
     );
