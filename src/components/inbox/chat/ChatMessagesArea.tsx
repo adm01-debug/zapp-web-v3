@@ -186,6 +186,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
         // Drop the saved height so the prepend-anchor effect skips reanchoring.
         prevScrollHeightRef.current = null;
         isFetchingOlderRef.current = false;
+        flagCancelled();
       }
     };
 
