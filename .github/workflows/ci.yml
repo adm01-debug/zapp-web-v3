@@ -109,15 +109,15 @@ jobs:
         with:
           deno-version: v1.x
 
-      - name: 🧪 Run evolution-api Deno tests
-        working-directory: supabase/functions/evolution-api
+      - name: 🧪 Run edge function Deno tests (evolution-api + public-api)
         run: |
           deno test \
             --allow-net \
             --allow-env \
             --allow-read \
             --reporter=pretty \
-            __tests__/
+            supabase/functions/evolution-api/__tests__/ \
+            supabase/functions/public-api/__tests__/
 
   # ===========================================
   # JOB 4: Build
