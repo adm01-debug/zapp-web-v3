@@ -1,78 +1,72 @@
 
 
-## Matriz de dependências hooks ↔ módulos (20–23 abr)
+## Diagrama navegável — Trilha de Mensagens (send → batching → delivery)
 
 ### Entregável
 
-Documento Markdown único em `/mnt/documents/MATRIZ_DEPENDENCIAS_HOOKS_20-23_ABRIL_2026.md` contendo uma **matriz tabular** com sentido de chamada explícito (`→` chama, `←` é chamado por, `↔` bidirecional/realtime).
+Diagrama Mermaid `flowchart LR` em `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd`, com nós clicáveis (`click NodeId "src/..."`), focado **exclusivamente** no ciclo de vida de uma mensagem outbound/inbound: composição → envio → status bus → retry/DLQ → realtime update → render no bubble.
 
-### Estrutura
+### Subdomínios (subgraphs)
 
-1. **Legenda de símbolos**
-   - `→` chamada síncrona (import + invocação)
-   - `⇒` persistência/escrita em DB
-   - `⇠` leitura via RPC
-   - `⤳` realtime/broadcast (assíncrono)
-   - `⊕` consumido por componente UI
+1. **Composição & Envio (UI)** — `useChatInputLogic`, `messageSender`, `buildSendIdempotencyKey`
+2. **Transporte & Retry** — `evolutionSendRetry`, `lib/retry`, `loadRetryConfig`, `enqueueClientFailedMessage`
+3. **Status Bus (in-memory)** — `sendStatusBus` (`emitSendStatus`, `subscribeAllSendStatus`, `getSendStatus`)
+4. **Persistência & Hooks de leitura** — `useMessages`, `useMessageStatus`, `useMessageSendStatus`
+5. **Realtime & Batching** — `useMessageUpdateBatcher`, `useRealtimeMessages`, `realtimeUtils`
+6. **Render** — `MessageStatusInline`, `MessageStatusIcon`, `VirtualizedMessageList`, `MessageBubble`
+7. **Backends** (cilindros) — `Lovable Cloud (messages)`, `Edge: evolution-api/sendText`, `DLQ: failed_messages`
 
-2. **Matriz principal** (tabela ampla, uma linha por hook/util do escopo 20–23):
+### Arestas (semântica clara)
 
-| Origem | Sentido | Destino | Tipo | Backend |
-|---|---|---|---|---|
-| [useSLAAlerts](src/hooks/useSLAAlerts.ts) | ⇒ | `conversation_events` | insert | Lovable Cloud |
-| [useSLAAlerts](src/hooks/useSLAAlerts.ts) | ← | [SLATimelineSection](src/components/inbox/contact-details/SLATimelineSection.tsx) | consumo UI | — |
-| [useConversationSLATimeline](src/hooks/useConversationSLATimeline.ts) | ⇠ | `rpc_list_messages` | RPC | FATOR X |
-| [evolutionSendRetry](src/lib/evolutionSendRetry.ts) | → | [lib/retry](src/lib/retry.ts) | util | — |
-| [evolutionSendRetry](src/lib/evolutionSendRetry.ts) | ⤳ | `enqueueClientFailedMessage` (DLQ) | enqueue | Lovable Cloud |
-| [useIncomingCallBroadcast](src/hooks/useIncomingCallBroadcast.ts) | ⤳ | `externalSupabase.channel()` | broadcast | FATOR X |
-| ... | ... | ... | ... | ... |
+- `-->` chamada síncrona / import
+- `==>` escrita persistente em DB
+- `-.->` evento realtime / pub-sub in-memory
+- `-..->` enqueue assíncrona (DLQ)
 
-3. **Submatrizes por domínio** (filtros prontos para o leitor):
-   - SLA & Timeline
-   - DLQ & Retry
-   - Realtime & Presença
-   - Webhook Health
-   - UX/Telemetria
+Fluxo principal representado:
 
-4. **Matriz reversa "consumido por"** — para cada hook, lista até 3 componentes/páginas que o importam (descobertos via `code--search_files`).
-
-5. **Quadro-resumo de acoplamento**:
-   | Hook | Fan-out (chama N) | Fan-in (chamado por N) | Risco |
-   |---|---:|---:|---|
-   | `useFailedMessages` | 2 | 4 | médio |
-   | ... | | | |
-
-6. **Findings de dependência**:
-   - Acoplamento crítico: `evolutionSendRetry` → `loadRetryConfig` → `failedMessagesEnqueue` (cadeia de 3 níveis sem fallback claro)
-   - Hook órfão suspeito: itens com fan-in = 0
-   - Bug `oderId` em `useTypingPresence` afeta consumidores em cascata
+```
+ChatInput → messageSender → evolutionSendRetry → Edge sendText
+                  ↓                      ↓ (falha)
+            emitSendStatus         enqueueClientFailedMessage ==> DLQ
+                  ↓                      ↓
+         sendStatusBus              (cron reprocess)
+                  ↓
+useMessageSendStatus / useMessageStatus  ←  useMessages (DB)
+                  ↓                            ↑
+        MessageStatusInline        useMessageUpdateBatcher -.-> realtime
+                  ↓
+            MessageBubble (render)
+```
 
 ### Como vou construir
 
-1. **Verificar arquivos** com `code--list_dir` em `src/hooks/`, `src/hooks/realtime/`, `src/lib/` (pular itens inexistentes — sem inventar).
-2. **Mapear fan-out** lendo cada hook com `code--view` e extraindo imports relevantes.
-3. **Mapear fan-in** com `code--search_files` por nome de cada hook (ex: `useSLAAlerts\(`).
-4. **Escrever** o `.md` em `/mnt/documents/MATRIZ_DEPENDENCIAS_HOOKS_20-23_ABRIL_2026.md`.
-5. **QA**: validar que cada link em `[texto](path)` aponta para arquivo existente; conferir que não há linha duplicada.
+1. **Verificar existência** dos arquivos via `code--list_dir` em `src/hooks/`, `src/hooks/realtime/`, `src/lib/`, `src/components/inbox/chat/`. Itens inexistentes ficam de fora — sem inventar.
+2. **Confirmar assinaturas** com `code--view` em `messageSender.ts`, `useMessageSendStatus.ts`, `useRealtimeMessages.ts` (não vistos nesta sessão) para garantir nomes corretos nos labels.
+3. **Confirmar consumidores** com `code--search_files` por: `evolutionSendRetry\(`, `emitSendStatus\(`, `useMessageStatus\(`, `useMessageSendStatus\(`.
+4. **Escrever** `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd` com 6 subgraphs + arestas + bloco `click` para cada nó com path relativo.
+5. **QA**: validar sintaxe Mermaid (parse local com `@mermaid-js/mermaid-cli` via `nix run` se disponível) e checar que cada `click` referencia arquivo existente.
 
 ### Detalhes técnicos
 
-- Links relativos no formato `[nome](src/...)` — clicáveis no preview do Lovable.
-- Sem emojis nas tabelas (regra do projeto). Símbolos Unicode `→ ⇒ ⇠ ⤳ ⊕ ↔ ←` são seguros.
-- Tabelas com no máximo 5 colunas para legibilidade mobile.
-- Documento alvo: ~400–600 linhas, ~30–45 KB.
-- Badges textuais: `[NOVO]`, `[EDITADO]`, `[BUG]`, `[ÓRFÃO]`.
+- Sem cores customizadas — auto-tema light/dark.
+- Sem emojis (lexer error).
+- Limite ~22 nós para legibilidade.
+- Labels curtos (≤ 28 chars). Caminhos completos só nos `click`.
+- Comentários `%%` no rodapé do `.mmd` com legenda das arestas e timestamp.
+- Anotação de dívida técnica: nó `evolutionSendRetry` recebe sufixo `[evolutionSendRetry — fan-out crítico]` (já documentado na matriz anterior).
 
 ### Arquivos afetados
 
 **Criar:**
-- `/mnt/documents/MATRIZ_DEPENDENCIAS_HOOKS_20-23_ABRIL_2026.md`
+- `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd`
 
 **Não edita código-fonte.**
 
 ### Fora de escopo
 
-- Diagrama visual (já entregue em `MAPA_HOOKS_DEPENDENCIAS_NAVEGAVEL.mmd`).
-- Análise de hooks anteriores a 20/abr.
-- Refatoração para reduzir acoplamento — apenas documentar.
+- Trilhas de mídia/áudio (upload, signed URLs) — domínio separado.
+- Fluxos de typing/presença e calls — já mapeados no diagrama anterior.
+- Renderização PNG/SVG estática — Lovable renderiza `.mmd` via `<lov-artifact>`.
+- Correção do typo `oderId` em `useTypingPresence` — fora deste domínio.
 
