@@ -275,6 +275,8 @@ export default function AdminInstancePausesPage() {
           )}
         </CardContent>
       </Card>
+
+      <IncidentDetailDialog pause={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
