@@ -1,33 +1,39 @@
-import { useMemo, useState } from 'react';
-import { format } from 'date-fns';
+import { useEffect, useMemo, useState } from 'react';
+import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   AlertTriangle, RefreshCw, Inbox, CheckCircle2, XCircle,
   Clock, RotateCw, Ban, Eye, PlayCircle, Server, BarChart3,
+  Search, ChevronLeft, ChevronRight, Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog';
+  Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   useFailedMessages,
+  useFailedMessagesStats,
   type FailedMessageRow,
   type FailedMessageStatus,
 } from '@/hooks/monitoring/useFailedMessages';
 import { cn } from '@/lib/utils';
 import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
+import { toast } from 'sonner';
 
 const STATUS_LABEL: Record<FailedMessageStatus, string> = {
   pending: 'Pendente',
@@ -61,12 +67,42 @@ export default function AdminFailedMessagesPage() {
   const [hours, setHours] = useState(24);
   const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
   const [errorCodeFilter, setErrorCodeFilter] = useState<string>('all');
+  const [instanceFilter, setInstanceFilter] = useState<string>('all');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState<string | null>(null);
+  const [customFrom, setCustomFrom] = useState<string>(''); // datetime-local
+  const [customTo, setCustomTo] = useState<string>('');
+  const [page, setPage] = useState(0);
+  const pageSize = 50;
+
   const [selected, setSelected] = useState<FailedMessageRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmBulkAbandon, setConfirmBulkAbandon] = useState(false);
+  const [bulkReason, setBulkReason] = useState('');
+
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim() || null);
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [hours, statusFilter, errorCodeFilter, instanceFilter, customFrom, customTo]);
+
+  const fromIso = customFrom ? new Date(customFrom).toISOString() : null;
+  const toIso = customTo ? new Date(customTo).toISOString() : null;
+  const useCustomRange = !!(fromIso && toIso);
+
+  const { data: stats } = useFailedMessagesStats();
 
   const {
-    data: rows = [],
+    rows,
+    total,
     isLoading,
     isRefetching,
     refetch,
@@ -77,15 +113,23 @@ export default function AdminFailedMessagesPage() {
     bulkAbandon,
     triggerReprocess,
   } = useFailedMessages({
-    hours,
+    hours: useCustomRange ? undefined : hours,
     status: statusFilter === 'all' ? null : statusFilter,
     errorCode: errorCodeFilter === 'all' ? null : errorCodeFilter,
+    instance: instanceFilter === 'all' ? null : instanceFilter,
+    search,
+    from: useCustomRange ? fromIso : null,
+    to: useCustomRange ? toIso : null,
+    page,
+    pageSize,
   });
 
   const sorted = useMemo(
     () => [...rows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)),
     [rows],
   );
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const topReasons = aggregates.byErrorCode.slice(0, 8);
   const maxReasonCount = topReasons[0]?.count ?? 1;
@@ -213,9 +257,27 @@ export default function AdminFailedMessagesPage() {
           <CardTitle className="text-sm font-medium">Filtros</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
+          <div className="flex flex-col gap-1 min-w-[220px] flex-1">
+            <label className="text-xs text-muted-foreground">Buscar (JID, código, mensagem)</label>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="ex.: 5511..., ETIMEDOUT, 503"
+                className="pl-8"
+              />
+            </div>
+          </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Janela</label>
-            <Select value={String(hours)} onValueChange={(v) => setHours(Number(v))}>
+            <label className="text-xs text-muted-foreground">
+              Janela {useCustomRange && <span className="text-warning">(ignorada)</span>}
+            </label>
+            <Select
+              value={String(hours)}
+              onValueChange={(v) => setHours(Number(v))}
+              disabled={useCustomRange}
+            >
               <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">Última hora</SelectItem>
@@ -226,6 +288,35 @@ export default function AdminFailedMessagesPage() {
             </Select>
           </div>
           <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">De</label>
+            <Input
+              type="datetime-local"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="w-[200px]"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Até</label>
+            <Input
+              type="datetime-local"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="w-[200px]"
+            />
+          </div>
+          {(customFrom || customTo) && (
+            <div className="flex flex-col gap-1 justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setCustomFrom(''); setCustomTo(''); }}
+              >
+                Limpar datas
+              </Button>
+            </div>
+          )}
+          <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">Status</label>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
               <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
@@ -235,6 +326,20 @@ export default function AdminFailedMessagesPage() {
                 <SelectItem value="retrying">Reprocessando</SelectItem>
                 <SelectItem value="succeeded">Sucesso</SelectItem>
                 <SelectItem value="abandoned">Abandonado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Instância</label>
+            <Select value={instanceFilter} onValueChange={setInstanceFilter}>
+              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {(stats?.by_instance ?? []).map((i) => (
+                  <SelectItem key={i.instance} value={i.instance}>
+                    {i.instance} ({i.count})
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -298,10 +403,15 @@ export default function AdminFailedMessagesPage() {
 
       {/* Table */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Inbox className="h-4 w-4" />
-            {sorted.length} item{sorted.length === 1 ? '' : 's'}
+            {total} item{total === 1 ? '' : 's'}
+            {total > pageSize && (
+              <span className="text-xs text-muted-foreground font-normal">
+                · página {page + 1} de {totalPages}
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -340,8 +450,13 @@ export default function AdminFailedMessagesPage() {
               </TableHeader>
               <TableBody>
                 {sorted.map((row) => (
-                  <TableRow key={row.id} data-state={selectedIds.has(row.id) ? 'selected' : undefined}>
-                    <TableCell className="w-10">
+                  <TableRow
+                    key={row.id}
+                    data-state={selectedIds.has(row.id) ? 'selected' : undefined}
+                    className="cursor-pointer"
+                    onClick={() => setSelected(row)}
+                  >
+                    <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedIds.has(row.id)}
                         onCheckedChange={() => toggleOne(row.id)}
@@ -370,9 +485,13 @@ export default function AdminFailedMessagesPage() {
                     <TableCell className="text-center text-xs">
                       {row.retry_count}/{row.max_retries}
                     </TableCell>
-                    <TableCell className="text-xs">{formatDate(row.next_attempt_at)}</TableCell>
+                    <TableCell className="text-xs" title={row.next_attempt_at ?? undefined}>
+                      {row.next_attempt_at
+                        ? formatDistanceToNow(new Date(row.next_attempt_at), { addSuffix: true, locale: ptBR })
+                        : '—'}
+                    </TableCell>
                     <TableCell className="text-xs">{formatDate(row.created_at)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-1">
                         <Button
                           size="icon"
@@ -411,11 +530,42 @@ export default function AdminFailedMessagesPage() {
               </TableBody>
             </Table>
           )}
+          {/* Pagination */}
+          {total > pageSize && (
+            <div className="flex items-center justify-between gap-2 p-3 border-t">
+              <span className="text-xs text-muted-foreground">
+                Mostrando {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} de {total}
+              </span>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Bulk abandon confirm */}
-      <AlertDialog open={confirmBulkAbandon} onOpenChange={setConfirmBulkAbandon}>
+      <AlertDialog open={confirmBulkAbandon} onOpenChange={(o) => {
+        setConfirmBulkAbandon(o);
+        if (!o) setBulkReason('');
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Abandonar {selectedIds.size} item(s)?</AlertDialogTitle>
@@ -424,16 +574,32 @@ export default function AdminFailedMessagesPage() {
               automaticamente. Você ainda pode forçar reprocesso manual depois.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">
+              Motivo (opcional, fica registrado no log)
+            </label>
+            <Textarea
+              value={bulkReason}
+              onChange={(e) => setBulkReason(e.target.value)}
+              placeholder="ex.: limpeza de exhausted antigos, instância descontinuada..."
+              rows={3}
+              maxLength={500}
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                bulkAbandon.mutate(Array.from(selectedIds), {
-                  onSuccess: () => {
-                    setSelectedIds(new Set());
-                    setConfirmBulkAbandon(false);
+                bulkAbandon.mutate(
+                  { ids: Array.from(selectedIds), reason: bulkReason },
+                  {
+                    onSuccess: () => {
+                      setSelectedIds(new Set());
+                      setConfirmBulkAbandon(false);
+                      setBulkReason('');
+                    },
                   },
-                });
+                );
               }}
             >
               Confirmar abandono
@@ -442,26 +608,55 @@ export default function AdminFailedMessagesPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Details dialog */}
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Detalhes da falha</DialogTitle>
-            <DialogDescription>
-              {selected && `${selected.instance_name} → ${shortJid(selected.remote_jid)}`}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Details drawer (Sheet right) */}
+      <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Detalhes da falha</SheetTitle>
+            <SheetDescription>
+              {selected && (
+                <span className="font-mono text-xs">
+                  {selected.instance_name} → {shortJid(selected.remote_jid)}
+                </span>
+              )}
+            </SheetDescription>
+          </SheetHeader>
           {selected && (
-            <div className="space-y-4">
+            <div className="space-y-4 mt-4">
+              <div className="flex items-center gap-2">
+                <Badge variant={STATUS_VARIANT[selected.status]}>
+                  {STATUS_LABEL[selected.status]}
+                </Badge>
+                {selected.remote_jid && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selected.remote_jid ?? '');
+                          toast.success('JID copiado');
+                        }}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copiar JID
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{selected.remote_jid}</TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <Field label="Status" value={STATUS_LABEL[selected.status]} />
                 <Field label="HTTP" value={selected.http_status?.toString() ?? '—'} />
                 <Field label="Código de erro" value={selected.error_code ?? '—'} />
                 <Field label="Tentativas" value={`${selected.retry_count}/${selected.max_retries}`} />
+                <Field label="Próximo retry" value={formatDate(selected.next_attempt_at)} />
                 <Field label="Criado" value={formatDate(selected.created_at)} />
                 <Field label="Última tentativa" value={formatDate(selected.last_attempt_at)} />
-                <Field label="Próximo retry" value={formatDate(selected.next_attempt_at)} />
                 <Field label="Concluído em" value={formatDate(selected.succeeded_at)} />
+                <Field label="Atualizado" value={formatDate(selected.updated_at)} />
               </div>
 
               {selected.error_message && (
@@ -482,7 +677,7 @@ export default function AdminFailedMessagesPage() {
                 </ScrollArea>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2 border-t">
                 {(selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
                   <Button
                     variant="outline"
@@ -496,7 +691,11 @@ export default function AdminFailedMessagesPage() {
                 {(selected.status === 'pending' || selected.status === 'retrying') && (
                   <Button
                     variant="destructive"
-                    onClick={() => { abandon.mutate(selected.id); setSelected(null); }}
+                    onClick={() => {
+                      const reason = window.prompt('Motivo do abandono (opcional):') ?? '';
+                      abandon.mutate({ id: selected.id, reason });
+                      setSelected(null);
+                    }}
                     disabled={abandon.isPending}
                   >
                     <Ban className="h-4 w-4 mr-2" />
@@ -506,8 +705,8 @@ export default function AdminFailedMessagesPage() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

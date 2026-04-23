@@ -54,7 +54,7 @@ export function DLQPanel() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const {
-    data: rows = [],
+    rows,
     isLoading,
     refetch,
     aggregates,
