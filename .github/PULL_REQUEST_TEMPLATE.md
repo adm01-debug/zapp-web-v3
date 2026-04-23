@@ -28,7 +28,8 @@
 <!-- Descreva como testou as mudanças -->
 
 - [ ] Testei localmente
-- [ ] Testes unitários passam
+- [ ] Testes unitários passam (`npm run test`)
+- [ ] Testes E2E passam (`npm run test:e2e`)
 - [ ] Testei no ambiente de staging
 - [ ] Testei em múltiplos navegadores
 - [ ] Testei em dispositivos móveis

@@ -118,6 +118,8 @@ Antes de abrir um PR, verifique:
 
 ## 🧪 Testes
 
+### Unitários (Vitest)
+
 ```bash
 # Rodar todos os testes
 npm run test
@@ -128,6 +130,22 @@ npm run test:coverage
 # Rodar em watch mode
 npm run test:watch
 ```
+
+### E2E (Playwright)
+
+```bash
+# Build + roda todos os specs E2E
+npm run build && npm run test:e2e
+
+# Modo interativo
+npm run test:e2e:ui
+
+# Ver relatório HTML
+npm run test:e2e:report
+```
+
+Configure `.env.test.local` com `E2E_USER_EMAIL` e `E2E_USER_PASSWORD`.
+Detalhes completos em [docs/testing/e2e.md](./docs/testing/e2e.md).
 
 ## 🎨 Padrões de Código
 
