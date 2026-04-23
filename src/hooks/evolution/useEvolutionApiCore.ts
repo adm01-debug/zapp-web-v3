@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
 import { normalizeIdempotencyKey, deriveIdempotencyKey } from '@/lib/idempotency';
+import { loadRetryConfig, getRetryConfigSync } from '@/lib/retryConfig';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -61,6 +62,8 @@ export function useEvolutionApiCore() {
 
   useEffect(() => {
     mountedRef.current = true;
+    // Esquenta cache de config global (não bloqueia)
+    void loadRetryConfig();
     return () => { mountedRef.current = false; };
   }, []);
 
@@ -70,8 +73,9 @@ export function useEvolutionApiCore() {
         ? { method: methodOrOptions }
         : methodOrOptions;
       const method: HttpMethod = opts.method ?? 'POST';
-      const baseBackoffMs = opts.baseBackoffMs ?? 250;
-      const timeoutMs = opts.timeoutMs ?? 30_000;
+      const dynCfg = getRetryConfigSync();
+      const baseBackoffMs = opts.baseBackoffMs ?? dynCfg.baseBackoffMs;
+      const timeoutMs = opts.timeoutMs ?? dynCfg.timeoutMs;
 
       // Validate + sanitize user-provided key; only a valid user key enables POST retry semantics.
       const userKey = normalizeIdempotencyKey(opts.idempotencyKey);
@@ -88,7 +92,7 @@ export function useEvolutionApiCore() {
       const effectiveKey = userKey ?? derivedKey;
 
       const canRetry = IDEMPOTENT_METHODS.has(method) || !!userKey;
-      const retries = Math.max(1, opts.retries ?? (canRetry ? 3 : 1));
+      const retries = Math.max(1, opts.retries ?? (canRetry ? dynCfg.maxRetries : 1));
 
       // Dedupe identical in-flight requests for idempotent verbs OR any POST with an effective key.
       const dedupeKey = effectiveKey

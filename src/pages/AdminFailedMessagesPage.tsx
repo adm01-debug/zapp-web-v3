@@ -27,6 +27,7 @@ import {
   type FailedMessageStatus,
 } from '@/hooks/monitoring/useFailedMessages';
 import { cn } from '@/lib/utils';
+import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
 
 const STATUS_LABEL: Record<FailedMessageStatus, string> = {
   pending: 'Pendente',
@@ -141,6 +142,9 @@ export default function AdminFailedMessagesPage() {
           </Button>
         </div>
       </header>
+
+      {/* Retry config (sem deploy) */}
+      <RetryConfigPanel />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
