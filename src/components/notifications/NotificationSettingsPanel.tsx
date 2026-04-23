@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { PushNotificationCard } from './PushNotificationCard';
 import { NotificationTypeSection, SentimentAlertCard, QuietHoursCard } from './NotificationTypeCards';
+import { ConnectionAlertPreferences } from '@/components/settings/ConnectionAlertPreferences';
 
 const SOUND_TYPES: { value: string; label: string; description: string }[] = [
   { value: 'chime', label: 'Chime', description: 'Tom suave e harmonioso' },
@@ -126,6 +127,7 @@ export function NotificationSettingsPanel() {
 
       <SentimentAlertCard settings={settings} updateSettings={updateSettings} />
       <PushNotificationCard />
+      <ConnectionAlertPreferences />
       <QuietHoursCard settings={settings} updateSettings={updateSettings} isQuietHours={isQuietHours} />
 
       <Button variant="outline" onClick={handleReset} className="w-full">
