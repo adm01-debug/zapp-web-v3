@@ -62,6 +62,8 @@ export function useEvolutionApiCore() {
 
   useEffect(() => {
     mountedRef.current = true;
+    // Esquenta cache de config global (não bloqueia)
+    void loadRetryConfig();
     return () => { mountedRef.current = false; };
   }, []);
 
