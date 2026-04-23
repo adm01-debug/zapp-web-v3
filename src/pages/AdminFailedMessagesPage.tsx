@@ -27,6 +27,7 @@ import {
   type FailedMessageStatus,
 } from '@/hooks/monitoring/useFailedMessages';
 import { cn } from '@/lib/utils';
+import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
 
 const STATUS_LABEL: Record<FailedMessageStatus, string> = {
   pending: 'Pendente',
