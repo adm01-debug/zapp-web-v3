@@ -100,7 +100,7 @@ export function useWebhookHealthAlerts(
       const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const res = await queryExternalProxy<RawEvent>({
         table: 'evolution_webhook_events',
-        select: 'instance_name,signature_valid,created_at',
+        select: 'instance_name,created_at',
         filters: [{ column: 'created_at', operator: 'gte', value: since24h }],
         order: { column: 'created_at', ascending: false },
         limit: 500,
