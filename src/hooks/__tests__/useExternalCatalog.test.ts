@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -8,7 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const mockInvoke = vi.fn();
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    functions: { invoke: (...args: any[]) => mockInvoke(...args) },
+    functions: { invoke: (...args: unknown[]) => mockInvoke(...args) },
   },
 }));
 
@@ -103,7 +102,7 @@ function setupMockInvoke(responses: Record<string, any>) {
     list_suppliers: { data: [] },
   };
   const merged = { ...defaults, ...responses };
-  mockInvoke.mockImplementation(async (fnName: string, opts: any) => {
+  mockInvoke.mockImplementation(async (fnName: string, opts: unknown) => {
     const action = opts?.body?.action;
     if (merged[action]) {
       return { data: merged[action], error: null };
@@ -166,7 +165,7 @@ describe('useExternalCatalog', () => {
     });
 
     it('sets loading state during fetch', async () => {
-      let resolvePromise: (v: any) => void;
+      let resolvePromise: (v: unknown) => void;
       mockInvoke.mockReturnValue(new Promise(r => { resolvePromise = r; }));
 
       const { result } = renderHook(() => useExternalCatalog(), { wrapper: createWrapper() });
@@ -568,7 +567,7 @@ describe('Edge Function Contract', () => {
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalled();
     });
-    const productCall = mockInvoke.mock.calls.find((c: any) => c[1]?.body?.action === 'list_products');
+    const productCall = mockInvoke.mock.calls.find((c: unknown) => c[1]?.body?.action === 'list_products');
     expect(productCall).toBeTruthy();
     expect(productCall[1].body.action).toBe('list_products');
   });
@@ -579,7 +578,7 @@ describe('Edge Function Contract', () => {
     const { result } = renderHook(() => useExternalCatalog(), { wrapper: createWrapper() });
     await act(async () => { await result.current.fetchProduct('p1'); });
 
-    const call = mockInvoke.mock.calls.find((c: any) => c[1]?.body?.action === 'get_product');
+    const call = mockInvoke.mock.calls.find((c: unknown) => c[1]?.body?.action === 'get_product');
     expect(call).toBeTruthy();
     expect(call[1].body.action).toBe('get_product');
     expect(call[1].body.params.product_id).toBe('p1');
@@ -592,7 +591,7 @@ describe('Edge Function Contract', () => {
     act(() => { result.current.fetchCategories(); });
 
     await waitFor(() => {
-      const catCall = mockInvoke.mock.calls.find((c: any) => c[1]?.body?.action === 'list_categories');
+      const catCall = mockInvoke.mock.calls.find((c: unknown) => c[1]?.body?.action === 'list_categories');
       expect(catCall).toBeTruthy();
     });
   });
@@ -604,7 +603,7 @@ describe('Edge Function Contract', () => {
     act(() => { result.current.fetchSuppliers(); });
 
     await waitFor(() => {
-      const supCall = mockInvoke.mock.calls.find((c: any) => c[1]?.body?.action === 'list_suppliers');
+      const supCall = mockInvoke.mock.calls.find((c: unknown) => c[1]?.body?.action === 'list_suppliers');
       expect(supCall).toBeTruthy();
     });
   });
@@ -699,7 +698,7 @@ describe('Data Integrity', () => {
     });
 
     const { result } = renderHook(() => useExternalCatalog(), { wrapper: createWrapper() });
-    let fetched: any;
+    let fetched: unknown;
     await act(async () => {
       fetched = await result.current.fetchProduct('p1');
     });
@@ -803,7 +802,7 @@ describe('Edge Cases & Boundaries', () => {
     });
 
     await waitFor(() => {
-      const call = mockInvoke.mock.calls.find((c: any) => c[1]?.body?.action === 'list_products' && c[1]?.body?.params?.search);
+      const call = mockInvoke.mock.calls.find((c: unknown) => c[1]?.body?.action === 'list_products' && c[1]?.body?.params?.search);
       expect(call).toBeTruthy();
       expect(call[1].body.params.search).toBe("caneta d'água & %");
     }, { timeout: 5000 });
