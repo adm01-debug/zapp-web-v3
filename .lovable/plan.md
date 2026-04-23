@@ -1,56 +1,79 @@
 
 
-## Filtros na Timeline de SLA
+## Filtro de SLA por Fila/Assignee na Timeline
 
 ### O que vai ser construído
 
-Adicionar uma barra de filtros compacta no topo do `SLATimelineSection` permitindo:
+A timeline hoje resolve UMA regra de SLA via `useApplicableSLA` baseado no estado **atual** da conversa (queue + assignedTo). Mas se a conversa foi reatribuída ao longo do tempo, os marcos antigos foram avaliados sob outra regra. Vou adicionar:
 
-1. **Filtro de status** (ToggleGroup multi-select): `Todos` · `OK` · `Em risco` · `Violado`
-2. **Filtro de período** (ToggleGroup single-select): `24h` · `7d` · `30d` · `Tudo`
+1. **Selector compacto na barra de filtros** com 3 modos:
+   - `Atual` (default) — usa fila + agente atuais da conversa (comportamento de hoje)
+   - `Por fila` — força resolução só por fila (ignora agente)
+   - `Por agente` — força resolução só por agente (ignora fila)
+   - `Sem SLA` — desabilita avaliação (todos marcos viram `na`)
 
-Os filtros se aplicam aos marcos da timeline (primeira mensagem, primeira resposta, última atividade, resolução, reabertura). Marcos sem status SLA (`'na'`) só aparecem com filtro `Todos`. O contador "Aguardando 1ª resposta" (live) sempre aparece quando ativo, independente de filtros — é estado operacional crítico.
+2. **Recalcular `firstResponseStatus` e `resolutionStatus`** com base na regra resolvida no modo escolhido.
+
+3. **Persistir** o modo no mesmo `localStorage` key (`sla-timeline-filters`).
+
+4. **Exibir no rodapé** qual escopo foi usado (ex: "Avaliado por: Fila — Suporte N1").
+
+### Por que não buscar regra histórica?
+
+Não temos histórico de reatribuição de fila/agente por conversa no FATOR X (não há tabela `conversation_assignments_history`). Forçar o operador a escolher o escopo é honesto e auditável. Quando histórico existir (lote futuro), trocamos por timeline de regras.
 
 ### Mudanças
 
-**1. `src/components/inbox/contact-details/SLATimelineSection.tsx`** (~+60 linhas, dentro do limite de 340)
+**1. `src/hooks/useApplicableSLA.ts`** — verificar assinatura atual
 
-- Adicionar estados locais com persistência em `localStorage`:
-  ```ts
-  const [statusFilter, setStatusFilter] = useState<SLAStatus[]>(['ok','warning','breached','na']);
-  const [periodFilter, setPeriodFilter] = useState<'24h'|'7d'|'30d'|'all'>('all');
-  ```
-  Chave: `sla-timeline-filters` (JSON com ambos).
+Já aceita `queueId` e `agentId` opcionais. Vou apenas passar `null` no campo a ignorar conforme o modo.
 
-- Helpers puros:
+**2. `src/components/inbox/contact-details/SLATimelineSection.tsx`** (~+40 linhas)
+
+- Novo state:
   ```ts
-  const PERIOD_MS = { '24h': 86_400_000, '7d': 604_800_000, '30d': 2_592_000_000, all: Infinity };
-  function isWithinPeriod(date: Date | null, period): boolean
-  function matchesFilters(milestone: { date: Date|null; status: SLAStatus }, statusFilter, periodFilter): boolean
+  type SLAScope = 'current' | 'queue' | 'agent' | 'none';
+  const [scope, setScope] = useState<SLAScope>(initial.scope);
   ```
 
-- Renderizar barra de filtros logo abaixo do título, usando `ToggleGroup` (já no projeto). Badge com contador de marcos visíveis vs total (`X de Y marcos`).
+- Resolver params do hook conforme scope:
+  ```ts
+  const slaParams = useMemo(() => {
+    const base = { contactId: contact.id, company: ..., jobTitle: ..., contactType: ... };
+    if (scope === 'queue') return { ...base, queueId: queue?.id ?? null, agentId: null };
+    if (scope === 'agent') return { ...base, queueId: null, agentId: assignedTo?.id ?? null };
+    if (scope === 'none') return null; // hook recebe enabled=false
+    return { ...base, queueId: queue?.id ?? null, agentId: assignedTo?.id ?? null };
+  }, [scope, contact, queue, assignedTo]);
+  ```
 
-- Aplicar `matchesFilters` ao array de marcos antes do `.map()` de renderização. Se `filteredMilestones.length === 0` e há marcos no total, mostrar empty state inline: "Nenhum marco corresponde aos filtros" com botão "Limpar filtros".
+  Se `useApplicableSLA` não tiver `enabled`, passar params vazios resulta em fallback default (5/60min) — aceitável para `'none'` mas vou inspecionar antes para decidir entre `enabled:false` vs zerar limites.
 
-- Marco "aguardando" (live counter) renderizado fora do filtro — sempre visível quando `isAwaitingFirstResponse`.
+- Quando `scope === 'none'`, forçar `firstResponseStatus = 'na'` e `resolutionStatus = 'na'` independente das durações.
+
+- Adicionar `ToggleGroup type="single"` na barra de filtros com 4 opções (Atual/Fila/Agente/Sem SLA).
+
+- Atualizar o rodapé para mostrar o escopo escolhido + a regra resolvida (ou "—" quando `none`).
+
+- Adicionar `scope` ao JSON salvo em localStorage (com migração defensiva — se ausente, default `'current'`).
 
 ### Detalhes técnicos
 
-- `ToggleGroup type="multiple"` para status, `type="single"` para período.
-- Variant `outline`, `size="sm"` para densidade compacta no painel lateral (largura 320px).
-- Acessibilidade: `aria-label="Filtrar marcos por status"` / `"Filtrar por período"`. Cada toggle com `aria-pressed` automático do Radix.
-- Tokens semânticos: `bg-muted/30` para barra de filtros, ícones Lucide (`CheckCircle2`, `AlertTriangle`, `XCircle`, `Filter`).
-- Persistência via try/catch (padrão do projeto, ver `ContactDetails.tsx`).
-- Sem `console.log`, sem `as any`, sem nova RPC, sem alteração de API pública do componente.
+- Mantém limite de 340 linhas (atual ~340, vou compactar a seção de filtros usando map de configs).
+- Tokens semânticos: `data-[state=on]:bg-primary/10` para o toggle ativo do escopo (diferenciar visualmente dos filtros de status).
+- Acessibilidade: `aria-label="Escopo da regra de SLA"`.
+- Sem `console.log`, sem `as any`, sem nova RPC.
+- Não altera API pública do componente.
 
 ### Arquivo afetado
 
 **Editar:** `src/components/inbox/contact-details/SLATimelineSection.tsx`
 
+**Inspecionar (read-only):** `src/hooks/useApplicableSLA.ts` (confirmar assinatura + suporte a `enabled`)
+
 ### Fora de escopo
 
-- Filtros globais salvos por usuário (server-side) — localStorage atende ao uso por contato.
-- Export da timeline filtrada — Política Zero Export.
-- Filtro por agente que respondeu — exigiria join Lovable Cloud × FATOR X (impossível em SQL conforme arquitetura).
+- Histórico real de reatribuição (precisa nova tabela + RPC FATOR X).
+- Reavaliação por marco individual (cada marco com sua própria regra) — exigiria múltiplas chamadas e não há ganho operacional sem histórico.
+- Filtro por intervalo customizado de data — fora do escopo deste lote.
 
