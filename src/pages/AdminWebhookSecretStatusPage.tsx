@@ -485,6 +485,7 @@ export default function AdminWebhookSecretStatusPage() {
                     <th className="py-2 pr-4">Instância</th>
                     <th className="py-2 pr-4">Assinatura</th>
                     <th className="py-2 pr-4">Status</th>
+                    <th className="py-2 pr-4 text-right">Ação</th>
                   </tr>
                 </thead>
                 <tbody>
