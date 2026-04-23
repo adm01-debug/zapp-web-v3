@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
@@ -49,6 +49,8 @@ export function useGlobalSearchData(open: boolean) {
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [mediaTypeFilter, setMediaTypeFilter] = useState<MediaTypeFilter>('all');
   const [showFilters, setShowFilters] = useState(false);
+  /** Last logged search event id — kept to correlate clicks if needed. */
+  const lastSearchEventIdRef = useRef<string | null>(null);
 
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
@@ -195,7 +197,21 @@ export function useGlobalSearchData(open: boolean) {
 
       searchResults.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
       setResults(searchResults);
-      if (cleanQuery.length >= 2) addToHistory(cleanQuery, searchResults.length);
+      if (cleanQuery.length >= 2) {
+        addToHistory(cleanQuery, searchResults.length);
+        // Fire-and-forget telemetry — never blocks UI.
+        supabase
+          .rpc('rpc_log_search_event', {
+            p_query: cleanQuery,
+            p_entities: Array.from(types),
+            p_result_count: searchResults.length,
+            p_used_vector: false,
+          })
+          .then(({ data, error }) => {
+            if (error) log.warn('rpc_log_search_event failed', error);
+            else if (typeof data === 'string') lastSearchEventIdRef.current = data;
+          });
+      }
     } catch (error) {
       log.error('Search error:', error);
       setResults([]);
@@ -236,5 +252,6 @@ export function useGlobalSearchData(open: boolean) {
     mediaTypeFilter, setMediaTypeFilter, showFilters, setShowFilters,
     history, removeFromHistory, clearHistory,
     toggleType, handleSearch, handleTagSelect, removeTag, performSearch,
+    lastSearchEventIdRef,
   };
 }

@@ -45,6 +45,7 @@ export const OmnichannelInbox = lazyWithRetry(() => import('@/components/omnicha
 export const AuditLogDashboard = lazyWithRetry(() => import('@/components/security/AuditLogDashboard').then(m => ({ default: m.AuditLogDashboard })));
 export const AdminTelemetriaPage = lazyWithRetry(() => import('@/pages/AdminTelemetriaPage'));
 export const AdminFailedMessagesPage = lazyWithRetry(() => import('@/pages/AdminFailedMessagesPage'));
+export const AdminSearchInsightsPage = lazyWithRetry(() => import('@/pages/AdminSearchInsightsPage'));
 export const AdminWebhookEventsPage = lazyWithRetry(() => import('@/pages/AdminWebhookEventsPage'));
 export const AdminWebhookOverviewPage = lazyWithRetry(() => import('@/pages/AdminWebhookOverviewPage'));
 export const NPSDashboard = lazyWithRetry(() => import('@/components/nps/NPSDashboard').then(m => ({ default: m.NPSDashboard })));
