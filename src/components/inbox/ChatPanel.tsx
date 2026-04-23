@@ -45,6 +45,9 @@ interface ChatPanelProps {
   onToggleDetails?: () => void;
   onBack?: () => void;
   hideHeader?: boolean;
+  onLoadOlder?: () => void | Promise<void>;
+  loadingOlder?: boolean;
+  hasMoreOlder?: boolean;
 }
 
 type DialogKey = 'quickReplies' | 'slashCommands' | 'transferDialog' | 'scheduleDialog' | 
@@ -83,7 +86,7 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
 
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
 
-export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false }: ChatPanelProps) {
+export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, loadingOlder = false, hasMoreOlder = false }: ChatPanelProps) {
   const [dialogs, dispatch] = useReducer(dialogReducer, initialDialogState);
   const openDialog = useCallback((key: DialogKey) => dispatch({ type: 'OPEN', key }), []);
   const closeDialog = useCallback((key: DialogKey) => dispatch({ type: 'CLOSE', key }), []);
@@ -237,7 +240,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           contactJid={contactJid} contactAvatar={contactAvatar}
           onSpeak={speak} onStop={stop} onReply={handlers.handleReplyToMessage} onForward={handlers.handleForwardMessage} onCopy={handlers.handleCopyMessage}
           onScrollToMessage={handleScrollToMessage} onInteractiveButtonClick={handlers.handleInteractiveButtonClick} onEditStart={handlers.handleEditStart}
-          highlightedMessageIds={highlightedMessageIds} activeHighlightId={activeHighlightId} searchQuery={searchQuery} />
+          highlightedMessageIds={highlightedMessageIds} activeHighlightId={activeHighlightId} searchQuery={searchQuery}
+          onLoadOlder={onLoadOlder} loadingOlder={loadingOlder} hasMoreOlder={hasMoreOlder} />
 
         <ChatQuickRepliesPopover show={dialogs.quickReplies} replies={filteredQuickReplies} onSelect={handleQuickReply} onClose={() => closeDialog('quickReplies')} />
 
