@@ -15,17 +15,7 @@ import { toast } from 'sonner';
 import { AuthEventTrendChart } from '@/components/admin/instance-pauses/AuthEventTrendChart';
 import { IncidentDetailDialog, type IncidentPause } from '@/components/admin/instance-pauses/IncidentDetailDialog';
 
-interface PauseRow {
-  id: string;
-  instance_name: string;
-  paused_until: string;
-  reason: string;
-  trigger_count: number;
-  paused_by: string | null;
-  auto_paused: boolean;
-  created_at: string;
-  updated_at: string;
-}
+type PauseRow = IncidentPause;
 
 const REFRESH_INTERVAL = 15_000;
 
