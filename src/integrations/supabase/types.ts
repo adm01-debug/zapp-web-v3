@@ -4360,6 +4360,42 @@ export type Database = {
           },
         ]
       }
+      instance_processing_pauses: {
+        Row: {
+          auto_paused: boolean
+          created_at: string
+          id: string
+          instance_name: string
+          paused_by: string | null
+          paused_until: string
+          reason: string
+          trigger_count: number
+          updated_at: string
+        }
+        Insert: {
+          auto_paused?: boolean
+          created_at?: string
+          id?: string
+          instance_name: string
+          paused_by?: string | null
+          paused_until: string
+          reason: string
+          trigger_count?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_paused?: boolean
+          created_at?: string
+          id?: string
+          instance_name?: string
+          paused_by?: string | null
+          paused_until?: string
+          reason?: string
+          trigger_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       integration_health_log: {
         Row: {
           checked_at: string
@@ -9139,6 +9175,15 @@ export type Database = {
       }
     }
     Functions: {
+      auto_pause_instance_on_auth_spike: {
+        Args: {
+          p_instance: string
+          p_minutes?: number
+          p_reason: string
+          p_trigger_count: number
+        }
+        Returns: string
+      }
       calculate_level: { Args: { xp_amount: number }; Returns: number }
       check_login_rate_limit: {
         Args: { p_email: string; p_ip?: string }
@@ -9302,6 +9347,7 @@ export type Database = {
         Returns: boolean
       }
       is_feature_enabled: { Args: { p_flag_name: string }; Returns: boolean }
+      is_instance_paused: { Args: { p_instance: string }; Returns: boolean }
       is_ip_blocked: { Args: { check_ip: string }; Returns: boolean }
       is_ip_whitelisted: { Args: { check_ip: string }; Returns: boolean }
       is_team_conversation_member: {
@@ -9347,6 +9393,15 @@ export type Database = {
           content: string
           similarity: number
         }[]
+      }
+      pause_instance: {
+        Args: {
+          p_instance: string
+          p_minutes?: number
+          p_reason: string
+          p_trigger_count?: number
+        }
+        Returns: string
       }
       reassign_absent_agents: {
         Args: { inactive_minutes?: number }
@@ -9448,6 +9503,7 @@ export type Database = {
         }[]
       }
       skill_based_assign: { Args: { p_queue_id: string }; Returns: string }
+      unpause_instance: { Args: { p_instance: string }; Returns: number }
       update_own_profile: {
         Args: {
           p_avatar_url?: string
