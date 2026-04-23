@@ -1,66 +1,78 @@
 
 
-## Cancelar/prevenir loadOlder duplicado em scroll rápido
+## Validação e fallback robusto do `idempotencyKey`
 
 ### Problema
 
-`triggerLoad()` em `ChatMessagesArea.tsx` já tem `isFetchingOlderRef` como guard, mas:
-1. Se o usuário **desce** durante o fetch, o batch que está chegando ainda é prepended e a posição é "ancorada" pra cima — o usuário sente um pulo pra trás indesejado.
-2. Se o fetch demora e o usuário sobe→desce→sobe, ao soltar o ref (100ms após `finally`), um segundo `triggerLoad` dispara mesmo que o usuário já não esteja mais perto do topo.
-3. Não há `AbortController` — o fetch HTTP continua mesmo após o usuário desistir.
+Em `src/hooks/evolution/useEvolutionApiCore.ts` (linhas 74–104):
 
-### Mudanças
+1. **Sem validação**: qualquer string aceita como `idempotencyKey`. Caracteres não-ASCII (emoji, acento) quebram o header `Idempotency-Key` (HTTP exige token ASCII). Strings vazias/whitespace habilitam dedupe falso (todas as chamadas colidem em `""`).
+2. **Sem truncamento**: chave muito longa estoura limite de header (alguns gateways cortam em ~256B → colisão silenciosa entre chaves longas com mesmo prefixo).
+3. **Fallback fraco**: quando `idempotencyKey` ausente, `JSON.stringify(body ?? {})` é usado como dedupe local. Mas: ordem de chaves não é estável → `{a:1,b:2}` ≠ `{b:2,a:1}` mesmo sendo o mesmo payload semântico → dedupe falha em chamadas equivalentes que vieram de origens diferentes.
+4. **Sem hash estável**: payloads grandes (mídia base64) viram dedupeKey gigante na memória; e o servidor não recebe dica nenhuma de idempotência nesses casos.
 
-**1. `src/hooks/useExternalEvolution.ts`** — `loadOlder` aceita `AbortSignal`
-- Adicionar `signal?: AbortSignal` em `fetchMessagesByJid` e propagar para `queryExternalProxy` (que já usa `fetch` internamente).
-- `loadOlder` no `useExternalMessages`: criar `AbortController` interno, guardar em `loadOlderAbortRef`. Antes de iniciar novo, abortar o anterior se existir. No `catch`, ignorar `AbortError`.
-- Expor `cancelLoadOlder()` no retorno do hook (chama `abort()` + reseta `loadingOlder`).
+### Solução
 
-**2. `src/lib/externalProxy.ts`** — propagar `signal`
-- `ProxySelectParams` ganha `signal?: AbortSignal`.
-- `queryExternalProxy` passa `signal` para o `fetch` interno.
+**1. Novo helper `src/lib/idempotency.ts`**
 
-**3. `src/hooks/useRealtimeInbox.ts`** — expor `cancelLoadOlder`
-- Quando external: repassar `externalMsgs.cancelLoadOlder`.
-- Quando local: stub `() => {}`.
+API:
+- `stableStringify(value: unknown): string` — JSON com chaves ordenadas recursivamente (suporta objects aninhados, arrays preservam ordem). Pula `undefined`/funções.
+- `sha256Hex(input: string): Promise<string>` — usa `crypto.subtle.digest('SHA-256', …)` e devolve hex (64 chars). Fallback síncrono para djb2 32-bit hex se `crypto.subtle` indisponível (SSR/jsdom em testes).
+- `normalizeIdempotencyKey(raw: string | undefined): string | undefined`
+  - `trim()`, retorna `undefined` se vazio.
+  - Substitui qualquer char fora de `[A-Za-z0-9._\-:+/=]` por `_` (ASCII-safe para header).
+  - Trunca em 128 chars; se truncado, anexa `:h<sha256(raw).slice(0,12)>` (preserva unicidade após truncamento).
+  - Retorna `undefined` se após sanitize ficar vazio.
+- `deriveIdempotencyKey(action: string, body: unknown): Promise<string>`
+  - Computa `sha256Hex(stableStringify({action, body}))`.
+  - Retorna `auto_${hash.slice(0, 24)}` — prefixo `auto_` distingue chave derivada de chave fornecida pelo caller.
 
-**4. `src/components/inbox/ChatPanel.tsx` + `RealtimeInboxView.tsx`** — propagar prop
-- `onCancelLoadOlder?: () => void` → repassar para `ChatMessagesArea`.
+**2. Patch em `src/hooks/evolution/useEvolutionApiCore.ts`**
 
-**5. `src/components/inbox/chat/ChatMessagesArea.tsx`** — lógica de cancelamento
-- Trackear direção do scroll: `lastScrollTopRef.current`. Se `scrollTop > lastScrollTop + 50` (descendo > 50px) E `isFetchingOlderRef.current === true` → chamar `onCancelLoadOlder()`.
-- Cancelar também ao **desmontar** (cleanup do `useEffect`): `onCancelLoadOlder?.()` no return do effect.
-- Manter `isFetchingOlderRef` mas adicionar `cancelledRef`: se cancelado durante o fetch, **pular o anchoring** de `scrollTop` no `requestAnimationFrame` (não força a posição pra cima — respeita onde o usuário está).
-- Coalescing extra: throttle do `triggerLoad` via `lastTriggerAtRef` — não dispara se o último trigger foi há < 250ms (defesa contra micro-scrolls).
+- Importar helpers acima.
+- `callApi`:
+  - Após resolver `opts`, calcular:
+    ```ts
+    const userKey = normalizeIdempotencyKey(opts.idempotencyKey);
+    // Para POST sem chave do usuário: deriva uma estável do payload (somente para dedupeKey local; NÃO vai pro header automaticamente — manteria comportamento atual de não enviar Idempotency-Key sem opt-in).
+    const derivedKey = !userKey && method === 'POST'
+      ? await deriveIdempotencyKey(action, body)
+      : undefined;
+    const effectiveKey = userKey ?? derivedKey;
+    ```
+  - `canRetry`: agora `IDEMPOTENT_METHODS.has(method) || !!userKey` (somente userKey habilita retry de POST — preserva semântica atual; `derivedKey` é só pra dedupe in-flight, não pra retry, evitando re-entregas inadvertidas).
+  - `dedupeKey`: `${method}:${action}:${effectiveKey ?? ''}` quando `effectiveKey` existe; vazio caso contrário.
+  - `invokeOpts.headers['Idempotency-Key'] = userKey` somente se `userKey` (não derivado).
+- Tratamento async: `callApi` já é async, `await deriveIdempotencyKey` antes do `inflightRef.get/set` é seguro (mas precisa garantir que a checagem `inflightRef.get(dedupeKey)` aconteça **depois** do await — código já segue essa ordem no patch).
+- Logar via `log.debug` quando truncar/sanitizar uma `userKey` (mostra prefixo + tamanho original) — útil pra detectar callers passando lixo.
 
-### Detalhes técnicos
+**3. Testes — `src/lib/__tests__/idempotency.test.ts`**
 
-- `AbortController` é nativo, não precisa de polyfill.
-- `queryExternalProxy` já usa `fetch` — só passar `{ signal }` no init.
-- `AbortError` precisa ser detectado por `error.name === 'AbortError'` (não `instanceof`) pra cobrir DOMException no Safari.
-- O `setLoadingOlder(false)` deve rodar tanto no abort quanto no success — usar `finally` no `loadOlder`.
-- Para o caso de prepend cancelado a meio caminho (rede já voltou): o `setMessages` no `then` precisa checar `if (controller.signal.aborted) return` antes de fazer merge.
+- `stableStringify`: ordem de chaves consistente; nested; arrays preservados; `undefined` removido.
+- `sha256Hex`: tamanho 64 hex; determinístico; mudou input → mudou output.
+- `normalizeIdempotencyKey`:
+  - undefined → undefined; "" → undefined; "   " → undefined.
+  - "abc" → "abc".
+  - emoji/acento → `_`.
+  - 200 chars → 128 chars terminados em `:h<12hex>`.
+  - duas chaves longas com mesmo prefixo de 128 mas sufixos diferentes → resultado diferente (graças ao hash sufixo).
+- `deriveIdempotencyKey`: `{a:1,b:2}` e `{b:2,a:1}` produzem mesma chave; payload diferente → chave diferente; prefixo `auto_`; tamanho ≤ 30.
 
-### Comportamento esperado
+### Compatibilidade
 
-| Cenário | Antes | Depois |
-|---|---|---|
-| Sobe rápido até topo, fica parado | 1 fetch | 1 fetch |
-| Sobe → desce antes de terminar | Fetch completa, prepend força ancoragem pra trás | Fetch abortado, sem prepend, scroll mantido onde usuário está |
-| Sobe rápido, dispara 3x | 1 fetch (guard ref) | 1 fetch (guard ref + 250ms throttle) |
-| Troca de conversa durante loadOlder | Fetch órfão termina e suja state | Cleanup do effect aborta no unmount |
+- Callers atuais não passam `idempotencyKey` → comportamento muda apenas no `dedupeKey` interno (passa a usar hash estável em vez de `JSON.stringify` cru). Sem mudança na API pública nem em retry semantics.
+- Callers que passam `idempotencyKey` ganham sanitização automática (header HTTP fica garantidamente válido).
+- Nenhum impacto em edge functions (lado servidor).
 
 ### Arquivos editados
 
-- `src/lib/externalProxy.ts`
-- `src/hooks/useExternalEvolution.ts`
-- `src/hooks/useRealtimeInbox.ts`
-- `src/components/inbox/ChatPanel.tsx`
-- `src/components/inbox/RealtimeInboxView.tsx`
-- `src/components/inbox/chat/ChatMessagesArea.tsx`
+- `src/lib/idempotency.ts` (novo)
+- `src/hooks/evolution/useEvolutionApiCore.ts`
+- `src/lib/__tests__/idempotency.test.ts` (novo)
 
 ### Fora de escopo
 
-- Não toco no polling forward (`pollNewMessages`) — já é incremental e leve.
-- Sem mudança no proxy (Edge Function) — abort é client-side; o servidor termina sozinho.
+- Não muda contrato server-side (edge function não passa a exigir/validar header).
+- Não introduz dedupe persistente cross-tab (segue per-isolate via `inflightRef`).
+- Não toca em `evolutionSendRetry.ts` (caminho separado, sem header de idempotência).
 
