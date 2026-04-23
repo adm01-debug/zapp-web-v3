@@ -66,6 +66,7 @@ interface RpcRow extends FailedMessageRow {
 
 export function useFailedMessages(filters: FailedMessagesFilters = {}) {
   const queryClient = useQueryClient();
+  const { isAdmin } = useUserRole();
   const {
     hours = 24,
     status = null,
