@@ -71,7 +71,7 @@ describe('useRealtimeContacts', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
-    capturedHandler = null;
+    mocks.state.handler = null;
     qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   });
 
@@ -81,8 +81,8 @@ describe('useRealtimeContacts', () => {
 
   it('subscribes to the per-instance channel on mount', () => {
     renderHook(() => useRealtimeContacts({ instance: 'wpp2' }), { wrapper: makeWrapper(qc) });
-    expect(channelFn).toHaveBeenCalledWith('realtime:evolution_contacts:wpp2');
-    expect(channelOn).toHaveBeenCalledWith(
+    expect(mocks.channelFn).toHaveBeenCalledWith('realtime:evolution_contacts:wpp2');
+    expect(mocks.channelOn).toHaveBeenCalledWith(
       'postgres_changes',
       expect.objectContaining({
         event: '*',
@@ -92,18 +92,18 @@ describe('useRealtimeContacts', () => {
       }),
       expect.any(Function),
     );
-    expect(channelSubscribe).toHaveBeenCalled();
+    expect(mocks.channelSubscribe).toHaveBeenCalled();
   });
 
   it('does not subscribe when disabled', () => {
     renderHook(() => useRealtimeContacts({ enabled: false }), { wrapper: makeWrapper(qc) });
-    expect(channelFn).not.toHaveBeenCalled();
+    expect(mocks.channelFn).not.toHaveBeenCalled();
   });
 
   it('ignores payloads from other instances', () => {
     renderHook(() => useRealtimeContacts({ instance: 'wpp2' }), { wrapper: makeWrapper(qc) });
     const invalidate = vi.spyOn(qc, 'invalidateQueries');
-    capturedHandler!({
+    mocks.state.handler!({
       eventType: 'UPDATE',
       new: makeContact({ instance_name: 'other' }),
       old: null,
@@ -115,7 +115,7 @@ describe('useRealtimeContacts', () => {
   it('ignores broadcast JIDs', () => {
     renderHook(() => useRealtimeContacts({ instance: 'wpp2' }), { wrapper: makeWrapper(qc) });
     const invalidate = vi.spyOn(qc, 'invalidateQueries');
-    capturedHandler!({
+    mocks.state.handler!({
       eventType: 'UPDATE',
       new: makeContact({ remote_jid: 'status@broadcast' }),
       old: null,
@@ -127,7 +127,7 @@ describe('useRealtimeContacts', () => {
   it('UPDATE invalidates conversations cache after debounce when no list entry', () => {
     renderHook(() => useRealtimeContacts({ instance: 'wpp2' }), { wrapper: makeWrapper(qc) });
     const invalidate = vi.spyOn(qc, 'invalidateQueries');
-    capturedHandler!({ eventType: 'UPDATE', new: makeContact(), old: null });
+    mocks.state.handler!({ eventType: 'UPDATE', new: makeContact(), old: null });
     expect(invalidate).not.toHaveBeenCalled();
     vi.advanceTimersByTime(100);
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['external-evolution', 'conversations'] });
@@ -136,7 +136,7 @@ describe('useRealtimeContacts', () => {
   it('UPDATE patches individual contact cache in place', () => {
     qc.setQueryData(['contact', '5511999999999@s.whatsapp.net'], makeContact({ push_name: 'Old' }));
     renderHook(() => useRealtimeContacts({ instance: 'wpp2' }), { wrapper: makeWrapper(qc) });
-    capturedHandler!({
+    mocks.state.handler!({
       eventType: 'UPDATE',
       new: makeContact({ push_name: 'NewName' }),
       old: null,
@@ -149,7 +149,7 @@ describe('useRealtimeContacts', () => {
   it('soft delete invalidates the list', () => {
     renderHook(() => useRealtimeContacts({ instance: 'wpp2' }), { wrapper: makeWrapper(qc) });
     const invalidate = vi.spyOn(qc, 'invalidateQueries');
-    capturedHandler!({
+    mocks.state.handler!({
       eventType: 'UPDATE',
       new: makeContact({ deleted_at: '2025-01-02T00:00:00Z' }),
       old: null,
@@ -161,9 +161,9 @@ describe('useRealtimeContacts', () => {
   it('coalesces multiple updates within debounce window', () => {
     renderHook(() => useRealtimeContacts({ instance: 'wpp2' }), { wrapper: makeWrapper(qc) });
     const invalidate = vi.spyOn(qc, 'invalidateQueries');
-    capturedHandler!({ eventType: 'UPDATE', new: makeContact({ push_name: 'A' }), old: null });
-    capturedHandler!({ eventType: 'UPDATE', new: makeContact({ push_name: 'B' }), old: null });
-    capturedHandler!({ eventType: 'UPDATE', new: makeContact({ push_name: 'C' }), old: null });
+    mocks.state.handler!({ eventType: 'UPDATE', new: makeContact({ push_name: 'A' }), old: null });
+    mocks.state.handler!({ eventType: 'UPDATE', new: makeContact({ push_name: 'B' }), old: null });
+    mocks.state.handler!({ eventType: 'UPDATE', new: makeContact({ push_name: 'C' }), old: null });
     vi.advanceTimersByTime(100);
     // Single coalesced flush -> conversations invalidate fired once
     const calls = invalidate.mock.calls.filter(
@@ -180,6 +180,6 @@ describe('useRealtimeContacts', () => {
       wrapper: makeWrapper(qc),
     });
     unmount();
-    expect(removeChannel).toHaveBeenCalled();
+    expect(mocks.removeChannel).toHaveBeenCalled();
   });
 });
