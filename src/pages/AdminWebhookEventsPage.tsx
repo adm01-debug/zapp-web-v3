@@ -195,15 +195,32 @@ export default function AdminWebhookEventsPage() {
             CHATS, CALL, LABELS, mensagens e conexão) por instância e período.
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isRefetching}
-        >
-          <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(v) => v && setViewMode(v as 'events' | 'calls')}
+            size="sm"
+          >
+            <ToggleGroupItem value="events" aria-label="Lista de eventos">
+              <List className="h-4 w-4 mr-1.5" />
+              Eventos
+            </ToggleGroupItem>
+            <ToggleGroupItem value="calls" aria-label="Correlação por call">
+              <PhoneCall className="h-4 w-4 mr-1.5" />
+              Por Call
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+          >
+            <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
+            Atualizar
+          </Button>
+        </div>
       </header>
 
       {/* KPI Cards */}
