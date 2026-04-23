@@ -23,7 +23,6 @@ const EXPECTED_REALTIME_CONSUMERS: string[] = [
   'src/hooks/useRealtimeMessages.ts',
   'src/hooks/useMessages.ts',
   'src/hooks/useMessageStatus.ts',
-  'src/hooks/realtime/useRealtimeNotifications.ts',
   'src/hooks/useTranscriptionNotifications.ts',
   'src/hooks/useRealtimeDashboard.ts',
   'src/components/monitoring/hooks/useEvolutionMonitoring.ts',

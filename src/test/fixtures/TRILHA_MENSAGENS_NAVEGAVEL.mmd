@@ -80,7 +80,6 @@ flowchart LR
   DB -.->|INSERT/UPDATE/DELETE| URM
   DB -.->|INSERT/UPDATE/DELETE| UM
   DB -.->|UPDATE status| UMS
-  DB -.->|INSERT novas| URN
   DB -.->|UPDATE transcription| UTN
   DB -.->|INSERT KPIs| URD
   DB -.->|INSERT health| UEM
@@ -132,13 +131,12 @@ flowchart LR
 %%   ==>   escrita persistente em DB
 %%   -.->  evento realtime / pub-sub in-memory
 %%   -..-> enqueue assincrona (DLQ)
-%% Fan-out realtime (postgres_changes 'messages'): 8 consumidores diretos
+%% Fan-out realtime (postgres_changes 'messages'): 7 consumidores diretos
 %%   1. useRealtimeMessages — feed global do inbox (INSERT/UPDATE/DELETE)
 %%   2. useMessages         — lista por contato aberto (INSERT/UPDATE/DELETE)
 %%   3. useMessageStatus    — status sent/delivered/read por mensagem (UPDATE)
-%%   4. useRealtimeNotifications — toasts/badges de novas mensagens (INSERT)
-%%   5. useTranscriptionNotifications — alerta quando transcricao conclui (UPDATE)
-%%   6. useRealtimeDashboard — KPIs em tempo real (INSERT)
-%%   7. useEvolutionMonitoring — saude do webhook/instancia (INSERT)
-%%   8. AudioMessagePlayer  — refresh de media_url assinada (UPDATE)
+%%   4. useTranscriptionNotifications — alerta quando transcricao conclui (UPDATE)
+%%   5. useRealtimeDashboard — KPIs em tempo real (INSERT)
+%%   6. useEvolutionMonitoring — saude do webhook/instancia (INSERT)
+%%   7. AudioMessagePlayer  — refresh de media_url assinada (UPDATE)
 %% Gerado: 23/abr/2026 — escopo trilha de mensagens (send -> batching -> delivery)
