@@ -9494,6 +9494,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_dlq_abandon: {
+        Args: { p_id: string; p_reason: string }
+        Returns: boolean
+      }
+      rpc_dlq_bulk_abandon: {
+        Args: { p_ids: string[]; p_reason: string }
+        Returns: number
+      }
+      rpc_dlq_retry_now: { Args: { p_id: string }; Returns: boolean }
+      rpc_dlq_stats: { Args: never; Returns: Json }
       rpc_instance_auth_event_summary: {
         Args: { p_hours?: number; p_instance?: string }
         Returns: Json
@@ -9507,6 +9517,35 @@ export type Database = {
           instance_name: string
           invalid_signature: number
           total: number
+        }[]
+      }
+      rpc_list_failed_messages: {
+        Args: {
+          p_from?: string
+          p_instance?: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_status?: string[]
+          p_to?: string
+        }
+        Returns: {
+          created_at: string
+          error_code: string
+          error_message: string
+          http_status: number
+          id: string
+          instance_name: string
+          last_attempt_at: string
+          max_retries: number
+          next_attempt_at: string
+          payload: Json
+          remote_jid: string
+          retry_count: number
+          status: string
+          succeeded_at: string
+          total_count: number
+          updated_at: string
         }[]
       }
       rpc_log_search_event: {
