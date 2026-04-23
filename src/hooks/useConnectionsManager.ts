@@ -29,6 +29,10 @@ export interface QrCodeDialogState {
   qrCode: string | null;
   status: 'loading' | 'pending' | 'connected' | 'error';
   errorMessage?: string;
+  /** Unix ms when current QR expires. null when not pending. */
+  expiresAt: number | null;
+  /** id of the qr_attempts row tied to current QR (for expiration update). */
+  attemptId: string | null;
 }
 
 const INITIAL_QR_STATE: QrCodeDialogState = {
@@ -37,7 +41,63 @@ const INITIAL_QR_STATE: QrCodeDialogState = {
   connectionName: '',
   qrCode: null,
   status: 'loading',
+  expiresAt: null,
+  attemptId: null,
 };
+
+const QR_TTL_MS = 60_000;
+const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
+
+interface PersistedQrState {
+  connectionId: string;
+  connectionName: string;
+  qrCode: string | null;
+  status: 'loading' | 'pending' | 'connected' | 'error';
+  expiresAt: number | null;
+  attemptId: string | null;
+  errorMessage?: string;
+}
+
+function loadPersistedQr(): PersistedQrState | null {
+  try {
+    const raw = sessionStorage.getItem(QR_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedQrState;
+    // discard if already expired
+    if (parsed.status === 'pending' && parsed.expiresAt && parsed.expiresAt <= Date.now()) {
+      sessionStorage.removeItem(QR_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function savePersistedQr(state: QrCodeDialogState) {
+  try {
+    if (!state.open || state.status === 'connected') {
+      sessionStorage.removeItem(QR_STORAGE_KEY);
+      return;
+    }
+    const payload: PersistedQrState = {
+      connectionId: state.connectionId,
+      connectionName: state.connectionName,
+      qrCode: state.qrCode,
+      status: state.status,
+      expiresAt: state.expiresAt,
+      attemptId: state.attemptId,
+      errorMessage: state.errorMessage,
+    };
+    sessionStorage.setItem(QR_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore storage errors (quota, private mode)
+  }
+}
+
+function clearPersistedQr() {
+  try { sessionStorage.removeItem(QR_STORAGE_KEY); } catch { /* noop */ }
+}
 
 export function useConnectionsManager() {
   const [connections, setConnections] = useState<WhatsAppConnection[]>([]);
