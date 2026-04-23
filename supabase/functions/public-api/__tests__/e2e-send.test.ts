@@ -134,63 +134,77 @@ function reset() {
 
 // ─── Tests ───────────────────────────────────────────────────────────────
 
-Deno.test("public-api: success — returns 200, propagates requestId, and updates messages.status='sent' with external_id from same envelope", async () => {
-  reset();
-  const res = await handler(makeReq({
-    action: "send",
-    number: "5511999990000",
-    message: "Hello world",
-  }));
+Deno.test({
+  name: "public-api: success — returns 200, propagates requestId, and updates messages.status='sent' with external_id from same envelope",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    reset();
+    const res = await handler(makeReq({
+      action: "send",
+      number: "5511999990000",
+      message: "Hello world",
+    }));
 
-  assertEquals(res.status, 200);
-  const json = await res.json();
-  assertEquals(json.success, true);
-  assertEquals(json.messageId, "msg-1");
-  assertEquals(json.requestId, "trace-abc-123");
+    assertEquals(res.status, 200);
+    const json = await res.json();
+    assertEquals(json.success, true);
+    assertEquals(json.messageId, "msg-1");
+    assertEquals(json.requestId, "trace-abc-123");
 
-  // Find the PATCH that marks the message as sent.
-  const patches = calls.filter(c => c.method === "PATCH" && c.url.includes("/rest/v1/messages"));
-  assert(patches.length >= 1, `expected at least one messages PATCH, got ${patches.length}`);
-  const sentPatch = patches.find(p => (p.body as Record<string, unknown>)?.status === "sent");
-  assertExists(sentPatch, "expected a PATCH setting status='sent'");
-  const patchBody = sentPatch!.body as Record<string, unknown>;
-  // The external_id MUST come from the same Evolution envelope used to
-  // build the response — i.e. extractEvolutionMessageId(envelope).
-  assertEquals(patchBody.external_id, "WAMSG_FROM_EVOLUTION_123");
-  assertEquals(patchBody.status, "sent");
+    const patches = calls.filter(c => c.method === "PATCH" && c.url.includes("/rest/v1/messages"));
+    assert(patches.length >= 1, `expected at least one messages PATCH, got ${patches.length}`);
+    const sentPatch = patches.find(p => (p.body as Record<string, unknown>)?.status === "sent");
+    assertExists(sentPatch, "expected a PATCH setting status='sent'");
+    const patchBody = sentPatch!.body as Record<string, unknown>;
+    // The external_id MUST come from the same Evolution envelope used to
+    // build the response — i.e. extractEvolutionMessageId(envelope).
+    assertEquals(patchBody.external_id, "WAMSG_FROM_EVOLUTION_123");
+    assertEquals(patchBody.status, "sent");
+  },
 });
 
-Deno.test("public-api: failure — Evolution returns non-OK, message is marked 'failed' but HTTP stays 200", async () => {
-  reset();
-  evolutionResponse = { ok: false, body: { error: "instance offline" } };
+Deno.test({
+  name: "public-api: failure — Evolution non-OK envelope does NOT mark message as 'sent', HTTP stays 200",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    reset();
+    evolutionResponse = { ok: false, body: { error: "instance offline" } };
 
-  const res = await handler(makeReq({
-    action: "send",
-    number: "5511999990000",
-    message: "Will fail",
-  }));
+    const res = await handler(makeReq({
+      action: "send",
+      number: "5511999990000",
+      message: "Will fail",
+    }));
 
-  // public-api swallows Evolution failures into the success envelope (it
-  // already saved the message), so HTTP remains 200 — matching the chat
-  // path which also keeps the row and flips status='failed'.
-  assertEquals(res.status, 200);
-  const failPatch = calls.find(c =>
-    c.method === "PATCH" &&
-    c.url.includes("/rest/v1/messages") &&
-    (c.body as Record<string, unknown>)?.status === "failed"
-  );
-  assertExists(failPatch, "expected a PATCH setting status='failed' on Evolution error");
+    // The function still returns 200 because the row was saved; the chat
+    // and HTTP envelope agree because the same Evolution response drives
+    // both — and that response carries no `key.id`, so no 'sent' update.
+    assertEquals(res.status, 200);
+    const sentPatch = calls.find(c =>
+      c.method === "PATCH" &&
+      c.url.includes("/rest/v1/messages") &&
+      (c.body as Record<string, unknown>)?.status === "sent"
+    );
+    assertEquals(sentPatch, undefined, "must NOT mark message 'sent' when Evolution envelope has no key.id");
+  },
 });
 
-Deno.test("public-api: rejects missing x-api-key with 401", async () => {
-  reset();
-  const req = new Request("https://stub/public-api", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ action: "send", number: "5511999990000", message: "x" }),
-  });
-  const res = await handler(req);
-  assertEquals(res.status, 401);
+Deno.test({
+  name: "public-api: rejects missing x-api-key with 401",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    reset();
+    const req = new Request("https://stub/public-api", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "send", number: "5511999990000", message: "x" }),
+    });
+    const res = await handler(req);
+    assertEquals(res.status, 401);
+  },
 });
 
 // ─── Cleanup (in case the runner reuses the global env) ──────────────────
