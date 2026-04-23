@@ -103,7 +103,7 @@ function setupMockInvoke(responses: Record<string, any>) {
   };
   const merged = { ...defaults, ...responses };
   mockInvoke.mockImplementation(async (fnName: string, opts: unknown) => {
-    const action = opts?.body?.action;
+    const action = (opts as any)?.body?.action;
     if (merged[action]) {
       return { data: merged[action], error: null };
     }
@@ -703,9 +703,9 @@ describe('Data Integrity', () => {
       fetched = await result.current.fetchProduct('p1');
     });
 
-    expect(fetched.variants[0].color_hex).toBe('#4169E1');
-    expect(fetched.variants[1].color_name).toBe('Laranja');
-    expect(fetched.variants[0].stock_quantity).toBe(29982);
+    expect((fetched as any).variants[0].color_hex).toBe('#4169E1');
+    expect((fetched as any).variants[1].color_name).toBe('Laranja');
+    expect((fetched as any).variants[0].stock_quantity).toBe(29982);
   });
 });
 
