@@ -448,26 +448,55 @@ export default function AdminFailedMessagesPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Details dialog */}
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Detalhes da falha</DialogTitle>
-            <DialogDescription>
-              {selected && `${selected.instance_name} → ${shortJid(selected.remote_jid)}`}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Details drawer (Sheet right) */}
+      <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Detalhes da falha</SheetTitle>
+            <SheetDescription>
+              {selected && (
+                <span className="font-mono text-xs">
+                  {selected.instance_name} → {shortJid(selected.remote_jid)}
+                </span>
+              )}
+            </SheetDescription>
+          </SheetHeader>
           {selected && (
-            <div className="space-y-4">
+            <div className="space-y-4 mt-4">
+              <div className="flex items-center gap-2">
+                <Badge variant={STATUS_VARIANT[selected.status]}>
+                  {STATUS_LABEL[selected.status]}
+                </Badge>
+                {selected.remote_jid && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selected.remote_jid ?? '');
+                          toast.success('JID copiado');
+                        }}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copiar JID
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{selected.remote_jid}</TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <Field label="Status" value={STATUS_LABEL[selected.status]} />
                 <Field label="HTTP" value={selected.http_status?.toString() ?? '—'} />
                 <Field label="Código de erro" value={selected.error_code ?? '—'} />
                 <Field label="Tentativas" value={`${selected.retry_count}/${selected.max_retries}`} />
+                <Field label="Próximo retry" value={formatDate(selected.next_attempt_at)} />
                 <Field label="Criado" value={formatDate(selected.created_at)} />
                 <Field label="Última tentativa" value={formatDate(selected.last_attempt_at)} />
-                <Field label="Próximo retry" value={formatDate(selected.next_attempt_at)} />
                 <Field label="Concluído em" value={formatDate(selected.succeeded_at)} />
+                <Field label="Atualizado" value={formatDate(selected.updated_at)} />
               </div>
 
               {selected.error_message && (
@@ -488,7 +517,7 @@ export default function AdminFailedMessagesPage() {
                 </ScrollArea>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2 border-t">
                 {(selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
                   <Button
                     variant="outline"
@@ -502,7 +531,11 @@ export default function AdminFailedMessagesPage() {
                 {(selected.status === 'pending' || selected.status === 'retrying') && (
                   <Button
                     variant="destructive"
-                    onClick={() => { abandon.mutate(selected.id); setSelected(null); }}
+                    onClick={() => {
+                      const reason = window.prompt('Motivo do abandono (opcional):') ?? '';
+                      abandon.mutate({ id: selected.id, reason });
+                      setSelected(null);
+                    }}
                     disabled={abandon.isPending}
                   >
                     <Ban className="h-4 w-4 mr-2" />
@@ -512,8 +545,8 @@ export default function AdminFailedMessagesPage() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
