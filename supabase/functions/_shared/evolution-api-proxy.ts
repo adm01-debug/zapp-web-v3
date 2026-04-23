@@ -195,22 +195,6 @@ export async function proxyToEvolution(
     retry_reasons: retryReasons,
     total_duration_ms: Date.now() - startedAt,
   });
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err));
-      if (lastError.name === 'AbortError') {
-        lastError = new Error(`Timeout após ${TIMEOUT_MS / 1000}s aguardando a API Evolution`);
-      }
-      if (attempt >= maxAttempts - 1) break;
-    }
-  }
-
-  const timeoutEnvelope: EvolutionErrorEnvelope = {
-    version: EVOLUTION_ENVELOPE_VERSION,
-    error: true,
-    status: 504,
-    message: `Falha ao conectar com a API Evolution: ${lastError?.message || 'Erro desconhecido'}`,
-    retries: maxAttempts - 1,
-  };
   return new Response(JSON.stringify(timeoutEnvelope), {
     status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
