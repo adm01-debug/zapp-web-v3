@@ -137,7 +137,7 @@ export default function AdminWebhookEventsPage() {
         select: '*',
         filters,
         order: { column: 'created_at', ascending: false },
-        limit: 500,
+        limit: 200,
       });
       return res.data ?? [];
     },
