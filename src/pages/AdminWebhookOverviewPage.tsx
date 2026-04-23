@@ -43,7 +43,9 @@ const RANGE_OPTIONS = [
   { value: '168', label: 'Últimos 7 dias' },
 ] as const;
 
-const HARD_LIMIT = 500;
+// Capped at 200 — the proxy enforces HEAVY_TABLE_MAX_LIMIT=200 anyway.
+// Asking for more just wastes a round-trip and risks Postgres timeouts.
+const HARD_LIMIT = 200;
 
 function formatTime(iso: string | null): string {
   if (!iso) return '—';
