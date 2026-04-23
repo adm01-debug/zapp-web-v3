@@ -75,6 +75,86 @@ describe('normalizeIdempotencyKey', () => {
     const b = normalizeIdempotencyKey('x'.repeat(150) + 'BBB')!;
     expect(a).not.toBe(b);
   });
+
+  // === EDGE CASES ===
+
+  describe('internal whitespace', () => {
+    it('replaces internal spaces with _', () => {
+      const out = normalizeIdempotencyKey('hello world key')!;
+      expect(out).toBe('hello_world_key');
+    });
+
+    it('replaces tabs and newlines with _', () => {
+      const out = normalizeIdempotencyKey('a\tb\nc\rd')!;
+      expect(out).toBe('a_b_c_d');
+    });
+
+    it('trims outer whitespace but preserves internal as _', () => {
+      const out = normalizeIdempotencyKey('  hello world  ')!;
+      expect(out).toBe('hello_world');
+    });
+
+    it('collapses keys that are only whitespace into undefined', () => {
+      expect(normalizeIdempotencyKey('\t\n\r ')).toBeUndefined();
+    });
+  });
+
+  describe('strings with only forbidden characters', () => {
+    it('converts emoji-only string into all underscores', () => {
+      const out = normalizeIdempotencyKey('🎉🎊✨')!;
+      expect(out).toBeDefined();
+      expect(out).toMatch(/^_+$/);
+    });
+
+    it('converts non-ASCII letter-only string into all underscores', () => {
+      const out = normalizeIdempotencyKey('ção')!;
+      expect(out).toMatch(/^_+$/);
+      expect(out.length).toBe(3);
+    });
+
+    it('handles single forbidden char', () => {
+      expect(normalizeIdempotencyKey('é')).toBe('_');
+    });
+  });
+
+  describe('boundary around 128-char limit', () => {
+    it('passes through unchanged at exactly 128 chars', () => {
+      const input = 'a'.repeat(128);
+      const out = normalizeIdempotencyKey(input)!;
+      expect(out).toBe(input);
+      expect(out.length).toBe(128);
+      expect(out).not.toMatch(/:h[0-9a-f]+$/);
+    });
+
+    it('passes through unchanged at 127 chars', () => {
+      const input = 'a'.repeat(127);
+      const out = normalizeIdempotencyKey(input)!;
+      expect(out).toBe(input);
+      expect(out.length).toBe(127);
+    });
+
+    it('truncates with hash suffix at 129 chars', () => {
+      const input = 'a'.repeat(129);
+      const out = normalizeIdempotencyKey(input)!;
+      expect(out.length).toBeLessThanOrEqual(128);
+      expect(out).toMatch(/:h[0-9a-f]+$/);
+    });
+
+    it('keeps unique suffixes for inputs differing only past the limit', () => {
+      const a = normalizeIdempotencyKey('a'.repeat(128) + 'X')!;
+      const b = normalizeIdempotencyKey('a'.repeat(128) + 'Y')!;
+      expect(a).not.toBe(b);
+      expect(a.length).toBeLessThanOrEqual(128);
+      expect(b.length).toBeLessThanOrEqual(128);
+    });
+
+    it('truncated output preserves head prefix from original', () => {
+      const input = 'prefix-' + 'a'.repeat(200);
+      const out = normalizeIdempotencyKey(input)!;
+      expect(out.startsWith('prefix-')).toBe(true);
+      expect(out.length).toBeLessThanOrEqual(128);
+    });
+  });
 });
 
 describe('deriveIdempotencyKey', () => {
