@@ -1,71 +1,81 @@
 
 
-## Painel: Consolidação de eventos de webhook (24h) por tipo + instance
+## Filtros por instância: Webhook Status + Assinatura validada
 
 ### Contexto
 
-Hoje temos `AdminWebhookEventsPage` (log auditável evento-a-evento) e `AdminWebhookSecretStatusPage` (saúde da assinatura). Falta uma **visão de overview agregada**: quantos eventos de cada tipo (`MESSAGES_UPSERT`, `PRESENCE_UPDATE`, `CALL`, etc.) processados nas últimas 24h, com fatiamento por `instance_name` — útil para ver volume, distribuição e gargalos sem ler 500 linhas.
+Hoje temos duas páginas admin separadas:
 
-### Decisão
+- **`AdminWebhookSecretStatusPage`** — mostra a saúde da assinatura HMAC (taxa de validação) **agregada globalmente**, sem fatiar por instância.
+- **`AdminWebhookOverviewPage`** — mostra contagem de eventos processados/pendentes/errored, com filtro de instância já existente.
 
-Criar `AdminWebhookOverviewPage` (rota nova `webhook-overview`) que:
-- Lê de `evolution_webhook_events` via `queryExternalProxy` (mesma stack do log existente).
-- Agrega client-side: contagem por `event_type` × `instance_name`, processados vs erros, série temporal por hora.
-- Filtros: período (1h / 6h / 24h / 7d, default 24h), instance (`all` ou seleção), incluir/excluir `processed=false`.
-- Auto-refresh 60s (mesmo do log).
+Falta: poder filtrar a página de **assinatura validada** por instância específica (ex.: "qual a taxa de validação só para `wpp2`?") e exibir, na mesma tela, o status atual do webhook (último evento, erros recentes, latência) também fatiado por instância.
 
-### Arquivos
+### O que vai ser construído
 
-**Criados (2):**
+#### 1. Filtro de instância em `AdminWebhookSecretStatusPage`
 
-1. `src/pages/AdminWebhookOverviewPage.tsx` (~280 linhas) — página principal:
-   - Header com título, refresh button e seletor de período + instance.
-   - **4 KPIs no topo** (cards): total de eventos, processados, com erro (com %), instâncias ativas.
-   - **Gráfico 1 — Barras horizontais** "Top eventos por tipo": usa `recharts BarChart` com lista de `event_type` ordenada por contagem desc, cores por categoria (mensagens=primary, conexão=warning, presença=muted, erro=destructive).
-   - **Gráfico 2 — Heatmap/tabela** "Tipo × Instance": tabela densa com `event_type` nas linhas e `instance_name` nas colunas, célula com contagem + cor de intensidade (`bg-primary/[opacidade]`). Para 1 instância só, vira coluna única.
-   - **Gráfico 3 — Série temporal** "Volume por hora": `AreaChart` empilhado mostrando processados vs erros nas últimas N horas (bucket de 1h se ≤24h, 6h se 7d).
-   - **Tabela "Detalhamento por tipo"**: `event_type`, total, processados, erros, % erro, último evento (timestamp), com badge colorido de severidade quando erro >5%.
-   - Estado vazio padrão (`GenericEmptyState`) e loading com skeleton.
+- Adicionar `<Select>` no header da página com lista de instâncias (carregadas via `aggregateByTypeAndInstance` sobre `evolution_webhook_events` recentes, igual ao Overview já faz) + opção "Todas".
+- Persistir seleção via `useUrlFilters` (param `?instance=wpp2`) para permitir compartilhar URL.
+- Aplicar o filtro nas queries que alimentam:
+  - **Taxa de validação HMAC** — filtrar `evolution_webhook_events.instance_name = X` antes de calcular `validated/total`.
+  - **Distribuição por header de assinatura** — mesma filtragem.
+  - **Janela 24h vs 7d** — manter, mas já fatiada por instância.
 
-2. `src/pages/admin-webhook-overview/aggregations.ts` (~80 linhas) — helpers puros testáveis:
-   - `aggregateByType(rows): Array<{type, total, processed, errored, lastAt}>`.
-   - `aggregateByTypeAndInstance(rows): { types: string[]; instances: string[]; matrix: Record<string, Record<string, number>> }`.
-   - `aggregateHourly(rows, hours): Array<{ bucket: string; processed: number; errored: number }>`.
-   - `categoryColor(eventType): string` — mapa para tokens semânticos (sem cores hardcoded).
+#### 2. Novo painel "Status atual do webhook" (por instância)
 
-**Editados (3):**
+Adicionar Card no topo da página com 3 KPIs vivos:
 
-3. `src/pages/ViewRouter.tsx` — adicionar `'webhook-overview': Views.AdminWebhookOverviewPage`.
+- **Último evento recebido** — timestamp + tipo + relativo ("há 12s").
+- **Eventos últimos 5min** — com mini-sparkline processed vs errored.
+- **Latência média de processamento** — `avg(processed_at - created_at)` da última hora.
 
-4. `src/pages/index.ts` (ou onde `Views.*` é exportado — confirmar via search) — exportar lazy `AdminWebhookOverviewPage`.
+Tudo fatiado pela instância selecionada (ou "todas" se nenhum filtro).
 
-5. `src/config/sidebarNavConfig.ts` — adicionar item de navegação no grupo Admin/Monitoring (depois de "Eventos do Webhook"), label "Overview Webhook", icon `BarChart3`, role `admin/supervisor`.
+Fonte: query única em `evolution_webhook_events` filtrada por `created_at > now() - interval '1 hour'`, agregação client-side (mesmo padrão do Overview, dentro do limite de 500 rows).
 
-**Criado (1) — testes:**
+#### 3. Tabela "Por instância" (quando filtro = "Todas")
 
-6. `src/pages/admin-webhook-overview/__tests__/aggregations.test.ts` — vitest:
-   - `aggregateByType` conta corretamente, separa processed/errored, pega último timestamp.
-   - `aggregateByTypeAndInstance` cria matriz correta com instâncias dedupadas.
-   - `aggregateHourly` cria buckets corretos (24 buckets para 24h, 7 para 7d).
-   - `categoryColor` retorna tokens conhecidos por grupo.
-   - Edge cases: array vazio retorna estruturas vazias válidas.
+Quando nenhuma instância específica estiver selecionada, mostrar tabela compacta:
+
+```text
+Instance   | Total 24h | Validados | % Válido | Último evento | Status
+wpp2       | 12.430    | 12.428    | 99.98%   | há 3s         | 🟢
+wpp_backup | 0         | 0         | —        | há 6h         | 🔴
+```
+
+Clicar numa linha aplica o filtro daquela instância (atualiza `?instance=` na URL).
 
 ### Detalhes técnicos
 
-- **Fonte de dados**: `queryExternalProxy({ table: 'evolution_webhook_events', ..., limit: 500 })` — mesma fonte do log auditável. Limite de 500 é suficiente para 24h em volume normal; quando filtro for 7d, sinalizar com aviso "amostra das 500 mais recentes" se `rows.length === 500`.
-- **Filtro por instance**: lista de instâncias é derivada do próprio resultado (`Array.from(new Set(rows.map(r => r.instance_name)))`) — sem query extra. Default: `'all'`.
-- **Cores**: usar tokens semânticos (`primary`, `warning`, `destructive`, `muted`) via Tailwind. Sem cores hardcoded (memória `style/design-system-and-skins`).
-- **Recharts**: já está no projeto (`TelemetryCharts` usa). Reuso de padrões do `TelemetryCharts.tsx` (formatBucketTime, AreaChart stacked).
-- **Acessibilidade**: tabela heatmap com `<caption>` para screen readers, células com `title` mostrando "TIPO em INSTANCE: N eventos". Teclado natural.
-- **Performance**: agregações em `useMemo`, dados de Recharts só recalculados quando `data` muda. Sem realtime (auto-refresh 60s já é responsivo).
-- **RLS**: `evolution_webhook_events` é leitura via proxy admin existente — sem mudança de policy.
-- **Sem mudanças em edge functions**: 100% frontend.
+**Arquivos a criar:**
+
+- `src/pages/admin-webhook-secret-status/instanceAggregations.ts` — funções puras `aggregateValidationByInstance(rows)`, `computeInstanceStatus(rows, instance)`, `computeLatencyStats(rows)`. Espelha o padrão de `admin-webhook-overview/aggregations.ts` (testável isoladamente).
+- `src/pages/admin-webhook-secret-status/InstanceFilterSelect.tsx` — Select com lista de instâncias derivada da query principal + opção "Todas".
+- `src/pages/admin-webhook-secret-status/InstanceStatusCards.tsx` — 3 cards de KPI (último evento / 5min / latência).
+- `src/pages/admin-webhook-secret-status/InstanceBreakdownTable.tsx` — tabela "Por instância" com sort por % válido.
+- `src/pages/admin-webhook-secret-status/__tests__/instanceAggregations.test.ts` — Vitest para as funções puras.
+
+**Arquivos a editar:**
+
+- `src/pages/AdminWebhookSecretStatusPage.tsx`:
+  - Importar `useUrlFilters` para ler/gravar `?instance=`.
+  - Aplicar filtro `instance_name = X` na query principal de `evolution_webhook_events` quando definido.
+  - Renderizar `InstanceFilterSelect` no header, `InstanceStatusCards` acima da seção HMAC, `InstanceBreakdownTable` quando filtro = "Todas".
+  - Atualizar título de seções existentes para refletir escopo ("Taxa de validação HMAC — wpp2" vs "Taxa global").
+
+**Padrões respeitados:**
+
+- Reuso de `useUrlFilters` (memória `architecture/data-fetching`) para sincronia URL ↔ estado.
+- RPC-first (memória `integrations/fator-x/data-access-standard`): se houver volume, considerar pedir RPC `rpc_webhook_health_by_instance` ao operador FATOR X num próximo lote — por ora, agregação client-side dentro do limite de 500 rows como no Overview.
+- Sem export CSV (Zero Export).
+- Sem hardcoded colors — usar tokens semânticos (`text-success`, `text-warning`, `text-destructive`).
+- Tipagem estrita, max ~340 linhas/arquivo, `log` de `@/lib/logger` para erros.
 
 ### Fora de escopo
 
-- Não substituir `AdminWebhookEventsPage` (log auditável continua sendo a referência drill-down).
-- Não criar RPC dedicada de agregação (`rpc_webhook_stats`) — manter agregação client-side enquanto volume couber em 500 rows. Se virar gargalo, vira lote dedicado pedindo RPC ao operador FATOR X.
-- Sem alertas/notificações automáticas (próximo lote pode plugar no `useWarRoomAlerts`).
-- Sem export CSV (regra Zero Export do projeto — memória `security/data-export-and-protection-policy`).
-- Sem dashboard combinado com `useEvolutionMonitoring` — esse é específico de webhook events; conexões/health continuam em `EvolutionMonitoringDashboard`.
+- Criação de RPC dedicada no FATOR X (mantém agregação client-side; revisitar se virar gargalo).
+- Alertas automáticos quando uma instância cai abaixo de threshold de validação (próximo lote pode plugar em `useWarRoomAlerts`).
+- Histórico longitudinal por instância (>7d) — fora do escopo desta página.
+- Comparação multi-instância em gráfico empilhado — pode virar enhancement futuro.
 
