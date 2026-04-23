@@ -5,6 +5,7 @@ import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { toast } from 'sonner';
 import { validateFile, FileValidationResult } from '@/utils/whatsappFileTypes';
 import { compressImage, formatCompressionInfo } from '@/utils/imageCompression';
+import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 
 interface FileMessageData {
   mediaUrl?: string;
