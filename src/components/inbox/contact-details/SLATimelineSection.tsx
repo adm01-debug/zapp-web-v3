@@ -208,13 +208,17 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   const firstResponseLimit = sla?.firstResponseMinutes ?? 5;
   const resolutionLimit = sla?.resolutionMinutes ?? 60;
 
-  const firstResponseStatus = timeline.isAwaitingFirstResponse
-    ? getSLAStatus(timeline.awaitingMs, firstResponseLimit)
-    : getSLAStatus(timeline.firstResponseDurationMs, firstResponseLimit);
+  const firstResponseStatus: SLAStatus = scope === 'none'
+    ? 'na'
+    : timeline.isAwaitingFirstResponse
+      ? getSLAStatus(timeline.awaitingMs, firstResponseLimit)
+      : getSLAStatus(timeline.firstResponseDurationMs, firstResponseLimit);
 
-  const resolutionStatus = timeline.resolutionDurationMs !== null
-    ? getSLAStatus(timeline.resolutionDurationMs, resolutionLimit)
-    : 'na';
+  const resolutionStatus: SLAStatus = scope === 'none'
+    ? 'na'
+    : timeline.resolutionDurationMs !== null
+      ? getSLAStatus(timeline.resolutionDurationMs, resolutionLimit)
+      : 'na';
 
   const firstResponseDurationLabel = timeline.isAwaitingFirstResponse
     ? `Aguardando há ${formatDurationMs(timeline.awaitingMs)}`
