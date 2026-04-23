@@ -1,89 +1,95 @@
 
 
-## Gráfico de tendência 7 dias: recebimento + % assinatura validada
+## Sincronização frontend ↔ backend — RPCs novas e instrumentação
 
-### Contexto
+### Diagnóstico
 
-A página `AdminWebhookSecretStatusPage` hoje mostra status **instantâneo** (último evento, 5min, 1h de latência) e breakdown por instância, mas não tem visão **histórica**. Falta um gráfico que mostre, dia a dia ao longo dos últimos 7 dias:
+Backend trouxe RPCs novas que ainda **não estão integradas** no frontend. Inventário:
 
-1. **Volume diário** de eventos recebidos (barras).
-2. **Taxa de validação HMAC** (linha sobreposta, eixo Y secundário 0-100%).
+| RPC backend | Status frontend | Ação |
+|---|---|---|
+| `rpc_dlq_*` (4) | ✅ Já wired em `useFailedMessages.ts` | OK |
+| `rpc_dlq_log_reprocess_trigger` | ✅ Wired (com `as any`) | Limpar cast |
+| `rpc_instance_auth_event_summary/trend` | ✅ Wired em `AuthEventTrendChart` | OK |
+| `rpc_list_failed_messages` (overload novo com `last_attempt_at`) | ⚠️ Hook usa overload antigo | Migrar para novo |
+| `rpc_log_search_event` | ❌ Não usado | **Integrar em GlobalSearch** |
+| `rpc_record_search_click` | ❌ Não usado | **Integrar em GlobalSearch** |
+| `rpc_search_insights` | ❌ Sem painel admin | **Criar painel admin** |
+| `rpc_record_event_key_usage` | ❌ Não usado | **Integrar no webhook edge function** |
 
-Permite identificar tendências (ex.: "% caiu de 99% pra 80% na quarta — algo mudou") e correlacionar volume com qualidade.
+Também observado: warning no console — `VirtualizedRealtimeList` passa ref para `ConversationPreviewLine` que não usa `forwardRef`. É uma regressão simples a corrigir junto.
 
 ### O que vai ser construído
 
-#### 1. Helper de agregação `weeklyTrendAggregations.ts`
+#### 1. Telemetria de busca global (`rpc_log_search_event` + `rpc_record_search_click`)
 
-Funções puras espelhando o padrão de `instanceAggregations.ts`:
+Em `src/components/inbox/useGlobalSearchData.ts`:
+- Após cada `performSearch` bem-sucedido (com `cleanQuery.length >= 2`), chamar `supabase.rpc('rpc_log_search_event', { p_query, p_entities: Array.from(types), p_result_count: searchResults.length, p_used_vector: false })`.
+- Guardar o `searchEventId` retornado em `useRef` para correlação com clique.
+- `fire-and-forget` (não bloqueia UI, captura erro via `log.warn`).
 
-- `aggregateDailyTrend(rows, days = 7)` → `DailyTrendPoint[]` com 7 buckets diários (preenche dias sem eventos com zeros), cada um contendo:
-  - `dateLabel` (`dd/MM`)
-  - `dateIso` (para sort)
-  - `total` — eventos recebidos no dia
-  - `validated` / `invalid` / `unsigned`
-  - `validationRate` (0-100, `null` quando `total === 0` para a linha não cair pra zero falso)
-  - `errored` (eventos com `error_message`)
-- Respeita o filtro de instância já vigente na página (recebe `rows` já filtrados).
+Em `src/components/inbox/GlobalSearch.tsx`:
+- No `handleSelect(result)`, chamar `supabase.rpc('rpc_record_search_click', { p_query: search, p_result_id: result.id, p_result_type: result.type })` antes de fechar.
 
-#### 2. Componente `WeeklyTrendChart.tsx`
+#### 2. Painel admin de Search Insights
 
-Composed chart Recharts:
+Nova rota `/admin/search-insights` (apenas admin):
+- `src/pages/AdminSearchInsightsPage.tsx` — orquestra fetch via `useQuery(['search-insights', days])` chamando `rpc_search_insights({ p_days })`.
+- Seletor de janela (1d / 7d / 30d).
+- Cards KPI: total de buscas, % vector, click-through rate, zero-result rate.
+- Tabela "Top queries" (query, count, avg_results).
+- Tabela "Zero result queries" (query, count, last_at) — base para curar Knowledge Base.
+- Empty state via `GenericEmptyState` quando `total_searches === 0`.
+- Adicionar entrada em `sidebarNavConfig.ts` (seção admin) e rota em `ViewRouter.tsx` com role-gate `admin`.
 
-- `<Bar dataKey="total">` — eixo Y esquerdo, cor `hsl(var(--chart-1))`.
-- `<Bar dataKey="errored" stackId="a">` opcional sobreposto pra destacar erros.
-- `<Line dataKey="validationRate">` — eixo Y direito (0-100%), cor `hsl(var(--success))`, com `connectNulls={false}` pra dias sem dados não distorcerem a média.
-- `<ReferenceLine y={95}>` no eixo direito — meta visual ("≥95% validado").
-- Tooltip custom mostrando: total, validados, inválidos, % e erros do dia.
-- Legend compacta no topo.
-- Skeleton enquanto carrega; empty state se 7 dias sem nenhum evento.
-- Header do card com label dinâmico: "Tendência 7 dias — Todas instâncias" ou "Tendência 7 dias — wpp2".
+#### 3. Migrar `useFailedMessages` para o overload novo
 
-#### 3. Nova query de 7 dias
+A função tem **dois overloads** no banco. Frontend usa o antigo (`p_status` text). O novo aceita `p_status text[]` e retorna `last_attempt_at`. Em `src/hooks/monitoring/useFailedMessages.ts`:
+- Já passa `p_status: status ? [status] : null` (array) — `types.ts` reflete os 2 overloads, o TS escolhe automaticamente. Validar via `tsc --noEmit` que está pegando o overload de array.
+- Expor `last_attempt_at` no tipo `FailedMessage` e renderizar coluna "Última tentativa" em `FailedMessagesTable.tsx` (badge "há Xmin" via `formatDistanceToNow`).
+- Remover `as any` do call de `rpc_dlq_log_reprocess_trigger` (RPC já tipada em `types.ts`).
 
-A query principal da página hoje pega 500 rows da última hora — não cobre 7 dias. Adicionar **query separada** via `useQuery`:
+#### 4. Instrumentação `rpc_record_event_key_usage` na edge function de webhook
 
-- Key: `['webhook-weekly-trend', instance]`
-- `queryExternalProxy('evolution_webhook_events', { ... created_at >= now-7d, instance_name (se filtrado), order desc, limit 5000 })`.
-- `staleTime: 5 * 60_000` (5min — não precisa polling agressivo pra histórico).
-- Limit 5000 cobre ~700 ev/dia; se ultrapassar, render banner "amostra parcial — peça RPC `rpc_webhook_trend_daily`".
+Em `supabase/functions/evolution-webhook/index.ts` (ou a que valida HMAC):
+- Após validar `x-evolution-signature` com sucesso usando uma chave de `system_event_keys`, chamar `supabase.rpc('rpc_record_event_key_usage', { p_key_id: keyId })` em fire-and-forget.
+- Permite tracking de uso/last-seen para rotação de chaves.
 
-#### 4. Integração na página
+#### 5. Correção do warning de ref
 
-- `AdminWebhookSecretStatusPage` renderiza `<WeeklyTrendChart>` **abaixo dos `InstanceStatusCards`** e acima da seção HMAC já existente.
-- Reutiliza o mesmo filtro de instância (`useUrlFilters`) — gráfico re-renderiza automaticamente ao trocar instância.
+Em `src/components/inbox/VirtualizedRealtimeList.tsx` ou `ConversationPreviewLine`:
+- Envolver `ConversationPreviewLine` em `React.forwardRef<HTMLDivElement, Props>` e propagar a ref para o div raiz.
+- Elimina warning no console (compliance com Core: "Direct children of `AnimatePresence` must use `React.forwardRef()`").
 
 ### Detalhes técnicos
 
 **Arquivos a criar:**
-
-- `src/pages/admin-webhook-secret-status/weeklyTrendAggregations.ts` — funções puras + tipos.
-- `src/pages/admin-webhook-secret-status/WeeklyTrendChart.tsx` — componente Recharts com tooltip custom e empty state.
-- `src/pages/admin-webhook-secret-status/__tests__/weeklyTrendAggregations.test.ts` — Vitest cobrindo:
-  - Bucketização com timezone local (sem off-by-one).
-  - 7 buckets sempre, mesmo sem dados.
-  - `validationRate = null` quando `total === 0`.
-  - Soma de `validated + invalid + unsigned === total`.
+- `src/pages/AdminSearchInsightsPage.tsx` (~250 linhas)
+- `src/pages/admin-search-insights/SearchInsightsKPICards.tsx` (~80 linhas)
+- `src/pages/admin-search-insights/SearchInsightsTables.tsx` (~120 linhas)
+- `src/hooks/useSearchInsights.ts` (~50 linhas) — wrapper de `useQuery`
 
 **Arquivos a editar:**
-
-- `src/pages/AdminWebhookSecretStatusPage.tsx`:
-  - Adicionar `useQuery` para janela 7 dias.
-  - Renderizar `<WeeklyTrendChart>` com dados agregados via `useMemo`.
+- `src/components/inbox/useGlobalSearchData.ts` — log search event
+- `src/components/inbox/GlobalSearch.tsx` — record click
+- `src/hooks/monitoring/useFailedMessages.ts` — remover `as any`, expor `last_attempt_at`
+- `src/components/admin/dlq/FailedMessagesTable.tsx` (ou equivalente) — coluna "Última tentativa"
+- `src/components/inbox/VirtualizedRealtimeList.tsx` ou `ConversationPreviewLine.tsx` — forwardRef
+- `src/config/sidebarNavConfig.ts` — entrada "Search Insights" (admin)
+- `src/pages/ViewRouter.tsx` — rota lazy + role-gate
+- `supabase/functions/evolution-webhook/index.ts` — chamar `rpc_record_event_key_usage` quando keyId conhecido
 
 **Padrões respeitados:**
-
-- Tokens semânticos (`hsl(var(--chart-1))`, `hsl(var(--success))`, `hsl(var(--destructive))`); zero hardcoded color.
-- Reuso de `CHART_STYLES`, `TOOLTIP_STYLE` e helpers de `src/lib/chartColors.ts`.
-- Sem export CSV (Zero Export).
-- Respeita filtro `?instance=` da URL.
-- `log.warn` se a query exceder o limite de 5000 rows.
-- Tipagem estrita, max ~340 linhas/arquivo.
+- Telemetria fire-and-forget (nunca bloqueia UI).
+- Role-gate duplo: RPC já tem `has_role('admin')` + `ProtectedRoute` no frontend.
+- `useQuery` com `staleTime: 60_000`, refetch on focus desabilitado em painel pesado.
+- Tokens semânticos, `GenericEmptyState`, max ~340 linhas/arquivo.
+- Sem `console.log`, usar `log` de `@/lib/logger`.
+- Sem `as any` (manter padrão consolidado da última correção de tipos).
 
 ### Fora de escopo
 
-- RPC `rpc_webhook_trend_daily` no FATOR X (futuro lote — atual usa agregação client-side).
-- Janelas customizáveis (14d/30d) — mantém 7d fixo nesta entrega; toggle pode entrar depois.
-- Comparação semana atual vs semana anterior — fora do escopo.
-- Drill-down clicando num dia para ver eventos daquele dia — fora do escopo.
+- Migrar `useGlobalSearchData` para usar a edge function `semantic-search` com vetor real (lote separado — hoje busca direto em `messages`/`contacts`, então `p_used_vector: false` é honesto).
+- Rotação automatizada de `system_event_keys` (UI de gestão de chaves) — requer lote próprio.
+- Outros RPCs que já estão integrados (`rpc_dlq_*`, `rpc_instance_auth_event_*`).
 
