@@ -33,10 +33,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: 📚 Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: 🔍 Run ESLint
         run: npm run lint
@@ -61,10 +60,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: 📚 Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: 🧪 Run Vitest
         run: npm run test -- --coverage --reporter=verbose
@@ -94,10 +92,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: 📚 Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: 🏗️ Build for production
         run: npm run build
@@ -140,7 +137,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm install --no-audit --no-fund
 
       - name: 🔒 Run npm audit
         run: npm audit --audit-level=high
