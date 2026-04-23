@@ -67,12 +67,42 @@ export default function AdminFailedMessagesPage() {
   const [hours, setHours] = useState(24);
   const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
   const [errorCodeFilter, setErrorCodeFilter] = useState<string>('all');
+  const [instanceFilter, setInstanceFilter] = useState<string>('all');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState<string | null>(null);
+  const [customFrom, setCustomFrom] = useState<string>(''); // datetime-local
+  const [customTo, setCustomTo] = useState<string>('');
+  const [page, setPage] = useState(0);
+  const pageSize = 50;
+
   const [selected, setSelected] = useState<FailedMessageRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmBulkAbandon, setConfirmBulkAbandon] = useState(false);
+  const [bulkReason, setBulkReason] = useState('');
+
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim() || null);
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [hours, statusFilter, errorCodeFilter, instanceFilter, customFrom, customTo]);
+
+  const fromIso = customFrom ? new Date(customFrom).toISOString() : null;
+  const toIso = customTo ? new Date(customTo).toISOString() : null;
+  const useCustomRange = !!(fromIso && toIso);
+
+  const { data: stats } = useFailedMessagesStats();
 
   const {
     rows,
+    total,
     isLoading,
     isRefetching,
     refetch,
@@ -83,15 +113,23 @@ export default function AdminFailedMessagesPage() {
     bulkAbandon,
     triggerReprocess,
   } = useFailedMessages({
-    hours,
+    hours: useCustomRange ? undefined : hours,
     status: statusFilter === 'all' ? null : statusFilter,
     errorCode: errorCodeFilter === 'all' ? null : errorCodeFilter,
+    instance: instanceFilter === 'all' ? null : instanceFilter,
+    search,
+    from: useCustomRange ? fromIso : null,
+    to: useCustomRange ? toIso : null,
+    page,
+    pageSize,
   });
 
   const sorted = useMemo(
     () => [...rows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)),
     [rows],
   );
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const topReasons = aggregates.byErrorCode.slice(0, 8);
   const maxReasonCount = topReasons[0]?.count ?? 1;
