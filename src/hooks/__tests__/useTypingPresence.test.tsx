@@ -63,4 +63,17 @@ describe('useTypingPresence', () => {
     }));
     expect(result.current).toBeDefined();
   });
+
+  it('usa remoteJid como chave do canal quando fornecido', async () => {
+    const { supabase } = await import('@/integrations/supabase/client');
+    (supabase.channel as ReturnType<typeof vi.fn>).mockClear();
+    renderHook(() => useTypingPresence({
+      conversationId: 'conv-1',
+      remoteJid: '5511999999999@s.whatsapp.net',
+    }));
+    expect(supabase.channel).toHaveBeenCalledWith(
+      'typing:5511999999999@s.whatsapp.net',
+      expect.any(Object),
+    );
+  });
 });
