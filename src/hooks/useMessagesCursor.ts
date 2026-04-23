@@ -212,7 +212,22 @@ export function useMessagesCursor({
   useEffect(() => {
     if (!enabled || !remoteJid || !isExternalConfigured || !externalSupabase) return;
 
-    const channel = externalSupabase
+    // externalSupabase is loosely typed (no Database generic), so the
+    // postgres_changes overload is not visible. Cast to a permissive shape.
+    type RealtimeChannel = {
+      on: (
+        kind: 'postgres_changes',
+        cfg: { event: string; schema: string; table: string; filter?: string },
+        cb: (payload: { new?: EvolutionMessage; old?: EvolutionMessage }) => void,
+      ) => RealtimeChannel;
+      subscribe: () => RealtimeChannel;
+    };
+    const client = externalSupabase as unknown as {
+      channel: (name: string) => RealtimeChannel;
+      removeChannel: (ch: RealtimeChannel) => void;
+    };
+
+    const channel = client
       .channel(`evolution_messages:${remoteJid}`)
       .on(
         'postgres_changes',
@@ -222,19 +237,16 @@ export function useMessagesCursor({
           table: 'evolution_messages',
           filter: `remote_jid=eq.${remoteJid}`,
         },
-        (payload: { new: EvolutionMessage }) => {
+        (payload) => {
           const m = payload.new;
           if (!m || !m.id) return;
           setPages((prev) => {
-            // Dedup: ignore if already present anywhere.
             for (const p of prev) {
               if (p.some((x) => x.id === m.id)) return prev;
             }
-            // Append to the LAST page (newest bucket); create page if empty.
             if (prev.length === 0) return [[m]];
             const last = prev[prev.length - 1];
-            const next = [...prev.slice(0, -1), [...last, m]];
-            return next;
+            return [...prev.slice(0, -1), [...last, m]];
           });
         },
       )
@@ -246,7 +258,7 @@ export function useMessagesCursor({
           table: 'evolution_messages',
           filter: `remote_jid=eq.${remoteJid}`,
         },
-        (payload: { new: EvolutionMessage }) => {
+        (payload) => {
           const m = payload.new;
           if (!m || !m.id) return;
           setPages((prev) =>
@@ -262,7 +274,7 @@ export function useMessagesCursor({
           table: 'evolution_messages',
           filter: `remote_jid=eq.${remoteJid}`,
         },
-        (payload: { old: EvolutionMessage }) => {
+        (payload) => {
           const id = payload.old?.id;
           if (!id) return;
           setPages((prev) => prev.map((page) => page.filter((x) => x.id !== id)));
@@ -271,7 +283,7 @@ export function useMessagesCursor({
       .subscribe();
 
     return () => {
-      void externalSupabase!.removeChannel(channel);
+      client.removeChannel(channel);
     };
   }, [enabled, remoteJid]);
 
