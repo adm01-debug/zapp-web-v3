@@ -46,8 +46,17 @@ serve(async (req) => {
   const action = (pathAction === 'evolution-api' && bodyForAction.action)
     ? String(bodyForAction.action) : pathAction;
 
+  // Idempotency key for `/message/*` sends. Accepts (in priority):
+  //  1. `Idempotency-Key` HTTP header (frontend → invokeEvolutionWithRetry)
+  //  2. `body.__idemKey` (DLQ reprocess can't set headers; carries it inline)
+  // Forwarded only for send-* actions; ignored elsewhere.
+  const idemKey = (req.headers.get('idempotency-key')
+    || req.headers.get('x-idempotency-key')
+    || (typeof bodyForAction.__idemKey === 'string' ? bodyForAction.__idemKey : '')
+    || '').trim() || undefined;
+
   const proxy = (path: string, method = 'POST', body?: unknown) =>
-    proxyToEvolution(evolutionApiUrl, evolutionApiKey, corsHeaders, path, method, body);
+    proxyToEvolution(evolutionApiUrl, evolutionApiKey, corsHeaders, path, method, body, undefined, idemKey);
 
   try {
     const body = await json();
