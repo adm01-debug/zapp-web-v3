@@ -68,10 +68,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Avoid COUNT on large tables — both 'exact' and 'estimated' can scan the whole table
-    // and hit statement_timeout. Force 'planned' (pg_class estimate, instant) whenever a count is requested.
-    const safeCount = countMode ? 'planned' : undefined
-    let query = ext.from(table).select(select || '*', { count: safeCount as any })
+    let query = ext.from(table).select(select || '*', { count: countMode || undefined })
 
     if (filters && Array.isArray(filters)) {
       for (const f of filters) {
@@ -83,7 +80,7 @@ Deno.serve(async (req) => {
       query = query.order(order.column, { ascending: order.ascending ?? true })
     }
 
-    const effectiveLimit = Math.min(limit || 50, 500)
+    const effectiveLimit = limit || 50
     const effectiveOffset = offset || 0
     query = query.range(effectiveOffset, effectiveOffset + effectiveLimit - 1)
 

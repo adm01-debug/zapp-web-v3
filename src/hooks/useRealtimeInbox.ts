@@ -18,7 +18,7 @@ export function useRealtimeInbox() {
   // Local DB source (original)
   const localRealtime = useRealtimeMessages();
   // External DB source (FATOR X)
-  const externalData = useExternalConversations(USE_EXTERNAL_DB);
+  const externalData = useExternalConversations();
 
   // Select source based on flag
   const conversations = USE_EXTERNAL_DB ? externalData.conversations : localRealtime.conversations;

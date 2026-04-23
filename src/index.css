@@ -1,4 +1,4 @@
-/* ===== MODULAR DESIGN SYSTEM (must come first) ===== */
+/* ===== MODULAR DESIGN SYSTEM ===== */
 @import './styles/tokens.css';
 @import './styles/base.css';
 @import './styles/utilities.css';
@@ -6,6 +6,10 @@
 @import './styles/animations.css';
 @import './styles/sidebar.css';
 @import './styles/accessibility.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ===== FONT VARIABLES ===== */
 :root {
@@ -69,3 +73,12 @@ html, body, #root {
   .overscroll-contain { overscroll-behavior: contain; }
   .will-change-transform { will-change: transform; }
 }
+
+/* ===== MODULAR DESIGN SYSTEM ===== */
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/utilities.css';
+@import './styles/components.css';
+@import './styles/animations.css';
+@import './styles/sidebar.css';
+@import './styles/accessibility.css';

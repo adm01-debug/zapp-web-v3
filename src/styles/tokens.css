@@ -1,7 +1,6 @@
 /* ===== DESIGN TOKENS — Light & Dark mode CSS variables ===== */
-@tailwind base;
 
-@layer base {
+
   :root {
     /* ===== FONTS ===== */
     --font-sans: 'Outfit', system-ui, sans-serif;
@@ -319,4 +318,4 @@
     --chart-sentiment-neutral: 220 25% 65%;
     --chart-sentiment-negative: 0 85% 62%;
   }
-}
+

@@ -5,6 +5,7 @@ import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { toast } from 'sonner';
 import { validateFile, FileValidationResult } from '@/utils/whatsappFileTypes';
 import { compressImage, formatCompressionInfo } from '@/utils/imageCompression';
+import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 
 interface FileMessageData {
   mediaUrl?: string;
@@ -113,7 +114,7 @@ export function useFileUploadLogic(opts: {
       : Promise.resolve(null);
 
     const [result, dbResult] = await Promise.all([apiPromise, dbPromise]);
-    const externalId = result?.key?.id || null;
+    const externalId = extractEvolutionMessageId(result);
     if (dbResult?.data?.id && externalId) {
       supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', dbResult.data.id).then(() => {});
     }

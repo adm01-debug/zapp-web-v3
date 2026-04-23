@@ -1,45 +1,84 @@
 
+## Corrigir a conexão com a Eco/Evolution API
 
-## Restaurar o sistema: corrigir ordem de `@import` no `src/index.css`
+### Problema confirmado
 
-### Causa raiz
-O build do Vite está falhando com `@import must precede all other statements` em **7 imports** porque o arquivo `src/index.css` foi modificado de forma incorreta numa correção anterior:
+O fluxo de reconexão já está chamando a função correta (`/functions/v1/evolution-api`). O erro atual não é mais de rota no frontend.
 
-- Os `@import './styles/*.css'` estão nas linhas **65–71** (final do arquivo)
-- Antes deles existem regras CSS reais: `:root` (linha 2), `html, body` (linha 8), `::view-transition` (linha 18), `@tailwind` (linha 32), `:focus-visible` (linha 38), media queries (linha 53)
+A falha real está no backend integrado:
+- `action: "connect"` para a instância `wpp2`
+- tentativa de recriar a instância quando ela não existe
+- resposta da API externa: `401 Unauthorized`
 
-A spec CSS exige que **todos os `@import` venham antes de qualquer outra regra** (exceto `@charset` e `@layer` vazios). Como o build CSS quebra, o preview fica em tela branca / fallback.
+Isso indica incompatibilidade entre `EVOLUTION_API_URL` e `EVOLUTION_API_KEY` (URL/chave de ambientes ou contas diferentes, chave inválida/expirada, ou chave sem permissão para criar instância).
 
-### Correção (1 arquivo, edit cirúrgico)
+### O que será feito
 
-**`src/index.css`** — reorganizar para a ordem correta:
+#### 1. Endurecer a função `supabase/functions/evolution-api/index.ts`
+Ajustar o fluxo `connect` para tratar autenticação da API externa antes de seguir com recriação automática:
 
-```text
-1. @import './styles/tokens.css';        ← TOPO
-2. @import './styles/base.css';
-3. @import './styles/utilities.css';
-4. @import './styles/components.css';
-5. @import './styles/animations.css';
-6. @import './styles/sidebar.css';
-7. @import './styles/accessibility.css';
-8. (linha em branco)
-9. :root { --font-display, --font-sans }
-10. html, body, #root { viewport lock }
-11. ::view-transition-* + keyframes
-12. @tailwind base; @tailwind components; @tailwind utilities;
-13. :focus-visible / safe-area / mobile media query
-```
+- detectar `401/403` tanto no `connect` quanto no `create-instance`
+- parar o fallback automático quando o erro for de credencial/permissão
+- retornar envelope consistente com:
+  - `error: true`
+  - `status`
+  - `message` claro e acionável
+  - `details` preservando a resposta original
 
-Conteúdo é **idêntico** — só muda a ordem (imports sobem para o topo). Nada é deletado.
+Também vou evitar respostas “400 genéricas” nesse caminho, para não quebrar a UI nem mascarar a causa real.
 
-### Validação pós-correção
-1. Dev-server log deve parar de emitir `[vite:css] @import must precede...`
-2. Preview em `/` carrega tela de login estilizada (fontes Outfit + cores Corporate Blue)
-3. Sem regressão visual: tokens, animations, sidebar continuam aplicados
+#### 2. Validar configuração da integração no backend
+Revisar o par de secrets usados pela função:
+- `EVOLUTION_API_URL`
+- `EVOLUTION_API_KEY`
 
-### Riscos
-Nenhum. Mudança puramente de ordem; CSS final compilado é equivalente, mas agora válido pelo parser.
+A correção prática será garantir que ambos apontem para a mesma instância/conta da Eco/Evolution API e que a chave tenha permissão para:
+- consultar instância
+- conectar instância
+- criar instância
 
-### Fora do escopo
-Os arquivos `src/styles/{base,tokens,components,utilities}.css` que receberam `@tailwind` na correção anterior **podem ficar como estão** — diretivas duplicadas são tratadas pelo Tailwind sem efeito colateral. Se quiser limpeza extra, faço numa segunda passada.
+Se a chave atual estiver incorreta, o ajuste necessário será atualizar o secret no backend.
 
+#### 3. Melhorar a UX no frontend de conexões
+Nos fluxos que hoje exibem “Reconectar” / “Ver QR Code”:
+- mostrar mensagem específica quando o backend devolver erro de autenticação
+- não continuar tentando gerar QR indefinidamente em erro `401/403`
+- orientar claramente que a integração externa está sem autorização, em vez de parecer “instância desconectada comum”
+
+Arquivos principais:
+- `src/components/alerts/EvolutionDisconnectBanner.tsx`
+- `src/hooks/useConnectionsManager.ts`
+
+#### 4. Adicionar cobertura de testes Deno
+Criar testes para o edge function cobrindo:
+- `connect` falhando com `401 Unauthorized`
+- `connect` detectando instância ausente e `create-instance` falhando com `401`
+- garantia de que a resposta final mantém envelope padronizado e mensagem correta
+
+Arquivo alvo:
+- `supabase/functions/evolution-api/__tests__/connect-auth-errors.test.ts` (ou ampliar o teste já existente de missing instance)
+
+### Resultado esperado
+
+Após a correção:
+- se a chave estiver válida, `wpp2` poderá ser recriada/conectada e o QR será exibido normalmente
+- se a chave estiver inválida, a interface mostrará erro explícito de autorização da Eco/Evolution API, sem tela em branco e sem falso fluxo de reconexão
+
+### Verificação
+
+1. Chamar `POST /functions/v1/evolution-api` com:
+   ```json
+   { "action": "connect", "instanceName": "wpp2" }
+   ```
+2. Confirmar um dos dois comportamentos:
+   - sucesso com QR code
+   - erro controlado com mensagem de credencial/permissão
+3. Repetir pelo botão **Reconectar** e pelo botão **Ver QR Code**
+4. Garantir que não haja crash da interface e que o erro deixe de aparecer como falha genérica
+
+### Arquivos afetados
+
+- `supabase/functions/evolution-api/index.ts`
+- `src/hooks/useConnectionsManager.ts`
+- `src/components/alerts/EvolutionDisconnectBanner.tsx`
+- `supabase/functions/evolution-api/__tests__/connect-auth-errors.test.ts`

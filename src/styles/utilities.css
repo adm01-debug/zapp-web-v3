@@ -1,7 +1,6 @@
 /* ===== UTILITY CLASSES — Typography, gradients, shadows, scrollbar ===== */
-@tailwind utilities;
 
-@layer utilities {
+
   .font-display {
     font-family: var(--font-display);
   }
@@ -124,4 +123,4 @@
   .shadow-sticky {
     box-shadow: 0 1px 3px hsl(var(--foreground) / 0.04), 0 1px 1px hsl(var(--foreground) / 0.02);
   }
-}
+

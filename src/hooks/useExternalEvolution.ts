@@ -3,7 +3,7 @@
  * Replaces the local DB reads for the Inbox when external DB is the source of truth.
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryExternalProxy } from '@/lib/externalProxy';
 import {
   buildExternalConversations,
@@ -42,22 +42,23 @@ async function fetchMessagesByJid(remoteJid: string, limit = 1000): Promise<Evol
 }
 
 // ─── Hook: External Conversations (list for sidebar) ──────────
-export function useExternalConversations(enabled = true) {
-  const query = useQuery<ConversationWithMessages[]>({
-    queryKey: ['external-evolution', 'conversations', enabled],
+export function useExternalConversations() {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['external-evolution', 'conversations'],
     queryFn: async () => {
       const messages = await fetchExternalMessages(500);
       return buildExternalConversations(messages);
     },
-    enabled,
-    refetchInterval: enabled ? POLL_INTERVAL : false,
+    refetchInterval: POLL_INTERVAL,
     staleTime: POLL_INTERVAL - 1000,
   });
 
   return {
     conversations: query.data || [],
-    loading: enabled ? query.isLoading : false,
-    error: enabled ? query.error?.message || null : null,
+    loading: query.isLoading,
+    error: query.error?.message || null,
     refetch: query.refetch,
   };
 }

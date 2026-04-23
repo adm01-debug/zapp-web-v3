@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
+import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 // Uses RealtimeMessage type from parent hook
 
 const log = getLogger('MessageSender');
@@ -163,7 +164,7 @@ export async function sendMessageToContact(
       throw new Error(apiResult?.message || 'Falha ao enviar mensagem');
     }
 
-    const externalId = apiResult?.key?.id || apiResult?.messageId || null;
+    const externalId = extractEvolutionMessageId(apiResult);
     await supabase.from('messages').update({ status: 'sent', external_id: externalId, whatsapp_connection_id: resolvedConnectionId }).eq('id', data.id);
   } catch (evolutionError) {
     log.error('Error sending via Evolution API:', evolutionError);

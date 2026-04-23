@@ -27,10 +27,20 @@ export class Logger {
   private requestId: string;
   private startTime: number;
 
-  constructor(functionName: string) {
+  constructor(functionName: string, req?: Request) {
     this.fn = functionName;
-    this.requestId = crypto.randomUUID().slice(0, 8);
+    // Honor inbound x-request-id header to enable end-to-end tracing across
+    // client → edge function → DB. Falls back to a fresh short UUID.
+    const inbound = req?.headers.get('x-request-id')?.trim();
+    this.requestId = (inbound && inbound.length > 0 && inbound.length <= 64)
+      ? inbound
+      : crypto.randomUUID().slice(0, 8);
     this.startTime = Date.now();
+  }
+
+  /** Expose request id so handlers can stamp it on DB writes for tracing. */
+  getRequestId(): string {
+    return this.requestId;
   }
 
   private log(level: LogLevel, message: string, ctx?: Record<string, unknown>) {
