@@ -8228,6 +8228,7 @@ export type Database = {
       }
       whatsapp_connections: {
         Row: {
+          api_type: string
           battery_level: number | null
           created_at: string
           created_by: string | null
@@ -8251,6 +8252,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          api_type?: string
           battery_level?: number | null
           created_at?: string
           created_by?: string | null
@@ -8274,6 +8276,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          api_type?: string
           battery_level?: number | null
           created_at?: string
           created_by?: string | null

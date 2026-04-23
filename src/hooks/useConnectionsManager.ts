@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 
+export type WhatsAppApiType = 'evolution' | 'official';
+
 export interface WhatsAppConnection {
   id: string;
   name: string;
@@ -13,6 +15,8 @@ export interface WhatsAppConnection {
   qr_code: string | null;
   is_default: boolean;
   created_at: string;
+  /** 'evolution' = não-oficial (QR Code via Evolution/Baileys); 'official' = WhatsApp Cloud API (Meta, sem QR). */
+  api_type?: string;
   battery_level?: number | null;
   is_plugged?: boolean | null;
   retry_count?: number | null;
@@ -117,7 +121,7 @@ export function useConnectionsManager() {
       attemptId: persisted.attemptId,
     };
   });
-  const [newConnection, setNewConnection] = useState({ name: '', phone_number: '' });
+  const [newConnection, setNewConnection] = useState<{ name: string; phone_number: string; api_type: WhatsAppApiType }>({ name: '', phone_number: '', api_type: 'evolution' });
   const [isCreating, setIsCreating] = useState(false);
   const [syncingHistory, setSyncingHistory] = useState<string | null>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
@@ -221,21 +225,31 @@ export function useConnectionsManager() {
       return;
     }
     setIsCreating(true);
-    const instanceName = generateInstanceName(newConnection.name);
+    const isOfficial = newConnection.api_type === 'official';
+    const instanceName = isOfficial ? `official_${Date.now().toString(36)}` : generateInstanceName(newConnection.name);
     try {
-      await createInstance({ instanceName });
+      // Official Cloud API doesn't use Evolution instances — skip createInstance.
+      if (!isOfficial) {
+        await createInstance({ instanceName });
+      }
       const { data, error } = await supabase.from('whatsapp_connections').insert({
         name: newConnection.name,
         phone_number: newConnection.phone_number,
         instance_id: instanceName,
         status: 'disconnected',
         is_default: connections.length === 0,
+        api_type: newConnection.api_type,
       }).select().single();
       if (error) throw error;
-      toast({ title: 'Conexão criada!', description: 'Agora conecte escaneando o QR Code.' });
+      toast({
+        title: 'Conexão criada!',
+        description: isOfficial
+          ? 'Configure as credenciais da API oficial (Meta) nas configurações da conexão.'
+          : 'Agora conecte escaneando o QR Code.',
+      });
       setIsAddDialogOpen(false);
-      setNewConnection({ name: '', phone_number: '' });
-      if (data) handleShowQrCode(data);
+      setNewConnection({ name: '', phone_number: '', api_type: 'evolution' });
+      if (data && !isOfficial) handleShowQrCode(data);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       log.error('Error creating connection:', error);
@@ -243,6 +257,25 @@ export function useConnectionsManager() {
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handleSetApiType = async (connection: WhatsAppConnection, api_type: WhatsAppApiType) => {
+    if ((connection.api_type ?? 'evolution') === api_type) return;
+    const { error } = await supabase
+      .from('whatsapp_connections')
+      .update({ api_type })
+      .eq('id', connection.id);
+    if (error) {
+      toast({ title: 'Erro ao atualizar tipo de API', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setConnections((prev) => prev.map((c) => (c.id === connection.id ? { ...c, api_type } : c)));
+    toast({
+      title: 'Tipo de API atualizado',
+      description: api_type === 'official'
+        ? `${connection.name} agora usa WhatsApp Cloud API (oficial). QR Code não será necessário.`
+        : `${connection.name} agora usa Evolution API (não-oficial) com QR Code.`,
+    });
   };
 
   const startStatusPolling = useCallback((instanceName: string, connectionId: string) => {
@@ -324,6 +357,14 @@ export function useConnectionsManager() {
   };
 
   const handleShowQrCode = async (connection: WhatsAppConnection) => {
+    if ((connection.api_type ?? 'evolution') === 'official') {
+      toast({
+        title: 'QR Code não disponível',
+        description: 'Esta conexão usa WhatsApp Cloud API (oficial). A autenticação é feita via credenciais da Meta, não via QR Code.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (!connection.instance_id) {
       toast({ title: 'Erro', description: 'Esta conexão não possui uma instância configurada.', variant: 'destructive' });
       return;
@@ -506,6 +547,7 @@ export function useConnectionsManager() {
     handleReconnect,
     handleDisconnect,
     handleSetDefault,
+    handleSetApiType,
     handleDelete,
     closeQrDialog,
   };
