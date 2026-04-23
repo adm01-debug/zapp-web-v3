@@ -60,6 +60,16 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
     return () => unregisterNavigationHandler();
   }, [registerNavigationHandler, unregisterNavigationHandler, setCurrentView]);
 
+  // Custom event bridge so deep components can navigate without prop-drilling.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const view = (e as CustomEvent<string>).detail;
+      if (typeof view === 'string') setCurrentView(view);
+    };
+    window.addEventListener('navigate-view', handler as EventListener);
+    return () => window.removeEventListener('navigate-view', handler as EventListener);
+  }, [setCurrentView]);
+
   // Keyboard navigation: Alt+←/→, Escape, Alt+Home
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
