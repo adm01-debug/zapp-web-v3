@@ -13,18 +13,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { AuthEventTrendChart } from '@/components/admin/instance-pauses/AuthEventTrendChart';
+import { IncidentDetailDialog, type IncidentPause } from '@/components/admin/instance-pauses/IncidentDetailDialog';
 
-interface PauseRow {
-  id: string;
-  instance_name: string;
-  paused_until: string;
-  reason: string;
-  trigger_count: number;
-  paused_by: string | null;
-  auto_paused: boolean;
-  created_at: string;
-  updated_at: string;
-}
+type PauseRow = IncidentPause;
 
 const REFRESH_INTERVAL = 15_000;
 
@@ -42,6 +33,7 @@ export default function AdminInstancePausesPage() {
   const [instance, setInstance] = useState('wpp2');
   const [minutes, setMinutes] = useState(15);
   const [reason, setReason] = useState('');
+  const [selected, setSelected] = useState<PauseRow | null>(null);
 
   const activeQuery = useQuery({
     queryKey: ['instance-pauses', 'active'],
@@ -194,19 +186,24 @@ export default function AdminInstancePausesPage() {
                 </thead>
                 <tbody>
                   {active.map((p) => (
-                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <tr
+                      key={p.id}
+                      className="border-b last:border-0 hover:bg-muted/30 cursor-pointer"
+                      onClick={() => setSelected(p)}
+                    >
                       <td className="py-2 pr-4 font-mono text-xs">{p.instance_name}</td>
                       <td className="py-2 pr-4">
                         {p.auto_paused
                           ? <Badge variant="destructive">auto</Badge>
                           : <Badge variant="subtle">manual</Badge>}
+                        {p.investigated_at && <Badge variant="success" className="ml-1 text-[10px]">investigado</Badge>}
                       </td>
                       <td className="py-2 pr-4 text-xs">{p.reason}</td>
                       <td className="py-2 pr-4 text-xs font-mono">{p.trigger_count}</td>
                       <td className="py-2 pr-4 text-xs">
                         {formatDistanceToNow(new Date(p.paused_until), { addSuffix: true, locale: ptBR })}
                       </td>
-                      <td className="py-2 pr-4">
+                      <td className="py-2 pr-4" onClick={(e) => e.stopPropagation()}>
                         <Button
                           size="sm" variant="outline"
                           onClick={() => unpauseMut.mutate(p.instance_name)}
@@ -249,7 +246,11 @@ export default function AdminInstancePausesPage() {
                   {history.map((p) => {
                     const isActive = new Date(p.paused_until).getTime() > Date.now();
                     return (
-                      <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <tr
+                        key={p.id}
+                        className="border-b last:border-0 hover:bg-muted/30 cursor-pointer"
+                        onClick={() => setSelected(p)}
+                      >
                         <td className="py-2 pr-4 text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(p.created_at), { addSuffix: true, locale: ptBR })}
                         </td>
@@ -260,7 +261,10 @@ export default function AdminInstancePausesPage() {
                         <td className="py-2 pr-4 text-xs">{p.reason}</td>
                         <td className="py-2 pr-4 text-xs font-mono">{p.trigger_count}</td>
                         <td className="py-2 pr-4">
-                          {isActive ? <Badge variant="warning">ativa</Badge> : <Badge variant="subtle">expirada</Badge>}
+                          <div className="flex items-center gap-1">
+                            {isActive ? <Badge variant="warning">ativa</Badge> : <Badge variant="subtle">expirada</Badge>}
+                            {p.investigated_at && <Badge variant="success" className="text-[10px]">investigado</Badge>}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -271,6 +275,8 @@ export default function AdminInstancePausesPage() {
           )}
         </CardContent>
       </Card>
+
+      <IncidentDetailDialog pause={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

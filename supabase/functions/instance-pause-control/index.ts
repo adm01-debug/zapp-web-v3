@@ -93,6 +93,35 @@ Deno.serve(async (req) => {
       return json({ instance, cleared: data ?? 0 });
     }
 
+    if (action === 'recent_events') {
+      const instance = String(body.instance ?? '').trim();
+      const limit = Math.min(Math.max(Number(body.limit) || 25, 1), 200);
+      const sinceMin = Math.min(Math.max(Number(body.since_minutes) || 60, 1), 1440);
+      const since = new Date(Date.now() - sinceMin * 60_000).toISOString();
+      let q = supabase
+        .from('instance_auth_events')
+        .select('id,instance_name,reason,source,http_status,detail,created_at')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (instance) q = q.eq('instance_name', instance);
+      const { data, error } = await q;
+      if (error) return json({ error: error.message }, 400);
+      return json({ items: data ?? [] });
+    }
+
+    if (action === 'mark_investigated') {
+      const pauseId = String(body.pause_id ?? '').trim();
+      const notes = body.notes != null ? String(body.notes).slice(0, 1000) : null;
+      if (!pauseId) return json({ error: 'pause_id is required' }, 400);
+      const { data, error } = await supabase.rpc('mark_pause_investigated', {
+        p_pause_id: pauseId,
+        p_notes: notes,
+      });
+      if (error) return json({ error: error.message }, 400);
+      return json({ pause: data });
+    }
+
     if (action === 'status') {
       const instance = String(body.instance ?? '').trim();
       if (!instance) return json({ error: 'instance is required' }, 400);
