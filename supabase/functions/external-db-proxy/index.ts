@@ -20,7 +20,14 @@ Deno.serve(async (req) => {
     }
 
     const ext = createClient(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false }
+      auth: { persistSession: false, autoRefreshToken: false },
+      db: { schema: 'public' },
+      global: {
+        headers: {
+          // Cap server-side statement time to avoid Edge Function 150s timeout cascading
+          'x-statement-timeout': '8000',
+        },
+      },
     })
 
     const body = await req.json()
@@ -68,7 +75,12 @@ Deno.serve(async (req) => {
       })
     }
 
-    let query = ext.from(table).select(select || '*', { count: countMode || undefined })
+    // Default to 'planned' count (uses pg statistics, no full scan).
+    // Only use 'exact' when explicitly requested AND limit is small.
+    const safeCountMode = countMode === 'exact' && (limit || 50) > 100
+      ? 'planned'
+      : countMode || undefined
+    let query = ext.from(table).select(select || '*', { count: safeCountMode })
 
     if (filters && Array.isArray(filters)) {
       for (const f of filters) {
