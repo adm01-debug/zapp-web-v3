@@ -1,110 +1,56 @@
 
 
-## Mini-timeline de SLA por conversa
+## Filtros na Timeline de SLA
 
 ### O que vai ser construído
 
-Uma seção **"Linha do tempo do atendimento"** no painel lateral de detalhes do contato (`ContactDetails`), exibindo os marcos de SLA da conversa atual com timestamps absolutos, durações relativas, e badges de status (dentro/violado) comparado contra a regra de SLA aplicável.
+Adicionar uma barra de filtros compacta no topo do `SLATimelineSection` permitindo:
 
-Marcos exibidos (em ordem):
-1. **Primeira mensagem do contato** (abertura)
-2. **Primeira resposta do agente** + duração desde abertura + badge SLA 1ª resposta
-3. **Última mensagem** (atividade mais recente)
-4. **Resolução / encerramento** + duração total + badge SLA resolução
-5. **Reabertura** (se houver)
+1. **Filtro de status** (ToggleGroup multi-select): `Todos` · `OK` · `Em risco` · `Violado`
+2. **Filtro de período** (ToggleGroup single-select): `24h` · `7d` · `30d` · `Tudo`
 
-Quando ainda não houver primeira resposta, mostra contador ao vivo (`Aguardando há Xmin`) com cor de urgência.
+Os filtros se aplicam aos marcos da timeline (primeira mensagem, primeira resposta, última atividade, resolução, reabertura). Marcos sem status SLA (`'na'`) só aparecem com filtro `Todos`. O contador "Aguardando 1ª resposta" (live) sempre aparece quando ativo, independente de filtros — é estado operacional crítico.
 
-### Componentes
+### Mudanças
 
-**1. Hook `src/hooks/useConversationSLATimeline.ts`** (~120 linhas)
+**1. `src/components/inbox/contact-details/SLATimelineSection.tsx`** (~+60 linhas, dentro do limite de 340)
 
-Busca via `externalClient`:
-- `rpc_list_messages(p_remote_jid, p_instance, p_limit=500)` — pega `created_at` da 1ª inbound, 1ª outbound, e última msg.
-- `rpc_list_conversations(p_instance, p_assigned_to=null, p_limit=1)` filtrado pelo `remote_jid` para `closed_at`/`reopened_at` (ou direto da conversation passada).
-- `conversation_events` (Lovable Cloud) para `event_type IN ('close','reopen')` como fallback de timestamps.
+- Adicionar estados locais com persistência em `localStorage`:
+  ```ts
+  const [statusFilter, setStatusFilter] = useState<SLAStatus[]>(['ok','warning','breached','na']);
+  const [periodFilter, setPeriodFilter] = useState<'24h'|'7d'|'30d'|'all'>('all');
+  ```
+  Chave: `sla-timeline-filters` (JSON com ambos).
 
-Retorna:
-```ts
-interface SLATimelineData {
-  firstContactAt: Date | null;
-  firstResponseAt: Date | null;
-  firstResponseDurationMs: number | null;
-  lastMessageAt: Date | null;
-  closedAt: Date | null;
-  resolutionDurationMs: number | null;
-  reopenedAt: Date | null;
-  isAwaitingFirstResponse: boolean;
-  awaitingMs: number | null;
-}
-```
+- Helpers puros:
+  ```ts
+  const PERIOD_MS = { '24h': 86_400_000, '7d': 604_800_000, '30d': 2_592_000_000, all: Infinity };
+  function isWithinPeriod(date: Date | null, period): boolean
+  function matchesFilters(milestone: { date: Date|null; status: SLAStatus }, statusFilter, periodFilter): boolean
+  ```
 
-`useQuery` com `staleTime: 30_000`, `refetchInterval: 30_000` quando `isAwaitingFirstResponse` (contador ao vivo).
+- Renderizar barra de filtros logo abaixo do título, usando `ToggleGroup` (já no projeto). Badge com contador de marcos visíveis vs total (`X de Y marcos`).
 
-**2. Componente `src/components/inbox/contact-details/SLATimelineSection.tsx`** (~180 linhas)
+- Aplicar `matchesFilters` ao array de marcos antes do `.map()` de renderização. Se `filteredMilestones.length === 0` e há marcos no total, mostrar empty state inline: "Nenhum marco corresponde aos filtros" com botão "Limpar filtros".
 
-- Recebe `conversation: Conversation`.
-- Internamente usa `useConversationSLATimeline(contact.remote_jid)` + `useApplicableSLA(...)` (já existente) para obter `firstResponseMinutes` e `resolutionMinutes`.
-- Renderiza lista vertical (reutiliza padrão visual do `ConversationTimeline.tsx`: linha vertical + dot + ícones Lucide).
-- Cada marco:
-  - Ícone (MessageCircle / Reply / Clock / CheckCircle2 / RotateCcw)
-  - Label PT-BR
-  - Timestamp absoluto (`dd/MM HH:mm`)
-  - Duração relativa (ex: "respondido em 4min")
-  - Badge SLA: `OK` (verde) / `Violado` (destrutivo) / `Em risco` (warning, >70% do prazo) / `—` (sem regra)
-- Estado especial "aguardando 1ª resposta": badge pulsante + contador (`formatTimeRemaining` reutilizado).
-- Empty state quando sem mensagens via `GenericEmptyState`.
-- Loading com `Skeleton` 3 linhas.
-
-**3. Integração em `ContactAccordionSections.tsx`**
-
-Adicionar novo `AccordionItem value="sla-timeline"` entre `'history'` e `'stats'`:
-```tsx
-<AccordionItem value="sla-timeline">
-  <AccordionTrigger>Linha do tempo do atendimento</AccordionTrigger>
-  <AccordionContent>
-    <SLATimelineSection conversation={conversation} />
-  </AccordionContent>
-</AccordionItem>
-```
-
-Atualizar `ACCORDION_STORAGE_KEY` default em `ContactDetails.tsx` para incluir `'sla-timeline'` na lista de seções abertas por padrão.
-
-### Cálculo de status SLA por marco
-
-```ts
-function getSLAStatus(durationMs: number | null, limitMinutes: number): 'ok' | 'warning' | 'breached' | 'na' {
-  if (durationMs === null) return 'na';
-  const limitMs = limitMinutes * 60_000;
-  if (durationMs > limitMs) return 'breached';
-  if (durationMs > limitMs * 0.7) return 'warning';
-  return 'ok';
-}
-```
-
-Reaproveita tokens semânticos: `success`, `warning`, `destructive`.
+- Marco "aguardando" (live counter) renderizado fora do filtro — sempre visível quando `isAwaitingFirstResponse`.
 
 ### Detalhes técnicos
 
-- Reutiliza `formatDistanceToNow` de `date-fns/locale/ptBR` (já em uso em `ConversationTimeline`).
-- Não cria novas RPCs — usa as já catalogadas (`rpc_list_messages`).
-- `remote_jid` derivado de `${contact.phone}@s.whatsapp.net` (padrão do projeto).
-- Respeita Core: max ~340 linhas/arquivo, sem `console.log`, tokens semânticos, sem `as any`, identidade por UUID quando possível mas messages busca por JID por compatibilidade com `rpc_list_messages`.
-- Acessibilidade: cada item da timeline com `role="listitem"`, container `role="list"` + `aria-label="Marcos de SLA da conversa"`.
+- `ToggleGroup type="multiple"` para status, `type="single"` para período.
+- Variant `outline`, `size="sm"` para densidade compacta no painel lateral (largura 320px).
+- Acessibilidade: `aria-label="Filtrar marcos por status"` / `"Filtrar por período"`. Cada toggle com `aria-pressed` automático do Radix.
+- Tokens semânticos: `bg-muted/30` para barra de filtros, ícones Lucide (`CheckCircle2`, `AlertTriangle`, `XCircle`, `Filter`).
+- Persistência via try/catch (padrão do projeto, ver `ContactDetails.tsx`).
+- Sem `console.log`, sem `as any`, sem nova RPC, sem alteração de API pública do componente.
 
-### Arquivos
+### Arquivo afetado
 
-**Criar:**
-- `src/hooks/useConversationSLATimeline.ts`
-- `src/components/inbox/contact-details/SLATimelineSection.tsx`
-
-**Editar:**
-- `src/components/inbox/contact-details/ContactAccordionSections.tsx` — novo `AccordionItem`
-- `src/components/inbox/ContactDetails.tsx` — `'sla-timeline'` no array de defaults do accordion
+**Editar:** `src/components/inbox/contact-details/SLATimelineSection.tsx`
 
 ### Fora de escopo
 
-- Histórico cross-conversa (auditoria agregada por contato em todas as conversas históricas) — pode virar lote separado se demandado.
-- Export CSV da timeline (Política Zero Export já em vigor).
-- Pause/resume de SLA por horário comercial (já tratado no `useApplicableSLA` via outro caminho).
+- Filtros globais salvos por usuário (server-side) — localStorage atende ao uso por contato.
+- Export da timeline filtrada — Política Zero Export.
+- Filtro por agente que respondeu — exigiria join Lovable Cloud × FATOR X (impossível em SQL conforme arquitetura).
 
