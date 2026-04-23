@@ -246,7 +246,11 @@ export default function AdminInstancePausesPage() {
                   {history.map((p) => {
                     const isActive = new Date(p.paused_until).getTime() > Date.now();
                     return (
-                      <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <tr
+                        key={p.id}
+                        className="border-b last:border-0 hover:bg-muted/30 cursor-pointer"
+                        onClick={() => setSelected(p)}
+                      >
                         <td className="py-2 pr-4 text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(p.created_at), { addSuffix: true, locale: ptBR })}
                         </td>
@@ -257,7 +261,10 @@ export default function AdminInstancePausesPage() {
                         <td className="py-2 pr-4 text-xs">{p.reason}</td>
                         <td className="py-2 pr-4 text-xs font-mono">{p.trigger_count}</td>
                         <td className="py-2 pr-4">
-                          {isActive ? <Badge variant="warning">ativa</Badge> : <Badge variant="subtle">expirada</Badge>}
+                          <div className="flex items-center gap-1">
+                            {isActive ? <Badge variant="warning">ativa</Badge> : <Badge variant="subtle">expirada</Badge>}
+                            {p.investigated_at && <Badge variant="success" className="text-[10px]">investigado</Badge>}
+                          </div>
                         </td>
                       </tr>
                     );
