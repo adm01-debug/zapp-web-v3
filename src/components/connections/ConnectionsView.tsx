@@ -23,6 +23,7 @@ import { InstanceSettingsDialog } from './InstanceSettingsDialog';
 import { IntegrationsPanel } from './IntegrationsPanel';
 import { NumberReputationMonitor } from './NumberReputationMonitor';
 import { ConnectionCard } from './ConnectionCard';
+import { DegradedQuickActions } from './DegradedQuickActions';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 
 export function ConnectionsView() {
@@ -139,6 +140,8 @@ export function ConnectionsView() {
           </motion.div>
         ))}
       </div>
+
+      <DegradedQuickActions connections={connections} onShowQrCode={handleShowQrCode} />
 
       {/* Connections List */}
       {loading ? (
