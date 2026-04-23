@@ -1,90 +1,148 @@
+
 ## Objetivo
 
-Adicionar um spec Playwright que cobre o fluxo da Galeria de Mídia no painel de detalhes do contato:
-
-1. Ao abrir uma conversa, a galeria **não** aparece automaticamente.
-2. Ao clicar em "Abrir galeria", o `Dialog` abre.
-3. É possível fechar o `Dialog` (via botão X / tecla Escape) e ele desaparece do DOM.
+Implementar **carregamento incremental ao rolar para cima** no chat (infinite scroll reverso), usando cursor por `created_at` e `pageSize` fixo por conversa, com função `loadOlder()` exposta pelo hook e integrada ao `ChatMessagesArea`.
 
 ## Contexto
 
-- Suíte E2E vive em `e2e/` (Playwright + fixture `authenticatedPage` em `e2e/fixtures/auth.ts`).
-- `ContactAccordionSections.tsx` renderiza um botão "Abrir galeria" que faz `setMediaOpen(true)`.
-- `MediaGallery.tsx` usa `Dialog` com `DialogTitle` "Galeria de Mídia" — seletor estável por accessible name (`role="dialog"` + name).
-- O painel de detalhes (`ContactDetails`) renderiza ao selecionar uma conversa; em mobile vira `Sheet`. O spec roda em chromium desktop padrão (1280×720), então o painel lateral é o caminho.
+Hoje:
+- `useMessages` (Lovable Cloud) faz **paginação loop até o fim** (`while hasMore`), carregando TUDO de uma conversa. Em conversas com 5k+ mensagens, isso é lento e consome memória.
+- `scrollLoaderController.ts` já existe como controlador puro para "load older on scroll-to-top" — com throttle, in-flight lock e reverse-cancel. Está testado mas **não há produtor de dados conectado** (callbacks `onLoadOlder`/`hasMoreOlder` ficam stub).
+- `ChatMessagesArea` já consome esse controller (presumido pelos testes), mas sem fonte real de páginas.
+- Domínio FATOR X já tem RPC `rpc_list_messages(p_remote_jid, p_instance, p_limit, p_before_date)` com cursor nativo via `p_before_date`.
 
-## Spec proposto: `e2e/contact-media-gallery.spec.ts`
+Lacuna: faltam (1) hook que pagina por cursor, (2) anchoring de scroll após prepend, (3) wiring em `ChatMessagesArea`.
 
-Estrutura mínima (~40 linhas), seguindo padrão de `inbox-realtime.spec.ts`:
+## Mudança proposta
+
+### 1. Novo hook: `src/hooks/useMessagesCursor.ts`
+
+Substitui o loop atual em `useMessages` por paginação cursor-based, mantendo realtime.
 
 ```ts
-import { test, expect } from './fixtures/auth';
+interface UseMessagesCursorOptions {
+  remoteJid: string | null;
+  instanceName?: string;        // default 'wpp2'
+  pageSize?: number;            // default 50
+  enabled?: boolean;
+}
 
-test.describe('Contact media gallery', () => {
-  test('não abre automaticamente e pode ser fechada', async ({ authenticatedPage: page }) => {
-    await page.goto('/');
-
-    // 1. Selecionar primeira conversa disponível (skip se vazio)
-    const firstConv = page
-      .locator('[data-testid="conversation-item"], [role="listitem"]')
-      .first();
-    if (!(await firstConv.isVisible().catch(() => false))) {
-      test.skip(true, 'Nenhuma conversa disponível para o usuário de teste');
-    }
-    await firstConv.click();
-
-    // 2. Esperar área de chat — garante que ContactDetails montou
-    await expect(
-      page.locator('[role="log"], [data-testid="chat-messages"]').first()
-    ).toBeVisible({ timeout: 10_000 });
-
-    // 3. Galeria NÃO deve estar visível automaticamente
-    const gallery = page.getByRole('dialog', { name: /Galeria de Mídia/i });
-    await expect(gallery).toBeHidden();
-
-    // 4. Localizar e clicar no botão "Abrir galeria" (pode estar dentro de accordion colapsado)
-    const openBtn = page.getByRole('button', { name: /Abrir galeria/i });
-    if (!(await openBtn.isVisible().catch(() => false))) {
-      // expandir accordion "Mídia Compartilhada" se necessário
-      await page.getByRole('button', { name: /Mídia Compartilhada/i }).click();
-    }
-    await openBtn.click();
-
-    // 5. Galeria abre
-    await expect(gallery).toBeVisible({ timeout: 5_000 });
-
-    // 6. Fechar via Escape (o botão X do Radix Dialog também aceita name 'Close')
-    await page.keyboard.press('Escape');
-    await expect(gallery).toBeHidden({ timeout: 5_000 });
-  });
-});
+interface UseMessagesCursorReturn {
+  messages: Message[];               // ordenadas ASC (mais antigas primeiro)
+  loading: boolean;                  // primeira página
+  loadingOlder: boolean;             // páginas subsequentes
+  hasMoreOlder: boolean;
+  error: string | null;
+  loadOlder: () => Promise<void>;
+  cancelLoadOlder: () => void;       // aborta fetch in-flight
+  refetch: () => Promise<void>;
+  addMessage / updateMessage / removeMessage;  // realtime + optimistic
+}
 ```
 
-### Notas de robustez
+**Fluxo interno**:
+- Estado: `pages: Message[][]`, `oldestCursor: string | null` (= `created_at` da mensagem mais antiga já carregada), `hasMoreOlder: boolean`.
+- Primeira carga: `rpc_list_messages(p_remote_jid, p_instance, p_limit=pageSize, p_before_date=null)` → ordena DESC no DB, inverte para ASC no client → preenche `pages[0]`. Define `hasMoreOlder = data.length === pageSize`.
+- `loadOlder()`: 
+  - Guarda contra concorrência via `inFlightRef` + `AbortController`.
+  - Chama `rpc_list_messages(..., p_before_date=oldestCursor)`.
+  - Prepend: `setPages(p => [newer, ...p])`.
+  - Atualiza `oldestCursor` para a nova mensagem mais antiga.
+  - `hasMoreOlder = data.length === pageSize`.
+- `cancelLoadOlder()`: aborta o controller atual; `loadingOlder` volta a `false` sem prepend.
+- Realtime (INSERT/UPDATE/DELETE): aplicado na **última página** (`pages[pages.length - 1]`) — novas mensagens sempre entram no fim.
+- Deduplicação por `id` no merge entre páginas e realtime.
 
-- `getByRole('dialog', { name: /Galeria de Mídia/i })` casa pela `DialogTitle` existente — sem precisar adicionar `data-testid`.
-- Passo 4 trata o caso de o accordion "stats/media" estar colapsado: tenta clicar no trigger pelo nome se o botão "Abrir galeria" não estiver visível.
-- `Escape` é o caminho de fechamento mais determinístico em Radix Dialog (evita ambiguidade com múltiplos botões X na página, incluindo o do painel `ContactDetails`).
-- Sem mocks de rede: o teste valida apenas comportamento de UI (montagem/desmontagem do dialog). Compatível com o ambiente que já roda `inbox-realtime.spec.ts`.
+### 2. Anchoring de scroll após prepend
+
+`scrollLoaderController` já salva `savedScrollHeight` no momento do trigger. Em `ChatMessagesArea`, após o efeito que detecta novo conteúdo no topo:
+
+```ts
+useLayoutEffect(() => {
+  const saved = controller.savedScrollHeight();
+  if (saved !== null && containerRef.current) {
+    const delta = containerRef.current.scrollHeight - saved;
+    if (delta > 0) {
+      containerRef.current.scrollTop = delta;
+      controller.reset(); // ou método dedicado clearSavedHeight()
+    }
+  }
+}, [messages.length]);
+```
+
+Adicionar método `clearSavedHeight()` ao controller para evitar `reset()` total (que zeraria throttle e lastScrollTop).
+
+### 3. Wiring em `ChatMessagesArea` (componente que renderiza mensagens)
+
+Substituir consumo de `useMessages` por `useMessagesCursor`. Conectar callbacks ao controller existente:
+
+```ts
+const { messages, loadingOlder, hasMoreOlder, loadOlder, cancelLoadOlder } = 
+  useMessagesCursor({ remoteJid: contact.phone, pageSize: 50 });
+
+const controller = useMemo(() => createScrollLoaderController({
+  hasMoreOlder: () => hasMoreOlder,
+  isLoadingOlder: () => loadingOlder,
+  onLoadOlder: loadOlder,
+  onCancelLoadOlder: cancelLoadOlder,
+  getScrollHeight: () => containerRef.current?.scrollHeight ?? 0,
+}), [hasMoreOlder, loadingOlder, loadOlder, cancelLoadOlder]);
+
+const onScroll = (e) => controller.onScroll(e.target.scrollTop, /*preloadPx*/ 600);
+```
+
+Indicador visual no topo: `{loadingOlder && <LoadingSpinner className="py-2" />}`. Quando `!hasMoreOlder && messages.length > 0`, opcional badge "Início da conversa".
+
+### 4. Integração com métricas existentes
+
+`loadOlderMetrics.ts` já existe. Conectar:
+- `recordLoadOlderStarted()` no início de `loadOlder`.
+- `recordLoadOlderCompleted(startedAt, { pageSize, hasMore })` no sucesso.
+- `recordLoadOlderCancelled(startedAt, { reason: 'user_scroll_down' })` quando `cancelLoadOlder` é chamado.
+
+### 5. Migração de `useMessages` (não-quebrante)
+
+Manter `useMessages` atual intacto. Outros consumidores (não-chat) que precisam de TODAS as mensagens continuam usando-o. Apenas `ChatMessagesArea` migra para `useMessagesCursor`. Isso evita riscos em telas como dashboards/exports.
+
+### 6. Testes
+
+`src/hooks/__tests__/useMessagesCursor.test.tsx`:
+1. Primeira carga retorna pageSize mensagens + `hasMoreOlder=true` quando RPC retorna pageSize linhas.
+2. `hasMoreOlder=false` quando RPC retorna < pageSize.
+3. `loadOlder()` chama RPC com `p_before_date` = `created_at` da mais antiga.
+4. Múltiplas chamadas concorrentes a `loadOlder()` resultam em 1 RPC call (in-flight lock).
+5. `cancelLoadOlder()` aborta fetch e zera `loadingOlder`.
+6. Realtime INSERT é aplicado no fim do array, mesmo após múltiplos `loadOlder()`.
+7. Trocar `remoteJid` reseta `pages`, `oldestCursor` e dispara nova primeira carga.
+8. Dedup: mensagem que já existe na página anterior não é duplicada na nova.
+
+`src/components/inbox/chat/__tests__/scrollAnchor.test.ts` (novo, ou ampliar suite existente):
+1. Após prepend com `savedScrollHeight=5000`, scroll é ajustado para `newHeight - 5000`.
+2. `clearSavedHeight()` zera o anchor sem afetar throttle/lastScrollTop.
 
 ## Arquivos
 
 | Ação | Arquivo |
 |---|---|
-| Criar | `e2e/contact-media-gallery.spec.ts` |
+| Criar | `src/hooks/useMessagesCursor.ts` |
+| Editar | `src/components/inbox/chat/scrollLoaderController.ts` (adicionar `clearSavedHeight()`) |
+| Editar | `src/components/inbox/chat/ChatMessagesArea.tsx` (consumir novo hook + anchoring) |
+| Criar | `src/hooks/__tests__/useMessagesCursor.test.tsx` |
+| Editar | `src/components/inbox/chat/__tests__/scrollLoaderController.test.ts` (cobrir `clearSavedHeight`) |
 
 ## Não-objetivos
 
-- Não validar conteúdo da galeria (thumbnails, contadores) — escopo é apenas abertura/fechamento.
-- Não testar variante mobile (`Sheet`) — fica para spec separado se necessário.
-- Não adicionar `data-testid` em `MediaGallery.tsx` ou no botão (seletores por role/name são suficientes e mais resilientes).
-- Não cobrir persistência por contato (planejada em iteração anterior, ainda não implementada).
+- Não remover/depreciar `useMessages` — coexistência intencional.
+- Não migrar dashboards/exports/relatórios para o novo hook.
+- Não implementar "jump to date" (cursor para o futuro a partir de uma data) — escopo limitado a "load older".
+- Não tocar em `useExternalEvolution` — esse já tem fluxo próprio de polling.
 
 ## Riscos e mitigações
 
 | Risco | Mitigação |
 |---|---|
-| Conta E2E sem conversas → spec sempre `skip` | Mesmo padrão já aceito em `inbox-realtime.spec.ts`. |
-| Múltiplos `[role="dialog"]` na página confundem o seletor | Filtro por `name: /Galeria de Mídia/i` desambigua. |
-| Animação de saída do `AnimatePresence` atrasa `toBeHidden` | Timeout de 5s já cobre folga (animação típica < 300ms). |
-| Botão "Abrir galeria" oculto por accordion fechado | Fallback explícito que clica no trigger "Mídia Compartilhada" antes. |
+| Mensagens com `created_at` idêntico podem ser puladas no cursor (RPC usa `<` em `before_date`) | Usar tie-breaker — incluir mensagens com `created_at == cursor AND id != cursorId` no merge client-side, dedup por `id`. |
+| Realtime INSERT chega enquanto `loadOlder` está em vôo | Realtime sempre append no fim; loadOlder sempre prepend. Não há colisão. |
+| Anchoring falha em scroll smooth/ios momentum | `useLayoutEffect` roda síncrono antes do paint; ajuste de `scrollTop` sobrescreve momentum. Aceitável. |
+| Trocar de contato durante `loadOlder` em vôo | Hook tem `mountedRef` + abort no cleanup do effect de `remoteJid`. |
+| Usuário com 50k mensagens scrolla até o topo (1000 paginações) | Aceitável — cada página é leve. Memória cresce linearmente; fora do escopo otimizar com windowing aqui (já existe `VirtualizedMessageList`). |
