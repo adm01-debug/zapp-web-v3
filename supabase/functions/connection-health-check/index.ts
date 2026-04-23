@@ -61,9 +61,31 @@ Deno.serve(async (req) => {
         response_time_ms: responseTime, error_message: errorMessage,
       });
 
-      await supabase.from('whatsapp_connections').update({
-        last_health_check: new Date().toISOString(), health_status: healthStatus, health_response_ms: responseTime,
-      }).eq('id', conn.id);
+      const justBecameDegraded = healthStatus === 'degraded' && conn.health_status !== 'degraded';
+      const updatePayload: Record<string, unknown> = {
+        last_health_check: new Date().toISOString(),
+        health_status: healthStatus,
+        health_response_ms: responseTime,
+      };
+      if (justBecameDegraded) {
+        updatePayload.degraded_at = new Date().toISOString();
+        // Audit trail when a connection is downgraded due to recent CONNECTION_CLOSED / latency
+        await supabase.from('audit_logs').insert({
+          action: 'connection_degraded',
+          entity_type: 'whatsapp_connection',
+          entity_id: conn.id,
+          details: {
+            instance_id: conn.instance_id,
+            phone: conn.phone_number,
+            response_time_ms: responseTime,
+            error_message: errorMessage,
+            previous_health: conn.health_status ?? null,
+            reason: 'CONNECTION_CLOSED_or_latency',
+          },
+        }).then(({ error }) => { if (error) log.warn('audit insert failed', { error: error.message }); });
+      }
+
+      await supabase.from('whatsapp_connections').update(updatePayload).eq('id', conn.id);
 
       results.push({ instance_id: conn.instance_id, status: healthStatus, response_time_ms: responseTime, error: errorMessage });
     }
