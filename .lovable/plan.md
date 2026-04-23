@@ -1,111 +1,71 @@
 
 
-## Indicador "digitando…" via canal `typing:${remote_jid}` no preview e no chat
+## Painel: Consolidação de eventos de webhook (24h) por tipo + instance
 
-### Problema
+### Contexto
 
-1. Webhook emite broadcast no canal `typing:${contact.id}` — onde `contact.id` é UUID da tabela legada `contacts` (Lovable Cloud). No inbox FATOR X, conversas usam `remote_jid` como id, então o broadcast não bate com o canal que o cliente assina.
-2. `useTypingPresence` está acoplado ao `supabase` (Lovable Cloud) e só é consumido no `ChatPanel` — a **lista de conversas** (preview) não mostra "digitando…" ao lado do contato, mesmo quando o webhook chega.
-3. Chave do canal é o `conversationId` genérico, não normalizado para `remote_jid` — torna impossível um produtor (webhook) e múltiplos consumidores (chat aberto + cards na sidebar) sincronizarem.
+Hoje temos `AdminWebhookEventsPage` (log auditável evento-a-evento) e `AdminWebhookSecretStatusPage` (saúde da assinatura). Falta uma **visão de overview agregada**: quantos eventos de cada tipo (`MESSAGES_UPSERT`, `PRESENCE_UPDATE`, `CALL`, etc.) processados nas últimas 24h, com fatiamento por `instance_name` — útil para ver volume, distribuição e gargalos sem ler 500 linhas.
 
 ### Decisão
 
-Padronizar o canal como **`typing:${remote_jid}`** (chave estável, derivada do JID do WhatsApp) e adicionar consumo do estado em **dois lugares**: `ChatPanelHeader` (já existe) e `ConversationItem`/`VirtualizedRealtimeList` (novo).
-
-- **Webhook** (`handlePresenceUpdate`): emitir broadcast em `typing:${jid}` (formato `${phone}@s.whatsapp.net`), mantendo compat — emite **também** no canal antigo `typing:${contact.id}` durante 1 release para fluxos legados.
-- **Hook `useTypingPresence`**: aceitar `remoteJid?: string` opcional; quando presente, sobrescreve `conversationId` na chave do canal. Mantém a API atual para não quebrar `ChatPanel`/team chat.
-- **Novo hook leve `useContactTyping(remoteJid)`**: read-only, sem `track`/`presence` — só assina o broadcast `contact_typing` e devolve `boolean`. Pensado para a lista (centenas de cards subscritos sem custo de presença).
-- **UI**:
-  - `ConversationItem`: substitui a linha de "última mensagem" por "digitando…" animado quando `useContactTyping(conversation.contact.id)` é true. Aplica também no `VirtualizedRealtimeList`.
-  - `ChatPanelHeader`: já exibe `TypingIndicatorCompact`, só passamos o `remoteJid` (= `conversation.contact.id` no FATOR X) para o hook.
+Criar `AdminWebhookOverviewPage` (rota nova `webhook-overview`) que:
+- Lê de `evolution_webhook_events` via `queryExternalProxy` (mesma stack do log existente).
+- Agrega client-side: contagem por `event_type` × `instance_name`, processados vs erros, série temporal por hora.
+- Filtros: período (1h / 6h / 24h / 7d, default 24h), instance (`all` ou seleção), incluir/excluir `processed=false`.
+- Auto-refresh 60s (mesmo do log).
 
 ### Arquivos
 
-**Editado (1) — webhook:**
-
-1. `supabase/functions/_shared/evolution-webhook-handlers.ts` — em `handlePresenceUpdate`:
-   - Calcula `const jid = presenceData.id || presenceData.remoteJid` (preserva formato `@s.whatsapp.net`).
-   - Emite broadcast em **dois** canais (compat):
-     ```ts
-     const payload = { isTyping: isComposing, remoteJid: jid, timestamp: new Date().toISOString() };
-     // Novo (FATOR X): chave por remote_jid
-     const ch1 = supabase.channel(`typing:${jid}`);
-     await ch1.send({ type: 'broadcast', event: 'contact_typing', payload });
-     supabase.removeChannel(ch1);
-     // Legacy (Lovable Cloud contact.id) — mantém durante migração
-     if (contact?.id) {
-       const ch2 = supabase.channel(`typing:${contact.id}`);
-       await ch2.send({ type: 'broadcast', event: 'contact_typing', payload: { ...payload, contactId: contact.id } });
-       supabase.removeChannel(ch2);
-     }
-     ```
-   - Filtro broadcast-defense: ignora `jid` que case `/@broadcast$/` ou `@g.us` (já filtrado).
-
-**Editado (1) — hook existente:**
-
-2. `src/hooks/useTypingPresence.ts`:
-   - Adiciona prop opcional `remoteJid?: string`.
-   - `const channelKey = remoteJid ?? conversationId;` — usa `typing:${channelKey}`.
-   - Corrige typo histórico `oderId` → `userId` no tipo `TypingUser`/`PresenceState` (interno, nenhum consumidor externo lê esses campos — confirmado no grep).
-   - Logger `getLogger('TypingPresence')`.
-   - Sem mudança de comportamento se `remoteJid` não for passado.
-
 **Criados (2):**
 
-3. `src/hooks/useContactTyping.ts` — hook leve read-only:
-   - Assinatura: `useContactTyping(remoteJid?: string | null): boolean`.
-   - Subscreve `supabase.channel(typing:${remoteJid}).on('broadcast', { event: 'contact_typing' }, ...)`.
-   - Estado `boolean` com auto-clear em 5s (mesma lógica do hook completo, sem `presence`/`track`).
-   - Defesa: retorna `false` e não subscreve se `remoteJid` for null/empty/`@broadcast`/`@g.us`.
-   - Cleanup em `removeChannel` + `clearTimeout`.
+1. `src/pages/AdminWebhookOverviewPage.tsx` (~280 linhas) — página principal:
+   - Header com título, refresh button e seletor de período + instance.
+   - **4 KPIs no topo** (cards): total de eventos, processados, com erro (com %), instâncias ativas.
+   - **Gráfico 1 — Barras horizontais** "Top eventos por tipo": usa `recharts BarChart` com lista de `event_type` ordenada por contagem desc, cores por categoria (mensagens=primary, conexão=warning, presença=muted, erro=destructive).
+   - **Gráfico 2 — Heatmap/tabela** "Tipo × Instance": tabela densa com `event_type` nas linhas e `instance_name` nas colunas, célula com contagem + cor de intensidade (`bg-primary/[opacidade]`). Para 1 instância só, vira coluna única.
+   - **Gráfico 3 — Série temporal** "Volume por hora": `AreaChart` empilhado mostrando processados vs erros nas últimas N horas (bucket de 1h se ≤24h, 6h se 7d).
+   - **Tabela "Detalhamento por tipo"**: `event_type`, total, processados, erros, % erro, último evento (timestamp), com badge colorido de severidade quando erro >5%.
+   - Estado vazio padrão (`GenericEmptyState`) e loading com skeleton.
 
-4. `src/hooks/__tests__/useContactTyping.test.tsx` — vitest:
-   - Mock `supabase.channel/on/subscribe/removeChannel`.
-   - Casos: subscreve com `remoteJid` válido; ignora `null`/`@g.us`/`@broadcast`; broadcast com `isTyping=true` seta `true`; auto-clear depois de 5s; cleanup remove canal.
+2. `src/pages/admin-webhook-overview/aggregations.ts` (~80 linhas) — helpers puros testáveis:
+   - `aggregateByType(rows): Array<{type, total, processed, errored, lastAt}>`.
+   - `aggregateByTypeAndInstance(rows): { types: string[]; instances: string[]; matrix: Record<string, Record<string, number>> }`.
+   - `aggregateHourly(rows, hours): Array<{ bucket: string; processed: number; errored: number }>`.
+   - `categoryColor(eventType): string` — mapa para tokens semânticos (sem cores hardcoded).
 
-**Editados (3) — UI:**
+**Editados (3):**
 
-5. `src/components/inbox/ChatPanel.tsx`:
-   - `useTypingPresence({ conversationId: conversation.id, remoteJid: conversation.contact.id, ... })`.
-   - Sem mais mudanças (header já consome `isContactTyping`).
+3. `src/pages/ViewRouter.tsx` — adicionar `'webhook-overview': Views.AdminWebhookOverviewPage`.
 
-6. `src/components/inbox/conversation-list/ConversationItem.tsx`:
-   - `const isTyping = useContactTyping(conversation.contact.id);`
-   - Onde renderiza preview da última mensagem (linha do `<p>` em ambos modos `compact` e expandido), envolve com:
-     ```tsx
-     {isTyping ? (
-       <span className="text-primary text-[13px] flex items-center gap-1.5 italic">
-         <TypingDots /> digitando…
-       </span>
-     ) : (
-       <p className="...">{lastMessageContent}</p>
-     )}
-     ```
-   - Reutiliza `TypingIndicatorCompact` ou cria `<TypingDots />` minúsculo inline (3 dots animados, ~40px) — provavelmente extrai um helper `TypingDots` de `TypingIndicator.tsx`.
+4. `src/pages/index.ts` (ou onde `Views.*` é exportado — confirmar via search) — exportar lazy `AdminWebhookOverviewPage`.
 
-7. `src/components/inbox/VirtualizedRealtimeList.tsx`:
-   - Mesmo padrão: `const isTyping = useContactTyping(contactId);` e troca a `<p>` da linha 200-204 pelo bloco condicional acima.
-   - Importa `useContactTyping`.
+5. `src/config/sidebarNavConfig.ts` — adicionar item de navegação no grupo Admin/Monitoring (depois de "Eventos do Webhook"), label "Overview Webhook", icon `BarChart3`, role `admin/supervisor`.
 
-**Editado (1) — testes existentes:**
+**Criado (1) — testes:**
 
-8. `src/hooks/__tests__/useTypingPresence.test.tsx`:
-   - Adiciona caso: `remoteJid` sobrescreve `conversationId` na chave do canal (verifica via `supabase.channel` mock chamado com `'typing:5511...@s.whatsapp.net'`).
+6. `src/pages/admin-webhook-overview/__tests__/aggregations.test.ts` — vitest:
+   - `aggregateByType` conta corretamente, separa processed/errored, pega último timestamp.
+   - `aggregateByTypeAndInstance` cria matriz correta com instâncias dedupadas.
+   - `aggregateHourly` cria buckets corretos (24 buckets para 24h, 7 para 7d).
+   - `categoryColor` retorna tokens conhecidos por grupo.
+   - Edge cases: array vazio retorna estruturas vazias válidas.
 
 ### Detalhes técnicos
 
-- **Bus correto**: `supabase` (Lovable Cloud) — é o mesmo bus do webhook. `externalClient` não tem broadcast emitido pelo webhook.
-- **Chave `remote_jid`**: estável entre webhook → preview → chat aberto. No FATOR X, `conversation.contact.id === remote_jid` (vide `derivedToConversationContact` em `evolutionAdapter.ts` linha 119).
-- **Performance**: na lista, cada `ConversationItem` cria **um canal Supabase** — para 50 conversas visíveis isso é aceitável (Supabase aceita milhares de canais). Mitigação futura: canal único `typing:wpp2` agregado, mas fora de escopo.
-- **Broadcast-defense**: hook ignora JIDs `@broadcast` e `@g.us` (memória `inbox/broadcast-defense`).
-- **Auto-clear 5s**: sem novo `composing` em 5s, considera parou de digitar (consistente com `useTypingPresence` atual).
-- **Compat legacy**: webhook emite no canal antigo `typing:${contact.id}` por enquanto — `team-chat` e fluxos com Lovable Cloud `contact.id` continuam funcionando até cleanup posterior.
-- **Testes**: 6 novos casos no `useContactTyping`, 1 caso adicional em `useTypingPresence`, sem breaking change na API existente.
+- **Fonte de dados**: `queryExternalProxy({ table: 'evolution_webhook_events', ..., limit: 500 })` — mesma fonte do log auditável. Limite de 500 é suficiente para 24h em volume normal; quando filtro for 7d, sinalizar com aviso "amostra das 500 mais recentes" se `rows.length === 500`.
+- **Filtro por instance**: lista de instâncias é derivada do próprio resultado (`Array.from(new Set(rows.map(r => r.instance_name)))`) — sem query extra. Default: `'all'`.
+- **Cores**: usar tokens semânticos (`primary`, `warning`, `destructive`, `muted`) via Tailwind. Sem cores hardcoded (memória `style/design-system-and-skins`).
+- **Recharts**: já está no projeto (`TelemetryCharts` usa). Reuso de padrões do `TelemetryCharts.tsx` (formatBucketTime, AreaChart stacked).
+- **Acessibilidade**: tabela heatmap com `<caption>` para screen readers, células com `title` mostrando "TIPO em INSTANCE: N eventos". Teclado natural.
+- **Performance**: agregações em `useMemo`, dados de Recharts só recalculados quando `data` muda. Sem realtime (auto-refresh 60s já é responsivo).
+- **RLS**: `evolution_webhook_events` é leitura via proxy admin existente — sem mudança de policy.
+- **Sem mudanças em edge functions**: 100% frontend.
 
 ### Fora de escopo
 
-- Não aglutinar broadcasts em canal único por instância (otimização futura).
-- Não exibir "digitando…" no Kanban / módulos não-inbox.
-- Não migrar `team-chat` para `remoteJid` (não tem WhatsApp).
-- Não remover ainda o canal legado `typing:${contact.id}` — fica para um lote de cleanup quando o inbox legado sumir.
+- Não substituir `AdminWebhookEventsPage` (log auditável continua sendo a referência drill-down).
+- Não criar RPC dedicada de agregação (`rpc_webhook_stats`) — manter agregação client-side enquanto volume couber em 500 rows. Se virar gargalo, vira lote dedicado pedindo RPC ao operador FATOR X.
+- Sem alertas/notificações automáticas (próximo lote pode plugar no `useWarRoomAlerts`).
+- Sem export CSV (regra Zero Export do projeto — memória `security/data-export-and-protection-policy`).
+- Sem dashboard combinado com `useEvolutionMonitoring` — esse é específico de webhook events; conexões/health continuam em `EvolutionMonitoringDashboard`.
 
