@@ -9540,6 +9540,34 @@ export type Database = {
         Args: { p_ids: string[]; p_reason: string }
         Returns: number
       }
+      rpc_dlq_list_audit: {
+        Args: { p_action?: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          action: string
+          created_at: string
+          details: Json
+          entity_id: string
+          id: string
+          user_email: string
+          user_id: string
+          user_name: string
+        }[]
+      }
+      rpc_dlq_log_item_action: {
+        Args: { p_action: string; p_ids: string[]; p_reason?: string }
+        Returns: undefined
+      }
+      rpc_dlq_log_reprocess_result: {
+        Args: {
+          p_abandoned?: number
+          p_failed?: number
+          p_message?: string
+          p_processed?: number
+          p_source?: string
+          p_succeeded?: number
+        }
+        Returns: undefined
+      }
       rpc_dlq_log_reprocess_trigger: {
         Args: { p_source?: string }
         Returns: undefined

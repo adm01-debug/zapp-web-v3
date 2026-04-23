@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { RetryMetricsPanel } from './RetryMetricsPanel';
 import { DLQPanel } from './DLQPanel';
+import { DLQAuditHistory } from './DLQAuditHistory';
 import type { ConnectionInfo, WebhookTestResult, WebhookConfig } from './hooks/useEvolutionMonitoring';
 
 interface SecretStatus {
@@ -127,6 +128,9 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
 
       {/* Dead-Letter Queue Panel */}
       <DLQPanel />
+
+      {/* DLQ audit trail — who reprocessed, when, which IDs, outcome */}
+      <DLQAuditHistory />
 
       {/* Auto-load config for first connection if not loaded */}
       {!webhookConfig && connections.length > 0 && (
