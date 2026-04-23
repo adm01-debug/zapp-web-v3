@@ -1,64 +1,66 @@
 
 
-## Infinite scroll no chat (carregar mensagens antigas ao chegar no topo)
+## Cancelar/prevenir loadOlder duplicado em scroll rápido
 
-### Estado atual
+### Problema
 
-- `useExternalMessages` já expõe `loadOlder()`, `loadingOlder`, `hasMore` (cursor `created_at < oldest`).
-- `useMessages` (local DB) **não** expõe paginação — hoje retorna tudo via realtime/range loop.
-- `useRealtimeInbox` consome um dos dois conforme `USE_EXTERNAL_DB`, mas **descarta** `loadOlder/loadingOlder/hasMore`.
-- `ChatMessagesArea` é a área scrollável (`scrollContainerRef`), mas só implementa `scrollToBottom` / `scrollToMessage`. Sem listener de scroll-up.
+`triggerLoad()` em `ChatMessagesArea.tsx` já tem `isFetchingOlderRef` como guard, mas:
+1. Se o usuário **desce** durante o fetch, o batch que está chegando ainda é prepended e a posição é "ancorada" pra cima — o usuário sente um pulo pra trás indesejado.
+2. Se o fetch demora e o usuário sobe→desce→sobe, ao soltar o ref (100ms após `finally`), um segundo `triggerLoad` dispara mesmo que o usuário já não esteja mais perto do topo.
+3. Não há `AbortController` — o fetch HTTP continua mesmo após o usuário desistir.
 
 ### Mudanças
 
-**1. `src/hooks/useRealtimeInbox.ts`** — propagar paginação
-- Quando `USE_EXTERNAL_DB`, repassar `externalMsgs.loadOlder`, `externalMsgs.loadingOlder`, `externalMsgs.hasMore`.
-- Quando local, expor stubs: `loadOlder = async () => {}`, `loadingOlder = false`, `hasMore = false` (no-op — local já carrega tudo).
-- Adicionar ao retorno: `loadOlderMessages`, `loadingOlderMessages`, `hasMoreMessages`.
+**1. `src/hooks/useExternalEvolution.ts`** — `loadOlder` aceita `AbortSignal`
+- Adicionar `signal?: AbortSignal` em `fetchMessagesByJid` e propagar para `queryExternalProxy` (que já usa `fetch` internamente).
+- `loadOlder` no `useExternalMessages`: criar `AbortController` interno, guardar em `loadOlderAbortRef`. Antes de iniciar novo, abortar o anterior se existir. No `catch`, ignorar `AbortError`.
+- Expor `cancelLoadOlder()` no retorno do hook (chama `abort()` + reseta `loadingOlder`).
 
-**2. `src/pages/Inbox.tsx` (ou wrapper que monta `ChatPanel`)** — passar props pra baixo
-- Localizar onde `ChatPanel` é instanciado a partir de `useRealtimeInbox` e passar as 3 novas props.
+**2. `src/lib/externalProxy.ts`** — propagar `signal`
+- `ProxySelectParams` ganha `signal?: AbortSignal`.
+- `queryExternalProxy` passa `signal` para o `fetch` interno.
 
-**3. `src/components/inbox/ChatPanel.tsx`** — receber e passar
-- Adicionar 3 props opcionais na interface `ChatPanelProps`: `onLoadOlder?: () => void | Promise<void>`, `loadingOlder?: boolean`, `hasMoreOlder?: boolean`.
-- Repassar para `ChatMessagesArea`.
+**3. `src/hooks/useRealtimeInbox.ts`** — expor `cancelLoadOlder`
+- Quando external: repassar `externalMsgs.cancelLoadOlder`.
+- Quando local: stub `() => {}`.
 
-**4. `src/components/inbox/chat/ChatMessagesArea.tsx`** — detector + indicador
-- Adicionar as 3 props na interface.
-- `useEffect` no `scrollContainerRef` com listener `scroll`:
-  - Threshold: `scrollTop < 80` E `hasMoreOlder` E `!loadingOlder` E `!isFetchingRef.current` → chamar `onLoadOlder()`.
-  - **Preservar posição**: antes de chamar, capturar `prevScrollHeight = container.scrollHeight`; após `onLoadOlder` resolver e o DOM atualizar (via `requestAnimationFrame`), ajustar `container.scrollTop = container.scrollHeight - prevScrollHeight`. Sem isso o usuário "salta" pra baixo de novo.
-  - Guardar `isFetchingRef` para evitar disparo duplo durante a animação.
-- Indicador de loading no topo (acima do primeiro grupo de data): se `loadingOlder` → spinner pequeno + "Carregando mensagens anteriores…"; se `!hasMoreOlder && messages.length > 0` → texto sutil "Início da conversa".
-- **Não** auto-scroll-to-bottom quando `loadingOlder` (já tratado pelo guard de preservação de posição).
+**4. `src/components/inbox/ChatPanel.tsx` + `RealtimeInboxView.tsx`** — propagar prop
+- `onCancelLoadOlder?: () => void` → repassar para `ChatMessagesArea`.
+
+**5. `src/components/inbox/chat/ChatMessagesArea.tsx`** — lógica de cancelamento
+- Trackear direção do scroll: `lastScrollTopRef.current`. Se `scrollTop > lastScrollTop + 50` (descendo > 50px) E `isFetchingOlderRef.current === true` → chamar `onCancelLoadOlder()`.
+- Cancelar também ao **desmontar** (cleanup do `useEffect`): `onCancelLoadOlder?.()` no return do effect.
+- Manter `isFetchingOlderRef` mas adicionar `cancelledRef`: se cancelado durante o fetch, **pular o anchoring** de `scrollTop` no `requestAnimationFrame` (não força a posição pra cima — respeita onde o usuário está).
+- Coalescing extra: throttle do `triggerLoad` via `lastTriggerAtRef` — não dispara se o último trigger foi há < 250ms (defesa contra micro-scrolls).
 
 ### Detalhes técnicos
 
-- Usar `useRef<boolean>` para `isFetchingRef` em vez de state pra evitar re-render no scroll handler.
-- O `useEffect` de auto-scroll existente (`scrollToBottom` em mudança de `messages.length`) precisa ser ignorado quando a mudança veio de `loadOlder`. Solução: comparar `messages[0].id` antes/depois — se o primeiro id mudou, foi prepend → não scrollar pro fim.
-  - Implementação: `prevFirstIdRef.current`. Se mudou e o length aumentou → prepend, skip auto-scroll.
-- Throttle nativo: o listener é leve (3 comparações), não precisa de debounce, mas `passive: true` na adição.
-- `loadOlder` no `useExternalEvolution` já tem guard `loadingOlder || !hasMore` — segurança extra.
+- `AbortController` é nativo, não precisa de polyfill.
+- `queryExternalProxy` já usa `fetch` — só passar `{ signal }` no init.
+- `AbortError` precisa ser detectado por `error.name === 'AbortError'` (não `instanceof`) pra cobrir DOMException no Safari.
+- O `setLoadingOlder(false)` deve rodar tanto no abort quanto no success — usar `finally` no `loadOlder`.
+- Para o caso de prepend cancelado a meio caminho (rede já voltou): o `setMessages` no `then` precisa checar `if (controller.signal.aborted) return` antes de fazer merge.
 
-### Comportamento
+### Comportamento esperado
 
-| Ação | Antes | Depois |
+| Cenário | Antes | Depois |
 |---|---|---|
-| Scroll até o topo do chat | Nada | Carrega 100 msgs anteriores, posição mantida |
-| Não há mais mensagens | — | Mostra "Início da conversa" |
-| Durante carregamento | — | Spinner discreto no topo |
-| Modo local DB | — | No-op (já carrega tudo via range loop) |
+| Sobe rápido até topo, fica parado | 1 fetch | 1 fetch |
+| Sobe → desce antes de terminar | Fetch completa, prepend força ancoragem pra trás | Fetch abortado, sem prepend, scroll mantido onde usuário está |
+| Sobe rápido, dispara 3x | 1 fetch (guard ref) | 1 fetch (guard ref + 250ms throttle) |
+| Troca de conversa durante loadOlder | Fetch órfão termina e suja state | Cleanup do effect aborta no unmount |
 
 ### Arquivos editados
 
+- `src/lib/externalProxy.ts`
+- `src/hooks/useExternalEvolution.ts`
 - `src/hooks/useRealtimeInbox.ts`
 - `src/components/inbox/ChatPanel.tsx`
+- `src/components/inbox/RealtimeInboxView.tsx`
 - `src/components/inbox/chat/ChatMessagesArea.tsx`
-- `src/pages/Inbox.tsx` (ou onde `ChatPanel` é instanciado a partir do hook — confirmo na implementação)
 
 ### Fora de escopo
 
-- Não toco em `useMessages` local (sem paginação por ora — local carrega tudo via range loop existente).
-- Não mudo `useExternalEvolution.ts` (já tem `loadOlder` pronto).
-- Sem virtualização nova — a lista atual usa render direto; com 100 msgs por página é OK.
+- Não toco no polling forward (`pollNewMessages`) — já é incremental e leve.
+- Sem mudança no proxy (Edge Function) — abort é client-side; o servidor termina sozinho.
 
