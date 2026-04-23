@@ -5004,6 +5004,51 @@ export type Database = {
         }
         Relationships: []
       }
+      nps_invitations: {
+        Row: {
+          channel: string
+          contact_id: string
+          created_at: string
+          id: string
+          responded: boolean
+          response_id: string | null
+          sent_at: string
+        }
+        Insert: {
+          channel?: string
+          contact_id: string
+          created_at?: string
+          id?: string
+          responded?: boolean
+          response_id?: string | null
+          sent_at?: string
+        }
+        Update: {
+          channel?: string
+          contact_id?: string
+          created_at?: string
+          id?: string
+          responded?: boolean
+          response_id?: string | null
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nps_invitations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nps_invitations_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "nps_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nps_surveys: {
         Row: {
           agent_id: string | null
