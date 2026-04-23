@@ -49,14 +49,20 @@ export function EvolutionDisconnectBanner() {
   const handleReconnect = async (conn: DisconnectedInstance) => {
     setReconnecting(conn.instance_id);
     try {
-      const { error } = await supabase.functions.invoke('evolution-api/instance/connect', {
-        method: 'POST',
-        body: { instanceName: conn.instance_id },
+      // NOTE: banner usa `connect` (gera QR novo); MonitoringConnectionsList usa
+      // `restart-instance` (recupera sessão sem rescan). Contratos diferentes propositais.
+      const { data, error } = await supabase.functions.invoke('evolution-api', {
+        body: { action: 'connect', instanceName: conn.instance_id },
       });
-      if (error) throw error;
-      toast.success(`Reconectando ${conn.instance_id}... Escaneie o QR Code na tela de conexões.`);
-    } catch {
-      toast.error(`Erro ao reconectar ${conn.instance_id}`);
+      if (error) throw new Error(error.message || 'Falha ao invocar evolution-api');
+      if (data?.error === true) {
+        throw new Error(data?.message || 'Evolution API retornou erro');
+      }
+      toast.success(`Reconectando ${conn.instance_id}... Abrindo tela de conexões para escanear o QR Code.`);
+      window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erro desconhecido';
+      toast.error(`Erro ao reconectar ${conn.instance_id}: ${msg}`);
     } finally {
       setReconnecting(null);
     }
