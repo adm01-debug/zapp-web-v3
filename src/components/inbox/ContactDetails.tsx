@@ -21,7 +21,7 @@ function getStoredAccordionState(): string[] {
     const stored = localStorage.getItem(ACCORDION_STORAGE_KEY);
     if (stored) return JSON.parse(stored);
   } catch { /* storage unavailable */ }
-  return ['info', 'crm-360', 'intelligence', 'tags', 'assignment', 'custom-fields', 'notes', 'history', 'stats'];
+  return ['info', 'crm-360', 'intelligence', 'tags', 'assignment', 'custom-fields', 'notes', 'history', 'sla-timeline', 'stats'];
 }
 
 function saveAccordionState(value: string[]) {
