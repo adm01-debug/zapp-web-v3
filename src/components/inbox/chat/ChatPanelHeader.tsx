@@ -42,12 +42,14 @@ interface ChatPanelHeaderProps {
   lastMessages?: string[];
   allMessages?: ChatMessage[];
   onSelectSuggestion?: (text: string) => void;
+  sendState?: 'idle' | 'retrying' | 'failed';
 }
 
 export function ChatPanelHeader({
   conversation, isContactTyping, showAIAssistant, showDetails, showSummaryPanel,
   onToggleAIAssistant, onToggleDetails, onOpenSearch, onOpenTransfer, onOpenSchedule,
   onBack, onGenerateSummary, isSummaryLoading, onCloseConversation, activeTool, onSetActiveTool,
+  sendState = 'idle',
 }: ChatPanelHeaderProps) {
   const isMobile = useIsMobile();
 
@@ -78,6 +80,17 @@ export function ChatPanelHeader({
               firstResponseMinutes={conversation.priority === 'high' ? 2 : 5}
               resolutionMinutes={conversation.priority === 'high' ? 30 : 60}
             />
+            {sendState === 'retrying' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-warning/15 text-warning border border-warning/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+                Tentando reenviar…
+              </span>
+            )}
+            {sendState === 'failed' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-destructive/15 text-destructive border border-destructive/30">
+                Última mensagem falhou
+              </span>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
             {isContactTyping ? <TypingIndicatorCompact isVisible={true} /> : (
