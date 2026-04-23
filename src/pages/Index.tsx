@@ -104,6 +104,7 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
     return () => clearTimeout(t);
   }, []);
   useTranscriptionNotifications({ enabled: !!user && notifReady });
+  useConnectionAlertsPush();
 
   const showChecklist = !checklistComplete && !checklistDismissed && currentView === 'dashboard';
 
