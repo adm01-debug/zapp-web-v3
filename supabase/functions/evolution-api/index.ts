@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { Logger, checkRateLimit, getClientIP, getCorsHeaders, handleCors } from "../_shared/validation.ts";
-import { proxyToEvolution, resolvePrivateBucketUrl } from "../_shared/evolution-api-proxy.ts";
+import { EVOLUTION_ENVELOPE_VERSION, proxyToEvolution, resolvePrivateBucketUrl } from "../_shared/evolution-api-proxy.ts";
 
 serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -57,9 +57,61 @@ serve(async (req) => {
     if (action === 'list-instances') return await proxy(`/instance/fetchInstances${body.instanceName ? `?instanceName=${body.instanceName}` : ''}`, 'GET');
 
     if (action === 'connect') {
-      const response = await fetch(`${evolutionApiUrl}/instance/connect/${instance}`, { method: 'GET', headers: { 'apikey': evolutionApiKey } });
-      const data = await response.json();
-      if (data.qrcode) await supabase.from('whatsapp_connections').update({ qr_code: data.qrcode.base64, status: 'pending', instance_id: instance }).eq('instance_id', instance);
+      const connectUrl = `${evolutionApiUrl}/instance/connect/${instance}`;
+      const doConnect = async () => {
+        const response = await fetch(connectUrl, { method: 'GET', headers: { 'apikey': evolutionApiKey } });
+        const data = await response.json();
+        return { response, data };
+      };
+
+      let { response, data } = await doConnect();
+
+      const rawMessages = Array.isArray(data?.response?.message)
+        ? data.response.message.map((msg: unknown) => JSON.stringify(msg)).join(' ')
+        : String(data?.response?.message ?? data?.message ?? '');
+      const missingInstance = response.status === 404 && /does not exist|not found/i.test(rawMessages);
+
+      if (missingInstance) {
+        const createResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
+          method: 'POST',
+          headers: { 'apikey': evolutionApiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instanceName: instance,
+            qrcode: body.qrcode ?? true,
+            integration: body.integration || 'WHATSAPP-BAILEYS',
+            token: body.token,
+            number: body.number,
+            businessId: body.businessId,
+            wabaId: body.wabaId,
+            phoneNumberId: body.phoneNumberId,
+            webhook: body.webhook,
+            chatwoot: body.chatwoot,
+            typebot: body.typebot,
+            proxy: body.proxy,
+          }),
+        });
+        const createData = await createResponse.json();
+
+        if (!createResponse.ok) {
+          return new Response(JSON.stringify({
+            version: EVOLUTION_ENVELOPE_VERSION,
+            error: true,
+            status: createResponse.status,
+            message: 'Falha ao recriar instância na API Evolution.',
+            details: createData,
+          }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        ({ response, data } = await doConnect());
+      }
+
+      if (response.ok && data?.qrcode?.base64) {
+        await supabase
+          .from('whatsapp_connections')
+          .update({ qr_code: data.qrcode.base64, status: 'pending', instance_id: instance })
+          .eq('instance_id', instance);
+      }
+
       return new Response(JSON.stringify(data), { status: response.ok ? 200 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 

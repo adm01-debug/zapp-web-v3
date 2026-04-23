@@ -129,7 +129,6 @@ export function useConnectionsManager() {
   const {
     isLoading: evolutionLoading,
     createInstance,
-    connectInstance,
     getInstanceStatus,
     disconnectInstance,
     deleteInstance,
@@ -356,6 +355,19 @@ export function useConnectionsManager() {
     }
   };
 
+  const requestConnectionQr = async (instanceId: string) => {
+    const { data, error } = await supabase.functions.invoke('evolution-api', {
+      body: { action: 'connect', instanceName: instanceId },
+    });
+
+    if (error) throw new Error(error.message || 'Erro ao gerar QR Code');
+    if (data && typeof data === 'object' && 'error' in data && data.error === true) {
+      throw new Error(typeof data.message === 'string' ? data.message : 'Erro ao gerar QR Code');
+    }
+
+    return data as { qrcode?: { base64?: string }; status?: string; state?: string } | null;
+  };
+
   const handleShowQrCode = async (connection: WhatsAppConnection) => {
     if ((connection.api_type ?? 'evolution') === 'official') {
       toast({
@@ -381,7 +393,7 @@ export function useConnectionsManager() {
     if (connection.status !== 'connected') {
       const attemptId = await logQrAttempt(connection);
       try {
-        const result = await connectInstance(connection.instance_id);
+        const result = await requestConnectionQr(connection.instance_id);
         const expiresAt = Date.now() + QR_TTL_MS;
         if (result?.qrcode?.base64) {
           setQrCodeDialog((prev) => ({
@@ -419,7 +431,7 @@ export function useConnectionsManager() {
     setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
     try {
-      const result = await connectInstance(connection.instance_id);
+      const result = await requestConnectionQr(connection.instance_id);
       const expiresAt = Date.now() + QR_TTL_MS;
       if (result?.qrcode?.base64) {
         setQrCodeDialog((prev) => ({
