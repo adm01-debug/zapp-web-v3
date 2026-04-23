@@ -71,9 +71,11 @@ interface MilestoneProps {
   status?: SLAStatus;
   pulse?: boolean;
   iconColor?: string;
+  agentName?: string | null;
+  queueName?: string | null;
 }
 
-function Milestone({ index, icon: Icon, label, timestamp, durationLabel, status, pulse, iconColor }: MilestoneProps) {
+function Milestone({ index, icon: Icon, label, timestamp, durationLabel, status, pulse, iconColor, agentName, queueName }: MilestoneProps) {
   const statusStyle = status ? STATUS_STYLES[status] : null;
   return (
     <motion.div
@@ -104,6 +106,22 @@ function Milestone({ index, icon: Icon, label, timestamp, durationLabel, status,
           <span>{formatTs(timestamp)}</span>
           {durationLabel && <span className="text-foreground/60">· {durationLabel}</span>}
         </div>
+        {(agentName || queueName) && (
+          <div className="flex items-center gap-1.5 mt-1 text-[10px] text-muted-foreground/90 flex-wrap">
+            {agentName && (
+              <span className="inline-flex items-center gap-1 bg-muted/40 rounded px-1.5 py-0.5">
+                <User className="w-2.5 h-2.5" />
+                <span className="text-foreground/80 font-medium">{agentName}</span>
+              </span>
+            )}
+            {queueName && (
+              <span className="inline-flex items-center gap-1 bg-muted/40 rounded px-1.5 py-0.5">
+                <Users className="w-2.5 h-2.5" />
+                <span className="text-foreground/80">{queueName}</span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -246,6 +264,9 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
     });
   }
 
+  const firstResponseAgentName = timeline.firstResponseBy?.agentName ?? assignedTo?.name ?? null;
+  const firstResponseQueueName = timeline.firstResponseBy?.queueName ?? queue?.name ?? null;
+
   if (timeline.firstResponseAt || timeline.isAwaitingFirstResponse) {
     milestones.push({
       key: 'first-response',
@@ -263,6 +284,8 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           status={firstResponseStatus}
           pulse={timeline.isAwaitingFirstResponse}
           iconColor={timeline.isAwaitingFirstResponse ? 'text-warning' : 'text-success'}
+          agentName={timeline.isAwaitingFirstResponse ? null : firstResponseAgentName}
+          queueName={timeline.isAwaitingFirstResponse ? null : firstResponseQueueName}
         />
       ),
     });
@@ -306,6 +329,8 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           }
           status={resolutionStatus}
           iconColor="text-success"
+          agentName={timeline.resolvedBy?.agentName ?? null}
+          queueName={timeline.resolvedBy?.queueName ?? null}
         />
       ),
     });

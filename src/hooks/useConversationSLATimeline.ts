@@ -2,6 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface SLAAttribution {
+  agentId: string | null;
+  agentName: string | null;
+  queueId: string | null;
+  queueName: string | null;
+}
+
 export interface SLATimelineData {
   firstContactAt: Date | null;
   firstResponseAt: Date | null;
@@ -13,6 +20,8 @@ export interface SLATimelineData {
   isAwaitingFirstResponse: boolean;
   awaitingMs: number | null;
   totalMessages: number;
+  firstResponseBy: SLAAttribution | null;
+  resolvedBy: SLAAttribution | null;
 }
 
 interface EvolutionMessageRow {
@@ -24,6 +33,14 @@ interface EvolutionMessageRow {
 interface ConversationEventRow {
   event_type: string;
   created_at: string;
+  performed_by: string | null;
+  from_agent_id: string | null;
+  to_agent_id: string | null;
+  from_queue_id: string | null;
+  to_queue_id: string | null;
+  performed_by_profile?: { id: string; name: string | null } | null;
+  to_agent?: { id: string; name: string | null } | null;
+  to_queue?: { id: string; name: string | null } | null;
 }
 
 const EMPTY: SLATimelineData = {
@@ -37,6 +54,8 @@ const EMPTY: SLATimelineData = {
   isAwaitingFirstResponse: false,
   awaitingMs: null,
   totalMessages: 0,
+  firstResponseBy: null,
+  resolvedBy: null,
 };
 
 /**
@@ -95,29 +114,64 @@ export function useConversationSLATimeline(remoteJid: string | null, contactId: 
           ? Date.now() - firstContactAt.getTime()
           : null;
 
-      // 2. Close / reopen events from Lovable Cloud (best-effort)
+      // 2. Close / reopen / assign events from Lovable Cloud (best-effort)
       let closedAt: Date | null = null;
       let reopenedAt: Date | null = null;
+      let resolvedBy: SLAAttribution | null = null;
+      let firstResponseBy: SLAAttribution | null = null;
 
       if (contactId) {
         const { data: events } = await supabase
           .from('conversation_events')
-          .select('event_type, created_at')
+          .select(`
+            event_type, created_at, performed_by, from_agent_id, to_agent_id,
+            from_queue_id, to_queue_id,
+            performed_by_profile:profiles!conversation_events_performed_by_fkey(id, name),
+            to_agent:profiles!conversation_events_to_agent_id_fkey(id, name),
+            to_queue:queues!conversation_events_to_queue_id_fkey(id, name)
+          `)
           .eq('contact_id', contactId)
-          .in('event_type', ['close', 'reopen'])
+          .in('event_type', ['close', 'reopen', 'assign'])
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(50);
 
-        const eventRows = (events || []) as ConversationEventRow[];
+        const eventRows = (events || []) as unknown as ConversationEventRow[];
         const lastClose = eventRows.find((e) => e.event_type === 'close');
         const lastReopen = eventRows.find((e) => e.event_type === 'reopen');
 
-        if (lastClose) closedAt = new Date(lastClose.created_at);
+        if (lastClose) {
+          closedAt = new Date(lastClose.created_at);
+          resolvedBy = {
+            agentId: lastClose.performed_by_profile?.id ?? lastClose.performed_by ?? null,
+            agentName: lastClose.performed_by_profile?.name ?? null,
+            queueId: lastClose.to_queue?.id ?? lastClose.to_queue_id ?? null,
+            queueName: lastClose.to_queue?.name ?? null,
+          };
+        }
         if (lastReopen) reopenedAt = new Date(lastReopen.created_at);
 
         // If reopen happened after close, conversation is open again — nullify closedAt for resolution math.
         if (closedAt && reopenedAt && reopenedAt > closedAt) {
           closedAt = null;
+          resolvedBy = null;
+        }
+
+        // First response attribution: pick the latest assign event whose created_at <= firstResponseAt
+        if (firstResponseAt) {
+          const assignsAsc = eventRows
+            .filter((e) => e.event_type === 'assign')
+            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          const activeAssign = [...assignsAsc]
+            .reverse()
+            .find((e) => new Date(e.created_at).getTime() <= firstResponseAt.getTime());
+          if (activeAssign) {
+            firstResponseBy = {
+              agentId: activeAssign.to_agent?.id ?? activeAssign.to_agent_id ?? null,
+              agentName: activeAssign.to_agent?.name ?? null,
+              queueId: activeAssign.to_queue?.id ?? activeAssign.to_queue_id ?? null,
+              queueName: activeAssign.to_queue?.name ?? null,
+            };
+          }
         }
       }
 
@@ -137,6 +191,8 @@ export function useConversationSLATimeline(remoteJid: string | null, contactId: 
         isAwaitingFirstResponse,
         awaitingMs,
         totalMessages: sorted.length,
+        firstResponseBy,
+        resolvedBy,
       };
     },
   });
