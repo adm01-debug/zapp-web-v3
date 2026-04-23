@@ -28,6 +28,23 @@ interface VirtualizedRealtimeListProps {
 const ITEM_HEIGHT = 80;
 const EMPTY_SET = new Set<string>();
 
+/**
+ * Linha de preview que escuta o canal `typing:${contactId}` e troca o conteúdo
+ * por "digitando…" enquanto o contato está compondo. Sub-componente para que o
+ * hook `useContactTyping` seja chamado por linha (regra dos Hooks).
+ */
+function ConversationPreviewLine({ contactId, fallback }: { contactId: string; fallback: string }) {
+  const isTyping = useContactTyping(contactId);
+  if (isTyping) {
+    return (
+      <div className="text-[13px]">
+        <TypingIndicatorCompact isVisible={true} />
+      </div>
+    );
+  }
+  return <p className="text-[13px] text-muted-foreground truncate">{fallback}</p>;
+}
+
 export function VirtualizedRealtimeList({
   conversations,
   selectedContactId,
@@ -199,11 +216,14 @@ export function VirtualizedRealtimeList({
                       )}
                     </div>
                   </div>
-                  <p className="text-[13px] text-muted-foreground truncate">
-                    {conversation.contact.contact_type === 'sicoob_gifts' && conversation.contact.company
-                      ? `${conversation.contact.company} · ${conversation.lastMessage?.content || 'Sem mensagens'}`
-                      : conversation.lastMessage?.content || 'Sem mensagens'}
-                  </p>
+                  <ConversationPreviewLine
+                    contactId={contactId}
+                    fallback={
+                      conversation.contact.contact_type === 'sicoob_gifts' && conversation.contact.company
+                        ? `${conversation.contact.company} · ${conversation.lastMessage?.content || 'Sem mensagens'}`
+                        : conversation.lastMessage?.content || 'Sem mensagens'
+                    }
+                  />
                   {conversation.contact.tags && conversation.contact.tags.length > 0 && (
                     <div className="flex gap-1 mt-1.5">
                       {conversation.contact.tags.slice(0, 2).map((tag) => (
