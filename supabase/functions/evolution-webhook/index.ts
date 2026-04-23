@@ -55,8 +55,8 @@ serve(async (req) => {
     const result = await validateWebhook(req);
     if (!result.valid) {
       console.warn(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`);
-      // Auto-pause: conta invalid_signature na janela
-      recordAuthFailureAndMaybePause(supabase, headerInstance ?? 'unknown', 'invalid_signature');
+      // Auto-pause: conta invalid_signature na janela e persiste o evento
+      recordAuthFailureAndMaybePause(supabase, headerInstance ?? 'unknown', 'invalid_signature', 'webhook', { message: result.error ?? 'invalid_signature' });
       await auditWebhookEvent(supabase, {
         request_id: requestId, status: 'rejected',
         error_message: result.error ?? 'invalid_signature',

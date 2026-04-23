@@ -12,6 +12,7 @@ import { Pause, Play, ShieldAlert, RefreshCw, AlertTriangle } from 'lucide-react
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { AuthEventTrendChart } from '@/components/admin/instance-pauses/AuthEventTrendChart';
 
 interface PauseRow {
   id: string;
@@ -134,6 +135,8 @@ export default function AdminInstancePausesPage() {
           </AlertDescription>
         </Alert>
       )}
+
+      <AuthEventTrendChart />
 
       <Card>
         <CardHeader>

@@ -4360,6 +4360,36 @@ export type Database = {
           },
         ]
       }
+      instance_auth_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          http_status: number | null
+          id: string
+          instance_name: string
+          reason: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          http_status?: number | null
+          id?: string
+          instance_name: string
+          reason: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          http_status?: number | null
+          id?: string
+          instance_name?: string
+          reason?: string
+          source?: string
+        }
+        Relationships: []
+      }
       instance_processing_pauses: {
         Row: {
           auto_paused: boolean
@@ -9197,6 +9227,7 @@ export type Database = {
       cleanup_old_evolution_incidents: { Args: never; Returns: number }
       cleanup_old_evolution_retry_metrics: { Args: never; Returns: undefined }
       cleanup_old_failed_messages: { Args: never; Returns: undefined }
+      cleanup_old_instance_auth_events: { Args: never; Returns: number }
       cleanup_old_qr_attempts: { Args: never; Returns: undefined }
       cleanup_old_send_failures: { Args: never; Returns: undefined }
       cleanup_webhook_deliveries: { Args: never; Returns: undefined }
@@ -9424,6 +9455,21 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: undefined
+      }
+      rpc_instance_auth_event_summary: {
+        Args: { p_hours?: number; p_instance?: string }
+        Returns: Json
+      }
+      rpc_instance_auth_event_trend: {
+        Args: { p_hours?: number; p_instance?: string }
+        Returns: {
+          auth_401: number
+          auth_403: number
+          bucket: string
+          instance_name: string
+          invalid_signature: number
+          total: number
+        }[]
       }
       rpc_log_search_event: {
         Args: {
