@@ -10,20 +10,23 @@
  *  - admin → page renders fully
  *  - while roles are loading → "Verificando permissões…" status
  */
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ViewRouter } from '@/pages/ViewRouter';
 
-// --- Mock heavy view to a sentinel (avoids loading the real page tree) ---
-vi.mock('@/pages/lazyViews', () => {
-  const React = require('react');
-  const Sentinel = () => React.createElement('div', { 'data-testid': 'dlq-page' }, 'DLQ Panel');
-  return new Proxy({}, {
-    get: () => React.lazy(async () => ({ default: Sentinel })),
-  });
+// Replace the heavy DLQ page lazy import with a tiny sentinel — keeps the rest
+// of the lazyViews map untouched (other routes still resolve normally).
+vi.mock('@/pages/lazyViews', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  const Sentinel = () =>
+    React.createElement('div', { 'data-testid': 'dlq-page' }, 'DLQ Panel');
+  return {
+    ...actual,
+    AdminFailedMessagesPage: React.lazy(async () => ({ default: Sentinel })),
+  };
 });
 
-// Auxiliary mocks to keep ViewRouter renderable in jsdom
+// Stub auxiliary hooks so ViewRouter renders without touching real app state.
 vi.mock('@/hooks/useCurrentModule', () => ({
   useCurrentModule: () => ({ label: 'Mensagens com Falha', icon: null, group: 'Admin' }),
 }));
@@ -31,38 +34,45 @@ vi.mock('@/hooks/useDocumentTitle', () => ({ useDocumentTitle: () => {} }));
 vi.mock('@/hooks/useAriaAnnouncer', () => ({
   useAriaAnnouncer: () => ({ announce: vi.fn() }),
 }));
-// framer-motion: bypass AnimatePresence to render children synchronously
-vi.mock('framer-motion', () => {
-  const React = require('react');
-  return {
-    motion: new Proxy({}, {
-      get: () => (props: any) => React.createElement('div', props, props.children),
-    }),
-    AnimatePresence: ({ children }: any) => React.createElement(React.Fragment, null, children),
-    useReducedMotion: () => true,
-  };
-});
 
-// useUserRole — central piece under test
+// framer-motion: bypass animation wrappers so children render synchronously.
+vi.mock('framer-motion', () => ({
+  motion: new Proxy(
+    {},
+    {
+      get:
+        () =>
+        ({ children, ...rest }: { children?: React.ReactNode } & Record<string, unknown>) =>
+          React.createElement('div', rest, children),
+    },
+  ),
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
+  useReducedMotion: () => true,
+}));
+
+// ErrorBoundary passthrough (we're not testing recovery here).
+vi.mock('@/components/ui/error-boundary-retry', () => ({
+  ErrorBoundaryWithRetry: ({ children }: { children?: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
+}));
+
+// Central piece under test — useUserRole drives the gate.
 const userRoleMock = vi.fn();
 vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: () => userRoleMock(),
 }));
 
-// ErrorBoundary passthrough
-vi.mock('@/components/ui/error-boundary-retry', () => {
-  const React = require('react');
-  return {
-    ErrorBoundaryWithRetry: ({ children }: any) => React.createElement(React.Fragment, null, children),
-  };
-});
+// Import AFTER mocks are registered.
+import { ViewRouter } from '@/pages/ViewRouter';
 
 function renderRoute() {
   return render(<ViewRouter currentView="failed-messages" />);
 }
 
 async function flushLazy() {
-  // Allow React.lazy + Suspense fallback (none here) to settle.
+  // Allow React.lazy + Suspense to resolve.
+  await new Promise((r) => setTimeout(r, 0));
   await new Promise((r) => setTimeout(r, 0));
 }
 
@@ -107,7 +117,7 @@ describe('ViewRouter — failed-messages role gating', () => {
     expect(screen.queryByTestId('dlq-page')).not.toBeInTheDocument();
   });
 
-  it('supervisor → page renders (read-only is enforced inside the page itself)', async () => {
+  it('supervisor → page renders (write actions are enforced inside the page itself)', async () => {
     userRoleMock.mockReturnValue({
       roles: ['supervisor'],
       isAdmin: false,
