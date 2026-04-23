@@ -190,6 +190,12 @@ export default function AdminWebhookSecretStatusPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {activeBreaches.length > 0 && (
+            <Badge variant="destructive" className="gap-1">
+              <ShieldAlert className="h-3 w-3" />
+              {activeBreaches.length} alerta{activeBreaches.length > 1 ? 's' : ''} ativo{activeBreaches.length > 1 ? 's' : ''}
+            </Badge>
+          )}
           <InstanceFilterSelect
             instances={instances}
             value={selectedInstance}
