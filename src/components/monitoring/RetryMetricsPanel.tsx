@@ -9,6 +9,7 @@ import { Activity, RefreshCw, Copy, TrendingUp, TrendingDown, ChevronDown, Chevr
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useRetryMetrics, type RetryMetricsFilters } from '@/hooks/monitoring/useRetryMetrics';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 
 const HOURS_OPTIONS: Array<{ value: number; label: string }> = [
   { value: 1, label: '1h' },
@@ -141,18 +142,9 @@ export function RetryMetricsPanel() {
           <KpiCard label="Duração média" value={`${agg?.avgDurationMs ?? 0}ms`} />
         </div>
 
-        {/* Top reasons */}
+        {/* Top reasons — bar chart (top 10) */}
         {agg && agg.topReasons.length > 0 && (
-          <div className="rounded-lg bg-muted/30 p-3">
-            <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Top motivos de retry</p>
-            <div className="flex flex-wrap gap-1.5">
-              {agg.topReasons.map(r => (
-                <Badge key={r.reason} variant="outline" className="text-[10px] font-mono">
-                  {r.reason} <span className="ml-1 text-muted-foreground">×{r.count}</span>
-                </Badge>
-              ))}
-            </div>
-          </div>
+          <TopReasonsChart reasons={agg.topReasons} />
         )}
 
         {/* Tabela */}
