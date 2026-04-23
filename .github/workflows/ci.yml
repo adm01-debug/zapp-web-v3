@@ -109,7 +109,7 @@ jobs:
         with:
           deno-version: v1.x
 
-      - name: 🧪 Run edge function Deno tests (evolution-api + public-api)
+      - name: 🧪 Run edge function Deno tests (evolution-api + public-api + webhook + dlq)
         run: |
           deno test \
             --allow-net \
@@ -117,7 +117,9 @@ jobs:
             --allow-read \
             --reporter=pretty \
             supabase/functions/evolution-api/__tests__/ \
-            supabase/functions/public-api/__tests__/
+            supabase/functions/public-api/__tests__/ \
+            supabase/functions/evolution-webhook/__tests__/ \
+            supabase/functions/reprocess-failed-messages/__tests__/
 
   # ===========================================
   # JOB 4: Build
