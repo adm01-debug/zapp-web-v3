@@ -161,9 +161,9 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
       await act(async () => {
         await result.current.connectInstance('wpp2');
       });
-      expect(mockInvoke).toHaveBeenCalledWith('evolution-api', {
+      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/connect', {
         method: 'POST',
-        body: { action: 'connect', instanceName: 'wpp2' },
+        body: { instanceName: 'wpp2' },
       });
     });
 
@@ -172,9 +172,9 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
       await act(async () => {
         await result.current.getInstanceStatus('wpp2');
       });
-      expect(mockInvoke).toHaveBeenCalledWith('evolution-api', {
+      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/status', {
         method: 'POST',
-        body: { action: 'status', instanceName: 'wpp2' },
+        body: { instanceName: 'wpp2' },
       });
     });
 
@@ -183,9 +183,9 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
       await act(async () => {
         await result.current.getInstanceInfo('wpp2');
       });
-      expect(mockInvoke).toHaveBeenCalledWith('evolution-api', {
+      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/instance-info', {
         method: 'POST',
-        body: { action: 'instance-info', instanceName: 'wpp2' },
+        body: { instanceName: 'wpp2' },
       });
     });
 
@@ -210,9 +210,9 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
       await act(async () => {
         await result.current.deleteInstance('wpp2');
       });
-      expect(mockInvoke).toHaveBeenCalledWith('evolution-api', {
+      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/delete-instance', {
         method: 'POST',
-        body: { action: 'delete-instance', instanceName: 'wpp2' },
+        body: { instanceName: 'wpp2' },
       });
     });
 
@@ -221,9 +221,9 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
       await act(async () => {
         await result.current.setPresence('wpp2', 'composing');
       });
-      expect(mockInvoke).toHaveBeenCalledWith('evolution-api', {
+      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/set-presence', {
         method: 'POST',
-        body: { action: 'set-presence', instanceName: 'wpp2', presence: 'composing' },
+        body: { instanceName: 'wpp2', presence: 'composing' },
       });
     });
   });
