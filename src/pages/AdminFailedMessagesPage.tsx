@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import {
   AlertTriangle, RefreshCw, Inbox, CheckCircle2, XCircle,
   Clock, RotateCw, Ban, Eye, PlayCircle, Server, BarChart3,
-  Search, ChevronLeft, ChevronRight, Copy,
+  Search, ChevronLeft, ChevronRight, Copy, Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -179,16 +179,25 @@ export default function AdminFailedMessagesPage() {
             <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
             Atualizar
           </Button>
-          <Button
-            size="sm"
-            onClick={() => triggerReprocess.mutate()}
-            disabled={triggerReprocess.isPending}
-          >
-            <PlayCircle className={cn('h-4 w-4 mr-2', triggerReprocess.isPending && 'animate-spin')} />
-            Reprocessar agora
-          </Button>
+          {isAdmin && (
+            <Button
+              size="sm"
+              onClick={() => triggerReprocess.mutate()}
+              disabled={triggerReprocess.isPending}
+            >
+              <PlayCircle className={cn('h-4 w-4 mr-2', triggerReprocess.isPending && 'animate-spin')} />
+              Reprocessar agora
+            </Button>
+          )}
         </div>
       </header>
+
+      {readOnly && isSupervisor && (
+        <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground flex items-center gap-2">
+          <Lock className="h-3.5 w-3.5" />
+          <span>Modo somente leitura — ações de reprocesso e abandono são restritas a administradores.</span>
+        </div>
+      )}
 
       {/* Retry config (sem deploy) */}
       <RetryConfigPanel />
