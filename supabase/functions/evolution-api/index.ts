@@ -126,6 +126,7 @@ serve(async (req) => {
 
         // Auth failure on create — surface clear actionable error.
         if (createResponse.status === 401 || createResponse.status === 403) {
+          recordAuthFailureAndMaybePause(supabase, String(instance), createResponse.status === 401 ? 'auth_401' : 'auth_403');
           return buildAuthError(createResponse.status, createData, 'create-instance');
         }
 
@@ -142,6 +143,7 @@ serve(async (req) => {
         ({ response, data } = await doConnect());
 
         if (response.status === 401 || response.status === 403) {
+          recordAuthFailureAndMaybePause(supabase, String(instance), response.status === 401 ? 'auth_401' : 'auth_403');
           return buildAuthError(response.status, data, 'connect');
         }
       }
