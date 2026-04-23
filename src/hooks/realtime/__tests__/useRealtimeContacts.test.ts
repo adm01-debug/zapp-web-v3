@@ -1,17 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const channelOn = vi.fn();
-const channelSubscribe = vi.fn();
-const removeChannel = vi.fn();
-const channelFn = vi.fn();
-
-let capturedHandler: ((payload: any) => void) | null = null;
-
 vi.mock('@/integrations/supabase/externalClient', () => {
-  const channel = {
+  const channelOn = vi.fn();
+  const channelSubscribe = vi.fn();
+  const removeChannel = vi.fn();
+  const state: { handler: ((p: any) => void) | null } = { handler: null };
+  const channel: any = {
     on: (...args: any[]) => {
       channelOn(...args);
-      capturedHandler = args[2] as (p: any) => void;
+      state.handler = args[2] as (p: any) => void;
       return channel;
     },
     subscribe: (...args: any[]) => {
@@ -19,13 +16,14 @@ vi.mock('@/integrations/supabase/externalClient', () => {
       return channel;
     },
   };
-  channelFn.mockImplementation(() => channel);
+  const channelFn = vi.fn(() => channel);
   return {
     isExternalConfigured: true,
     externalSupabase: {
       channel: channelFn,
       removeChannel,
     },
+    __test: { channelOn, channelSubscribe, removeChannel, channelFn, state },
   };
 });
 
@@ -37,6 +35,15 @@ import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { useRealtimeContacts } from '../useRealtimeContacts';
+import * as externalClientMod from '@/integrations/supabase/externalClient';
+
+const mocks = (externalClientMod as any).__test as {
+  channelOn: ReturnType<typeof vi.fn>;
+  channelSubscribe: ReturnType<typeof vi.fn>;
+  removeChannel: ReturnType<typeof vi.fn>;
+  channelFn: ReturnType<typeof vi.fn>;
+  state: { handler: ((p: any) => void) | null };
+};
 
 function makeWrapper(qc: QueryClient) {
   return ({ children }: { children: React.ReactNode }) =>
