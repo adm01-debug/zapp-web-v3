@@ -59,6 +59,47 @@ describe('parser de wildcard "*" — arestas do diagrama', () => {
     expect(got.has('UPDATE')).toBe(false);
     expect(got.has('DELETE')).toBe(false);
   });
+
+  describe('multiplos "*" no mesmo rotulo', () => {
+    it('"* UPDATE *" expande sem duplicar eventos (Set garante unicidade)', () => {
+      const got = parseEdgeEvents('* UPDATE *');
+      expect(got).toEqual(new Set(['INSERT', 'UPDATE', 'DELETE']));
+      expect(got.size).toBe(3);
+    });
+
+    it('"** todos **" com wildcards repetidos resulta em exatamente 3 eventos', () => {
+      const got = parseEdgeEvents('** todos **');
+      expect(got.size).toBe(3);
+      expect(got).toEqual(new Set(['INSERT', 'UPDATE', 'DELETE']));
+    });
+
+    it('"* INSERT * UPDATE * DELETE *" nao quebra e mantem 3 eventos', () => {
+      const got = parseEdgeEvents('* INSERT * UPDATE * DELETE *');
+      expect(got.size).toBe(3);
+      expect(got).toEqual(new Set(['INSERT', 'UPDATE', 'DELETE']));
+    });
+
+    it('"*****" (so wildcards) ainda expande para os 3 eventos', () => {
+      const got = parseEdgeEvents('*****');
+      expect(got).toEqual(new Set(['INSERT', 'UPDATE', 'DELETE']));
+    });
+
+    it('"* *" (wildcards separados por espaco) expande para os 3 eventos', () => {
+      const got = parseEdgeEvents('* *');
+      expect(got).toEqual(new Set(['INSERT', 'UPDATE', 'DELETE']));
+    });
+
+    it('"INSERT * UPDATE" mistura wildcard + nomes sem duplicacao', () => {
+      const got = parseEdgeEvents('INSERT * UPDATE');
+      expect(got.size).toBe(3);
+      expect(got).toEqual(new Set(['INSERT', 'UPDATE', 'DELETE']));
+    });
+
+    it('texto adjacente a "*" sem espaco (ex: "*KPIs*") ainda ativa wildcard', () => {
+      const got = parseEdgeEvents('*KPIs*');
+      expect(got).toEqual(new Set(['INSERT', 'UPDATE', 'DELETE']));
+    });
+  });
 });
 
 describe('parser de wildcard "*" — hooks (event: "*")', () => {
