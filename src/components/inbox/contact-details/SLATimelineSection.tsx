@@ -264,6 +264,9 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
     });
   }
 
+  const firstResponseAgentName = timeline.firstResponseBy?.agentName ?? assignedTo?.name ?? null;
+  const firstResponseQueueName = timeline.firstResponseBy?.queueName ?? queue?.name ?? null;
+
   if (timeline.firstResponseAt || timeline.isAwaitingFirstResponse) {
     milestones.push({
       key: 'first-response',
@@ -281,6 +284,8 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           status={firstResponseStatus}
           pulse={timeline.isAwaitingFirstResponse}
           iconColor={timeline.isAwaitingFirstResponse ? 'text-warning' : 'text-success'}
+          agentName={timeline.isAwaitingFirstResponse ? null : firstResponseAgentName}
+          queueName={timeline.isAwaitingFirstResponse ? null : firstResponseQueueName}
         />
       ),
     });
