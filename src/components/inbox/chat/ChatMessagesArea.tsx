@@ -162,6 +162,12 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
 
       isFetchingOlderRef.current = true;
       cancelledRef.current = false;
+      // New load attempt: clear any prior cancel badge.
+      setLoadCancelled(false);
+      if (cancelBadgeTimerRef.current) {
+        clearTimeout(cancelBadgeTimerRef.current);
+        cancelBadgeTimerRef.current = null;
+      }
       prevScrollHeightRef.current = container.scrollHeight;
       Promise.resolve(onLoadOlder()).finally(() => {
         setTimeout(() => { isFetchingOlderRef.current = false; }, 100);
