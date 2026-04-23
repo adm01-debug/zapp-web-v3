@@ -362,7 +362,14 @@ export function useConnectionsManager() {
 
     if (error) throw new Error(error.message || 'Erro ao gerar QR Code');
     if (data && typeof data === 'object' && 'error' in data && data.error === true) {
-      throw new Error(typeof data.message === 'string' ? data.message : 'Erro ao gerar QR Code');
+      const code = (data as { code?: string }).code;
+      const message = typeof (data as { message?: unknown }).message === 'string'
+        ? (data as { message: string }).message
+        : 'Erro ao gerar QR Code';
+      if (code === 'EVOLUTION_AUTH_ERROR') {
+        throw new Error(`Integração sem autorização: ${message}`);
+      }
+      throw new Error(message);
     }
 
     return data as { qrcode?: { base64?: string }; status?: string; state?: string } | null;
