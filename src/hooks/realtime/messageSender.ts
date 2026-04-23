@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
+import { invokeEvolutionWithRetry } from '@/lib/evolutionSendRetry';
+import { toast } from '@/hooks/use-toast';
 // Uses RealtimeMessage type from parent hook
 
 const log = getLogger('MessageSender');
@@ -153,15 +155,25 @@ export async function sendMessageToContact(
 
     const { action, body } = buildEvolutionPayload(connection.instance_id, phone, content, messageType, mediaUrl, mediaPayload);
 
-    const { data: apiResult, error: apiError } = await supabase.functions.invoke(
-      `evolution-api/${action}`,
-      { body }
+    const { data: apiResult, error: apiError } = await invokeEvolutionWithRetry(
+      action,
+      { body },
+      {
+        onRetry: (attempt, total) => {
+          if (attempt === 1) {
+            toast({
+              title: 'Conexão instável',
+              description: `Tentando reenviar… (${attempt}/${total})`,
+            });
+          }
+        },
+      }
     );
 
-    if (apiError || apiResult?.error) {
+    if (apiError || (apiResult as { error?: unknown })?.error) {
       log.error('Evolution API send error:', apiError || apiResult);
       await supabase.from('messages').update({ status: 'failed', whatsapp_connection_id: resolvedConnectionId }).eq('id', data.id);
-      throw new Error(apiResult?.message || 'Falha ao enviar mensagem');
+      throw new Error((apiResult as { message?: string })?.message || 'Falha ao enviar mensagem');
     }
 
     const externalId = extractEvolutionMessageId(apiResult);
