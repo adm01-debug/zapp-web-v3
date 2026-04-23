@@ -562,7 +562,10 @@ export default function AdminFailedMessagesPage() {
       </Card>
 
       {/* Bulk abandon confirm */}
-      <AlertDialog open={confirmBulkAbandon} onOpenChange={setConfirmBulkAbandon}>
+      <AlertDialog open={confirmBulkAbandon} onOpenChange={(o) => {
+        setConfirmBulkAbandon(o);
+        if (!o) setBulkReason('');
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Abandonar {selectedIds.size} item(s)?</AlertDialogTitle>
@@ -571,16 +574,32 @@ export default function AdminFailedMessagesPage() {
               automaticamente. Você ainda pode forçar reprocesso manual depois.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">
+              Motivo (opcional, fica registrado no log)
+            </label>
+            <Textarea
+              value={bulkReason}
+              onChange={(e) => setBulkReason(e.target.value)}
+              placeholder="ex.: limpeza de exhausted antigos, instância descontinuada..."
+              rows={3}
+              maxLength={500}
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                bulkAbandon.mutate(Array.from(selectedIds), {
-                  onSuccess: () => {
-                    setSelectedIds(new Set());
-                    setConfirmBulkAbandon(false);
+                bulkAbandon.mutate(
+                  { ids: Array.from(selectedIds), reason: bulkReason },
+                  {
+                    onSuccess: () => {
+                      setSelectedIds(new Set());
+                      setConfirmBulkAbandon(false);
+                      setBulkReason('');
+                    },
                   },
-                });
+                );
               }}
             >
               Confirmar abandono
