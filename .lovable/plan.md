@@ -1,115 +1,115 @@
 
 
-## Configuração de retry por instância (sem deploy)
+## Hardening RLS + gating de UI do painel DLQ
 
-### Estado atual
+### Estado atual (auditado)
 
-- `useEvolutionApiCore.callApi` aceita `retries`, `baseBackoffMs`, `timeoutMs` por chamada (defaults: 1/3, 250ms, 30s) — mas **nenhum caller passa**.
-- `invokeEvolutionWithRetry` (envios) tem `maxRetries=3`, `baseDelayMs=800`, `maxDelayMs=6000` **hardcoded**.
-- `messageSender.ts` passa `MAX_RETRIES` (constante de módulo).
-- Tabela `global_settings (key, value, description)` já existe e funciona como KV. Sem chaves de retry hoje.
-
-### Solução
-
-Configuração **por instância** (com fallback global → defaults), persistida em `global_settings`, lida em runtime sem reload.
-
-**1. Convenção de chaves em `global_settings`**
-
-```
-retry.global.maxRetries           → "3"
-retry.global.baseBackoffMs        → "800"
-retry.global.maxBackoffMs         → "6000"
-retry.global.timeoutMs            → "30000"
-retry.instance.<name>.maxRetries  → "5"      (override opcional)
-retry.instance.<name>.baseBackoffMs ...
-retry.instance.<name>.timeoutMs ...
-```
-
-Resolução: `instance.<name>.X` ?? `global.X` ?? hardcoded default.
-
-**2. `src/lib/retryConfig.ts`** (novo)
-
-- `RetryConfig = { maxRetries, baseBackoffMs, maxBackoffMs, timeoutMs }`.
-- `DEFAULT_RETRY_CONFIG = { maxRetries: 3, baseBackoffMs: 800, maxBackoffMs: 6000, timeoutMs: 30000 }`.
-- `RANGES`: maxRetries 1–10, baseBackoff 100–10000, maxBackoff 1000–60000, timeout 5000–120000 (validação + clamp).
-- Cache in-memory `Map<instanceName | '_global', RetryConfig>` com TTL 60s.
-- `loadRetryConfig(instanceName?: string): Promise<RetryConfig>`:
-  - Lê 8 keys (`global.*` + `instance.<name>.*`) de `global_settings` numa query com `.in('key', [...])`.
-  - Mescla, valida via `RANGES.clamp(v)`, devolve config final.
-  - Usa cache se válido.
-- `invalidateRetryConfigCache(instanceName?)` — chamado pela UI ao salvar.
-- `getRetryConfigSync(instanceName?)` — devolve do cache OU defaults (não bloqueia render).
-
-**3. `src/lib/evolutionSendRetry.ts`** — usar config dinâmica
-
-- Antes do `withRetry(...)`, chamar `await loadRetryConfig(instanceName)`.
-- Substituir hardcodes (800/6000/3) pelos valores da config.
-- Mantém `config.maxRetries` opcional como override por chamada (ainda vence).
-
-**4. `src/hooks/evolution/useEvolutionApiCore.ts`** — usar defaults dinâmicos
-
-- Quando `opts.retries`/`baseBackoffMs`/`timeoutMs` não vierem, ler `getRetryConfigSync(action.instanceName?)` — mas como `callApi` não conhece instância, usar config **global** apenas. Override por chamada continua possível.
-- Disparar `loadRetryConfig()` em background (fire-and-forget) para esquentar cache no primeiro render do hook.
-
-**5. `src/hooks/messaging/useInstanceRetryConfig.ts`** (novo)
-
-- Hook React: `useInstanceRetryConfig(instanceName?)` → `{ config, isLoading, save(partial), reset() }`.
-- `save` faz upsert em `global_settings` para cada chave alterada (uma a uma, dentro de `Promise.all`), valida via `RANGES`, invalida cache, mostra toast.
-- `reset` deleta as `instance.<name>.*` (volta ao global).
-
-**6. `src/components/admin/RetryConfigPanel.tsx`** (novo)
-
-- Card admin-only com:
-  - Select de instância (popular via `evolution_stage_mapping` distinct OU lista hardcoded `['_global', 'wpp2']` — pegar de `whatsapp_connections.instance_id`).
-  - 4 campos com `Slider` + `Input` numérico:
-    - Max retries (1–10)
-    - Base backoff ms (100–10000, step 100)
-    - Max backoff ms (1000–60000, step 500)
-    - Timeout ms (5000–120000, step 1000)
-  - Indicador "herda do global" se a instância não tem override.
-  - Botões: "Salvar", "Restaurar global" (apaga overrides), "Restaurar default" (só visível em `_global`).
-  - Mostra preview do efeito: "1ª tentativa imediata, 2ª em ~800ms, 3ª em ~1600ms, abort em 30s".
-
-**7. Integração**
-
-- Adicionar tab/card `RetryConfigPanel` em `AdminFailedMessagesPage.tsx` no topo (logo abaixo do header) ou em `MonitoringPage` — escolho `AdminFailedMessagesPage` por afinidade temática.
-- Sem migração SQL: `global_settings` já existe e RLS atual cobre admin (assumindo policy existente).
-
-**8. Testes — `src/lib/__tests__/retryConfig.test.ts`**
-
-- `clampToRange`: valores fora dos limites são corrigidos.
-- `loadRetryConfig`: mock supabase → instance override vence global; sem chaves → defaults; cache TTL respeitado.
-- `getRetryConfigSync`: devolve defaults antes de carregar; cacheado depois.
-
-### Comportamento
-
-| Cenário | Resultado |
+**RLS `failed_messages`** (já existe):
+| Cmd | Quem |
 |---|---|
-| Operador detecta picos de timeout em `wpp2` | Aumenta `timeoutMs` para 60s só nessa instância via UI |
-| Evolution Eco fica boa de novo | Reduz `maxRetries` para 2 via UI, reduzindo carga |
-| Sem nada configurado | Usa hardcoded defaults atuais (sem mudança de comportamento) |
-| Caller passa `{ maxRetries: 5 }` na invocação | Override por chamada vence (back-compat) |
-| 2 abas abertas, admin salva | Cache local da outra aba expira em 60s |
+| SELECT | `is_admin_or_supervisor` |
+| INSERT | `service_role OR admin` |
+| UPDATE | `service_role OR admin/supervisor` |
+| DELETE | `admin` |
 
-### Compatibilidade
+**RPCs `rpc_dlq_*` / `rpc_list_failed_messages`**: todas exigem **`has_role(admin)`** — supervisor é bloqueado mesmo podendo ver via SELECT.
 
-- Zero breaking change. Sem config, comportamento idêntico ao atual.
-- API pública dos hooks/funcs inalterada — só os defaults ficam dinâmicos.
-- Sem nova dependência. Usa `Slider`, `Input`, `Button`, `Select` já existentes.
+**Frontend**: `failed-messages` está em `VIEW_MAP` (`ViewRouter.tsx`) sem gate de role. Item no `advancedNav` aparece para todos. Página chama RPCs admin-only sem checagem prévia.
 
-### Arquivos editados/criados
+**Inconsistência**: política SELECT diz "admin OU supervisor", mas RPCs dizem "só admin". Precisa decidir e alinhar.
 
-- `src/lib/retryConfig.ts` (novo)
-- `src/lib/__tests__/retryConfig.test.ts` (novo)
-- `src/hooks/messaging/useInstanceRetryConfig.ts` (novo)
-- `src/components/admin/RetryConfigPanel.tsx` (novo)
-- `src/lib/evolutionSendRetry.ts` (usa config dinâmica)
-- `src/hooks/evolution/useEvolutionApiCore.ts` (usa defaults dinâmicos)
-- `src/pages/AdminFailedMessagesPage.tsx` (monta o painel)
+### Decisão
+
+- **Visualizar/listar/inspecionar DLQ** → admin **e** supervisor (consistência com SELECT existente e padrão do projeto `is_admin_or_supervisor`)
+- **Mutações destrutivas** (`retry_now`, `abandon`, `bulk_abandon`, `DELETE`) → **só admin** (mantém)
+- **INSERT** → service_role (edge functions) **OU** `is_admin_or_supervisor` (admin/supervisor podem reenfileirar manualmente se necessário no futuro)
+- **UI**: bloquear acesso à view e ocultar item da nav para quem não for admin/supervisor
+
+### Mudanças
+
+**1. Migration — alinhar RLS e RPCs**
+
+```sql
+-- INSERT: admite supervisor (alinhado com a UI)
+DROP POLICY "Service role and admins can insert failed messages" ON public.failed_messages;
+CREATE POLICY "Service role admins and supervisors can insert failed messages"
+  ON public.failed_messages FOR INSERT TO authenticated, service_role
+  WITH CHECK (auth.role() = 'service_role' OR public.is_admin_or_supervisor(auth.uid()));
+
+-- rpc_list_failed_messages e rpc_dlq_stats: passam a aceitar supervisor
+CREATE OR REPLACE FUNCTION public.rpc_list_failed_messages(...) ...
+  IF NOT public.is_admin_or_supervisor(auth.uid()) THEN
+    RAISE EXCEPTION 'Access denied: admin or supervisor role required';
+  END IF;
+  -- resto igual
+
+CREATE OR REPLACE FUNCTION public.rpc_dlq_stats() ...
+  IF NOT public.is_admin_or_supervisor(auth.uid()) THEN
+    RAISE EXCEPTION 'Access denied: admin or supervisor role required';
+  END IF;
+
+-- rpc_dlq_retry_now, rpc_dlq_abandon, rpc_dlq_bulk_abandon: mantêm has_role(admin)
+-- (ações destrutivas continuam restritas)
+```
+
+**2. `src/components/auth/RequireRole.tsx`** (criar se não existir; se existir, reutilizar)
+
+Componente declarativo: recebe `roles: AppRole[]` e `children`. Mostra `loading` enquanto `useUserRole` resolve, renderiza `<NotAuthorizedView/>` (empty state padrão `GenericEmptyState` com ícone Lock) se o usuário não tiver papel; senão renderiza children. Já existe `ProtectedRoute` que faz isso para rotas — vou extrair/reutilizar a lógica como wrapper inline para usar dentro do `VIEW_MAP`.
+
+**3. `src/pages/ViewRouter.tsx`** — gating server-side da view
+
+- Adicionar mapa `VIEW_REQUIRED_ROLES: Record<string, AppRole[]>`:
+  ```ts
+  'failed-messages': ['admin', 'supervisor'],
+  ```
+- Em `ErrorBoundaryView`, antes de renderizar o lazy component, checar `useUserRole`. Se não autorizado → `<NotAuthorizedView viewLabel={mod.label}/>`. Se loading → spinner já existente.
+
+**4. `src/components/layout/sidebarNavConfig.ts`** + consumer da nav
+
+- Adicionar campo opcional `requiredRoles?: AppRole[]` em `NavItemConfig`.
+- Marcar `failed-messages` com `requiredRoles: ['admin','supervisor']`.
+- No componente que renderiza `advancedNav` (Sidebar/AdminView), filtrar items por `useUserRole().hasRole`. Vou localizar o consumer durante implementação (`AdminView` ou similar).
+
+**5. `src/pages/AdminFailedMessagesPage.tsx`** — esconder ações destrutivas para supervisor
+
+- Importar `useUserRole`. Botões "Tentar agora", "Abandonar" (single + bulk) só renderizam se `isAdmin`. Supervisor vê tudo (lista, drawer, payload, KPIs) em modo read-only.
+- Banner sutil quando `isSupervisor && !isAdmin`: "Modo somente leitura — ações restritas a administradores."
+
+**6. `src/hooks/monitoring/useFailedMessages.ts`** — defesa em profundidade
+
+- Mutations `retryNow/abandon/bulk*` já vão falhar no servidor para não-admin (RLS + RPC guard). Adicionar pre-check rápido: se não é admin, `toast.error('Ação restrita a administradores')` antes de chamar (evita roundtrip + erro feio).
+
+### Segurança resultante (defesa em camadas)
+
+| Camada | DLQ visualizar | DLQ retry/abandon | DLQ inserir |
+|---|---|---|---|
+| RLS tabela | admin/supervisor | admin (UPDATE policy permite supervisor mas RPC restringe) | service_role/admin/supervisor |
+| RPC guard | admin/supervisor | admin | n/a (insert direto) |
+| UI route gate | admin/supervisor | admin (botões hidden) | n/a |
+| UI nav gate | admin/supervisor | n/a | n/a |
+
+Não-autorizado: ocultado da nav, bloqueado na rota, falha em RPC, falha em RLS. Quatro camadas.
+
+### Arquivos
+
+**Migration nova** (1):
+- Alinhar policy INSERT + relaxar `rpc_list_failed_messages` e `rpc_dlq_stats` para `is_admin_or_supervisor`
+
+**Editados** (4):
+- `src/pages/ViewRouter.tsx` — gating por role
+- `src/components/layout/sidebarNavConfig.ts` — campo `requiredRoles`
+- consumer de `advancedNav` (Sidebar/AdminView — identifico na implementação) — filtro por role
+- `src/pages/AdminFailedMessagesPage.tsx` — botões condicionais + banner read-only
+- `src/hooks/monitoring/useFailedMessages.ts` — pre-check em mutations
+
+**Criados** (1):
+- `src/components/auth/NotAuthorizedView.tsx` — empty state reutilizável (ícone Lock, mensagem clara, botão voltar)
 
 ### Fora de escopo
 
-- Sem propagação para edge functions (proxy server-side mantém defaults — out-of-scope; este plano é client-side). Se quiser depois, mesma convenção de keys funciona lá.
-- Sem histórico de mudanças (audit_logs já capturaria via trigger, mas `global_settings` não tem trigger hoje — não vou criar).
-- Sem rate-limit de saves; UI já tem disabled state durante mutation.
+- Sem mudar `send_failures` policies (já corretas).
+- Sem alterar `whatsapp_connections` ou outras tabelas de monitoring.
+- Sem criar role nova.
+- Sem auditoria adicional além da já existente em `rpc_dlq_*`.
+- Sem testes E2E de RLS (testes unitários de role-check em `useFailedMessages` ficam para próximo lote se quiser).
 
