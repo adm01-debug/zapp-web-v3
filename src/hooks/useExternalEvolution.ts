@@ -61,6 +61,7 @@ async function fetchMessagesByJid(
   remoteJid: string,
   limit = CONVERSATION_PAGE_SIZE,
   beforeDate?: string,
+  signal?: AbortSignal,
 ): Promise<EvolutionMessage[]> {
   const filters: { column: string; operator: string; value: unknown }[] = [
     { column: 'remote_jid', operator: 'eq', value: remoteJid },
@@ -78,6 +79,7 @@ async function fetchMessagesByJid(
     // we reverse on the client for chronological display.
     order: { column: 'created_at', ascending: false },
     limit,
+    signal,
   });
   return result.data.slice().reverse();
 }
@@ -133,10 +135,26 @@ export function useExternalMessages(remoteJid: string | null) {
   const mountedRef = useRef(true);
   const previousJidRef = useRef<string | null>(null);
   const lastSeenRef = useRef<string | null>(null);
+  const loadOlderAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+      // Abort any in-flight loadOlder on unmount
+      if (loadOlderAbortRef.current) {
+        loadOlderAbortRef.current.abort();
+        loadOlderAbortRef.current = null;
+      }
+    };
+  }, []);
+
+  const cancelLoadOlder = useCallback(() => {
+    if (loadOlderAbortRef.current) {
+      loadOlderAbortRef.current.abort();
+      loadOlderAbortRef.current = null;
+      if (mountedRef.current) setLoadingOlder(false);
+    }
   }, []);
 
   const initialFetch = useCallback(async () => {
@@ -188,7 +206,7 @@ export function useExternalMessages(remoteJid: string | null) {
     }
   }, [remoteJid]);
 
-  // Load older page (scroll up)
+  // Load older page (scroll up) — cancellable
   const loadOlder = useCallback(async () => {
     if (!remoteJid || !mountedRef.current || loadingOlder || !hasMore) return;
     if (messages.length === 0) return;
@@ -196,10 +214,17 @@ export function useExternalMessages(remoteJid: string | null) {
     const oldest = messages[0]?.created_at;
     if (!oldest) return;
 
+    // Abort any previous in-flight loadOlder before starting a new one.
+    if (loadOlderAbortRef.current) {
+      loadOlderAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    loadOlderAbortRef.current = controller;
+
     try {
       setLoadingOlder(true);
-      const older = await fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest);
-      if (!mountedRef.current) return;
+      const older = await fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest, controller.signal);
+      if (!mountedRef.current || controller.signal.aborted) return;
 
       const mapped = older.map(evolutionToRealtimeMessage);
       if (mapped.length === 0) {
@@ -208,14 +233,21 @@ export function useExternalMessages(remoteJid: string | null) {
       }
 
       setMessages(prev => {
+        if (controller.signal.aborted) return prev;
         const seen = new Set(prev.map(m => m.id));
         const additions = mapped.filter(m => !seen.has(m.id));
         return [...additions, ...prev];
       });
       setHasMore(older.length === CONVERSATION_PAGE_SIZE);
     } catch (err) {
+      // Silence aborts (user navigated away or scrolled back down)
+      const name = (err as { name?: string } | null)?.name;
+      if (name === 'AbortError') return;
       log.error('Error loading older messages:', err);
     } finally {
+      if (loadOlderAbortRef.current === controller) {
+        loadOlderAbortRef.current = null;
+      }
       if (mountedRef.current) setLoadingOlder(false);
     }
   }, [remoteJid, messages, loadingOlder, hasMore]);
@@ -260,6 +292,7 @@ export function useExternalMessages(remoteJid: string | null) {
     error,
     refetch: initialFetch,
     loadOlder,
+    cancelLoadOlder,
     addMessage,
     updateMessage,
     removeMessage,

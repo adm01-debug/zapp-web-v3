@@ -36,6 +36,7 @@ interface ChatMessagesAreaProps {
   activeHighlightId?: string | null;
   searchQuery?: string;
   onLoadOlder?: () => void | Promise<void>;
+  onCancelLoadOlder?: () => void;
   loadingOlder?: boolean;
   hasMoreOlder?: boolean;
 }
@@ -50,16 +51,19 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   messages, isContactTyping, typingUserName, ttsLoading, ttsPlaying, ttsMessageId,
   instanceName, contactJid, contactAvatar, onSpeak, onStop, onReply, onForward, onCopy,
   onScrollToMessage, onInteractiveButtonClick, onEditStart, highlightedMessageIds, activeHighlightId, searchQuery,
-  onLoadOlder, loadingOlder = false, hasMoreOlder = false,
+  onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false,
 }, ref) => {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isFetchingOlderRef = useRef(false);
+  const cancelledRef = useRef(false);
   const prevScrollHeightRef = useRef<number | null>(null);
   const prevFirstIdRef = useRef<string | null>(null);
   const prevLengthRef = useRef<number>(0);
+  const lastScrollTopRef = useRef<number>(0);
+  const lastTriggerAtRef = useRef<number>(0);
 
   const handleMessageDeleted = useCallback(async (messageId: string) => {
     try {
@@ -127,7 +131,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     }, {} as Record<string, Message[]>);
   }, [messages]);
 
-  // Scroll-to-top detector → loadOlder
+  // Scroll-to-top detector → loadOlder (with cancellation on reverse-scroll)
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container || !onLoadOlder) return;
@@ -135,18 +139,43 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     // Preload threshold: ~1 viewport height OR 600px, whichever is larger.
     // Triggers loadOlder before user reaches scrollTop=0 to avoid visible "wait" gap.
     const PRELOAD_PX = Math.max(600, container.clientHeight);
+    const TRIGGER_THROTTLE_MS = 250;
+    const REVERSE_CANCEL_PX = 50;
 
     const triggerLoad = () => {
       if (!hasMoreOlder || loadingOlder || isFetchingOlderRef.current) return;
+      const now = Date.now();
+      if (now - lastTriggerAtRef.current < TRIGGER_THROTTLE_MS) return;
+      lastTriggerAtRef.current = now;
+
       isFetchingOlderRef.current = true;
+      cancelledRef.current = false;
       prevScrollHeightRef.current = container.scrollHeight;
       Promise.resolve(onLoadOlder()).finally(() => {
         setTimeout(() => { isFetchingOlderRef.current = false; }, 100);
       });
     };
 
+    const maybeCancel = (currentTop: number) => {
+      // If user is scrolling DOWN > REVERSE_CANCEL_PX while a fetch is in-flight, abort it.
+      if (
+        isFetchingOlderRef.current &&
+        currentTop > lastScrollTopRef.current + REVERSE_CANCEL_PX &&
+        onCancelLoadOlder
+      ) {
+        cancelledRef.current = true;
+        onCancelLoadOlder();
+        // Drop the saved height so the prepend-anchor effect skips reanchoring.
+        prevScrollHeightRef.current = null;
+        isFetchingOlderRef.current = false;
+      }
+    };
+
     const handleScroll = () => {
-      if (container.scrollTop < PRELOAD_PX) triggerLoad();
+      const top = container.scrollTop;
+      maybeCancel(top);
+      if (top < PRELOAD_PX) triggerLoad();
+      lastScrollTopRef.current = top;
     };
 
     // Anticipate intent: if user is scrolling up via wheel/touch near the top, preload immediately
@@ -162,6 +191,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
       lastTouchY = y;
     };
 
+    lastScrollTopRef.current = container.scrollTop;
     container.addEventListener('scroll', handleScroll, { passive: true });
     container.addEventListener('wheel', handleWheel, { passive: true });
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -171,8 +201,13 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
       container.removeEventListener('wheel', handleWheel);
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchmove', handleTouchMove);
+      // On unmount (e.g. conversation switch), abort any in-flight loadOlder.
+      if (isFetchingOlderRef.current && onCancelLoadOlder) {
+        onCancelLoadOlder();
+        isFetchingOlderRef.current = false;
+      }
     };
-  }, [onLoadOlder, hasMoreOlder, loadingOlder]);
+  }, [onLoadOlder, onCancelLoadOlder, hasMoreOlder, loadingOlder]);
 
   // Preserve scroll position after older messages prepend
   useEffect(() => {
@@ -184,12 +219,16 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     const firstChanged = prevFirstIdRef.current !== null && firstId !== prevFirstIdRef.current;
     const wasPrepend = lengthIncreased && firstChanged;
 
-    if (wasPrepend && prevScrollHeightRef.current !== null) {
+    if (wasPrepend && prevScrollHeightRef.current !== null && !cancelledRef.current) {
       const prev = prevScrollHeightRef.current;
       requestAnimationFrame(() => {
         container.scrollTop = container.scrollHeight - prev;
         prevScrollHeightRef.current = null;
       });
+    } else if (cancelledRef.current) {
+      // Cancelled mid-flight: respect user's current scroll position, no anchoring.
+      prevScrollHeightRef.current = null;
+      cancelledRef.current = false;
     }
 
     prevFirstIdRef.current = firstId;

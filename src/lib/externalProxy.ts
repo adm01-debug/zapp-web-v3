@@ -16,6 +16,8 @@ interface ProxySelectParams {
    * Use for pagination by created_at (gt for forward, lt for older).
    */
   cursor?: { column: string; operator: 'gt' | 'lt' | 'gte' | 'lte'; value: string };
+  /** Optional AbortSignal — cancels the underlying fetch. */
+  signal?: AbortSignal;
 }
 
 interface ProxyMutationParams {
@@ -40,12 +42,25 @@ interface ProxyResponse<T = unknown> {
 }
 
 export async function queryExternalProxy<T = unknown>(params: ProxyParams): Promise<ProxyResponse<T>> {
-  const { data, error } = await supabase.functions.invoke('external-db-proxy', {
-    body: params,
-  });
+  // Extract signal so it isn't sent in the JSON body.
+  const { signal, ...body } = params as ProxyParams & { signal?: AbortSignal };
+
+  // supabase.functions.invoke supports an optional signal via second arg.
+  const invokeOptions: { body: unknown; signal?: AbortSignal } = { body };
+  if (signal) invokeOptions.signal = signal;
+
+  const { data, error } = await supabase.functions.invoke('external-db-proxy', invokeOptions);
 
   if (error) {
-    throw new Error(error.message || 'External DB proxy error');
+    // Normalize abort: supabase may surface AbortError via FunctionsFetchError
+    const name = (error as { name?: string }).name;
+    const message = error.message || '';
+    if (name === 'AbortError' || /aborted/i.test(message)) {
+      const abortErr = new Error('Aborted');
+      abortErr.name = 'AbortError';
+      throw abortErr;
+    }
+    throw new Error(message || 'External DB proxy error');
   }
 
   if (data?.error) {
