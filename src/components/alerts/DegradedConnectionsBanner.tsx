@@ -9,6 +9,7 @@ interface DegradedInstance {
   health_status: string | null;
   health_response_ms: number | null;
   last_health_check: string | null;
+  degraded_at: string | null;
 }
 
 interface Props {
