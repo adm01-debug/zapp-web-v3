@@ -59,7 +59,7 @@ describe('useWebAuthn', () => {
       res = await result.current.registerPasskey('My Key');
     });
 
-    expect(res.success).toBe(false);
+    expect((res as any).success).toBe(false);
   });
 
   it('registerPasskey fails when WebAuthn not supported', async () => {
@@ -71,7 +71,7 @@ describe('useWebAuthn', () => {
       res = await result.current.registerPasskey('My Key');
     });
 
-    expect(res.success).toBe(false);
+    expect((res as any).success).toBe(false);
   });
 
   it('authenticateWithPasskey fails when WebAuthn not supported', async () => {
@@ -82,7 +82,7 @@ describe('useWebAuthn', () => {
       res = await result.current.authenticateWithPasskey('test@test.com');
     });
 
-    expect(res.success).toBe(false);
+    expect((res as any).success).toBe(false);
   });
 
   it('deletePasskey requires user to be logged in', async () => {
@@ -94,7 +94,7 @@ describe('useWebAuthn', () => {
       res = await result.current.deletePasskey('passkey-1');
     });
 
-    expect(res.success).toBe(false);
+    expect((res as any).success).toBe(false);
   });
 
   it('deletePasskey calls supabase with correct params', async () => {
@@ -119,7 +119,7 @@ describe('useWebAuthn', () => {
       res = await result.current.deletePasskey('passkey-1');
     });
 
-    expect(res.success).toBe(true);
+    expect((res as any).success).toBe(true);
   });
 
   it('renamePasskey requires user', async () => {
@@ -131,7 +131,7 @@ describe('useWebAuthn', () => {
       res = await result.current.renamePasskey('pk-1', 'New Name');
     });
 
-    expect(res.success).toBe(false);
+    expect((res as any).success).toBe(false);
   });
 
   it('renamePasskey updates name correctly', async () => {
@@ -156,7 +156,7 @@ describe('useWebAuthn', () => {
       res = await result.current.renamePasskey('pk-1', 'Updated Key');
     });
 
-    expect(res.success).toBe(true);
+    expect((res as any).success).toBe(true);
   });
 
   it('fetchPasskeys does nothing when no user', async () => {
