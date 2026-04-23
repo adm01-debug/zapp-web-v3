@@ -11,11 +11,13 @@ import { TelemetryCharts } from "@/components/admin/telemetry/TelemetryCharts";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { TelemetryRow, SeverityFilter, TimeFilter } from "./admin-telemetria/telemetryTypes";
 import { formatDuration, computeTopOffenders } from "./admin-telemetria/telemetryUtils";
 import { TelemetryStatsCards } from "./admin-telemetria/TelemetryStatsCards";
 import { TelemetryTopOffenders } from "./admin-telemetria/TelemetryTopOffenders";
 import { TelemetryTable } from "./admin-telemetria/TelemetryTable";
+import { ClientTelemetryPanel } from "./admin-telemetria/ClientTelemetryPanel";
 
 export default function AdminTelemetriaPage() {
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
