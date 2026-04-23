@@ -9,8 +9,10 @@ import { format, subDays, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Webhook, RefreshCw, Inbox, CheckCircle2, XCircle,
-  Eye, Filter,
+  Eye, Filter, PhoneCall, List,
 } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { CallCorrelationView } from './admin-webhook-overview/CallCorrelationView';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
