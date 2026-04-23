@@ -133,6 +133,7 @@ export default function AdminFailedMessagesPage() {
     hours: useCustomRange ? undefined : hours,
     status: statusFilter === 'all' ? null : statusFilter,
     errorCode: errorCodeFilter === 'all' ? null : errorCodeFilter,
+    rootCause: rootCauseFilter === 'all' ? null : rootCauseFilter,
     instance: instanceFilter === 'all' ? null : instanceFilter,
     search,
     from: useCustomRange ? fromIso : null,
@@ -150,6 +151,8 @@ export default function AdminFailedMessagesPage() {
 
   const topReasons = aggregates.byErrorCode.slice(0, 8);
   const maxReasonCount = topReasons[0]?.count ?? 1;
+  const rootCauseStats = aggregates.byRootCause;
+  const maxRootCauseCount = rootCauseStats[0]?.count ?? 1;
 
   const allVisibleSelected = sorted.length > 0 && sorted.every((r) => selectedIds.has(r.id));
   const someVisibleSelected = sorted.some((r) => selectedIds.has(r.id));
