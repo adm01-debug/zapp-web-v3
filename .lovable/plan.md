@@ -1,60 +1,87 @@
 
 
-## Hook realtime: sincronização de `evolution_contacts` com a lista de conversas
+## Listener de broadcast para chamadas recebidas no inbox
 
 ### Contexto
 
-Hoje a lista de conversas (inbox) é alimentada por `rpc_list_conversations` + dados de contato vindos de `rpc_list_contacts`/`rpc_get_contact`. Updates em `evolution_contacts` (mudança de `lead_status`, `push_name`, `profile_picture_url`, `assigned_to`, `notes`, novas tags) **não chegam ao cliente em tempo real** — só após refetch manual ou navegação. Já temos `useRealtimeMessages` para mensagens; falta o equivalente para contatos.
+Hoje `useIncomingCallListener` escuta `postgres_changes` na tabela legada `calls` (Lovable Cloud) e busca o contato com fallback para "Desconhecido". Isso tem dois problemas:
+
+1. **Latência alta**: depende do INSERT propagar via replication.
+2. **Acoplado ao schema legado**: nome/avatar vêm de `contacts` (Lovable Cloud), não de `evolution_contacts` (FATOR X) onde os dados ricos do WhatsApp vivem (`push_name`, `profile_picture_url`).
+
+A pedido: usar **broadcast** (canal Realtime efêmero, sub-100ms) emitido pelo webhook no momento do evento `CALL`, e o cliente resolve nome+avatar via `remote_jid` no FATOR X.
 
 ### Decisão
 
-Criar `useRealtimeContacts` no padrão dos hooks realtime existentes (`useRealtimeMessages`, `useMessageUpdateBatcher`):
-
-- Subscreve `postgres_changes` no schema `public`, tabela `evolution_contacts`, eventos `INSERT | UPDATE | DELETE`, no **`externalClient`** (FATOR X).
-- Filtro: `instance_name=eq.wpp2` (padrão do projeto).
-- Aplica updates batched (100ms) no cache do React Query das queries de conversa/contato — sem refetch desnecessário.
-- Trata soft delete (`deleted_at IS NOT NULL`) removendo o item da lista.
+- **Webhook** (`handleCallEvent`) emite `broadcast` no canal global `incoming-calls:wpp2` com payload mínimo (`remote_jid`, `is_video`, `call_status`, `agent_profile_id`, `started_at`, `wa_call_id`).
+- **Hook novo** `useIncomingCallBroadcast` subscreve esse canal no `externalClient`, filtra pelo `agent_profile_id` do usuário, e dispara um lookup `rpc_get_contact({ p_remote_jid })` para resolver `push_name` + `profile_picture_url`.
+- **Componente** `IncomingCallAlert` ganha uma fonte adicional (broadcast), mantendo o listener antigo de `postgres_changes` como **fallback** durante migração.
 
 ### Arquivos
 
+**Editado (1):**
+
+1. `supabase/functions/_shared/evolution-webhook-handlers.ts` — em `handleCallEvent`, após o INSERT em `calls`, emite broadcast:
+   ```ts
+   const channel = supabase.channel(`incoming-calls:${instance}`);
+   await channel.send({
+     type: 'broadcast',
+     event: 'call_received',
+     payload: {
+       remote_jid: from,
+       is_video: !!isVideo,
+       call_status: callStatus || 'ringing',
+       agent_profile_id: agentId,
+       started_at: new Date().toISOString(),
+       wa_call_id: callData.id ?? null,
+     },
+   });
+   supabase.removeChannel(channel);
+   ```
+   - Payload **não contém PII** além do JID (que o cliente já tem acesso via RPC). Nome/avatar resolvidos no cliente.
+   - Mantém INSERT em `calls` + `notifications` (compat).
+
 **Criados (2):**
 
-1. `src/hooks/realtime/useRealtimeContacts.ts` — hook principal
-   - Assinatura: `useRealtimeContacts({ instance?: string; enabled?: boolean })`
-   - Subscreve canal único `realtime:evolution_contacts:wpp2` no `externalClient`.
-   - Mantém `pendingUpdatesRef: Map<remote_jid, EvolutionContact>` + `flushTimerRef` (100ms).
-   - Em flush: invalida/atualiza queries `['conversations', instance, ...]`, `['contact', remoteJid]`, `['contacts-list', ...]` via `queryClient.setQueryData` (patch otimista) com fallback a `invalidateQueries` quando não há entrada em cache.
-   - INSERT → invalida lista (novo contato pode aparecer).
-   - UPDATE → patch direto + emite evento `window.dispatchEvent(new CustomEvent('contact-updated', { detail }))` para componentes não-React-Query.
-   - DELETE/`deleted_at` → remove do cache de lista, mantém no cache individual (para UI mostrar "contato removido").
-   - Cleanup: `externalClient.removeChannel` + `clearTimeout`.
+2. `src/hooks/useIncomingCallBroadcast.ts` — hook novo:
+   - Assinatura: `useIncomingCallBroadcast(): { incomingCall: IncomingCall | null; dismissCall: () => void }`.
+   - Subscreve `externalClient.channel('incoming-calls:wpp2').on('broadcast', { event: 'call_received' }, handler)`.
+   - No handler:
+     - Filtra `payload.agent_profile_id === profile?.id` (ou `null` = broadcast geral, opcional).
+     - Chama `externalClient.rpc('rpc_get_contact', { p_remote_jid: payload.remote_jid, p_instance: 'wpp2' })` para obter `push_name`, `profile_picture_url`, `name`, `phone`.
+     - Constrói `IncomingCall` (mesma shape de `useIncomingCallListener`) com `contact_name`, `contact_phone`, `contact_avatar_url`, `is_video`, `started_at`.
+   - Cleanup: `externalClient.removeChannel`.
+   - Logger: `getLogger('IncomingCallBroadcast')`.
 
-2. `src/hooks/realtime/__tests__/useRealtimeContacts.test.ts` — testes vitest
-   - Mock `externalClient` (channel/on/subscribe/removeChannel).
-   - Casos: subscreve no mount; ignora payload de outra instance; UPDATE atualiza cache; DELETE remove da lista; flush respeita debounce de 100ms; cleanup remove canal.
+3. `src/hooks/__tests__/useIncomingCallBroadcast.test.ts` — vitest:
+   - Mock `externalClient.channel/on/subscribe/removeChannel` + `rpc('rpc_get_contact', …)`.
+   - Casos: broadcast com `agent_profile_id` correto resolve contato e seta `incomingCall`; broadcast com `agent_profile_id` de outro agente é ignorado; `rpc_get_contact` falhando ainda gera alerta com fallback `phone`; `dismissCall` zera o estado; cleanup remove canal.
 
-**Editados (2):**
+**Editado (2):**
 
-3. `src/components/inbox/InboxView.tsx` (ou container raiz da inbox — confirmo no momento da implementação procurando o consumidor de `rpc_list_conversations`):
-   - Chama `useRealtimeContacts({ instance: 'wpp2' })` uma única vez no topo.
+4. `src/components/calls/IncomingCallAlert.tsx`:
+   - Importa `useIncomingCallBroadcast` além do `useIncomingCallListener`.
+   - Usa `incomingCall = broadcastCall ?? legacyCall` (broadcast tem prioridade — chega primeiro).
+   - `dismissCall()` chama ambos os dismissers.
+   - Renderiza `Avatar` com `AvatarImage src={incomingCall.contact_avatar_url}` quando disponível, mantendo `AvatarFallback` com iniciais.
 
-4. `mem://architecture/performance` (atualização incremental):
-   - Adicionar linha mencionando `useRealtimeContacts` ao lado de `useRealtimeMessages` no padrão de batchers 100ms.
+5. `src/types/incomingCall.ts` (extrai a interface `IncomingCall` para evitar import circular entre os dois hooks):
+   - Move `interface IncomingCall { ... contact_avatar_url?: string | null; ... }` do hook legado para o tipo compartilhado; ambos os hooks importam dele.
 
-### Detalhes técnicos relevantes
+### Detalhes técnicos
 
-- **Cliente correto**: `externalClient` (FATOR X), não `supabase`. Garante que o realtime escuta o banco onde a tabela vive.
-- **Sem bypass de RPC**: o hook só *escuta* mudanças e atualiza cache; leituras continuam via `rpc_list_contacts`/`rpc_get_contact`. Não viola a regra de "nunca SELECT direto em `evolution_contacts`".
-- **Filtro de instância** aplicado no servidor (`filter: 'instance_name=eq.wpp2'`) para reduzir tráfego.
-- **Idempotência de cache**: `setQueryData` usa `produce`-like update — se contato não existir na lista atual, fallback para `invalidateQueries` em vez de inserir blindly (preserva ordenação/paginação do RPC).
-- **Defesa contra broadcast**: filtra `remote_jid` que case com `/^status@broadcast$|@broadcast$/` antes de propagar (memória `inbox/broadcast-defense`).
-- **Tipos**: usar `EvolutionContact` de `src/types/evolutionExternal.ts` no payload tipado.
-- **Logger**: `getLogger('RealtimeContacts')` para warn em payloads malformados.
+- **Cliente correto**: `externalClient` no front (mesmo bus do webhook). Lovable Cloud `supabase` não recebe esse broadcast.
+- **Topic estável**: `incoming-calls:${instance}` — instance fixa em `wpp2` por enquanto, parametrizável no hook.
+- **Sem persistência**: broadcast é fire-and-forget; o INSERT em `calls` continua sendo a fonte de verdade para histórico (já existe). Por isso mantemos o listener legado como fallback (caso o agente abra o app **depois** do broadcast).
+- **Filtragem de agente**: feita no cliente (broadcast vai pra todos os subscribers do topic). Aceitável: payload é mínimo e o lookup PII só roda quando o filtro passa.
+- **Defesa de broadcast (memória `inbox/broadcast-defense`)**: filtra `remote_jid` que case `/@broadcast$/` antes de processar.
+- **Acessibilidade**: alerta já é `forwardRef` e usa `AnimatePresence` corretamente — sem mudança aqui.
+- **Logger**: warn quando payload malformado; error quando `rpc_get_contact` falhar.
 
 ### Fora de escopo
 
-- Não toca em `rpc_*` nem em policies do FATOR X.
-- Não cria nova tabela ou migração.
-- Não altera `useRealtimeMessages`.
-- Sem painel de status do canal (pode vir num lote futuro junto ao monitoring de webhook).
+- Migrar INSERT do webhook para `rpc_insert_call` no FATOR X (não existe ainda evento de chamada chegando lá; fica para lote de migração de calls).
+- Remover o listener legado `useIncomingCallListener` — manter como fallback até confirmar paridade em produção.
+- Modal de atendimento (`CallDialog`) — sem mudanças, já consumido pelo alerta.
+- Notificação push/sirene global — já tratada por `useNotificationSettings` no componente.
 
