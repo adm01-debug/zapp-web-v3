@@ -1,0 +1,118 @@
+import { describe, it, expect } from 'vitest';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+
+/**
+ * Validador do diagrama de fan-out realtime de mensagens.
+ *
+ * Falha quando:
+ *  1. Um nó clicável do .mmd referencia arquivo que não existe (hook removido/renomeado).
+ *  2. Um arquivo do código escuta postgres_changes em table:'messages' mas NÃO está no diagrama.
+ *  3. Um consumidor listado no diagrama não escuta mais a tabela messages.
+ *
+ * Fonte da verdade do diagrama: src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd
+ * (cópia sincronizada de /mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd)
+ */
+
+const REPO_ROOT = resolve(__dirname, '../..');
+const MMD_PATH = resolve(__dirname, 'fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd');
+
+// Allowlist canônica — extraída dos comentários %% no rodapé do .mmd.
+// Ao alterar consumidores realtime de 'messages', atualize AMBOS: diagrama e esta lista.
+const EXPECTED_REALTIME_CONSUMERS: string[] = [
+  'src/hooks/useRealtimeMessages.ts',
+  'src/hooks/useMessages.ts',
+  'src/hooks/useMessageStatus.ts',
+  'src/hooks/useTranscriptionNotifications.ts',
+  'src/hooks/useRealtimeDashboard.ts',
+  'src/components/monitoring/hooks/useEvolutionMonitoring.ts',
+  'src/components/inbox/AudioMessagePlayer.tsx',
+];
+
+const UPDATE_HINT = 'Atualize src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd (e a cópia em /mnt/documents/).';
+
+function readMmd(): string {
+  return readFileSync(MMD_PATH, 'utf8');
+}
+
+function extractClickPaths(mmd: string): Array<{ node: string; path: string }> {
+  const re = /click\s+(\w+)\s+"([^"]+)"/g;
+  const out: Array<{ node: string; path: string }> = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(mmd)) !== null) out.push({ node: m[1], path: m[2] });
+  return out;
+}
+
+function walk(dir: string, acc: string[] = []): string[] {
+  let entries: string[] = [];
+  try { entries = readdirSync(dir); } catch { return acc; }
+  for (const name of entries) {
+    const full = join(dir, name);
+    let st;
+    try { st = statSync(full); } catch { continue; }
+    if (st.isDirectory()) {
+      if (name === 'node_modules' || name === '__tests__' || name === 'test' || name === 'fixtures') continue;
+      walk(full, acc);
+    } else if (st.isFile()) {
+      if (/\.(test|spec)\.(ts|tsx)$/.test(name)) continue;
+      if (/\.(ts|tsx)$/.test(name)) acc.push(full);
+    }
+  }
+  return acc;
+}
+
+const MESSAGES_CHANNEL_RE = /supabase\s*\.channel\([\s\S]*?table:\s*['"]messages['"]/;
+
+function findMessagesListeners(): string[] {
+  const srcDir = join(REPO_ROOT, 'src');
+  const files = walk(srcDir);
+  const hits: string[] = [];
+  for (const f of files) {
+    let content: string;
+    try { content = readFileSync(f, 'utf8'); } catch { continue; }
+    if (MESSAGES_CHANNEL_RE.test(content)) {
+      hits.push(f.substring(REPO_ROOT.length + 1).replace(/\\/g, '/'));
+    }
+  }
+  return hits;
+}
+
+describe('Diagrama TRILHA_MENSAGENS_NAVEGAVEL — validador de fan-out realtime', () => {
+  it('todos os caminhos clicaveis no diagrama existem no repositorio', () => {
+    const mmd = readMmd();
+    const clicks = extractClickPaths(mmd);
+    expect(clicks.length).toBeGreaterThan(0);
+
+    const missing = clicks.filter(({ path }) => !existsSync(resolve(REPO_ROOT, path)));
+    if (missing.length > 0) {
+      const list = missing.map(({ node, path }) => `  - ${node} -> ${path}`).join('\n');
+      throw new Error(
+        `Arquivo(s) referenciado(s) no diagrama nao existe(m):\n${list}\n${UPDATE_HINT}`
+      );
+    }
+  });
+
+  it('todo arquivo que escuta postgres_changes em messages esta no diagrama', () => {
+    const listeners = findMessagesListeners();
+    const orphans = listeners.filter((p) => !EXPECTED_REALTIME_CONSUMERS.includes(p));
+    if (orphans.length > 0) {
+      throw new Error(
+        `Arquivo(s) escutam table:'messages' mas NAO estao no diagrama:\n` +
+        orphans.map((p) => `  - ${p}`).join('\n') +
+        `\n${UPDATE_HINT}`
+      );
+    }
+  });
+
+  it('todo consumidor listado no diagrama ainda escuta postgres_changes em messages', () => {
+    const listeners = new Set(findMessagesListeners());
+    const phantoms = EXPECTED_REALTIME_CONSUMERS.filter((p) => !listeners.has(p));
+    if (phantoms.length > 0) {
+      throw new Error(
+        `Consumidor(es) listado(s) no diagrama nao escutam mais table:'messages':\n` +
+        phantoms.map((p) => `  - ${p}`).join('\n') +
+        `\n${UPDATE_HINT}`
+      );
+    }
+  });
+});
