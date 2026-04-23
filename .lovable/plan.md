@@ -1,95 +1,76 @@
 
 
-## Sincronização frontend ↔ backend — RPCs novas e instrumentação
-
-### Diagnóstico
-
-Backend trouxe RPCs novas que ainda **não estão integradas** no frontend. Inventário:
-
-| RPC backend | Status frontend | Ação |
-|---|---|---|
-| `rpc_dlq_*` (4) | ✅ Já wired em `useFailedMessages.ts` | OK |
-| `rpc_dlq_log_reprocess_trigger` | ✅ Wired (com `as any`) | Limpar cast |
-| `rpc_instance_auth_event_summary/trend` | ✅ Wired em `AuthEventTrendChart` | OK |
-| `rpc_list_failed_messages` (overload novo com `last_attempt_at`) | ⚠️ Hook usa overload antigo | Migrar para novo |
-| `rpc_log_search_event` | ❌ Não usado | **Integrar em GlobalSearch** |
-| `rpc_record_search_click` | ❌ Não usado | **Integrar em GlobalSearch** |
-| `rpc_search_insights` | ❌ Sem painel admin | **Criar painel admin** |
-| `rpc_record_event_key_usage` | ❌ Não usado | **Integrar no webhook edge function** |
-
-Também observado: warning no console — `VirtualizedRealtimeList` passa ref para `ConversationPreviewLine` que não usa `forwardRef`. É uma regressão simples a corrigir junto.
+## Tooltip explicativo no badge de SLA
 
 ### O que vai ser construído
 
-#### 1. Telemetria de busca global (`rpc_log_search_event` + `rpc_record_search_click`)
+Adicionar um `Tooltip` ao `SLAIndicatorForContact` que explica de onde vieram os minutos exibidos — qual nível da hierarquia (contato/empresa/cargo/tipo/fila/agente) foi resolvido, o nome da regra e os tempos. Quando estiver em fallback (loading ou sem regra), o tooltip explica o motivo.
 
-Em `src/components/inbox/useGlobalSearchData.ts`:
-- Após cada `performSearch` bem-sucedido (com `cleanQuery.length >= 2`), chamar `supabase.rpc('rpc_log_search_event', { p_query, p_entities: Array.from(types), p_result_count: searchResults.length, p_used_vector: false })`.
-- Guardar o `searchEventId` retornado em `useRef` para correlação com clique.
-- `fire-and-forget` (não bloqueia UI, captura erro via `log.warn`).
+### Mudanças
 
-Em `src/components/inbox/GlobalSearch.tsx`:
-- No `handleSelect(result)`, chamar `supabase.rpc('rpc_record_search_click', { p_query: search, p_result_id: result.id, p_result_type: result.type })` antes de fechar.
+**1. `src/hooks/useApplicableSLA.ts`** — expor o nível resolvido
 
-#### 2. Painel admin de Search Insights
+Adicionar campo `matchedLevel` ao tipo `ApplicableSLA`:
 
-Nova rota `/admin/search-insights` (apenas admin):
-- `src/pages/AdminSearchInsightsPage.tsx` — orquestra fetch via `useQuery(['search-insights', days])` chamando `rpc_search_insights({ p_days })`.
-- Seletor de janela (1d / 7d / 30d).
-- Cards KPI: total de buscas, % vector, click-through rate, zero-result rate.
-- Tabela "Top queries" (query, count, avg_results).
-- Tabela "Zero result queries" (query, count, last_at) — base para curar Knowledge Base.
-- Empty state via `GenericEmptyState` quando `total_searches === 0`.
-- Adicionar entrada em `sidebarNavConfig.ts` (seção admin) e rota em `ViewRouter.tsx` com role-gate `admin`.
+```ts
+type MatchedLevel = 'contact' | 'company' | 'job_title' | 'contact_type' | 'queue' | 'agent' | 'global_default' | 'system_default';
 
-#### 3. Migrar `useFailedMessages` para o overload novo
+export interface ApplicableSLA {
+  firstResponseMinutes: number;
+  resolutionMinutes: number;
+  ruleName: string;
+  ruleId: string | null;
+  matchedLevel: MatchedLevel;
+}
+```
 
-A função tem **dois overloads** no banco. Frontend usa o antigo (`p_status` text). O novo aceita `p_status text[]` e retorna `last_attempt_at`. Em `src/hooks/monitoring/useFailedMessages.ts`:
-- Já passa `p_status: status ? [status] : null` (array) — `types.ts` reflete os 2 overloads, o TS escolhe automaticamente. Validar via `tsc --noEmit` que está pegando o overload de array.
-- Expor `last_attempt_at` no tipo `FailedMessage` e renderizar coluna "Última tentativa" em `FailedMessagesTable.tsx` (badge "há Xmin" via `formatDistanceToNow`).
-- Remover `as any` do call de `rpc_dlq_log_reprocess_trigger` (RPC já tipada em `types.ts`).
+- Em `resolveHierarchy`, retornar tupla `{ sla, level }` para cada match e propagar.
+- `SYSTEM_DEFAULT.matchedLevel = 'system_default'`; fallback de `sla_configurations` → `'global_default'`.
 
-#### 4. Instrumentação `rpc_record_event_key_usage` na edge function de webhook
+**2. `src/components/inbox/SLAIndicatorForContact.tsx`** — envolver com Tooltip
 
-Em `supabase/functions/evolution-webhook/index.ts` (ou a que valida HMAC):
-- Após validar `x-evolution-signature` com sucesso usando uma chave de `system_event_keys`, chamar `supabase.rpc('rpc_record_event_key_usage', { p_key_id: keyId })` em fire-and-forget.
-- Permite tracking de uso/last-seen para rotação de chaves.
+```tsx
+<Tooltip>
+  <TooltipTrigger asChild>
+    <span className="inline-flex"><SLAIndicator … /></span>
+  </TooltipTrigger>
+  <TooltipContent side="bottom" className="max-w-xs">
+    <SLATooltipContent applicable={applicable} isLoading={isLoading} fallbackFr={fallbackFr} fallbackRes={fallbackRes} priority={conversation.priority} />
+  </TooltipContent>
+</Tooltip>
+```
 
-#### 5. Correção do warning de ref
+**3. Sub-componente `SLATooltipContent`** (no mesmo arquivo, ~50 linhas)
 
-Em `src/components/inbox/VirtualizedRealtimeList.tsx` ou `ConversationPreviewLine`:
-- Envolver `ConversationPreviewLine` em `React.forwardRef<HTMLDivElement, Props>` e propagar a ref para o div raiz.
-- Elimina warning no console (compliance com Core: "Direct children of `AnimatePresence` must use `React.forwardRef()`").
+Renderiza:
+- **Título**: nome da regra (`applicable.ruleName`) ou "Carregando regras…" / "Sem regra específica"
+- **Badge do nível** mapeado para PT-BR:
+  - `contact` → "Contato específico"
+  - `company` → "Empresa: {company}"
+  - `job_title` → "Cargo: {jobTitle}"
+  - `contact_type` → "Tipo: {contactType}"
+  - `queue` → "Fila"
+  - `agent` → "Agente atribuído"
+  - `global_default` → "Padrão global"
+  - `system_default` → "Padrão do sistema (fallback)"
+- **Linhas de tempo**: "1ª resposta: Xmin" / "Resolução: Ymin"
+- **Hierarquia visual** (lista cinza pequena): "Contato › Empresa › Cargo › Tipo › Fila › Agente" com o nível resolvido em negrito/realce
+- **Motivo do fallback** (quando `!applicable`):
+  - Se `isLoading`: "Carregando regras de SLA — usando padrões da prioridade ({priority})."
+  - Senão: "Nenhuma regra cadastrada cobre este contato. Usando padrão por prioridade ({priority})."
+
+**4. Expor `isLoading`** do `useApplicableSLA` (já vem do `useQuery`, só passar adiante).
 
 ### Detalhes técnicos
 
-**Arquivos a criar:**
-- `src/pages/AdminSearchInsightsPage.tsx` (~250 linhas)
-- `src/pages/admin-search-insights/SearchInsightsKPICards.tsx` (~80 linhas)
-- `src/pages/admin-search-insights/SearchInsightsTables.tsx` (~120 linhas)
-- `src/hooks/useSearchInsights.ts` (~50 linhas) — wrapper de `useQuery`
-
-**Arquivos a editar:**
-- `src/components/inbox/useGlobalSearchData.ts` — log search event
-- `src/components/inbox/GlobalSearch.tsx` — record click
-- `src/hooks/monitoring/useFailedMessages.ts` — remover `as any`, expor `last_attempt_at`
-- `src/components/admin/dlq/FailedMessagesTable.tsx` (ou equivalente) — coluna "Última tentativa"
-- `src/components/inbox/VirtualizedRealtimeList.tsx` ou `ConversationPreviewLine.tsx` — forwardRef
-- `src/config/sidebarNavConfig.ts` — entrada "Search Insights" (admin)
-- `src/pages/ViewRouter.tsx` — rota lazy + role-gate
-- `supabase/functions/evolution-webhook/index.ts` — chamar `rpc_record_event_key_usage` quando keyId conhecido
-
-**Padrões respeitados:**
-- Telemetria fire-and-forget (nunca bloqueia UI).
-- Role-gate duplo: RPC já tem `has_role('admin')` + `ProtectedRoute` no frontend.
-- `useQuery` com `staleTime: 60_000`, refetch on focus desabilitado em painel pesado.
-- Tokens semânticos, `GenericEmptyState`, max ~340 linhas/arquivo.
-- Sem `console.log`, usar `log` de `@/lib/logger`.
-- Sem `as any` (manter padrão consolidado da última correção de tipos).
+- Tooltip via `@/components/ui/tooltip` (Radix, já no projeto). Sem novo dep.
+- Acessibilidade: `TooltipTrigger asChild` no `<span>` wrapper para preservar layout do badge SLA original.
+- Não quebra nenhum dos 4 callsites (`ChatHeader`, `ChatPanelHeader`, `ConversationList`, `ConversationItem`) — assinatura pública do componente é a mesma.
+- Tokens semânticos (`text-muted-foreground`, `bg-primary/10`), sem cores hardcoded.
+- Arquivo final ~110 linhas, dentro do limite de 340.
 
 ### Fora de escopo
 
-- Migrar `useGlobalSearchData` para usar a edge function `semantic-search` com vetor real (lote separado — hoje busca direto em `messages`/`contacts`, então `p_used_vector: false` é honesto).
-- Rotação automatizada de `system_event_keys` (UI de gestão de chaves) — requer lote próprio.
-- Outros RPCs que já estão integrados (`rpc_dlq_*`, `rpc_instance_auth_event_*`).
+- Editor de regras de SLA (já existe em `/admin/sla`).
+- Tooltip em `BusinessHoursBadge` (já tem o seu próprio).
 
