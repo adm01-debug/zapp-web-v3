@@ -216,6 +216,7 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
         <OfflineIndicator />
         <ConnectionToast />
         <EvolutionDisconnectBanner />
+        <DegradedConnectionsBanner onNavigate={setCurrentView} />
 
         <WelcomeModal
           isOpen={showWelcome}
