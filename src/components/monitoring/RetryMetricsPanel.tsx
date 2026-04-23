@@ -14,7 +14,13 @@ import { useRetryMetrics, type RetryMetricsFilters } from '@/hooks/monitoring/us
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, Legend } from 'recharts';
 import { RetryAlertsConfig } from './RetryAlertsConfig';
 import { RetryAlertsBanner } from './RetryAlertsBanner';
-import { evaluateAllInstances, loadThresholds, type RetryThresholds } from '@/lib/retryAlerts';
+import {
+  evaluateAllInstances,
+  loadThresholds,
+  loadPerInstanceThresholds,
+  type RetryThresholds,
+  type PerInstanceThresholds,
+} from '@/lib/retryAlerts';
 
 const HOURS_OPTIONS: Array<{ value: number; label: string }> = [
   { value: 1, label: '1h' },
@@ -58,6 +64,7 @@ export function RetryMetricsPanel() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [thresholds, setThresholds] = useState<RetryThresholds>(() => loadThresholds());
+  const [perInstance, setPerInstance] = useState<PerInstanceThresholds>(() => loadPerInstanceThresholds());
   const [compareMode, setCompareMode] = useState<boolean>(false);
 
   const filters: RetryMetricsFilters = {
@@ -72,8 +79,8 @@ export function RetryMetricsPanel() {
   const agg = data?.aggregates;
 
   const breaches = useMemo(
-    () => evaluateAllInstances(byInstance, thresholds),
-    [byInstance, thresholds],
+    () => evaluateAllInstances(byInstance, thresholds, perInstance),
+    [byInstance, thresholds, perInstance],
   );
 
   // Toast quando aparece nova violação (dedupe por instance dentro da janela atual).
@@ -170,6 +177,9 @@ export function RetryMetricsPanel() {
             <RetryAlertsConfig
               value={thresholds}
               onChange={setThresholds}
+              perInstance={perInstance}
+              onPerInstanceChange={setPerInstance}
+              knownInstances={byInstance.map((b) => b.instance)}
               hasBreaches={breaches.length > 0}
             />
             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
