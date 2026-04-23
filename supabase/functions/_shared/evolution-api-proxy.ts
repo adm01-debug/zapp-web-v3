@@ -132,6 +132,16 @@ export async function proxyToEvolution(
           message: friendlyMessage,
           details: data,
         };
+        logRetryMetric({
+          action: actionLabel,
+          method,
+          instance_name: instanceInPath ?? null,
+          attempt_count: attempt + 1,
+          final_status: 'failed',
+          final_http_status: response.status,
+          retry_reasons: retryReasons,
+          total_duration_ms: Date.now() - startedAt,
+        });
         return new Response(JSON.stringify(errorEnvelope), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -144,9 +154,47 @@ export async function proxyToEvolution(
         data && typeof data === 'object' && !Array.isArray(data) && !('version' in (data as Record<string, unknown>))
           ? { version: EVOLUTION_ENVELOPE_VERSION, ...(data as Record<string, unknown>) }
           : data;
+      logRetryMetric({
+        action: actionLabel,
+        method,
+        instance_name: instanceInPath ?? null,
+        attempt_count: attempt + 1,
+        final_status: 'success',
+        final_http_status: response.status,
+        retry_reasons: retryReasons,
+        total_duration_ms: Date.now() - startedAt,
+      });
       return new Response(JSON.stringify(versioned), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      const reason = lastError.name === 'AbortError' ? 'timeout' : 'network_error';
+      retryReasons.push({ attempt: attempt + 1, reason });
+      if (lastError.name === 'AbortError') {
+        lastError = new Error(`Timeout após ${TIMEOUT_MS / 1000}s aguardando a API Evolution`);
+      }
+      if (attempt >= maxAttempts - 1) break;
+    }
+  }
+
+  const timeoutEnvelope: EvolutionErrorEnvelope = {
+    version: EVOLUTION_ENVELOPE_VERSION,
+    error: true,
+    status: 504,
+    message: `Falha ao conectar com a API Evolution: ${lastError?.message || 'Erro desconhecido'}`,
+    retries: maxAttempts - 1,
+  };
+  logRetryMetric({
+    action: actionLabel,
+    method,
+    instance_name: instanceInPath ?? null,
+    attempt_count: maxAttempts,
+    final_status: 'exhausted',
+    final_http_status: lastHttpStatus,
+    retry_reasons: retryReasons,
+    total_duration_ms: Date.now() - startedAt,
+  });
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
       if (lastError.name === 'AbortError') {
