@@ -192,7 +192,12 @@ export function RetryMetricsPanel() {
 
         {/* Top reasons — bar chart (top 10) */}
         {agg && agg.topReasons.length > 0 && (
-          <TopReasonsChart reasons={agg.topReasons} />
+          <TopReasonsChart
+            reasons={agg.topReasons}
+            previousReasons={data?.previousTopReasons ?? []}
+            compareMode={compareMode}
+            windowHours={hours}
+          />
         )}
 
         {/* Tabela */}
