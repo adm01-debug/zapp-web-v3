@@ -129,7 +129,7 @@ jobs:
   build:
     name: 🏗️ Build
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test, deno-edge-tests]
+    needs: [lint-and-typecheck, deno-edge-tests]
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
