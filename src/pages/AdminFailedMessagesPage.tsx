@@ -457,6 +457,7 @@ export default function AdminFailedMessagesPage() {
                   <TableHead>Destinatário</TableHead>
                   <TableHead>Erro</TableHead>
                   <TableHead className="text-center">Tentativas</TableHead>
+                  <TableHead>Última tentativa</TableHead>
                   <TableHead>Próximo retry</TableHead>
                   <TableHead>Criado</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -500,6 +501,11 @@ export default function AdminFailedMessagesPage() {
                     </TableCell>
                     <TableCell className="text-center text-xs">
                       {row.retry_count}/{row.max_retries}
+                    </TableCell>
+                    <TableCell className="text-xs" title={row.last_attempt_at ?? undefined}>
+                      {row.last_attempt_at
+                        ? formatDistanceToNow(new Date(row.last_attempt_at), { addSuffix: true, locale: ptBR })
+                        : '—'}
                     </TableCell>
                     <TableCell className="text-xs" title={row.next_attempt_at ?? undefined}>
                       {row.next_attempt_at

@@ -254,8 +254,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       // Audit trail: register who triggered the manual reprocess. Best-effort —
       // never blocks the actual reprocess invocation.
       try {
-        // deno-lint-ignore no-explicit-any
-        await (supabase as any).rpc('rpc_dlq_log_reprocess_trigger', { p_source: 'panel' });
+        await supabase.rpc('rpc_dlq_log_reprocess_trigger', { p_source: 'panel' });
       } catch (logErr) {
         console.warn('[dlq] failed to log reprocess trigger', logErr);
       }
