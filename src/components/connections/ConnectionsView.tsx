@@ -12,6 +12,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription,
 } from '@/components/ui/dialog';
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
   Smartphone, Plus, QrCode, Loader2, CheckCircle2, XCircle, AlertCircle, RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -34,7 +37,7 @@ export function ConnectionsView() {
     qrCodeDialog, newConnection, setNewConnection, isCreating,
     syncingHistory, setSyncingHistory, evolutionLoading,
     handleAddConnection, handleShowQrCode, handleRefreshQrCode,
-    handleCopyId, handleDisconnect, handleSetDefault, handleDelete, closeQrDialog,
+    handleCopyId, handleDisconnect, handleSetDefault, handleSetApiType, handleDelete, closeQrDialog,
   } = useConnectionsManager();
 
   const [businessHoursDialog, setBusinessHoursDialog] = useState({ open: false, connectionId: '', connectionName: '' });
@@ -90,6 +93,34 @@ export function ConnectionsView() {
               <div className="grid gap-4 py-4">
                 <div className="space-y-2"><Label>Nome da Conexão</Label><Input placeholder="Ex: WhatsApp Vendas" value={newConnection.name} onChange={(e) => setNewConnection({ ...newConnection, name: e.target.value })} /></div>
                 <div className="space-y-2"><Label>Número do WhatsApp</Label><Input placeholder="+55 11 99999-0000" value={newConnection.phone_number} onChange={(e) => setNewConnection({ ...newConnection, phone_number: e.target.value })} /></div>
+                <div className="space-y-2">
+                  <Label>Tipo de API</Label>
+                  <Select
+                    value={newConnection.api_type}
+                    onValueChange={(v) => setNewConnection({ ...newConnection, api_type: v as 'evolution' | 'official' })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Selecione o tipo de API" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="evolution">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Não-oficial (Evolution API)</span>
+                          <span className="text-xs text-muted-foreground">Conexão via QR Code (WhatsApp Web)</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="official">
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">Oficial (WhatsApp Cloud API)</span>
+                          <span className="text-xs text-muted-foreground">Autenticação via Meta — sem QR Code</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {newConnection.api_type === 'official' && (
+                    <p className="text-xs text-muted-foreground">
+                      A API oficial não usa QR Code. Após criar, configure as credenciais (Phone Number ID, Access Token) nas configurações da conexão.
+                    </p>
+                  )}
+                </div>
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isCreating}>Cancelar</Button>
                   <Button onClick={handleAddConnection} className="bg-whatsapp hover:bg-whatsapp-dark" disabled={isCreating}>
