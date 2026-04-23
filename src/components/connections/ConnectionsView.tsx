@@ -207,7 +207,7 @@ export function ConnectionsView() {
               <ConnectionCard
                 connection={connection} syncingHistory={syncingHistory}
                 onShowQrCode={handleShowQrCode} onCopyId={handleCopyId} onDisconnect={handleDisconnect}
-                onSetDefault={handleSetDefault} onDelete={handleDelete}
+                onSetDefault={handleSetDefault} onSetApiType={handleSetApiType} onDelete={handleDelete}
                 onBusinessHours={(id, name) => setBusinessHoursDialog({ open: true, connectionId: id, connectionName: name })}
                 onQueues={(id, name) => setQueuesDialog({ open: true, connectionId: id, connectionName: name })}
                 onSettings={(inst, name) => setSettingsDialog({ open: true, instanceName: inst, connectionName: name })}
