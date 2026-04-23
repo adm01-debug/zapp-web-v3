@@ -121,7 +121,7 @@ interface MilestoneEntry {
   render: (index: number) => JSX.Element;
 }
 
-function loadFilters(): { status: SLAStatus[]; period: PeriodFilter } {
+function loadFilters(): { status: SLAStatus[]; period: PeriodFilter; scope: SLAScope } {
   try {
     const raw = localStorage.getItem(FILTER_STORAGE_KEY);
     if (raw) {
@@ -130,11 +130,19 @@ function loadFilters(): { status: SLAStatus[]; period: PeriodFilter } {
         ? parsed.status.filter((s: string): s is SLAStatus => ALL_STATUSES.includes(s as SLAStatus))
         : ALL_STATUSES;
       const period: PeriodFilter = ['24h', '7d', '30d', 'all'].includes(parsed.period) ? parsed.period : 'all';
-      return { status: status.length ? status : ALL_STATUSES, period };
+      const scope: SLAScope = ['current', 'queue', 'agent', 'none'].includes(parsed.scope) ? parsed.scope : 'current';
+      return { status: status.length ? status : ALL_STATUSES, period, scope };
     }
   } catch { /* storage unavailable */ }
-  return { status: ALL_STATUSES, period: 'all' };
+  return { status: ALL_STATUSES, period: 'all', scope: 'current' };
 }
+
+const SCOPE_LABELS: Record<SLAScope, string> = {
+  current: 'Atual (fila + agente)',
+  queue: 'Por fila',
+  agent: 'Por agente',
+  none: 'Sem SLA',
+};
 
 export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   const { contact, queue, assignedTo } = conversation;
