@@ -3,6 +3,13 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
+import {
+  classifyRootCause,
+  aggregateByRootCause,
+  getRootCauseMeta,
+  type RootCause,
+  type RootCauseMeta,
+} from '@/lib/failureRootCause';
 
 const ADMIN_ONLY_MSG = 'Ação restrita a administradores.';
 
