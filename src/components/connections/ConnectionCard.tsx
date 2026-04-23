@@ -132,8 +132,16 @@ export function ConnectionCard({
               </motion.div>
               {connection.status !== 'connected' && !isOfficial && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button variant="outline" size="sm" onClick={() => onShowQrCode(connection)} className="border-whatsapp text-whatsapp hover:bg-whatsapp hover:text-primary-foreground">
-                    <QrCode className="w-4 h-4 mr-2" />Conectar
+                  <Button
+                    variant={connection.status === 'disconnected' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onShowQrCode(connection)}
+                    className={connection.status === 'disconnected'
+                      ? 'bg-whatsapp text-primary-foreground hover:bg-whatsapp/90 animate-pulse'
+                      : 'border-whatsapp text-whatsapp hover:bg-whatsapp hover:text-primary-foreground'}
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    {connection.status === 'disconnected' ? 'Ver QR Code' : 'Conectar'}
                   </Button>
                 </motion.div>
               )}
