@@ -5,7 +5,11 @@ import {
   evaluateAllInstances,
   loadThresholds,
   saveThresholds,
+  loadPerInstanceThresholds,
+  savePerInstanceThresholds,
+  resolveThresholds,
   type InstanceMetrics,
+  type PerInstanceThresholds,
 } from '../retryAlerts';
 
 const makeMetrics = (overrides: Partial<InstanceMetrics> = {}): InstanceMetrics => ({
