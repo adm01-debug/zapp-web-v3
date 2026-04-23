@@ -143,6 +143,9 @@ export default function AdminFailedMessagesPage() {
         </div>
       </header>
 
+      {/* Retry config (sem deploy) */}
+      <RetryConfigPanel />
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <KpiCard icon={Clock} label="Pendentes" value={aggregates.pending} tone="warning" />
