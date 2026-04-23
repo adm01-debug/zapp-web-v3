@@ -89,6 +89,22 @@ serve(async (req) => {
   const data = payload.data ?? {};
   const baseData = isRecord(data) ? data : {};
 
+  // Pause guard: se a instância foi pausada (manual ou auto), descarta o evento
+  // com 503 e audit 'rejected'. A Evolution costuma retry-arr, mas durante a
+  // janela de pausa preferimos isso a continuar processando lixo.
+  if (await isInstancePaused(supabase, instance)) {
+    await auditWebhookEvent(supabase, {
+      request_id: requestId, instance, event_type: event, status: 'rejected',
+      error_message: 'instance_paused',
+      duration_ms: Date.now() - startedAt,
+    });
+    console.warn(`[webhook][${requestId}] instance=${instance} is paused — skipping event ${event}`);
+    return new Response(
+      JSON.stringify({ error: 'instance_paused', instance, requestId }),
+      { status: 503, headers: { ...corsHeaders, 'Retry-After': '60' } },
+    );
+  }
+
   // Idempotency guard: dedup by hash of (instance + event + body). Evolution retries reuse
   // the same payload, so if we have seen this event_id we short-circuit with 200.
   const bodyHash = await sha256Hex(rawBody);
