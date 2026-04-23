@@ -1,138 +1,87 @@
 
 
-## CI no GitHub Actions + E2E com Playwright para fluxos críticos
+## Estado de UI para envios com retry por conversa
 
-### Diagnóstico
+Hoje o status de envio só tem `pending|sent|delivered|read|failed` (vide `MessageStatus.tsx` e `useMessageStatus.ts`). Quando `invokeEvolutionWithRetry` faz backoff, o usuário não vê "tentando 2/3", e quando falha por 401/403 o motivo fica escondido em `failed` genérico. Vamos ampliar o vocabulário de status e expor isso no balão de mensagem.
 
-O projeto **já tem** `.github/workflows/ci.yml` com 5 jobs (lint, vitest, deno tests, build, security audit). Falta:
-- Job de **E2E com Playwright** no pipeline.
-- **Setup do Playwright** (config, fixtures, specs) — não existe `playwright.config.ts` nem `e2e/`.
-- Cobertura E2E dos **fluxos críticos**: conexão WhatsApp e envio de mensagens.
+### Novos estados
 
-### O que será construído
+| Status | Quando |
+|---|---|
+| `sending` | Insert no DB, antes da chamada Evolution |
+| `retrying` | `onRetry` do `invokeEvolutionWithRetry` disparou (1ª/2ª tentativa) |
+| `failed_auth` | Resposta 401/403 da Evolution (não-transitório) |
+| `failed_retries` | Esgotou `maxRetries` em erro transitório |
+| `failed` | Falha definitiva genérica (mantém compat) |
+| `sent` / `delivered` / `read` | Inalterados |
 
-#### 1. Setup Playwright
+### Camadas a tocar
 
-**Arquivos novos:**
-- `playwright.config.ts` — base URL do preview Lovable, browsers (chromium + webkit), retries (2 em CI), screenshot/trace on failure, reporter HTML + GitHub.
-- `e2e/fixtures/auth.ts` — fixture `authenticatedPage` que faz login via UI (ou injeta sessão Supabase via `localStorage`) usando credenciais de **service account de teste** lidas de secrets.
-- `e2e/fixtures/test-data.ts` — JIDs/instâncias seed para testes (não tocar dados reais; usar instância mock `wpp2-test` ou contato dummy `5511999999999@s.whatsapp.net`).
-- `e2e/utils/supabase.ts` — helpers para limpeza pós-teste (delete contatos/mensagens criados via `service_role`).
-- `package.json` — adicionar scripts `test:e2e`, `test:e2e:ui`, `test:e2e:debug` e devDeps `@playwright/test`.
+**1. Bus client-side de status de envio** (novo `src/hooks/realtime/sendStatusBus.ts`)
+- `Map<messageId, { status, attempt?, totalRetries?, errorCode?, errorReason? }>`
+- Pub/sub simples (`subscribe(messageId, cb)` + `emit`).
+- Necessário porque `retrying` é estado *transiente* que não vai para o DB (não queremos sobrescrever `status` final). Persistência fica só para estados terminais.
 
-#### 2. Specs E2E — fluxos críticos
+**2. `messageSender.ts`**
+- Emitir no bus em cada transição:
+  - Após insert → `emit(id, { status: 'sending' })`.
+  - Dentro de `onRetry(attempt, total)` → `emit(id, { status: 'retrying', attempt, totalRetries: total })`.
+  - Em sucesso → `emit(id, { status: 'sent' })` (e DB já atualiza).
+  - Em erro: detectar 401/403 olhando `apiError.status` e mensagens (`unauthorized`, `forbidden`) → `emit(id, { status: 'failed_auth', errorCode: 401|403, errorReason })` e gravar `status='failed_auth'` no DB.
+  - Em erro transitório que esgotou retries → `failed_retries` + DB.
+- Toast atual de "Conexão instável" continua, mas pula se já houver outro toast no minuto (dedup leve via timestamp por contato).
 
-**`e2e/auth.spec.ts`** (smoke)
-- Login com email/senha → redireciona para `/`.
-- Logout → volta para `/auth`.
-- Acesso protegido sem sessão → redireciona para `/auth`.
+**3. Schema (migration)**
+- Ampliar enum/check de `messages.status` para incluir `sending`, `retrying`, `failed_auth`, `failed_retries`. Hoje a coluna é texto livre conforme `useMessageStatus` (sem CHECK), confirmar via `read_query` antes — se houver CHECK, migrar; se não, só atualizar tipos TS.
+- Adicionar colunas opcionais: `error_code text`, `error_reason text` em `messages` (úteis para o painel admin de failed_messages já existente).
 
-**`e2e/whatsapp-connection.spec.ts`** (conexão)
-- Navega para `/admin/connections` (ou rota equivalente).
-- Cria nova conexão `wpp2-test`.
-- Verifica que QR code/pairing code é exibido (mock de `evolution-api` `instance/connect`).
-- Estado da conexão muda para `connected` após mock de webhook `CONNECTION_UPDATE`.
-- Desconecta e remove a instância (cleanup).
+**4. `useMessageStatus.ts`**
+- Tipo `MessageUIStatus = 'sending'|'retrying'|'sent'|'delivered'|'read'|'failed'|'failed_auth'|'failed_retries'`.
+- Merge: status do bus (transiente) tem prioridade sobre status do DB para `retrying`/`sending`; estados terminais vêm do DB (via realtime já existente).
+- Expor `getMessageStatusDetail(id)` retornando `{ status, attempt?, totalRetries?, errorCode?, errorReason? }`.
 
-**`e2e/send-message.spec.ts`** (envio crítico)
-- Abre o Inbox (`/`).
-- Clica em "Nova conversa" → escolhe contato existente seed.
-- Digita mensagem e envia via Enter.
-- Verifica bolha otimista (`status='sending'`) aparece em ≤500ms.
-- Verifica que após mock de resposta da Evolution, status muda para `sent` (✓).
-- Envio de imagem (upload mock) → bolha de mídia aparece.
-- Envio com Eco offline (mock 503) → mensagem entra em DLQ via toast informativo.
+**5. `MessageStatus.tsx`**
+- Estender `statusConfig` com:
+  - `retrying`: ícone `RefreshCw` animado (spin), cor `text-warning`, label `Tentando ${attempt}/${total}…`.
+  - `failed_auth`: ícone `ShieldAlert`, cor `text-destructive`, label `Falha de autenticação (${code})`.
+  - `failed_retries`: ícone `AlertCircle`, cor `text-destructive`, label `Falhou após ${total} tentativas`.
+- Aceitar prop opcional `detail?: { attempt?, totalRetries?, errorCode? }` para compor o tooltip.
 
-**`e2e/inbox-realtime.spec.ts`** (paridade Whaticket)
-- Recebe mensagem inbound (mock de webhook `MESSAGES_UPSERT` via insert direto no DB de teste).
-- Lista de conversas atualiza em ≤2s.
-- Contador de não-lidas incrementa.
-- Abrir conversa zera contador.
+**6. Ação "Reenviar" no balão**
+- Em `MessageBubble` (consumidor de `MessageStatus`), quando status ∈ {`failed`, `failed_auth`, `failed_retries`}, mostrar botão pequeno "Reenviar" que chama `sendMessageToContact` novamente com o conteúdo original e marca a mensagem antiga como substituída (não regravar — apenas novo insert).
+- Para `failed_auth`, o botão abre dica: "Verifique a conexão WhatsApp" (link para `/admin/instance-pauses`).
 
-#### 3. Mocking strategy
+**7. Indicador agregado por conversa/telefone**
+- Em `useRealtimeMessages` adicionar derivado `conversationSendState[contactId]`:
+  - `retrying` se houver qualquer mensagem `retrying` agora.
+  - senão `failed` se a última outbound terminou em qualquer falha.
+  - senão `idle`.
+- Consumido em `ChatPanelHeader` para uma micro-pílula ao lado do nome ("Tentando reenviar…" / "Última mensagem falhou").
 
-- **Evolution API**: usar `page.route('**/functions/v1/evolution-api', ...)` para interceptar e responder com fixtures determinísticas. Sem chamadas reais à Eco em CI.
-- **Supabase Realtime**: usar fixture que injeta payloads via canal mock OU acionar via `service_role` no DB FATOR X de teste.
-- **Auth**: criar usuário de teste seed `e2e-bot@zappweb.test` com role `admin` em migração de seed dev-only (não roda em prod).
+### Detalhes técnicos
 
-#### 4. CI — novo job no `.github/workflows/ci.yml`
-
-Adicionar **JOB 5: E2E Tests** após `build`:
-
-```yaml
-e2e:
-  name: 🎭 E2E Tests (Playwright)
-  runs-on: ubuntu-latest
-  needs: build
-  timeout-minutes: 20
-  strategy:
-    fail-fast: false
-    matrix:
-      shard: [1/2, 2/2]   # paralelizar em 2 shards
-  steps:
-    - checkout / setup node 20
-    - npm install
-    - npx playwright install --with-deps chromium webkit
-    - download dist artifact (do job build)
-    - npm run preview &  (servir dist na porta 4173)
-    - wait-on http://localhost:4173
-    - npx playwright test --shard=${{ matrix.shard }}
-      env:
-        E2E_BASE_URL: http://localhost:4173
-        E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
-        E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
-        VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-        VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-    - upload playwright-report/ + test-results/ artifacts (sempre)
-```
-
-#### 5. Documentação
-
-- `docs/testing/e2e.md` — como rodar local, criar specs, debugar, lidar com flakiness.
-- Update `CONTRIBUTING.md` — adicionar seção "Testes E2E" e como rodar antes de PR.
-- Update `.github/PULL_REQUEST_TEMPLATE.md` — checkbox "Testes E2E passam".
-
-### Critérios de aceite
-
-- `npm run test:e2e` roda local contra `npm run dev` e passa nos 4 specs.
-- CI executa o job `e2e` em PRs e em push para `main`/`develop`.
-- Falha de E2E bloqueia o merge.
-- Relatório HTML do Playwright fica disponível como artifact por 7 dias.
-- Nenhum teste E2E faz chamada real à Evolution API ou ao FATOR X de produção (tudo mockado ou em instância de teste).
-- Cleanup remove dados de teste após cada run (`afterEach`/`afterAll`).
-- Tempo total do job ≤ 10 min (com sharding 2x).
-
-### Secrets necessários (a configurar pelo usuário)
-
-- `E2E_USER_EMAIL` — email do bot de teste
-- `E2E_USER_PASSWORD` — senha do bot de teste
-
-(Os demais — `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` — já existem no workflow.)
+- Detecção de auth no Evolution: `apiResult.status` 401/403, ou string `unauthorized`/`forbidden`/`invalid token` no `apiResult.message`. Reaproveitar lógica do `instance-pause` shared não é necessário no client.
+- `evolutionSendRetry.ts` não muda: já chama `onRetry`. Apenas o caller passa um callback mais rico (com `attempt`/`total`).
+- Bus é em memória (perdido em reload). Estados terminais persistem no DB → após reload o usuário vê `failed_auth`/`failed_retries` corretamente.
+- Performance: bus usa `Set<callback>` por `messageId`; cleanup no `unmount` da bolha.
 
 ### Arquivos
 
-**Novos**
-- `playwright.config.ts`
-- `e2e/auth.spec.ts`
-- `e2e/whatsapp-connection.spec.ts`
-- `e2e/send-message.spec.ts`
-- `e2e/inbox-realtime.spec.ts`
-- `e2e/fixtures/auth.ts`
-- `e2e/fixtures/test-data.ts`
-- `e2e/utils/supabase.ts`
-- `docs/testing/e2e.md`
+Criar:
+- `src/hooks/realtime/sendStatusBus.ts`
+- `supabase/migrations/<ts>_extend_message_status.sql`
 
-**Editados**
-- `.github/workflows/ci.yml` — novo job `e2e` com matrix sharding
-- `package.json` — scripts + devDep `@playwright/test`
-- `CONTRIBUTING.md` — seção "Testes E2E"
-- `.github/PULL_REQUEST_TEMPLATE.md` — checkbox E2E
-- `.gitignore` — `playwright-report/`, `test-results/`, `.auth/`
+Editar:
+- `src/hooks/realtime/messageSender.ts` (emit + classificação de erro)
+- `src/hooks/useMessageStatus.ts` (merge bus + DB, novo tipo)
+- `src/components/inbox/MessageStatus.tsx` (3 novos estados + tooltip detalhado)
+- `src/components/inbox/chat/MessageBubble.tsx` (botão Reenviar + uso da nova prop)
+- `src/components/inbox/chat/ChatPanelHeader.tsx` (pílula agregada)
+- `src/hooks/useRealtimeMessages.ts` (derivado `conversationSendState`)
+- `src/integrations/supabase/types.ts` (auto após migration)
 
-### Riscos & mitigação
-
-- **Flakiness em realtime** → usar `expect.poll()` com timeout 10s e retries CI=2.
-- **Custo de tempo CI** → sharding em 2 + only-chromium em PR (webkit só em push para main).
-- **Dados poluindo prod** → toda escrita E2E vai para JID/instância marcada `*-test` + cleanup obrigatório no `afterAll`.
-- **Auth Supabase em iframe Lovable** → testar contra build local (`npm run preview`) na porta 4173, não contra preview Lovable, evitando rate limit e CSP de iframe.
+### Fora de escopo
+- Não mudo `evolutionSendRetry.ts` nem o backoff.
+- Não mexo no painel `failed_messages` (já existe e continuará lendo `error_reason`/`error_code` quando preenchidos).
+- Sem alteração nas edge functions.
 
