@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, checkRateLimit, getClientIP } from "../_shared/validation.ts";
+import { extractEvolutionMessageId } from "../_shared/evolution-message-id.ts";
 
 const SendActionSchema = z.object({
   action: z.literal('send'),
@@ -146,10 +147,11 @@ Deno.serve(async (req) => {
         );
         const sendData = await sendRes.json();
 
-        if (sendData?.key?.id) {
+        const externalId = extractEvolutionMessageId(sendData);
+        if (externalId) {
           await supabase
             .from('messages')
-            .update({ external_id: sendData.key.id, status: 'sent' })
+            .update({ external_id: externalId, status: 'sent' })
             .eq('id', msg.id);
         }
       }

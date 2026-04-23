@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { getLogger } from '@/lib/logger';
 import { newRequestId } from '@/lib/withRequestId';
+import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 
 const log = getLogger('useSendProduct');
 
@@ -109,7 +110,7 @@ export function useSendToContact(onSuccess: () => void) {
           headers: trace.headers,
         });
 
-        const externalId = apiResult?.key?.id || null;
+        const externalId = extractEvolutionMessageId(apiResult);
         if (dbResult?.id && externalId) {
           await supabase.from('messages')
             .update({ external_id: externalId, status: 'sent' })
@@ -139,7 +140,7 @@ export function useSendToContact(onSuccess: () => void) {
         headers: textTrace.headers,
       });
 
-      const textExternalId = textApiResult?.key?.id || null;
+      const textExternalId = extractEvolutionMessageId(textApiResult);
       if (textDbResult?.id && textExternalId) {
         await supabase.from('messages')
           .update({ external_id: textExternalId, status: 'sent' })
