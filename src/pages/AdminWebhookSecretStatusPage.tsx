@@ -517,6 +517,20 @@ export default function AdminWebhookSecretStatusPage() {
                           <Badge variant="subtle">pendente</Badge>
                         )}
                       </td>
+                      <td className="py-2 pr-4 text-right">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={recheckingId === e.id}
+                          onClick={() => handleRecheck(e.id ?? '')}
+                          aria-label="Revalidar assinatura"
+                        >
+                          <RefreshCw
+                            className={`h-3.5 w-3.5 ${recheckingId === e.id ? 'animate-spin' : ''}`}
+                          />
+                          <span className="ml-1 text-xs">Revalidar</span>
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -532,6 +546,14 @@ export default function AdminWebhookSecretStatusPage() {
         onChange={setAlertConfig}
         recentAlerts={recentAlerts}
         activeCount={activeBreaches.length}
+      />
+
+      <RecheckResultDialog
+        open={recheckOpen}
+        onOpenChange={setRecheckOpen}
+        loading={recheckLoading}
+        result={recheckResult}
+        error={recheckError}
       />
     </div>
   );
