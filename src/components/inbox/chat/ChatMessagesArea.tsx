@@ -279,7 +279,17 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
               <span>Carregando mensagens anteriores…</span>
             </div>
           )}
-          {!loadingOlder && !hasMoreOlder && messages.length > 0 && (
+          {!loadingOlder && loadCancelled && (
+            <div
+              role="status"
+              data-testid="load-older-cancelled"
+              className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/30"
+            >
+              <Ban className="h-3 w-3" />
+              <span>Carregamento cancelado</span>
+            </div>
+          )}
+          {!loadingOlder && !loadCancelled && !hasMoreOlder && messages.length > 0 && (
             <span className="text-[11px] text-muted-foreground/60 italic">Início da conversa</span>
           )}
         </div>
