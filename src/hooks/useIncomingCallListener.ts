@@ -2,16 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { log } from '@/lib/logger';
+import type { IncomingCall } from '@/types/incomingCall';
 
-export interface IncomingCall {
-  id: string;
-  contact_id: string | null;
-  contact_name: string;
-  contact_phone: string;
-  is_video: boolean;
-  whatsapp_connection_id: string | null;
-  started_at: string;
-}
+export type { IncomingCall } from '@/types/incomingCall';
 
 export function useIncomingCallListener() {
   const { user, profile } = useAuth();

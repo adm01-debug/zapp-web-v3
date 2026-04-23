@@ -333,6 +333,36 @@ export async function handleCallEvent(supabase: any, instance: string, data: unk
       });
     }
   }
+
+  // Emit realtime broadcast on FATOR X bus for sub-100ms incoming-call alert.
+  // Payload is minimal (no PII besides JID); client resolves name/avatar via rpc_get_contact.
+  try {
+    const externalUrl = Deno.env.get('EXTERNAL_SUPABASE_URL');
+    const externalKey = Deno.env.get('EXTERNAL_SUPABASE_SERVICE_ROLE_KEY')
+      || Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY');
+    if (externalUrl && externalKey) {
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+      const externalAdmin = createClient(externalUrl, externalKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const bcastChannel = externalAdmin.channel(`incoming-calls:${instance}`);
+      await bcastChannel.send({
+        type: 'broadcast',
+        event: 'call_received',
+        payload: {
+          remote_jid: from,
+          is_video: !!isVideo,
+          call_status: callStatus || 'ringing',
+          agent_profile_id: agentId,
+          started_at: new Date().toISOString(),
+          wa_call_id: (callData.id as string) ?? null,
+        },
+      });
+      await externalAdmin.removeChannel(bcastChannel);
+    }
+  } catch (err) {
+    console.warn('[handleCallEvent] broadcast emit failed', err);
+  }
 }
 
 // deno-lint-ignore no-explicit-any
