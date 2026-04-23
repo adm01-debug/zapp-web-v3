@@ -19,8 +19,8 @@ export function SLAIndicatorForContact({ conversation, compact, className }: SLA
     company: contact.company ?? null,
     jobTitle: contact.job_title ?? null,
     contactType: contact.contact_type ?? null,
-    queueId: contact.queue_id ?? null,
-    agentId: contact.assigned_to ?? null,
+    queueId: conversation.queue?.id ?? null,
+    agentId: conversation.assignedTo?.id ?? null,
   });
 
   const fallbackFr = conversation.priority === 'high' ? 2 : 5;
