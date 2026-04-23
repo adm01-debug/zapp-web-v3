@@ -156,6 +156,17 @@ export function RetryMetricsPanel() {
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex items-center gap-1.5 px-2 h-8 rounded-md border bg-card">
+              <Switch
+                id="compare-mode"
+                checked={compareMode}
+                onCheckedChange={setCompareMode}
+                className="scale-75 data-[state=checked]:bg-primary"
+              />
+              <Label htmlFor="compare-mode" className="text-[11px] cursor-pointer select-none">
+                Comparar período
+              </Label>
+            </div>
             <RetryAlertsConfig
               value={thresholds}
               onChange={setThresholds}
