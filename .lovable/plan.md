@@ -1,106 +1,82 @@
 
 
-## Análise Exaustiva — Melhorias Pendentes no ZAPP Web
+## Dead-Letter Queue automática para envios da Evolution API
 
-Realizei varredura cruzada entre código, edge functions, migrações SQL e documentos de auditoria (`IMPROVEMENT_PLAN.md`, `EVOLUTION_API_GAPS_ANALYSIS.md`, `HANDOFF_EVOLUTION_SECURITY_2026-04-12.md`, `FORGOTTEN_FEATURES_REPORT.md`, `AUDITORIA_COMPLETA_ZAPP_WEB.md`). Abaixo estão **as melhorias REAIS pendentes**, agrupadas por prioridade e prontas para serem executadas em sequência (modo autônomo, conforme sua preferência).
+A tabela `failed_messages`, a edge function `reprocess-failed-messages` e o cron de 15 min **já existem**. Faltam três peças para fechar o ciclo: **enqueue automático**, **RLS correto para service role**, **painel admin** e **cleanup**.
 
----
+### O que muda
 
-### 🔴 P0 — Resiliência e Segurança Crítica (Sprint Evolution)
+#### 1. Backend — enqueue automático
 
-| # | Item | Estado atual | Arquivo-alvo |
-|---|------|--------------|--------------|
-| 1 | **Retry com exponential backoff em envio de mensagens** | Ausente (`useEvolutionMessaging.ts` envia sem retry) | `src/hooks/evolution/useEvolutionMessaging.ts` + `_shared/evolution-api-proxy.ts` |
-| 2 | **Dead-letter queue para mensagens falhas** | Não existe tabela `failed_messages` nem reprocessador | nova migration + `supabase/functions/reprocess-failed-messages/` |
-| 3 | **Job pg_cron de reconciliação de mensagens órfãs** | Inexistente | nova migration SQL (4h em 4h) |
-| 4 | **Hardening do banner `EvolutionDisconnectBanner`** | Após patch do `EVOLUTION_AUTH_ERROR`, falta cooldown anti-spam de toast e log estruturado | `src/components/alerts/EvolutionDisconnectBanner.tsx` |
-| 5 | **Webhook HMAC strict-mode auditável** | Implementado mas roda como "skip se sem secret" — falta painel admin para visualizar status do secret e violação | novo card em `MonitoringWebhookPanel.tsx` |
+**A. Helper novo `supabase/functions/_shared/enqueue-failed-message.ts`**
+- Função `enqueueFailedMessage({ instance_name, remote_jid, path, payload, http_status, error_code, error_message })`.
+- Usa service role, fire-and-forget, nunca relança erro.
+- Filtro: só enquileira se for **POST de envio** (`/message/*`) **e** o erro for **transitório** (`5xx`, `429`, timeout, `network_error`). Nunca enquileira `400/401/403/404/422` — esses falham permanentemente.
+- Persiste `payload` com chave extra `__path` para o reprocesso saber a rota original.
 
----
+**B. Instrumentar `_shared/evolution-api-proxy.ts`**
+- Nos pontos onde já existe métrica de retry (`final_status === 'failed'` em POST com `/message/`, e `final_status === 'exhausted'`), chamar `enqueueFailedMessage(...)`.
+- `max_retries=5`, `next_attempt_at = now() + 60s` (primeira tentativa rápida).
 
-### 🟠 P1 — Eventos Evolution Não Tratados
+#### 2. Banco — RLS + cleanup
 
-Identificados em `EVOLUTION_API_GAPS_ANALYSIS.md` mas **ainda não implementados** nos handlers do `evolution-webhook/index.ts`:
+**Migração nova:**
+- Adicionar policy: `INSERT/UPDATE` permitido também via `service_role` (atualmente só admin pode inserir, então as edge functions falham silenciosamente).
+- Adicionar policy `SELECT` para supervisores (não só admins).
+- Função `cleanup_old_failed_messages()` — purga linhas com `status IN ('succeeded','abandoned')` há mais de **30 dias**.
+- Cron diário (3:15 UTC) chama o cleanup.
 
-| Evento | Funcionalidade que destrava |
-|--------|------------------------------|
-| `PRESENCE_UPDATE` (enriquecido) | indicador online/offline no header do chat |
-| `CONTACTS_UPDATE` | sync automático de avatar/pushName |
-| `CHATS_UPDATE` | refletir arquivar/fixar feito no celular |
-| `CALL` | gravar chamadas via `rpc_insert_call` |
-| `LABELS_ASSOCIATION` | sincronizar labels do WA Business com `evolution_tags` |
+#### 3. Edge function `reprocess-failed-messages` (já existe)
 
-**Ação:** estender `_shared/evolution-sync-actions.ts` com handlers dedicados + RPCs do FATOR X já disponíveis (`rpc_upsert_contact`, `rpc_insert_call`).
+Pequenos ajustes:
+- Garantir que devolva contagem por status no JSON (já faz).
+- Logar com prefixo `[dlq-reprocess]` cada item processado para auditoria via `edge_function_logs`.
 
----
+#### 4. Frontend — Painel admin
 
-### 🟡 P2 — Itens Falsamente "Concluídos" no IMPROVEMENT_PLAN.md
+**Hook novo `src/hooks/monitoring/useFailedMessages.ts`**
+- React Query, lista paginada (50), filtros: status, instância, janela (1h/24h/7d).
+- Realtime via `postgres_changes` na tabela.
+- Mutation `retryNow(id)` → seta `next_attempt_at = now()`, `status = 'retrying'`.
+- Mutation `abandon(id)` → seta `status = 'abandoned'`.
+- Mutation `triggerReprocess()` → invoca a edge function manualmente.
 
-Cabeçalho do doc declara P2 = 100%, mas o corpo lista 12 pendentes reais (verificado por inspeção):
+**Componente novo `src/components/monitoring/DLQPanel.tsx`**
+- 4 KPIs: pendentes, em retry, abandonadas (24h), taxa de sucesso pós-retry.
+- Tabela: instância | destinatário | tipo (derivado de `payload.__path`) | tentativas | status | erro (truncado) | última tentativa | próxima tentativa | ações (Retry agora / Abandonar).
+- Botão global **"Reprocessar agora"** (chama a edge function).
+- Linha expandível para ver `payload` formatado e mensagem de erro completa.
+- Empty state padrão `GenericEmptyState`.
 
-| ID | Item | Falta |
-|----|------|-------|
-| 3.10 | VoIP nativa | painel admin de configuração SIP unificado |
-| 3.11 | Builder visual de automações | editor drag-and-drop (hoje só lista) |
-| 3.12 | NPS periódico | scheduler automático no cron |
-| 3.13 | 2FA via Authenticator | finalizar fluxo TOTP (passkey OK, TOTP incompleto) |
-| 3.15 | Filtros salvos compartilháveis | persistir presets entre agentes |
-| 3.16 | Bulk actions melhorados | seleção múltipla na inbox |
-| 3.17 | Atalhos contextuais | command palette estendido por contexto |
-| 3.18 | Export automático | bloqueado por política Zero Export — **descartar definitivamente do plano** |
+**Integração**
+- Adicionar `DLQPanel` em `MonitoringWebhookPanel.tsx`, abaixo do `RetryMetricsPanel`.
 
----
+### Critérios de aceite
 
-### 🟢 P3 — Qualidade, Testes e Documentação
+- POST `send-text` que falha com 503 três vezes (retry server-side esgotado) cria automaticamente uma linha em `failed_messages` com `status='pending'`, `payload` contendo o body original + `__path`.
+- Erros 401/403/400 **não** geram linha (são permanentes, já capturados no painel de incidentes).
+- Cron `reprocess-failed-messages-15min` retoma o item; se Evolution responder 200, `status` vira `succeeded`.
+- Após 5 tentativas → `status='abandoned'`; admin vê na tabela e pode reabrir manualmente.
+- Não-admin/não-supervisor não acessa o painel (RLS + UI já protegida pela rota `/admin`).
+- Cleanup remove sucessos/abandonados >30 dias.
 
-| # | Item | Estado |
-|---|------|--------|
-| 1 | **CI/CD GitHub Actions** | ausente — workflow lint/test/typecheck |
-| 2 | **Testes E2E Playwright** | ausentes — só temos Vitest unitários |
-| 3 | **Cobertura Deno tests** para edge functions críticas | parcial — faltam `evolution-webhook`, `whatsapp-webhook`, `talkx-send` |
-| 4 | **Documentação consolidada** | 4 docs com status conflitante (`IMPROVEMENT_PLAN`, `EVOLUTION_API_GAPS`, `HANDOFF`, `FORGOTTEN_FEATURES`) — unificar em `docs/STATUS_REAL.md` |
-| 5 | **587 ocorrências de "todo/todos"** falso-positivo (texto PT-BR) | nenhuma TODO/FIXME real encontrada — adicionar lint rule para distinguir |
+### Arquivos
 
----
+**Novos**
+- `supabase/migrations/<ts>_failed_messages_rls_cleanup.sql`
+- `supabase/functions/_shared/enqueue-failed-message.ts`
+- `src/hooks/monitoring/useFailedMessages.ts`
+- `src/components/monitoring/DLQPanel.tsx`
 
-### 📊 Resumo Executivo
+**Editados**
+- `supabase/functions/_shared/evolution-api-proxy.ts` — chamar `enqueueFailedMessage` nos pontos de falha de POST `/message/*`
+- `supabase/functions/reprocess-failed-messages/index.ts` — logs `[dlq-reprocess]`
+- `src/components/monitoring/MonitoringWebhookPanel.tsx` — montar `<DLQPanel />`
 
-```text
-┌─────────────────────────────────────────────────────┐
-│  Total de melhorias REAIS pendentes:  22            │
-├─────────────────────────────────────────────────────┤
-│  P0 (crítico)                          5            │
-│  P1 (eventos Evolution)                5            │
-│  P2 (UX avançada)                      7            │
-│  P3 (qualidade/docs)                   5            │
-└─────────────────────────────────────────────────────┘
-```
+### Riscos & mitigação
 
----
-
-### 🛠️ Plano de Execução Sequencial (modo autônomo)
-
-Após aprovação, executarei **uma melhoria por vez**, em ordem rigorosa do P0 ao P3, sem pedir confirmações intermediárias, conforme sua preferência registrada (`.lovable/user-preferences`).
-
-**Ordem proposta:**
-
-1. P0.1 → Retry exponential backoff (`evolution-api-proxy.ts`)
-2. P0.2 → Tabela `failed_messages` + edge function reprocessador
-3. P0.3 → Migration `pg_cron` reconciliação
-4. P0.4 → Hardening `EvolutionDisconnectBanner` (cooldown + log)
-5. P0.5 → Card admin de status do `WEBHOOK_SECRET`
-6. P1.1–5 → Handlers de eventos Evolution (`PRESENCE/CONTACTS/CHATS/CALL/LABELS`)
-7. P2.10–17 → UX avançada (excluindo 3.18 Export)
-8. P3.1–4 → CI/CD, testes E2E, Deno tests, doc unificado
-
-### Detalhes técnicos por melhoria (resumo de cada arquivo afetado)
-
-- **Retry/backoff:** wrapper `withRetry(fn, { maxRetries: 3, baseDelay: 500, jitter: true })` em `_shared/evolution-api-proxy.ts`. Aplicado a `proxyToEvolution`. Não tocará em rotas de `connect` (evita loop em 401).
-- **DLQ:** `failed_messages(id, payload jsonb, error_code, retry_count, last_attempt_at, status, created_at)` com RLS admin-only. Edge function `reprocess-failed-messages` chamada por cron a cada 15min, máx 5 retries.
-- **Reconciliação:** `pg_cron` executa `fn_reconcile_orphan_messages()` 4/4h, comparando `evolution_messages.message_id` com payload bruto recebido em `evolution_audit_log`.
-- **Banner:** adicionar `Map<string, number>` de cooldown 30s por instance_id, log via `getLogger('EvolutionBanner')`.
-- **Eventos Evolution:** cada handler usa RPCs FATOR X já existentes (`rpc_upsert_contact`, `rpc_insert_call`); `LABELS_ASSOCIATION` faz upsert em `evolution_tags` com `external_label_id`.
-- **VoIP/Builder/NPS/2FA TOTP:** componentes novos sob `src/components/{voip,automations,nps,security}/`, sem alterar schema existente.
-- **CI/CD:** `.github/workflows/ci.yml` rodando `pnpm lint && pnpm test && pnpm typecheck`.
-- **Doc unificado:** `docs/STATUS_REAL.md` substituirá os 4 docs conflitantes (mantidos como histórico em `docs/_archive/`).
+- **Volume excessivo** se Eco cair longamente → filtro restritivo (só transitórios) + `max_retries=5` + cleanup 30d.
+- **Mensagens duplicadas** se Eco processar mas timeout no retorno → reprocesso usa o mesmo payload sem `messageId` novo; Evolution já dedup por janela curta. Aceitável dado que é DLQ (último recurso).
+- **Loop com cron** → `next_attempt_at` com backoff exponencial (já implementado na função existente); cron só processa itens com `next_attempt_at <= now()`.
+- **Vazamento de payload sensível** → `failed_messages` só leitura admin/supervisor (RLS). Painel admin já está atrás de `/admin`.
 
