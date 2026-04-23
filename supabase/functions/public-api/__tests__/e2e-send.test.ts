@@ -53,6 +53,13 @@ function jsonRes(body: unknown, status = 200): Response {
   });
 }
 
+/** PostgREST `.single()` / `.maybeSingle()` sends this Accept header and
+ * expects a single object (not an array). Helps the mock pick the right shape. */
+function wantsSingle(init?: RequestInit): boolean {
+  const accept = new Headers(init?.headers).get("accept") ?? "";
+  return accept.includes("application/vnd.pgrst.object+json");
+}
+
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
@@ -63,30 +70,33 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   }
   calls.push({ url, method, body });
 
-  // Supabase global_settings (api_token check)
+  const single = wantsSingle(init);
+  const wrap = (row: unknown) => single ? row : [row];
+
+  // Supabase global_settings (api_token check via .single())
   if (url.includes("/rest/v1/global_settings")) {
-    return jsonRes([{ value: "valid-token" }]);
+    return jsonRes(wrap({ value: "valid-token" }));
   }
-  // whatsapp_connections lookup
+  // whatsapp_connections lookup (.single())
   if (url.includes("/rest/v1/whatsapp_connections")) {
-    return jsonRes([{
+    return jsonRes(wrap({
       id: "conn-1",
       instance_id: "wpp2",
       status: "connected",
       is_default: true,
-    }]);
+    }));
   }
-  // contacts: GET returns an existing contact so we skip the insert path
+  // contacts lookup — return existing so we skip insert
   if (url.includes("/rest/v1/contacts") && method === "GET") {
-    return jsonRes([{ id: "contact-1" }]);
+    return jsonRes(wrap({ id: "contact-1" }));
   }
   // messages insert
   if (url.includes("/rest/v1/messages") && method === "POST") {
-    return jsonRes([{ id: "msg-1", status: "sending" }]);
+    return jsonRes(wrap({ id: "msg-1", status: "sending" }));
   }
   // messages update (PATCH)
   if (url.includes("/rest/v1/messages") && method === "PATCH") {
-    return jsonRes([{ id: "msg-1", ...(body as Record<string, unknown>) }]);
+    return jsonRes(wrap({ id: "msg-1", ...(body as Record<string, unknown>) }));
   }
   // Evolution API send
   if (url.includes("/message/sendText/")) {
