@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { withRetry } from '@/lib/retry';
 import { getLogger } from '@/lib/logger';
 import { enqueueClientFailedMessage } from '@/lib/failedMessagesEnqueue';
+import { loadRetryConfig } from '@/lib/retryConfig';
 
 const log = getLogger('EvolutionSendRetry');
 
