@@ -136,6 +136,41 @@ export function DLQPanel() {
           ))}
         </div>
 
+        {/* Top reasons (clickable badges) */}
+        {topReasons.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Top motivos</span>
+            {topReasons.map((r) => {
+              const isActive = errorCodeFilter === r.code;
+              return (
+                <button
+                  key={r.code}
+                  type="button"
+                  onClick={() => setErrorCodeFilter(isActive ? null : r.code)}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-mono transition-colors',
+                    isActive
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted/40 hover:bg-muted border-border',
+                  )}
+                  title={isActive ? 'Limpar filtro' : `Filtrar por ${r.code}`}
+                >
+                  {r.code}
+                  <span className="opacity-70">·{r.count}</span>
+                </button>
+              );
+            })}
+            {errorCodeFilter && (
+              <Button
+                variant="ghost" size="sm" className="h-6 px-2 text-[10px]"
+                onClick={() => setErrorCodeFilter(null)}
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* Table */}
         {rows.length === 0 ? (
           <GenericEmptyState
