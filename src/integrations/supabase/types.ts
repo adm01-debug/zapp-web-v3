@@ -8124,6 +8124,7 @@ export type Database = {
           battery_level: number | null
           created_at: string
           created_by: string | null
+          degraded_at: string | null
           farewell_enabled: boolean | null
           farewell_message: string | null
           health_response_ms: number | null
@@ -8146,6 +8147,7 @@ export type Database = {
           battery_level?: number | null
           created_at?: string
           created_by?: string | null
+          degraded_at?: string | null
           farewell_enabled?: boolean | null
           farewell_message?: string | null
           health_response_ms?: number | null
@@ -8168,6 +8170,7 @@ export type Database = {
           battery_level?: number | null
           created_at?: string
           created_by?: string | null
+          degraded_at?: string | null
           farewell_enabled?: boolean | null
           farewell_message?: string | null
           health_response_ms?: number | null
