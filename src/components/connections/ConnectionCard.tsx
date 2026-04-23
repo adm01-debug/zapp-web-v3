@@ -9,7 +9,7 @@ import {
 import {
   Smartphone, MoreVertical, Trash2, Copy, QrCode, Wifi, WifiOff,
   Star, Clock, Loader2, RefreshCw, History, Link2, Settings, Boxes,
-  BatteryCharging, BatteryLow, BatteryMedium, BatteryFull,
+  BatteryCharging, BatteryLow, BatteryMedium, BatteryFull, ShieldCheck, Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +32,7 @@ interface ConnectionCardProps {
   onCopyId: (id: string) => void;
   onDisconnect: (c: WhatsAppConnection) => void;
   onSetDefault: (id: string) => void;
+  onSetApiType?: (c: WhatsAppConnection, api_type: 'evolution' | 'official') => void;
   onDelete: (c: WhatsAppConnection) => void;
   onBusinessHours: (id: string, name: string) => void;
   onQueues: (id: string, name: string) => void;
@@ -42,11 +43,12 @@ interface ConnectionCardProps {
 
 export function ConnectionCard({
   connection, syncingHistory,
-  onShowQrCode, onCopyId, onDisconnect, onSetDefault, onDelete,
+  onShowQrCode, onCopyId, onDisconnect, onSetDefault, onSetApiType, onDelete,
   onBusinessHours, onQueues, onSettings, onIntegrations, onSyncHistory,
 }: ConnectionCardProps) {
   const status = statusConfig[connection.status] || statusConfig.disconnected;
   const StatusIcon = status.icon;
+  const isOfficial = (connection.api_type ?? 'evolution') === 'official';
 
   return (
     <motion.div whileHover={{ y: -2, boxShadow: '0 8px 30px hsl(var(--primary) / 0.1)' }}>
