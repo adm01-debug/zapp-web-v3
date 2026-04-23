@@ -239,6 +239,17 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
       ? getSLAStatus(timeline.resolutionDurationMs, resolutionLimit)
       : 'na';
 
+  useSLAAlerts({
+    contactId: contact.id ?? null,
+    contactName: contact.name || contact.phone || 'Contato',
+    scope,
+    firstResponseStatus,
+    resolutionStatus,
+    ruleName: sla?.ruleName ?? null,
+    awaitingMs: timeline.awaitingMs,
+    resolutionDurationMs: timeline.resolutionDurationMs,
+  });
+
   const firstResponseDurationLabel = timeline.isAwaitingFirstResponse
     ? `Aguardando há ${formatDurationMs(timeline.awaitingMs)}`
     : timeline.firstResponseDurationMs !== null
