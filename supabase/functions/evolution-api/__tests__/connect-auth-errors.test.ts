@@ -5,7 +5,7 @@ const SOURCE = await readSource();
 const NEXT_ACTION = /action === '/;
 
 Deno.test("connect handles 401/403 from upstream without recreating instance", () => {
-  const block = extractBlock(SOURCE, "action === 'connect'", { until: NEXT_ACTION });
+  const block = extractBlock(SOURCE, "action === 'connect'", { until: NEXT_ACTION, maxSize: 6000 });
 
   // Auth detection on the initial connect call.
   assertMatch(block, /response\.status === 401 \|\| response\.status === 403/);
@@ -19,7 +19,7 @@ Deno.test("connect handles 401/403 from upstream without recreating instance", (
 });
 
 Deno.test("connect never returns a raw 400 — always uses envelope", () => {
-  const block = extractBlock(SOURCE, "action === 'connect'", { until: NEXT_ACTION });
+  const block = extractBlock(SOURCE, "action === 'connect'", { until: NEXT_ACTION, maxSize: 6000 });
 
   // The legacy `status: response.ok ? 200 : 400` shortcut must be gone.
   assert(

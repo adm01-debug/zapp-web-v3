@@ -7,6 +7,7 @@ const NEXT_ACTION = /action === '/;
 Deno.test("connect recreates missing instance before retrying", () => {
   const block = extractBlock(SOURCE, "action === 'connect'", {
     until: NEXT_ACTION,
+    maxSize: 6000,
   });
 
   assertMatch(block, /response\.status === 404/);
