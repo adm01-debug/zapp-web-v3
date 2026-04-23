@@ -119,6 +119,9 @@ export function RealtimeInboxView() {
                       messages={inbox.legacyMessages}
                       onSendMessage={inbox.handleSendMessage}
                       onSendAudio={inbox.handleSendAudio}
+                      onLoadOlder={inbox.loadOlderMessages}
+                      loadingOlder={inbox.loadingOlderMessages}
+                      hasMoreOlder={inbox.hasMoreMessages}
                       showDetails={isMobile ? false : inbox.showDetails}
                       onToggleDetails={() => inbox.setShowDetails(!inbox.showDetails)}
                       onBack={isMobile ? () => {

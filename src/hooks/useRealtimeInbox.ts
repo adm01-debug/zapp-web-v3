@@ -56,6 +56,13 @@ export function useRealtimeInbox() {
   const selectedMessagesLoading = USE_EXTERNAL_DB ? externalMsgs.loading : localMsgs.loading;
   const refetchSelectedMessages = USE_EXTERNAL_DB ? externalMsgs.refetch : localMsgs.refetch;
 
+  // Pagination (older messages) — only meaningful in external mode for now
+  const loadOlderMessages = useCallback(async () => {
+    if (USE_EXTERNAL_DB) await externalMsgs.loadOlder();
+  }, [externalMsgs]);
+  const loadingOlderMessages = USE_EXTERNAL_DB ? externalMsgs.loadingOlder : false;
+  const hasMoreMessages = USE_EXTERNAL_DB ? externalMsgs.hasMore : false;
+
   // Listen for open-contact-chat events
   useEffect(() => {
     const appWindow = window as Window & { __pendingOpenContactId?: string };
@@ -242,5 +249,9 @@ export function useRealtimeInbox() {
     refetch,
     setSelectedContact,
     markAsRead,
+    // Pagination
+    loadOlderMessages,
+    loadingOlderMessages,
+    hasMoreMessages,
   };
 }
