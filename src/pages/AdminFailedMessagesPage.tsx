@@ -580,7 +580,20 @@ export default function AdminFailedMessagesPage() {
                     <TableCell className="font-mono text-xs">{row.instance_name}</TableCell>
                     <TableCell className="font-mono text-xs">{shortJid(row.remote_jid)}</TableCell>
                     <TableCell className="max-w-[280px]">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-1">
+                        {(() => {
+                          const cause = classifyRootCause(row);
+                          const meta = getRootCauseMeta(cause);
+                          return (
+                            <Badge
+                              variant="outline"
+                              className={cn('w-fit text-[10px] px-1.5 py-0', ROOT_CAUSE_TONE_CLASS[meta.tone])}
+                              title={meta.hint}
+                            >
+                              {meta.label}
+                            </Badge>
+                          );
+                        })()}
                         <span className="text-xs font-medium">
                           {row.error_code ?? (row.http_status ? `HTTP ${row.http_status}` : '—')}
                         </span>
