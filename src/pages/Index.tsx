@@ -20,6 +20,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { OfflineIndicator, ConnectionToast } from '@/components/ui/offline-indicator';
 import { EvolutionDisconnectBanner } from '@/components/alerts/EvolutionDisconnectBanner';
 import { DegradedConnectionsBanner } from '@/components/alerts/DegradedConnectionsBanner';
+import { useConnectionAlertsPush } from '@/hooks/useConnectionAlertsPush';
 import { toast } from 'sonner';
 
 const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _ref) {
