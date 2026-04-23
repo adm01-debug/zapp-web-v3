@@ -1,6 +1,7 @@
 // Reprocessa entradas pendentes na DLQ `failed_messages`.
 // Chamada por pg_cron a cada 15min ou manualmente por admin.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+import { computeBackoffMs } from '../_shared/dlq-backoff.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -74,7 +75,7 @@ Deno.serve(async (req) => {
         }).eq('id', row.id);
         abandoned++;
       } else {
-        const backoffMs = Math.min(60_000 * Math.pow(2, attempt), 3_600_000);
+        const backoffMs = computeBackoffMs(attempt + 1);
         await supabase.from('failed_messages').update({
           status: 'retrying',
           retry_count: attempt,
@@ -87,7 +88,7 @@ Deno.serve(async (req) => {
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      const backoffMs = Math.min(60_000 * Math.pow(2, attempt), 3_600_000);
+      const backoffMs = computeBackoffMs(attempt + 1);
       const next = attempt >= row.max_retries ? 'abandoned' : 'retrying';
       await supabase.from('failed_messages').update({
         status: next,
