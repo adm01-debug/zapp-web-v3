@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +47,7 @@ interface ContactAccordionSectionsProps {
 }
 
 export function ContactAccordionSections({ contact, conversation, enrichedData, aiTags, slaInfo, profileId }: ContactAccordionSectionsProps) {
+  const [mediaOpen, setMediaOpen] = useState(false);
   return (
     <>
       <Section index={0} value="info" icon={<Info className="w-3.5 h-3.5 text-primary" />} label="Informações">
@@ -132,10 +134,19 @@ export function ContactAccordionSections({ contact, conversation, enrichedData, 
             <div className="flex items-center gap-2"><Image className="w-3.5 h-3.5" />Mídia Compartilhada</div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
-            <MediaGallery contactId={contact.id} open={true} onOpenChange={() => {}} />
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-center gap-2"
+              onClick={() => setMediaOpen(true)}
+            >
+              <Image className="w-3.5 h-3.5" />
+              Abrir galeria
+            </Button>
           </AccordionContent>
         </AccordionItem>
       </motion.div>
+      <MediaGallery contactId={contact.id} open={mediaOpen} onOpenChange={setMediaOpen} />
     </>
   );
 }
