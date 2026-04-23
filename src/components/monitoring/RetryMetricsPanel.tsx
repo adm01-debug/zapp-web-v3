@@ -58,6 +58,7 @@ export function RetryMetricsPanel() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [thresholds, setThresholds] = useState<RetryThresholds>(() => loadThresholds());
+  const [compareMode, setCompareMode] = useState<boolean>(false);
 
   const filters: RetryMetricsFilters = {
     hours,
