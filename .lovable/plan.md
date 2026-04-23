@@ -1,76 +1,110 @@
 
 
-## Tooltip explicativo no badge de SLA
+## Mini-timeline de SLA por conversa
 
 ### O que vai ser construído
 
-Adicionar um `Tooltip` ao `SLAIndicatorForContact` que explica de onde vieram os minutos exibidos — qual nível da hierarquia (contato/empresa/cargo/tipo/fila/agente) foi resolvido, o nome da regra e os tempos. Quando estiver em fallback (loading ou sem regra), o tooltip explica o motivo.
+Uma seção **"Linha do tempo do atendimento"** no painel lateral de detalhes do contato (`ContactDetails`), exibindo os marcos de SLA da conversa atual com timestamps absolutos, durações relativas, e badges de status (dentro/violado) comparado contra a regra de SLA aplicável.
 
-### Mudanças
+Marcos exibidos (em ordem):
+1. **Primeira mensagem do contato** (abertura)
+2. **Primeira resposta do agente** + duração desde abertura + badge SLA 1ª resposta
+3. **Última mensagem** (atividade mais recente)
+4. **Resolução / encerramento** + duração total + badge SLA resolução
+5. **Reabertura** (se houver)
 
-**1. `src/hooks/useApplicableSLA.ts`** — expor o nível resolvido
+Quando ainda não houver primeira resposta, mostra contador ao vivo (`Aguardando há Xmin`) com cor de urgência.
 
-Adicionar campo `matchedLevel` ao tipo `ApplicableSLA`:
+### Componentes
 
+**1. Hook `src/hooks/useConversationSLATimeline.ts`** (~120 linhas)
+
+Busca via `externalClient`:
+- `rpc_list_messages(p_remote_jid, p_instance, p_limit=500)` — pega `created_at` da 1ª inbound, 1ª outbound, e última msg.
+- `rpc_list_conversations(p_instance, p_assigned_to=null, p_limit=1)` filtrado pelo `remote_jid` para `closed_at`/`reopened_at` (ou direto da conversation passada).
+- `conversation_events` (Lovable Cloud) para `event_type IN ('close','reopen')` como fallback de timestamps.
+
+Retorna:
 ```ts
-type MatchedLevel = 'contact' | 'company' | 'job_title' | 'contact_type' | 'queue' | 'agent' | 'global_default' | 'system_default';
-
-export interface ApplicableSLA {
-  firstResponseMinutes: number;
-  resolutionMinutes: number;
-  ruleName: string;
-  ruleId: string | null;
-  matchedLevel: MatchedLevel;
+interface SLATimelineData {
+  firstContactAt: Date | null;
+  firstResponseAt: Date | null;
+  firstResponseDurationMs: number | null;
+  lastMessageAt: Date | null;
+  closedAt: Date | null;
+  resolutionDurationMs: number | null;
+  reopenedAt: Date | null;
+  isAwaitingFirstResponse: boolean;
+  awaitingMs: number | null;
 }
 ```
 
-- Em `resolveHierarchy`, retornar tupla `{ sla, level }` para cada match e propagar.
-- `SYSTEM_DEFAULT.matchedLevel = 'system_default'`; fallback de `sla_configurations` → `'global_default'`.
+`useQuery` com `staleTime: 30_000`, `refetchInterval: 30_000` quando `isAwaitingFirstResponse` (contador ao vivo).
 
-**2. `src/components/inbox/SLAIndicatorForContact.tsx`** — envolver com Tooltip
+**2. Componente `src/components/inbox/contact-details/SLATimelineSection.tsx`** (~180 linhas)
 
+- Recebe `conversation: Conversation`.
+- Internamente usa `useConversationSLATimeline(contact.remote_jid)` + `useApplicableSLA(...)` (já existente) para obter `firstResponseMinutes` e `resolutionMinutes`.
+- Renderiza lista vertical (reutiliza padrão visual do `ConversationTimeline.tsx`: linha vertical + dot + ícones Lucide).
+- Cada marco:
+  - Ícone (MessageCircle / Reply / Clock / CheckCircle2 / RotateCcw)
+  - Label PT-BR
+  - Timestamp absoluto (`dd/MM HH:mm`)
+  - Duração relativa (ex: "respondido em 4min")
+  - Badge SLA: `OK` (verde) / `Violado` (destrutivo) / `Em risco` (warning, >70% do prazo) / `—` (sem regra)
+- Estado especial "aguardando 1ª resposta": badge pulsante + contador (`formatTimeRemaining` reutilizado).
+- Empty state quando sem mensagens via `GenericEmptyState`.
+- Loading com `Skeleton` 3 linhas.
+
+**3. Integração em `ContactAccordionSections.tsx`**
+
+Adicionar novo `AccordionItem value="sla-timeline"` entre `'history'` e `'stats'`:
 ```tsx
-<Tooltip>
-  <TooltipTrigger asChild>
-    <span className="inline-flex"><SLAIndicator … /></span>
-  </TooltipTrigger>
-  <TooltipContent side="bottom" className="max-w-xs">
-    <SLATooltipContent applicable={applicable} isLoading={isLoading} fallbackFr={fallbackFr} fallbackRes={fallbackRes} priority={conversation.priority} />
-  </TooltipContent>
-</Tooltip>
+<AccordionItem value="sla-timeline">
+  <AccordionTrigger>Linha do tempo do atendimento</AccordionTrigger>
+  <AccordionContent>
+    <SLATimelineSection conversation={conversation} />
+  </AccordionContent>
+</AccordionItem>
 ```
 
-**3. Sub-componente `SLATooltipContent`** (no mesmo arquivo, ~50 linhas)
+Atualizar `ACCORDION_STORAGE_KEY` default em `ContactDetails.tsx` para incluir `'sla-timeline'` na lista de seções abertas por padrão.
 
-Renderiza:
-- **Título**: nome da regra (`applicable.ruleName`) ou "Carregando regras…" / "Sem regra específica"
-- **Badge do nível** mapeado para PT-BR:
-  - `contact` → "Contato específico"
-  - `company` → "Empresa: {company}"
-  - `job_title` → "Cargo: {jobTitle}"
-  - `contact_type` → "Tipo: {contactType}"
-  - `queue` → "Fila"
-  - `agent` → "Agente atribuído"
-  - `global_default` → "Padrão global"
-  - `system_default` → "Padrão do sistema (fallback)"
-- **Linhas de tempo**: "1ª resposta: Xmin" / "Resolução: Ymin"
-- **Hierarquia visual** (lista cinza pequena): "Contato › Empresa › Cargo › Tipo › Fila › Agente" com o nível resolvido em negrito/realce
-- **Motivo do fallback** (quando `!applicable`):
-  - Se `isLoading`: "Carregando regras de SLA — usando padrões da prioridade ({priority})."
-  - Senão: "Nenhuma regra cadastrada cobre este contato. Usando padrão por prioridade ({priority})."
+### Cálculo de status SLA por marco
 
-**4. Expor `isLoading`** do `useApplicableSLA` (já vem do `useQuery`, só passar adiante).
+```ts
+function getSLAStatus(durationMs: number | null, limitMinutes: number): 'ok' | 'warning' | 'breached' | 'na' {
+  if (durationMs === null) return 'na';
+  const limitMs = limitMinutes * 60_000;
+  if (durationMs > limitMs) return 'breached';
+  if (durationMs > limitMs * 0.7) return 'warning';
+  return 'ok';
+}
+```
+
+Reaproveita tokens semânticos: `success`, `warning`, `destructive`.
 
 ### Detalhes técnicos
 
-- Tooltip via `@/components/ui/tooltip` (Radix, já no projeto). Sem novo dep.
-- Acessibilidade: `TooltipTrigger asChild` no `<span>` wrapper para preservar layout do badge SLA original.
-- Não quebra nenhum dos 4 callsites (`ChatHeader`, `ChatPanelHeader`, `ConversationList`, `ConversationItem`) — assinatura pública do componente é a mesma.
-- Tokens semânticos (`text-muted-foreground`, `bg-primary/10`), sem cores hardcoded.
-- Arquivo final ~110 linhas, dentro do limite de 340.
+- Reutiliza `formatDistanceToNow` de `date-fns/locale/ptBR` (já em uso em `ConversationTimeline`).
+- Não cria novas RPCs — usa as já catalogadas (`rpc_list_messages`).
+- `remote_jid` derivado de `${contact.phone}@s.whatsapp.net` (padrão do projeto).
+- Respeita Core: max ~340 linhas/arquivo, sem `console.log`, tokens semânticos, sem `as any`, identidade por UUID quando possível mas messages busca por JID por compatibilidade com `rpc_list_messages`.
+- Acessibilidade: cada item da timeline com `role="listitem"`, container `role="list"` + `aria-label="Marcos de SLA da conversa"`.
+
+### Arquivos
+
+**Criar:**
+- `src/hooks/useConversationSLATimeline.ts`
+- `src/components/inbox/contact-details/SLATimelineSection.tsx`
+
+**Editar:**
+- `src/components/inbox/contact-details/ContactAccordionSections.tsx` — novo `AccordionItem`
+- `src/components/inbox/ContactDetails.tsx` — `'sla-timeline'` no array de defaults do accordion
 
 ### Fora de escopo
 
-- Editor de regras de SLA (já existe em `/admin/sla`).
-- Tooltip em `BusinessHoursBadge` (já tem o seu próprio).
+- Histórico cross-conversa (auditoria agregada por contato em todas as conversas históricas) — pode virar lote separado se demandado.
+- Export CSV da timeline (Política Zero Export já em vigor).
+- Pause/resume de SLA por horário comercial (já tratado no `useApplicableSLA` via outro caminho).
 
