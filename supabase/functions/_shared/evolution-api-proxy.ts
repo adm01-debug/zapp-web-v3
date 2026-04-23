@@ -7,6 +7,38 @@ const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+/**
+ * Versioned envelope returned by the Evolution proxy / public-api.
+ *
+ * `version` is an optional integer that callers may inspect to negotiate
+ * future, breaking changes to this response shape. Today the proxy always
+ * stamps `EVOLUTION_ENVELOPE_VERSION` (currently `1`). Callers that don't
+ * read `version` keep working — the field is purely additive.
+ *
+ * Bump `EVOLUTION_ENVELOPE_VERSION` (and update consumers) only when a
+ * breaking change to the envelope shape is shipped.
+ */
+export const EVOLUTION_ENVELOPE_VERSION = 1 as const;
+
+export interface EvolutionErrorEnvelope {
+  version?: number;
+  error: true;
+  status: number;
+  message: string;
+  details?: unknown;
+  retries?: number;
+}
+
+export interface EvolutionSuccessEnvelope<T = unknown> {
+  version?: number;
+  data: T;
+}
+
+/** Either a successful proxied payload or an error envelope. */
+export type EvolutionEnvelope<T = unknown> =
+  | EvolutionSuccessEnvelope<T>
+  | EvolutionErrorEnvelope;
+
 export async function proxyToEvolution(
   evolutionApiUrl: string,
   evolutionApiKey: string,
