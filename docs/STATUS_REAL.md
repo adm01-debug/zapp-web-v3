@@ -51,7 +51,7 @@ Auditoria revelou que 6 dos 7 itens já estão implementados:
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | CI/CD GitHub Actions | ✅ `.github/workflows/ci.yml` (lint + tsc + vitest + build) |
+| 1 | CI/CD GitHub Actions | ✅ `.github/workflows/ci.yml` já existente — lint, typecheck, vitest+coverage, deno tests (evolution-api + public-api), build com bundle report, npm audit + scan de secrets. |
 | 2 | E2E Playwright | ❌ **Pendente** — épico próprio |
 | 3 | Deno tests para `evolution-webhook`/`whatsapp-webhook`/`talkx-send` | 🟡 Parcial — coberturas adicionais ficam como melhoria contínua |
 | 4 | Documentação consolidada | ✅ Este arquivo |
