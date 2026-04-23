@@ -16,6 +16,7 @@
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^3.10.0",
     "@lovable.dev/cloud-auth-js": "^1.1.1",
+    "@playwright/test": "^1.59.1",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -83,6 +84,7 @@
     "vaul": "^0.9.9",
     "vite-plugin-pwa": "0.19.8",
     "vitest": "^4.0.18",
+    "wait-on": "^9.0.5",
     "xlsx": "^0.18.5",
     "zod": "^3.25.76"
   },
