@@ -94,7 +94,7 @@ serve(async (req) => {
 
       // Auth failure on connect — do NOT try to recreate the instance.
       if (response.status === 401 || response.status === 403) {
-        recordAuthFailureAndMaybePause(supabase, String(instance), response.status === 401 ? 'auth_401' : 'auth_403');
+        recordAuthFailureAndMaybePause(supabase, String(instance), response.status === 401 ? 'auth_401' : 'auth_403', 'evolution-api', { http_status: response.status, message: 'connect' });
         return buildAuthError(response.status, data, 'connect');
       }
 
@@ -126,7 +126,7 @@ serve(async (req) => {
 
         // Auth failure on create — surface clear actionable error.
         if (createResponse.status === 401 || createResponse.status === 403) {
-          recordAuthFailureAndMaybePause(supabase, String(instance), createResponse.status === 401 ? 'auth_401' : 'auth_403');
+          recordAuthFailureAndMaybePause(supabase, String(instance), createResponse.status === 401 ? 'auth_401' : 'auth_403', 'evolution-api', { http_status: createResponse.status, message: 'create-instance' });
           return buildAuthError(createResponse.status, createData, 'create-instance');
         }
 
@@ -143,7 +143,7 @@ serve(async (req) => {
         ({ response, data } = await doConnect());
 
         if (response.status === 401 || response.status === 403) {
-          recordAuthFailureAndMaybePause(supabase, String(instance), response.status === 401 ? 'auth_401' : 'auth_403');
+          recordAuthFailureAndMaybePause(supabase, String(instance), response.status === 401 ? 'auth_401' : 'auth_403', 'evolution-api', { http_status: response.status, message: 'connect-after-create' });
           return buildAuthError(response.status, data, 'connect');
         }
       }
