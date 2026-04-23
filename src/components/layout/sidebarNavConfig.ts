@@ -141,6 +141,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'media-migration', icon: HardDrive, label: 'Migração Mídia' },
   { id: 'sicoob-bridge', icon: Landmark, label: 'Sicoob Bridge' },
   { id: 'evolution-monitor', icon: Activity, label: 'Monitor Evolution' },
+  { id: 'webhook-secret', icon: ShieldCheck, label: 'Webhook Secret' },
 ] as const;
 
 // ── Backward-compat re-exports ────────────────────────────
