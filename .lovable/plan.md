@@ -1,81 +1,85 @@
 
 
-## Filtros por instância: Webhook Status + Assinatura validada
+## Alertas em tempo real: assinaturas inválidas + silêncio do webhook
 
 ### Contexto
 
-Hoje temos duas páginas admin separadas:
+A página `AdminWebhookSecretStatusPage` agora mostra status por instância (último evento, latência, taxa de validação HMAC), mas é **passiva** — o admin precisa abrir a aba pra perceber problemas. Falta empurrar alertas quando:
 
-- **`AdminWebhookSecretStatusPage`** — mostra a saúde da assinatura HMAC (taxa de validação) **agregada globalmente**, sem fatiar por instância.
-- **`AdminWebhookOverviewPage`** — mostra contagem de eventos processados/pendentes/errored, com filtro de instância já existente.
-
-Falta: poder filtrar a página de **assinatura validada** por instância específica (ex.: "qual a taxa de validação só para `wpp2`?") e exibir, na mesma tela, o status atual do webhook (último evento, erros recentes, latência) também fatiado por instância.
+1. **Pico de assinaturas inválidas** — ex.: instância `wpp2` salta de 0% pra 5%+ de `signature_valid=false` numa janela curta (possível chave HMAC errada, replay attack, ou rotação mal feita).
+2. **Silêncio do webhook** — nenhum evento recebido por X minutos numa instância que normalmente é ativa (possível Evolution caído, túnel quebrado, ou instância desconectada).
 
 ### O que vai ser construído
 
-#### 1. Filtro de instância em `AdminWebhookSecretStatusPage`
+#### 1. Hook `useWebhookHealthAlerts`
 
-- Adicionar `<Select>` no header da página com lista de instâncias (carregadas via `aggregateByTypeAndInstance` sobre `evolution_webhook_events` recentes, igual ao Overview já faz) + opção "Todas".
-- Persistir seleção via `useUrlFilters` (param `?instance=wpp2`) para permitir compartilhar URL.
-- Aplicar o filtro nas queries que alimentam:
-  - **Taxa de validação HMAC** — filtrar `evolution_webhook_events.instance_name = X` antes de calcular `validated/total`.
-  - **Distribuição por header de assinatura** — mesma filtragem.
-  - **Janela 24h vs 7d** — manter, mas já fatiada por instância.
+Novo hook em `src/hooks/useWebhookHealthAlerts.ts` que:
 
-#### 2. Novo painel "Status atual do webhook" (por instância)
+- Faz polling a cada 30s da query `evolution_webhook_events` (últimos 15 min, agrupado por instância) via `queryExternalProxy` — mesmo padrão usado nas outras páginas admin.
+- Executa duas avaliações por instância:
+  - **Invalid signature spike**: se `invalidRate >= thresholds.invalidRatePct` E `total >= thresholds.minSampleSize` → dispara alerta `signature_spike`.
+  - **Silence window**: se `lastEventAt` for mais antigo que `thresholds.silenceMinutes` E a instância teve eventos nas últimas 24h (pra não alertar instâncias dormentes) → dispara alerta `webhook_silence`.
+- Usa `useRef<Map<instance, lastAlertAt>>` para deduplicar (cooldown de 5min por instância+tipo, não spammar toast a cada poll).
+- Respeita `useNotificationSettings` — não toca som em quiet hours, mas mantém toast/browser notification.
+- Dispara via:
+  - `toast.error(...)` (sonner) — visível na sessão.
+  - `playNotificationSound('alert')` quando habilitado e fora de quiet hours.
+  - `showBrowserNotification(...)` quando permissão concedida.
 
-Adicionar Card no topo da página com 3 KPIs vivos:
+#### 2. Painel de configuração de thresholds
 
-- **Último evento recebido** — timestamp + tipo + relativo ("há 12s").
-- **Eventos últimos 5min** — com mini-sparkline processed vs errored.
-- **Latência média de processamento** — `avg(processed_at - created_at)` da última hora.
+Novo componente `src/pages/admin-webhook-secret-status/AlertThresholdsPanel.tsx`:
 
-Tudo fatiado pela instância selecionada (ou "todas" se nenhum filtro).
+- Card colapsável "Alertas em tempo real" no final da página.
+- Inputs:
+  - **% inválido tolerado** (default 5%, 0-100)
+  - **Amostra mínima** (default 20 eventos, anti-ruído pra instância nova)
+  - **Silêncio máximo (min)** (default 10 min)
+  - Switch "Ativar alertas"
+- Persistência via `localStorage` usando `safeGetJSON/safeSetJSON` (mesmo padrão de `src/lib/retryAlerts.ts`).
+- Helper puro `src/lib/webhookHealthAlerts.ts` com `loadAlertConfig()`, `saveAlertConfig()`, `evaluateInstanceHealth(stats, config)` retornando `{ breached, type, reason }[]`.
 
-Fonte: query única em `evolution_webhook_events` filtrada por `created_at > now() - interval '1 hour'`, agregação client-side (mesmo padrão do Overview, dentro do limite de 500 rows).
+#### 3. Integração na página
 
-#### 3. Tabela "Por instância" (quando filtro = "Todas")
+- `AdminWebhookSecretStatusPage` chama `useWebhookHealthAlerts(config)` no topo.
+- Renderiza `<AlertThresholdsPanel />` no fim da página.
+- Quando alerta dispara, além do toast, atualiza um badge "⚠️ N alertas ativos" no header da página com lista expansível dos últimos 5 alertas (timestamp + instância + motivo).
 
-Quando nenhuma instância específica estiver selecionada, mostrar tabela compacta:
+#### 4. Mounting global (opcional, mas recomendado)
 
-```text
-Instance   | Total 24h | Validados | % Válido | Último evento | Status
-wpp2       | 12.430    | 12.428    | 99.98%   | há 3s         | 🟢
-wpp_backup | 0         | 0         | —        | há 6h         | 🔴
-```
-
-Clicar numa linha aplica o filtro daquela instância (atualiza `?instance=` na URL).
+Para que o admin receba alertas mesmo sem a página aberta, montar o hook também em `AppShell` (similar ao `useConnectionAlertsPush` e `useWarRoomAlerts`), gated por `useUserRole` → só roda para `admin`/`supervisor`.
 
 ### Detalhes técnicos
 
 **Arquivos a criar:**
 
-- `src/pages/admin-webhook-secret-status/instanceAggregations.ts` — funções puras `aggregateValidationByInstance(rows)`, `computeInstanceStatus(rows, instance)`, `computeLatencyStats(rows)`. Espelha o padrão de `admin-webhook-overview/aggregations.ts` (testável isoladamente).
-- `src/pages/admin-webhook-secret-status/InstanceFilterSelect.tsx` — Select com lista de instâncias derivada da query principal + opção "Todas".
-- `src/pages/admin-webhook-secret-status/InstanceStatusCards.tsx` — 3 cards de KPI (último evento / 5min / latência).
-- `src/pages/admin-webhook-secret-status/InstanceBreakdownTable.tsx` — tabela "Por instância" com sort por % válido.
-- `src/pages/admin-webhook-secret-status/__tests__/instanceAggregations.test.ts` — Vitest para as funções puras.
+- `src/lib/webhookHealthAlerts.ts` — config + evaluator puros (espelha `src/lib/retryAlerts.ts`).
+- `src/lib/__tests__/webhookHealthAlerts.test.ts` — Vitest cobrindo:
+  - Spike só dispara acima de `minSampleSize`.
+  - Silêncio só dispara se instância teve eventos recentes.
+  - Persistência de config (load/save/fallback).
+  - Cooldown evita duplicação.
+- `src/hooks/useWebhookHealthAlerts.ts` — hook com polling, dedupe, integração com toast/sound/browser notification.
+- `src/pages/admin-webhook-secret-status/AlertThresholdsPanel.tsx` — UI de config + lista de alertas recentes.
 
 **Arquivos a editar:**
 
-- `src/pages/AdminWebhookSecretStatusPage.tsx`:
-  - Importar `useUrlFilters` para ler/gravar `?instance=`.
-  - Aplicar filtro `instance_name = X` na query principal de `evolution_webhook_events` quando definido.
-  - Renderizar `InstanceFilterSelect` no header, `InstanceStatusCards` acima da seção HMAC, `InstanceBreakdownTable` quando filtro = "Todas".
-  - Atualizar título de seções existentes para refletir escopo ("Taxa de validação HMAC — wpp2" vs "Taxa global").
+- `src/pages/AdminWebhookSecretStatusPage.tsx` — montar hook + renderizar painel + badge de alertas ativos no header.
+- `src/components/AppShell.tsx` (ou equivalente) — montar `useWebhookHealthAlerts` gated por role admin/supervisor para alertas globais.
 
 **Padrões respeitados:**
 
-- Reuso de `useUrlFilters` (memória `architecture/data-fetching`) para sincronia URL ↔ estado.
-- RPC-first (memória `integrations/fator-x/data-access-standard`): se houver volume, considerar pedir RPC `rpc_webhook_health_by_instance` ao operador FATOR X num próximo lote — por ora, agregação client-side dentro do limite de 500 rows como no Overview.
-- Sem export CSV (Zero Export).
-- Sem hardcoded colors — usar tokens semânticos (`text-success`, `text-warning`, `text-destructive`).
-- Tipagem estrita, max ~340 linhas/arquivo, `log` de `@/lib/logger` para erros.
+- Reuso de `useNotificationSettings` (quiet hours), `playNotificationSound`, `showBrowserNotification`, `toast` (sonner).
+- Sem export CSV.
+- Tokens semânticos (`text-warning`, `text-destructive`, `bg-warning/10`).
+- Cooldown de 5min por instância+tipo para evitar fadiga de alerta.
+- `log.warn` de `@/lib/logger` para auditoria interna dos disparos.
+- Tipagem estrita, max ~340 linhas/arquivo.
 
 ### Fora de escopo
 
-- Criação de RPC dedicada no FATOR X (mantém agregação client-side; revisitar se virar gargalo).
-- Alertas automáticos quando uma instância cai abaixo de threshold de validação (próximo lote pode plugar em `useWarRoomAlerts`).
-- Histórico longitudinal por instância (>7d) — fora do escopo desta página.
-- Comparação multi-instância em gráfico empilhado — pode virar enhancement futuro.
+- Persistir alertas no banco (`security_alerts` ou `audit_logs`) — por ora ficam só na sessão; se virar requisito de auditoria, próximo lote pode plugar via `fn_safe_audit_log`.
+- Alertas por e-mail/SMS/Slack — fora do escopo (pode entrar via Resend/Webhook num próximo lote).
+- Auto-pause da instância quando spike detectado — já existe mecanismo paralelo em `_shared/instance-pause.ts` para auth failures; replicar pra HMAC fica para outro lote.
+- Histórico longitudinal de alertas (>sessão atual) — fora do escopo desta entrega.
 
