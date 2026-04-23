@@ -47,27 +47,8 @@ export function useEvolutionIncidents(filters: Filters = {}) {
       params.set('hours', String(hours));
       if (type && type !== 'all') params.set('type', type);
 
-      const { data, error } = await supabase.functions.invoke('evolution-incidents', {
-        method: 'GET' as never, // SDK aceita GET via path
-        // @ts-expect-error - supabase-js permite passar query string
-        body: undefined,
-      });
-
-      // Fallback: se invoke não passar query, usar fetch direto
-      if (error || !data) {
-        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evolution-incidents?${params.toString()}`;
-        const session = (await supabase.auth.getSession()).data.session;
-        const res = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${session?.access_token ?? ''}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return (await res.json()) as IncidentsResponse;
-      }
-
-      // Como invoke não suporta query nativamente, refazemos via fetch sempre
+      // supabase.functions.invoke não suporta query string nativamente,
+      // então fazemos fetch direto com credenciais da sessão.
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evolution-incidents?${params.toString()}`;
       const session = (await supabase.auth.getSession()).data.session;
       const res = await fetch(url, {
