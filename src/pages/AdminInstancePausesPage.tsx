@@ -13,6 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { AuthEventTrendChart } from '@/components/admin/instance-pauses/AuthEventTrendChart';
+import { IncidentDetailDialog, type IncidentPause } from '@/components/admin/instance-pauses/IncidentDetailDialog';
 
 interface PauseRow {
   id: string;
