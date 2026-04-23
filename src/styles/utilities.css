@@ -1,4 +1,5 @@
 /* ===== UTILITY CLASSES — Typography, gradients, shadows, scrollbar ===== */
+@tailwind utilities;
 
 @layer utilities {
   .font-display {

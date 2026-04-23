@@ -1,4 +1,5 @@
 /* ===== DESIGN TOKENS — Light & Dark mode CSS variables ===== */
+@tailwind base;
 
 @layer base {
   :root {

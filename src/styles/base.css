@@ -1,4 +1,5 @@
 /* ===== BASE STYLES — Resets, typography, body ===== */
+@tailwind base;
 
 @layer base {
   * {

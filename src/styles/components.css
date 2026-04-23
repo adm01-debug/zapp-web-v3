@@ -1,4 +1,5 @@
 /* ===== COMPONENT STYLES — Cards, hover effects, chat, gamification ===== */
+@tailwind components;
 
 @layer components {
   /* ===== CARD STYLES ===== */
