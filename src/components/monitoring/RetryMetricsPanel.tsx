@@ -83,22 +83,25 @@ export function RetryMetricsPanel() {
     [byInstance, thresholds, perInstance],
   );
 
-  // Toast quando aparece nova violação (dedupe por instance dentro da janela atual).
+  // Toast quando aparece nova violação. Dedupe por (instância × janela de horas):
+  // cada instância dispara no máx. 1 toast por janela; trocar `hours` reseta o set.
   const notifiedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
+    // Reset apenas quando a janela muda — edições de thresholds não re-disparam.
     notifiedRef.current = new Set();
-  }, [hours, thresholds]);
+  }, [hours]);
 
   useEffect(() => {
     for (const b of breaches) {
-      if (notifiedRef.current.has(b.instance)) continue;
-      notifiedRef.current.add(b.instance);
+      const key = `${b.instance}|${hours}h`;
+      if (notifiedRef.current.has(key)) continue;
+      notifiedRef.current.add(key);
       toast.error(`Retry degradado em ${b.instance}`, {
         description: b.reasons.join(' · '),
         duration: 6000,
       });
     }
-  }, [breaches]);
+  }, [breaches, hours]);
 
   const actionOptions = useMemo(() => {
     const set = new Set<string>();
