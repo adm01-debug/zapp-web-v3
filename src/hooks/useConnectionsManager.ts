@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -136,6 +136,19 @@ export function useConnectionsManager() {
     savePersistedQr(qrCodeDialog);
   }, [qrCodeDialog]);
 
+  // Tracks which connections we've already toasted as "connected" in this
+  // session, so realtime + status-poll can't fire duplicate notifications.
+  const toastedConnectedRef = useRef<Set<string>>(new Set());
+
+  const announceConnected = useCallback((conn: { id: string; name: string }) => {
+    if (toastedConnectedRef.current.has(conn.id)) return;
+    toastedConnectedRef.current.add(conn.id);
+    toast({
+      title: 'WhatsApp conectado!',
+      description: `${conn.name} está online e pronto para enviar e receber mensagens.`,
+    });
+  }, []);
+
   useEffect(() => {
     fetchConnections();
 
@@ -147,15 +160,20 @@ export function useConnectionsManager() {
         (payload) => {
           log.debug('Connection update:', payload);
           if (payload.eventType === 'UPDATE') {
+            const newConn = payload.new as WhatsAppConnection;
+            const oldConn = payload.old as Partial<WhatsAppConnection> | null;
             setConnections((prev) =>
-              prev.map((conn) =>
-                conn.id === (payload.new as WhatsAppConnection).id
-                  ? (payload.new as WhatsAppConnection)
-                  : conn
-              )
+              prev.map((conn) => (conn.id === newConn.id ? newConn : conn))
             );
-            if (qrCodeDialog.open && qrCodeDialog.connectionId === (payload.new as WhatsAppConnection).id) {
-              const newConn = payload.new as WhatsAppConnection;
+            // Fire connected toast on transition → 'connected', regardless of
+            // whether the QR dialog is open or closed.
+            if (
+              newConn.status === 'connected' &&
+              oldConn?.status !== 'connected'
+            ) {
+              announceConnected({ id: newConn.id, name: newConn.name });
+            }
+            if (qrCodeDialog.open && qrCodeDialog.connectionId === newConn.id) {
               if (newConn.status === 'connected') {
                 setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
               } else if (newConn.qr_code) {
@@ -227,7 +245,7 @@ export function useConnectionsManager() {
     }
   };
 
-  const startStatusPolling = useCallback((instanceName: string, _connectionId: string) => {
+  const startStatusPolling = useCallback((instanceName: string, connectionId: string) => {
     if (pollingInterval) clearInterval(pollingInterval);
     const interval = setInterval(async () => {
       try {
@@ -236,14 +254,20 @@ export function useConnectionsManager() {
           clearInterval(interval);
           setPollingInterval(null);
           setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
-          toast({ title: 'Conectado!', description: 'WhatsApp conectado com sucesso.' });
+          // Use the deduplicated announcer so we don't double-toast when realtime
+          // also delivers the UPDATE event with status='connected'.
+          setConnections((prev) => {
+            const conn = prev.find((c) => c.id === connectionId);
+            if (conn) announceConnected({ id: conn.id, name: conn.name });
+            return prev;
+          });
         }
       } catch (error) {
         log.error('Status polling error:', error);
       }
     }, 3000);
     setPollingInterval(interval);
-  }, [getInstanceStatus, pollingInterval]);
+  }, [getInstanceStatus, pollingInterval, announceConnected]);
 
   /**
    * Logs a QR generation attempt to qr_attempts. Returns the inserted attempt id (if successful)
