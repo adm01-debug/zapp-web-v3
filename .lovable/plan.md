@@ -1,72 +1,51 @@
 
 
-## Diagrama navegável — Trilha de Mensagens (send → batching → delivery)
+## Validador automatizado: diagrama de fan-out vs. realidade
 
 ### Entregável
 
-Diagrama Mermaid `flowchart LR` em `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd`, com nós clicáveis (`click NodeId "src/..."`), focado **exclusivamente** no ciclo de vida de uma mensagem outbound/inbound: composição → envio → status bus → retry/DLQ → realtime update → render no bubble.
+Teste Vitest em `src/test/realtimeFanout.test.ts` que parseia `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd` e falha se algum nó referenciado no diagrama deixar de existir no repositório, ou se algum dos consumidores conhecidos de `postgres_changes` na tabela `messages` não estiver listado no diagrama.
 
-### Subdomínios (subgraphs)
+### O que o teste cobre
 
-1. **Composição & Envio (UI)** — `useChatInputLogic`, `messageSender`, `buildSendIdempotencyKey`
-2. **Transporte & Retry** — `evolutionSendRetry`, `lib/retry`, `loadRetryConfig`, `enqueueClientFailedMessage`
-3. **Status Bus (in-memory)** — `sendStatusBus` (`emitSendStatus`, `subscribeAllSendStatus`, `getSendStatus`)
-4. **Persistência & Hooks de leitura** — `useMessages`, `useMessageStatus`, `useMessageSendStatus`
-5. **Realtime & Batching** — `useMessageUpdateBatcher`, `useRealtimeMessages`, `realtimeUtils`
-6. **Render** — `MessageStatusInline`, `MessageStatusIcon`, `VirtualizedMessageList`, `MessageBubble`
-7. **Backends** (cilindros) — `Lovable Cloud (messages)`, `Edge: evolution-api/sendText`, `DLQ: failed_messages`
+1. **Existência dos arquivos clicáveis** — para cada `click NodeId "src/..."` no `.mmd`, valida que o caminho existe (`fs.existsSync`). Falha se um hook foi removido/renomeado sem atualizar o diagrama.
 
-### Arestas (semântica clara)
+2. **Sincronia do fan-out realtime** — varre `src/**/*.{ts,tsx}` por arquivos que assinam `postgres_changes` em `table: 'messages'` e compara com a lista canônica anotada no `.mmd` (8 consumidores). Falha em duas direções:
+   - **Hook órfão no código**: arquivo escuta `messages` mas não está listado no diagrama → diagrama desatualizado.
+   - **Hook fantasma no diagrama**: listado no diagrama mas o arquivo já não escuta → diagrama desatualizado.
 
-- `-->` chamada síncrona / import
-- `==>` escrita persistente em DB
-- `-.->` evento realtime / pub-sub in-memory
-- `-..->` enqueue assíncrona (DLQ)
-
-Fluxo principal representado:
-
-```
-ChatInput → messageSender → evolutionSendRetry → Edge sendText
-                  ↓                      ↓ (falha)
-            emitSendStatus         enqueueClientFailedMessage ==> DLQ
-                  ↓                      ↓
-         sendStatusBus              (cron reprocess)
-                  ↓
-useMessageSendStatus / useMessageStatus  ←  useMessages (DB)
-                  ↓                            ↑
-        MessageStatusInline        useMessageUpdateBatcher -.-> realtime
-                  ↓
-            MessageBubble (render)
-```
+3. **Allowlist explícito** — a lista de consumidores esperados fica num array no topo do teste (`EXPECTED_REALTIME_CONSUMERS`) extraído dos comentários `%%` do `.mmd`. Mudou? Atualiza os dois lados conscientemente.
 
 ### Como vou construir
 
-1. **Verificar existência** dos arquivos via `code--list_dir` em `src/hooks/`, `src/hooks/realtime/`, `src/lib/`, `src/components/inbox/chat/`. Itens inexistentes ficam de fora — sem inventar.
-2. **Confirmar assinaturas** com `code--view` em `messageSender.ts`, `useMessageSendStatus.ts`, `useRealtimeMessages.ts` (não vistos nesta sessão) para garantir nomes corretos nos labels.
-3. **Confirmar consumidores** com `code--search_files` por: `evolutionSendRetry\(`, `emitSendStatus\(`, `useMessageStatus\(`, `useMessageSendStatus\(`.
-4. **Escrever** `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd` com 6 subgraphs + arestas + bloco `click` para cada nó com path relativo.
-5. **QA**: validar sintaxe Mermaid (parse local com `@mermaid-js/mermaid-cli` via `nix run` se disponível) e checar que cada `click` referencia arquivo existente.
+1. Confirmar que `vitest` já roda no projeto (memória `vitest-baseline` confirma 2380+ testes).
+2. Copiar `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd` para dentro do repo em `src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd` — testes não conseguem ler `/mnt/documents` em CI.
+3. Escrever `src/test/realtimeFanout.test.ts` com 3 `it(...)`:
+   - `it('todos os caminhos clicaveis existem')`
+   - `it('todo arquivo que escuta messages esta no diagrama')`
+   - `it('todo consumidor do diagrama ainda escuta messages')`
+4. Detector de assinatura: regex `/supabase\s*\.channel\([\s\S]*?table:\s*['"]messages['"]/` (multilinha, tolerante a quebras).
+5. Rodar `code--run_tests` para validar.
 
 ### Detalhes técnicos
 
-- Sem cores customizadas — auto-tema light/dark.
-- Sem emojis (lexer error).
-- Limite ~22 nós para legibilidade.
-- Labels curtos (≤ 28 chars). Caminhos completos só nos `click`.
-- Comentários `%%` no rodapé do `.mmd` com legenda das arestas e timestamp.
-- Anotação de dívida técnica: nó `evolutionSendRetry` recebe sufixo `[evolutionSendRetry — fan-out crítico]` (já documentado na matriz anterior).
+- Sem dependências novas — usa `node:fs`, `node:path`, `fast-glob` já presente (verificar) ou `fs.readdirSync` recursivo.
+- Excludes: `**/__tests__/**`, `**/*.test.{ts,tsx}`, `**/test/**`, `node_modules`.
+- Allowlist documentada no topo do teste com referência ao bloco `%%` do `.mmd` para fácil manutenção.
+- Mensagens de falha incluem o caminho do arquivo problemático e instrução: *"atualize TRILHA_MENSAGENS_NAVEGAVEL.mmd"*.
 
 ### Arquivos afetados
 
 **Criar:**
-- `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd`
+- `src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd` (cópia do diagrama)
+- `src/test/realtimeFanout.test.ts`
 
-**Não edita código-fonte.**
+**Não edita** código de produção nem o `.mmd` original em `/mnt/documents`.
 
 ### Fora de escopo
 
-- Trilhas de mídia/áudio (upload, signed URLs) — domínio separado.
-- Fluxos de typing/presença e calls — já mapeados no diagrama anterior.
-- Renderização PNG/SVG estática — Lovable renderiza `.mmd` via `<lov-artifact>`.
-- Correção do typo `oderId` em `useTypingPresence` — fora deste domínio.
+- Validar arestas de envio (composição, retry, DLQ) — só fan-out realtime.
+- Validar outros diagramas (`MAPA_HOOKS_DEPENDENCIAS_NAVEGAVEL.mmd` etc.).
+- Auto-corrigir o diagrama — só falha o teste com instrução clara.
+- Cobrir consumidores de tabelas que não sejam `messages`.
 
