@@ -110,12 +110,26 @@ export async function proxyToEvolution(
         } else if (response.status === 404) {
           friendlyMessage = 'Instância não encontrada na API Evolution.';
         }
-        return new Response(JSON.stringify({ error: true, status: response.status, message: friendlyMessage, details: data }), {
+        const errorEnvelope: EvolutionErrorEnvelope = {
+          version: EVOLUTION_ENVELOPE_VERSION,
+          error: true,
+          status: response.status,
+          message: friendlyMessage,
+          details: data,
+        };
+        return new Response(JSON.stringify(errorEnvelope), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      return new Response(JSON.stringify(data), {
+      // Preserve raw Evolution payload shape but add a non-conflicting
+      // `version` marker when possible. Falls back to raw data for
+      // non-object responses (arrays, primitives) to avoid breaking callers.
+      const versioned =
+        data && typeof data === 'object' && !Array.isArray(data) && !('version' in (data as Record<string, unknown>))
+          ? { version: EVOLUTION_ENVELOPE_VERSION, ...(data as Record<string, unknown>) }
+          : data;
+      return new Response(JSON.stringify(versioned), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (err) {
@@ -127,11 +141,14 @@ export async function proxyToEvolution(
     }
   }
 
-  return new Response(JSON.stringify({
-    error: true, status: 504,
+  const timeoutEnvelope: EvolutionErrorEnvelope = {
+    version: EVOLUTION_ENVELOPE_VERSION,
+    error: true,
+    status: 504,
     message: `Falha ao conectar com a API Evolution: ${lastError?.message || 'Erro desconhecido'}`,
     retries: maxAttempts - 1,
-  }), {
+  };
+  return new Response(JSON.stringify(timeoutEnvelope), {
     status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
