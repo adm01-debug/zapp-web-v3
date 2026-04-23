@@ -101,4 +101,60 @@ describe('retryAlerts', () => {
       expect(t.minSampleSize).toBe(DEFAULT_THRESHOLDS.minSampleSize);
     });
   });
+
+  describe('per-instance overrides', () => {
+    it('returns empty object when nothing stored', () => {
+      expect(loadPerInstanceThresholds()).toEqual({});
+    });
+
+    it('roundtrips per-instance overrides', () => {
+      const map: PerInstanceThresholds = {
+        wpp2: { p95Attempts: 5 },
+        wpp3: { failureRatePct: 50, minSampleSize: 20 },
+      };
+      expect(savePerInstanceThresholds(map)).toBe(true);
+      expect(loadPerInstanceThresholds()).toEqual(map);
+    });
+
+    it('drops invalid fields when loading', () => {
+      try {
+        localStorage.setItem(
+          'zappweb:retry-alert-thresholds:per-instance',
+          JSON.stringify({
+            wpp2: { p95Attempts: 'foo', failureRatePct: -5, minSampleSize: 10 },
+            wpp3: 'not-an-object',
+            wpp4: {},
+          }),
+        );
+      } catch { /* ignore */ }
+      const out = loadPerInstanceThresholds();
+      expect(out.wpp2).toEqual({ minSampleSize: 10 });
+      expect(out.wpp3).toBeUndefined();
+      expect(out.wpp4).toBeUndefined();
+    });
+
+    it('resolveThresholds merges override on top of globals', () => {
+      const overrides: PerInstanceThresholds = { wpp2: { p95Attempts: 10 } };
+      const out = resolveThresholds('wpp2', DEFAULT_THRESHOLDS, overrides);
+      expect(out.p95Attempts).toBe(10);
+      expect(out.failureRatePct).toBe(DEFAULT_THRESHOLDS.failureRatePct);
+      expect(out.minSampleSize).toBe(DEFAULT_THRESHOLDS.minSampleSize);
+    });
+
+    it('resolveThresholds returns globals when no override exists', () => {
+      const out = resolveThresholds('unknown', DEFAULT_THRESHOLDS, {});
+      expect(out).toBe(DEFAULT_THRESHOLDS);
+    });
+
+    it('evaluateAllInstances applies per-instance overrides', () => {
+      const list: InstanceMetrics[] = [
+        makeMetrics({ instance: 'wpp2', p95Attempts: 4, failureRatePct: 5 }),
+        makeMetrics({ instance: 'wpp3', p95Attempts: 4, failureRatePct: 5 }),
+      ];
+      const overrides: PerInstanceThresholds = { wpp2: { p95Attempts: 10 } };
+      const r = evaluateAllInstances(list, DEFAULT_THRESHOLDS, overrides);
+      expect(r).toHaveLength(1);
+      expect(r[0].instance).toBe('wpp3');
+    });
+  });
 });
