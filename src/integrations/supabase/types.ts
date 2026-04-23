@@ -4910,6 +4910,8 @@ export type Database = {
           contact_id: string | null
           content: string
           created_at: string
+          error_code: string | null
+          error_reason: string | null
           external_id: string | null
           id: string
           is_deleted: boolean | null
@@ -4933,6 +4935,8 @@ export type Database = {
           contact_id?: string | null
           content: string
           created_at?: string
+          error_code?: string | null
+          error_reason?: string | null
           external_id?: string | null
           id?: string
           is_deleted?: boolean | null
@@ -4956,6 +4960,8 @@ export type Database = {
           contact_id?: string | null
           content?: string
           created_at?: string
+          error_code?: string | null
+          error_reason?: string | null
           external_id?: string | null
           id?: string
           is_deleted?: boolean | null
