@@ -1,22 +1,23 @@
 import { assert, assertMatch } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { extractBlock, readSource } from "./_helpers.ts";
 
-const SOURCE = await Deno.readTextFile(
-  new URL("../index.ts", import.meta.url),
-);
+const SOURCE = await readSource();
 
-function blockAfter(marker: string, size = 1500): string {
-  const i = SOURCE.indexOf(marker);
-  if (i === -1) throw new Error(`marker not found: ${marker}`);
-  return SOURCE.slice(i, i + size);
-}
+// Capture each handler block up to the next `action ===` marker, so we never
+// truncate before `return await proxy(...)`.
+const NEXT_ACTION = /action === '/;
 
 Deno.test("send-media path includes ${instance}", () => {
-  const block = blockAfter("action === 'send-media'", 600);
+  const block = extractBlock(SOURCE, "action === 'send-media'", {
+    until: NEXT_ACTION,
+  });
   assertMatch(block, /\/message\/sendMedia\/\$\{instance\}/);
 });
 
 Deno.test("send-audio path includes ${instance} (multi-line block)", () => {
-  const block = blockAfter("action === 'send-audio'", 1500);
+  const block = extractBlock(SOURCE, "action === 'send-audio'", {
+    until: NEXT_ACTION,
+  });
   assertMatch(block, /\/message\/sendWhatsAppAudio\/\$\{instance\}/);
   assertMatch(block, /return await proxy\(/);
 });
@@ -33,8 +34,12 @@ Deno.test("proxy() helper forwards path to proxyToEvolution", () => {
 });
 
 Deno.test("send-media and send-audio never call fetch() directly", () => {
-  const media = blockAfter("action === 'send-media'", 600);
-  const audio = blockAfter("action === 'send-audio'", 1500);
+  const media = extractBlock(SOURCE, "action === 'send-media'", {
+    until: NEXT_ACTION,
+  });
+  const audio = extractBlock(SOURCE, "action === 'send-audio'", {
+    until: NEXT_ACTION,
+  });
   assert(!media.includes("fetch("), "send-media must use proxy(), not fetch()");
   assert(!audio.includes("fetch("), "send-audio must use proxy(), not fetch()");
 });
