@@ -284,3 +284,72 @@ function KpiCard({ label, value, subtitle, delta }: KpiCardProps) {
     </div>
   );
 }
+
+interface TopReasonsChartProps {
+  reasons: Array<{ reason: string; count: number }>;
+}
+
+function TopReasonsChart({ reasons }: TopReasonsChartProps) {
+  const data = useMemo(
+    () => reasons.slice(0, 10).map(r => ({ reason: r.reason, count: r.count })),
+    [reasons],
+  );
+  const total = useMemo(() => data.reduce((s, d) => s + d.count, 0), [data]);
+  // Dynamic height: ~28px per bar, min 180px
+  const chartHeight = Math.max(180, data.length * 32);
+
+  return (
+    <div className="rounded-lg bg-muted/30 p-3">
+      <div className="flex items-baseline justify-between mb-2">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+          Top {data.length} motivos de retry
+        </p>
+        <span className="text-[10px] text-muted-foreground">{total} ocorrências</span>
+      </div>
+      <div style={{ width: '100%', height: chartHeight }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={data}
+            layout="vertical"
+            margin={{ top: 4, right: 24, bottom: 4, left: 8 }}
+            barCategoryGap={6}
+          >
+            <XAxis
+              type="number"
+              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
+              allowDecimals={false}
+            />
+            <YAxis
+              type="category"
+              dataKey="reason"
+              width={140}
+              tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontFamily: 'ui-monospace, monospace' }}
+              axisLine={false}
+              tickLine={false}
+              interval={0}
+            />
+            <Tooltip
+              cursor={{ fill: 'hsl(var(--muted) / 0.4)' }}
+              contentStyle={{
+                background: 'hsl(var(--popover))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 6,
+                fontSize: 11,
+                color: 'hsl(var(--popover-foreground))',
+              }}
+              formatter={(value: number) => [`${value} retries`, 'Total']}
+              labelFormatter={(label: string) => label}
+            />
+            <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="hsl(var(--primary))">
+              {data.map((_, i) => (
+                <Cell key={i} fill={`hsl(var(--primary) / ${1 - i * 0.06})`} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
