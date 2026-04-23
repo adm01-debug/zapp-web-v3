@@ -360,6 +360,7 @@ export default function AdminWebhookEventsPage() {
       {viewMode === 'calls' && <CallCorrelationView events={filtered} />}
 
       {/* Table */}
+      {viewMode === 'events' && (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
