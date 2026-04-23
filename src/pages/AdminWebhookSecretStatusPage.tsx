@@ -492,6 +492,14 @@ export default function AdminWebhookSecretStatusPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Realtime alerts configuration */}
+      <AlertThresholdsPanel
+        config={alertConfig}
+        onChange={setAlertConfig}
+        recentAlerts={recentAlerts}
+        activeCount={activeBreaches.length}
+      />
     </div>
   );
 }
