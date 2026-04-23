@@ -251,26 +251,73 @@ export default function AdminWebhookEventsPage() {
             </Select>
           </FilterField>
 
-          <FilterField label="Buscar (JID, nome, evento, erro)">
+          <FilterField label="Tipo de mensagem">
+            <Select value={messageType} onValueChange={(v) => setMessageType(v as MessageTypeFilter)}>
+              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {MESSAGE_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>{t === 'all' ? 'Todos' : t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
+
+          <FilterField label="Status">
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
+              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
+
+          <FilterField label="Remote JID">
             <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Ex: 5511… ou MESSAGES…"
-              className="w-[260px]"
+              value={remoteJidFilter}
+              onChange={(e) => setRemoteJidFilter(e.target.value)}
+              placeholder="Ex: 5511999"
+              className="w-[200px] font-mono"
             />
           </FilterField>
 
-          <FilterField label="Apenas com erro">
-            <Button
-              variant={onlyErrors ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setOnlyErrors((v) => !v)}
-              className="h-9"
-            >
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              {onlyErrors ? 'Sim' : 'Não'}
-            </Button>
+          <FilterField label="Push name">
+            <Input
+              value={pushNameFilter}
+              onChange={(e) => setPushNameFilter(e.target.value)}
+              placeholder="Ex: João"
+              className="w-[200px]"
+            />
           </FilterField>
+
+          <FilterField label="Refinar (texto livre)">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filtra resultado já carregado"
+              className="w-[240px]"
+            />
+          </FilterField>
+
+          {(remoteJidFilter || pushNameFilter || messageType !== 'all' || status !== 'all' || search) && (
+            <FilterField label=" ">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9"
+                onClick={() => {
+                  setRemoteJidFilter('');
+                  setPushNameFilter('');
+                  setMessageType('all');
+                  setStatus('all');
+                  setSearch('');
+                }}
+              >
+                Limpar filtros
+              </Button>
+            </FilterField>
+          )}
         </CardContent>
       </Card>
 
