@@ -137,7 +137,7 @@ export default function AdminWebhookEventsPage() {
         select: '*',
         filters,
         order: { column: 'created_at', ascending: false },
-        limit: 500,
+        limit: 200,
       });
       return res.data ?? [];
     },
@@ -503,7 +503,7 @@ export default function AdminWebhookEventsPage() {
       </Dialog>
 
       <p className="text-xs text-muted-foreground text-center">
-        Fonte: <code>evolution_webhook_events</code> (FATOR X) · Limite 500 registros por consulta ·
+        Fonte: <code>evolution_webhook_events</code> (FATOR X) · Limite 200 registros por consulta ·
         Auto-refresh a cada 60s
       </p>
     </div>
