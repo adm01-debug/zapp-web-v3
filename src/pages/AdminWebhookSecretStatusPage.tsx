@@ -24,6 +24,8 @@ import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { InstanceFilterSelect } from './admin-webhook-secret-status/InstanceFilterSelect';
 import { InstanceStatusCards } from './admin-webhook-secret-status/InstanceStatusCards';
 import { InstanceBreakdownTable } from './admin-webhook-secret-status/InstanceBreakdownTable';
+import { AlertThresholdsPanel } from './admin-webhook-secret-status/AlertThresholdsPanel';
+import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
 import {
   aggregateValidationByInstance,
   computeInstanceStatus,
