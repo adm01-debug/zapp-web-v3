@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
 import { useConversationSLATimeline } from '@/hooks/useConversationSLATimeline';
 import { useApplicableSLA } from '@/hooks/useApplicableSLA';
+import { useSLAAlerts } from '@/hooks/useSLAAlerts';
 
 type SLAStatus = 'ok' | 'warning' | 'breached' | 'na';
 type PeriodFilter = '24h' | '7d' | '30d' | 'all';
