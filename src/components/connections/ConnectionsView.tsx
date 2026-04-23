@@ -24,6 +24,7 @@ import { IntegrationsPanel } from './IntegrationsPanel';
 import { NumberReputationMonitor } from './NumberReputationMonitor';
 import { ConnectionCard } from './ConnectionCard';
 import { DegradedQuickActions } from './DegradedQuickActions';
+import { QrCountdown } from './QrCountdown';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 
 export function ConnectionsView() {
