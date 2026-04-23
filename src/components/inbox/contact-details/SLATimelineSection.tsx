@@ -154,21 +154,28 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   const initial = useMemo(loadFilters, []);
   const [statusFilter, setStatusFilter] = useState<SLAStatus[]>(initial.status);
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>(initial.period);
+  const [scope, setScope] = useState<SLAScope>(initial.scope);
 
   useEffect(() => {
     try {
-      localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({ status: statusFilter, period: periodFilter }));
+      localStorage.setItem(
+        FILTER_STORAGE_KEY,
+        JSON.stringify({ status: statusFilter, period: periodFilter, scope })
+      );
     } catch { /* storage unavailable */ }
-  }, [statusFilter, periodFilter]);
+  }, [statusFilter, periodFilter, scope]);
 
   const { data: timeline, isLoading } = useConversationSLATimeline(remoteJid, contact.id);
+
+  const slaQueueId = scope === 'current' || scope === 'queue' ? (queue?.id ?? null) : null;
+  const slaAgentId = scope === 'current' || scope === 'agent' ? (assignedTo?.id ?? null) : null;
   const { data: sla } = useApplicableSLA({
-    contactId: contact.id,
-    company: contact.company ?? null,
-    jobTitle: contact.job_title ?? null,
-    contactType: contact.contact_type ?? null,
-    queueId: queue?.id ?? null,
-    agentId: assignedTo?.id ?? null,
+    contactId: scope === 'none' ? undefined : contact.id,
+    company: scope === 'none' ? null : (contact.company ?? null),
+    jobTitle: scope === 'none' ? null : (contact.job_title ?? null),
+    contactType: scope === 'none' ? null : (contact.contact_type ?? null),
+    queueId: slaQueueId,
+    agentId: slaAgentId,
   });
 
   if (isLoading) {
