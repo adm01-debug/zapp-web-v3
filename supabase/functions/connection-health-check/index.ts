@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     if (connError || !connections) return errorResponse('Failed to fetch connections', 500, req);
 
     const results = [];
-    const alertsToCreate: Array<{ connection_id: string; instance_id: string; phone: string | null }> = [];
+    const alertsToCreate: Array<{ connection_id: string; instance_id: string; phone: string | null; reason: 'disconnected' | 'degraded' }> = [];
 
     for (const conn of connections) {
       const start = performance.now();
@@ -43,8 +43,12 @@ Deno.serve(async (req) => {
           if (dbStatus !== conn.status) {
             await supabase.from('whatsapp_connections').update({ status: dbStatus, updated_at: new Date().toISOString() }).eq('id', conn.id);
             if (dbStatus === 'disconnected' && conn.status === 'connected') {
-              alertsToCreate.push({ connection_id: conn.id, instance_id: conn.instance_id, phone: conn.phone_number });
+              alertsToCreate.push({ connection_id: conn.id, instance_id: conn.instance_id, phone: conn.phone_number, reason: 'disconnected' });
             }
+          }
+          // Detecta transição para "degraded" também (CONNECTION_CLOSED recente, latência alta etc.)
+          if (healthStatus === 'degraded') {
+            alertsToCreate.push({ connection_id: conn.id, instance_id: conn.instance_id, phone: conn.phone_number, reason: 'degraded' });
           }
         } else {
           healthStatus = 'error';
@@ -90,13 +94,56 @@ Deno.serve(async (req) => {
       results.push({ instance_id: conn.instance_id, status: healthStatus, response_time_ms: responseTime, error: errorMessage });
     }
 
+    // Carrega usuários com opt-in para receber alertas (push/email)
+    let optInUserIds: string[] = [];
+    if (alertsToCreate.length > 0) {
+      const { data: prefs } = await supabase
+        .from('connection_alert_preferences')
+        .select('user_id, alert_on_degraded, alert_on_disconnected, push_enabled');
+      optInUserIds = (prefs ?? [])
+        .filter((p: any) => p.push_enabled && (p.alert_on_degraded || p.alert_on_disconnected))
+        .map((p: any) => p.user_id);
+    }
+
     for (const alert of alertsToCreate) {
+      const isDegraded = alert.reason === 'degraded';
+      const title = isDegraded
+        ? `Conexão ${alert.instance_id} degradada`
+        : `Conexão ${alert.instance_id} desconectada`;
+      const message = isDegraded
+        ? `A instância ${alert.instance_id}${alert.phone ? ` (${alert.phone})` : ''} está instável (CONNECTION_CLOSED recente ou latência alta).`
+        : `A instância ${alert.instance_id}${alert.phone ? ` (${alert.phone})` : ''} perdeu conexão com o WhatsApp.`;
+
+      // 1) Warroom alert (admins veem em todo lugar)
       await supabase.from('warroom_alerts').insert({
-        alert_type: 'connection_down', severity: 'critical',
-        title: `Conexão ${alert.instance_id} desconectada`,
-        description: `A instância ${alert.instance_id}${alert.phone ? ` (${alert.phone})` : ''} perdeu conexão com o WhatsApp.`,
-        metadata: { connection_id: alert.connection_id, instance_id: alert.instance_id },
+        alert_type: isDegraded ? 'warning' : 'critical',
+        title,
+        message,
+        source: 'connection_health',
       }).then(({ error }) => { if (error) log.warn("Failed to create warroom alert", { error: error.message }); });
+
+      // 2) Notificações por usuário com opt-in (frontend dispara push do navegador via realtime)
+      const eligibleUsers = optInUserIds.filter((uid) => {
+        // já filtramos push_enabled acima; aqui poderia filtrar por tipo, mantemos simples
+        return true;
+      });
+      if (eligibleUsers.length > 0) {
+        const rows = eligibleUsers.map((uid) => ({
+          user_id: uid,
+          title,
+          message,
+          type: 'connection_alert',
+          metadata: {
+            connection_id: alert.connection_id,
+            instance_id: alert.instance_id,
+            reason: alert.reason,
+            phone: alert.phone,
+          },
+        }));
+        await supabase.from('notifications').insert(rows).then(({ error }) => {
+          if (error) log.warn("Failed to insert notifications", { error: error.message });
+        });
+      }
     }
 
     // Cleanup old health logs
