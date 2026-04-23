@@ -18,6 +18,7 @@ import { useApplicableSLA } from '@/hooks/useApplicableSLA';
 
 type SLAStatus = 'ok' | 'warning' | 'breached' | 'na';
 type PeriodFilter = '24h' | '7d' | '30d' | 'all';
+type SLAScope = 'current' | 'queue' | 'agent' | 'none';
 
 const FILTER_STORAGE_KEY = 'sla-timeline-filters';
 const ALL_STATUSES: SLAStatus[] = ['ok', 'warning', 'breached', 'na'];
