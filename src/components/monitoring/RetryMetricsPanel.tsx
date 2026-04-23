@@ -340,24 +340,59 @@ function KpiCard({ label, value, subtitle, delta }: KpiCardProps) {
 
 interface TopReasonsChartProps {
   reasons: Array<{ reason: string; count: number }>;
+  previousReasons?: Array<{ reason: string; count: number }>;
+  compareMode?: boolean;
+  windowHours?: number;
 }
 
-function TopReasonsChart({ reasons }: TopReasonsChartProps) {
-  const data = useMemo(
-    () => reasons.slice(0, 10).map(r => ({ reason: r.reason, count: r.count })),
-    [reasons],
-  );
-  const total = useMemo(() => data.reduce((s, d) => s + d.count, 0), [data]);
-  // Dynamic height: ~28px per bar, min 180px
-  const chartHeight = Math.max(180, data.length * 32);
+function deltaTone(curr: number, prev: number): { tone: 'up' | 'down' | 'flat'; pct: number | null } {
+  if (prev === 0 && curr === 0) return { tone: 'flat', pct: 0 };
+  if (prev === 0) return { tone: 'up', pct: null };
+  const pct = Math.round(((curr - prev) / prev) * 1000) / 10;
+  if (pct > 0) return { tone: 'up', pct };
+  if (pct < 0) return { tone: 'down', pct };
+  return { tone: 'flat', pct };
+}
+
+function TopReasonsChart({ reasons, previousReasons = [], compareMode = false, windowHours = 24 }: TopReasonsChartProps) {
+  // Build merged dataset: union of top reasons across both periods so the user
+  // sees both NEW reasons that emerged AND old reasons that disappeared.
+  const data = useMemo(() => {
+    if (!compareMode) {
+      return reasons.slice(0, 10).map(r => ({ reason: r.reason, current: r.count, previous: 0 }));
+    }
+    const prevMap = new Map(previousReasons.map(r => [r.reason, r.count]));
+    const currMap = new Map(reasons.map(r => [r.reason, r.count]));
+    const allReasons = new Set<string>([...currMap.keys(), ...prevMap.keys()]);
+    const merged = Array.from(allReasons).map(reason => ({
+      reason,
+      current: currMap.get(reason) ?? 0,
+      previous: prevMap.get(reason) ?? 0,
+    }));
+    // Sort by max(current, previous) so the most relevant rows surface,
+    // then keep top 10.
+    merged.sort((a, b) => Math.max(b.current, b.previous) - Math.max(a.current, a.previous));
+    return merged.slice(0, 10);
+  }, [reasons, previousReasons, compareMode]);
+
+  const total = useMemo(() => data.reduce((s, d) => s + d.current, 0), [data]);
+  const previousTotal = useMemo(() => data.reduce((s, d) => s + d.previous, 0), [data]);
+  const chartHeight = Math.max(180, data.length * (compareMode ? 44 : 32));
 
   return (
     <div className="rounded-lg bg-muted/30 p-3">
-      <div className="flex items-baseline justify-between mb-2">
+      <div className="flex items-baseline justify-between mb-2 gap-2 flex-wrap">
         <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
           Top {data.length} motivos de retry
+          {compareMode && (
+            <span className="ml-2 normal-case tracking-normal text-muted-foreground/80">
+              · atual vs. {windowHours}h anteriores
+            </span>
+          )}
         </p>
-        <span className="text-[10px] text-muted-foreground">{total} ocorrências</span>
+        <span className="text-[10px] text-muted-foreground">
+          {total} ocorrências{compareMode && ` · anterior: ${previousTotal}`}
+        </span>
       </div>
       <div style={{ width: '100%', height: chartHeight }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -392,17 +427,65 @@ function TopReasonsChart({ reasons }: TopReasonsChartProps) {
                 fontSize: 11,
                 color: 'hsl(var(--popover-foreground))',
               }}
-              formatter={(value: number) => [`${value} retries`, 'Total']}
+              formatter={(value: number, name: string) => {
+                const label = name === 'previous' ? 'Período anterior' : 'Período atual';
+                return [`${value} retries`, label];
+              }}
               labelFormatter={(label: string) => label}
             />
-            <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="hsl(var(--primary))">
-              {data.map((_, i) => (
+            {compareMode && (
+              <Legend
+                wrapperStyle={{ fontSize: 10, paddingTop: 4 }}
+                iconType="square"
+                formatter={(v) => (v === 'previous' ? 'Período anterior' : 'Período atual')}
+              />
+            )}
+            {compareMode && (
+              <Bar
+                dataKey="previous"
+                radius={[0, 4, 4, 0]}
+                fill="hsl(var(--muted-foreground) / 0.45)"
+              />
+            )}
+            <Bar dataKey="current" radius={[0, 4, 4, 0]} fill="hsl(var(--primary))">
+              {!compareMode && data.map((_, i) => (
                 <Cell key={i} fill={`hsl(var(--primary) / ${1 - i * 0.06})`} />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Comparison delta list — surfaces shifts even when bars are similar. */}
+      {compareMode && data.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {data.map((d) => {
+            const { tone, pct } = deltaTone(d.current, d.previous);
+            const Icon = tone === 'up' ? TrendingUp : tone === 'down' ? TrendingDown : Minus;
+            const toneClass =
+              tone === 'up' ? 'text-amber-500'
+              : tone === 'down' ? 'text-emerald-500'
+              : 'text-muted-foreground';
+            return (
+              <li
+                key={d.reason}
+                className="flex items-center justify-between gap-3 text-[11px] font-mono px-2 py-1 rounded bg-background/50 border border-border/40"
+              >
+                <span className="truncate">{d.reason}</span>
+                <span className="flex items-center gap-2 shrink-0">
+                  <span className="text-muted-foreground">{d.previous}</span>
+                  <span className="text-muted-foreground/60">→</span>
+                  <span>{d.current}</span>
+                  <span className={cn('inline-flex items-center gap-0.5 w-14 justify-end', toneClass)}>
+                    <Icon className="w-3 h-3" />
+                    {pct === null ? 'novo' : `${Math.abs(pct)}%`}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
