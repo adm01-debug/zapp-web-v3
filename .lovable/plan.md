@@ -1,84 +1,63 @@
 
 
-## Refatorar `public-api action: 'send'` para rotear via `evolution-api` invoke + teste de integração
+## Testes Deno: `send-sticker` exige `instanceName` e proxy recebe a instância correta
 
-### Estado atual
+### Contexto
 
-`supabase/functions/public-api/index.ts` envia texto chamando `fetch` direto em `${EVOLUTION_API_URL}/message/sendText/${instance_id}`. Isso duplica responsabilidades (CORS, retry, normalização de erro) que já vivem em `evolution-api` via `proxyToEvolution`. Também impede testar de forma uniforme se `instanceName` é repassado corretamente.
+`evolution-api/index.ts` já implementa `action === 'send-sticker'` chamando `proxy(\`/message/sendSticker/${instance}\`, 'POST', { number, sticker })`, onde `instance = body.instanceName || body.instance`. A suíte atual cobre `send-media`/`send-audio` (`send-media-audio-instance.test.ts`) mas **não** cobre sticker. Vamos adicionar cobertura no mesmo padrão + um teste de integração runtime que stuba `fetch` e confirma a URL final.
 
-### Mudança 1 — `supabase/functions/public-api/index.ts`
+### Mudança 1 — `supabase/functions/evolution-api/__tests__/send-sticker-instance.test.ts` (novo)
 
-Substituir o bloco `try { ... fetch(${evolutionUrl}/message/sendText/...) }` por uma invocação da edge `evolution-api`:
+Testes **estáticos** (análise de source via helpers compartilhados):
+
+1. **Path inclui `${instance}`**: extrai bloco `action === 'send-sticker'` (até próximo `action === '`) e valida `assertMatch(block, /\/message\/sendSticker\/\$\{instance\}/)`.
+2. **Usa `proxy()`, não `fetch()` direto**: `assert(!block.includes("fetch("))`.
+3. **Resolve URL privada antes do envio**: `assertMatch(block, /resolvePrivateBucketUrl\(/)` — garante que sticker em bucket privado é assinado.
+4. **Bloco contém `return await proxy(`** — confirma que o handler de fato delega ao proxy compartilhado.
+
+### Mudança 2 — mesmo arquivo, teste de **integração runtime**
+
+Usar `withFetchStub` (já em `_helpers.ts`) para interceptar a chamada real de `proxyToEvolution` e validar a URL construída:
 
 ```ts
-const { data: invokeData, error: invokeError } = await supabase.functions.invoke(
-  'evolution-api',
-  {
-    body: {
-      action: 'send-text',
-      instanceName: connection.instance_id,
-      number: phone,
-      text: message,
+Deno.test("proxy receives correct instance in sendSticker URL", leakSafeOpts, async () => {
+  let capturedUrl = "";
+  await withFetchStub(
+    async (input) => {
+      capturedUrl = typeof input === "string" ? input : input.toString();
+      return new Response(JSON.stringify({ key: { id: "msg_1" } }), {
+        status: 200, headers: { "content-type": "application/json" },
+      });
     },
-  }
-);
-
-if (invokeError) {
-  log.error('evolution-api invoke error', { error: invokeError.message });
-  await supabase.from('messages').update({ status: 'failed' }).eq('id', msg.id);
-} else {
-  const externalId = extractEvolutionMessageId(invokeData);
-  if (externalId) {
-    await supabase.from('messages')
-      .update({ external_id: externalId, status: 'sent' })
-      .eq('id', msg.id);
-  }
-}
+    async () => {
+      const res = await proxyToEvolution(
+        URL_BASE, KEY, CORS_DEFAULT,
+        "/message/sendSticker/wpp2", "POST",
+        { number: "5511999999999", sticker: "https://example.com/s.webp" },
+      );
+      await res.text();
+    },
+  );
+  assertEquals(capturedUrl, `${URL_BASE}/message/sendSticker/wpp2`);
+});
 ```
 
-Removidas: leitura local de `EVOLUTION_API_URL` / `EVOLUTION_API_KEY` no bloco de envio (continuam sendo usadas pelo `evolution-api`). O guard `extractEvolutionMessageId(invokeData)` continua válido — `evolution-api` devolve o JSON cru da Evolution.
+Variante negativa: chamar com instância vazia/undefined → URL contém `/sendSticker/undefined` → garante que ausência de `instanceName` se manifesta no path (documenta o contrato; o handler em `index.ts` é quem deve validar a presença, não o proxy).
 
-### Mudança 2 — atualizar guard estático
+### Mudança 3 — extensão do guard genérico (opcional, defensivo)
 
-`supabase/functions/public-api/__tests__/no-direct-fetch.test.ts` tem um `Deno.test.ignore` marcado como "FUTURE" para a rota `send` (texto). Trocar por teste **ativo** que valida:
-
-- bloco do handler `'send'` **não** contém `fetch(`
-- bloco do handler `'send'` contém `functions.invoke('evolution-api'` (ou `"evolution-api"`)
-
-Usando o helper `extractBlock` recém-criado em `supabase/functions/evolution-api/__tests__/_helpers.ts` — porém ele vive na pasta da outra função. Solução: criar **`supabase/functions/_shared/test-helpers.ts`** promovendo `extractBlock`/`readSourceFrom` para uso por qualquer função, e re-exportar do helper local da `evolution-api` para manter compat.
-
-### Mudança 3 — novo arquivo `supabase/functions/public-api/__tests__/send-routes-instance.test.ts`
-
-Teste de **contrato/integração estática** análogo ao `send-media-audio-instance.test.ts`:
-
-1. **Validação de input**: garante que o `SendActionSchema` (Zod) rejeita request sem `number` e sem `message` — testa a função pura via re-import (ou regex sobre source confirmando `z.string().min(...)`).
-2. **Repasse de `instanceName`**: análise estática sobre o bloco do handler `'send'` confirmando que o `body` da invocação contém literalmente `instanceName: connection.instance_id` e `action: 'send-text'`.
-3. **Sem fetch direto**: confirma ausência de `fetch(` no bloco.
-4. **Cobertura futura `send-media-*` / `send-audio-*`**: loop `Deno.test` que, **se** o bloco `action === 'send-media'` (ou `send-audio`, `send-image`, `send-document`, `send-video`) existir, exige que o body da invoke inclua `instanceName:`. Se não existir ainda, o teste passa (no-op) — espelha o padrão atual de `no-direct-fetch.test.ts`, garantindo que quando essas rotas forem implementadas no `public-api`, o repasse de `instanceName` será obrigatório.
+Em `send-media-audio-instance.test.ts` já existe um teste "instance é resolvida de `instanceName` com fallback". Não precisa duplicar — o regex `body\.instanceName\s*\|\|\s*body\.instance` cobre todos os handlers, incluindo sticker. Apenas anotar isso no header do novo arquivo.
 
 ### Mudança 4 — CI
 
-O job `deno-edge-tests` no `.github/workflows/ci.yml` hoje só roda `supabase/functions/evolution-api/__tests__/`. Estender para também rodar `supabase/functions/public-api/__tests__/`:
-
-```yaml
-run: |
-  deno test --allow-net --allow-env --allow-read --reporter=pretty \
-    supabase/functions/evolution-api/__tests__/ \
-    supabase/functions/public-api/__tests__/
-```
-
-Sem `working-directory` (passa caminhos absolutos a partir do repo root).
+Nada a alterar. O job `deno-edge-tests` em `.github/workflows/ci.yml` já roda `supabase/functions/evolution-api/__tests__/` recursivamente, então o novo arquivo é incluído automaticamente.
 
 ### Verificação
 
-Rodar `supabase--test_edge_functions` filtrando `public-api` e `evolution-api` — todos verdes. Disparar uma chamada real via `supabase--curl_edge_functions` em `/public-api` com um número válido (ambiente de teste) confirmando que a mensagem é persistida com `status: sent` e `external_id` populado.
+- `supabase--test_edge_functions` filtrando `evolution-api` → todos verdes (incluindo os 4 novos sub-testes de sticker).
+- Confirmar via `--reporter=pretty` que não há leaks (`leakSafeOpts` aplicado no teste runtime, igual aos demais testes que armam `AbortController`).
 
 ### Arquivos afetados
 
-- `supabase/functions/public-api/index.ts` (refatorado: troca `fetch` direto por `supabase.functions.invoke`)
-- `supabase/functions/public-api/__tests__/no-direct-fetch.test.ts` (ativa o teste `FUTURE`)
-- `supabase/functions/public-api/__tests__/send-routes-instance.test.ts` (criado)
-- `supabase/functions/_shared/test-helpers.ts` (criado: promove `extractBlock`/`readSourceFrom` para uso compartilhado)
-- `supabase/functions/evolution-api/__tests__/_helpers.ts` (re-exporta do shared para manter compat)
-- `.github/workflows/ci.yml` (job `deno-edge-tests` passa a rodar também `public-api/__tests__/`)
+- `supabase/functions/evolution-api/__tests__/send-sticker-instance.test.ts` (criado, ~60 linhas)
 
