@@ -130,10 +130,17 @@ export function ConnectionCard({
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button variant="outline" size="sm" onClick={() => onCopyId(connection.id)}><Copy className="w-4 h-4 mr-2" />Copiar ID</Button>
               </motion.div>
-              {connection.status !== 'connected' && (
+              {connection.status !== 'connected' && !isOfficial && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button variant="outline" size="sm" onClick={() => onShowQrCode(connection)} className="border-whatsapp text-whatsapp hover:bg-whatsapp hover:text-primary-foreground">
                     <QrCode className="w-4 h-4 mr-2" />Conectar
+                  </Button>
+                </motion.div>
+              )}
+              {connection.status !== 'connected' && isOfficial && connection.instance_id && (
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="outline" size="sm" onClick={() => onSettings(connection.instance_id!, connection.name)} className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                    <ShieldCheck className="w-4 h-4 mr-2" />Configurar credenciais
                   </Button>
                 </motion.div>
               )}
@@ -151,7 +158,21 @@ export function ConnectionCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onSetDefault(connection.id)}><Star className="w-4 h-4 mr-2" />Definir como padrão</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onShowQrCode(connection)}><QrCode className="w-4 h-4 mr-2" />Gerar QR Code</DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onShowQrCode(connection)}
+                    disabled={isOfficial}
+                    title={isOfficial ? 'API Oficial não usa QR Code' : undefined}
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />Gerar QR Code
+                  </DropdownMenuItem>
+                  {onSetApiType && (
+                    <DropdownMenuItem
+                      onClick={() => onSetApiType(connection, isOfficial ? 'evolution' : 'official')}
+                    >
+                      {isOfficial ? <Zap className="w-4 h-4 mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
+                      Mudar para API {isOfficial ? 'não-oficial (Evolution)' : 'oficial (Cloud API)'}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => onBusinessHours(connection.id, connection.name)}><Clock className="w-4 h-4 mr-2" />Horário de Atendimento</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onQueues(connection.id, connection.name)}><Link2 className="w-4 h-4 mr-2" />Vincular Filas</DropdownMenuItem>
                   {connection.instance_id && (
