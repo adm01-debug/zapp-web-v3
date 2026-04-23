@@ -129,7 +129,6 @@ export function useConnectionsManager() {
   const {
     isLoading: evolutionLoading,
     createInstance,
-    connectInstance,
     getInstanceStatus,
     disconnectInstance,
     deleteInstance,
