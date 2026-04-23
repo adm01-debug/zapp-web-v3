@@ -45,9 +45,19 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Per-request Postgres statement timeout (8s) — fail fast instead of
+    // letting Postgres run up to its global default. This is what produces
+    // "canceling statement due to statement timeout" — we want it to fire
+    // BEFORE the edge function's 9s race so we can return a clean 504.
     const ext = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
       db: { schema: 'public' },
+      global: {
+        headers: {
+          // PostgREST exposes per-request settings via this header.
+          'x-statement-timeout': '8000',
+        },
+      },
     })
 
     // Hard cap to fail fast (well below Edge Function 150s + Postgres default).
@@ -73,9 +83,13 @@ Deno.serve(async (req) => {
     if (action === 'rpc' && rpc) {
       try {
         const { data: rpcData, error } = await withTimeout(ext.rpc(rpc, params || {}))
-        if (error) return new Response(JSON.stringify({ error: error.message }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
+        if (error) {
+          const isTimeout = /statement timeout|canceling statement/i.test(error.message)
+          return new Response(JSON.stringify({ error: error.message }), {
+            status: isTimeout ? 504 : 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
         return new Response(JSON.stringify({ data: rpcData }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
