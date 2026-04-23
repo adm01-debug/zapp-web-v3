@@ -132,19 +132,46 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     const container = scrollContainerRef.current;
     if (!container || !onLoadOlder) return;
 
+    // Preload threshold: ~1 viewport height OR 600px, whichever is larger.
+    // Triggers loadOlder before user reaches scrollTop=0 to avoid visible "wait" gap.
+    const PRELOAD_PX = Math.max(600, container.clientHeight);
+
+    const triggerLoad = () => {
+      if (!hasMoreOlder || loadingOlder || isFetchingOlderRef.current) return;
+      isFetchingOlderRef.current = true;
+      prevScrollHeightRef.current = container.scrollHeight;
+      Promise.resolve(onLoadOlder()).finally(() => {
+        setTimeout(() => { isFetchingOlderRef.current = false; }, 100);
+      });
+    };
+
     const handleScroll = () => {
-      if (container.scrollTop < 80 && hasMoreOlder && !loadingOlder && !isFetchingOlderRef.current) {
-        isFetchingOlderRef.current = true;
-        prevScrollHeightRef.current = container.scrollHeight;
-        Promise.resolve(onLoadOlder()).finally(() => {
-          // released after DOM update effect runs
-          setTimeout(() => { isFetchingOlderRef.current = false; }, 100);
-        });
-      }
+      if (container.scrollTop < PRELOAD_PX) triggerLoad();
+    };
+
+    // Anticipate intent: if user is scrolling up via wheel/touch near the top, preload immediately
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY < 0 && container.scrollTop < PRELOAD_PX * 1.5) triggerLoad();
+    };
+
+    let lastTouchY = 0;
+    const handleTouchStart = (e: TouchEvent) => { lastTouchY = e.touches[0]?.clientY ?? 0; };
+    const handleTouchMove = (e: TouchEvent) => {
+      const y = e.touches[0]?.clientY ?? 0;
+      if (y > lastTouchY && container.scrollTop < PRELOAD_PX * 1.5) triggerLoad();
+      lastTouchY = y;
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
+    container.addEventListener('wheel', handleWheel, { passive: true });
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: true });
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+    };
   }, [onLoadOlder, hasMoreOlder, loadingOlder]);
 
   // Preserve scroll position after older messages prepend
