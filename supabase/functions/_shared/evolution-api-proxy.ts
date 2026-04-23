@@ -114,6 +114,21 @@ export async function proxyToEvolution(
         } else if (response.status === 404) {
           friendlyMessage = 'Instância não encontrada na API Evolution.';
         }
+        // Registrar incidente para 401/403 (silencioso, não bloqueia)
+        if (response.status === 401 || response.status === 403) {
+          logEvolutionIncident({
+            instanceName: instanceInPath ?? 'unknown',
+            incidentType: response.status === 401 ? 'auth_401' : 'auth_403',
+            httpStatus: response.status,
+            source: 'evolution-api-proxy',
+            details: {
+              method,
+              path,
+              friendlyMessage,
+              evolutionResponse: data,
+            },
+          });
+        }
         const errorEnvelope: EvolutionErrorEnvelope = {
           version: EVOLUTION_ENVELOPE_VERSION,
           error: true,
