@@ -33,6 +33,13 @@ export interface ScrollLoaderController {
   wasCancelled(): boolean;
   /** Last saved scrollHeight (or null if cancelled / never set). */
   savedScrollHeight(): number | null;
+  /**
+   * Clear ONLY the saved scrollHeight anchor (used after a successful prepend
+   * has been re-anchored). Unlike `reset()`, this preserves throttle window,
+   * lastScrollTop and the in-flight flag so subsequent triggers still respect
+   * timing guards.
+   */
+  clearSavedHeight(): void;
   /** Reset internal state — for tests / unmount. */
   reset(): void;
 }
@@ -92,6 +99,9 @@ export function createScrollLoaderController(opts: ScrollLoaderOptions): ScrollL
     isFetching: () => isFetching,
     wasCancelled: () => cancelled,
     savedScrollHeight: () => savedScrollHeight,
+    clearSavedHeight() {
+      savedScrollHeight = null;
+    },
     reset() {
       isFetching = false;
       cancelled = false;
