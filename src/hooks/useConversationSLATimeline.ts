@@ -2,6 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface SLAAttribution {
+  agentId: string | null;
+  agentName: string | null;
+  queueId: string | null;
+  queueName: string | null;
+}
+
 export interface SLATimelineData {
   firstContactAt: Date | null;
   firstResponseAt: Date | null;
@@ -13,6 +20,8 @@ export interface SLATimelineData {
   isAwaitingFirstResponse: boolean;
   awaitingMs: number | null;
   totalMessages: number;
+  firstResponseBy: SLAAttribution | null;
+  resolvedBy: SLAAttribution | null;
 }
 
 interface EvolutionMessageRow {
@@ -24,6 +33,14 @@ interface EvolutionMessageRow {
 interface ConversationEventRow {
   event_type: string;
   created_at: string;
+  performed_by: string | null;
+  from_agent_id: string | null;
+  to_agent_id: string | null;
+  from_queue_id: string | null;
+  to_queue_id: string | null;
+  performed_by_profile?: { id: string; name: string | null } | null;
+  to_agent?: { id: string; name: string | null } | null;
+  to_queue?: { id: string; name: string | null } | null;
 }
 
 const EMPTY: SLATimelineData = {
@@ -37,6 +54,8 @@ const EMPTY: SLATimelineData = {
   isAwaitingFirstResponse: false,
   awaitingMs: null,
   totalMessages: 0,
+  firstResponseBy: null,
+  resolvedBy: null,
 };
 
 /**
