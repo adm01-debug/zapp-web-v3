@@ -14,7 +14,13 @@ import { useRetryMetrics, type RetryMetricsFilters } from '@/hooks/monitoring/us
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, Legend } from 'recharts';
 import { RetryAlertsConfig } from './RetryAlertsConfig';
 import { RetryAlertsBanner } from './RetryAlertsBanner';
-import { evaluateAllInstances, loadThresholds, type RetryThresholds } from '@/lib/retryAlerts';
+import {
+  evaluateAllInstances,
+  loadThresholds,
+  loadPerInstanceThresholds,
+  type RetryThresholds,
+  type PerInstanceThresholds,
+} from '@/lib/retryAlerts';
 
 const HOURS_OPTIONS: Array<{ value: number; label: string }> = [
   { value: 1, label: '1h' },
