@@ -1,67 +1,78 @@
 
 
-## Diagrama Mermaid navegável — hooks & módulos (20–23 abr)
+## Matriz de dependências hooks ↔ módulos (20–23 abr)
 
-### O que vai ser entregue
+### Entregável
 
-Um diagrama Mermaid `graph LR` em `/mnt/documents/MAPA_HOOKS_DEPENDENCIAS_NAVEGAVEL.mmd` onde **cada nó é clicável** e abre o arquivo correspondente no repositório, usando a sintaxe `click NodeId "URL"`.
+Documento Markdown único em `/mnt/documents/MATRIZ_DEPENDENCIAS_HOOKS_20-23_ABRIL_2026.md` contendo uma **matriz tabular** com sentido de chamada explícito (`→` chama, `←` é chamado por, `↔` bidirecional/realtime).
 
-### Estrutura do diagrama
+### Estrutura
 
-Subgrafos por domínio (mesma taxonomia do mapa anterior):
+1. **Legenda de símbolos**
+   - `→` chamada síncrona (import + invocação)
+   - `⇒` persistência/escrita em DB
+   - `⇠` leitura via RPC
+   - `⤳` realtime/broadcast (assíncrono)
+   - `⊕` consumido por componente UI
 
-1. **SLA & Timeline** — `useConversationSLATimeline`, `useSLAAlerts`, `SLATimelineSection`
-2. **DLQ & Retry** — `useFailedMessages`, `useFailedMessageAlerts`, `useInstanceRetryConfig`, `evolutionSendRetry`, `lib/retry`, `lib/retryAlerts`
-3. **Realtime & Presença** — `useIncomingCallBroadcast`, `useContactTyping`, `useTypingPresence`, `useMessageUpdateBatcher`, `useMessageSendStatus`
-4. **Webhook Health** — `useWebhookHealthAlerts`, `lib/webhookHealthAlerts`
-5. **Backends** (nós-âncora estilizados) — `Lovable Cloud`, `FATOR X`, `Edge Functions`
+2. **Matriz principal** (tabela ampla, uma linha por hook/util do escopo 20–23):
 
-### Sintaxe usada (exemplo)
+| Origem | Sentido | Destino | Tipo | Backend |
+|---|---|---|---|---|
+| [useSLAAlerts](src/hooks/useSLAAlerts.ts) | ⇒ | `conversation_events` | insert | Lovable Cloud |
+| [useSLAAlerts](src/hooks/useSLAAlerts.ts) | ← | [SLATimelineSection](src/components/inbox/contact-details/SLATimelineSection.tsx) | consumo UI | — |
+| [useConversationSLATimeline](src/hooks/useConversationSLATimeline.ts) | ⇠ | `rpc_list_messages` | RPC | FATOR X |
+| [evolutionSendRetry](src/lib/evolutionSendRetry.ts) | → | [lib/retry](src/lib/retry.ts) | util | — |
+| [evolutionSendRetry](src/lib/evolutionSendRetry.ts) | ⤳ | `enqueueClientFailedMessage` (DLQ) | enqueue | Lovable Cloud |
+| [useIncomingCallBroadcast](src/hooks/useIncomingCallBroadcast.ts) | ⤳ | `externalSupabase.channel()` | broadcast | FATOR X |
+| ... | ... | ... | ... | ... |
 
-```mermaid
-graph LR
-  subgraph SLA
-    SLAAlerts[useSLAAlerts]
-    SLATimeline[useConversationSLATimeline]
-  end
-  SLAAlerts --> CloudDB[(Lovable Cloud<br/>conversation_events)]
-  SLATimeline --> FX[(FATOR X<br/>rpc_list_messages)]
-  click SLAAlerts "src/hooks/useSLAAlerts.ts" "Abrir useSLAAlerts.ts"
-  click SLATimeline "src/hooks/useConversationSLATimeline.ts" "Abrir hook"
-```
+3. **Submatrizes por domínio** (filtros prontos para o leitor):
+   - SLA & Timeline
+   - DLQ & Retry
+   - Realtime & Presença
+   - Webhook Health
+   - UX/Telemetria
 
-Cada `click` aponta para o caminho relativo do arquivo no repo (formato `src/...`), funcional no preview do Mermaid Live Editor e em qualquer viewer compatível.
+4. **Matriz reversa "consumido por"** — para cada hook, lista até 3 componentes/páginas que o importam (descobertos via `code--search_files`).
+
+5. **Quadro-resumo de acoplamento**:
+   | Hook | Fan-out (chama N) | Fan-in (chamado por N) | Risco |
+   |---|---:|---:|---|
+   | `useFailedMessages` | 2 | 4 | médio |
+   | ... | | | |
+
+6. **Findings de dependência**:
+   - Acoplamento crítico: `evolutionSendRetry` → `loadRetryConfig` → `failedMessagesEnqueue` (cadeia de 3 níveis sem fallback claro)
+   - Hook órfão suspeito: itens com fan-in = 0
+   - Bug `oderId` em `useTypingPresence` afeta consumidores em cascata
 
 ### Como vou construir
 
-1. **Verificar existência** dos arquivos com `code--list_dir` em `src/hooks/`, `src/hooks/realtime/`, `src/hooks/messaging/`, `src/lib/` para evitar links quebrados.
-2. **Mapear chamadas reais** com `code--search_files` (ex: `useFailedMessages\(`, `evolutionSendRetry\(`) para desenhar arestas verídicas (até 3 consumidores por hook, sem inventar).
-3. **Escrever** `/mnt/documents/MAPA_HOOKS_DEPENDENCIAS_NAVEGAVEL.mmd` com:
-   - Subgrafos por domínio
-   - Arestas direcionadas (`-->` para chamadas síncronas, `-.->` para realtime/broadcast)
-   - Nós de backend em formato `[(...)]` (cilindro) para destacar persistência
-   - Bloco `click` para cada hook/util com path relativo
-4. **Emitir** `<lov-artifact mime_type="text/vnd.mermaid">` apontando para o arquivo.
-5. **QA**: validar sintaxe rodando o `.mmd` por um parser local (`@mermaid-js/mermaid-cli` via `nix run` se necessário) e checar que todos os `click` referenciam arquivos existentes.
+1. **Verificar arquivos** com `code--list_dir` em `src/hooks/`, `src/hooks/realtime/`, `src/lib/` (pular itens inexistentes — sem inventar).
+2. **Mapear fan-out** lendo cada hook com `code--view` e extraindo imports relevantes.
+3. **Mapear fan-in** com `code--search_files` por nome de cada hook (ex: `useSLAAlerts\(`).
+4. **Escrever** o `.md` em `/mnt/documents/MATRIZ_DEPENDENCIAS_HOOKS_20-23_ABRIL_2026.md`.
+5. **QA**: validar que cada link em `[texto](path)` aponta para arquivo existente; conferir que não há linha duplicada.
 
 ### Detalhes técnicos
 
-- **Sem cores customizadas** — auto-tema light/dark do Mermaid (regra do projeto).
-- **Sem emojis** nos labels (causam lexer error).
-- **Legendas textuais** para tipos de aresta no rodapé do `.mmd` via comentários `%%`.
-- **Limite ~25 nós** para legibilidade; hooks fora do escopo 20–23 ficam de fora.
-- Nó "ghost" `useTypingPresence` marcado com label `[useTypingPresence — BUG: oderId]` para destacar dívida técnica documentada.
+- Links relativos no formato `[nome](src/...)` — clicáveis no preview do Lovable.
+- Sem emojis nas tabelas (regra do projeto). Símbolos Unicode `→ ⇒ ⇠ ⤳ ⊕ ↔ ←` são seguros.
+- Tabelas com no máximo 5 colunas para legibilidade mobile.
+- Documento alvo: ~400–600 linhas, ~30–45 KB.
+- Badges textuais: `[NOVO]`, `[EDITADO]`, `[BUG]`, `[ÓRFÃO]`.
 
 ### Arquivos afetados
 
 **Criar:**
-- `/mnt/documents/MAPA_HOOKS_DEPENDENCIAS_NAVEGAVEL.mmd`
+- `/mnt/documents/MATRIZ_DEPENDENCIAS_HOOKS_20-23_ABRIL_2026.md`
 
 **Não edita código-fonte.**
 
 ### Fora de escopo
 
-- Renderização do diagrama em PNG/SVG estático — Lovable já renderiza `.mmd` inline via `<lov-artifact>`.
-- Inclusão de hooks anteriores a 20/abr (já cobertos por relatórios anteriores).
-- Correção do bug `oderId` — apenas anotação visual no diagrama.
+- Diagrama visual (já entregue em `MAPA_HOOKS_DEPENDENCIAS_NAVEGAVEL.mmd`).
+- Análise de hooks anteriores a 20/abr.
+- Refatoração para reduzir acoplamento — apenas documentar.
 
