@@ -60,6 +60,9 @@ export function useRealtimeInbox() {
   const loadOlderMessages = useCallback(async () => {
     if (USE_EXTERNAL_DB) await externalMsgs.loadOlder();
   }, [externalMsgs]);
+  const cancelLoadOlderMessages = useCallback(() => {
+    if (USE_EXTERNAL_DB) externalMsgs.cancelLoadOlder();
+  }, [externalMsgs]);
   const loadingOlderMessages = USE_EXTERNAL_DB ? externalMsgs.loadingOlder : false;
   const hasMoreMessages = USE_EXTERNAL_DB ? externalMsgs.hasMore : false;
 
@@ -251,6 +254,7 @@ export function useRealtimeInbox() {
     markAsRead,
     // Pagination
     loadOlderMessages,
+    cancelLoadOlderMessages,
     loadingOlderMessages,
     hasMoreMessages,
   };
