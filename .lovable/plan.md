@@ -1,85 +1,89 @@
 
 
-## Alertas em tempo real: assinaturas inválidas + silêncio do webhook
+## Gráfico de tendência 7 dias: recebimento + % assinatura validada
 
 ### Contexto
 
-A página `AdminWebhookSecretStatusPage` agora mostra status por instância (último evento, latência, taxa de validação HMAC), mas é **passiva** — o admin precisa abrir a aba pra perceber problemas. Falta empurrar alertas quando:
+A página `AdminWebhookSecretStatusPage` hoje mostra status **instantâneo** (último evento, 5min, 1h de latência) e breakdown por instância, mas não tem visão **histórica**. Falta um gráfico que mostre, dia a dia ao longo dos últimos 7 dias:
 
-1. **Pico de assinaturas inválidas** — ex.: instância `wpp2` salta de 0% pra 5%+ de `signature_valid=false` numa janela curta (possível chave HMAC errada, replay attack, ou rotação mal feita).
-2. **Silêncio do webhook** — nenhum evento recebido por X minutos numa instância que normalmente é ativa (possível Evolution caído, túnel quebrado, ou instância desconectada).
+1. **Volume diário** de eventos recebidos (barras).
+2. **Taxa de validação HMAC** (linha sobreposta, eixo Y secundário 0-100%).
+
+Permite identificar tendências (ex.: "% caiu de 99% pra 80% na quarta — algo mudou") e correlacionar volume com qualidade.
 
 ### O que vai ser construído
 
-#### 1. Hook `useWebhookHealthAlerts`
+#### 1. Helper de agregação `weeklyTrendAggregations.ts`
 
-Novo hook em `src/hooks/useWebhookHealthAlerts.ts` que:
+Funções puras espelhando o padrão de `instanceAggregations.ts`:
 
-- Faz polling a cada 30s da query `evolution_webhook_events` (últimos 15 min, agrupado por instância) via `queryExternalProxy` — mesmo padrão usado nas outras páginas admin.
-- Executa duas avaliações por instância:
-  - **Invalid signature spike**: se `invalidRate >= thresholds.invalidRatePct` E `total >= thresholds.minSampleSize` → dispara alerta `signature_spike`.
-  - **Silence window**: se `lastEventAt` for mais antigo que `thresholds.silenceMinutes` E a instância teve eventos nas últimas 24h (pra não alertar instâncias dormentes) → dispara alerta `webhook_silence`.
-- Usa `useRef<Map<instance, lastAlertAt>>` para deduplicar (cooldown de 5min por instância+tipo, não spammar toast a cada poll).
-- Respeita `useNotificationSettings` — não toca som em quiet hours, mas mantém toast/browser notification.
-- Dispara via:
-  - `toast.error(...)` (sonner) — visível na sessão.
-  - `playNotificationSound('alert')` quando habilitado e fora de quiet hours.
-  - `showBrowserNotification(...)` quando permissão concedida.
+- `aggregateDailyTrend(rows, days = 7)` → `DailyTrendPoint[]` com 7 buckets diários (preenche dias sem eventos com zeros), cada um contendo:
+  - `dateLabel` (`dd/MM`)
+  - `dateIso` (para sort)
+  - `total` — eventos recebidos no dia
+  - `validated` / `invalid` / `unsigned`
+  - `validationRate` (0-100, `null` quando `total === 0` para a linha não cair pra zero falso)
+  - `errored` (eventos com `error_message`)
+- Respeita o filtro de instância já vigente na página (recebe `rows` já filtrados).
 
-#### 2. Painel de configuração de thresholds
+#### 2. Componente `WeeklyTrendChart.tsx`
 
-Novo componente `src/pages/admin-webhook-secret-status/AlertThresholdsPanel.tsx`:
+Composed chart Recharts:
 
-- Card colapsável "Alertas em tempo real" no final da página.
-- Inputs:
-  - **% inválido tolerado** (default 5%, 0-100)
-  - **Amostra mínima** (default 20 eventos, anti-ruído pra instância nova)
-  - **Silêncio máximo (min)** (default 10 min)
-  - Switch "Ativar alertas"
-- Persistência via `localStorage` usando `safeGetJSON/safeSetJSON` (mesmo padrão de `src/lib/retryAlerts.ts`).
-- Helper puro `src/lib/webhookHealthAlerts.ts` com `loadAlertConfig()`, `saveAlertConfig()`, `evaluateInstanceHealth(stats, config)` retornando `{ breached, type, reason }[]`.
+- `<Bar dataKey="total">` — eixo Y esquerdo, cor `hsl(var(--chart-1))`.
+- `<Bar dataKey="errored" stackId="a">` opcional sobreposto pra destacar erros.
+- `<Line dataKey="validationRate">` — eixo Y direito (0-100%), cor `hsl(var(--success))`, com `connectNulls={false}` pra dias sem dados não distorcerem a média.
+- `<ReferenceLine y={95}>` no eixo direito — meta visual ("≥95% validado").
+- Tooltip custom mostrando: total, validados, inválidos, % e erros do dia.
+- Legend compacta no topo.
+- Skeleton enquanto carrega; empty state se 7 dias sem nenhum evento.
+- Header do card com label dinâmico: "Tendência 7 dias — Todas instâncias" ou "Tendência 7 dias — wpp2".
 
-#### 3. Integração na página
+#### 3. Nova query de 7 dias
 
-- `AdminWebhookSecretStatusPage` chama `useWebhookHealthAlerts(config)` no topo.
-- Renderiza `<AlertThresholdsPanel />` no fim da página.
-- Quando alerta dispara, além do toast, atualiza um badge "⚠️ N alertas ativos" no header da página com lista expansível dos últimos 5 alertas (timestamp + instância + motivo).
+A query principal da página hoje pega 500 rows da última hora — não cobre 7 dias. Adicionar **query separada** via `useQuery`:
 
-#### 4. Mounting global (opcional, mas recomendado)
+- Key: `['webhook-weekly-trend', instance]`
+- `queryExternalProxy('evolution_webhook_events', { ... created_at >= now-7d, instance_name (se filtrado), order desc, limit 5000 })`.
+- `staleTime: 5 * 60_000` (5min — não precisa polling agressivo pra histórico).
+- Limit 5000 cobre ~700 ev/dia; se ultrapassar, render banner "amostra parcial — peça RPC `rpc_webhook_trend_daily`".
 
-Para que o admin receba alertas mesmo sem a página aberta, montar o hook também em `AppShell` (similar ao `useConnectionAlertsPush` e `useWarRoomAlerts`), gated por `useUserRole` → só roda para `admin`/`supervisor`.
+#### 4. Integração na página
+
+- `AdminWebhookSecretStatusPage` renderiza `<WeeklyTrendChart>` **abaixo dos `InstanceStatusCards`** e acima da seção HMAC já existente.
+- Reutiliza o mesmo filtro de instância (`useUrlFilters`) — gráfico re-renderiza automaticamente ao trocar instância.
 
 ### Detalhes técnicos
 
 **Arquivos a criar:**
 
-- `src/lib/webhookHealthAlerts.ts` — config + evaluator puros (espelha `src/lib/retryAlerts.ts`).
-- `src/lib/__tests__/webhookHealthAlerts.test.ts` — Vitest cobrindo:
-  - Spike só dispara acima de `minSampleSize`.
-  - Silêncio só dispara se instância teve eventos recentes.
-  - Persistência de config (load/save/fallback).
-  - Cooldown evita duplicação.
-- `src/hooks/useWebhookHealthAlerts.ts` — hook com polling, dedupe, integração com toast/sound/browser notification.
-- `src/pages/admin-webhook-secret-status/AlertThresholdsPanel.tsx` — UI de config + lista de alertas recentes.
+- `src/pages/admin-webhook-secret-status/weeklyTrendAggregations.ts` — funções puras + tipos.
+- `src/pages/admin-webhook-secret-status/WeeklyTrendChart.tsx` — componente Recharts com tooltip custom e empty state.
+- `src/pages/admin-webhook-secret-status/__tests__/weeklyTrendAggregations.test.ts` — Vitest cobrindo:
+  - Bucketização com timezone local (sem off-by-one).
+  - 7 buckets sempre, mesmo sem dados.
+  - `validationRate = null` quando `total === 0`.
+  - Soma de `validated + invalid + unsigned === total`.
 
 **Arquivos a editar:**
 
-- `src/pages/AdminWebhookSecretStatusPage.tsx` — montar hook + renderizar painel + badge de alertas ativos no header.
-- `src/components/AppShell.tsx` (ou equivalente) — montar `useWebhookHealthAlerts` gated por role admin/supervisor para alertas globais.
+- `src/pages/AdminWebhookSecretStatusPage.tsx`:
+  - Adicionar `useQuery` para janela 7 dias.
+  - Renderizar `<WeeklyTrendChart>` com dados agregados via `useMemo`.
 
 **Padrões respeitados:**
 
-- Reuso de `useNotificationSettings` (quiet hours), `playNotificationSound`, `showBrowserNotification`, `toast` (sonner).
-- Sem export CSV.
-- Tokens semânticos (`text-warning`, `text-destructive`, `bg-warning/10`).
-- Cooldown de 5min por instância+tipo para evitar fadiga de alerta.
-- `log.warn` de `@/lib/logger` para auditoria interna dos disparos.
+- Tokens semânticos (`hsl(var(--chart-1))`, `hsl(var(--success))`, `hsl(var(--destructive))`); zero hardcoded color.
+- Reuso de `CHART_STYLES`, `TOOLTIP_STYLE` e helpers de `src/lib/chartColors.ts`.
+- Sem export CSV (Zero Export).
+- Respeita filtro `?instance=` da URL.
+- `log.warn` se a query exceder o limite de 5000 rows.
 - Tipagem estrita, max ~340 linhas/arquivo.
 
 ### Fora de escopo
 
-- Persistir alertas no banco (`security_alerts` ou `audit_logs`) — por ora ficam só na sessão; se virar requisito de auditoria, próximo lote pode plugar via `fn_safe_audit_log`.
-- Alertas por e-mail/SMS/Slack — fora do escopo (pode entrar via Resend/Webhook num próximo lote).
-- Auto-pause da instância quando spike detectado — já existe mecanismo paralelo em `_shared/instance-pause.ts` para auth failures; replicar pra HMAC fica para outro lote.
-- Histórico longitudinal de alertas (>sessão atual) — fora do escopo desta entrega.
+- RPC `rpc_webhook_trend_daily` no FATOR X (futuro lote — atual usa agregação client-side).
+- Janelas customizáveis (14d/30d) — mantém 7d fixo nesta entrega; toggle pode entrar depois.
+- Comparação semana atual vs semana anterior — fora do escopo.
+- Drill-down clicando num dia para ver eventos daquele dia — fora do escopo.
 
