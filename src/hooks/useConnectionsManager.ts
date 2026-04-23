@@ -421,8 +421,50 @@ export function useConnectionsManager() {
 
   const closeQrDialog = () => {
     if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null); }
+    clearPersistedQr();
     setQrCodeDialog(INITIAL_QR_STATE);
   };
+
+  // After connections load (e.g. after a page refresh), if we have a restored
+  // pending QR, resume status polling and re-arm the expiration timer for the
+  // remaining time. This keeps the QR visible and the countdown accurate without
+  // forcing the user to manually generate a new QR before the existing one expires.
+  useEffect(() => {
+    if (loading) return;
+    if (!qrCodeDialog.open) return;
+    if (qrCodeDialog.status !== 'pending') return;
+    const conn = connections.find((c) => c.id === qrCodeDialog.connectionId);
+    if (!conn?.instance_id) return;
+
+    // If persisted QR already expired, surface the expired state instead of restoring it.
+    if (qrCodeDialog.expiresAt && qrCodeDialog.expiresAt <= Date.now()) {
+      void updateQrAttempt(qrCodeDialog.attemptId, { status: 'expired' });
+      setQrCodeDialog((prev) => ({
+        ...prev,
+        status: 'error',
+        errorMessage: 'QR Code expirado. Gere um novo.',
+        expiresAt: null,
+      }));
+      return;
+    }
+
+    startStatusPolling(conn.instance_id, conn.id);
+    const remaining = qrCodeDialog.expiresAt
+      ? Math.max(0, qrCodeDialog.expiresAt - Date.now())
+      : QR_TTL_MS;
+    const timer = setTimeout(() => {
+      setQrCodeDialog((prev) => {
+        if (prev.connectionId === conn.id && prev.status === 'pending') {
+          void updateQrAttempt(prev.attemptId, { status: 'expired' });
+          return { ...prev, status: 'error', errorMessage: 'QR Code expirado. Gere um novo.', expiresAt: null };
+        }
+        return prev;
+      });
+    }, remaining);
+    return () => clearTimeout(timer);
+    // We intentionally only run this when connections finish loading the first time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   return {
     connections,
