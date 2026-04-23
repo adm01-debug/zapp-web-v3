@@ -34,6 +34,8 @@ export interface RetryMetricsResponse {
   rows: RetryMetricRow[];
   aggregates: RetryAggregates;
   previousTotal: number;
+  /** Top reasons of the equivalent previous window (same length, same filters). */
+  previousTopReasons?: Array<{ reason: string; count: number }>;
   deltaPct: number | null;
   windowHours: number;
 }
