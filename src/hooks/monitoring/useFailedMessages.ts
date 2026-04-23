@@ -24,22 +24,37 @@ export interface FailedMessageRow {
 }
 
 export interface FailedMessagesFilters {
-  hours?: number;                       // default 24
+  hours?: number;
   status?: FailedMessageStatus | null;
   instance?: string | null;
+  errorCode?: string | null;
+}
+
+export interface ErrorCodeAggregate {
+  code: string;
+  count: number;
+  lastAt: string;
+}
+
+export interface InstanceAggregate {
+  instance: string;
+  count: number;
 }
 
 export interface FailedMessagesAggregates {
   pending: number;
   retrying: number;
   abandoned24h: number;
-  successAfterRetryRate: number; // 0..100
+  successAfterRetryRate: number;
+  byErrorCode: ErrorCodeAggregate[];
+  byInstance: InstanceAggregate[];
+  topInstance: InstanceAggregate | null;
 }
 
 export function useFailedMessages(filters: FailedMessagesFilters = {}) {
   const queryClient = useQueryClient();
-  const { hours = 24, status = null, instance = null } = filters;
-  const queryKey = ['failed-messages', { hours, status, instance }];
+  const { hours = 24, status = null, instance = null, errorCode = null } = filters;
+  const queryKey = ['failed-messages', { hours, status, instance, errorCode }];
 
   const query = useQuery<FailedMessageRow[]>({
     queryKey,
@@ -50,9 +65,10 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
         .select('*')
         .gte('created_at', since)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(200);
       if (status) q = q.eq('status', status);
       if (instance) q = q.eq('instance_name', instance);
+      if (errorCode) q = q.eq('error_code', errorCode);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as FailedMessageRow[];
@@ -71,7 +87,42 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
     const successAfterRetryRate = retried.length === 0
       ? 0
       : Math.round((succeededRetried / retried.length) * 1000) / 10;
-    return { pending, retrying, abandoned24h, successAfterRetryRate };
+
+    // Agregação por error_code
+    const errorMap = new Map<string, { count: number; lastAt: string }>();
+    for (const r of rows) {
+      const code = r.error_code ?? (r.http_status ? `http_${r.http_status}` : 'unknown');
+      const cur = errorMap.get(code);
+      if (cur) {
+        cur.count += 1;
+        if (r.created_at > cur.lastAt) cur.lastAt = r.created_at;
+      } else {
+        errorMap.set(code, { count: 1, lastAt: r.created_at });
+      }
+    }
+    const byErrorCode: ErrorCodeAggregate[] = Array.from(errorMap.entries())
+      .map(([code, v]) => ({ code, count: v.count, lastAt: v.lastAt }))
+      .sort((a, b) => b.count - a.count);
+
+    // Agregação por instância
+    const instMap = new Map<string, number>();
+    for (const r of rows) {
+      instMap.set(r.instance_name, (instMap.get(r.instance_name) ?? 0) + 1);
+    }
+    const byInstance: InstanceAggregate[] = Array.from(instMap.entries())
+      .map(([instance, count]) => ({ instance, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      pending,
+      retrying,
+      abandoned24h,
+      successAfterRetryRate,
+      byErrorCode,
+      byInstance,
+      topInstance: byInstance[0] ?? null,
+    };
   }, [query.data]);
 
   // Realtime
@@ -127,6 +178,51 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
     },
   });
 
+  const bulkRetry = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return 0;
+      const { error } = await supabase
+        .from('failed_messages')
+        .update({
+          status: 'retrying',
+          next_attempt_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .in('id', ids);
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`${n} item(s) marcado(s) para reprocesso.`);
+      queryClient.invalidateQueries({ queryKey: ['failed-messages'] });
+    },
+    onError: (e: unknown) => {
+      toast.error(`Falha em massa: ${e instanceof Error ? e.message : 'erro'}`);
+    },
+  });
+
+  const bulkAbandon = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return 0;
+      const { error } = await supabase
+        .from('failed_messages')
+        .update({
+          status: 'abandoned',
+          updated_at: new Date().toISOString(),
+        })
+        .in('id', ids);
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (n) => {
+      toast.success(`${n} item(s) abandonado(s).`);
+      queryClient.invalidateQueries({ queryKey: ['failed-messages'] });
+    },
+    onError: (e: unknown) => {
+      toast.error(`Falha em massa: ${e instanceof Error ? e.message : 'erro'}`);
+    },
+  });
+
   const triggerReprocess = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('reprocess-failed-messages', { method: 'POST' });
@@ -146,5 +242,5 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
     },
   });
 
-  return { ...query, aggregates, retryNow, abandon, triggerReprocess };
+  return { ...query, aggregates, retryNow, abandon, bulkRetry, bulkAbandon, triggerReprocess };
 }
