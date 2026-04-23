@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, PhoneOff, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CallDialog } from './CallDialog';
-import { useIncomingCallListener, type IncomingCall } from '@/hooks/useIncomingCallListener';
+import { useIncomingCallListener } from '@/hooks/useIncomingCallListener';
+import { useIncomingCallBroadcast } from '@/hooks/useIncomingCallBroadcast';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { cn } from '@/lib/utils';
 
@@ -13,7 +14,11 @@ const log = getLogger('IncomingCallAlert');
 
 export const IncomingCallAlert = forwardRef<HTMLDivElement>(
   function IncomingCallAlert(_props, ref) {
-  const { incomingCall, dismissCall } = useIncomingCallListener();
+  const { incomingCall: legacyCall, dismissCall: dismissLegacy } = useIncomingCallListener();
+  const { incomingCall: broadcastCall, dismissCall: dismissBroadcast } = useIncomingCallBroadcast();
+  // Broadcast wins (arrives first); legacy is fallback
+  const incomingCall = broadcastCall ?? legacyCall;
+  const dismissCall = () => { dismissBroadcast(); dismissLegacy(); };
   const { settings: notifSettings, isQuietHours } = useNotificationSettings();
   const [showDialog, setShowDialog] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -120,6 +125,9 @@ export const IncomingCallAlert = forwardRef<HTMLDivElement>(
           {/* Contact info */}
           <div className="p-4 flex items-center gap-3">
             <Avatar className="h-12 w-12">
+              {incomingCall.contact_avatar_url && (
+                <AvatarImage src={incomingCall.contact_avatar_url} alt={incomingCall.contact_name} />
+              )}
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                 {getInitials(incomingCall.contact_name)}
               </AvatarFallback>
