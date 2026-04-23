@@ -1,55 +1,57 @@
 
 
-## Refatorar testes da edge `evolution-api` com helper compartilhado
+## Automatizar testes Deno de `evolution-api` no CI
 
-Os arquivos de teste em `supabase/functions/evolution-api/__tests__/` repetem o helper `blockAfter(marker, size)` e o padrão de stub/restore de `globalThis.fetch`. Isso gera duplicação e risco de flakiness (timeouts não limpos, fetch não restaurado entre testes, tamanho fixo do bloco que pode cortar trechos relevantes).
+Garantir que toda PR/push execute a suíte Deno da edge function `evolution-api` (incluindo os testes refatorados de `send-media` e `send-audio`) e bloqueie o merge se algum falhar.
 
-### Arquivo novo: `supabase/functions/evolution-api/__tests__/_helpers.ts`
+### Mudança em `.github/workflows/ci.yml`
 
-Helper compartilhado com:
+Adicionar um novo job **`deno-edge-tests`** paralelo aos jobs Node existentes (`lint-and-typecheck`, `test`, `build`, `security`). O job `build` passa a depender também desse novo job, garantindo que PRs com testes Deno quebrados não cheguem ao build.
 
-1. **`readSource()`** — lê `../index.ts` uma única vez (cache em módulo) via `Deno.readTextFile`. Evita reler em cada teste.
+```yaml
+deno-edge-tests:
+  name: 🦕 Deno Edge Function Tests
+  runs-on: ubuntu-latest
+  steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
 
-2. **`extractBlock(marker, opts?)`** — extração robusta de bloco por marcador:
-   - `opts.until?: string | RegExp` — termina no próximo marcador (ex.: próximo `action ===` ou `} else if`), em vez de tamanho fixo.
-   - `opts.maxSize?: number` — fallback (default 2000) caso `until` não bata.
-   - Lança erro descritivo se o marcador não existir.
-   - Resolve a flakiness de `blockAfter(marker, 600)` cortar antes de `return await proxy(...)`.
+    - name: 🦕 Setup Deno
+      uses: denoland/setup-deno@v1
+      with:
+        deno-version: v1.x
 
-3. **`stubFetch(impl)`** — substitui `globalThis.fetch` e devolve `restore()`. Uso:
-   ```ts
-   const restore = stubFetch(() => Promise.reject(new TypeError("network down")));
-   try { /* ... */ } finally { restore(); }
-   ```
-   Garante restauração mesmo em falha de assertiva.
+    - name: 🧪 Run evolution-api Deno tests
+      working-directory: supabase/functions/evolution-api
+      run: |
+        deno test \
+          --allow-net \
+          --allow-env \
+          --allow-read \
+          --reporter=pretty \
+          __tests__/
+```
 
-4. **`withFetchStub(impl, fn)`** — açúcar `try/finally` que aceita uma função de teste async e cuida do restore automaticamente. Reduz boilerplate nos testes de integração do proxy.
+E na declaração do job `build`:
 
-5. **`leakSafeOpts`** — constante exportada `{ sanitizeOps: false, sanitizeResources: false } as const`, com comentário explicando o motivo (timeout do `AbortController` no proxy não é limpo em rejeição síncrona). Centraliza a decisão.
+```yaml
+build:
+  needs: [lint-and-typecheck, test, deno-edge-tests]
+```
 
-6. **`CORS_DEFAULT`, `URL_BASE`, `KEY`** — constantes compartilhadas dos testes do proxy.
+### Por que assim
 
-### Arquivos a refatorar
-
-- **`send-media-audio-instance.test.ts`** — substituir `blockAfter` local por `extractBlock` do helper, usando `until: /action === '/` para capturar o bloco inteiro até o próximo handler (resolve o `size = 1500` arbitrário).
-- **`proxy-fetch-failure.test.ts`** — substituir `realFetch`/`restoreFetch` locais por `stubFetch`/`withFetchStub`; importar `leakSafeOpts`, `CORS_DEFAULT`, `URL_BASE`, `KEY`.
-
-Comportamento dos testes permanece idêntico — só muda a mecânica interna.
-
-### Detalhes técnicos
-
-- Helper sem dependências externas além de `https://deno.land/std@0.224.0/assert/mod.ts` (e nem isso é necessário — usa `throw new Error`).
-- `readSource` usa `new URL("../index.ts", import.meta.url)` (mesmo padrão atual).
-- `extractBlock` com `until` faz `source.slice(start, start + maxSize).search(until)` para limitar; se não bater, retorna até `maxSize`.
-- `stubFetch` armazena o `globalThis.fetch` original no momento da chamada (não em variável de módulo), evitando race se múltiplos testes paralelos stubarem.
+- **Sem segredos necessários**: a suíte refatorada é 100% offline — análise estática de `index.ts` + stub de `globalThis.fetch` via `withFetchStub`. Não precisa de `EVOLUTION_API_URL`, `SUPABASE_URL`, etc.
+- **Permissões mínimas**: `--allow-net` (somente para o `import` de `deno.land/std`), `--allow-env` (Deno test exige), `--allow-read` (helper `readSource()` lê `../index.ts`).
+- **Escopo cirúrgico**: roda só `supabase/functions/evolution-api/__tests__/` para manter o CI rápido (~5s). Se mais funções ganharem testes Deno depois, o job pode ser generalizado.
+- **Bloqueia merge**: como `build` depende dele e branch protection exige `build` verde, qualquer regressão em `send-media` / `send-audio` quebra a PR.
+- **Cache**: `denoland/setup-deno@v1` já habilita cache de dependências por padrão via `~/.cache/deno`.
 
 ### Verificação
 
-Rodar `supabase--test_edge_functions` filtrando `evolution-api` e confirmar que todos os testes (`send-media-audio-instance`, `proxy-fetch-failure`, e quaisquer existentes) passam sem warnings de leak.
+Após o merge, abrir uma PR de teste (ex.: introduzir uma quebra proposital em `send-media-audio-instance.test.ts` localmente, observar o status check `🦕 Deno Edge Function Tests` falhar, reverter).
 
 ### Arquivos afetados
 
-- `supabase/functions/evolution-api/__tests__/_helpers.ts` (criado)
-- `supabase/functions/evolution-api/__tests__/send-media-audio-instance.test.ts` (refatorado)
-- `supabase/functions/evolution-api/__tests__/proxy-fetch-failure.test.ts` (refatorado)
+- `.github/workflows/ci.yml` (adiciona job `deno-edge-tests`, atualiza `needs:` do job `build`)
 
