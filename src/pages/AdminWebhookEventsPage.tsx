@@ -341,8 +341,8 @@ export default function AdminWebhookEventsPage() {
         </CardContent>
       </Card>
 
-      {/* Type breakdown (chips) */}
-      {aggregates.types.length > 0 && (
+      {/* Type breakdown (chips) — só faz sentido na visão lista */}
+      {viewMode === 'events' && aggregates.types.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {aggregates.types.map(([type, count]) => (
             <Badge
@@ -356,6 +356,8 @@ export default function AdminWebhookEventsPage() {
           ))}
         </div>
       )}
+
+      {viewMode === 'calls' && <CallCorrelationView events={filtered} />}
 
       {/* Table */}
       <Card>
