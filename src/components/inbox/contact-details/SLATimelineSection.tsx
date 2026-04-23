@@ -4,7 +4,7 @@ import { format, formatDistanceStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   MessageCircle, Reply, Clock, CheckCircle2, RotateCcw, Activity, AlertTriangle,
-  Filter, XCircle,
+  Filter, XCircle, Target, Users, User, MinusCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { useApplicableSLA } from '@/hooks/useApplicableSLA';
 
 type SLAStatus = 'ok' | 'warning' | 'breached' | 'na';
 type PeriodFilter = '24h' | '7d' | '30d' | 'all';
+type SLAScope = 'current' | 'queue' | 'agent' | 'none';
 
 const FILTER_STORAGE_KEY = 'sla-timeline-filters';
 const ALL_STATUSES: SLAStatus[] = ['ok', 'warning', 'breached', 'na'];
@@ -120,7 +121,7 @@ interface MilestoneEntry {
   render: (index: number) => JSX.Element;
 }
 
-function loadFilters(): { status: SLAStatus[]; period: PeriodFilter } {
+function loadFilters(): { status: SLAStatus[]; period: PeriodFilter; scope: SLAScope } {
   try {
     const raw = localStorage.getItem(FILTER_STORAGE_KEY);
     if (raw) {
@@ -129,11 +130,19 @@ function loadFilters(): { status: SLAStatus[]; period: PeriodFilter } {
         ? parsed.status.filter((s: string): s is SLAStatus => ALL_STATUSES.includes(s as SLAStatus))
         : ALL_STATUSES;
       const period: PeriodFilter = ['24h', '7d', '30d', 'all'].includes(parsed.period) ? parsed.period : 'all';
-      return { status: status.length ? status : ALL_STATUSES, period };
+      const scope: SLAScope = ['current', 'queue', 'agent', 'none'].includes(parsed.scope) ? parsed.scope : 'current';
+      return { status: status.length ? status : ALL_STATUSES, period, scope };
     }
   } catch { /* storage unavailable */ }
-  return { status: ALL_STATUSES, period: 'all' };
+  return { status: ALL_STATUSES, period: 'all', scope: 'current' };
 }
+
+const SCOPE_LABELS: Record<SLAScope, string> = {
+  current: 'Atual (fila + agente)',
+  queue: 'Por fila',
+  agent: 'Por agente',
+  none: 'Sem SLA',
+};
 
 export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   const { contact, queue, assignedTo } = conversation;
@@ -145,21 +154,28 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   const initial = useMemo(loadFilters, []);
   const [statusFilter, setStatusFilter] = useState<SLAStatus[]>(initial.status);
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>(initial.period);
+  const [scope, setScope] = useState<SLAScope>(initial.scope);
 
   useEffect(() => {
     try {
-      localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({ status: statusFilter, period: periodFilter }));
+      localStorage.setItem(
+        FILTER_STORAGE_KEY,
+        JSON.stringify({ status: statusFilter, period: periodFilter, scope })
+      );
     } catch { /* storage unavailable */ }
-  }, [statusFilter, periodFilter]);
+  }, [statusFilter, periodFilter, scope]);
 
   const { data: timeline, isLoading } = useConversationSLATimeline(remoteJid, contact.id);
+
+  const slaQueueId = scope === 'current' || scope === 'queue' ? (queue?.id ?? null) : null;
+  const slaAgentId = scope === 'current' || scope === 'agent' ? (assignedTo?.id ?? null) : null;
   const { data: sla } = useApplicableSLA({
-    contactId: contact.id,
-    company: contact.company ?? null,
-    jobTitle: contact.job_title ?? null,
-    contactType: contact.contact_type ?? null,
-    queueId: queue?.id ?? null,
-    agentId: assignedTo?.id ?? null,
+    contactId: scope === 'none' ? undefined : contact.id,
+    company: scope === 'none' ? null : (contact.company ?? null),
+    jobTitle: scope === 'none' ? null : (contact.job_title ?? null),
+    contactType: scope === 'none' ? null : (contact.contact_type ?? null),
+    queueId: slaQueueId,
+    agentId: slaAgentId,
   });
 
   if (isLoading) {
@@ -192,13 +208,17 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   const firstResponseLimit = sla?.firstResponseMinutes ?? 5;
   const resolutionLimit = sla?.resolutionMinutes ?? 60;
 
-  const firstResponseStatus = timeline.isAwaitingFirstResponse
-    ? getSLAStatus(timeline.awaitingMs, firstResponseLimit)
-    : getSLAStatus(timeline.firstResponseDurationMs, firstResponseLimit);
+  const firstResponseStatus: SLAStatus = scope === 'none'
+    ? 'na'
+    : timeline.isAwaitingFirstResponse
+      ? getSLAStatus(timeline.awaitingMs, firstResponseLimit)
+      : getSLAStatus(timeline.firstResponseDurationMs, firstResponseLimit);
 
-  const resolutionStatus = timeline.resolutionDurationMs !== null
-    ? getSLAStatus(timeline.resolutionDurationMs, resolutionLimit)
-    : 'na';
+  const resolutionStatus: SLAStatus = scope === 'none'
+    ? 'na'
+    : timeline.resolutionDurationMs !== null
+      ? getSLAStatus(timeline.resolutionDurationMs, resolutionLimit)
+      : 'na';
 
   const firstResponseDurationLabel = timeline.isAwaitingFirstResponse
     ? `Aguardando há ${formatDurationMs(timeline.awaitingMs)}`
@@ -316,6 +336,7 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   const clearFilters = () => {
     setStatusFilter(ALL_STATUSES);
     setPeriodFilter('all');
+    setScope('current');
   };
 
   return (
@@ -364,6 +385,28 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           <ToggleGroupItem value="30d" className="h-6 px-2 text-[10px]">30d</ToggleGroupItem>
           <ToggleGroupItem value="all" className="h-6 px-2 text-[10px]">Tudo</ToggleGroupItem>
         </ToggleGroup>
+        <ToggleGroup
+          type="single"
+          size="sm"
+          variant="outline"
+          value={scope}
+          onValueChange={(v) => v && setScope(v as SLAScope)}
+          aria-label="Escopo da regra de SLA"
+          className="flex-wrap justify-start gap-1"
+        >
+          <ToggleGroupItem value="current" className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary">
+            <Target className="w-3 h-3 mr-1" />Atual
+          </ToggleGroupItem>
+          <ToggleGroupItem value="queue" className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary">
+            <Users className="w-3 h-3 mr-1" />Fila
+          </ToggleGroupItem>
+          <ToggleGroupItem value="agent" className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary">
+            <User className="w-3 h-3 mr-1" />Agente
+          </ToggleGroupItem>
+          <ToggleGroupItem value="none" className="h-6 px-2 text-[10px] data-[state=on]:bg-muted data-[state=on]:text-muted-foreground">
+            <MinusCircle className="w-3 h-3 mr-1" />Sem SLA
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       {filteredMilestones.length === 0 ? (
@@ -380,12 +423,16 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
         </div>
       )}
 
-      {sla && (
-        <p className="pl-1 text-[10px] text-muted-foreground/80 leading-relaxed">
-          Regra aplicada: <span className="text-foreground/80 font-medium">{sla.ruleName}</span>
-          {' · '}1ª resposta {sla.firstResponseMinutes}min · Resolução {sla.resolutionMinutes}min
-        </p>
-      )}
+      <p className="pl-1 text-[10px] text-muted-foreground/80 leading-relaxed">
+        Avaliado por: <span className="text-foreground/80 font-medium">{SCOPE_LABELS[scope]}</span>
+        {scope !== 'none' && sla && (
+          <>
+            {' · Regra '}<span className="text-foreground/80 font-medium">{sla.ruleName}</span>
+            {' · '}1ª resp. {sla.firstResponseMinutes}min · Resolução {sla.resolutionMinutes}min
+          </>
+        )}
+        {scope === 'none' && ' · limites desativados'}
+      </p>
     </div>
   );
 }
