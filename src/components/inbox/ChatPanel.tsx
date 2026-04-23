@@ -113,7 +113,10 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const dragCounterRef = useRef(0);
 
   const { isContactTyping, typingUsers, handleTypingStart, handleTypingStop } = useTypingPresence({
-    conversationId: conversation.id, currentUserId: 'agent', currentUserName: conversation.assignedTo?.name || 'Agente',
+    conversationId: conversation.id,
+    remoteJid: conversation.contact.id,
+    currentUserId: 'agent',
+    currentUserName: conversation.assignedTo?.name || 'Agente',
   });
   const { quickReplies: dbQuickReplies, incrementUseCount } = useQuickReplies();
   const { settings, updateSettings, saveSettings } = useUserSettings();

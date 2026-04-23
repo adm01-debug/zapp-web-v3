@@ -21,12 +21,19 @@ interface UseTypingPresenceProps {
   conversationId: string;
   currentUserId?: string;
   currentUserName?: string;
+  /**
+   * Opcional. Quando presente, sobrescreve `conversationId` na chave do canal
+   * (`typing:${remoteJid}`). Permite sincronizar com o broadcast emitido pelo
+   * webhook (que usa `remote_jid` como chave estável).
+   */
+  remoteJid?: string;
 }
 
 export function useTypingPresence({
   conversationId,
   currentUserId = 'agent',
-  currentUserName = 'Agente'
+  currentUserName = 'Agente',
+  remoteJid,
 }: UseTypingPresenceProps) {
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [isContactTyping, setIsContactTyping] = useState(false);
@@ -77,8 +84,11 @@ export function useTypingPresence({
   useEffect(() => {
     if (!conversationId) return;
 
+    // Chave do canal: prefere `remoteJid` quando fornecido (sincroniza com webhook).
+    const channelKey = remoteJid ?? conversationId;
+
     // Create presence channel for this conversation
-    const channel = supabase.channel(`typing:${conversationId}`, {
+    const channel = supabase.channel(`typing:${channelKey}`, {
       config: {
         presence: {
           key: currentUserId,
@@ -161,7 +171,7 @@ export function useTypingPresence({
       channel.unsubscribe();
       supabase.removeChannel(channel);
     };
-  }, [conversationId, currentUserId]);
+  }, [conversationId, currentUserId, remoteJid]);
 
   return {
     isContactTyping,

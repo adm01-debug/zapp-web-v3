@@ -191,15 +191,37 @@ export async function handlePresenceUpdate(supabase: any, instance: string, data
       isComposing = directStatus === 'composing';
     }
 
+    // Defesa: ignorar broadcasts/grupos
+    if (jid.endsWith('@broadcast') || jid.endsWith('@g.us')) {
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const basePayload = { isTyping: isComposing, remoteJid: jid, timestamp };
+
+    // Novo (FATOR X): canal por remote_jid — chave estável compartilhada entre webhook → preview → chat aberto
+    try {
+      const ch1 = supabase.channel(`typing:${jid}`);
+      await ch1.send({ type: 'broadcast', event: 'contact_typing', payload: basePayload });
+      supabase.removeChannel(ch1);
+    } catch (_e) {
+      // best-effort: não quebrar o webhook se broadcast falhar
+    }
+
+    // Legacy (Lovable Cloud contact.id) — mantém compat durante migração
     const phone = normalizePhone(jid);
     if (phone) {
       const connection = await getConnectionByInstance(supabase, instance);
       if (connection) {
         const contact = await getContactByPhone(supabase, phone, connection.id);
         if (contact) {
-          const channel = supabase.channel(`typing:${contact.id}`);
-          await channel.send({ type: 'broadcast', event: 'contact_typing', payload: { isTyping: isComposing, contactId: contact.id, timestamp: new Date().toISOString() } });
-          supabase.removeChannel(channel);
+          try {
+            const ch2 = supabase.channel(`typing:${contact.id}`);
+            await ch2.send({ type: 'broadcast', event: 'contact_typing', payload: { ...basePayload, contactId: contact.id } });
+            supabase.removeChannel(ch2);
+          } catch (_e) {
+            // best-effort
+          }
         }
       }
     }
