@@ -64,9 +64,18 @@ export function ConnectionCard({
                 <Smartphone className={cn('w-6 h-6', connection.status === 'connected' ? 'text-whatsapp' : 'text-muted-foreground')} />
               </motion.div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold">{connection.name}</h3>
                   {connection.is_default && <Badge variant="secondary" className="text-xs"><Star className="w-3 h-3 mr-1" />Padrão</Badge>}
+                  <Badge
+                    variant="outline"
+                    className={cn('text-xs',
+                      isOfficial ? 'border-primary text-primary' : 'border-whatsapp text-whatsapp')}
+                    title={isOfficial ? 'WhatsApp Cloud API (Meta) — sem QR Code' : 'Evolution API (não-oficial) — usa QR Code'}
+                  >
+                    {isOfficial ? <ShieldCheck className="w-3 h-3 mr-1" /> : <Zap className="w-3 h-3 mr-1" />}
+                    {isOfficial ? 'API Oficial' : 'Não-oficial (QR)'}
+                  </Badge>
                   <Badge variant="outline" className={cn('text-xs',
                     connection.status === 'connected' && 'border-status-online text-status-online',
                     connection.status !== 'connected' && connection.status !== 'pending' && 'border-status-offline text-status-offline',
