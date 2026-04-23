@@ -64,6 +64,7 @@ export function RetryMetricsPanel() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [thresholds, setThresholds] = useState<RetryThresholds>(() => loadThresholds());
+  const [perInstance, setPerInstance] = useState<PerInstanceThresholds>(() => loadPerInstanceThresholds());
   const [compareMode, setCompareMode] = useState<boolean>(false);
 
   const filters: RetryMetricsFilters = {
@@ -78,8 +79,8 @@ export function RetryMetricsPanel() {
   const agg = data?.aggregates;
 
   const breaches = useMemo(
-    () => evaluateAllInstances(byInstance, thresholds),
-    [byInstance, thresholds],
+    () => evaluateAllInstances(byInstance, thresholds, perInstance),
+    [byInstance, thresholds, perInstance],
   );
 
   // Toast quando aparece nova violação (dedupe por instance dentro da janela atual).
