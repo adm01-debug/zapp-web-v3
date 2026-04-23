@@ -329,6 +329,8 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           }
           status={resolutionStatus}
           iconColor="text-success"
+          agentName={timeline.resolvedBy?.agentName ?? null}
+          queueName={timeline.resolvedBy?.queueName ?? null}
         />
       ),
     });
