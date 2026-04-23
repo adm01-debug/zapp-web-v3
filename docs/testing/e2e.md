@@ -10,6 +10,7 @@ Cobrimos os fluxos críticos do ZAPP Web com Playwright:
 | `e2e/whatsapp-connection.spec.ts` | Criar instância, exibir QR code |
 | `e2e/send-message.spec.ts` | Envio otimista, fallback Eco offline |
 | `e2e/inbox-realtime.spec.ts` | Lista, abrir conversa, contador zero |
+| `e2e/evolution-retry-failure.spec.ts` | Falhas intermitentes Evolution: marca `failed` só após esgotar retries; recupera no meio sem marcar |
 
 ## Rodando local
 
