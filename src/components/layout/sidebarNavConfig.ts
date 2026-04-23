@@ -57,6 +57,7 @@ import {
   Code2,
   Webhook,
   BrainCircuit,
+  Search,
 } from 'lucide-react';
 import type { NavItemConfig } from './SidebarNavItem';
 
@@ -145,6 +146,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'evolution-monitor', icon: Activity, label: 'Monitor Evolution' },
   { id: 'webhook-secret', icon: ShieldCheck, label: 'Webhook Secret' },
   { id: 'instance-pauses', icon: Pause, label: 'Pausas de Instância' },
+  { id: 'search-insights', icon: Search, label: 'Search Insights', requiredRoles: ['admin'] },
 ] as const;
 
 // ── Backward-compat re-exports ────────────────────────────

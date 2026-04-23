@@ -13,6 +13,7 @@ import * as Views from './lazyViews';
 // Route-level role gates. Backend RPC/RLS remain the source of truth — this is a UX layer.
 const VIEW_REQUIRED_ROLES: Record<string, AppRole[]> = {
   'failed-messages': ['admin', 'supervisor'],
+  'search-insights': ['admin'],
 };
 
 interface ViewRouterProps {
@@ -104,6 +105,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'talkx': Views.TalkXView,
   'evolution-monitor': Views.EvolutionMonitoringDashboard,
   'webhook-secret': Views.AdminWebhookSecretStatusPage,
+  'search-insights': Views.AdminSearchInsightsPage,
 };
 
 // Views that need custom props
