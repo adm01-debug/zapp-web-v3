@@ -9,56 +9,19 @@
  *    timeout is not cleared on synchronous fetch rejection.
  */
 
-let _cachedSource: string | null = null;
+import {
+  extractBlock as _extractBlock,
+  type ExtractBlockOptions as _ExtractBlockOptions,
+  readSourceFrom,
+} from "../../_shared/test-helpers.ts";
 
 /** Read `../index.ts` once and cache the contents. */
 export async function readSource(): Promise<string> {
-  if (_cachedSource !== null) return _cachedSource;
-  _cachedSource = await Deno.readTextFile(
-    new URL("../index.ts", import.meta.url),
-  );
-  return _cachedSource;
+  return await readSourceFrom(import.meta.url, "../index.ts");
 }
 
-export interface ExtractBlockOptions {
-  /** Stop the block when this pattern is found after the marker. */
-  until?: string | RegExp;
-  /** Max characters to scan / return (default 2000). */
-  maxSize?: number;
-}
-
-/**
- * Extract a chunk of source starting at `marker`. If `until` is provided,
- * the block ends at the next match of `until` after the marker (exclusive),
- * bounded by `maxSize`. Otherwise returns up to `maxSize` characters.
- *
- * Throws a descriptive error if the marker is not found.
- */
-export function extractBlock(
-  source: string,
-  marker: string,
-  opts: ExtractBlockOptions = {},
-): string {
-  const start = source.indexOf(marker);
-  if (start === -1) {
-    throw new Error(`extractBlock: marker not found: ${JSON.stringify(marker)}`);
-  }
-  const maxSize = opts.maxSize ?? 2000;
-  const window = source.slice(start, start + maxSize);
-  if (opts.until !== undefined) {
-    // search after the marker itself so we don't match the marker line
-    const afterMarker = window.slice(marker.length);
-    const idx = afterMarker.search(
-      typeof opts.until === "string"
-        ? new RegExp(opts.until.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-        : opts.until,
-    );
-    if (idx !== -1) {
-      return window.slice(0, marker.length + idx);
-    }
-  }
-  return window;
-}
+export type ExtractBlockOptions = _ExtractBlockOptions;
+export const extractBlock = _extractBlock;
 
 type FetchFn = typeof globalThis.fetch;
 

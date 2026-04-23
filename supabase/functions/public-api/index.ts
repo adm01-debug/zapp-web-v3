@@ -131,28 +131,34 @@ Deno.serve(async (req) => {
       return errorResponse('Failed to save message', 500, req);
     }
 
-    // Send via Evolution API
+    // Send via evolution-api edge function (centralized proxy).
+    // Routing through invoke avoids duplicating CORS/retry/error normalization
+    // and gives us a uniform contract for instanceName forwarding.
     try {
-      const evolutionUrl = Deno.env.get('EVOLUTION_API_URL');
-      const evolutionKey = Deno.env.get('EVOLUTION_API_KEY');
-
-      if (evolutionUrl && evolutionKey && connection.instance_id) {
-        const sendRes = await fetch(
-          `${evolutionUrl}/message/sendText/${connection.instance_id}`,
+      if (connection.instance_id) {
+        const { data: invokeData, error: invokeError } = await supabase.functions.invoke(
+          'evolution-api',
           {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': evolutionKey },
-            body: JSON.stringify({ number: phone, text: message }),
+            body: {
+              action: 'send-text',
+              instanceName: connection.instance_id,
+              number: phone,
+              text: message,
+            },
           }
         );
-        const sendData = await sendRes.json();
 
-        const externalId = extractEvolutionMessageId(sendData);
-        if (externalId) {
-          await supabase
-            .from('messages')
-            .update({ external_id: externalId, status: 'sent' })
-            .eq('id', msg.id);
+        if (invokeError) {
+          log.error('evolution-api invoke error', { error: invokeError.message });
+          await supabase.from('messages').update({ status: 'failed' }).eq('id', msg.id);
+        } else {
+          const externalId = extractEvolutionMessageId(invokeData);
+          if (externalId) {
+            await supabase
+              .from('messages')
+              .update({ external_id: externalId, status: 'sent' })
+              .eq('id', msg.id);
+          }
         }
       }
     } catch (sendErr) {
