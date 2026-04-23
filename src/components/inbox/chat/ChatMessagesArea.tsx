@@ -178,6 +178,18 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
       lastScrollTopRef.current = top;
     };
 
+    // rAF-based throttle: coalesce rapid scroll events into at most 1 invocation per frame.
+    // Cuts handler invocations from ~60-120/s on fast wheels/trackpads down to ~60/s,
+    // and dedupes the inner triggerLoad/maybeCancel work without delaying user response.
+    let rafId: number | null = null;
+    const throttledScroll = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        handleScroll();
+      });
+    };
+
     // Anticipate intent: if user is scrolling up via wheel/touch near the top, preload immediately
     const handleWheel = (e: WheelEvent) => {
       if (e.deltaY < 0 && container.scrollTop < PRELOAD_PX * 1.5) triggerLoad();
@@ -192,15 +204,16 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     };
 
     lastScrollTopRef.current = container.scrollTop;
-    container.addEventListener('scroll', handleScroll, { passive: true });
+    container.addEventListener('scroll', throttledScroll, { passive: true });
     container.addEventListener('wheel', handleWheel, { passive: true });
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
     container.addEventListener('touchmove', handleTouchMove, { passive: true });
     return () => {
-      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener('scroll', throttledScroll);
       container.removeEventListener('wheel', handleWheel);
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchmove', handleTouchMove);
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
       // On unmount (e.g. conversation switch), abort any in-flight loadOlder.
       if (isFetchingOlderRef.current && onCancelLoadOlder) {
         onCancelLoadOlder();
