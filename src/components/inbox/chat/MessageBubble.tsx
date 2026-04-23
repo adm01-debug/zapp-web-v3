@@ -21,6 +21,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatMessageTime, MessageStatusIcon } from './messageUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { sendMessageToContact } from '@/hooks/realtime/messageSender';
+import { Link } from 'react-router-dom';
+import { RefreshCw, ShieldAlert } from 'lucide-react';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('MessageBubble');
@@ -231,6 +234,42 @@ export function MessageBubble({
                   {isSent && <MessageStatusIcon status={message.status} />}
                 </div>
               </motion.div>
+            )}
+
+            {/* Resend / auth-fix actions for failed outbound messages */}
+            {isSent && !message.is_deleted && (message.status === 'failed' || message.status === 'failed_auth' || message.status === 'failed_retries') && (
+              <div className="flex items-center justify-end gap-2 mt-1 px-1">
+                {message.status === 'failed_auth' ? (
+                  <Link
+                    to="/admin/instance-pauses"
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-destructive hover:underline"
+                  >
+                    <ShieldAlert className="w-3 h-3" />
+                    Verifique a conexão WhatsApp
+                  </Link>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      if (!message.conversationId || !message.content) return;
+                      try {
+                        await sendMessageToContact(
+                          message.conversationId,
+                          message.content,
+                          message.type === 'text' ? 'text' : message.type,
+                          message.mediaUrl,
+                        );
+                        toast({ title: 'Reenviando mensagem…' });
+                      } catch (err) {
+                        toast({ title: 'Falha ao reenviar', variant: 'destructive' });
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-destructive hover:underline"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Reenviar
+                  </button>
+                )}
+              </div>
             )}
 
             <MessageReactions
