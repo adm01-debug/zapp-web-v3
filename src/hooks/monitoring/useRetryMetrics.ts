@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { InstanceMetrics } from '@/lib/retryAlerts';
 
 export interface RetryMetricRow {
   id: string;
@@ -68,6 +69,31 @@ export function useRetryMetrics(filters: RetryMetricsFilters = {}) {
     refetchInterval: 30_000,
   });
 
+  // Aggregate por instância (client-side, da janela atual)
+  const byInstance = useMemo<InstanceMetrics[]>(() => {
+    const rows = query.data?.rows ?? [];
+    const map = new Map<string, RetryMetricRow[]>();
+    for (const r of rows) {
+      const key = r.instance_name ?? '(global)';
+      const arr = map.get(key) ?? [];
+      arr.push(r);
+      map.set(key, arr);
+    }
+    const out: InstanceMetrics[] = [];
+    for (const [instance, list] of map.entries()) {
+      const total = list.length;
+      const successAfterRetry = list.filter(r => r.final_status === 'success').length;
+      const failed = list.filter(r => r.final_status === 'failed').length;
+      const exhausted = list.filter(r => r.final_status === 'exhausted').length;
+      const attempts = list.map(r => r.attempt_count).sort((a, b) => a - b);
+      const idx = Math.max(0, Math.ceil(attempts.length * 0.95) - 1);
+      const p95Attempts = attempts.length ? attempts[idx] : 0;
+      const failureRatePct = total > 0 ? Math.round(((failed + exhausted) / total) * 100) : 0;
+      out.push({ instance, total, successAfterRetry, failed, exhausted, p95Attempts, failureRatePct });
+    }
+    return out.sort((a, b) => b.total - a.total);
+  }, [query.data?.rows]);
+
   // Realtime: invalida ao receber INSERT
   useEffect(() => {
     const channel = supabase
@@ -86,5 +112,5 @@ export function useRetryMetrics(filters: RetryMetricsFilters = {}) {
     };
   }, [queryClient]);
 
-  return query;
+  return { ...query, byInstance };
 }
