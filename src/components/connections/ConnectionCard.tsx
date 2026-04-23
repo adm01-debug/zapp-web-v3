@@ -9,7 +9,7 @@ import {
 import {
   Smartphone, MoreVertical, Trash2, Copy, QrCode, Wifi, WifiOff,
   Star, Clock, Loader2, RefreshCw, History, Link2, Settings, Boxes,
-  BatteryCharging, BatteryLow, BatteryMedium, BatteryFull, ShieldCheck, Zap,
+  BatteryCharging, BatteryLow, BatteryMedium, BatteryFull,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +32,6 @@ interface ConnectionCardProps {
   onCopyId: (id: string) => void;
   onDisconnect: (c: WhatsAppConnection) => void;
   onSetDefault: (id: string) => void;
-  onSetApiType?: (c: WhatsAppConnection, api_type: 'evolution' | 'official') => void;
   onDelete: (c: WhatsAppConnection) => void;
   onBusinessHours: (id: string, name: string) => void;
   onQueues: (id: string, name: string) => void;
@@ -43,12 +42,11 @@ interface ConnectionCardProps {
 
 export function ConnectionCard({
   connection, syncingHistory,
-  onShowQrCode, onCopyId, onDisconnect, onSetDefault, onSetApiType, onDelete,
+  onShowQrCode, onCopyId, onDisconnect, onSetDefault, onDelete,
   onBusinessHours, onQueues, onSettings, onIntegrations, onSyncHistory,
 }: ConnectionCardProps) {
   const status = statusConfig[connection.status] || statusConfig.disconnected;
   const StatusIcon = status.icon;
-  const isOfficial = (connection.api_type ?? 'evolution') === 'official';
 
   return (
     <motion.div whileHover={{ y: -2, boxShadow: '0 8px 30px hsl(var(--primary) / 0.1)' }}>
@@ -64,18 +62,9 @@ export function ConnectionCard({
                 <Smartphone className={cn('w-6 h-6', connection.status === 'connected' ? 'text-whatsapp' : 'text-muted-foreground')} />
               </motion.div>
               <div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
                   <h3 className="font-semibold">{connection.name}</h3>
                   {connection.is_default && <Badge variant="secondary" className="text-xs"><Star className="w-3 h-3 mr-1" />Padrão</Badge>}
-                  <Badge
-                    variant="outline"
-                    className={cn('text-xs',
-                      isOfficial ? 'border-primary text-primary' : 'border-whatsapp text-whatsapp')}
-                    title={isOfficial ? 'WhatsApp Cloud API (Meta) — sem QR Code' : 'Evolution API (não-oficial) — usa QR Code'}
-                  >
-                    {isOfficial ? <ShieldCheck className="w-3 h-3 mr-1" /> : <Zap className="w-3 h-3 mr-1" />}
-                    {isOfficial ? 'API Oficial' : 'Não-oficial (QR)'}
-                  </Badge>
                   <Badge variant="outline" className={cn('text-xs',
                     connection.status === 'connected' && 'border-status-online text-status-online',
                     connection.status !== 'connected' && connection.status !== 'pending' && 'border-status-offline text-status-offline',
@@ -130,25 +119,10 @@ export function ConnectionCard({
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button variant="outline" size="sm" onClick={() => onCopyId(connection.id)}><Copy className="w-4 h-4 mr-2" />Copiar ID</Button>
               </motion.div>
-              {connection.status !== 'connected' && !isOfficial && (
+              {connection.status !== 'connected' && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant={connection.status === 'disconnected' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onShowQrCode(connection)}
-                    className={connection.status === 'disconnected'
-                      ? 'bg-whatsapp text-primary-foreground hover:bg-whatsapp/90 animate-pulse'
-                      : 'border-whatsapp text-whatsapp hover:bg-whatsapp hover:text-primary-foreground'}
-                  >
-                    <QrCode className="w-4 h-4 mr-2" />
-                    {connection.status === 'disconnected' ? 'Ver QR Code' : 'Conectar'}
-                  </Button>
-                </motion.div>
-              )}
-              {connection.status !== 'connected' && isOfficial && connection.instance_id && (
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button variant="outline" size="sm" onClick={() => onSettings(connection.instance_id!, connection.name)} className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                    <ShieldCheck className="w-4 h-4 mr-2" />Configurar credenciais
+                  <Button variant="outline" size="sm" onClick={() => onShowQrCode(connection)} className="border-whatsapp text-whatsapp hover:bg-whatsapp hover:text-primary-foreground">
+                    <QrCode className="w-4 h-4 mr-2" />Conectar
                   </Button>
                 </motion.div>
               )}
@@ -166,21 +140,7 @@ export function ConnectionCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onSetDefault(connection.id)}><Star className="w-4 h-4 mr-2" />Definir como padrão</DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onShowQrCode(connection)}
-                    disabled={isOfficial}
-                    title={isOfficial ? 'API Oficial não usa QR Code' : undefined}
-                  >
-                    <QrCode className="w-4 h-4 mr-2" />Gerar QR Code
-                  </DropdownMenuItem>
-                  {onSetApiType && (
-                    <DropdownMenuItem
-                      onClick={() => onSetApiType(connection, isOfficial ? 'evolution' : 'official')}
-                    >
-                      {isOfficial ? <Zap className="w-4 h-4 mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
-                      Mudar para API {isOfficial ? 'não-oficial (Evolution)' : 'oficial (Cloud API)'}
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem onClick={() => onShowQrCode(connection)}><QrCode className="w-4 h-4 mr-2" />Gerar QR Code</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onBusinessHours(connection.id, connection.name)}><Clock className="w-4 h-4 mr-2" />Horário de Atendimento</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onQueues(connection.id, connection.name)}><Link2 className="w-4 h-4 mr-2" />Vincular Filas</DropdownMenuItem>
                   {connection.instance_id && (

@@ -130,7 +130,7 @@ export function useExternalTableBrowser<T = Record<string, unknown>>(tableName: 
     order,
     limit: pageSize,
     offset: page * pageSize,
-    countMode: 'estimated',
+    countMode: 'exact',
     staleTime: 2 * 60 * 1000,
   });
 

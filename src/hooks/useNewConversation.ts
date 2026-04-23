@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { newRequestId } from '@/lib/withRequestId';
 
 interface ContactResult {
   id: string;
@@ -79,17 +78,14 @@ export function useNewConversation(
         await supabase.functions.invoke('batch-fetch-avatars');
       }
       if (!contactId) { toast.error('Selecione um contato'); setIsSending(false); return; }
-      const trace = newRequestId('new-conv');
       const { error: msgError } = await supabase.from('messages').insert({
         contact_id: contactId, content: messageText.trim(), sender: 'agent',
         message_type: 'text', status: 'sending', whatsapp_connection_id: selectedConnection || null,
-        request_id: trace.requestId,
       });
       if (msgError) throw msgError;
       await supabase.functions.invoke('evolution-api', {
         body: { action: 'send-text', instanceName: connections.find(c => c.id === selectedConnection)?.name || 'wpp2',
           number: selectedContact?.phone || newPhone, text: messageText.trim() },
-        headers: trace.headers,
       });
       toast.success('Mensagem enviada!');
       await supabase.functions.invoke('batch-fetch-avatars');

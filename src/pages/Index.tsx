@@ -19,8 +19,6 @@ import { Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { OfflineIndicator, ConnectionToast } from '@/components/ui/offline-indicator';
 import { EvolutionDisconnectBanner } from '@/components/alerts/EvolutionDisconnectBanner';
-import { DegradedConnectionsBanner } from '@/components/alerts/DegradedConnectionsBanner';
-import { useConnectionAlertsPush } from '@/hooks/useConnectionAlertsPush';
 import { toast } from 'sonner';
 
 const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _ref) {
@@ -61,30 +59,6 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
     return () => unregisterNavigationHandler();
   }, [registerNavigationHandler, unregisterNavigationHandler, setCurrentView]);
 
-  // Custom event bridge so deep components can navigate without prop-drilling.
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const view = (e as CustomEvent<string>).detail;
-      if (typeof view === 'string') setCurrentView(view);
-    };
-    window.addEventListener('navigate-view', handler as EventListener);
-    return () => window.removeEventListener('navigate-view', handler as EventListener);
-  }, [setCurrentView]);
-
-  // Deep-link: ?view=<viewId> on initial load opens that view directly (used by copy-link flows).
-  const deepLinkViewHandledRef = useRef(false);
-  useEffect(() => {
-    if (deepLinkViewHandledRef.current || loading || !user) return;
-    const params = new URLSearchParams(window.location.search);
-    const targetView = params.get('view');
-    if (targetView && targetView !== currentView) {
-      deepLinkViewHandledRef.current = true;
-      setCurrentView(targetView);
-    } else if (targetView) {
-      deepLinkViewHandledRef.current = true;
-    }
-  }, [loading, user, currentView, setCurrentView]);
-
   // Keyboard navigation: Alt+←/→, Escape, Alt+Home
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -118,7 +92,6 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
     return () => clearTimeout(t);
   }, []);
   useTranscriptionNotifications({ enabled: !!user && notifReady });
-  useConnectionAlertsPush();
 
   const showChecklist = !checklistComplete && !checklistDismissed && currentView === 'dashboard';
 
@@ -242,7 +215,6 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
         <OfflineIndicator />
         <ConnectionToast />
         <EvolutionDisconnectBanner />
-        <DegradedConnectionsBanner onNavigate={setCurrentView} />
 
         <WelcomeModal
           isOpen={showWelcome}

@@ -7,38 +7,6 @@ const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-/**
- * Versioned envelope returned by the Evolution proxy / public-api.
- *
- * `version` is an optional integer that callers may inspect to negotiate
- * future, breaking changes to this response shape. Today the proxy always
- * stamps `EVOLUTION_ENVELOPE_VERSION` (currently `1`). Callers that don't
- * read `version` keep working — the field is purely additive.
- *
- * Bump `EVOLUTION_ENVELOPE_VERSION` (and update consumers) only when a
- * breaking change to the envelope shape is shipped.
- */
-export const EVOLUTION_ENVELOPE_VERSION = 1 as const;
-
-export interface EvolutionErrorEnvelope {
-  version?: number;
-  error: true;
-  status: number;
-  message: string;
-  details?: unknown;
-  retries?: number;
-}
-
-export interface EvolutionSuccessEnvelope<T = unknown> {
-  version?: number;
-  data: T;
-}
-
-/** Either a successful proxied payload or an error envelope. */
-export type EvolutionEnvelope<T = unknown> =
-  | EvolutionSuccessEnvelope<T>
-  | EvolutionErrorEnvelope;
-
 export async function proxyToEvolution(
   evolutionApiUrl: string,
   evolutionApiKey: string,
@@ -110,26 +78,12 @@ export async function proxyToEvolution(
         } else if (response.status === 404) {
           friendlyMessage = 'Instância não encontrada na API Evolution.';
         }
-        const errorEnvelope: EvolutionErrorEnvelope = {
-          version: EVOLUTION_ENVELOPE_VERSION,
-          error: true,
-          status: response.status,
-          message: friendlyMessage,
-          details: data,
-        };
-        return new Response(JSON.stringify(errorEnvelope), {
+        return new Response(JSON.stringify({ error: true, status: response.status, message: friendlyMessage, details: data }), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Preserve raw Evolution payload shape but add a non-conflicting
-      // `version` marker when possible. Falls back to raw data for
-      // non-object responses (arrays, primitives) to avoid breaking callers.
-      const versioned =
-        data && typeof data === 'object' && !Array.isArray(data) && !('version' in (data as Record<string, unknown>))
-          ? { version: EVOLUTION_ENVELOPE_VERSION, ...(data as Record<string, unknown>) }
-          : data;
-      return new Response(JSON.stringify(versioned), {
+      return new Response(JSON.stringify(data), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (err) {
@@ -141,14 +95,11 @@ export async function proxyToEvolution(
     }
   }
 
-  const timeoutEnvelope: EvolutionErrorEnvelope = {
-    version: EVOLUTION_ENVELOPE_VERSION,
-    error: true,
-    status: 504,
+  return new Response(JSON.stringify({
+    error: true, status: 504,
     message: `Falha ao conectar com a API Evolution: ${lastError?.message || 'Erro desconhecido'}`,
     retries: maxAttempts - 1,
-  };
-  return new Response(JSON.stringify(timeoutEnvelope), {
+  }), {
     status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }

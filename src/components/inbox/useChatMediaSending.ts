@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { normalizeMediaUrl } from '@/utils/normalizeMediaUrl';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
-import { newRequestId } from '@/lib/withRequestId';
 
 /**
  * Encapsulates WhatsApp instance resolution and media-message sending
@@ -135,17 +134,15 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     try {
       const phone = contactPhone!.replace(/\D/g, '');
       const isUrl = emojiUrl.startsWith('http');
-      const trace = newRequestId('emoji');
 
       const apiPromise = isUrl
-        ? supabase.functions.invoke('evolution-api', { method: 'POST', body: { action: 'send-media', instanceName: inst, number: phone, mediaUrl: emojiUrl, mediaType: 'image' }, headers: trace.headers })
-        : supabase.functions.invoke('evolution-api', { method: 'POST', body: { action: 'send-text', instanceName: inst, number: phone, text: emojiUrl }, headers: trace.headers });
+        ? supabase.functions.invoke('evolution-api', { method: 'POST', body: { action: 'send-media', instanceName: inst, number: phone, mediaUrl: emojiUrl, mediaType: 'image' } })
+        : supabase.functions.invoke('evolution-api', { method: 'POST', body: { action: 'send-text', instanceName: inst, number: phone, text: emojiUrl } });
 
       const dbPromise = supabase.from('messages').insert({
         contact_id: contactId, whatsapp_connection_id: whatsappConnectionId,
         content: isUrl ? '[Emoji]' : emojiUrl, message_type: isUrl ? 'image' : 'text',
         media_url: isUrl ? emojiUrl : null, sender: 'agent', status: 'sending',
-        request_id: trace.requestId,
       }).select('id').single();
 
       const [apiResult, dbResult] = await Promise.all([apiPromise, dbPromise]);
@@ -174,18 +171,15 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     try {
       const phone = contactPhone!.replace(/\D/g, '');
       const normalizedAudioUrl = normalizeMediaUrl(audioUrl);
-      const trace = newRequestId('audio');
 
       const apiPromise = supabase.functions.invoke('evolution-api', {
         body: { action: 'send-audio', instanceName: inst, number: phone, audioUrl: normalizedAudioUrl },
-        headers: trace.headers,
       });
 
       const dbPromise = supabase.from('messages').insert({
         contact_id: contactId, whatsapp_connection_id: whatsappConnectionId,
         content: '[Áudio Meme]', message_type: 'audio',
         media_url: normalizedAudioUrl, sender: 'agent', status: 'sending',
-        request_id: trace.requestId,
       }).select('id').single();
 
       const [apiResult, dbResult] = await Promise.all([apiPromise, dbPromise]);

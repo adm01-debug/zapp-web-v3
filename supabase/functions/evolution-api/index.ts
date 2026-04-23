@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { Logger, checkRateLimit, getClientIP, getCorsHeaders, handleCors } from "../_shared/validation.ts";
-import { EVOLUTION_ENVELOPE_VERSION, proxyToEvolution, resolvePrivateBucketUrl } from "../_shared/evolution-api-proxy.ts";
+import { proxyToEvolution, resolvePrivateBucketUrl } from "../_shared/evolution-api-proxy.ts";
 
 serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -57,97 +57,10 @@ serve(async (req) => {
     if (action === 'list-instances') return await proxy(`/instance/fetchInstances${body.instanceName ? `?instanceName=${body.instanceName}` : ''}`, 'GET');
 
     if (action === 'connect') {
-      const connectUrl = `${evolutionApiUrl}/instance/connect/${instance}`;
-      const doConnect = async () => {
-        const response = await fetch(connectUrl, { method: 'GET', headers: { 'apikey': evolutionApiKey } });
-        const data = await response.json();
-        return { response, data };
-      };
-
-      const buildAuthError = (status: number, details: unknown, where: 'connect' | 'create-instance') =>
-        new Response(JSON.stringify({
-          version: EVOLUTION_ENVELOPE_VERSION,
-          error: true,
-          status,
-          message: `Falha de autenticação na API Evolution (${where}). Verifique se EVOLUTION_API_URL e EVOLUTION_API_KEY apontam para a mesma conta e se a chave tem permissão para gerenciar instâncias.`,
-          code: 'EVOLUTION_AUTH_ERROR',
-          details,
-        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
-      let { response, data } = await doConnect();
-
-      // Auth failure on connect — do NOT try to recreate the instance.
-      if (response.status === 401 || response.status === 403) {
-        return buildAuthError(response.status, data, 'connect');
-      }
-
-      const rawMessages = Array.isArray(data?.response?.message)
-        ? data.response.message.map((msg: unknown) => JSON.stringify(msg)).join(' ')
-        : String(data?.response?.message ?? data?.message ?? '');
-      const missingInstance = response.status === 404 && /does not exist|not found/i.test(rawMessages);
-
-      if (missingInstance) {
-        const createResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
-          method: 'POST',
-          headers: { 'apikey': evolutionApiKey, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            instanceName: instance,
-            qrcode: body.qrcode ?? true,
-            integration: body.integration || 'WHATSAPP-BAILEYS',
-            token: body.token,
-            number: body.number,
-            businessId: body.businessId,
-            wabaId: body.wabaId,
-            phoneNumberId: body.phoneNumberId,
-            webhook: body.webhook,
-            chatwoot: body.chatwoot,
-            typebot: body.typebot,
-            proxy: body.proxy,
-          }),
-        });
-        const createData = await createResponse.json();
-
-        // Auth failure on create — surface clear actionable error.
-        if (createResponse.status === 401 || createResponse.status === 403) {
-          return buildAuthError(createResponse.status, createData, 'create-instance');
-        }
-
-        if (!createResponse.ok) {
-          return new Response(JSON.stringify({
-            version: EVOLUTION_ENVELOPE_VERSION,
-            error: true,
-            status: createResponse.status,
-            message: 'Falha ao recriar instância na API Evolution.',
-            details: createData,
-          }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        }
-
-        ({ response, data } = await doConnect());
-
-        if (response.status === 401 || response.status === 403) {
-          return buildAuthError(response.status, data, 'connect');
-        }
-      }
-
-      if (response.ok && data?.qrcode?.base64) {
-        await supabase
-          .from('whatsapp_connections')
-          .update({ qr_code: data.qrcode.base64, status: 'pending', instance_id: instance })
-          .eq('instance_id', instance);
-      }
-
-      // Avoid raw 400 — return a structured envelope when upstream is not OK.
-      if (!response.ok) {
-        return new Response(JSON.stringify({
-          version: EVOLUTION_ENVELOPE_VERSION,
-          error: true,
-          status: response.status,
-          message: 'Falha ao conectar instância na API Evolution.',
-          details: data,
-        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-
-      return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const response = await fetch(`${evolutionApiUrl}/instance/connect/${instance}`, { method: 'GET', headers: { 'apikey': evolutionApiKey } });
+      const data = await response.json();
+      if (data.qrcode) await supabase.from('whatsapp_connections').update({ qr_code: data.qrcode.base64, status: 'pending', instance_id: instance }).eq('instance_id', instance);
+      return new Response(JSON.stringify(data), { status: response.ok ? 200 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'status') {
@@ -323,7 +236,7 @@ serve(async (req) => {
       status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {
-    const log = new Logger('evolution-api', req);
+    const log = new Logger('evolution-api');
     const message = error instanceof Error ? error.message : 'Unknown error';
     log.error('Unhandled error', { error: message });
     return new Response(JSON.stringify({ error: message }), {

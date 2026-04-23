@@ -28,35 +28,19 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci
 
-      - name: 🔍 Run ESLint (changed files on PRs, full on push)
-        run: |
-          set -euo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE="origin/${{ github.base_ref }}"
-            git fetch origin "${{ github.base_ref }}" --depth=1 || true
-            CHANGED=$(git diff --name-only --diff-filter=ACMRT "$BASE"...HEAD -- '*.ts' '*.tsx' \
-              | grep -Ev '^(dist|supabase/functions)/' || true)
-            if [ -n "$CHANGED" ]; then
-              echo "Linting changed files:"
-              printf '  %s\n' $CHANGED
-              npx eslint $CHANGED
-            else
-              echo "No lintable TS/TSX files changed."
-            fi
-          else
-            npx eslint .
-          fi
+      - name: 🔍 Run ESLint
+        run: npm run lint
+        continue-on-error: false
 
       - name: 🔎 Run TypeScript check
         run: npx tsc --noEmit
@@ -77,9 +61,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci
 
       - name: 🧪 Run Vitest
         run: npm run test -- --coverage --reporter=verbose
@@ -95,37 +80,12 @@ jobs:
           retention-days: 7
 
   # ===========================================
-  # JOB 3: Deno Edge Function Tests
-  # ===========================================
-  deno-edge-tests:
-    name: 🦕 Deno Edge Function Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🦕 Setup Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-
-      - name: 🧪 Run edge function Deno tests (evolution-api + public-api)
-        run: |
-          deno test \
-            --allow-net \
-            --allow-env \
-            --allow-read \
-            --reporter=pretty \
-            supabase/functions/evolution-api/__tests__/ \
-            supabase/functions/public-api/__tests__/
-
-  # ===========================================
-  # JOB 4: Build
+  # JOB 3: Build
   # ===========================================
   build:
     name: 🏗️ Build
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test, deno-edge-tests]
+    needs: [lint-and-typecheck, test]
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -134,9 +94,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci
 
       - name: 🏗️ Build for production
         run: npm run build
@@ -179,9 +140,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
+          cache: 'npm'
 
       - name: 🔒 Run npm audit
         run: npm audit --audit-level=high

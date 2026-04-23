@@ -49,30 +49,14 @@ export function EvolutionDisconnectBanner() {
   const handleReconnect = async (conn: DisconnectedInstance) => {
     setReconnecting(conn.instance_id);
     try {
-      // banner usa `connect` (gera QR novo); a edge function lida com instância
-      // ausente (404) recriando automaticamente, e devolve erro estruturado em
-      // caso de 401/403 (autenticação) — que NÃO deve disparar fallback.
-      const { data, error } = await supabase.functions.invoke('evolution-api', {
-        body: { action: 'connect', instanceName: conn.instance_id },
+      const { error } = await supabase.functions.invoke('evolution-api/instance/connect', {
+        method: 'POST',
+        body: { instanceName: conn.instance_id },
       });
-
-      if (error) throw new Error(error.message || 'Falha ao invocar evolution-api');
-
-      if (data?.error === true) {
-        const code = typeof data?.code === 'string' ? data.code : null;
-        const message = data?.message || 'Evolution API retornou erro';
-        if (code === 'EVOLUTION_AUTH_ERROR') {
-          toast.error(`Integração sem autorização: ${message}`, { duration: 8000 });
-          return;
-        }
-        throw new Error(message);
-      }
-
-      toast.success(`Reconectando ${conn.instance_id}... Abrindo tela de conexões para escanear o QR Code.`);
-      window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Erro desconhecido';
-      toast.error(`Erro ao reconectar ${conn.instance_id}: ${msg}`);
+      if (error) throw error;
+      toast.success(`Reconectando ${conn.instance_id}... Escaneie o QR Code na tela de conexões.`);
+    } catch {
+      toast.error(`Erro ao reconectar ${conn.instance_id}`);
     } finally {
       setReconnecting(null);
     }

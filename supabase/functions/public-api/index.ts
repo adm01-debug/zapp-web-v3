@@ -1,7 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, checkRateLimit, getClientIP } from "../_shared/validation.ts";
-import { extractEvolutionMessageId } from "../_shared/evolution-message-id.ts";
 
 const SendActionSchema = z.object({
   action: z.literal('send'),
@@ -14,8 +13,7 @@ Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
 
-  const log = new Logger("public-api", req);
-  const requestId = log.getRequestId();
+  const log = new Logger("public-api");
 
   const ip = getClientIP(req);
   const rl = checkRateLimit(`public-api:${ip}`, 60, 60_000);
@@ -111,7 +109,7 @@ Deno.serve(async (req) => {
       return errorResponse('Failed to create contact', 500, req);
     }
 
-    // Insert message — stamp request_id for end-to-end tracing.
+    // Insert message
     const { data: msg, error: msgError } = await supabase
       .from('messages')
       .insert({
@@ -121,7 +119,6 @@ Deno.serve(async (req) => {
         message_type: 'text',
         status: 'sending',
         whatsapp_connection_id: connection.id,
-        request_id: requestId,
       })
       .select()
       .single();
@@ -131,34 +128,27 @@ Deno.serve(async (req) => {
       return errorResponse('Failed to save message', 500, req);
     }
 
-    // Send via evolution-api edge function (centralized proxy).
-    // Routing through invoke avoids duplicating CORS/retry/error normalization
-    // and gives us a uniform contract for instanceName forwarding.
+    // Send via Evolution API
     try {
-      if (connection.instance_id) {
-        const { data: invokeData, error: invokeError } = await supabase.functions.invoke(
-          'evolution-api',
+      const evolutionUrl = Deno.env.get('EVOLUTION_API_URL');
+      const evolutionKey = Deno.env.get('EVOLUTION_API_KEY');
+
+      if (evolutionUrl && evolutionKey && connection.instance_id) {
+        const sendRes = await fetch(
+          `${evolutionUrl}/message/sendText/${connection.instance_id}`,
           {
-            body: {
-              action: 'send-text',
-              instanceName: connection.instance_id,
-              number: phone,
-              text: message,
-            },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': evolutionKey },
+            body: JSON.stringify({ number: phone, text: message }),
           }
         );
+        const sendData = await sendRes.json();
 
-        if (invokeError) {
-          log.error('evolution-api invoke error', { error: invokeError.message });
-          await supabase.from('messages').update({ status: 'failed' }).eq('id', msg.id);
-        } else {
-          const externalId = extractEvolutionMessageId(invokeData);
-          if (externalId) {
-            await supabase
-              .from('messages')
-              .update({ external_id: externalId, status: 'sent' })
-              .eq('id', msg.id);
-          }
+        if (sendData?.key?.id) {
+          await supabase
+            .from('messages')
+            .update({ external_id: sendData.key.id, status: 'sent' })
+            .eq('id', msg.id);
         }
       }
     } catch (sendErr) {
@@ -166,8 +156,8 @@ Deno.serve(async (req) => {
       await supabase.from('messages').update({ status: 'failed' }).eq('id', msg.id);
     }
 
-    log.done(200, { messageId: msg.id, requestId });
-    return jsonResponse({ success: true, messageId: msg.id, contactId: contact.id, requestId }, 200, req);
+    log.done(200, { messageId: msg.id });
+    return jsonResponse({ success: true, messageId: msg.id, contactId: contact.id }, 200, req);
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Internal server error';
     log.error('Unhandled error', { error: msg });

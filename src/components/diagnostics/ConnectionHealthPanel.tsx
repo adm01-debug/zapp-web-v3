@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Wifi, WifiOff, RefreshCw, CheckCircle2, XCircle, AlertTriangle,
-  Clock, Activity, Loader2, HeartPulse, Zap, Timer, Link as LinkIcon, Check,
+  Clock, Activity, Loader2, HeartPulse, Zap, Timer,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -42,31 +42,6 @@ export function ConnectionHealthPanel() {
   const [recentLogs, setRecentLogs] = useState<HealthLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  /** Build a deep link that opens the connections view and auto-launches the QR dialog. */
-  const buildQrLink = (instanceId: string) => {
-    const url = new URL(window.location.origin);
-    url.searchParams.set('view', 'connections');
-    url.searchParams.set('qr', instanceId);
-    return url.toString();
-  };
-
-  const handleCopyQrLink = async (conn: ConnectionHealth) => {
-    if (!conn.instance_id) {
-      toast.error('Instância sem identificador — não é possível gerar o link.');
-      return;
-    }
-    const link = buildQrLink(conn.instance_id);
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopiedId(conn.id);
-      toast.success('Link do QR copiado — abra em outro dispositivo para reconectar.');
-      setTimeout(() => setCopiedId((c) => (c === conn.id ? null : c)), 2000);
-    } catch {
-      toast.error('Falha ao copiar. Copie manualmente: ' + link);
-    }
-  };
 
   const fetchData = useCallback(async () => {
     const [{ data: conns }, { data: logs }] = await Promise.all([
@@ -234,18 +209,6 @@ export function ConnectionHealthPanel() {
                       </span>
                       <span className="text-xs text-muted-foreground capitalize">{conn.status}</span>
                     </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full gap-2 focus-visible:ring-2 focus-visible:ring-ring"
-                      onClick={() => handleCopyQrLink(conn)}
-                      aria-label={`Copiar link do QR Code da instância ${conn.instance_id}`}
-                    >
-                      {copiedId === conn.id
-                        ? <><Check className="w-3.5 h-3.5 text-success" />Link copiado</>
-                        : <><LinkIcon className="w-3.5 h-3.5" />Copiar link do QR</>}
-                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>

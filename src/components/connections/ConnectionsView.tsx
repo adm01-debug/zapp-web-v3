@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
 import { FloatingParticles } from '@/components/dashboard/FloatingParticles';
@@ -12,9 +12,6 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription,
 } from '@/components/ui/dialog';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import {
   Smartphone, Plus, QrCode, Loader2, CheckCircle2, XCircle, AlertCircle, RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,8 +23,6 @@ import { InstanceSettingsDialog } from './InstanceSettingsDialog';
 import { IntegrationsPanel } from './IntegrationsPanel';
 import { NumberReputationMonitor } from './NumberReputationMonitor';
 import { ConnectionCard } from './ConnectionCard';
-import { DegradedQuickActions } from './DegradedQuickActions';
-import { QrCountdown } from './QrCountdown';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 
 export function ConnectionsView() {
@@ -37,32 +32,13 @@ export function ConnectionsView() {
     qrCodeDialog, newConnection, setNewConnection, isCreating,
     syncingHistory, setSyncingHistory, evolutionLoading,
     handleAddConnection, handleShowQrCode, handleRefreshQrCode,
-    handleCopyId, handleDisconnect, handleSetDefault, handleSetApiType, handleDelete, closeQrDialog,
+    handleCopyId, handleDisconnect, handleSetDefault, handleDelete, closeQrDialog,
   } = useConnectionsManager();
 
   const [businessHoursDialog, setBusinessHoursDialog] = useState({ open: false, connectionId: '', connectionName: '' });
   const [queuesDialog, setQueuesDialog] = useState({ open: false, connectionId: '', connectionName: '' });
   const [settingsDialog, setSettingsDialog] = useState({ open: false, instanceName: '', connectionName: '' });
   const [integrationsDialog, setIntegrationsDialog] = useState({ open: false, instanceName: '', connectionName: '' });
-
-  // Deep-link: ?qr=<instance_id> auto-opens the QR dialog for that instance.
-  const deepLinkHandledRef = useRef(false);
-  useEffect(() => {
-    if (deepLinkHandledRef.current || loading || connections.length === 0) return;
-    const params = new URLSearchParams(window.location.search);
-    const targetInstance = params.get('qr');
-    if (!targetInstance) return;
-    const conn = connections.find((c) => c.instance_id === targetInstance);
-    if (conn) {
-      deepLinkHandledRef.current = true;
-      handleShowQrCode(conn);
-      // Clean URL so refreshing doesn't reopen the dialog unexpectedly.
-      const url = new URL(window.location.href);
-      url.searchParams.delete('qr');
-      url.searchParams.delete('view');
-      window.history.replaceState({}, '', url.toString());
-    }
-  }, [connections, loading, handleShowQrCode]);
 
   const handleSyncHistory = async (connection: { id: string; instance_id?: string | null }) => {
     if (!connection.instance_id) return;
@@ -93,34 +69,6 @@ export function ConnectionsView() {
               <div className="grid gap-4 py-4">
                 <div className="space-y-2"><Label>Nome da Conexão</Label><Input placeholder="Ex: WhatsApp Vendas" value={newConnection.name} onChange={(e) => setNewConnection({ ...newConnection, name: e.target.value })} /></div>
                 <div className="space-y-2"><Label>Número do WhatsApp</Label><Input placeholder="+55 11 99999-0000" value={newConnection.phone_number} onChange={(e) => setNewConnection({ ...newConnection, phone_number: e.target.value })} /></div>
-                <div className="space-y-2">
-                  <Label>Tipo de API</Label>
-                  <Select
-                    value={newConnection.api_type}
-                    onValueChange={(v) => setNewConnection({ ...newConnection, api_type: v as 'evolution' | 'official' })}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Selecione o tipo de API" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="evolution">
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">Não-oficial (Evolution API)</span>
-                          <span className="text-xs text-muted-foreground">Conexão via QR Code (WhatsApp Web)</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="official">
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">Oficial (WhatsApp Cloud API)</span>
-                          <span className="text-xs text-muted-foreground">Autenticação via Meta — sem QR Code</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {newConnection.api_type === 'official' && (
-                    <p className="text-xs text-muted-foreground">
-                      A API oficial não usa QR Code. Após criar, configure as credenciais (Phone Number ID, Access Token) nas configurações da conexão.
-                    </p>
-                  )}
-                </div>
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isCreating}>Cancelar</Button>
                   <Button onClick={handleAddConnection} className="bg-whatsapp hover:bg-whatsapp-dark" disabled={isCreating}>
@@ -167,7 +115,6 @@ export function ConnectionsView() {
                   <p>3. Toque em <strong>Aparelhos conectados</strong></p><p>4. Toque em <strong>Conectar um aparelho</strong></p><p>5. Aponte seu celular para esta tela</p>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" />Aguardando conexão...</div>
-                {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
               </>
             )}
             {(qrCodeDialog.status === 'pending' || qrCodeDialog.status === 'error') && (
@@ -193,8 +140,6 @@ export function ConnectionsView() {
         ))}
       </div>
 
-      <DegradedQuickActions connections={connections} onShowQrCode={handleShowQrCode} />
-
       {/* Connections List */}
       {loading ? (
         <div className="flex items-center justify-center py-8 text-muted-foreground"><Loader2 className="w-6 h-6 animate-spin mr-2" />Carregando conexões...</div>
@@ -207,7 +152,7 @@ export function ConnectionsView() {
               <ConnectionCard
                 connection={connection} syncingHistory={syncingHistory}
                 onShowQrCode={handleShowQrCode} onCopyId={handleCopyId} onDisconnect={handleDisconnect}
-                onSetDefault={handleSetDefault} onSetApiType={handleSetApiType} onDelete={handleDelete}
+                onSetDefault={handleSetDefault} onDelete={handleDelete}
                 onBusinessHours={(id, name) => setBusinessHoursDialog({ open: true, connectionId: id, connectionName: name })}
                 onQueues={(id, name) => setQueuesDialog({ open: true, connectionId: id, connectionName: name })}
                 onSettings={(inst, name) => setSettingsDialog({ open: true, instanceName: inst, connectionName: name })}

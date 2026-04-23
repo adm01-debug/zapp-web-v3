@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fromTable } from '@/lib/supabaseHelpers';
 import { toast } from 'sonner';
-import { newRequestId } from '@/lib/withRequestId';
 
 export interface TalkXCampaign {
   id: string;
@@ -157,11 +156,9 @@ export function useTalkX() {
   });
 
   const startCampaign = useCallback(async (campaignId: string) => {
-    const trace = newRequestId('talkx-start');
     try {
       const { data, error } = await supabase.functions.invoke('talkx-send', {
         body: { campaignId, action: 'start' },
-        headers: trace.headers,
       });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['talkx-campaigns'] });
@@ -174,11 +171,9 @@ export function useTalkX() {
   }, [queryClient]);
 
   const pauseCampaign = useCallback(async (campaignId: string) => {
-    const trace = newRequestId('talkx-pause');
     try {
       await supabase.functions.invoke('talkx-send', {
         body: { campaignId, action: 'pause' },
-        headers: trace.headers,
       });
       queryClient.invalidateQueries({ queryKey: ['talkx-campaigns'] });
       toast.info('Campanha pausada');
@@ -189,11 +184,9 @@ export function useTalkX() {
   }, [queryClient]);
 
   const cancelCampaign = useCallback(async (campaignId: string) => {
-    const trace = newRequestId('talkx-cancel');
     try {
       await supabase.functions.invoke('talkx-send', {
         body: { campaignId, action: 'cancel' },
-        headers: trace.headers,
       });
       queryClient.invalidateQueries({ queryKey: ['talkx-campaigns'] });
       toast.info('Campanha cancelada');

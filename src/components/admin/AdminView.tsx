@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Shield, Users, Search, Crown, UserCog, User, History, RefreshCw,
-  UserPlus, Building, Eye, Loader2, Brain, QrCode,
+  UserPlus, Building, Eye, Loader2, Brain,
 } from 'lucide-react';
 import { useUserRole, AppRole } from '@/hooks/useUserRole';
 import { AdminCRMDashboard } from './AdminCRMDashboard';
@@ -19,7 +19,6 @@ import { PlaybooksManager } from './PlaybooksManager';
 import { SupervisorCopilot } from './SupervisorCopilot';
 import { TrainingMode } from './TrainingMode';
 import { CrisisRoom } from './CrisisRoom';
-import { QrAttemptsPanel } from './QrAttemptsPanel';
 import { useAdminData, accessLevelConfig, type UserWithRole } from './useAdminData';
 import { AdminUsersTable } from './AdminUsersTable';
 import { AdminAuditTable } from './AdminAuditTable';
@@ -30,7 +29,7 @@ const roleColorMap = { admin: 'text-warning', supervisor: 'text-info', agent: 't
 
 export function AdminView() {
   const { isAdmin, isSupervisor, loading: roleLoading } = useUserRole();
-  const [activeTab, setActiveTab] = useState<'users' | 'audit' | 'crm' | 'playbooks' | 'copilot' | 'training' | 'crisis' | 'qr-history'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'audit' | 'crm' | 'playbooks' | 'copilot' | 'training' | 'crisis'>('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -116,7 +115,7 @@ export function AdminView() {
       </motion.div>
 
       <div className="flex gap-2 flex-wrap">
-        {([['users', Users, `Usuários (${users.length})`], ['audit', History, 'Auditoria'], ['qr-history', QrCode, 'Histórico de QR'], ['crm', Building, 'CRM 360°'], ['playbooks', Shield, 'Playbooks'], ['copilot', Brain, 'Copilot IA'], ['training', Users, 'Treinamento'], ['crisis', Shield, 'Sala de Crise']] as const).map(([tab, Icon, label]) => (
+        {([['users', Users, `Usuários (${users.length})`], ['audit', History, 'Auditoria'], ['crm', Building, 'CRM 360°'], ['playbooks', Shield, 'Playbooks'], ['copilot', Brain, 'Copilot IA'], ['training', Users, 'Treinamento'], ['crisis', Shield, 'Sala de Crise']] as const).map(([tab, Icon, label]) => (
           <Button key={tab} variant={activeTab === tab ? 'default' : 'outline'} onClick={() => setActiveTab(tab as typeof activeTab)}
             className={activeTab === tab ? 'bg-whatsapp hover:bg-whatsapp-dark' : ''} size="sm">
             <Icon className="w-4 h-4 mr-2" /> {label}
@@ -282,8 +281,6 @@ export function AdminView() {
         <TrainingMode />
       ) : activeTab === 'crisis' ? (
         <CrisisRoom />
-      ) : activeTab === 'qr-history' ? (
-        <QrAttemptsPanel />
       ) : null}
     </div>
   );
