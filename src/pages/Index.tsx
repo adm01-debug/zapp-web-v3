@@ -19,6 +19,7 @@ import { Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { OfflineIndicator, ConnectionToast } from '@/components/ui/offline-indicator';
 import { EvolutionDisconnectBanner } from '@/components/alerts/EvolutionDisconnectBanner';
+import { DegradedConnectionsBanner } from '@/components/alerts/DegradedConnectionsBanner';
 import { toast } from 'sonner';
 
 const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _ref) {
@@ -215,6 +216,7 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
         <OfflineIndicator />
         <ConnectionToast />
         <EvolutionDisconnectBanner />
+        <DegradedConnectionsBanner onNavigate={setCurrentView} />
 
         <WelcomeModal
           isOpen={showWelcome}
