@@ -4,6 +4,7 @@
  */
 
 export interface SecretStatusEvent {
+  id?: string;
   event_type: string;
   instance_name: string | null;
   signature_valid: boolean | null;
