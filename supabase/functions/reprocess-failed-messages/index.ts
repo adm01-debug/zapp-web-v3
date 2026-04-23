@@ -45,6 +45,9 @@ Deno.serve(async (req) => {
       const instance = row.instance_name;
       const body = { ...payload };
       delete (body as Record<string, unknown>).__path;
+      console.info('[dlq-reprocess]', JSON.stringify({
+        id: row.id, instance, path, attempt, max: row.max_retries,
+      }));
 
       const resp = await fetch(`${evolutionUrl}${path}/${instance}`, {
         method: 'POST',
