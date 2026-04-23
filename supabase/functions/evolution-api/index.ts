@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { Logger, checkRateLimit, getClientIP, getCorsHeaders, handleCors } from "../_shared/validation.ts";
 import { EVOLUTION_ENVELOPE_VERSION, proxyToEvolution, resolvePrivateBucketUrl } from "../_shared/evolution-api-proxy.ts";
+import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
 
 serve(async (req) => {
   const corsResponse = handleCors(req);
@@ -52,6 +53,21 @@ serve(async (req) => {
     const body = await json();
     const instance = body.instanceName || body.instance;
 
+    // Pause guard: bloqueia operações que usam instância quando ela está pausada.
+    // Permite ações de gestão da instância em si para o admin poder ver status.
+    const READ_ONLY_INSTANCE_ACTIONS = new Set([
+      'list-instances', 'instance-info', 'status', 'get-settings', 'get-webhook',
+    ]);
+    if (instance && !READ_ONLY_INSTANCE_ACTIONS.has(action) && await isInstancePaused(supabase, String(instance))) {
+      return new Response(JSON.stringify({
+        version: EVOLUTION_ENVELOPE_VERSION,
+        error: true,
+        status: 503,
+        code: 'INSTANCE_PAUSED',
+        message: `Instância "${instance}" está pausada temporariamente por excesso de falhas de autenticação. Tente novamente em alguns minutos ou retome manualmente no painel.`,
+      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } });
+    }
+
     // ─── 1. Instance Management ───
     if (action === 'create-instance') return await proxy('/instance/create', 'POST', { instanceName: instance, qrcode: body.qrcode ?? true, integration: body.integration || 'WHATSAPP-BAILEYS', token: body.token, number: body.number, businessId: body.businessId, wabaId: body.wabaId, phoneNumberId: body.phoneNumberId, webhook: body.webhook, chatwoot: body.chatwoot, typebot: body.typebot, proxy: body.proxy });
     if (action === 'list-instances') return await proxy(`/instance/fetchInstances${body.instanceName ? `?instanceName=${body.instanceName}` : ''}`, 'GET');
@@ -78,6 +94,7 @@ serve(async (req) => {
 
       // Auth failure on connect — do NOT try to recreate the instance.
       if (response.status === 401 || response.status === 403) {
+        recordAuthFailureAndMaybePause(supabase, String(instance), response.status === 401 ? 'auth_401' : 'auth_403');
         return buildAuthError(response.status, data, 'connect');
       }
 
