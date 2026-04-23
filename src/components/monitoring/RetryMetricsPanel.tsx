@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
-import { Activity, RefreshCw, Copy, TrendingUp, TrendingDown, ChevronDown, ChevronRight, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { Activity, RefreshCw, Copy, TrendingUp, TrendingDown, ChevronDown, ChevronRight, AlertTriangle, CheckCircle2, XCircle, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useRetryMetrics, type RetryMetricsFilters } from '@/hooks/monitoring/useRetryMetrics';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, Legend } from 'recharts';
 import { RetryAlertsConfig } from './RetryAlertsConfig';
 import { RetryAlertsBanner } from './RetryAlertsBanner';
 import { evaluateAllInstances, loadThresholds, type RetryThresholds } from '@/lib/retryAlerts';
