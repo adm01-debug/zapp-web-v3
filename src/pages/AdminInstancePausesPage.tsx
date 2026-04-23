@@ -186,19 +186,24 @@ export default function AdminInstancePausesPage() {
                 </thead>
                 <tbody>
                   {active.map((p) => (
-                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <tr
+                      key={p.id}
+                      className="border-b last:border-0 hover:bg-muted/30 cursor-pointer"
+                      onClick={() => setSelected(p)}
+                    >
                       <td className="py-2 pr-4 font-mono text-xs">{p.instance_name}</td>
                       <td className="py-2 pr-4">
                         {p.auto_paused
                           ? <Badge variant="destructive">auto</Badge>
                           : <Badge variant="subtle">manual</Badge>}
+                        {p.investigated_at && <Badge variant="success" className="ml-1 text-[10px]">investigado</Badge>}
                       </td>
                       <td className="py-2 pr-4 text-xs">{p.reason}</td>
                       <td className="py-2 pr-4 text-xs font-mono">{p.trigger_count}</td>
                       <td className="py-2 pr-4 text-xs">
                         {formatDistanceToNow(new Date(p.paused_until), { addSuffix: true, locale: ptBR })}
                       </td>
-                      <td className="py-2 pr-4">
+                      <td className="py-2 pr-4" onClick={(e) => e.stopPropagation()}>
                         <Button
                           size="sm" variant="outline"
                           onClick={() => unpauseMut.mutate(p.instance_name)}
