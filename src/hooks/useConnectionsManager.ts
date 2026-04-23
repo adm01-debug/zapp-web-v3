@@ -305,31 +305,45 @@ export function useConnectionsManager() {
       return;
     }
     setQrCodeDialog({
-      open: true, connectionId: connection.id, connectionName: connection.name,
+      open: true,
+      connectionId: connection.id,
+      connectionName: connection.name,
       qrCode: connection.qr_code,
       status: connection.status === 'connected' ? 'connected' : 'loading',
+      expiresAt: null,
+      attemptId: null,
     });
     if (connection.status !== 'connected') {
       const attemptId = await logQrAttempt(connection);
       try {
         const result = await connectInstance(connection.instance_id);
+        const expiresAt = Date.now() + QR_TTL_MS;
         if (result?.qrcode?.base64) {
-          setQrCodeDialog((prev) => ({ ...prev, qrCode: result.qrcode.base64, status: 'pending' }));
+          setQrCodeDialog((prev) => ({
+            ...prev,
+            qrCode: result.qrcode.base64,
+            status: 'pending',
+            expiresAt,
+            attemptId,
+          }));
+        } else {
+          setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
         }
         startStatusPolling(connection.instance_id, connection.id);
         // QR codes typically expire after ~60s — auto-mark expired if dialog still pending.
         setTimeout(() => {
           setQrCodeDialog((prev) => {
             if (prev.connectionId === connection.id && prev.status === 'pending') {
-              updateQrAttempt(attemptId, { status: 'expired' });
+              updateQrAttempt(prev.attemptId, { status: 'expired' });
+              return { ...prev, status: 'error', errorMessage: 'QR Code expirado. Gere um novo.', expiresAt: null };
             }
             return prev;
           });
-        }, 60_000);
+        }, QR_TTL_MS);
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar QR Code';
         await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
-        setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage }));
+        setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
       }
     }
   };
@@ -337,28 +351,37 @@ export function useConnectionsManager() {
   const handleRefreshQrCode = async () => {
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
-    setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null }));
+    setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
     try {
       const result = await connectInstance(connection.instance_id);
+      const expiresAt = Date.now() + QR_TTL_MS;
       if (result?.qrcode?.base64) {
-        setQrCodeDialog((prev) => ({ ...prev, qrCode: result.qrcode.base64, status: 'pending' }));
+        setQrCodeDialog((prev) => ({
+          ...prev,
+          qrCode: result.qrcode.base64,
+          status: 'pending',
+          expiresAt,
+          attemptId,
+        }));
+      } else {
+        setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
       }
       setTimeout(() => {
         setQrCodeDialog((prev) => {
           if (prev.connectionId === connection.id && prev.status === 'pending') {
-            updateQrAttempt(attemptId, { status: 'expired' });
+            updateQrAttempt(prev.attemptId, { status: 'expired' });
+            return { ...prev, status: 'error', errorMessage: 'QR Code expirado. Gere um novo.', expiresAt: null };
           }
           return prev;
         });
-      }, 60_000);
+      }, QR_TTL_MS);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
-      setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage }));
+      setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
     }
   };
-
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
     toast({ title: 'ID copiado!', description: 'O ID da conexão foi copiado para a área de transferência.' });
