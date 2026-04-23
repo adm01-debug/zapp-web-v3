@@ -95,12 +95,37 @@ jobs:
           retention-days: 7
 
   # ===========================================
-  # JOB 3: Build
+  # JOB 3: Deno Edge Function Tests
+  # ===========================================
+  deno-edge-tests:
+    name: 🦕 Deno Edge Function Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🦕 Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: 🧪 Run evolution-api Deno tests
+        working-directory: supabase/functions/evolution-api
+        run: |
+          deno test \
+            --allow-net \
+            --allow-env \
+            --allow-read \
+            --reporter=pretty \
+            __tests__/
+
+  # ===========================================
+  # JOB 4: Build
   # ===========================================
   build:
     name: 🏗️ Build
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test]
+    needs: [lint-and-typecheck, test, deno-edge-tests]
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
