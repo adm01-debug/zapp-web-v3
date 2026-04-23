@@ -1,115 +1,60 @@
 
 
-## Hardening RLS + gating de UI do painel DLQ
+## Hook realtime: sincronização de `evolution_contacts` com a lista de conversas
 
-### Estado atual (auditado)
+### Contexto
 
-**RLS `failed_messages`** (já existe):
-| Cmd | Quem |
-|---|---|
-| SELECT | `is_admin_or_supervisor` |
-| INSERT | `service_role OR admin` |
-| UPDATE | `service_role OR admin/supervisor` |
-| DELETE | `admin` |
-
-**RPCs `rpc_dlq_*` / `rpc_list_failed_messages`**: todas exigem **`has_role(admin)`** — supervisor é bloqueado mesmo podendo ver via SELECT.
-
-**Frontend**: `failed-messages` está em `VIEW_MAP` (`ViewRouter.tsx`) sem gate de role. Item no `advancedNav` aparece para todos. Página chama RPCs admin-only sem checagem prévia.
-
-**Inconsistência**: política SELECT diz "admin OU supervisor", mas RPCs dizem "só admin". Precisa decidir e alinhar.
+Hoje a lista de conversas (inbox) é alimentada por `rpc_list_conversations` + dados de contato vindos de `rpc_list_contacts`/`rpc_get_contact`. Updates em `evolution_contacts` (mudança de `lead_status`, `push_name`, `profile_picture_url`, `assigned_to`, `notes`, novas tags) **não chegam ao cliente em tempo real** — só após refetch manual ou navegação. Já temos `useRealtimeMessages` para mensagens; falta o equivalente para contatos.
 
 ### Decisão
 
-- **Visualizar/listar/inspecionar DLQ** → admin **e** supervisor (consistência com SELECT existente e padrão do projeto `is_admin_or_supervisor`)
-- **Mutações destrutivas** (`retry_now`, `abandon`, `bulk_abandon`, `DELETE`) → **só admin** (mantém)
-- **INSERT** → service_role (edge functions) **OU** `is_admin_or_supervisor` (admin/supervisor podem reenfileirar manualmente se necessário no futuro)
-- **UI**: bloquear acesso à view e ocultar item da nav para quem não for admin/supervisor
+Criar `useRealtimeContacts` no padrão dos hooks realtime existentes (`useRealtimeMessages`, `useMessageUpdateBatcher`):
 
-### Mudanças
-
-**1. Migration — alinhar RLS e RPCs**
-
-```sql
--- INSERT: admite supervisor (alinhado com a UI)
-DROP POLICY "Service role and admins can insert failed messages" ON public.failed_messages;
-CREATE POLICY "Service role admins and supervisors can insert failed messages"
-  ON public.failed_messages FOR INSERT TO authenticated, service_role
-  WITH CHECK (auth.role() = 'service_role' OR public.is_admin_or_supervisor(auth.uid()));
-
--- rpc_list_failed_messages e rpc_dlq_stats: passam a aceitar supervisor
-CREATE OR REPLACE FUNCTION public.rpc_list_failed_messages(...) ...
-  IF NOT public.is_admin_or_supervisor(auth.uid()) THEN
-    RAISE EXCEPTION 'Access denied: admin or supervisor role required';
-  END IF;
-  -- resto igual
-
-CREATE OR REPLACE FUNCTION public.rpc_dlq_stats() ...
-  IF NOT public.is_admin_or_supervisor(auth.uid()) THEN
-    RAISE EXCEPTION 'Access denied: admin or supervisor role required';
-  END IF;
-
--- rpc_dlq_retry_now, rpc_dlq_abandon, rpc_dlq_bulk_abandon: mantêm has_role(admin)
--- (ações destrutivas continuam restritas)
-```
-
-**2. `src/components/auth/RequireRole.tsx`** (criar se não existir; se existir, reutilizar)
-
-Componente declarativo: recebe `roles: AppRole[]` e `children`. Mostra `loading` enquanto `useUserRole` resolve, renderiza `<NotAuthorizedView/>` (empty state padrão `GenericEmptyState` com ícone Lock) se o usuário não tiver papel; senão renderiza children. Já existe `ProtectedRoute` que faz isso para rotas — vou extrair/reutilizar a lógica como wrapper inline para usar dentro do `VIEW_MAP`.
-
-**3. `src/pages/ViewRouter.tsx`** — gating server-side da view
-
-- Adicionar mapa `VIEW_REQUIRED_ROLES: Record<string, AppRole[]>`:
-  ```ts
-  'failed-messages': ['admin', 'supervisor'],
-  ```
-- Em `ErrorBoundaryView`, antes de renderizar o lazy component, checar `useUserRole`. Se não autorizado → `<NotAuthorizedView viewLabel={mod.label}/>`. Se loading → spinner já existente.
-
-**4. `src/components/layout/sidebarNavConfig.ts`** + consumer da nav
-
-- Adicionar campo opcional `requiredRoles?: AppRole[]` em `NavItemConfig`.
-- Marcar `failed-messages` com `requiredRoles: ['admin','supervisor']`.
-- No componente que renderiza `advancedNav` (Sidebar/AdminView), filtrar items por `useUserRole().hasRole`. Vou localizar o consumer durante implementação (`AdminView` ou similar).
-
-**5. `src/pages/AdminFailedMessagesPage.tsx`** — esconder ações destrutivas para supervisor
-
-- Importar `useUserRole`. Botões "Tentar agora", "Abandonar" (single + bulk) só renderizam se `isAdmin`. Supervisor vê tudo (lista, drawer, payload, KPIs) em modo read-only.
-- Banner sutil quando `isSupervisor && !isAdmin`: "Modo somente leitura — ações restritas a administradores."
-
-**6. `src/hooks/monitoring/useFailedMessages.ts`** — defesa em profundidade
-
-- Mutations `retryNow/abandon/bulk*` já vão falhar no servidor para não-admin (RLS + RPC guard). Adicionar pre-check rápido: se não é admin, `toast.error('Ação restrita a administradores')` antes de chamar (evita roundtrip + erro feio).
-
-### Segurança resultante (defesa em camadas)
-
-| Camada | DLQ visualizar | DLQ retry/abandon | DLQ inserir |
-|---|---|---|---|
-| RLS tabela | admin/supervisor | admin (UPDATE policy permite supervisor mas RPC restringe) | service_role/admin/supervisor |
-| RPC guard | admin/supervisor | admin | n/a (insert direto) |
-| UI route gate | admin/supervisor | admin (botões hidden) | n/a |
-| UI nav gate | admin/supervisor | n/a | n/a |
-
-Não-autorizado: ocultado da nav, bloqueado na rota, falha em RPC, falha em RLS. Quatro camadas.
+- Subscreve `postgres_changes` no schema `public`, tabela `evolution_contacts`, eventos `INSERT | UPDATE | DELETE`, no **`externalClient`** (FATOR X).
+- Filtro: `instance_name=eq.wpp2` (padrão do projeto).
+- Aplica updates batched (100ms) no cache do React Query das queries de conversa/contato — sem refetch desnecessário.
+- Trata soft delete (`deleted_at IS NOT NULL`) removendo o item da lista.
 
 ### Arquivos
 
-**Migration nova** (1):
-- Alinhar policy INSERT + relaxar `rpc_list_failed_messages` e `rpc_dlq_stats` para `is_admin_or_supervisor`
+**Criados (2):**
 
-**Editados** (4):
-- `src/pages/ViewRouter.tsx` — gating por role
-- `src/components/layout/sidebarNavConfig.ts` — campo `requiredRoles`
-- consumer de `advancedNav` (Sidebar/AdminView — identifico na implementação) — filtro por role
-- `src/pages/AdminFailedMessagesPage.tsx` — botões condicionais + banner read-only
-- `src/hooks/monitoring/useFailedMessages.ts` — pre-check em mutations
+1. `src/hooks/realtime/useRealtimeContacts.ts` — hook principal
+   - Assinatura: `useRealtimeContacts({ instance?: string; enabled?: boolean })`
+   - Subscreve canal único `realtime:evolution_contacts:wpp2` no `externalClient`.
+   - Mantém `pendingUpdatesRef: Map<remote_jid, EvolutionContact>` + `flushTimerRef` (100ms).
+   - Em flush: invalida/atualiza queries `['conversations', instance, ...]`, `['contact', remoteJid]`, `['contacts-list', ...]` via `queryClient.setQueryData` (patch otimista) com fallback a `invalidateQueries` quando não há entrada em cache.
+   - INSERT → invalida lista (novo contato pode aparecer).
+   - UPDATE → patch direto + emite evento `window.dispatchEvent(new CustomEvent('contact-updated', { detail }))` para componentes não-React-Query.
+   - DELETE/`deleted_at` → remove do cache de lista, mantém no cache individual (para UI mostrar "contato removido").
+   - Cleanup: `externalClient.removeChannel` + `clearTimeout`.
 
-**Criados** (1):
-- `src/components/auth/NotAuthorizedView.tsx` — empty state reutilizável (ícone Lock, mensagem clara, botão voltar)
+2. `src/hooks/realtime/__tests__/useRealtimeContacts.test.ts` — testes vitest
+   - Mock `externalClient` (channel/on/subscribe/removeChannel).
+   - Casos: subscreve no mount; ignora payload de outra instance; UPDATE atualiza cache; DELETE remove da lista; flush respeita debounce de 100ms; cleanup remove canal.
+
+**Editados (2):**
+
+3. `src/components/inbox/InboxView.tsx` (ou container raiz da inbox — confirmo no momento da implementação procurando o consumidor de `rpc_list_conversations`):
+   - Chama `useRealtimeContacts({ instance: 'wpp2' })` uma única vez no topo.
+
+4. `mem://architecture/performance` (atualização incremental):
+   - Adicionar linha mencionando `useRealtimeContacts` ao lado de `useRealtimeMessages` no padrão de batchers 100ms.
+
+### Detalhes técnicos relevantes
+
+- **Cliente correto**: `externalClient` (FATOR X), não `supabase`. Garante que o realtime escuta o banco onde a tabela vive.
+- **Sem bypass de RPC**: o hook só *escuta* mudanças e atualiza cache; leituras continuam via `rpc_list_contacts`/`rpc_get_contact`. Não viola a regra de "nunca SELECT direto em `evolution_contacts`".
+- **Filtro de instância** aplicado no servidor (`filter: 'instance_name=eq.wpp2'`) para reduzir tráfego.
+- **Idempotência de cache**: `setQueryData` usa `produce`-like update — se contato não existir na lista atual, fallback para `invalidateQueries` em vez de inserir blindly (preserva ordenação/paginação do RPC).
+- **Defesa contra broadcast**: filtra `remote_jid` que case com `/^status@broadcast$|@broadcast$/` antes de propagar (memória `inbox/broadcast-defense`).
+- **Tipos**: usar `EvolutionContact` de `src/types/evolutionExternal.ts` no payload tipado.
+- **Logger**: `getLogger('RealtimeContacts')` para warn em payloads malformados.
 
 ### Fora de escopo
 
-- Sem mudar `send_failures` policies (já corretas).
-- Sem alterar `whatsapp_connections` ou outras tabelas de monitoring.
-- Sem criar role nova.
-- Sem auditoria adicional além da já existente em `rpc_dlq_*`.
-- Sem testes E2E de RLS (testes unitários de role-check em `useFailedMessages` ficam para próximo lote se quiser).
+- Não toca em `rpc_*` nem em policies do FATOR X.
+- Não cria nova tabela ou migração.
+- Não altera `useRealtimeMessages`.
+- Sem painel de status do canal (pode vir num lote futuro junto ao monitoring de webhook).
 
