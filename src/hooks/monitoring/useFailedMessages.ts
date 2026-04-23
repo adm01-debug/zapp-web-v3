@@ -251,6 +251,14 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
 
   const triggerReprocess = useMutation({
     mutationFn: async () => {
+      // Audit trail: register who triggered the manual reprocess. Best-effort —
+      // never blocks the actual reprocess invocation.
+      try {
+        // deno-lint-ignore no-explicit-any
+        await (supabase as any).rpc('rpc_dlq_log_reprocess_trigger', { p_source: 'panel' });
+      } catch (logErr) {
+        console.warn('[dlq] failed to log reprocess trigger', logErr);
+      }
       const { data, error } = await supabase.functions.invoke('reprocess-failed-messages', { method: 'POST' });
       if (error) throw error;
       return data as { processed?: number; succeeded?: number; failed?: number; abandoned?: number; message?: string };
