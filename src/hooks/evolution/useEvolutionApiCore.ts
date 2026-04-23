@@ -73,8 +73,9 @@ export function useEvolutionApiCore() {
         ? { method: methodOrOptions }
         : methodOrOptions;
       const method: HttpMethod = opts.method ?? 'POST';
-      const baseBackoffMs = opts.baseBackoffMs ?? 250;
-      const timeoutMs = opts.timeoutMs ?? 30_000;
+      const dynCfg = getRetryConfigSync();
+      const baseBackoffMs = opts.baseBackoffMs ?? dynCfg.baseBackoffMs;
+      const timeoutMs = opts.timeoutMs ?? dynCfg.timeoutMs;
 
       // Validate + sanitize user-provided key; only a valid user key enables POST retry semantics.
       const userKey = normalizeIdempotencyKey(opts.idempotencyKey);
