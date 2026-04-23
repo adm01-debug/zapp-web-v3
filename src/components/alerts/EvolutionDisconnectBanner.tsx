@@ -49,33 +49,24 @@ export function EvolutionDisconnectBanner() {
   const handleReconnect = async (conn: DisconnectedInstance) => {
     setReconnecting(conn.instance_id);
     try {
-      // NOTE: banner usa `connect` (gera QR novo); MonitoringConnectionsList usa
-      // `restart-instance` (recupera sessão sem rescan). Contratos diferentes propositais.
-      let { data, error } = await supabase.functions.invoke('evolution-api', {
+      // banner usa `connect` (gera QR novo); a edge function lida com instância
+      // ausente (404) recriando automaticamente, e devolve erro estruturado em
+      // caso de 401/403 (autenticação) — que NÃO deve disparar fallback.
+      const { data, error } = await supabase.functions.invoke('evolution-api', {
         body: { action: 'connect', instanceName: conn.instance_id },
       });
 
-      // Se a instância não existe mais na Evolution API, recria e tenta novamente.
-      const notFound =
-        (data?.error === true && /does not exist|not found/i.test(String(data?.message ?? ''))) ||
-        (error && /does not exist|not found|404/i.test(String(error.message ?? '')));
-
-      if (notFound) {
-        toast.message(`Instância "${conn.instance_id}" não existe na Evolution API. Recriando...`);
-        const create = await supabase.functions.invoke('evolution-api', {
-          body: { action: 'create-instance', instanceName: conn.instance_id, qrcode: true },
-        });
-        if (create.error || create.data?.error === true) {
-          throw new Error(create.data?.message || create.error?.message || 'Falha ao recriar instância');
-        }
-        // Após criação, chama connect para garantir QR.
-        ({ data, error } = await supabase.functions.invoke('evolution-api', {
-          body: { action: 'connect', instanceName: conn.instance_id },
-        }));
-      }
-
       if (error) throw new Error(error.message || 'Falha ao invocar evolution-api');
-      if (data?.error === true) throw new Error(data?.message || 'Evolution API retornou erro');
+
+      if (data?.error === true) {
+        const code = typeof data?.code === 'string' ? data.code : null;
+        const message = data?.message || 'Evolution API retornou erro';
+        if (code === 'EVOLUTION_AUTH_ERROR') {
+          toast.error(`Integração sem autorização: ${message}`, { duration: 8000 });
+          return;
+        }
+        throw new Error(message);
+      }
 
       toast.success(`Reconectando ${conn.instance_id}... Abrindo tela de conexões para escanear o QR Code.`);
       window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
