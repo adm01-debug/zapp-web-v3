@@ -68,9 +68,9 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Avoid exact COUNT on large tables — it scans the whole table and hits statement_timeout.
-    // 'planned' uses pg_class estimate (instant); 'estimated' falls back to exact only if planned < threshold.
-    const safeCount = countMode === 'exact' ? 'planned' : (countMode || undefined)
+    // Avoid COUNT on large tables — both 'exact' and 'estimated' can scan the whole table
+    // and hit statement_timeout. Force 'planned' (pg_class estimate, instant) whenever a count is requested.
+    const safeCount = countMode ? 'planned' : undefined
     let query = ext.from(table).select(select || '*', { count: safeCount as any })
 
     if (filters && Array.isArray(filters)) {
