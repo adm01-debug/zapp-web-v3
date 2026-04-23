@@ -31,6 +31,7 @@ import {
   type FailedMessageRow,
   type FailedMessageStatus,
 } from '@/hooks/monitoring/useFailedMessages';
+import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/utils';
 import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
 import { toast } from 'sonner';
@@ -64,6 +65,8 @@ function shortJid(jid: string | null) {
 }
 
 export default function AdminFailedMessagesPage() {
+  const { isAdmin, isSupervisor } = useUserRole();
+  const readOnly = !isAdmin;
   const [hours, setHours] = useState(24);
   const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
   const [errorCodeFilter, setErrorCodeFilter] = useState<string>('all');
