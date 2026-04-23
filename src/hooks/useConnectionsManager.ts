@@ -357,6 +357,14 @@ export function useConnectionsManager() {
   };
 
   const handleShowQrCode = async (connection: WhatsAppConnection) => {
+    if ((connection.api_type ?? 'evolution') === 'official') {
+      toast({
+        title: 'QR Code não disponível',
+        description: 'Esta conexão usa WhatsApp Cloud API (oficial). A autenticação é feita via credenciais da Meta, não via QR Code.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (!connection.instance_id) {
       toast({ title: 'Erro', description: 'Esta conexão não possui uma instância configurada.', variant: 'destructive' });
       return;
@@ -539,6 +547,7 @@ export function useConnectionsManager() {
     handleReconnect,
     handleDisconnect,
     handleSetDefault,
+    handleSetApiType,
     handleDelete,
     closeQrDialog,
   };
