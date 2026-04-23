@@ -185,12 +185,12 @@ export function useConnectionsManager() {
         .select('id')
         .single();
       if (error) {
-        log('Failed to log QR attempt', error);
+        log.warn('Failed to log QR attempt', error);
         return null;
       }
       return data?.id ?? null;
     } catch (e) {
-      log('Failed to log QR attempt (catch)', e);
+      log.warn('Failed to log QR attempt (catch)', e);
       return null;
     }
   };
@@ -211,7 +211,7 @@ export function useConnectionsManager() {
         })
         .eq('id', attemptId);
     } catch (e) {
-      log('Failed to update QR attempt', e);
+      log.warn('Failed to update QR attempt', e);
     }
   };
 
