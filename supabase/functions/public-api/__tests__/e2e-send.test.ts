@@ -98,8 +98,8 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 
 // Now import the handler — top-level Deno.serve will be captured above.
 await import("../index.ts");
-assertExists(captured, "public-api did not register a handler via Deno.serve");
-const handler = captured!;
+if (!captured) throw new Error("public-api did not register a handler via Deno.serve");
+const handler: Handler = captured;
 
 function makeReq(body: unknown, headers: Record<string, string> = {}): Request {
   return new Request("https://stub/public-api", {
