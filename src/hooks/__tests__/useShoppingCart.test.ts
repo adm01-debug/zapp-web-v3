@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), error: vi.fn(), warn: vi.fn() }),
-  log: { debug: vi.fn(), info: vi.fn(), error: vi.fn() },
+  log: { debug: vi.fn(), info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
 import { useShoppingCart } from '@/hooks/useShoppingCart';

@@ -22,7 +22,7 @@ vi.mock('@/hooks/use-toast', () => ({
 }));
 
 vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
+  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 
 import { useQueueGoals } from '@/hooks/useQueueGoals';
