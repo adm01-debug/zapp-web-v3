@@ -48,6 +48,7 @@ import {
   Building2,
   Sparkles,
   RefreshCw,
+  Pause,
   Landmark,
   HeartPulse,
   BarChartHorizontal,
