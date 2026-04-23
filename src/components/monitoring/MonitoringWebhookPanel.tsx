@@ -121,6 +121,9 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
         </CardContent>
       </Card>
 
+      {/* Retry Metrics Panel */}
+      <RetryMetricsPanel />
+
       {/* Auto-load config for first connection if not loaded */}
       {!webhookConfig && connections.length > 0 && (
         <div className="flex gap-2">
