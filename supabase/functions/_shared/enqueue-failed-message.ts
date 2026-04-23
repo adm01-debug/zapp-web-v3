@@ -89,15 +89,25 @@ export function enqueueFailedMessage(input: EnqueueFailedMessageInput): void {
         next_attempt_at: new Date(Date.now() + computeBackoffMs(1)).toISOString(),
         idempotency_key: idemKey,
       })
-    // PostgrestBuilder is a PromiseLike, not a Promise — use the two-arg
-    // .then(onFulfilled, onRejected) form so type-checking succeeds.
-    .then(
-      // deno-lint-ignore no-explicit-any
-      (res: any) => {
-        if (res?.error) console.warn('[dlq-enqueue] insert failed:', res.error.message);
-      },
-      (e: unknown) => {
-        console.warn('[dlq-enqueue] insert threw:', e instanceof Error ? e.message : String(e));
-      },
-    );
+      // PostgrestBuilder is a PromiseLike, not a Promise — use the two-arg
+      // .then(onFulfilled, onRejected) form so type-checking succeeds.
+      .then(
+        // deno-lint-ignore no-explicit-any
+        (res: any) => {
+          if (res?.error) {
+            // Conflito de chave idempotente (23505) é esperado: dedupe silencioso.
+            if (res.error.code === '23505') {
+              console.info('[dlq-enqueue] dedupe: item já em fila para', input.path);
+            } else {
+              console.warn('[dlq-enqueue] insert failed:', res.error.message);
+            }
+          }
+        },
+        (e: unknown) => {
+          console.warn('[dlq-enqueue] insert threw:', e instanceof Error ? e.message : String(e));
+        },
+      );
+  }, (e: unknown) => {
+    console.warn('[dlq-enqueue] key build failed:', e instanceof Error ? e.message : String(e));
+  });
 }
