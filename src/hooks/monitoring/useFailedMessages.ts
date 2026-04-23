@@ -3,6 +3,13 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
+import {
+  classifyRootCause,
+  aggregateByRootCause,
+  getRootCauseMeta,
+  type RootCause,
+  type RootCauseMeta,
+} from '@/lib/failureRootCause';
 
 const ADMIN_ONLY_MSG = 'Ação restrita a administradores.';
 
@@ -31,6 +38,8 @@ export interface FailedMessagesFilters {
   status?: FailedMessageStatus | null;
   instance?: string | null;
   errorCode?: string | null;
+  /** Filtro adicional por causa raiz canônica (rate_limit, auth, …). */
+  rootCause?: RootCause | null;
   search?: string | null;
   /** Custom range — overrides `hours` when both `from` and `to` are set */
   from?: string | null;
@@ -50,6 +59,12 @@ export interface InstanceAggregate {
   count: number;
 }
 
+export interface RootCauseAggregate {
+  cause: RootCause;
+  count: number;
+  meta: RootCauseMeta;
+}
+
 export interface FailedMessagesAggregates {
   pending: number;
   retrying: number;
@@ -57,6 +72,8 @@ export interface FailedMessagesAggregates {
   successAfterRetryRate: number;
   byErrorCode: ErrorCodeAggregate[];
   byInstance: InstanceAggregate[];
+  /** Agrupamento por causa raiz canônica (sorted desc). */
+  byRootCause: RootCauseAggregate[];
   topInstance: InstanceAggregate | null;
 }
 
@@ -72,6 +89,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
     status = null,
     instance = null,
     errorCode = null,
+    rootCause = null,
     search = null,
     from = null,
     to = null,
@@ -84,7 +102,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
 
   const queryKey = [
     'failed-messages',
-    { status, instance, errorCode, search, effectiveFrom, effectiveTo, page, pageSize },
+    { status, instance, errorCode, rootCause, search, effectiveFrom, effectiveTo, page, pageSize },
   ];
 
   const query = useQuery<{ rows: FailedMessageRow[]; total: number }>({
@@ -101,12 +119,18 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       });
       if (error) throw error;
       const list = (data ?? []) as RpcRow[];
-      // Client-side filter for error_code (RPC doesn't expose it — keeps API surface small)
-      const filtered = errorCode
-        ? list.filter((r) => (r.error_code ?? (r.http_status ? `http_${r.http_status}` : 'unknown')) === errorCode)
-        : list;
+      // Client-side filters (RPC keeps API surface small).
+      const filtered = list.filter((r) => {
+        if (errorCode) {
+          const code = r.error_code ?? (r.http_status ? `http_${r.http_status}` : 'unknown');
+          if (code !== errorCode) return false;
+        }
+        if (rootCause) {
+          if (classifyRootCause(r) !== rootCause) return false;
+        }
+        return true;
+      });
       const total = list[0]?.total_count != null ? Number(list[0].total_count) : 0;
-      // Strip total_count to keep row type clean
       const rows: FailedMessageRow[] = filtered.map(({ total_count: _t, ...rest }) => rest);
       return { rows, total };
     },
@@ -149,6 +173,8 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
+    const byRootCause: RootCauseAggregate[] = aggregateByRootCause(rows);
+
     return {
       pending,
       retrying,
@@ -156,6 +182,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       successAfterRetryRate,
       byErrorCode,
       byInstance,
+      byRootCause,
       topInstance: byInstance[0] ?? null,
     };
   }, [query.data]);

@@ -35,6 +35,19 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/utils';
 import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
 import { toast } from 'sonner';
+import {
+  ALL_ROOT_CAUSES,
+  classifyRootCause,
+  getRootCauseMeta,
+  type RootCause,
+} from '@/lib/failureRootCause';
+
+const ROOT_CAUSE_TONE_CLASS: Record<'warning' | 'destructive' | 'info' | 'muted', string> = {
+  warning: 'bg-warning/15 text-warning-foreground border-warning/40',
+  destructive: 'bg-destructive/15 text-destructive border-destructive/40',
+  info: 'bg-primary/15 text-primary border-primary/40',
+  muted: 'bg-muted text-muted-foreground border-border',
+};
 
 const STATUS_LABEL: Record<FailedMessageStatus, string> = {
   pending: 'Pendente',
@@ -70,6 +83,7 @@ export default function AdminFailedMessagesPage() {
   const [hours, setHours] = useState(24);
   const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
   const [errorCodeFilter, setErrorCodeFilter] = useState<string>('all');
+  const [rootCauseFilter, setRootCauseFilter] = useState<RootCause | 'all'>('all');
   const [instanceFilter, setInstanceFilter] = useState<string>('all');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState<string | null>(null);
@@ -95,7 +109,7 @@ export default function AdminFailedMessagesPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(0);
-  }, [hours, statusFilter, errorCodeFilter, instanceFilter, customFrom, customTo]);
+  }, [hours, statusFilter, errorCodeFilter, rootCauseFilter, instanceFilter, customFrom, customTo]);
 
   const fromIso = customFrom ? new Date(customFrom).toISOString() : null;
   const toIso = customTo ? new Date(customTo).toISOString() : null;
@@ -119,6 +133,7 @@ export default function AdminFailedMessagesPage() {
     hours: useCustomRange ? undefined : hours,
     status: statusFilter === 'all' ? null : statusFilter,
     errorCode: errorCodeFilter === 'all' ? null : errorCodeFilter,
+    rootCause: rootCauseFilter === 'all' ? null : rootCauseFilter,
     instance: instanceFilter === 'all' ? null : instanceFilter,
     search,
     from: useCustomRange ? fromIso : null,
@@ -136,6 +151,8 @@ export default function AdminFailedMessagesPage() {
 
   const topReasons = aggregates.byErrorCode.slice(0, 8);
   const maxReasonCount = topReasons[0]?.count ?? 1;
+  const rootCauseStats = aggregates.byRootCause;
+  const maxRootCauseCount = rootCauseStats[0]?.count ?? 1;
 
   const allVisibleSelected = sorted.length > 0 && sorted.every((r) => selectedIds.has(r.id));
   const someVisibleSelected = sorted.some((r) => selectedIds.has(r.id));
@@ -221,13 +238,70 @@ export default function AdminFailedMessagesPage() {
         />
       </div>
 
+      {/* Root cause categorization */}
+      {rootCauseStats.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Causa raiz
+              {rootCauseFilter !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => setRootCauseFilter('all')}
+                  className="ml-auto text-xs font-normal text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                >
+                  Limpar filtro
+                </button>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {rootCauseStats.map((r) => {
+              const pct = Math.round((r.count / maxRootCauseCount) * 100);
+              const isActive = rootCauseFilter === r.cause;
+              return (
+                <button
+                  key={r.cause}
+                  type="button"
+                  onClick={() => setRootCauseFilter(isActive ? 'all' : r.cause)}
+                  className={cn(
+                    'w-full flex items-center gap-3 text-left rounded-md p-1.5 transition-colors',
+                    isActive ? 'bg-primary/10' : 'hover:bg-muted/50',
+                  )}
+                  title={r.meta.hint}
+                  aria-pressed={isActive}
+                >
+                  <Badge
+                    variant="outline"
+                    className={cn('w-36 justify-center shrink-0 text-[11px]', ROOT_CAUSE_TONE_CLASS[r.meta.tone])}
+                  >
+                    {r.meta.label}
+                  </Badge>
+                  <div className="flex-1 h-5 bg-muted/40 rounded overflow-hidden">
+                    <div
+                      className={cn(
+                        'h-full transition-all',
+                        isActive ? 'bg-primary' : r.meta.tone === 'destructive' ? 'bg-destructive/70' : 'bg-warning/70',
+                      )}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="text-xs tabular-nums w-10 text-right shrink-0">{r.count}</span>
+                </button>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Top reasons chart */}
       {topReasons.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              Top motivos de falha
+              Top motivos de falha (error_code)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -356,7 +430,25 @@ export default function AdminFailedMessagesPage() {
             </Select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Motivo</label>
+            <label className="text-xs text-muted-foreground">Causa raiz</label>
+            <Select value={rootCauseFilter} onValueChange={(v) => setRootCauseFilter(v as RootCause | 'all')}>
+              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {ALL_ROOT_CAUSES.map((c) => {
+                  const meta = getRootCauseMeta(c);
+                  const count = aggregates.byRootCause.find(x => x.cause === c)?.count ?? 0;
+                  return (
+                    <SelectItem key={c} value={c}>
+                      {meta.label}{count > 0 ? ` (${count})` : ''}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Motivo (error_code)</label>
             <Select value={errorCodeFilter} onValueChange={setErrorCodeFilter}>
               <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -488,7 +580,20 @@ export default function AdminFailedMessagesPage() {
                     <TableCell className="font-mono text-xs">{row.instance_name}</TableCell>
                     <TableCell className="font-mono text-xs">{shortJid(row.remote_jid)}</TableCell>
                     <TableCell className="max-w-[280px]">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-1">
+                        {(() => {
+                          const cause = classifyRootCause(row);
+                          const meta = getRootCauseMeta(cause);
+                          return (
+                            <Badge
+                              variant="outline"
+                              className={cn('w-fit text-[10px] px-1.5 py-0', ROOT_CAUSE_TONE_CLASS[meta.tone])}
+                              title={meta.hint}
+                            >
+                              {meta.label}
+                            </Badge>
+                          );
+                        })()}
                         <span className="text-xs font-medium">
                           {row.error_code ?? (row.http_status ? `HTTP ${row.http_status}` : '—')}
                         </span>
@@ -645,10 +750,23 @@ export default function AdminFailedMessagesPage() {
           </SheetHeader>
           {selected && (
             <div className="space-y-4 mt-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant={STATUS_VARIANT[selected.status]}>
                   {STATUS_LABEL[selected.status]}
                 </Badge>
+                {(() => {
+                  const cause = classifyRootCause(selected);
+                  const meta = getRootCauseMeta(cause);
+                  return (
+                    <Badge
+                      variant="outline"
+                      className={cn('text-xs', ROOT_CAUSE_TONE_CLASS[meta.tone])}
+                      title={meta.hint}
+                    >
+                      Causa: {meta.label}
+                    </Badge>
+                  );
+                })()}
                 {selected.remote_jid && (
                   <Tooltip>
                     <TooltipTrigger asChild>
