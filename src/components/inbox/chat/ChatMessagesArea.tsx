@@ -1,5 +1,6 @@
 import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('ChatMessagesArea');
@@ -34,6 +35,9 @@ interface ChatMessagesAreaProps {
   highlightedMessageIds?: Set<string>;
   activeHighlightId?: string | null;
   searchQuery?: string;
+  onLoadOlder?: () => void | Promise<void>;
+  loadingOlder?: boolean;
+  hasMoreOlder?: boolean;
 }
 
 export interface ChatMessagesAreaRef {
@@ -46,11 +50,16 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   messages, isContactTyping, typingUserName, ttsLoading, ttsPlaying, ttsMessageId,
   instanceName, contactJid, contactAvatar, onSpeak, onStop, onReply, onForward, onCopy,
   onScrollToMessage, onInteractiveButtonClick, onEditStart, highlightedMessageIds, activeHighlightId, searchQuery,
+  onLoadOlder, loadingOlder = false, hasMoreOlder = false,
 }, ref) => {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isFetchingOlderRef = useRef(false);
+  const prevScrollHeightRef = useRef<number | null>(null);
+  const prevFirstIdRef = useRef<string | null>(null);
+  const prevLengthRef = useRef<number>(0);
 
   const handleMessageDeleted = useCallback(async (messageId: string) => {
     try {
