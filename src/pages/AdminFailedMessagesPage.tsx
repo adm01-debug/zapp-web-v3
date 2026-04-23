@@ -513,7 +513,7 @@ export default function AdminFailedMessagesPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {(row.status === 'pending' || row.status === 'retrying' || row.status === 'abandoned') && (
+                        {isAdmin && (row.status === 'pending' || row.status === 'retrying' || row.status === 'abandoned') && (
                           <Button
                             size="icon"
                             variant="ghost"
@@ -524,7 +524,7 @@ export default function AdminFailedMessagesPage() {
                             <RotateCw className="h-4 w-4" />
                           </Button>
                         )}
-                        {(row.status === 'pending' || row.status === 'retrying') && (
+                        {isAdmin && (row.status === 'pending' || row.status === 'retrying') && (
                           <Button
                             size="icon"
                             variant="ghost"
