@@ -1,10 +1,20 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, AlertTriangle, Send, Shield, PlayCircle, Loader2, Radio, Copy } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Send, Shield, PlayCircle, Loader2, Radio, Copy, KeyRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import type { ConnectionInfo, WebhookTestResult, WebhookConfig } from './hooks/useEvolutionMonitoring';
+
+interface SecretStatus {
+  configured: boolean;
+  length: number;
+  hashPrefix: string | null;
+  strictMode: boolean;
+  checkedAt: string;
+}
 
 interface Props {
   connections: ConnectionInfo[];
@@ -35,6 +45,25 @@ const EVENT_CATEGORIES: Record<string, string[]> = {
 
 export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig, reconfiguring, onTest, onReconfigure, onCheckConfig }: Props) {
   const configuredEvents = webhookConfig?.events || [];
+  const [secretStatus, setSecretStatus] = useState<SecretStatus | null>(null);
+  const [loadingSecret, setLoadingSecret] = useState(false);
+
+  const loadSecretStatus = async () => {
+    setLoadingSecret(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('webhook-secret-status');
+      if (error) throw error;
+      setSecretStatus(data as SecretStatus);
+    } catch (e) {
+      toast.error(`Falha ao verificar segredo do webhook: ${e instanceof Error ? e.message : 'erro'}`);
+    } finally {
+      setLoadingSecret(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSecretStatus();
+  }, []);
 
   const copyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -43,6 +72,54 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
 
   return (
     <div className="space-y-4">
+      {/* Webhook Secret Status Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <KeyRound className="w-4 h-4" />Segredo HMAC do Webhook
+          </CardTitle>
+          <CardDescription>
+            Status do <code className="text-[10px]">WEBHOOK_SECRET</code> — apenas hash parcial é exibido (nunca o valor).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3 flex-wrap">
+            {secretStatus ? (
+              <>
+                {secretStatus.configured ? (
+                  <Badge className="bg-emerald-500/80 hover:bg-emerald-500/70">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />Strict mode ativo
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive">
+                    <AlertTriangle className="w-3 h-3 mr-1" />Sem segredo — webhook aceito sem assinatura
+                  </Badge>
+                )}
+                {secretStatus.configured && (
+                  <>
+                    <span className="text-xs text-muted-foreground">
+                      Comprimento: <span className="font-mono">{secretStatus.length}</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Hash SHA-256: <span className="font-mono">{secretStatus.hashPrefix}…</span>
+                    </span>
+                  </>
+                )}
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  Verificado: {new Date(secretStatus.checkedAt).toLocaleTimeString()}
+                </span>
+              </>
+            ) : (
+              <span className="text-xs text-muted-foreground">Carregando…</span>
+            )}
+            <Button variant="outline" size="sm" onClick={loadSecretStatus} disabled={loadingSecret}>
+              {loadingSecret ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Shield className="w-3 h-3 mr-1" />}
+              Re-verificar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Auto-load config for first connection if not loaded */}
       {!webhookConfig && connections.length > 0 && (
         <div className="flex gap-2">
