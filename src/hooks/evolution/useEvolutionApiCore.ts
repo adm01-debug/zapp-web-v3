@@ -92,7 +92,7 @@ export function useEvolutionApiCore() {
       const effectiveKey = userKey ?? derivedKey;
 
       const canRetry = IDEMPOTENT_METHODS.has(method) || !!userKey;
-      const retries = Math.max(1, opts.retries ?? (canRetry ? 3 : 1));
+      const retries = Math.max(1, opts.retries ?? (canRetry ? dynCfg.maxRetries : 1));
 
       // Dedupe identical in-flight requests for idempotent verbs OR any POST with an effective key.
       const dedupeKey = effectiveKey
