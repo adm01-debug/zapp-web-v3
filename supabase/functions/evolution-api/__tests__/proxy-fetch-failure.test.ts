@@ -22,7 +22,11 @@ function restoreFetch() {
  * These tests lock that contract down for the send-media path.
  */
 
-Deno.test("send-media: network failure returns 200 + error envelope (504)", async () => {
+Deno.test({
+  name: "send-media: network failure returns 200 + error envelope (504)",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
   globalThis.fetch = () => Promise.reject(new TypeError("network down"));
   try {
     // POST is non-idempotent → no retry, single attempt
