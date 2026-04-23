@@ -146,4 +146,38 @@ describe('createScrollLoaderController', () => {
       expect(onLoadOlder).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('clearSavedHeight (anchor pos-prepend)', () => {
+    it('zera savedScrollHeight sem afetar throttle nem lastScrollTop', () => {
+      const { ctrl, onLoadOlder } = setup();
+      ctrl.onScroll(100, 600);
+      expect(ctrl.savedScrollHeight()).toBe(5000);
+      expect(ctrl.isFetching()).toBe(true);
+
+      ctrl.clearSavedHeight();
+      expect(ctrl.savedScrollHeight()).toBeNull();
+
+      // Throttle ainda ativo: novo trigger imediato (mesma janela) NAO duplica.
+      ctrl.triggerLoad();
+      expect(onLoadOlder).toHaveBeenCalledTimes(1);
+
+      // Apos passar a janela, dispara de novo (so se o lock for liberado).
+      advance(300);
+      // Simula liberacao do isFetching (mock onLoadOlder ja resolveu).
+      // Como a Promise e resolvida sincronamente em vi.fn, basta um microtask:
+      return Promise.resolve().then(() => Promise.resolve()).then(() => {
+        ctrl.triggerLoad();
+        expect(onLoadOlder).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it('clearSavedHeight nao altera wasCancelled', () => {
+      const { ctrl } = setup();
+      ctrl.onScroll(100, 600);
+      ctrl.onScroll(800, 600); // cancela
+      expect(ctrl.wasCancelled()).toBe(true);
+      ctrl.clearSavedHeight();
+      expect(ctrl.wasCancelled()).toBe(true);
+    });
+  });
 });
