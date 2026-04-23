@@ -109,8 +109,8 @@ export async function invokeEvolutionWithRetry<T = unknown>(
     },
     {
       maxRetries,
-      baseDelayMs: 800,
-      maxDelayMs: 6000,
+      baseDelayMs,
+      maxDelayMs,
       shouldRetry: (err) => isTransient(err),
       onRetry: (err, attempt) => {
         log.warn(`[evolution] retry ${attempt}/${maxRetries} action=${action}`, err);
