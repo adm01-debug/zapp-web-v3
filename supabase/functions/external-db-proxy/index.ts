@@ -75,7 +75,12 @@ Deno.serve(async (req) => {
       })
     }
 
-    let query = ext.from(table).select(select || '*', { count: countMode || undefined })
+    // Default to 'planned' count (uses pg statistics, no full scan).
+    // Only use 'exact' when explicitly requested AND limit is small.
+    const safeCountMode = countMode === 'exact' && (limit || 50) > 100
+      ? 'planned'
+      : countMode || undefined
+    let query = ext.from(table).select(select || '*', { count: safeCountMode })
 
     if (filters && Array.isArray(filters)) {
       for (const f of filters) {
