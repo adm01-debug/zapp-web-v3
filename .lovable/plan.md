@@ -1,106 +1,64 @@
 
 
-## Notificações de SLA (Em risco / Violado) para o time comercial
+## Mapa Navegável de Hooks & Funções (20–23 abril 2026)
 
-### O que vai ser construído
+### O que vai ser entregue
 
-Quando a timeline detectar que a conversa atual está em **`warning`** ou **`breached`** (1ª resposta ou resolução), disparar uma notificação **uma única vez por conversa+tipo+severidade** para alertar o time comercial. Respeita o escopo (`current` / `queue` / `agent` / `none`) — em `none` não dispara.
+Um documento Markdown único em `/mnt/documents/MAPA_HOOKS_FUNCOES_20-23_ABRIL_2026.md` contendo **tabelas navegáveis** (uma por domínio) com:
 
-### Decisão técnica
+| Coluna | Conteúdo |
+|---|---|
+| **Hook / Função** | Nome + link relativo para o arquivo no repo |
+| **Tipo** | hook React / util / componente / edge function |
+| **Resumo (1 linha)** | O que faz, em PT-BR |
+| **Entradas** | Principais parâmetros |
+| **Saídas** | O que retorna |
+| **Consumido por** | Componentes/páginas que usam (com links) |
+| **Backend tocado** | Lovable Cloud / FATOR X / RPC / edge function |
 
-Hoje o sistema já tem:
-- **War Room alerts** (`useWarRoomAlerts`) — sirene global no header (memória `mem://features/alerts/siren-button`)
-- **`toast`** (sonner) para feedback in-app
-- **`conversation_events`** — auditoria persistente
+### Estrutura do documento
 
-Vou usar:
-1. **Toast in-app** com ícone + ação "Ver conversa" — feedback imediato pro agente atual
-2. **Insert em `conversation_events`** com `event_type='sla_alert'` + metadata (severity, kind, scope, ruleName, durationMs) — auditoria + base pra futuras notificações por canal (email/push)
-3. **Anti-spam via `useRef` Set** com chave `${contactId}:${kind}:${severity}` — não re-dispara no mesmo session
+1. **Sumário executivo** — quantos hooks novos, quantos editados, agrupamento por domínio
+2. **Índice clicável** por domínio (anchors `#sla`, `#dlq`, `#realtime`, etc.)
+3. **Tabelas por domínio**:
+   - **SLA & Timeline** — `useConversationSLATimeline`, `useSLAAlerts`, `useApplicableSLA` (revisitado)
+   - **DLQ & Retry** — `useFailedMessages`, `useFailedMessageAlerts`, `useInstanceRetryConfig`, `evolutionSendRetry`, `retry`, `retryAlerts`
+   - **Realtime & Presença** — `useIncomingCallBroadcast`, `useContactTyping`, `useTypingPresence`, `useMessageUpdateBatcher`, `useMessageSendStatus`
+   - **Webhook Health** — `useWebhookHealthAlerts`, `webhookHealthAlerts`
+   - **War Room & Alertas** — `useWarRoomAlerts` (extensões)
+   - **UX/Telemetria/Mobile** — `usePullToRefresh`, `useReturnFocus`, `useScrollDepthTracker`, `useNavSwipeTracker`, `useAttemptCounter`, `useKpiDrilldown`
+4. **Mapa de dependências cruzadas** — diagrama Mermaid mostrando quem chama quem
+5. **Findings & dívidas técnicas** — bug `oderId`, índice faltante em `conversation_events.event_type`, redundância call listeners
+6. **Rodapé** — versão, fontes (planos aprovados + arquivos verificados), próximos passos sugeridos
 
-Não vou criar tabela nova, edge function, nem cron job. Notificação cross-team (email/push pro time comercial) fica como **nota de roadmap** no rodapé da seção, porque exige decisão de canal (email? Slack? push?) que não foi especificada.
+### Como vou construir (passo a passo)
 
-### Mudanças
-
-**1. `src/hooks/useSLAAlerts.ts`** (novo, ~70 linhas)
-
-```ts
-interface SLAAlertParams {
-  contactId: string | null;
-  contactName: string;
-  scope: SLAScope;
-  firstResponseStatus: SLAStatus;
-  resolutionStatus: SLAStatus;
-  ruleName: string | null;
-  awaitingMs: number | null;
-  resolutionDurationMs: number | null;
-}
-
-export function useSLAAlerts(params: SLAAlertParams) {
-  const firedRef = useRef<Set<string>>(new Set());
-  
-  useEffect(() => {
-    if (params.scope === 'none' || !params.contactId) return;
-    
-    const fire = (kind: 'first_response' | 'resolution', severity: 'warning' | 'breached', durationMs: number | null) => {
-      const key = `${params.contactId}:${kind}:${severity}`;
-      if (firedRef.current.has(key)) return;
-      firedRef.current.add(key);
-      
-      // Toast
-      const isBreach = severity === 'breached';
-      toast[isBreach ? 'error' : 'warning'](
-        `SLA ${isBreach ? 'violado' : 'em risco'} — ${params.contactName}`,
-        {
-          description: `${kind === 'first_response' ? '1ª resposta' : 'Resolução'} · ${formatDurationMs(durationMs)} · ${params.ruleName ?? 'regra padrão'}`,
-          duration: isBreach ? 10000 : 6000,
-        }
-      );
-      
-      // Audit (best-effort, fire-and-forget)
-      supabase.from('conversation_events').insert({
-        contact_id: params.contactId,
-        event_type: 'sla_alert',
-        metadata: { kind, severity, scope: params.scope, ruleName: params.ruleName, durationMs },
-      }).then(() => {}, () => {});
-    };
-    
-    if (params.firstResponseStatus === 'warning' || params.firstResponseStatus === 'breached') {
-      fire('first_response', params.firstResponseStatus, params.awaitingMs);
-    }
-    if (params.resolutionStatus === 'warning' || params.resolutionStatus === 'breached') {
-      fire('resolution', params.resolutionStatus, params.resolutionDurationMs);
-    }
-  }, [params.contactId, params.scope, params.firstResponseStatus, params.resolutionStatus]);
-}
-```
-
-**2. `src/components/inbox/contact-details/SLATimelineSection.tsx`** (~+5 linhas)
-
-- Importar e chamar `useSLAAlerts` com os valores já calculados.
-- Sem mudança visual.
+1. **Verificar existência** de cada hook/util citado nos relatórios anteriores via `code--list_dir` em `src/hooks/`, `src/hooks/realtime/`, `src/hooks/messaging/`, `src/lib/`. Remover do mapa qualquer item que não exista no filesystem (evita inventar).
+2. **Inspecionar assinatura** dos hooks-chave com `code--view` para preencher entradas/saídas com precisão (sem inventar tipos).
+3. **Buscar consumidores** com `code--search_files` para cada hook (ex: `useFailedMessages\(`) e listar até 3 arquivos consumidores reais.
+4. **Gerar diagrama Mermaid** das dependências em `/mnt/documents/MAPA_HOOKS_DEPENDENCIAS.mmd` e referenciar via `<lov-artifact>`.
+5. **Escrever o `.md` consolidado** em `/mnt/documents/MAPA_HOOKS_FUNCOES_20-23_ABRIL_2026.md`.
+6. **QA**: abrir o arquivo gerado, validar links relativos (formato `src/hooks/...`) e contagens.
 
 ### Detalhes técnicos
 
-- `event_type='sla_alert'` é um valor novo aceito pela coluna text — `conversation_events.event_type` não tem CHECK constraint estrito (já aceita `'close'`, `'reopen'`, `'assign'` e outros).
-- Insert é `fire-and-forget` (`.then(() => {}, () => {})`) — falha de RLS não quebra a UI.
-- `firedRef` reseta na desmontagem (troca de conversa → novo `useRef`), o que é o comportamento desejado: cada vez que abro uma conversa em risco/violada, vejo o alerta uma vez.
-- Toasts usam `sonner` (já no projeto) com cor por severidade (`error` para violado, `warning` para em risco).
-- Sem `console.log`, sem `as any`, sem nova tabela ou edge function.
-- Respeita escopo `'none'` (não dispara).
+- Links no formato `[useSLAAlerts](src/hooks/useSLAAlerts.ts)` — clicáveis no preview do Lovable e em qualquer Markdown viewer.
+- Tabelas com no máximo 7 colunas para legibilidade mobile.
+- Sem emojis nas tabelas (regra do projeto). Status visual via badges textuais: `[NOVO]`, `[EDITADO]`, `[VERIFICADO]`, `[NÃO ENCONTRADO]`.
+- Diagrama Mermaid sem cores customizadas (auto-tema light/dark).
+- Documento alvo: ~600–900 linhas, ~45–60KB.
 
 ### Arquivos afetados
 
 **Criar:**
-- `src/hooks/useSLAAlerts.ts`
+- `/mnt/documents/MAPA_HOOKS_FUNCOES_20-23_ABRIL_2026.md`
+- `/mnt/documents/MAPA_HOOKS_DEPENDENCIAS.mmd`
 
-**Editar:**
-- `src/components/inbox/contact-details/SLATimelineSection.tsx`
+**Não edita código-fonte** — é tarefa de documentação pura (artifact).
 
 ### Fora de escopo
 
-- Notificação por email/push/Slack pro time inteiro — exige escolha de canal e edge function dedicada. Posso adicionar num lote separado se você definir o canal preferido.
-- Configuração por usuário ("quero/não quero ser notificado") — não há painel de preferências; pode virar lote.
-- Browser notifications (`Notification.permission`) — exige opt-in explícito do usuário.
-- Throttle persistente cross-session — `firedRef` é session-scoped por design (cada login vê o estado atual).
+- Refatoração ou correção dos bugs identificados (ex: typo `oderId`) — só documentar; correção exige novo plano.
+- Cobertura de hooks anteriores a 20/abr (já existem nos relatórios v1/v2/FINAL).
+- Análise de performance ou benchmarks reais — apenas anotações qualitativas baseadas em código.
 
