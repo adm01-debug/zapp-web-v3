@@ -13,6 +13,11 @@ import { TypingIndicator } from '../TypingIndicator';
 import { format } from 'date-fns';
 import { formatDateSeparator } from './messageUtils';
 import { MessageBubble } from './MessageBubble';
+import {
+  recordLoadOlderStarted,
+  recordLoadOlderCancelled,
+  recordLoadOlderCompleted,
+} from './loadOlderMetrics';
 
 interface ChatMessagesAreaProps {
   messages: Message[];
