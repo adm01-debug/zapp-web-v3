@@ -22,26 +22,42 @@ Deno.serve(async (req) => {
     const ext = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
       db: { schema: 'public' },
-      global: {
-        headers: {
-          // Cap server-side statement time to avoid Edge Function 150s timeout cascading
-          'x-statement-timeout': '8000',
-        },
-      },
     })
+
+    // Hard cap to fail fast (well below Edge Function 150s + Postgres default).
+    // Returns 504 instead of bubbling Postgres "statement timeout" as a confusing 400.
+    const HARD_TIMEOUT_MS = 9000
+    const withTimeout = <T>(p: PromiseLike<T>): Promise<T> =>
+      Promise.race([
+        Promise.resolve(p),
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error('proxy_timeout')), HARD_TIMEOUT_MS)
+        ),
+      ])
+
+    const timeoutResponse = () =>
+      new Response(
+        JSON.stringify({ error: 'Query timed out. Try narrower filters or a smaller limit.' }),
+        { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
 
     const body = await req.json()
     const { action, table, select, filters, order, limit, offset, countMode, rpc, params, data, match } = body
 
     // RPC call
     if (action === 'rpc' && rpc) {
-      const { data: rpcData, error } = await ext.rpc(rpc, params || {})
-      if (error) return new Response(JSON.stringify({ error: error.message }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-      return new Response(JSON.stringify({ data: rpcData }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      try {
+        const { data: rpcData, error } = await withTimeout(ext.rpc(rpc, params || {}))
+        if (error) return new Response(JSON.stringify({ error: error.message }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+        return new Response(JSON.stringify({ data: rpcData }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      } catch (e) {
+        if ((e as Error).message === 'proxy_timeout') return timeoutResponse()
+        throw e
+      }
     }
 
     // Mutation: insert
@@ -75,12 +91,17 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Default to 'planned' count (uses pg statistics, no full scan).
-    // Only use 'exact' when explicitly requested AND limit is small.
-    const safeCountMode = countMode === 'exact' && (limit || 50) > 100
-      ? 'planned'
-      : countMode || undefined
-    let query = ext.from(table).select(select || '*', { count: safeCountMode })
+    // 'exact' COUNT is the #1 cause of statement timeouts on large tables.
+    // Force 'planned' (uses pg_class statistics, instant) unless caller explicitly
+    // opts in via countMode='exact' AND uses a tiny limit (<=50) on a filtered query.
+    const requestedExact = countMode === 'exact'
+    const tinyLimit = (limit || 50) <= 50
+    const hasFilters = Array.isArray(filters) && filters.length > 0
+    const safeCountMode = requestedExact && tinyLimit && hasFilters
+      ? 'exact'
+      : (countMode ? 'planned' : undefined)
+
+    let query = ext.from(table).select(select || '*', { count: safeCountMode as 'exact' | 'planned' | undefined })
 
     if (filters && Array.isArray(filters)) {
       for (const f of filters) {
