@@ -3,6 +3,22 @@ import { getLogger } from '@/lib/logger';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 import { invokeEvolutionWithRetry } from '@/lib/evolutionSendRetry';
 import { toast } from '@/hooks/use-toast';
+import { emitSendStatus } from './sendStatusBus';
+
+const MAX_RETRIES = 3;
+const lastInstabilityToastByContact = new Map<string, number>();
+
+function classifyAuthError(err: unknown): { isAuth: boolean; code?: number; reason?: string } {
+  if (!err || typeof err !== 'object') return { isAuth: false };
+  const anyErr = err as { status?: number; message?: string; error?: { message?: string } };
+  const status = anyErr.status;
+  const msg = (anyErr.message || anyErr.error?.message || '').toLowerCase();
+  if (status === 401 || status === 403) return { isAuth: true, code: status, reason: anyErr.message };
+  if (msg.includes('unauthorized') || msg.includes('forbidden') || msg.includes('invalid token') || msg.includes('invalid api key')) {
+    return { isAuth: true, code: status, reason: anyErr.message || msg };
+  }
+  return { isAuth: false };
+}
 // Uses RealtimeMessage type from parent hook
 
 const log = getLogger('MessageSender');
@@ -133,6 +149,8 @@ export async function sendMessageToContact(
     throw error;
   }
 
+  emitSendStatus(data.id, { status: 'sending' });
+
   try {
     const { data: contact } = await supabase
       .from('contacts')
@@ -159,8 +177,12 @@ export async function sendMessageToContact(
       action,
       { body },
       {
+        maxRetries: MAX_RETRIES,
         onRetry: (attempt, total) => {
-          if (attempt === 1) {
+          emitSendStatus(data.id, { status: 'retrying', attempt, totalRetries: total });
+          const last = lastInstabilityToastByContact.get(contactId) ?? 0;
+          if (attempt === 1 && Date.now() - last > 60_000) {
+            lastInstabilityToastByContact.set(contactId, Date.now());
             toast({
               title: 'Conexão instável',
               description: `Tentando reenviar… (${attempt}/${total})`,
@@ -171,16 +193,54 @@ export async function sendMessageToContact(
     );
 
     if (apiError || (apiResult as { error?: unknown })?.error) {
-      log.error('Evolution API send error:', apiError || apiResult);
-      await supabase.from('messages').update({ status: 'failed', whatsapp_connection_id: resolvedConnectionId }).eq('id', data.id);
-      throw new Error((apiResult as { message?: string })?.message || 'Falha ao enviar mensagem');
+      const errPayload = apiError || (apiResult as { error?: unknown; message?: string });
+      log.error('Evolution API send error:', errPayload);
+      const auth = classifyAuthError(errPayload);
+      const reason = (apiResult as { message?: string })?.message
+        || (apiError as { message?: string } | null)?.message
+        || 'Falha ao enviar mensagem';
+
+      if (auth.isAuth) {
+        await supabase.from('messages').update({
+          status: 'failed_auth',
+          whatsapp_connection_id: resolvedConnectionId,
+          error_code: auth.code ? String(auth.code) : null,
+          error_reason: auth.reason || reason,
+        }).eq('id', data.id);
+        emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason });
+      } else {
+        await supabase.from('messages').update({
+          status: 'failed',
+          whatsapp_connection_id: resolvedConnectionId,
+          error_reason: reason,
+        }).eq('id', data.id);
+        emitSendStatus(data.id, { status: 'failed', errorReason: reason });
+      }
+      throw new Error(reason);
     }
 
     const externalId = extractEvolutionMessageId(apiResult);
     await supabase.from('messages').update({ status: 'sent', external_id: externalId, whatsapp_connection_id: resolvedConnectionId }).eq('id', data.id);
+    emitSendStatus(data.id, { status: 'sent' });
   } catch (evolutionError) {
     log.error('Error sending via Evolution API:', evolutionError);
-    await supabase.from('messages').update({ status: 'failed' }).eq('id', data.id);
+    const auth = classifyAuthError(evolutionError);
+    const reason = evolutionError instanceof Error ? evolutionError.message : 'Falha ao enviar mensagem';
+    if (auth.isAuth) {
+      await supabase.from('messages').update({
+        status: 'failed_auth',
+        error_code: auth.code ? String(auth.code) : null,
+        error_reason: auth.reason || reason,
+      }).eq('id', data.id);
+      emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason });
+    } else {
+      // If error came from withRetry exhausting attempts, mark failed_retries
+      await supabase.from('messages').update({
+        status: 'failed_retries',
+        error_reason: reason,
+      }).eq('id', data.id);
+      emitSendStatus(data.id, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason });
+    }
     throw evolutionError;
   }
 
