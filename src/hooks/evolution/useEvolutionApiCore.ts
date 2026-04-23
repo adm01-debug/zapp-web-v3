@@ -97,13 +97,13 @@ export function useEvolutionApiCore() {
           try {
             const invokeOpts: { method: 'POST'; body: object; headers?: Record<string, string>; signal?: AbortSignal } = {
               method: 'POST',
-              body: { action, ...(body ?? {}) },
+              body: body ?? {},
               signal: controller.signal,
             };
             if (opts.idempotencyKey) {
               invokeOpts.headers = { 'Idempotency-Key': opts.idempotencyKey };
             }
-            const { data, error } = await supabase.functions.invoke('evolution-api', invokeOpts);
+            const { data, error } = await supabase.functions.invoke(`evolution-api/${action}`, invokeOpts);
             if (error) {
               const err = Object.assign(new Error(error.message || 'Evolution API error'), {
                 apiStatus: (error as { status?: number }).status,
