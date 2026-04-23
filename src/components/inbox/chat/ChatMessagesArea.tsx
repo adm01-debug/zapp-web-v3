@@ -127,9 +127,65 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     }, {} as Record<string, Message[]>);
   }, [messages]);
 
+  // Scroll-to-top detector → loadOlder
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onLoadOlder) return;
+
+    const handleScroll = () => {
+      if (container.scrollTop < 80 && hasMoreOlder && !loadingOlder && !isFetchingOlderRef.current) {
+        isFetchingOlderRef.current = true;
+        prevScrollHeightRef.current = container.scrollHeight;
+        Promise.resolve(onLoadOlder()).finally(() => {
+          // released after DOM update effect runs
+          setTimeout(() => { isFetchingOlderRef.current = false; }, 100);
+        });
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [onLoadOlder, hasMoreOlder, loadingOlder]);
+
+  // Preserve scroll position after older messages prepend
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const firstId = messages[0]?.id ?? null;
+    const lengthIncreased = messages.length > prevLengthRef.current;
+    const firstChanged = prevFirstIdRef.current !== null && firstId !== prevFirstIdRef.current;
+    const wasPrepend = lengthIncreased && firstChanged;
+
+    if (wasPrepend && prevScrollHeightRef.current !== null) {
+      const prev = prevScrollHeightRef.current;
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight - prev;
+        prevScrollHeightRef.current = null;
+      });
+    }
+
+    prevFirstIdRef.current = firstId;
+    prevLengthRef.current = messages.length;
+  }, [messages]);
+
   return (
     <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-6 md:px-8 space-y-4 scrollbar-thin bg-background/50 relative">
       <ChatWatermark />
+
+      {onLoadOlder && (
+        <div className="flex justify-center py-2" aria-live="polite">
+          {loadingOlder && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/30">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span>Carregando mensagens anteriores…</span>
+            </div>
+          )}
+          {!loadingOlder && !hasMoreOlder && messages.length > 0 && (
+            <span className="text-[11px] text-muted-foreground/60 italic">Início da conversa</span>
+          )}
+        </div>
+      )}
 
       {Object.entries(groupedMessages).map(([dateKey, dayMessages]) => (
         <div key={dateKey}>
