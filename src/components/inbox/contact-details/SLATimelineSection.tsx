@@ -423,12 +423,16 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
         </div>
       )}
 
-      {sla && (
-        <p className="pl-1 text-[10px] text-muted-foreground/80 leading-relaxed">
-          Regra aplicada: <span className="text-foreground/80 font-medium">{sla.ruleName}</span>
-          {' · '}1ª resposta {sla.firstResponseMinutes}min · Resolução {sla.resolutionMinutes}min
-        </p>
-      )}
+      <p className="pl-1 text-[10px] text-muted-foreground/80 leading-relaxed">
+        Avaliado por: <span className="text-foreground/80 font-medium">{SCOPE_LABELS[scope]}</span>
+        {scope !== 'none' && sla && (
+          <>
+            {' · Regra '}<span className="text-foreground/80 font-medium">{sla.ruleName}</span>
+            {' · '}1ª resp. {sla.firstResponseMinutes}min · Resolução {sla.resolutionMinutes}min
+          </>
+        )}
+        {scope === 'none' && ' · limites desativados'}
+      </p>
     </div>
   );
 }
