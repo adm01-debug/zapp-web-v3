@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { getLogger } from '@/lib/logger';
 import { sendMessageToContact } from './realtime/messageSender';
+import { subscribeAllSendStatus, getSendStatus } from './realtime/sendStatusBus';
 import {
   normalizeMessage, buildConversation, dedupeContacts, buildConversations,
   getUniqueMessageContactIds, chunkArray,
@@ -33,7 +34,7 @@ export interface RealtimeMessage {
   message_type: string;
   media_url: string | null;
   is_read: boolean | null;
-  status: 'sent' | 'delivered' | 'read' | 'failed' | null;
+  status: 'sending' | 'retrying' | 'sent' | 'delivered' | 'read' | 'failed' | 'failed_auth' | 'failed_retries' | null;
   status_updated_at: string | null;
   created_at: string;
   updated_at: string;
@@ -72,10 +73,13 @@ export interface ConversationWithMessages {
   lastMessage: RealtimeMessage | null;
 }
 
+export type ConversationSendState = 'idle' | 'retrying' | 'failed';
+
 export function useRealtimeMessages() {
   const [conversations, setConversations] = useState<ConversationWithMessages[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sendStateTick, setSendStateTick] = useState(0);
   const conversationsRef = useRef<ConversationWithMessages[]>([]);
 
   const {
@@ -203,9 +207,42 @@ export function useRealtimeMessages() {
     );
   };
 
+  // Subscribe to bus to recompute conversationSendState
+  useEffect(() => {
+    const unsub = subscribeAllSendStatus(() => setSendStateTick((t) => t + 1));
+    return unsub;
+  }, []);
+
+  // Derive per-contact send state (transient bus + last DB status)
+  const conversationSendState: Record<string, ConversationSendState> = {};
+  for (const c of conversations) {
+    let state: ConversationSendState = 'idle';
+    const outbound = c.messages.filter((m) => m.sender === 'agent');
+    // Check bus for any retrying/sending in this conversation
+    const anyRetrying = outbound.some((m) => {
+      const bus = getSendStatus(m.id);
+      return bus?.status === 'retrying';
+    });
+    if (anyRetrying) {
+      state = 'retrying';
+    } else {
+      const lastOutbound = outbound[outbound.length - 1];
+      if (lastOutbound) {
+        const bus = getSendStatus(lastOutbound.id);
+        const effective = bus?.status ?? lastOutbound.status;
+        if (effective === 'failed' || effective === 'failed_auth' || effective === 'failed_retries') {
+          state = 'failed';
+        }
+      }
+    }
+    conversationSendState[c.contact.id] = state;
+  }
+  void sendStateTick; // ensure dep tracked
+
   return {
     conversations, loading, error, sendMessage, markAsRead,
     refetch: fetchConversations, newMessageNotification,
     dismissNotification, setSelectedContact, setSoundEnabled,
+    conversationSendState,
   };
 }
