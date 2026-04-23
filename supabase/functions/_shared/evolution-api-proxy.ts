@@ -1,6 +1,13 @@
 // Shared proxy logic for Evolution API edge function
 import { logRetryMetric, type RetryReason } from './log-retry-metric.ts';
 import { enqueueFailedMessage } from './enqueue-failed-message.ts';
+import {
+  isSendPath,
+  isValidIdemKey,
+  lookupSendCache,
+  storeSendCache,
+  extractEvolutionMessageId,
+} from './send-idempotency.ts';
 
 const TIMEOUT_MS = 15000;
 const MAX_RETRIES = 2;
@@ -48,11 +55,37 @@ export async function proxyToEvolution(
   path: string,
   method: string = 'POST',
   body?: unknown,
-  instanceInPath?: string
+  instanceInPath?: string,
+  /**
+   * Optional idempotency key for `/message/*` POSTs. When present, identical
+   * keys are deduped against `evolution_send_idempotency` (24h TTL) so that
+   * client/DLQ retries after network failures don't create duplicate WhatsApp
+   * messages. Ignored for non-send paths and non-POST verbs.
+   */
+  idemKey?: string,
 ): Promise<Response> {
   const fullUrl = instanceInPath
     ? `${evolutionApiUrl}${path}/${instanceInPath}`
     : `${evolutionApiUrl}${path}`;
+
+  // ─── Idempotency cache (POST /message/* only) ───
+  const idempotencyEnabled =
+    method === 'POST' && isSendPath(path) && isValidIdemKey(idemKey);
+
+  if (idempotencyEnabled) {
+    const cached = await lookupSendCache(idemKey!);
+    if (cached) {
+      console.log(`[Evolution API] idempotency HIT for ${idemKey} (${path})`);
+      return new Response(JSON.stringify(cached.response), {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'X-Idempotent-Replay': 'true',
+        },
+      });
+    }
+  }
 
   const opts: RequestInit = {
     method,
