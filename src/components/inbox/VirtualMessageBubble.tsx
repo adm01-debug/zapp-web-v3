@@ -11,23 +11,12 @@ import { QuotedMessage } from './ReplyQuote';
 import { LocationMessageDisplay } from './LocationMessage';
 import { AudioMessagePlayer } from './AudioMessagePlayer';
 import { TextToSpeechButton } from './TextToSpeechButton';
-import {
-  Check, CheckCheck, Clock, X, Reply, Forward, Copy,
-} from 'lucide-react';
+import { Reply, Forward, Copy } from 'lucide-react';
 import { format } from 'date-fns';
+import { MessageStatusInline } from './chat/MessageStatusInline';
 
 function formatMessageTime(date: Date): string {
   return format(date, 'HH:mm');
-}
-
-function MessageStatusIcon({ status }: { status: Message['status'] }) {
-  switch (status) {
-    case 'sent': return <Check className="w-3 h-3" />;
-    case 'delivered': return <CheckCheck className="w-3 h-3" />;
-    case 'read': return <CheckCheck className="w-3 h-3 text-info" />;
-    case 'failed': return <X className="w-3 h-3 text-destructive" />;
-    default: return <Clock className="w-3 h-3 animate-pulse" />;
-  }
 }
 
 interface MessageBubbleProps {
@@ -89,7 +78,7 @@ export function MessageBubble({
             {message.content && message.type === 'text' && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>}
             <div className={cn('flex items-center gap-1 mt-1 text-[10px]', isSent ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
               <span>{formatMessageTime(message.timestamp)}</span>
-              {isSent && <MessageStatusIcon status={message.status} />}
+              {isSent && <MessageStatusInline message={message} />}
             </div>
           </div>
         )}
