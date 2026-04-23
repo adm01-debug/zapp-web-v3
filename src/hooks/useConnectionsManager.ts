@@ -103,7 +103,20 @@ export function useConnectionsManager() {
   const [connections, setConnections] = useState<WhatsAppConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [qrCodeDialog, setQrCodeDialog] = useState<QrCodeDialogState>(INITIAL_QR_STATE);
+  const [qrCodeDialog, setQrCodeDialog] = useState<QrCodeDialogState>(() => {
+    const persisted = loadPersistedQr();
+    if (!persisted) return INITIAL_QR_STATE;
+    return {
+      open: true,
+      connectionId: persisted.connectionId,
+      connectionName: persisted.connectionName,
+      qrCode: persisted.qrCode,
+      status: persisted.status,
+      errorMessage: persisted.errorMessage,
+      expiresAt: persisted.expiresAt,
+      attemptId: persisted.attemptId,
+    };
+  });
   const [newConnection, setNewConnection] = useState({ name: '', phone_number: '' });
   const [isCreating, setIsCreating] = useState(false);
   const [syncingHistory, setSyncingHistory] = useState<string | null>(null);
@@ -117,6 +130,11 @@ export function useConnectionsManager() {
     disconnectInstance,
     deleteInstance,
   } = useEvolutionApi();
+
+  // Persist QR dialog state across page reloads.
+  useEffect(() => {
+    savePersistedQr(qrCodeDialog);
+  }, [qrCodeDialog]);
 
   useEffect(() => {
     fetchConnections();
@@ -139,9 +157,14 @@ export function useConnectionsManager() {
             if (qrCodeDialog.open && qrCodeDialog.connectionId === (payload.new as WhatsAppConnection).id) {
               const newConn = payload.new as WhatsAppConnection;
               if (newConn.status === 'connected') {
-                setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null }));
+                setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
               } else if (newConn.qr_code) {
-                setQrCodeDialog((prev) => ({ ...prev, qrCode: newConn.qr_code, status: 'pending' }));
+                setQrCodeDialog((prev) => ({
+                  ...prev,
+                  qrCode: newConn.qr_code,
+                  status: 'pending',
+                  expiresAt: prev.expiresAt ?? Date.now() + QR_TTL_MS,
+                }));
               }
             }
           } else if (payload.eventType === 'INSERT') {
@@ -157,6 +180,7 @@ export function useConnectionsManager() {
       supabase.removeChannel(channel);
       if (pollingInterval) clearInterval(pollingInterval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchConnections = async () => {
