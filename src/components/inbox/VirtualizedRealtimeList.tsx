@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useMemo } from 'react';
+import { useRef, useState, useCallback, useMemo, forwardRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,17 +33,19 @@ const EMPTY_SET = new Set<string>();
  * por "digitando…" enquanto o contato está compondo. Sub-componente para que o
  * hook `useContactTyping` seja chamado por linha (regra dos Hooks).
  */
-function ConversationPreviewLine({ contactId, fallback }: { contactId: string; fallback: string }) {
-  const isTyping = useContactTyping(contactId);
-  if (isTyping) {
-    return (
-      <div className="text-[13px]">
-        <TypingIndicatorCompact isVisible={true} />
-      </div>
-    );
+const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; fallback: string }>(
+  function ConversationPreviewLine({ contactId, fallback }, ref) {
+    const isTyping = useContactTyping(contactId);
+    if (isTyping) {
+      return (
+        <div ref={ref} className="text-[13px]">
+          <TypingIndicatorCompact isVisible={true} />
+        </div>
+      );
+    }
+    return <p ref={ref as React.Ref<HTMLParagraphElement>} className="text-[13px] text-muted-foreground truncate">{fallback}</p>;
   }
-  return <p className="text-[13px] text-muted-foreground truncate">{fallback}</p>;
-}
+);
 
 export function VirtualizedRealtimeList({
   conversations,
