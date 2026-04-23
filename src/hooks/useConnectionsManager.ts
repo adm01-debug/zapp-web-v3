@@ -245,7 +245,7 @@ export function useConnectionsManager() {
     }
   };
 
-  const startStatusPolling = useCallback((instanceName: string, _connectionId: string) => {
+  const startStatusPolling = useCallback((instanceName: string, connectionId: string) => {
     if (pollingInterval) clearInterval(pollingInterval);
     const interval = setInterval(async () => {
       try {
@@ -254,14 +254,20 @@ export function useConnectionsManager() {
           clearInterval(interval);
           setPollingInterval(null);
           setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
-          toast({ title: 'Conectado!', description: 'WhatsApp conectado com sucesso.' });
+          // Use the deduplicated announcer so we don't double-toast when realtime
+          // also delivers the UPDATE event with status='connected'.
+          setConnections((prev) => {
+            const conn = prev.find((c) => c.id === connectionId);
+            if (conn) announceConnected({ id: conn.id, name: conn.name });
+            return prev;
+          });
         }
       } catch (error) {
         log.error('Status polling error:', error);
       }
     }, 3000);
     setPollingInterval(interval);
-  }, [getInstanceStatus, pollingInterval]);
+  }, [getInstanceStatus, pollingInterval, announceConnected]);
 
   /**
    * Logs a QR generation attempt to qr_attempts. Returns the inserted attempt id (if successful)
