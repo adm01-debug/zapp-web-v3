@@ -95,6 +95,7 @@ export default function AdminWebhookEventsPage() {
   const [pushNameFilter, setPushNameFilter] = useState('');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<EvolutionWebhookEvent | null>(null);
+  const [viewMode, setViewMode] = useState<'events' | 'calls'>('events');
 
   const sinceISO = useMemo(
     () => subHours(new Date(), Number(hours)).toISOString(),
