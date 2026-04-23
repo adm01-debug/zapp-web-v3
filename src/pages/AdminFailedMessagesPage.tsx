@@ -690,7 +690,7 @@ export default function AdminFailedMessagesPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t">
-                {(selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
+                {isAdmin && (selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
                   <Button
                     variant="outline"
                     onClick={() => { retryNow.mutate(selected.id); setSelected(null); }}
@@ -700,7 +700,7 @@ export default function AdminFailedMessagesPage() {
                     Reprocessar agora
                   </Button>
                 )}
-                {(selected.status === 'pending' || selected.status === 'retrying') && (
+                {isAdmin && (selected.status === 'pending' || selected.status === 'retrying') && (
                   <Button
                     variant="destructive"
                     onClick={() => {
@@ -713,6 +713,11 @@ export default function AdminFailedMessagesPage() {
                     <Ban className="h-4 w-4 mr-2" />
                     Abandonar
                   </Button>
+                )}
+                {readOnly && (
+                  <span className="text-xs text-muted-foreground self-center">
+                    Apenas leitura
+                  </span>
                 )}
               </div>
             </div>
