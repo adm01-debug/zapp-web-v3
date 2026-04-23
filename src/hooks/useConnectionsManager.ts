@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 
+export type WhatsAppApiType = 'evolution' | 'official';
+
 export interface WhatsAppConnection {
   id: string;
   name: string;
@@ -13,6 +15,8 @@ export interface WhatsAppConnection {
   qr_code: string | null;
   is_default: boolean;
   created_at: string;
+  /** 'evolution' = não-oficial (QR Code via Evolution/Baileys); 'official' = WhatsApp Cloud API (Meta, sem QR). */
+  api_type?: WhatsAppApiType;
   battery_level?: number | null;
   is_plugged?: boolean | null;
   retry_count?: number | null;
