@@ -80,6 +80,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'omni-inbox': Views.OmnichannelInbox,
   'audit-logs': Views.AuditLogDashboard,
   'telemetry': Views.AdminTelemetriaPage,
+  'failed-messages': Views.AdminFailedMessagesPage,
   'nps': Views.NPSDashboard,
   'team-chat': Views.TeamChatView,
   'email-chat': Views.EmailChatView,
