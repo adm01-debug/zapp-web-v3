@@ -254,6 +254,9 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
       // On unmount (e.g. conversation switch), abort any in-flight loadOlder.
       if (isFetchingOlderRef.current && onCancelLoadOlder) {
         onCancelLoadOlder();
+        cancelledRef.current = true;
+        recordLoadOlderCancelled(inFlightStartedAt, { contactJid, reason: 'unmount' });
+        inFlightStartedAt = null;
         isFetchingOlderRef.current = false;
       }
     };
