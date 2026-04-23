@@ -7,6 +7,7 @@
 // - Erros permanentes (400/401/403/404/422) NÃO entram na fila.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { buildIdempotencyKey, computeBackoffMs } from './dlq-backoff.ts';
 
 export interface EnqueueFailedMessageInput {
   instance_name: string;
@@ -21,7 +22,6 @@ export interface EnqueueFailedMessageInput {
 
 const PERMANENT_STATUSES = new Set([400, 401, 403, 404, 422]);
 const MAX_RETRIES = 5;
-const FIRST_ATTEMPT_DELAY_MS = 60_000; // 60s
 
 let cached: ReturnType<typeof createClient> | null = null;
 
@@ -70,29 +70,44 @@ export function enqueueFailedMessage(input: EnqueueFailedMessageInput): void {
 
   const payloadWithPath = { ...input.payload, __path: input.path };
 
-  client
-    .from('failed_messages')
-    .insert({
-      instance_name: input.instance_name,
-      remote_jid: input.remote_jid ?? null,
-      payload: payloadWithPath,
-      error_code: input.error_code ?? null,
-      error_message: input.error_message?.slice(0, 500) ?? null,
-      http_status: input.http_status ?? null,
-      retry_count: 0,
-      max_retries: MAX_RETRIES,
-      status: 'pending',
-      next_attempt_at: new Date(Date.now() + FIRST_ATTEMPT_DELAY_MS).toISOString(),
-    })
-    // PostgrestBuilder is a PromiseLike, not a Promise — use the two-arg
-    // .then(onFulfilled, onRejected) form so type-checking succeeds.
-    .then(
-      // deno-lint-ignore no-explicit-any
-      (res: any) => {
-        if (res?.error) console.warn('[dlq-enqueue] insert failed:', res.error.message);
-      },
-      (e: unknown) => {
-        console.warn('[dlq-enqueue] insert threw:', e instanceof Error ? e.message : String(e));
-      },
-    );
+  // Fire-and-forget: build key async, then insert. Conflito de chave (item já em fila)
+  // é silenciosamente ignorado — não relança e não loga como erro fatal.
+  buildIdempotencyKey(input.instance_name, input.path, input.payload).then((idemKey) => {
+    client
+      .from('failed_messages')
+      .insert({
+        instance_name: input.instance_name,
+        remote_jid: input.remote_jid ?? null,
+        payload: payloadWithPath,
+        error_code: input.error_code ?? null,
+        error_message: input.error_message?.slice(0, 500) ?? null,
+        http_status: input.http_status ?? null,
+        retry_count: 0,
+        max_retries: MAX_RETRIES,
+        status: 'pending',
+        // Primeira tentativa = backoff(attempt=1) com jitter (~60s ±15%).
+        next_attempt_at: new Date(Date.now() + computeBackoffMs(1)).toISOString(),
+        idempotency_key: idemKey,
+      })
+      // PostgrestBuilder is a PromiseLike, not a Promise — use the two-arg
+      // .then(onFulfilled, onRejected) form so type-checking succeeds.
+      .then(
+        // deno-lint-ignore no-explicit-any
+        (res: any) => {
+          if (res?.error) {
+            // Conflito de chave idempotente (23505) é esperado: dedupe silencioso.
+            if (res.error.code === '23505') {
+              console.info('[dlq-enqueue] dedupe: item já em fila para', input.path);
+            } else {
+              console.warn('[dlq-enqueue] insert failed:', res.error.message);
+            }
+          }
+        },
+        (e: unknown) => {
+          console.warn('[dlq-enqueue] insert threw:', e instanceof Error ? e.message : String(e));
+        },
+      );
+  }, (e: unknown) => {
+    console.warn('[dlq-enqueue] key build failed:', e instanceof Error ? e.message : String(e));
+  });
 }

@@ -3875,6 +3875,7 @@ export type Database = {
           error_message: string | null
           http_status: number | null
           id: string
+          idempotency_key: string | null
           instance_name: string
           last_attempt_at: string | null
           max_retries: number
@@ -3892,6 +3893,7 @@ export type Database = {
           error_message?: string | null
           http_status?: number | null
           id?: string
+          idempotency_key?: string | null
           instance_name: string
           last_attempt_at?: string | null
           max_retries?: number
@@ -3909,6 +3911,7 @@ export type Database = {
           error_message?: string | null
           http_status?: number | null
           id?: string
+          idempotency_key?: string | null
           instance_name?: string
           last_attempt_at?: string | null
           max_retries?: number

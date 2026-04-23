@@ -15,8 +15,28 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
+import { sha256Hex, stableStringify } from '@/lib/idempotency';
 
 const log = getLogger('FailedMessagesEnqueue');
+
+/** Hash determinístico de (instance|path|payload) — espelha `_shared/dlq-backoff.ts`. */
+async function buildIdempotencyKey(
+  instance: string,
+  path: string,
+  payload: Record<string, unknown>,
+): Promise<string> {
+  const cleaned = { ...payload };
+  delete (cleaned as Record<string, unknown>).__path;
+  return sha256Hex(`${instance}|${path}|${stableStringify(cleaned)}`);
+}
+
+/** Backoff exponencial com cap+jitter — espelha `_shared/dlq-backoff.ts`. */
+function computeBackoffMs(attempt: number): number {
+  const safe = Math.max(1, Math.floor(attempt));
+  const capped = Math.min(60_000 * Math.pow(2, safe - 1), 3_600_000);
+  const jitter = capped * 0.15 * (Math.random() * 2 - 1);
+  return Math.max(1_000, Math.round(capped + jitter));
+}
 
 export interface EnqueueClientFailedMessageInput {
   instance_name: string;
@@ -31,7 +51,6 @@ export interface EnqueueClientFailedMessageInput {
 
 const PERMANENT_STATUSES = new Set([400, 401, 403, 404, 422]);
 const MAX_RETRIES = 5;
-const FIRST_ATTEMPT_DELAY_MS = 60_000;
 
 function isTransientFailure(input: EnqueueClientFailedMessageInput): boolean {
   if (input.http_status == null) {
@@ -57,23 +76,35 @@ export function enqueueClientFailedMessage(input: EnqueueClientFailedMessageInpu
   const payloadWithPath = { ...input.payload, __path: input.path };
 
   // Fire-and-forget — não bloqueia o caller, não relança.
-  void supabase
-    .from('failed_messages')
-    .insert({
-      instance_name: input.instance_name,
-      remote_jid: input.remote_jid ?? null,
-      payload: payloadWithPath,
-      error_code: input.error_code ?? null,
-      error_message: input.error_message?.slice(0, 500) ?? null,
-      http_status: input.http_status ?? null,
-      retry_count: 0,
-      max_retries: MAX_RETRIES,
-      status: 'pending',
-      next_attempt_at: new Date(Date.now() + FIRST_ATTEMPT_DELAY_MS).toISOString(),
-    })
-    .then(({ error }) => {
-      if (error) log.warn('[client-dlq] insert failed:', error.message);
-    });
+  void buildIdempotencyKey(input.instance_name, input.path, input.payload)
+    .then((idemKey) =>
+      supabase
+        .from('failed_messages')
+        .insert({
+          instance_name: input.instance_name,
+          remote_jid: input.remote_jid ?? null,
+          payload: payloadWithPath,
+          error_code: input.error_code ?? null,
+          error_message: input.error_message?.slice(0, 500) ?? null,
+          http_status: input.http_status ?? null,
+          retry_count: 0,
+          max_retries: MAX_RETRIES,
+          status: 'pending',
+          next_attempt_at: new Date(Date.now() + computeBackoffMs(1)).toISOString(),
+          idempotency_key: idemKey,
+        })
+        .then(({ error }) => {
+          if (error) {
+            // 23505 = conflito da unique parcial → dedupe esperado, não é erro fatal.
+            if (error.code === '23505') {
+              log.info('[client-dlq] dedupe: item já em fila para', input.path);
+            } else {
+              log.warn('[client-dlq] insert failed:', error.message);
+            }
+          }
+        }),
+    )
+    .catch((e) => log.warn('[client-dlq] key build failed:', e instanceof Error ? e.message : String(e)));
 }
 
 // Helpers exportados para testes
