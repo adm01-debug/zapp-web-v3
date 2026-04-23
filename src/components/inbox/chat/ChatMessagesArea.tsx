@@ -64,6 +64,18 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   const prevLengthRef = useRef<number>(0);
   const lastScrollTopRef = useRef<number>(0);
   const lastTriggerAtRef = useRef<number>(0);
+  const [loadCancelled, setLoadCancelled] = useState(false);
+  const cancelBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const flagCancelled = useCallback(() => {
+    setLoadCancelled(true);
+    if (cancelBadgeTimerRef.current) clearTimeout(cancelBadgeTimerRef.current);
+    cancelBadgeTimerRef.current = setTimeout(() => setLoadCancelled(false), 2500);
+  }, []);
+
+  useEffect(() => () => {
+    if (cancelBadgeTimerRef.current) clearTimeout(cancelBadgeTimerRef.current);
+  }, []);
 
   const handleMessageDeleted = useCallback(async (messageId: string) => {
     try {
