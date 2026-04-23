@@ -1,4 +1,5 @@
 // Shared proxy logic for Evolution API edge function
+import { logRetryMetric, type RetryReason } from './log-retry-metric.ts';
 
 const TIMEOUT_MS = 15000;
 const MAX_RETRIES = 2;
@@ -67,6 +68,15 @@ export async function proxyToEvolution(
   const isIdempotent = method === 'GET' || method === 'PUT' || method === 'DELETE';
   const maxAttempts = isIdempotent ? MAX_RETRIES + 1 : 1;
 
+  // Métricas de retry: derivar `action` curta do path (ex.: '/message/sendText/' → 'sendText')
+  const startedAt = Date.now();
+  const retryReasons: RetryReason[] = [];
+  const actionLabel = (() => {
+    const parts = path.split('/').filter(Boolean);
+    return parts[parts.length - 1] || path;
+  })();
+  let lastHttpStatus: number | null = null;
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       if (attempt > 0) {
@@ -84,10 +94,12 @@ export async function proxyToEvolution(
       const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
       const response = await fetch(fullUrl, { ...opts, signal: controller.signal });
       clearTimeout(timeoutId);
+      lastHttpStatus = response.status;
 
       if (RETRYABLE_STATUSES.has(response.status) && attempt < maxAttempts - 1) {
         console.warn(`[Evolution API] Got ${response.status}, will retry...`);
         lastError = new Error(`HTTP ${response.status}`);
+        retryReasons.push({ attempt: attempt + 1, status: response.status, reason: `http_${response.status}` });
         continue;
       }
 
