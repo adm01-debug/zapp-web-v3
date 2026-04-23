@@ -236,7 +236,7 @@ serve(async (req) => {
       status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {
-    const log = new Logger('evolution-api');
+    const log = new Logger('evolution-api', req);
     const message = error instanceof Error ? error.message : 'Unknown error';
     log.error('Unhandled error', { error: message });
     return new Response(JSON.stringify({ error: message }), {
