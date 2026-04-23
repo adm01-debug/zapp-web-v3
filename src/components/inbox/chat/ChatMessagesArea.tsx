@@ -13,6 +13,11 @@ import { TypingIndicator } from '../TypingIndicator';
 import { format } from 'date-fns';
 import { formatDateSeparator } from './messageUtils';
 import { MessageBubble } from './MessageBubble';
+import {
+  recordLoadOlderStarted,
+  recordLoadOlderCancelled,
+  recordLoadOlderCompleted,
+} from './loadOlderMetrics';
 
 interface ChatMessagesAreaProps {
   messages: Message[];
@@ -154,6 +159,10 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     const TRIGGER_THROTTLE_MS = 250;
     const REVERSE_CANCEL_PX = 50;
 
+    // Tracks the perf.now() timestamp of the in-flight load so we can compute
+    // duration on completion or cancellation.
+    let inFlightStartedAt: number | null = null;
+
     const triggerLoad = () => {
       if (!hasMoreOlder || loadingOlder || isFetchingOlderRef.current) return;
       const now = Date.now();
@@ -169,7 +178,14 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
         cancelBadgeTimerRef.current = null;
       }
       prevScrollHeightRef.current = container.scrollHeight;
+      inFlightStartedAt = recordLoadOlderStarted({ contactJid });
+      const startedAtForThisRun = inFlightStartedAt;
       Promise.resolve(onLoadOlder()).finally(() => {
+        // Only count as "completed" if no cancellation flipped the flag first.
+        if (!cancelledRef.current && startedAtForThisRun != null) {
+          recordLoadOlderCompleted(startedAtForThisRun, { contactJid });
+        }
+        if (inFlightStartedAt === startedAtForThisRun) inFlightStartedAt = null;
         setTimeout(() => { isFetchingOlderRef.current = false; }, 100);
       });
     };
@@ -183,6 +199,8 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
       ) {
         cancelledRef.current = true;
         onCancelLoadOlder();
+        recordLoadOlderCancelled(inFlightStartedAt, { contactJid, reason: 'reverse-scroll' });
+        inFlightStartedAt = null;
         // Drop the saved height so the prepend-anchor effect skips reanchoring.
         prevScrollHeightRef.current = null;
         isFetchingOlderRef.current = false;
@@ -236,10 +254,13 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
       // On unmount (e.g. conversation switch), abort any in-flight loadOlder.
       if (isFetchingOlderRef.current && onCancelLoadOlder) {
         onCancelLoadOlder();
+        cancelledRef.current = true;
+        recordLoadOlderCancelled(inFlightStartedAt, { contactJid, reason: 'unmount' });
+        inFlightStartedAt = null;
         isFetchingOlderRef.current = false;
       }
     };
-  }, [onLoadOlder, onCancelLoadOlder, hasMoreOlder, loadingOlder, flagCancelled]);
+  }, [onLoadOlder, onCancelLoadOlder, hasMoreOlder, loadingOlder, flagCancelled, contactJid]);
 
   // Preserve scroll position after older messages prepend
   useEffect(() => {
