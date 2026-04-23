@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { ConnectionInfo, WebhookTestResult, WebhookConfig } from './hooks/useEvolutionMonitoring';
+import { IncidentsPanel } from './IncidentsPanel';
 
 interface SecretStatus {
   configured: boolean;
@@ -248,6 +249,9 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
           </CardContent>
         </Card>
       </div>
+
+      {/* Incidentes recentes (HMAC + 401/403) */}
+      <IncidentsPanel instances={connections.map(c => c.instance_id)} />
     </div>
   );
 }
