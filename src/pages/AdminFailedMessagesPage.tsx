@@ -403,10 +403,15 @@ export default function AdminFailedMessagesPage() {
 
       {/* Table */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Inbox className="h-4 w-4" />
-            {sorted.length} item{sorted.length === 1 ? '' : 's'}
+            {total} item{total === 1 ? '' : 's'}
+            {total > pageSize && (
+              <span className="text-xs text-muted-foreground font-normal">
+                · página {page + 1} de {totalPages}
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -445,8 +450,13 @@ export default function AdminFailedMessagesPage() {
               </TableHeader>
               <TableBody>
                 {sorted.map((row) => (
-                  <TableRow key={row.id} data-state={selectedIds.has(row.id) ? 'selected' : undefined}>
-                    <TableCell className="w-10">
+                  <TableRow
+                    key={row.id}
+                    data-state={selectedIds.has(row.id) ? 'selected' : undefined}
+                    className="cursor-pointer"
+                    onClick={() => setSelected(row)}
+                  >
+                    <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedIds.has(row.id)}
                         onCheckedChange={() => toggleOne(row.id)}
@@ -475,9 +485,13 @@ export default function AdminFailedMessagesPage() {
                     <TableCell className="text-center text-xs">
                       {row.retry_count}/{row.max_retries}
                     </TableCell>
-                    <TableCell className="text-xs">{formatDate(row.next_attempt_at)}</TableCell>
+                    <TableCell className="text-xs" title={row.next_attempt_at ?? undefined}>
+                      {row.next_attempt_at
+                        ? formatDistanceToNow(new Date(row.next_attempt_at), { addSuffix: true, locale: ptBR })
+                        : '—'}
+                    </TableCell>
                     <TableCell className="text-xs">{formatDate(row.created_at)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-1">
                         <Button
                           size="icon"
@@ -515,6 +529,34 @@ export default function AdminFailedMessagesPage() {
                 ))}
               </TableBody>
             </Table>
+          )}
+          {/* Pagination */}
+          {total > pageSize && (
+            <div className="flex items-center justify-between gap-2 p-3 border-t">
+              <span className="text-xs text-muted-foreground">
+                Mostrando {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} de {total}
+              </span>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
