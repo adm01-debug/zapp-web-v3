@@ -5724,6 +5724,80 @@ export type Database = {
           },
         ]
       }
+      qr_attempts: {
+        Row: {
+          connected_at: string | null
+          connection_id: string | null
+          connection_name: string | null
+          created_at: string
+          error_message: string | null
+          expired_at: string | null
+          id: string
+          instance_id: string
+          metadata: Json | null
+          requested_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          connected_at?: string | null
+          connection_id?: string | null
+          connection_name?: string | null
+          created_at?: string
+          error_message?: string | null
+          expired_at?: string | null
+          id?: string
+          instance_id: string
+          metadata?: Json | null
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          connected_at?: string | null
+          connection_id?: string | null
+          connection_name?: string | null
+          created_at?: string
+          error_message?: string | null
+          expired_at?: string | null
+          id?: string
+          instance_id?: string
+          metadata?: Json | null
+          requested_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_attempts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_attempts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_agent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_attempts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_attempts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       query_telemetry: {
         Row: {
           count_mode: string | null
@@ -8901,6 +8975,7 @@ export type Database = {
       cleanup_expired_event_keys: { Args: never; Returns: undefined }
       cleanup_health_log: { Args: never; Returns: undefined }
       cleanup_old_connection_action_log: { Args: never; Returns: undefined }
+      cleanup_old_qr_attempts: { Args: never; Returns: undefined }
       cleanup_old_send_failures: { Args: never; Returns: undefined }
       cleanup_webhook_deliveries: { Args: never; Returns: undefined }
       clear_login_attempts: { Args: { p_email: string }; Returns: undefined }
