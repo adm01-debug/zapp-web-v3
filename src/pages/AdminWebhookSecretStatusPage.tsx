@@ -1,5 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { recheckWebhookSignature, type RecheckResult } from '@/lib/recheckWebhookSignature';
+import { RecheckResultDialog } from './admin-webhook-secret-status/RecheckResultDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { queryExternalProxy } from '@/lib/externalProxy';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -174,6 +177,35 @@ export default function AdminWebhookSecretStatusPage() {
     activeBreaches,
     recentAlerts,
   } = useWebhookHealthAlerts();
+
+  // Recheck dialog state
+  const [recheckOpen, setRecheckOpen] = useState(false);
+  const [recheckLoading, setRecheckLoading] = useState(false);
+  const [recheckResult, setRecheckResult] = useState<RecheckResult | null>(null);
+  const [recheckError, setRecheckError] = useState<string | null>(null);
+  const [recheckingId, setRecheckingId] = useState<string | null>(null);
+
+  const handleRecheck = async (eventId: string) => {
+    setRecheckingId(eventId);
+    setRecheckOpen(true);
+    setRecheckLoading(true);
+    setRecheckResult(null);
+    setRecheckError(null);
+    try {
+      const res = await recheckWebhookSignature(eventId);
+      setRecheckResult(res);
+      if (res.signature_valid === true) toast.success('Assinatura válida');
+      else if (res.signature_valid === false) toast.error('Assinatura inválida');
+      else toast.message('Revalidação inconclusiva');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Falha ao revalidar';
+      setRecheckError(msg);
+      toast.error(msg);
+    } finally {
+      setRecheckLoading(false);
+      setRecheckingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
