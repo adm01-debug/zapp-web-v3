@@ -9503,6 +9503,10 @@ export type Database = {
         Args: { p_ids: string[]; p_reason: string }
         Returns: number
       }
+      rpc_dlq_log_reprocess_trigger: {
+        Args: { p_source?: string }
+        Returns: undefined
+      }
       rpc_dlq_retry_now: { Args: { p_id: string }; Returns: boolean }
       rpc_dlq_stats: { Args: never; Returns: Json }
       rpc_instance_auth_event_summary: {
