@@ -1,51 +1,90 @@
+## Objetivo
 
+Adicionar um spec Playwright que cobre o fluxo da Galeria de Mídia no painel de detalhes do contato:
 
-## Validador automatizado: diagrama de fan-out vs. realidade
+1. Ao abrir uma conversa, a galeria **não** aparece automaticamente.
+2. Ao clicar em "Abrir galeria", o `Dialog` abre.
+3. É possível fechar o `Dialog` (via botão X / tecla Escape) e ele desaparece do DOM.
 
-### Entregável
+## Contexto
 
-Teste Vitest em `src/test/realtimeFanout.test.ts` que parseia `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd` e falha se algum nó referenciado no diagrama deixar de existir no repositório, ou se algum dos consumidores conhecidos de `postgres_changes` na tabela `messages` não estiver listado no diagrama.
+- Suíte E2E vive em `e2e/` (Playwright + fixture `authenticatedPage` em `e2e/fixtures/auth.ts`).
+- `ContactAccordionSections.tsx` renderiza um botão "Abrir galeria" que faz `setMediaOpen(true)`.
+- `MediaGallery.tsx` usa `Dialog` com `DialogTitle` "Galeria de Mídia" — seletor estável por accessible name (`role="dialog"` + name).
+- O painel de detalhes (`ContactDetails`) renderiza ao selecionar uma conversa; em mobile vira `Sheet`. O spec roda em chromium desktop padrão (1280×720), então o painel lateral é o caminho.
 
-### O que o teste cobre
+## Spec proposto: `e2e/contact-media-gallery.spec.ts`
 
-1. **Existência dos arquivos clicáveis** — para cada `click NodeId "src/..."` no `.mmd`, valida que o caminho existe (`fs.existsSync`). Falha se um hook foi removido/renomeado sem atualizar o diagrama.
+Estrutura mínima (~40 linhas), seguindo padrão de `inbox-realtime.spec.ts`:
 
-2. **Sincronia do fan-out realtime** — varre `src/**/*.{ts,tsx}` por arquivos que assinam `postgres_changes` em `table: 'messages'` e compara com a lista canônica anotada no `.mmd` (8 consumidores). Falha em duas direções:
-   - **Hook órfão no código**: arquivo escuta `messages` mas não está listado no diagrama → diagrama desatualizado.
-   - **Hook fantasma no diagrama**: listado no diagrama mas o arquivo já não escuta → diagrama desatualizado.
+```ts
+import { test, expect } from './fixtures/auth';
 
-3. **Allowlist explícito** — a lista de consumidores esperados fica num array no topo do teste (`EXPECTED_REALTIME_CONSUMERS`) extraído dos comentários `%%` do `.mmd`. Mudou? Atualiza os dois lados conscientemente.
+test.describe('Contact media gallery', () => {
+  test('não abre automaticamente e pode ser fechada', async ({ authenticatedPage: page }) => {
+    await page.goto('/');
 
-### Como vou construir
+    // 1. Selecionar primeira conversa disponível (skip se vazio)
+    const firstConv = page
+      .locator('[data-testid="conversation-item"], [role="listitem"]')
+      .first();
+    if (!(await firstConv.isVisible().catch(() => false))) {
+      test.skip(true, 'Nenhuma conversa disponível para o usuário de teste');
+    }
+    await firstConv.click();
 
-1. Confirmar que `vitest` já roda no projeto (memória `vitest-baseline` confirma 2380+ testes).
-2. Copiar `/mnt/documents/TRILHA_MENSAGENS_NAVEGAVEL.mmd` para dentro do repo em `src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd` — testes não conseguem ler `/mnt/documents` em CI.
-3. Escrever `src/test/realtimeFanout.test.ts` com 3 `it(...)`:
-   - `it('todos os caminhos clicaveis existem')`
-   - `it('todo arquivo que escuta messages esta no diagrama')`
-   - `it('todo consumidor do diagrama ainda escuta messages')`
-4. Detector de assinatura: regex `/supabase\s*\.channel\([\s\S]*?table:\s*['"]messages['"]/` (multilinha, tolerante a quebras).
-5. Rodar `code--run_tests` para validar.
+    // 2. Esperar área de chat — garante que ContactDetails montou
+    await expect(
+      page.locator('[role="log"], [data-testid="chat-messages"]').first()
+    ).toBeVisible({ timeout: 10_000 });
 
-### Detalhes técnicos
+    // 3. Galeria NÃO deve estar visível automaticamente
+    const gallery = page.getByRole('dialog', { name: /Galeria de Mídia/i });
+    await expect(gallery).toBeHidden();
 
-- Sem dependências novas — usa `node:fs`, `node:path`, `fast-glob` já presente (verificar) ou `fs.readdirSync` recursivo.
-- Excludes: `**/__tests__/**`, `**/*.test.{ts,tsx}`, `**/test/**`, `node_modules`.
-- Allowlist documentada no topo do teste com referência ao bloco `%%` do `.mmd` para fácil manutenção.
-- Mensagens de falha incluem o caminho do arquivo problemático e instrução: *"atualize TRILHA_MENSAGENS_NAVEGAVEL.mmd"*.
+    // 4. Localizar e clicar no botão "Abrir galeria" (pode estar dentro de accordion colapsado)
+    const openBtn = page.getByRole('button', { name: /Abrir galeria/i });
+    if (!(await openBtn.isVisible().catch(() => false))) {
+      // expandir accordion "Mídia Compartilhada" se necessário
+      await page.getByRole('button', { name: /Mídia Compartilhada/i }).click();
+    }
+    await openBtn.click();
 
-### Arquivos afetados
+    // 5. Galeria abre
+    await expect(gallery).toBeVisible({ timeout: 5_000 });
 
-**Criar:**
-- `src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd` (cópia do diagrama)
-- `src/test/realtimeFanout.test.ts`
+    // 6. Fechar via Escape (o botão X do Radix Dialog também aceita name 'Close')
+    await page.keyboard.press('Escape');
+    await expect(gallery).toBeHidden({ timeout: 5_000 });
+  });
+});
+```
 
-**Não edita** código de produção nem o `.mmd` original em `/mnt/documents`.
+### Notas de robustez
 
-### Fora de escopo
+- `getByRole('dialog', { name: /Galeria de Mídia/i })` casa pela `DialogTitle` existente — sem precisar adicionar `data-testid`.
+- Passo 4 trata o caso de o accordion "stats/media" estar colapsado: tenta clicar no trigger pelo nome se o botão "Abrir galeria" não estiver visível.
+- `Escape` é o caminho de fechamento mais determinístico em Radix Dialog (evita ambiguidade com múltiplos botões X na página, incluindo o do painel `ContactDetails`).
+- Sem mocks de rede: o teste valida apenas comportamento de UI (montagem/desmontagem do dialog). Compatível com o ambiente que já roda `inbox-realtime.spec.ts`.
 
-- Validar arestas de envio (composição, retry, DLQ) — só fan-out realtime.
-- Validar outros diagramas (`MAPA_HOOKS_DEPENDENCIAS_NAVEGAVEL.mmd` etc.).
-- Auto-corrigir o diagrama — só falha o teste com instrução clara.
-- Cobrir consumidores de tabelas que não sejam `messages`.
+## Arquivos
 
+| Ação | Arquivo |
+|---|---|
+| Criar | `e2e/contact-media-gallery.spec.ts` |
+
+## Não-objetivos
+
+- Não validar conteúdo da galeria (thumbnails, contadores) — escopo é apenas abertura/fechamento.
+- Não testar variante mobile (`Sheet`) — fica para spec separado se necessário.
+- Não adicionar `data-testid` em `MediaGallery.tsx` ou no botão (seletores por role/name são suficientes e mais resilientes).
+- Não cobrir persistência por contato (planejada em iteração anterior, ainda não implementada).
+
+## Riscos e mitigações
+
+| Risco | Mitigação |
+|---|---|
+| Conta E2E sem conversas → spec sempre `skip` | Mesmo padrão já aceito em `inbox-realtime.spec.ts`. |
+| Múltiplos `[role="dialog"]` na página confundem o seletor | Filtro por `name: /Galeria de Mídia/i` desambigua. |
+| Animação de saída do `AnimatePresence` atrasa `toBeHidden` | Timeout de 5s já cobre folga (animação típica < 300ms). |
+| Botão "Abrir galeria" oculto por accordion fechado | Fallback explícito que clica no trigger "Mídia Compartilhada" antes. |
