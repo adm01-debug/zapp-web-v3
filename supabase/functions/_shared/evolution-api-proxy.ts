@@ -211,6 +211,17 @@ export async function proxyToEvolution(
         retry_reasons: retryReasons,
         total_duration_ms: Date.now() - startedAt,
       });
+      // Cache success so future retries with the same idem key replay this exact response.
+      if (idempotencyEnabled) {
+        await storeSendCache({
+          idem_key: idemKey!,
+          instance_name: instanceInPath ?? '',
+          path,
+          response: versioned,
+          http_status: 200,
+          external_message_id: extractEvolutionMessageId(versioned),
+        });
+      }
       return new Response(JSON.stringify(versioned), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
