@@ -19,6 +19,56 @@ export function normalizeEventName(event?: string): string {
   return (event || '').trim().toLowerCase().replace(/_/g, '.');
 }
 
+// Redacts phone/JID for logs: keeps country+area code, masks the rest.
+// "5511998765432@s.whatsapp.net" -> "551199***"
+export function redactJid(jid?: string | null): string {
+  if (!jid) return '';
+  const raw = String(jid).split('@')[0].replace(/:\d+$/, '');
+  if (raw.length <= 6) return raw.replace(/.(?=.{0})/g, '*');
+  return `${raw.slice(0, 6)}***`;
+}
+
+export function generateRequestId(): string {
+  try { return crypto.randomUUID(); } catch { return `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`; }
+}
+
+// SHA-256 hex of a string. Used to produce stable deduplication keys from raw webhook bodies.
+export async function sha256Hex(input: string): Promise<string> {
+  const bytes = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Marks an event as processed. Returns true if this is the first time (caller should process),
+// false if a prior row already exists (caller should treat as duplicate). Non-unique errors are
+// treated as "new" so the handler is never blocked by audit-infra failure.
+// deno-lint-ignore no-explicit-any
+export async function markEventProcessed(supabase: any, eventId: string, instance: string, eventType: string): Promise<boolean> {
+  const { error } = await supabase.from('webhook_events_processed').insert({
+    event_id: eventId, instance, event_type: eventType,
+  });
+  if (!error) return true;
+  if (error.code === '23505') return false;
+  console.warn('[idempotency] insert failed, proceeding as new:', error.message ?? error.code);
+  return true;
+}
+
+export interface WebhookAuditRow {
+  request_id: string;
+  instance?: string | null;
+  event_type?: string | null;
+  status: 'received' | 'processed' | 'duplicate' | 'error' | 'rejected';
+  duration_ms?: number | null;
+  error_message?: string | null;
+}
+
+// deno-lint-ignore no-explicit-any
+export async function auditWebhookEvent(supabase: any, row: WebhookAuditRow): Promise<void> {
+  try { await supabase.from('webhook_audit_log').insert(row); } catch (e) {
+    console.warn('[audit] insert failed:', (e as Error).message ?? String(e));
+  }
+}
+
 export function toEventRecords(data: unknown, collectionKeys: string[] = []): Record<string, unknown>[] {
   if (Array.isArray(data)) return data.filter(isRecord);
   if (!isRecord(data)) return [];
