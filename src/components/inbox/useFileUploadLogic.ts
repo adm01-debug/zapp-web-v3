@@ -113,7 +113,7 @@ export function useFileUploadLogic(opts: {
       : Promise.resolve(null);
 
     const [result, dbResult] = await Promise.all([apiPromise, dbPromise]);
-    const externalId = result?.key?.id || null;
+    const externalId = extractEvolutionMessageId(result);
     if (dbResult?.data?.id && externalId) {
       supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', dbResult.data.id).then(() => {});
     }
