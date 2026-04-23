@@ -336,6 +336,7 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   const clearFilters = () => {
     setStatusFilter(ALL_STATUSES);
     setPeriodFilter('all');
+    setScope('current');
   };
 
   return (
