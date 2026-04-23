@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WifiOff, RefreshCw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('EvolutionBanner');
+const RECONNECT_COOLDOWN_MS = 30_000;
 
 interface DisconnectedInstance {
   id: string;
@@ -16,6 +20,7 @@ export function EvolutionDisconnectBanner() {
   const [disconnected, setDisconnected] = useState<DisconnectedInstance[]>([]);
   const [dismissed, setDismissed] = useState(false);
   const [reconnecting, setReconnecting] = useState<string | null>(null);
+  const cooldownRef = useRef<Map<string, number>>(new Map());
 
   const fetchStatus = async () => {
     const { data } = await supabase
@@ -47,11 +52,19 @@ export function EvolutionDisconnectBanner() {
   }, []);
 
   const handleReconnect = async (conn: DisconnectedInstance) => {
+    const now = Date.now();
+    const lastAttempt = cooldownRef.current.get(conn.instance_id) ?? 0;
+    if (now - lastAttempt < RECONNECT_COOLDOWN_MS) {
+      const wait = Math.ceil((RECONNECT_COOLDOWN_MS - (now - lastAttempt)) / 1000);
+      toast.info(`Aguarde ${wait}s antes de tentar reconectar novamente.`);
+      log.warn('Reconnect cooldown active', { instance: conn.instance_id, waitSec: wait });
+      return;
+    }
+    cooldownRef.current.set(conn.instance_id, now);
+
     setReconnecting(conn.instance_id);
+    log.info('Reconnect attempt', { instance: conn.instance_id });
     try {
-      // banner usa `connect` (gera QR novo); a edge function lida com instância
-      // ausente (404) recriando automaticamente, e devolve erro estruturado em
-      // caso de 401/403 (autenticação) — que NÃO deve disparar fallback.
       const { data, error } = await supabase.functions.invoke('evolution-api', {
         body: { action: 'connect', instanceName: conn.instance_id },
       });
@@ -61,6 +74,7 @@ export function EvolutionDisconnectBanner() {
       if (data?.error === true) {
         const code = typeof data?.code === 'string' ? data.code : null;
         const message = data?.message || 'Evolution API retornou erro';
+        log.error('Reconnect returned error envelope', { instance: conn.instance_id, code, message });
         if (code === 'EVOLUTION_AUTH_ERROR') {
           toast.error(`Integração sem autorização: ${message}`, { duration: 8000 });
           return;
@@ -68,10 +82,12 @@ export function EvolutionDisconnectBanner() {
         throw new Error(message);
       }
 
+      log.info('Reconnect dispatched, navigating to connections', { instance: conn.instance_id });
       toast.success(`Reconectando ${conn.instance_id}... Abrindo tela de conexões para escanear o QR Code.`);
       window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Erro desconhecido';
+      log.error('Reconnect failed', { instance: conn.instance_id, error: msg });
       toast.error(`Erro ao reconectar ${conn.instance_id}: ${msg}`);
     } finally {
       setReconnecting(null);

@@ -3796,6 +3796,60 @@ export type Database = {
         }
         Relationships: []
       }
+      failed_messages: {
+        Row: {
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          http_status: number | null
+          id: string
+          instance_name: string
+          last_attempt_at: string | null
+          max_retries: number
+          next_attempt_at: string | null
+          payload: Json
+          remote_jid: string | null
+          retry_count: number
+          status: string
+          succeeded_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          http_status?: number | null
+          id?: string
+          instance_name: string
+          last_attempt_at?: string | null
+          max_retries?: number
+          next_attempt_at?: string | null
+          payload: Json
+          remote_jid?: string | null
+          retry_count?: number
+          status?: string
+          succeeded_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          http_status?: number | null
+          id?: string
+          instance_name?: string
+          last_attempt_at?: string | null
+          max_retries?: number
+          next_attempt_at?: string | null
+          payload?: Json
+          remote_jid?: string | null
+          retry_count?: number
+          status?: string
+          succeeded_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorite_contacts: {
         Row: {
           contact_id: string
