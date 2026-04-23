@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
@@ -11,19 +10,19 @@ const mockRemoveChannel = vi.fn();
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: (...args: any[]) => mockFrom(...args),
-    channel: (...args: any[]) => mockChannel(...args),
-    removeChannel: (...args: any[]) => mockRemoveChannel(...args),
+    from: (...args: unknown[]) => mockFrom(...args),
+    channel: (...args: unknown[]) => mockChannel(...args),
+    removeChannel: (...args: unknown[]) => mockRemoveChannel(...args),
   },
 }));
 
 vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
+  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 
 import { useMessages } from '@/hooks/useMessages';
 
-function makeQueryChain(data: any[] = [], error: any = null) {
+function makeQueryChain(data: unknown[] = [], error: unknown = null) {
   const rangeMock = vi.fn()
     .mockResolvedValueOnce({ data, error })
     .mockResolvedValue({ data: [], error: null });

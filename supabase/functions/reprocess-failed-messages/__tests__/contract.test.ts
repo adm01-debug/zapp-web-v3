@@ -11,9 +11,14 @@
  *  - Credenciais Evolution validadas antes do loop.
  */
 import { assert, assertMatch } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { readSourceFrom } from "../../_shared/test-helpers.ts";
 import { hasMarker, readSource } from "./_helpers.ts";
 
 const SOURCE = await readSource();
+const BACKOFF_SOURCE = await readSourceFrom(
+  import.meta.url,
+  "../../_shared/dlq-backoff.ts",
+);
 
 Deno.test("Setup: usa SERVICE_ROLE_KEY e exige credenciais Evolution", () => {
   assertMatch(SOURCE, /SUPABASE_SERVICE_ROLE_KEY/);
@@ -58,9 +63,15 @@ Deno.test("Esgotado: attempt >= max_retries => abandoned", () => {
 });
 
 Deno.test("Backoff exponencial limitado (cap em 1h)", () => {
-  // Math.min(60_000 * 2^attempt, 3_600_000)
-  assertMatch(SOURCE, /Math\.min\(60_000 \* Math\.pow\(2, attempt\), 3_600_000\)/);
+  // O worker delega o cálculo ao helper compartilhado `computeBackoffMs`.
+  assertMatch(SOURCE, /computeBackoffMs\(attempt \+ 1\)/);
+  assertMatch(SOURCE, /from '\.\.\/_shared\/dlq-backoff\.ts'/);
   assertMatch(SOURCE, /next_attempt_at:/);
+  // O helper mantém a fórmula base*2^(n-1) com teto em 1h (60_000 → 3_600_000).
+  assertMatch(BACKOFF_SOURCE, /BASE_DELAY_MS\s*=\s*60_000/);
+  assertMatch(BACKOFF_SOURCE, /MAX_DELAY_MS\s*=\s*3_600_000/);
+  assertMatch(BACKOFF_SOURCE, /Math\.min\(raw,\s*MAX_DELAY_MS\)/);
+  assertMatch(BACKOFF_SOURCE, /BASE_DELAY_MS \* Math\.pow\(2, safeAttempt - 1\)/);
 });
 
 Deno.test("Catch: exceções também respeitam max_retries (retry/abandon)", () => {
