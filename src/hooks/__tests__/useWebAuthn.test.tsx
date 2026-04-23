@@ -54,47 +54,47 @@ describe('useWebAuthn', () => {
     mockUseAuth.mockReturnValue({ user: null });
     const { result } = renderHook(() => useWebAuthn());
 
-    let res: unknown;
+    let res: { success: boolean; userId?: string; userEmail?: string } = { success: false };
     await act(async () => {
       res = await result.current.registerPasskey('My Key');
     });
 
-    expect((res as any).success).toBe(false);
+    expect(res.success).toBe(false);
   });
 
   it('registerPasskey fails when WebAuthn not supported', async () => {
     mockUseAuth.mockReturnValue({ user: { id: 'u1', email: 'test@test.com' } });
     const { result } = renderHook(() => useWebAuthn());
 
-    let res: unknown;
+    let res: { success: boolean; userId?: string; userEmail?: string } = { success: false };
     await act(async () => {
       res = await result.current.registerPasskey('My Key');
     });
 
-    expect((res as any).success).toBe(false);
+    expect(res.success).toBe(false);
   });
 
   it('authenticateWithPasskey fails when WebAuthn not supported', async () => {
     const { result } = renderHook(() => useWebAuthn());
 
-    let res: unknown;
+    let res: { success: boolean; userId?: string; userEmail?: string } = { success: false };
     await act(async () => {
       res = await result.current.authenticateWithPasskey('test@test.com');
     });
 
-    expect((res as any).success).toBe(false);
+    expect(res.success).toBe(false);
   });
 
   it('deletePasskey requires user to be logged in', async () => {
     mockUseAuth.mockReturnValue({ user: null });
     const { result } = renderHook(() => useWebAuthn());
 
-    let res: unknown;
+    let res: { success: boolean; userId?: string; userEmail?: string } = { success: false };
     await act(async () => {
       res = await result.current.deletePasskey('passkey-1');
     });
 
-    expect((res as any).success).toBe(false);
+    expect(res.success).toBe(false);
   });
 
   it('deletePasskey calls supabase with correct params', async () => {
@@ -114,24 +114,24 @@ describe('useWebAuthn', () => {
 
     const { result } = renderHook(() => useWebAuthn());
 
-    let res: unknown;
+    let res: { success: boolean; userId?: string; userEmail?: string } = { success: false };
     await act(async () => {
       res = await result.current.deletePasskey('passkey-1');
     });
 
-    expect((res as any).success).toBe(true);
+    expect(res.success).toBe(true);
   });
 
   it('renamePasskey requires user', async () => {
     mockUseAuth.mockReturnValue({ user: null });
     const { result } = renderHook(() => useWebAuthn());
 
-    let res: unknown;
+    let res: { success: boolean; userId?: string; userEmail?: string } = { success: false };
     await act(async () => {
       res = await result.current.renamePasskey('pk-1', 'New Name');
     });
 
-    expect((res as any).success).toBe(false);
+    expect(res.success).toBe(false);
   });
 
   it('renamePasskey updates name correctly', async () => {
@@ -151,12 +151,12 @@ describe('useWebAuthn', () => {
 
     const { result } = renderHook(() => useWebAuthn());
 
-    let res: unknown;
+    let res: { success: boolean; userId?: string; userEmail?: string } = { success: false };
     await act(async () => {
       res = await result.current.renamePasskey('pk-1', 'Updated Key');
     });
 
-    expect((res as any).success).toBe(true);
+    expect(res.success).toBe(true);
   });
 
   it('fetchPasskeys does nothing when no user', async () => {
