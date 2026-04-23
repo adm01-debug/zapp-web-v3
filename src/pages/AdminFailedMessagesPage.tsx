@@ -430,7 +430,25 @@ export default function AdminFailedMessagesPage() {
             </Select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Motivo</label>
+            <label className="text-xs text-muted-foreground">Causa raiz</label>
+            <Select value={rootCauseFilter} onValueChange={(v) => setRootCauseFilter(v as RootCause | 'all')}>
+              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {ALL_ROOT_CAUSES.map((c) => {
+                  const meta = getRootCauseMeta(c);
+                  const count = aggregates.byRootCause.find(x => x.cause === c)?.count ?? 0;
+                  return (
+                    <SelectItem key={c} value={c}>
+                      {meta.label}{count > 0 ? ` (${count})` : ''}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">Motivo (error_code)</label>
             <Select value={errorCodeFilter} onValueChange={setErrorCodeFilter}>
               <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
               <SelectContent>
