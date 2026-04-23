@@ -18,7 +18,8 @@ import { QuotedMessage } from '../ReplyQuote';
 import { LocationMessageDisplay } from '../LocationMessage';
 import { TextToSpeechButton } from '../TextToSpeechButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatMessageTime, MessageStatusIcon } from './messageUtils';
+import { formatMessageTime } from './messageUtils';
+import { MessageStatusInline } from './MessageStatusInline';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { sendMessageToContact } from '@/hooks/realtime/messageSender';
@@ -231,7 +232,7 @@ export function MessageBubble({
                 )}>
                   {message.isEdited && <span className="text-[9px] italic mr-0.5">editada</span>}
                   <span className="text-[10px] font-medium">{formatMessageTime(message.timestamp)}</span>
-                  {isSent && <MessageStatusIcon status={message.status} />}
+                  {isSent && <MessageStatusInline message={message} />}
                 </div>
               </motion.div>
             )}
