@@ -137,15 +137,22 @@ Deno.serve(async (req) => {
     const { data: rowsCurrent, error: errCur } = await q;
     if (errCur) throw errCur;
 
-    // Janela anterior (apenas para delta — só count)
-    const { count: previousCount } = await admin
+    // Janela anterior — agora também trazemos retry_reasons para construir o
+    // ranking comparativo (modo de comparação no painel). Filtros de action/
+    // instance/status são re-aplicados para alinhar a base de comparação.
+    let qPrev = admin
       .from('evolution_retry_metrics')
-      .select('*', { count: 'exact', head: true })
+      .select('retry_reasons, attempt_count, final_status, action, instance_name, total_duration_ms, id, method, idempotency_key, final_http_status, created_at')
       .gte('created_at', previousSince)
       .lt('created_at', since);
+    if (action) qPrev = qPrev.eq('action', action);
+    if (instance) qPrev = qPrev.eq('instance_name', instance);
+    if (status) qPrev = qPrev.eq('final_status', status);
+    const { data: rowsPrevious } = await qPrev;
 
     const aggCurrent = aggregate((rowsCurrent ?? []) as RetryRow[]);
-    const previousTotal = previousCount ?? 0;
+    const aggPrevious = aggregate((rowsPrevious ?? []) as RetryRow[]);
+    const previousTotal = aggPrevious.total;
     const deltaPct = previousTotal === 0
       ? null
       : Math.round(((aggCurrent.total - previousTotal) / previousTotal) * 1000) / 10;
@@ -154,6 +161,7 @@ Deno.serve(async (req) => {
       rows: rowsCurrent ?? [],
       aggregates: aggCurrent,
       previousTotal,
+      previousTopReasons: aggPrevious.topReasons,
       deltaPct,
       windowHours: hours,
     }), {
