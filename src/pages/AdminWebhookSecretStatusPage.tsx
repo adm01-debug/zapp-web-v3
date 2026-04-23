@@ -167,6 +167,14 @@ export default function AdminWebhookSecretStatusPage() {
   const enabled = (secret?.configured ?? false) || total24h > 0;
   const scopeLabel = selectedInstance ?? 'todas';
 
+  // Realtime alerts hook — partilha config/state com o painel.
+  const {
+    config: alertConfig,
+    setConfig: setAlertConfig,
+    activeBreaches,
+    recentAlerts,
+  } = useWebhookHealthAlerts();
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
