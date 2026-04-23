@@ -9151,6 +9151,7 @@ export type Database = {
       cleanup_old_connection_action_log: { Args: never; Returns: undefined }
       cleanup_old_evolution_incidents: { Args: never; Returns: number }
       cleanup_old_evolution_retry_metrics: { Args: never; Returns: undefined }
+      cleanup_old_failed_messages: { Args: never; Returns: undefined }
       cleanup_old_qr_attempts: { Args: never; Returns: undefined }
       cleanup_old_send_failures: { Args: never; Returns: undefined }
       cleanup_webhook_deliveries: { Args: never; Returns: undefined }
