@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
 import { FloatingParticles } from '@/components/dashboard/FloatingParticles';
@@ -40,6 +40,25 @@ export function ConnectionsView() {
   const [queuesDialog, setQueuesDialog] = useState({ open: false, connectionId: '', connectionName: '' });
   const [settingsDialog, setSettingsDialog] = useState({ open: false, instanceName: '', connectionName: '' });
   const [integrationsDialog, setIntegrationsDialog] = useState({ open: false, instanceName: '', connectionName: '' });
+
+  // Deep-link: ?qr=<instance_id> auto-opens the QR dialog for that instance.
+  const deepLinkHandledRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkHandledRef.current || loading || connections.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const targetInstance = params.get('qr');
+    if (!targetInstance) return;
+    const conn = connections.find((c) => c.instance_id === targetInstance);
+    if (conn) {
+      deepLinkHandledRef.current = true;
+      handleShowQrCode(conn);
+      // Clean URL so refreshing doesn't reopen the dialog unexpectedly.
+      const url = new URL(window.location.href);
+      url.searchParams.delete('qr');
+      url.searchParams.delete('view');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [connections, loading, handleShowQrCode]);
 
   const handleSyncHistory = async (connection: { id: string; instance_id?: string | null }) => {
     if (!connection.instance_id) return;

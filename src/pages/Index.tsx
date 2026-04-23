@@ -71,6 +71,20 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
     return () => window.removeEventListener('navigate-view', handler as EventListener);
   }, [setCurrentView]);
 
+  // Deep-link: ?view=<viewId> on initial load opens that view directly (used by copy-link flows).
+  const deepLinkViewHandledRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkViewHandledRef.current || loading || !user) return;
+    const params = new URLSearchParams(window.location.search);
+    const targetView = params.get('view');
+    if (targetView && targetView !== currentView) {
+      deepLinkViewHandledRef.current = true;
+      setCurrentView(targetView);
+    } else if (targetView) {
+      deepLinkViewHandledRef.current = true;
+    }
+  }, [loading, user, currentView, setCurrentView]);
+
   // Keyboard navigation: Alt+←/→, Escape, Alt+Home
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
