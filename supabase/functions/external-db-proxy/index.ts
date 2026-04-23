@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       query = query.order(order.column, { ascending: order.ascending ?? true })
     }
 
-    const effectiveLimit = limit || 50
+    const effectiveLimit = Math.min(limit || 50, 500)
     const effectiveOffset = offset || 0
     query = query.range(effectiveOffset, effectiveOffset + effectiveLimit - 1)
 
