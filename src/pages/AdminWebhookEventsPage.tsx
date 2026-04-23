@@ -43,6 +43,23 @@ const EVENT_TYPES = [
 
 type EventTypeFilter = typeof EVENT_TYPES[number];
 
+// Tipos de mensagem mais comuns recebidos pela Evolution. `all` desliga o filtro.
+const MESSAGE_TYPES = [
+  'all', 'conversation', 'extendedTextMessage', 'imageMessage', 'videoMessage',
+  'audioMessage', 'documentMessage', 'stickerMessage', 'locationMessage',
+  'contactMessage', 'reactionMessage', 'pollCreationMessage', 'protocolMessage',
+] as const;
+type MessageTypeFilter = typeof MESSAGE_TYPES[number];
+
+// Status agregado (independe do filtro textual livre).
+const STATUS_OPTIONS = [
+  { value: 'all',       label: 'Todos' },
+  { value: 'processed', label: 'Processados' },
+  { value: 'pending',   label: 'Pendentes' },
+  { value: 'error',     label: 'Com erro' },
+] as const;
+type StatusFilter = typeof STATUS_OPTIONS[number]['value'];
+
 const RANGE_OPTIONS = [
   { value: '1', label: 'Última hora' },
   { value: '6', label: 'Últimas 6h' },
