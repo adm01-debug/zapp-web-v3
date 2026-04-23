@@ -6,6 +6,7 @@ import { CheckCircle2, XCircle, AlertTriangle, Send, Shield, PlayCircle, Loader2
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { RetryMetricsPanel } from './RetryMetricsPanel';
 import type { ConnectionInfo, WebhookTestResult, WebhookConfig } from './hooks/useEvolutionMonitoring';
 
 interface SecretStatus {
