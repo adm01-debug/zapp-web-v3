@@ -87,15 +87,15 @@ describe('createScrollLoaderController', () => {
   });
 
   describe('cancelamento previne pulo de scroll', () => {
-    it('reverse-scroll DOWN > reverseCancelPx aborta o fetch e zera savedScrollHeight', () => {
+    it('reverse-scroll DOWN > reverseCancelPx E alem da zona de preload aborta o fetch', () => {
       const { ctrl, onCancelLoadOlder } = setup();
-      // Estabelece baseline de scroll.
+      // Estabelece baseline de scroll dentro da zona de preload.
       ctrl.onScroll(100, 600); // dispara loadOlder + salva scrollHeight=5000
       expect(ctrl.isFetching()).toBe(true);
       expect(ctrl.savedScrollHeight()).toBe(5000);
 
-      // Usuario muda de ideia e rola pra baixo (delta > 50).
-      ctrl.onScroll(200, 600);
+      // Usuario rola para FORA da zona de preload (top=800 > preload=600).
+      ctrl.onScroll(800, 600);
       expect(onCancelLoadOlder).toHaveBeenCalledTimes(1);
       expect(ctrl.wasCancelled()).toBe(true);
       // savedScrollHeight zerado => prepend-anchor effect NAO vai reposicionar
@@ -104,18 +104,26 @@ describe('createScrollLoaderController', () => {
       expect(ctrl.isFetching()).toBe(false);
     });
 
-    it('movimento DOWN <= reverseCancelPx NAO cancela', () => {
+    it('movimento DOWN dentro da zona de preload NAO cancela (anti-jitter)', () => {
       const { ctrl, onCancelLoadOlder } = setup();
       ctrl.onScroll(100, 600);
-      ctrl.onScroll(140, 600); // delta = 40, abaixo do limite de 50
+      // Delta = 100 (>50) MAS top=200 ainda dentro da zona de preload (<600).
+      ctrl.onScroll(200, 600);
       expect(onCancelLoadOlder).not.toHaveBeenCalled();
       expect(ctrl.savedScrollHeight()).toBe(5000);
+    });
+
+    it('movimento DOWN <= reverseCancelPx (mesmo fora do topo) NAO cancela', () => {
+      const { ctrl, onCancelLoadOlder } = setup();
+      ctrl.onScroll(700, 600); // fora da zona, sem disparo (top >= preload)
+      ctrl.onScroll(740, 600); // delta = 40, abaixo do limite de 50
+      expect(onCancelLoadOlder).not.toHaveBeenCalled();
     });
 
     it('sem onCancelLoadOlder, nao tenta cancelar nem zera savedScrollHeight', () => {
       const { ctrl } = setup({ onCancelLoadOlder: undefined });
       ctrl.onScroll(100, 600);
-      ctrl.onScroll(300, 600);
+      ctrl.onScroll(800, 600); // mesmo cruzando a zona, sem callback
       expect(ctrl.isFetching()).toBe(true);
       expect(ctrl.savedScrollHeight()).toBe(5000);
     });
@@ -132,7 +140,7 @@ describe('createScrollLoaderController', () => {
     it('apos cancelar, novo trigger eh permitido (passado o throttle)', () => {
       const { ctrl, onLoadOlder } = setup();
       ctrl.onScroll(100, 600);              // load #1
-      ctrl.onScroll(300, 600);              // cancel
+      ctrl.onScroll(800, 600);              // cancel (fora da zona)
       advance(300);                          // passa throttle
       ctrl.onScroll(50, 600);               // load #2
       expect(onLoadOlder).toHaveBeenCalledTimes(2);
