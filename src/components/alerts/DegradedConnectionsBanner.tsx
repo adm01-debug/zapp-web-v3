@@ -60,8 +60,18 @@ export function DegradedConnectionsBanner({ onNavigate, recentWindowMs = 10 * 60
 
   if (degraded.length === 0 || isDismissed) return null;
 
+  const formatDegradedAt = (iso: string | null) => {
+    if (!iso) return null;
+    try {
+      return new Date(iso).toLocaleString('pt-BR', {
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+      });
+    } catch { return null; }
+  };
+
+  const firstDegradedAt = formatDegradedAt(degraded[0]?.degraded_at ?? null);
   const label = degraded.length === 1
-    ? `Conexão "${degraded[0].instance_id}" está degradada`
+    ? `Conexão "${degraded[0].instance_id}" rebaixada${firstDegradedAt ? ` em ${firstDegradedAt}` : ''}`
     : `${degraded.length} conexões com desempenho degradado`;
 
   return (
@@ -78,7 +88,9 @@ export function DegradedConnectionsBanner({ onNavigate, recentWindowMs = 10 * 60
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span className="text-sm font-medium truncate">{label}</span>
           <span className="text-xs opacity-80 hidden sm:inline">
-            Latência alta ou estado intermitente detectado.
+            {degraded.length > 1 && firstDegradedAt
+              ? `Rebaixamento mais recente em ${firstDegradedAt}.`
+              : 'Latência alta ou estado intermitente detectado.'}
           </span>
           <button
             onClick={() => onNavigate('connections')}
