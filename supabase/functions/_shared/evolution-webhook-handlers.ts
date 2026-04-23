@@ -6,6 +6,93 @@ import {
   getConnectionByInstance, getContactByPhone, persistProfilePicture,
 } from "./evolution-helpers.ts";
 
+// deno-lint-ignore no-explicit-any
+export async function handleLogoutInstance(supabase: any, instance: string, data: unknown) {
+  const payload = isRecord(data) ? data : {};
+  const reasonCode = (payload.disconnectionReasonCode as number | undefined)
+    ?? (payload.reasonCode as number | undefined)
+    ?? null;
+
+  const { data: prev } = await supabase.from('whatsapp_connections')
+    .select('id, status, phone_number').eq('instance_id', instance).maybeSingle();
+
+  await supabase.from('whatsapp_connections')
+    .update({ status: 'logged_out', qr_code: null, updated_at: new Date().toISOString() })
+    .eq('instance_id', instance);
+
+  if (prev && prev.status !== 'logged_out') {
+    const phone = prev.phone_number ? ` (${prev.phone_number})` : '';
+    await supabase.from('warroom_alerts').insert({
+      alert_type: 'critical',
+      title: `🚪 Instância ${instance} deslogada`,
+      message: `WhatsApp desconectou por logout${reasonCode ? ` (code=${reasonCode})` : ''}. ` +
+        `A instância${phone} precisa reautenticar via QR code.`,
+      source: 'evolution-webhook',
+    });
+  }
+  console.log(`[LOGOUT_INSTANCE] instance=${instance} reasonCode=${reasonCode ?? 'n/a'}`);
+}
+
+// deno-lint-ignore no-explicit-any
+export async function handleGroupsUpsert(supabase: any, instance: string, data: unknown) {
+  const groups = toEventRecords(data, ['groups']);
+  if (groups.length === 0) return;
+  const connection = await getConnectionByInstance(supabase, instance);
+  if (!connection) return;
+
+  let upserted = 0;
+  for (const g of groups) {
+    const groupId = (g.id as string) || (g.remoteJid as string);
+    const name = (g.subject as string) || (g.name as string);
+    if (!groupId) continue;
+    const participants = g.participants as unknown[] | undefined;
+    const description = g.desc as string || g.description as string || null;
+    const row = {
+      whatsapp_connection_id: connection.id,
+      group_id: groupId,
+      name: name || groupId,
+      description,
+      participant_count: Array.isArray(participants) ? participants.length : 0,
+      avatar_url: (g.pictureUrl as string) || (g.profilePictureUrl as string) || null,
+      updated_at: new Date().toISOString(),
+    };
+    const { error } = await supabase.from('whatsapp_groups')
+      .upsert(row, { onConflict: 'whatsapp_connection_id,group_id' });
+    if (!error) upserted++;
+  }
+  console.log(`[groups.upsert] instance=${instance} upserted=${upserted}/${groups.length}`);
+}
+
+// deno-lint-ignore no-explicit-any
+export async function handleGroupParticipantsUpdate(supabase: any, instance: string, data: unknown) {
+  const payload = isRecord(data) ? data : {};
+  const groupId = payload.id as string;
+  const action = payload.action as string;
+  const participants = (payload.participants as string[] | undefined) ?? [];
+  if (!groupId) return;
+  const connection = await getConnectionByInstance(supabase, instance);
+  if (!connection) return;
+
+  const { data: existing } = await supabase.from('whatsapp_groups')
+    .select('id, participant_count').eq('whatsapp_connection_id', connection.id).eq('group_id', groupId).maybeSingle();
+
+  const delta = action === 'add' || action === 'promote' ? participants.length
+    : action === 'remove' || action === 'demote' ? -participants.length : 0;
+  const nextCount = Math.max(0, (existing?.participant_count ?? 0) + delta);
+
+  if (existing) {
+    await supabase.from('whatsapp_groups')
+      .update({ participant_count: nextCount, updated_at: new Date().toISOString() })
+      .eq('id', existing.id);
+  } else {
+    await supabase.from('whatsapp_groups').insert({
+      whatsapp_connection_id: connection.id, group_id: groupId,
+      name: groupId, participant_count: Math.max(0, delta),
+    });
+  }
+  console.log(`[group.participants.update] instance=${instance} group=${groupId} action=${action} delta=${delta}`);
+}
+
 // Re-export message handlers for backward compatibility
 export {
   handleSendMessage, handleMessagesUpdate, handleMessagesDelete,
@@ -15,7 +102,7 @@ export {
 // deno-lint-ignore no-explicit-any
 export async function handleConnectionUpdate(supabase: any, instance: string, baseData: Record<string, unknown>) {
   const status = (baseData.status as string) === 'open' ? 'connected' :
-    (baseData.status as string) === 'close' ? 'disconnected' : 'pending';
+    (baseData.status as string) === 'close' ? 'disconnected' : 'connecting';
 
   const { data: prevConn } = await supabase.from('whatsapp_connections')
     .select('status, phone_number').eq('instance_id', instance).single();
@@ -276,7 +363,7 @@ export async function handleApplicationStartup(supabase: any, instance: string) 
     .select('id, status').eq('instance_id', instance).maybeSingle();
   if (conn && conn.status === 'disconnected') {
     await supabase.from('whatsapp_connections')
-      .update({ status: 'pending', updated_at: new Date().toISOString() }).eq('id', conn.id);
+      .update({ status: 'connecting', updated_at: new Date().toISOString() }).eq('id', conn.id);
   }
 }
 

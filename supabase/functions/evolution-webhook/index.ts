@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { getCorsHeaders, handleCors } from "../_shared/validation.ts";
 import {
   isRecord, normalizeEventName, toEventRecords,
-  handleReactionEvent,
+  handleReactionEvent, redactJid, generateRequestId,
   type WebhookPayload,
 } from "../_shared/evolution-helpers.ts";
 import { parseMessageContent } from "../_shared/evolution-media.ts";
@@ -13,47 +13,83 @@ import {
   handleLabelsEdit, handleLabelsAssociation, handleCallEvent,
   handleChatsDelete, handleApplicationStartup, handleMessagesSet,
   handleContactsSet, handleChatsSet, handleMessagesEdited,
+  handleLogoutInstance, handleGroupsUpsert, handleGroupParticipantsUpdate,
 } from "../_shared/evolution-webhook-handlers.ts";
 import {
   handleIncomingMessage, handleOutgoingWhatsAppMessage,
 } from "../_shared/evolution-webhook-messages.ts";
+import { createWebhookValidator } from "../_shared/hmac-validation.ts";
+
+const WEBHOOK_SECRET = Deno.env.get('EVOLUTION_WEBHOOK_SECRET') || Deno.env.get('WEBHOOK_SECRET') || '';
+const STRICT_MODE = (Deno.env.get('EVOLUTION_WEBHOOK_STRICT') ?? 'true').toLowerCase() !== 'false';
+const validateWebhook = WEBHOOK_SECRET
+  ? createWebhookValidator(WEBHOOK_SECRET, STRICT_MODE)
+  : null;
 
 serve(async (req) => {
+  const requestId = generateRequestId();
+  const baseHeaders = { 'Content-Type': 'application/json', 'x-request-id': requestId };
+
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
-  const corsHeaders = getCorsHeaders(req);
+  const corsHeaders = { ...getCorsHeaders(req), ...baseHeaders };
 
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
+  // HMAC validation before reading body as JSON so we can verify on raw text.
+  let rawBody: string;
+  if (validateWebhook) {
+    const result = await validateWebhook(req);
+    if (!result.valid) {
+      console.warn(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`);
+      return new Response(
+        JSON.stringify({ error: 'unauthorized', reason: result.error ?? 'invalid_signature', requestId }),
+        { status: 401, headers: corsHeaders },
+      );
+    }
+    rawBody = result.payload ?? '';
+  } else {
+    console.warn(`[webhook][${requestId}] WEBHOOK_SECRET not configured — signature validation skipped`);
+    rawBody = await req.text();
+  }
+
+  let payload: WebhookPayload;
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    payload = JSON.parse(rawBody) as WebhookPayload;
+  } catch {
+    return new Response(JSON.stringify({ error: 'invalid_json', requestId }), { status: 400, headers: corsHeaders });
+  }
 
-    const payload: WebhookPayload = await req.json();
-    const event = normalizeEventName(payload.event);
-    const instance = payload.instance;
-    const data = payload.data ?? {};
-    const baseData = isRecord(data) ? data : {};
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('Evolution webhook received:', payload.event, '->', event, instance);
+  const event = normalizeEventName(payload.event);
+  const instance = payload.instance;
+  const data = payload.data ?? {};
+  const baseData = isRecord(data) ? data : {};
 
+  console.log(`[webhook][${requestId}] received raw=${payload.event} norm=${event} instance=${instance}`);
+
+  try {
     if (event === 'connection.update') await handleConnectionUpdate(supabase, instance, baseData);
+
+    if (event === 'logout.instance') await handleLogoutInstance(supabase, instance, baseData);
 
     if (event === 'qrcode.updated') {
       const qrCode = (baseData.qrcode as Record<string, string>)?.base64;
       if (qrCode) {
         await supabase.from('whatsapp_connections')
-          .update({ qr_code: qrCode, status: 'pending', updated_at: new Date().toISOString() })
+          .update({ qr_code: qrCode, status: 'qr_pending', updated_at: new Date().toISOString() })
           .eq('instance_id', instance);
       }
     }
 
     if (event === 'messages.upsert') {
       const entries = toEventRecords(data, ['messages']);
-      console.log(`[MSG_UPSERT] Processing ${entries.length} entries for instance ${instance}`);
+      console.log(`[webhook][${requestId}][msg.upsert] entries=${entries.length} instance=${instance}`);
       for (const entry of entries) {
         const keySource = isRecord(entry.key) ? entry.key : isRecord(baseData.key) ? baseData.key : null;
         const externalId =
@@ -63,7 +99,7 @@ serve(async (req) => {
           null;
 
         if (!externalId) {
-          console.log('[MSG_UPSERT] Ignored: missing message id', { instance, entryKeys: Object.keys(entry) });
+          console.log(`[webhook][${requestId}][msg.upsert] ignored: missing id`);
           continue;
         }
 
@@ -93,20 +129,19 @@ serve(async (req) => {
             (typeof keySource?.participantAlt === 'string' ? keySource.participantAlt : undefined),
         };
 
-        console.log(`[MSG_UPSERT] id=${externalId} fromMe=${key.fromMe} remoteJid=${key.remoteJid} hasReaction=${!!(entry.message as Record<string,unknown>)?.reactionMessage || !!(baseData.message as Record<string,unknown>)?.reactionMessage}`);
+        const hasReaction = !!(entry.message as Record<string,unknown>)?.reactionMessage
+          || !!(baseData.message as Record<string,unknown>)?.reactionMessage;
+        console.log(`[webhook][${requestId}][msg.upsert] id=${externalId} fromMe=${key.fromMe} jid=${redactJid(key.remoteJid)} reaction=${hasReaction}`);
 
         const msg = (entry.message || baseData.message) as Record<string, unknown> | undefined;
         if (msg?.reactionMessage) {
-          console.log(`[MSG_UPSERT] Processing reaction for ${externalId}`);
           await handleReactionEvent(supabase, msg.reactionMessage as Record<string, unknown>, !!key.fromMe);
           continue;
         }
 
         if (!key.fromMe) {
-          console.log(`[MSG_UPSERT] -> handleIncomingMessage for ${externalId}`);
           await handleIncomingMessage(supabase, instance, { ...baseData, ...entry }, key, supabaseUrl, supabaseServiceKey);
         } else {
-          console.log(`[MSG_UPSERT] -> handleOutgoingWhatsAppMessage for ${externalId}`);
           await handleOutgoingWhatsAppMessage(supabase, instance, { ...baseData, ...entry }, key);
         }
       }
@@ -120,15 +155,11 @@ serve(async (req) => {
     if (event === 'chats.upsert' || event === 'chats.update') await handleChatsUpdate(supabase, instance, data);
 
     if (event === 'groups.upsert' || event === 'group.update') {
-      const groupData = isRecord(data) ? data : {};
-      const groupJid = groupData.id as string;
-      const subject = groupData.subject as string;
-      if (groupJid && subject) console.log(`Group update: ${groupJid} — ${subject}`);
+      await handleGroupsUpsert(supabase, instance, data);
     }
 
     if (event === 'group.participants.update' || event === 'group-participants.update') {
-      const participantData = isRecord(data) ? data : {};
-      console.log(`Group ${participantData.id} participants ${participantData.action}: ${(participantData.participants as string[])?.join(', ')}`);
+      await handleGroupParticipantsUpdate(supabase, instance, data);
     }
 
     if (event === 'labels.edit') await handleLabelsEdit(supabase, instance, data);
@@ -141,14 +172,16 @@ serve(async (req) => {
     if (event === 'chats.set') await handleChatsSet(supabase, instance, data);
     if (event === 'messages.edited' || event === 'messages.edit') await handleMessagesEdited(supabase, data, baseData);
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ success: true, requestId }), { status: 200, headers: corsHeaders });
   } catch (error: unknown) {
-    console.error('Evolution webhook error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // Logical/handler errors: log the detail internally, return 200 to evo so it does not
+    // retry-storm an already-persisted-but-partially-failed event. Idempotency will ensure
+    // the retry is safe once implemented (S1). Auth/contract errors above still return 4xx.
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[webhook][${requestId}] handler_error event=${event} instance=${instance}: ${detail}`);
+    return new Response(
+      JSON.stringify({ success: false, error: 'internal_error', requestId }),
+      { status: 200, headers: corsHeaders },
+    );
   }
 });

@@ -19,6 +19,19 @@ export function normalizeEventName(event?: string): string {
   return (event || '').trim().toLowerCase().replace(/_/g, '.');
 }
 
+// Redacts phone/JID for logs: keeps country+area code, masks the rest.
+// "5511998765432@s.whatsapp.net" -> "551199***"
+export function redactJid(jid?: string | null): string {
+  if (!jid) return '';
+  const raw = String(jid).split('@')[0].replace(/:\d+$/, '');
+  if (raw.length <= 6) return raw.replace(/.(?=.{0})/g, '*');
+  return `${raw.slice(0, 6)}***`;
+}
+
+export function generateRequestId(): string {
+  try { return crypto.randomUUID(); } catch { return `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`; }
+}
+
 export function toEventRecords(data: unknown, collectionKeys: string[] = []): Record<string, unknown>[] {
   if (Array.isArray(data)) return data.filter(isRecord);
   if (!isRecord(data)) return [];
