@@ -191,15 +191,23 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     };
 
     const maybeCancel = (currentTop: number) => {
-      // If user is scrolling DOWN > REVERSE_CANCEL_PX while a fetch is in-flight, abort it.
-      if (
-        isFetchingOlderRef.current &&
-        currentTop > lastScrollTopRef.current + REVERSE_CANCEL_PX &&
-        onCancelLoadOlder
-      ) {
+      // Only cancel an in-flight loadOlder when the user has CLEARLY left the
+      // top zone — i.e. they scrolled past the preload threshold AND moved down
+      // by more than REVERSE_CANCEL_PX. This avoids spurious cancellations from
+      // micro-jitter or rubber-band bounces near scrollTop=0, which were
+      // aborting valid loads while the user was still effectively at the top.
+      if (!isFetchingOlderRef.current || !onCancelLoadOlder) return;
+      const movedDownEnough = currentTop > lastScrollTopRef.current + REVERSE_CANCEL_PX;
+      const leftTopZone = currentTop > PRELOAD_PX;
+      if (movedDownEnough && leftTopZone) {
         cancelledRef.current = true;
         onCancelLoadOlder();
-        recordLoadOlderCancelled(inFlightStartedAt, { contactJid, reason: 'reverse-scroll' });
+        recordLoadOlderCancelled(inFlightStartedAt, {
+          contactJid,
+          reason: 'reverse-scroll',
+          scrollTop: currentTop,
+          preloadPx: PRELOAD_PX,
+        });
         inFlightStartedAt = null;
         // Drop the saved height so the prepend-anchor effect skips reanchoring.
         prevScrollHeightRef.current = null;
