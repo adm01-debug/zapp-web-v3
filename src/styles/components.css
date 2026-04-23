@@ -1,6 +1,6 @@
 /* ===== COMPONENT STYLES — Cards, hover effects, chat, gamification ===== */
 
-@layer components {
+
   /* ===== CARD STYLES ===== */
   .card-base { @apply bg-card rounded-xl border border-border p-6 transition-all duration-200; }
   .card-elevated { @apply bg-card-elevated rounded-xl border border-border p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
@@ -112,4 +112,4 @@
   .animate-coin-shine { animation: coin-shine 2s ease-in-out infinite; }
   .animate-level-up { animation: level-up 0.6s ease-out; }
   .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
-}
+

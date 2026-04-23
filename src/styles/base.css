@@ -1,6 +1,6 @@
 /* ===== BASE STYLES — Resets, typography, body ===== */
 
-@layer base {
+
   * {
     @apply border-border;
   }
@@ -115,7 +115,7 @@
     font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
     @apply text-sm;
   }
-}
+
 
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar {
