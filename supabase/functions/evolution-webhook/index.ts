@@ -4,6 +4,7 @@ import { getCorsHeaders, handleCors } from "../_shared/validation.ts";
 import {
   isRecord, normalizeEventName, toEventRecords,
   handleReactionEvent, redactJid, generateRequestId,
+  sha256Hex, markEventProcessed, auditWebhookEvent,
   type WebhookPayload,
 } from "../_shared/evolution-helpers.ts";
 import { parseMessageContent } from "../_shared/evolution-media.ts";
@@ -28,6 +29,7 @@ const validateWebhook = WEBHOOK_SECRET
 
 serve(async (req) => {
   const requestId = generateRequestId();
+  const startedAt = Date.now();
   const baseHeaders = { 'Content-Type': 'application/json', 'x-request-id': requestId };
 
   const corsResponse = handleCors(req);
@@ -38,12 +40,21 @@ serve(async (req) => {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   // HMAC validation before reading body as JSON so we can verify on raw text.
   let rawBody: string;
   if (validateWebhook) {
     const result = await validateWebhook(req);
     if (!result.valid) {
       console.warn(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`);
+      await auditWebhookEvent(supabase, {
+        request_id: requestId, status: 'rejected',
+        error_message: result.error ?? 'invalid_signature',
+        duration_ms: Date.now() - startedAt,
+      });
       return new Response(
         JSON.stringify({ error: 'unauthorized', reason: result.error ?? 'invalid_signature', requestId }),
         { status: 401, headers: corsHeaders },
@@ -59,17 +70,31 @@ serve(async (req) => {
   try {
     payload = JSON.parse(rawBody) as WebhookPayload;
   } catch {
+    await auditWebhookEvent(supabase, {
+      request_id: requestId, status: 'rejected', error_message: 'invalid_json',
+      duration_ms: Date.now() - startedAt,
+    });
     return new Response(JSON.stringify({ error: 'invalid_json', requestId }), { status: 400, headers: corsHeaders });
   }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   const event = normalizeEventName(payload.event);
   const instance = payload.instance;
   const data = payload.data ?? {};
   const baseData = isRecord(data) ? data : {};
+
+  // Idempotency guard: dedup by hash of (instance + event + body). Evolution retries reuse
+  // the same payload, so if we have seen this event_id we short-circuit with 200.
+  const bodyHash = await sha256Hex(rawBody);
+  const eventId = `${instance || 'unknown'}:${event}:${bodyHash}`;
+  const isNew = await markEventProcessed(supabase, eventId, instance, event);
+  if (!isNew) {
+    await auditWebhookEvent(supabase, {
+      request_id: requestId, instance, event_type: event, status: 'duplicate',
+      duration_ms: Date.now() - startedAt,
+    });
+    console.log(`[webhook][${requestId}] duplicate event_id=${eventId.slice(0, 48)}… skipped`);
+    return new Response(JSON.stringify({ success: true, duplicate: true, requestId }), { status: 200, headers: corsHeaders });
+  }
 
   console.log(`[webhook][${requestId}] received raw=${payload.event} norm=${event} instance=${instance}`);
 
@@ -172,13 +197,20 @@ serve(async (req) => {
     if (event === 'chats.set') await handleChatsSet(supabase, instance, data);
     if (event === 'messages.edited' || event === 'messages.edit') await handleMessagesEdited(supabase, data, baseData);
 
+    await auditWebhookEvent(supabase, {
+      request_id: requestId, instance, event_type: event, status: 'processed',
+      duration_ms: Date.now() - startedAt,
+    });
     return new Response(JSON.stringify({ success: true, requestId }), { status: 200, headers: corsHeaders });
   } catch (error: unknown) {
     // Logical/handler errors: log the detail internally, return 200 to evo so it does not
-    // retry-storm an already-persisted-but-partially-failed event. Idempotency will ensure
-    // the retry is safe once implemented (S1). Auth/contract errors above still return 4xx.
+    // retry-storm the same event. The idempotency guard above makes retries safe.
     const detail = error instanceof Error ? error.message : String(error);
     console.error(`[webhook][${requestId}] handler_error event=${event} instance=${instance}: ${detail}`);
+    await auditWebhookEvent(supabase, {
+      request_id: requestId, instance, event_type: event, status: 'error',
+      duration_ms: Date.now() - startedAt, error_message: detail.slice(0, 500),
+    });
     return new Response(
       JSON.stringify({ success: false, error: 'internal_error', requestId }),
       { status: 200, headers: corsHeaders },

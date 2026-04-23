@@ -5,70 +5,172 @@ import { log } from '@/lib/logger';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+export interface CallApiOptions {
+  method?: HttpMethod;
+  /** Max attempts including the first one. Default: 3 for idempotent verbs, 1 for POST unless `idempotencyKey` is set. */
+  retries?: number;
+  /** Milliseconds for the first backoff. Default: 250ms; doubles each attempt. */
+  baseBackoffMs?: number;
+  /** Overall per-request timeout. Default: 30s. */
+  timeoutMs?: number;
+  /** When present, POST requests become retriable and dedup'd by this key (recommended for sends). */
+  idempotencyKey?: string;
+}
+
+const IDEMPOTENT_METHODS = new Set<HttpMethod>(['GET']);
+
+interface EvolutionApiError extends Error {
+  details?: unknown;
+  apiStatus?: number;
+  retries?: number;
+  retryAfterMs?: number;
+}
+
+function isRetriableStatus(status?: number): boolean {
+  if (status == null) return true; // network / unknown: retry
+  if (status === 408 || status === 425 || status === 429) return true;
+  if (status >= 500 && status < 600) return true;
+  return false;
+}
+
+function parseRetryAfter(raw: unknown): number | undefined {
+  if (typeof raw !== 'string' && typeof raw !== 'number') return undefined;
+  const n = Number(raw);
+  if (Number.isFinite(n) && n >= 0) return Math.floor(n * 1000);
+  const date = Date.parse(String(raw));
+  if (!Number.isNaN(date)) return Math.max(0, date - Date.now());
+  return undefined;
+}
+
+async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    if (signal) {
+      const onAbort = () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')); };
+      if (signal.aborted) return onAbort();
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
+  });
+}
+
 export function useEvolutionApiCore() {
   const [isLoading, setIsLoading] = useState(false);
   const mountedRef = useRef(true);
-  const inflightRef = useRef<Map<string, Promise<any>>>(new Map());
+  const inflightRef = useRef<Map<string, Promise<unknown>>>(new Map());
 
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const callApi = useCallback(async (action: string, body?: object, method: HttpMethod = 'POST'): Promise<any> => {
-    const dedupeKey = method === 'GET' ? `${action}:${JSON.stringify(body || {})}` : '';
-    if (dedupeKey && inflightRef.current.has(dedupeKey)) {
-      return inflightRef.current.get(dedupeKey);
-    }
+  const callApi = useCallback(
+    async <T = unknown>(action: string, body?: object, methodOrOptions: HttpMethod | CallApiOptions = 'POST'): Promise<T> => {
+      const opts: CallApiOptions = typeof methodOrOptions === 'string'
+        ? { method: methodOrOptions }
+        : methodOrOptions;
+      const method: HttpMethod = opts.method ?? 'POST';
+      const baseBackoffMs = opts.baseBackoffMs ?? 250;
+      const timeoutMs = opts.timeoutMs ?? 30_000;
+      const canRetry = IDEMPOTENT_METHODS.has(method) || !!opts.idempotencyKey;
+      const retries = Math.max(1, opts.retries ?? (canRetry ? 3 : 1));
 
-    if (mountedRef.current) setIsLoading(true);
+      // Dedupe identical in-flight requests for idempotent verbs OR any POST with an idempotencyKey.
+      const dedupeKey = canRetry
+        ? `${method}:${action}:${opts.idempotencyKey ?? JSON.stringify(body ?? {})}`
+        : '';
+      if (dedupeKey) {
+        const existing = inflightRef.current.get(dedupeKey);
+        if (existing) return existing as Promise<T>;
+      }
 
-    const promise = (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke(`evolution-api/${action}`, {
-          method: 'POST',
-          body: body ?? {},
-        });
-        if (error) throw error;
-        if (data && typeof data === 'object' && data.error === true) {
-          const apiError = Object.assign(
-            new Error(data.message || 'Erro na API Evolution'),
-            { details: data.details, apiStatus: data.status, retries: data.retries }
-          );
-          throw apiError;
+      if (mountedRef.current) setIsLoading(true);
+
+      const run = (async (): Promise<T> => {
+        let attempt = 0;
+        let lastError: EvolutionApiError | null = null;
+
+        while (attempt < retries) {
+          attempt++;
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+          try {
+            const invokeOpts: { method: 'POST'; body: object; headers?: Record<string, string>; signal?: AbortSignal } = {
+              method: 'POST',
+              body: body ?? {},
+              signal: controller.signal,
+            };
+            if (opts.idempotencyKey) {
+              invokeOpts.headers = { 'Idempotency-Key': opts.idempotencyKey };
+            }
+            const { data, error } = await supabase.functions.invoke(`evolution-api/${action}`, invokeOpts);
+            if (error) {
+              const err = Object.assign(new Error(error.message || 'Evolution API error'), {
+                apiStatus: (error as { status?: number }).status,
+              }) as EvolutionApiError;
+              throw err;
+            }
+            if (data && typeof data === 'object' && (data as { error?: boolean }).error === true) {
+              const d = data as { message?: string; details?: unknown; status?: number; retryAfter?: unknown };
+              const apiError = Object.assign(new Error(d.message || 'Evolution API error'), {
+                details: d.details,
+                apiStatus: d.status,
+                retries: attempt,
+                retryAfterMs: parseRetryAfter(d.retryAfter),
+              }) as EvolutionApiError;
+              throw apiError;
+            }
+            return data as T;
+          } catch (error) {
+            const err = error as EvolutionApiError;
+            lastError = err;
+            const status = err.apiStatus;
+            if (attempt >= retries || !isRetriableStatus(status)) break;
+
+            const backoff = err.retryAfterMs ?? baseBackoffMs * 2 ** (attempt - 1);
+            const jitter = Math.floor(Math.random() * 100);
+            try { await sleep(backoff + jitter); } catch { break; }
+            continue;
+          } finally {
+            clearTimeout(timeoutId);
+          }
         }
-        return data;
-      } catch (error) {
-        log.error(`Evolution API error (${action}):`, error);
-        throw error;
-      } finally {
+
+        log.error(`Evolution API error (${action}) after ${attempt} attempt(s):`, lastError);
+        throw lastError ?? new Error(`Evolution API failed: ${action}`);
+      })();
+
+      const wrapped = run.finally(() => {
         if (dedupeKey) inflightRef.current.delete(dedupeKey);
         if (mountedRef.current) setIsLoading(false);
+      });
+
+      if (dedupeKey) inflightRef.current.set(dedupeKey, wrapped);
+      return wrapped;
+    },
+    [],
+  );
+
+  const withToast = useCallback(
+    async <T = unknown>(
+      action: string,
+      body: object | undefined,
+      successMsg: string,
+      errorMsg: string,
+      methodOrOptions: HttpMethod | CallApiOptions = 'POST',
+    ): Promise<T> => {
+      try {
+        const data = await callApi<T>(action, body, methodOrOptions);
+        toast.success(successMsg);
+        return data;
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : errorMsg;
+        toast.error(msg);
+        throw error;
       }
-    })();
-
-    if (dedupeKey) inflightRef.current.set(dedupeKey, promise);
-    return promise;
-  }, []);
-
-  const withToast = useCallback(async (
-    action: string,
-    body: object | undefined,
-    successMsg: string,
-    errorMsg: string,
-    method: HttpMethod = 'POST'
-  ) => {
-    try {
-      const data = await callApi(action, body, method);
-      toast.success(successMsg);
-      return data;
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : errorMsg;
-      toast.error(msg);
-      throw error;
-    }
-  }, [callApi]);
+    },
+    [callApi],
+  );
 
   return { isLoading, callApi, withToast };
 }

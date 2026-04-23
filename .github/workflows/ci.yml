@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
@@ -37,9 +39,24 @@ jobs:
       - name: 📚 Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: 🔍 Run ESLint
-        run: npm run lint
-        continue-on-error: false
+      - name: 🔍 Run ESLint (changed files on PRs, full on push)
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="origin/${{ github.base_ref }}"
+            git fetch origin "${{ github.base_ref }}" --depth=1 || true
+            CHANGED=$(git diff --name-only --diff-filter=ACMRT "$BASE"...HEAD -- '*.ts' '*.tsx' \
+              | grep -Ev '^(dist|supabase/functions)/' || true)
+            if [ -n "$CHANGED" ]; then
+              echo "Linting changed files:"
+              printf '  %s\n' $CHANGED
+              npx eslint $CHANGED
+            else
+              echo "No lintable TS/TSX files changed."
+            fi
+          else
+            npx eslint .
+          fi
 
       - name: 🔎 Run TypeScript check
         run: npx tsc --noEmit
