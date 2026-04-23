@@ -1,7 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
+
+const ADMIN_ONLY_MSG = 'Ação restrita a administradores.';
 
 export type FailedMessageStatus = 'pending' | 'retrying' | 'succeeded' | 'abandoned';
 
