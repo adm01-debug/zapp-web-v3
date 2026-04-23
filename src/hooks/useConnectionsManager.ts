@@ -235,7 +235,7 @@ export function useConnectionsManager() {
         if (result?.state === 'open' || result?.status === 'connected') {
           clearInterval(interval);
           setPollingInterval(null);
-          setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null }));
+          setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
           toast({ title: 'Conectado!', description: 'WhatsApp conectado com sucesso.' });
         }
       } catch (error) {
