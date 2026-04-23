@@ -177,6 +177,9 @@ export function RetryMetricsPanel() {
             <RetryAlertsConfig
               value={thresholds}
               onChange={setThresholds}
+              perInstance={perInstance}
+              onPerInstanceChange={setPerInstance}
+              knownInstances={byInstance.map((b) => b.instance)}
               hasBreaches={breaches.length > 0}
             />
             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
