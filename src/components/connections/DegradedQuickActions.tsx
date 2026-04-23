@@ -17,7 +17,8 @@ interface DegradedConnection {
 
 interface Props {
   connections: DegradedConnection[];
-  onShowQrCode: (connection: { id: string; instance_id?: string | null; name?: string | null }) => void;
+  // Accept the parent's full connection shape — we just forward it.
+  onShowQrCode: (connection: any) => void;
 }
 
 /** Quick-actions block for degraded instances: diagnostics link, QR regen, revalidate now. */
