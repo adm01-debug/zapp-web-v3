@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import {
   AlertTriangle, RefreshCw, Inbox, CheckCircle2, XCircle,
   Clock, RotateCw, Ban, Eye, PlayCircle, Server, BarChart3,
-  Search, ChevronLeft, ChevronRight, Copy,
+  Search, ChevronLeft, ChevronRight, Copy, Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,7 @@ import {
   type FailedMessageRow,
   type FailedMessageStatus,
 } from '@/hooks/monitoring/useFailedMessages';
+import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/utils';
 import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
 import { toast } from 'sonner';
@@ -64,6 +65,8 @@ function shortJid(jid: string | null) {
 }
 
 export default function AdminFailedMessagesPage() {
+  const { isAdmin, isSupervisor } = useUserRole();
+  const readOnly = !isAdmin;
   const [hours, setHours] = useState(24);
   const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
   const [errorCodeFilter, setErrorCodeFilter] = useState<string>('all');
@@ -176,16 +179,25 @@ export default function AdminFailedMessagesPage() {
             <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
             Atualizar
           </Button>
-          <Button
-            size="sm"
-            onClick={() => triggerReprocess.mutate()}
-            disabled={triggerReprocess.isPending}
-          >
-            <PlayCircle className={cn('h-4 w-4 mr-2', triggerReprocess.isPending && 'animate-spin')} />
-            Reprocessar agora
-          </Button>
+          {isAdmin && (
+            <Button
+              size="sm"
+              onClick={() => triggerReprocess.mutate()}
+              disabled={triggerReprocess.isPending}
+            >
+              <PlayCircle className={cn('h-4 w-4 mr-2', triggerReprocess.isPending && 'animate-spin')} />
+              Reprocessar agora
+            </Button>
+          )}
         </div>
       </header>
+
+      {readOnly && isSupervisor && (
+        <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground flex items-center gap-2">
+          <Lock className="h-3.5 w-3.5" />
+          <span>Modo somente leitura — ações de reprocesso e abandono são restritas a administradores.</span>
+        </div>
+      )}
 
       {/* Retry config (sem deploy) */}
       <RetryConfigPanel />
@@ -360,8 +372,8 @@ export default function AdminFailedMessagesPage() {
         </CardContent>
       </Card>
 
-      {/* Bulk action bar */}
-      {selectedIds.size > 0 && (
+      {/* Bulk action bar (admin only) */}
+      {isAdmin && selectedIds.size > 0 && (
         <Card className="border-primary/40 bg-primary/5">
           <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
             <span className="text-sm">
@@ -426,18 +438,20 @@ export default function AdminFailedMessagesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={allVisibleSelected}
-                      onCheckedChange={toggleAll}
-                      aria-label="Selecionar tudo"
-                      data-state={
-                        allVisibleSelected ? 'checked'
-                        : someVisibleSelected ? 'indeterminate'
-                        : 'unchecked'
-                      }
-                    />
-                  </TableHead>
+                  {isAdmin && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        onCheckedChange={toggleAll}
+                        aria-label="Selecionar tudo"
+                        data-state={
+                          allVisibleSelected ? 'checked'
+                          : someVisibleSelected ? 'indeterminate'
+                          : 'unchecked'
+                        }
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>Status</TableHead>
                   <TableHead>Instância</TableHead>
                   <TableHead>Destinatário</TableHead>
@@ -456,13 +470,15 @@ export default function AdminFailedMessagesPage() {
                     className="cursor-pointer"
                     onClick={() => setSelected(row)}
                   >
-                    <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox
-                        checked={selectedIds.has(row.id)}
-                        onCheckedChange={() => toggleOne(row.id)}
-                        aria-label="Selecionar item"
-                      />
-                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(row.id)}
+                          onCheckedChange={() => toggleOne(row.id)}
+                          aria-label="Selecionar item"
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Badge variant={STATUS_VARIANT[row.status]}>
                         {STATUS_LABEL[row.status]}
@@ -501,7 +517,7 @@ export default function AdminFailedMessagesPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {(row.status === 'pending' || row.status === 'retrying' || row.status === 'abandoned') && (
+                        {isAdmin && (row.status === 'pending' || row.status === 'retrying' || row.status === 'abandoned') && (
                           <Button
                             size="icon"
                             variant="ghost"
@@ -512,7 +528,7 @@ export default function AdminFailedMessagesPage() {
                             <RotateCw className="h-4 w-4" />
                           </Button>
                         )}
-                        {(row.status === 'pending' || row.status === 'retrying') && (
+                        {isAdmin && (row.status === 'pending' || row.status === 'retrying') && (
                           <Button
                             size="icon"
                             variant="ghost"
@@ -678,7 +694,7 @@ export default function AdminFailedMessagesPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t">
-                {(selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
+                {isAdmin && (selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
                   <Button
                     variant="outline"
                     onClick={() => { retryNow.mutate(selected.id); setSelected(null); }}
@@ -688,7 +704,7 @@ export default function AdminFailedMessagesPage() {
                     Reprocessar agora
                   </Button>
                 )}
-                {(selected.status === 'pending' || selected.status === 'retrying') && (
+                {isAdmin && (selected.status === 'pending' || selected.status === 'retrying') && (
                   <Button
                     variant="destructive"
                     onClick={() => {
@@ -701,6 +717,11 @@ export default function AdminFailedMessagesPage() {
                     <Ban className="h-4 w-4 mr-2" />
                     Abandonar
                   </Button>
+                )}
+                {readOnly && (
+                  <span className="text-xs text-muted-foreground self-center">
+                    Apenas leitura
+                  </span>
                 )}
               </div>
             </div>

@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/hooks/useTheme';
+import { useUserRole, type AppRole } from '@/hooks/useUserRole';
 import { IconButton } from '@/components/ui/icon-button';
 import {
   primaryNav,
@@ -16,6 +17,7 @@ import {
   systemNav,
   advancedNav,
 } from '@/components/layout/sidebarNavConfig';
+import type { NavItemConfig } from '@/components/layout/SidebarNavItem';
 
 interface MobileDrawerMenuProps {
   isOpen: boolean;
@@ -78,6 +80,7 @@ export function MobileDrawerMenu({
 }: MobileDrawerMenuProps) {
   const [search, setSearch] = useState('');
   const { resolvedTheme, setTheme } = useTheme();
+  const { hasRole } = useUserRole();
   const isDark = resolvedTheme === 'dark';
 
   const initials = agentName
@@ -86,9 +89,19 @@ export function MobileDrawerMenu({
     .join('')
     .slice(0, 2) || 'U';
 
+  // Hide items the user lacks roles for (defense layer in addition to RPC/RLS guards)
+  const canSee = useCallback(
+    (item: NavItemConfig) =>
+      !item.requiredRoles || item.requiredRoles.some((r) => hasRole(r as AppRole)),
+    [hasRole],
+  );
+
   const filteredSections = useMemo(() => {
-    if (!search.trim()) return sections;
-    return sections
+    const base = sections
+      .map((s) => ({ ...s, items: s.items.filter(canSee) }))
+      .filter((s) => s.items.length > 0);
+    if (!search.trim()) return base;
+    return base
       .map((s) => ({
         ...s,
         items: s.items.filter((i) =>
@@ -96,10 +109,15 @@ export function MobileDrawerMenu({
         ),
       }))
       .filter((s) => s.items.length > 0);
-  }, [search]);
+  }, [search, canSee]);
 
   const recentIds = useMemo(getRecents, [isOpen]);
-  const recentItems = useMemo(() => recentIds.map(id => allItems.find(i => i.id === id)).filter(Boolean) as typeof allItems, [recentIds]);
+  const recentItems = useMemo(
+    () =>
+      (recentIds.map(id => allItems.find(i => i.id === id)).filter(Boolean) as typeof allItems)
+        .filter(canSee),
+    [recentIds, canSee],
+  );
 
   const handleNav = (id: string) => {
     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(5);

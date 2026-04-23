@@ -4,12 +4,16 @@ import { Star } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover';
 
+export type NavRequiredRole = 'admin' | 'supervisor' | 'agent' | 'special_agent';
+
 export interface NavItemConfig {
   id: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   shortcut?: string;
   badge?: number;
+  /** Optional role gate — item is hidden from users without one of these roles. */
+  requiredRoles?: NavRequiredRole[];
 }
 
 const SHORTCUT_MAP: Record<string, string> = {
