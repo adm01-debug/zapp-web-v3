@@ -63,9 +63,16 @@ export async function invokeEvolutionWithRetry<T = unknown>(
   config: {
     maxRetries?: number;
     onRetry?: (attempt: number, totalRetries: number, err: unknown) => void;
+    /**
+     * Stable idempotency key per logical send. When set, it is also injected
+     * into the DLQ payload as `__idemKey` so reprocess-failed-messages can
+     * forward the same key and avoid creating a duplicate WhatsApp message
+     * on the Evolution side after network recovery.
+     */
+    idempotencyKey?: string;
   } = {}
 ): Promise<EvolutionInvokeResult<T>> {
-  const { onRetry } = config;
+  const { onRetry, idempotencyKey } = config;
 
   // Snapshot pra DLQ caso falhe definitivamente
   const instanceName = (opts.body?.instance_name ?? opts.body?.instanceName) as string | undefined;
@@ -78,13 +85,19 @@ export async function invokeEvolutionWithRetry<T = unknown>(
   const baseDelayMs = dynCfg.baseBackoffMs;
   const maxDelayMs = dynCfg.maxBackoffMs;
 
+  // Make sure the idem key is forwarded as header even when caller didn't set it.
+  const mergedHeaders: Record<string, string> = { ...(opts.headers || {}) };
+  if (idempotencyKey && !mergedHeaders['Idempotency-Key'] && !mergedHeaders['idempotency-key']) {
+    mergedHeaders['Idempotency-Key'] = idempotencyKey;
+  }
+
   try {
     return await withRetry(
     async () => {
       const result = await supabase.functions.invoke(`evolution-api/${action}`, {
         method: opts.method || 'POST',
         body: opts.body,
-        headers: opts.headers,
+        headers: mergedHeaders,
       });
 
       // Supabase encapsula erros em result.error; também checa payload com erro
@@ -126,12 +139,16 @@ export async function invokeEvolutionWithRetry<T = unknown>(
       const errorCode = status
         ? `http_${status}`
         : message.toLowerCase().includes('timeout') ? 'timeout' : 'network_error';
+      // Embed the idem key in the DLQ payload so the cron worker reuses it.
+      const dlqPayload = idempotencyKey
+        ? { ...opts.body, __idemKey: idempotencyKey }
+        : opts.body;
       enqueueClientFailedMessage({
         instance_name: instanceName,
         remote_jid: remoteJid ?? null,
         path: sendPath,
         method: opts.method || 'POST',
-        payload: opts.body,
+        payload: dlqPayload,
         http_status: status,
         error_code: errorCode,
         error_message: message,

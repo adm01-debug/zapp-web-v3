@@ -43,16 +43,24 @@ Deno.serve(async (req) => {
     try {
       const payload = row.payload as Record<string, unknown>;
       const path = (payload.__path as string) || '/message/sendText';
+      const idemKey = typeof payload.__idemKey === 'string' ? payload.__idemKey : null;
       const instance = row.instance_name;
       const body = { ...payload };
       delete (body as Record<string, unknown>).__path;
+      delete (body as Record<string, unknown>).__idemKey;
       console.info('[dlq-reprocess]', JSON.stringify({
-        id: row.id, instance, path, attempt, max: row.max_retries,
+        id: row.id, instance, path, attempt, max: row.max_retries, hasIdem: !!idemKey,
       }));
+
+      const fetchHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        apikey: evolutionKey,
+      };
+      if (idemKey) fetchHeaders['Idempotency-Key'] = idemKey;
 
       const resp = await fetch(`${evolutionUrl}${path}/${instance}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: evolutionKey },
+        headers: fetchHeaders,
         body: JSON.stringify(body),
       });
       const respText = await resp.text();
