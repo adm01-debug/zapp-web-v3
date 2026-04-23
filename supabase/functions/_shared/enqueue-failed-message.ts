@@ -84,11 +84,15 @@ export function enqueueFailedMessage(input: EnqueueFailedMessageInput): void {
       status: 'pending',
       next_attempt_at: new Date(Date.now() + FIRST_ATTEMPT_DELAY_MS).toISOString(),
     })
-    // deno-lint-ignore no-explicit-any
-    .then((res: any) => {
-      if (res?.error) console.warn('[dlq-enqueue] insert failed:', res.error.message);
-    })
-    .catch((e: unknown) => {
-      console.warn('[dlq-enqueue] insert threw:', e instanceof Error ? e.message : String(e));
-    });
+    // PostgrestBuilder is a PromiseLike, not a Promise — use the two-arg
+    // .then(onFulfilled, onRejected) form so type-checking succeeds.
+    .then(
+      // deno-lint-ignore no-explicit-any
+      (res: any) => {
+        if (res?.error) console.warn('[dlq-enqueue] insert failed:', res.error.message);
+      },
+      (e: unknown) => {
+        console.warn('[dlq-enqueue] insert threw:', e instanceof Error ? e.message : String(e));
+      },
+    );
 }

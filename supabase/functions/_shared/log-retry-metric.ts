@@ -61,13 +61,17 @@ export function logRetryMetric(input: RetryMetricInput): void {
       retry_reasons: input.retry_reasons,
       total_duration_ms: input.total_duration_ms,
     })
-    // deno-lint-ignore no-explicit-any
-    .then((res: any) => {
-      if (res?.error) {
-        console.warn('[retry-metric] insert failed:', res.error.message);
-      }
-    })
-    .catch((e: unknown) => {
-      console.warn('[retry-metric] insert threw:', e instanceof Error ? e.message : String(e));
-    });
+    // PostgrestBuilder is a PromiseLike, not a Promise — use the two-arg
+    // .then(onFulfilled, onRejected) form so type-checking succeeds.
+    .then(
+      // deno-lint-ignore no-explicit-any
+      (res: any) => {
+        if (res?.error) {
+          console.warn('[retry-metric] insert failed:', res.error.message);
+        }
+      },
+      (e: unknown) => {
+        console.warn('[retry-metric] insert threw:', e instanceof Error ? e.message : String(e));
+      },
+    );
 }
