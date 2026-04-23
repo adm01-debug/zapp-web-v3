@@ -10,11 +10,22 @@ interface ContactSLAParams {
   agentId?: string | null;
 }
 
+export type SLAMatchedLevel =
+  | 'contact'
+  | 'company'
+  | 'job_title'
+  | 'contact_type'
+  | 'queue'
+  | 'agent'
+  | 'global_default'
+  | 'system_default';
+
 export interface ApplicableSLA {
   firstResponseMinutes: number;
   resolutionMinutes: number;
   ruleName: string;
   ruleId: string | null;
+  matchedLevel: SLAMatchedLevel;
 }
 
 const SYSTEM_DEFAULT: ApplicableSLA = {
@@ -22,6 +33,7 @@ const SYSTEM_DEFAULT: ApplicableSLA = {
   resolutionMinutes: 60,
   ruleName: 'Padrão do Sistema',
   ruleId: null,
+  matchedLevel: 'system_default',
 };
 
 /**
@@ -51,43 +63,33 @@ function resolveHierarchy(
   let queueMatch: ApplicableSLA | null = null;
   let agentMatch: ApplicableSLA | null = null;
 
+  const build = (rule: typeof rules[number], level: SLAMatchedLevel): ApplicableSLA => ({
+    firstResponseMinutes: rule.first_response_minutes,
+    resolutionMinutes: rule.resolution_minutes,
+    ruleName: rule.name,
+    ruleId: rule.id,
+    matchedLevel: level,
+  });
+
   for (const rule of rules) {
-    const sla: ApplicableSLA = {
-      firstResponseMinutes: rule.first_response_minutes,
-      resolutionMinutes: rule.resolution_minutes,
-      ruleName: rule.name,
-      ruleId: rule.id,
-    };
-
-    // Contact-level (highest priority)
     if (rule.contact_id && rule.contact_id === params.contactId && !contactMatch) {
-      contactMatch = sla;
-      break; // Highest priority found — no need to continue
+      contactMatch = build(rule, 'contact');
+      break;
     }
-
-    // Company-level (must not have contact_id)
     if (!rule.contact_id && rule.company && rule.company === params.company && !companyMatch) {
-      companyMatch = sla;
+      companyMatch = build(rule, 'company');
     }
-
-    // Job title (must not have contact_id or company)
     if (!rule.contact_id && !rule.company && rule.job_title && rule.job_title === params.jobTitle && !jobTitleMatch) {
-      jobTitleMatch = sla;
+      jobTitleMatch = build(rule, 'job_title');
     }
-
-    // Contact type (must not have contact_id, company, or job_title)
     if (!rule.contact_id && !rule.company && !rule.job_title && rule.contact_type && rule.contact_type === params.contactType && !contactTypeMatch) {
-      contactTypeMatch = sla;
+      contactTypeMatch = build(rule, 'contact_type');
     }
-
-    // Queue (must not have contact_id)
     if (!rule.contact_id && rule.queue_id && rule.queue_id === params.queueId && !queueMatch) {
-      queueMatch = sla;
+      queueMatch = build(rule, 'queue');
     }
-
-    // Agent (must not have contact_id)
     if (!rule.contact_id && rule.agent_id && rule.agent_id === params.agentId && !agentMatch) {
-      agentMatch = sla;
+      agentMatch = build(rule, 'agent');
     }
   }
 
@@ -123,6 +125,7 @@ export function useApplicableSLA(params: ContactSLAParams) {
           resolutionMinutes: configs[0].resolution_minutes,
           ruleName: configs[0].name,
           ruleId: null,
+          matchedLevel: 'global_default',
         };
       }
 
