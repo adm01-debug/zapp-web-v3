@@ -9,8 +9,10 @@ import { format, subDays, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Webhook, RefreshCw, Inbox, CheckCircle2, XCircle,
-  Eye, Filter,
+  Eye, Filter, PhoneCall, List,
 } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { CallCorrelationView } from './admin-webhook-overview/CallCorrelationView';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,6 +95,7 @@ export default function AdminWebhookEventsPage() {
   const [pushNameFilter, setPushNameFilter] = useState('');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<EvolutionWebhookEvent | null>(null);
+  const [viewMode, setViewMode] = useState<'events' | 'calls'>('events');
 
   const sinceISO = useMemo(
     () => subHours(new Date(), Number(hours)).toISOString(),
@@ -192,15 +195,32 @@ export default function AdminWebhookEventsPage() {
             CHATS, CALL, LABELS, mensagens e conexão) por instância e período.
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isRefetching}
-        >
-          <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(v) => v && setViewMode(v as 'events' | 'calls')}
+            size="sm"
+          >
+            <ToggleGroupItem value="events" aria-label="Lista de eventos">
+              <List className="h-4 w-4 mr-1.5" />
+              Eventos
+            </ToggleGroupItem>
+            <ToggleGroupItem value="calls" aria-label="Correlação por call">
+              <PhoneCall className="h-4 w-4 mr-1.5" />
+              Por Call
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+          >
+            <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
+            Atualizar
+          </Button>
+        </div>
       </header>
 
       {/* KPI Cards */}
@@ -321,8 +341,8 @@ export default function AdminWebhookEventsPage() {
         </CardContent>
       </Card>
 
-      {/* Type breakdown (chips) */}
-      {aggregates.types.length > 0 && (
+      {/* Type breakdown (chips) — só faz sentido na visão lista */}
+      {viewMode === 'events' && aggregates.types.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {aggregates.types.map(([type, count]) => (
             <Badge
@@ -337,7 +357,10 @@ export default function AdminWebhookEventsPage() {
         </div>
       )}
 
+      {viewMode === 'calls' && <CallCorrelationView events={filtered} />}
+
       {/* Table */}
+      {viewMode === 'events' && (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -428,6 +451,7 @@ export default function AdminWebhookEventsPage() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Details dialog */}
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
