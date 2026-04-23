@@ -58,6 +58,7 @@ describe('parser de wildcard "*" — arestas do diagrama', () => {
     expect(got).toEqual(new Set(['INSERT']));
     expect(got.has('UPDATE')).toBe(false);
     expect(got.has('DELETE')).toBe(false);
+  });
 
   describe('multiplos "*" no mesmo rotulo', () => {
     it('"* UPDATE *" expande sem duplicar eventos (Set garante unicidade)', () => {
