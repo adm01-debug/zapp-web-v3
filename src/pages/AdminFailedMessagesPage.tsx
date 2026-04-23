@@ -372,8 +372,8 @@ export default function AdminFailedMessagesPage() {
         </CardContent>
       </Card>
 
-      {/* Bulk action bar */}
-      {selectedIds.size > 0 && (
+      {/* Bulk action bar (admin only) */}
+      {isAdmin && selectedIds.size > 0 && (
         <Card className="border-primary/40 bg-primary/5">
           <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
             <span className="text-sm">
