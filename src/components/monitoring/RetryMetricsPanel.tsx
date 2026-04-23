@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,9 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useRetryMetrics, type RetryMetricsFilters } from '@/hooks/monitoring/useRetryMetrics';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
+import { RetryAlertsConfig } from './RetryAlertsConfig';
+import { RetryAlertsBanner } from './RetryAlertsBanner';
+import { evaluateAllInstances, loadThresholds, type RetryThresholds } from '@/lib/retryAlerts';
 
 const HOURS_OPTIONS: Array<{ value: number; label: string }> = [
   { value: 1, label: '1h' },
@@ -52,6 +55,7 @@ export function RetryMetricsPanel() {
   const [actionFilter, setActionFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [thresholds, setThresholds] = useState<RetryThresholds>(() => loadThresholds());
 
   const filters: RetryMetricsFilters = {
     hours,
@@ -59,10 +63,32 @@ export function RetryMetricsPanel() {
     status: statusFilter === 'all' ? null : (statusFilter as RetryMetricsFilters['status']),
   };
 
-  const { data, isLoading, refetch, isFetching } = useRetryMetrics(filters);
+  const { data, isLoading, refetch, isFetching, byInstance } = useRetryMetrics(filters);
 
   const rows = data?.rows ?? [];
   const agg = data?.aggregates;
+
+  const breaches = useMemo(
+    () => evaluateAllInstances(byInstance, thresholds),
+    [byInstance, thresholds],
+  );
+
+  // Toast quando aparece nova violação (dedupe por instance dentro da janela atual).
+  const notifiedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    notifiedRef.current = new Set();
+  }, [hours, thresholds]);
+
+  useEffect(() => {
+    for (const b of breaches) {
+      if (notifiedRef.current.has(b.instance)) continue;
+      notifiedRef.current.add(b.instance);
+      toast.error(`Retry degradado em ${b.instance}`, {
+        description: b.reasons.join(' · '),
+        duration: 6000,
+      });
+    }
+  }, [breaches]);
 
   const actionOptions = useMemo(() => {
     const set = new Set<string>();
