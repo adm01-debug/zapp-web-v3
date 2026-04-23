@@ -23,10 +23,29 @@ export interface InstanceMetrics {
   failureRatePct: number;
 }
 
+export type BreachReasonKind = 'p95' | 'failure_rate';
+
+export interface BreachReason {
+  kind: BreachReasonKind;
+  /** Texto pronto pra exibir (ex.: "p95=4 ≥ 3"). */
+  label: string;
+  /** Valor observado na janela atual. */
+  observed: number;
+  /** Threshold efetivo aplicado (global OU override por instância). */
+  threshold: number;
+}
+
 export interface InstanceBreach {
   instance: string;
+  /** Strings legadas (compat). */
   reasons: string[];
+  /** Motivos estruturados — usar pra UI. */
+  details: BreachReason[];
   metrics: InstanceMetrics;
+  /** Thresholds efetivos aplicados (após merge global+override). */
+  effectiveThresholds: RetryThresholds;
+  /** True quando a instância tem override explícito por instância. */
+  hasOverride: boolean;
 }
 
 export const DEFAULT_THRESHOLDS: RetryThresholds = {
@@ -100,22 +119,32 @@ function numOr(v: unknown, fallback: number): number {
   return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback;
 }
 
-/** Avalia uma instância. Retorna lista de motivos de violação (vazia = ok). */
+/** Avalia uma instância. Retorna motivos estruturados (vazio = ok). */
 export function evaluateInstance(
   metrics: InstanceMetrics,
   thresholds: RetryThresholds,
-): { breached: boolean; reasons: string[] } {
+): { breached: boolean; reasons: string[]; details: BreachReason[] } {
   if (metrics.total < thresholds.minSampleSize) {
-    return { breached: false, reasons: [] };
+    return { breached: false, reasons: [], details: [] };
   }
-  const reasons: string[] = [];
+  const details: BreachReason[] = [];
   if (metrics.p95Attempts >= thresholds.p95Attempts) {
-    reasons.push(`p95=${metrics.p95Attempts} ≥ ${thresholds.p95Attempts}`);
+    details.push({
+      kind: 'p95',
+      label: `p95=${metrics.p95Attempts} ≥ ${thresholds.p95Attempts}`,
+      observed: metrics.p95Attempts,
+      threshold: thresholds.p95Attempts,
+    });
   }
   if (metrics.failureRatePct >= thresholds.failureRatePct) {
-    reasons.push(`falha=${metrics.failureRatePct}% ≥ ${thresholds.failureRatePct}%`);
+    details.push({
+      kind: 'failure_rate',
+      label: `falha=${metrics.failureRatePct}% ≥ ${thresholds.failureRatePct}%`,
+      observed: metrics.failureRatePct,
+      threshold: thresholds.failureRatePct,
+    });
   }
-  return { breached: reasons.length > 0, reasons };
+  return { breached: details.length > 0, reasons: details.map(d => d.label), details };
 }
 
 /**
@@ -129,9 +158,19 @@ export function evaluateAllInstances(
 ): InstanceBreach[] {
   const breaches: InstanceBreach[] = [];
   for (const m of metrics) {
+    const hasOverride = !!overrides && !!overrides[m.instance] && Object.keys(overrides[m.instance]).length > 0;
     const effective = overrides ? resolveThresholds(m.instance, thresholds, overrides) : thresholds;
-    const { breached, reasons } = evaluateInstance(m, effective);
-    if (breached) breaches.push({ instance: m.instance, reasons, metrics: m });
+    const { breached, reasons, details } = evaluateInstance(m, effective);
+    if (breached) {
+      breaches.push({
+        instance: m.instance,
+        reasons,
+        details,
+        metrics: m,
+        effectiveThresholds: effective,
+        hasOverride,
+      });
+    }
   }
   return breaches;
 }
