@@ -3,7 +3,7 @@ import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { motion } from '@/components/ui/motion';
-import { SLAIndicator } from '../SLAIndicator';
+import { SLAIndicatorForContact } from '../SLAIndicatorForContact';
 import { SentimentEmoji, getSentimentFromScore, type SentimentLevel } from '../SentimentIndicator';
 import { QuickPeek } from '@/components/ui/quick-peek';
 import { TypingIndicatorCompact } from '../TypingIndicator';
@@ -176,7 +176,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               </TooltipProvider>
             </div>
             <div className="mt-1">
-              <SLAIndicator firstMessageAt={conversation.createdAt} firstResponseAt={conversation.status === 'resolved' ? conversation.updatedAt : null} resolvedAt={conversation.status === 'resolved' ? conversation.updatedAt : null} firstResponseMinutes={conversation.priority === 'high' ? 2 : 5} resolutionMinutes={conversation.priority === 'high' ? 30 : 60} compact />
+              <SLAIndicatorForContact conversation={conversation} compact />
             </div>
             {conversation.tags.length > 0 && (
               <div className="flex items-center gap-1 mt-2 flex-wrap">

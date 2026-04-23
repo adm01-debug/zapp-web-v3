@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { TypingIndicatorCompact } from '../TypingIndicator';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { SLAIndicator } from '../SLAIndicator';
+import { SLAIndicatorForContact } from '../SLAIndicatorForContact';
 import { ChatHeaderToolbar } from './ChatHeaderToolbar';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -73,13 +73,7 @@ export function ChatPanelHeader({
         <div>
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-foreground text-[15px]">{conversation.contact.name}</h3>
-            <SLAIndicator
-              firstMessageAt={conversation.createdAt}
-              firstResponseAt={conversation.status === 'resolved' ? conversation.updatedAt : null}
-              resolvedAt={conversation.status === 'resolved' ? conversation.updatedAt : null}
-              firstResponseMinutes={conversation.priority === 'high' ? 2 : 5}
-              resolutionMinutes={conversation.priority === 'high' ? 30 : 60}
-            />
+            <SLAIndicatorForContact conversation={conversation} />
             {sendState === 'retrying' && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-warning/15 text-warning border border-warning/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />

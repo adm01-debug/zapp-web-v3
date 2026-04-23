@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
-import { SLAIndicator } from './SLAIndicator';
+import { SLAIndicatorForContact } from './SLAIndicatorForContact';
 import { ConversationContextMenu } from './ConversationContextMenu';
 import { useExternalContact360Batch, CRMBatchResult } from '@/hooks/useExternalContact360Batch';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
@@ -263,14 +263,7 @@ export function ConversationList({
                           <CRMConversationBadge crmInfo={crmLookup(conversation.contact.phone)} />
                         )}
                         <div className="mt-2">
-                          <SLAIndicator
-                            firstMessageAt={conversation.createdAt}
-                            firstResponseAt={conversation.status === 'resolved' ? conversation.updatedAt : null}
-                            resolvedAt={conversation.status === 'resolved' ? conversation.updatedAt : null}
-                            firstResponseMinutes={conversation.priority === 'high' ? 2 : 5}
-                            resolutionMinutes={conversation.priority === 'high' ? 30 : 60}
-                            compact
-                          />
+                          <SLAIndicatorForContact conversation={conversation} compact />
                         </div>
 
                         {/* Tags */}
