@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { recheckWebhookSignature, type RecheckResult } from '@/lib/recheckWebhookSignature';
@@ -179,6 +179,49 @@ export default function AdminWebhookSecretStatusPage() {
     activeBreaches,
     recentAlerts,
   } = useWebhookHealthAlerts();
+
+  // View preferences (status/reason/event-type/density/columns/pinned instance)
+  const {
+    prefs,
+    setPref,
+    setVisibleColumn,
+    clearFilters: clearAdvancedFilters,
+    resetPrefs,
+    activeFilterCount,
+  } = useWebhookViewPreferences();
+
+  // Auto-apply pinned instance once on mount, only if URL has no instance set.
+  const pinnedAppliedRef = useRef(false);
+  useEffect(() => {
+    if (pinnedAppliedRef.current) return;
+    pinnedAppliedRef.current = true;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get('instance') && prefs.pinnedInstance) {
+      setInstance(prefs.pinnedInstance);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Available event types from current dataset.
+  const availableEventTypes = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of events) if (e.event_type) set.add(e.event_type);
+    return Array.from(set).sort();
+  }, [events]);
+
+  // Apply advanced filters to events table only (not aggregated cards).
+  const filteredEvents = useMemo(() => {
+    const reason = prefs.reasonSearch.trim().toLowerCase();
+    return events.filter((e) => {
+      if (prefs.statusFilter === 'valid' && e.signature_valid !== true) return false;
+      if (prefs.statusFilter === 'invalid' && e.signature_valid !== false) return false;
+      if (prefs.statusFilter === 'unsigned' && e.signature_valid !== null) return false;
+      if (prefs.statusFilter === 'errored' && !e.error_message) return false;
+      if (prefs.eventTypeFilter && e.event_type !== prefs.eventTypeFilter) return false;
+      if (reason && !(e.error_message ?? '').toLowerCase().includes(reason)) return false;
+      return true;
+    });
+  }, [events, prefs.statusFilter, prefs.eventTypeFilter, prefs.reasonSearch]);
 
   // Recheck dialog state
   const [recheckOpen, setRecheckOpen] = useState(false);
