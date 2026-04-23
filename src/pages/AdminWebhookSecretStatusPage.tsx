@@ -24,6 +24,8 @@ import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { InstanceFilterSelect } from './admin-webhook-secret-status/InstanceFilterSelect';
 import { InstanceStatusCards } from './admin-webhook-secret-status/InstanceStatusCards';
 import { InstanceBreakdownTable } from './admin-webhook-secret-status/InstanceBreakdownTable';
+import { AlertThresholdsPanel } from './admin-webhook-secret-status/AlertThresholdsPanel';
+import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
 import {
   aggregateValidationByInstance,
   computeInstanceStatus,
@@ -165,6 +167,14 @@ export default function AdminWebhookSecretStatusPage() {
   const enabled = (secret?.configured ?? false) || total24h > 0;
   const scopeLabel = selectedInstance ?? 'todas';
 
+  // Realtime alerts hook — partilha config/state com o painel.
+  const {
+    config: alertConfig,
+    setConfig: setAlertConfig,
+    activeBreaches,
+    recentAlerts,
+  } = useWebhookHealthAlerts();
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -180,6 +190,12 @@ export default function AdminWebhookSecretStatusPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {activeBreaches.length > 0 && (
+            <Badge variant="destructive" className="gap-1">
+              <ShieldAlert className="h-3 w-3" />
+              {activeBreaches.length} alerta{activeBreaches.length > 1 ? 's' : ''} ativo{activeBreaches.length > 1 ? 's' : ''}
+            </Badge>
+          )}
           <InstanceFilterSelect
             instances={instances}
             value={selectedInstance}
@@ -476,6 +492,14 @@ export default function AdminWebhookSecretStatusPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Realtime alerts configuration */}
+      <AlertThresholdsPanel
+        config={alertConfig}
+        onChange={setAlertConfig}
+        recentAlerts={recentAlerts}
+        activeCount={activeBreaches.length}
+      />
     </div>
   );
 }

@@ -21,6 +21,8 @@ import { OfflineIndicator, ConnectionToast } from '@/components/ui/offline-indic
 import { EvolutionDisconnectBanner } from '@/components/alerts/EvolutionDisconnectBanner';
 import { DegradedConnectionsBanner } from '@/components/alerts/DegradedConnectionsBanner';
 import { useConnectionAlertsPush } from '@/hooks/useConnectionAlertsPush';
+import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 
 const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _ref) {
@@ -119,6 +121,9 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
   }, []);
   useTranscriptionNotifications({ enabled: !!user && notifReady });
   useConnectionAlertsPush();
+  // Webhook health alerts — só roda para admin/supervisor (gated abaixo)
+  const { isAdmin, isSupervisor } = useUserRole();
+  useWebhookHealthAlerts({ enabled: !!user && notifReady && (isAdmin || isSupervisor) });
 
   const showChecklist = !checklistComplete && !checklistDismissed && currentView === 'dashboard';
 
