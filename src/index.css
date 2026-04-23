@@ -1,3 +1,12 @@
+/* ===== MODULAR DESIGN SYSTEM (must come first) ===== */
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/utilities.css';
+@import './styles/components.css';
+@import './styles/animations.css';
+@import './styles/sidebar.css';
+@import './styles/accessibility.css';
+
 /* ===== FONT VARIABLES ===== */
 :root {
   --font-display: 'Outfit', system-ui, sans-serif;
@@ -60,12 +69,3 @@ html, body, #root {
   .overscroll-contain { overscroll-behavior: contain; }
   .will-change-transform { will-change: transform; }
 }
-
-/* ===== MODULAR DESIGN SYSTEM ===== */
-@import './styles/tokens.css';
-@import './styles/base.css';
-@import './styles/utilities.css';
-@import './styles/components.css';
-@import './styles/animations.css';
-@import './styles/sidebar.css';
-@import './styles/accessibility.css';
