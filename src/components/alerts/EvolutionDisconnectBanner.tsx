@@ -51,13 +51,32 @@ export function EvolutionDisconnectBanner() {
     try {
       // NOTE: banner usa `connect` (gera QR novo); MonitoringConnectionsList usa
       // `restart-instance` (recupera sessão sem rescan). Contratos diferentes propositais.
-      const { data, error } = await supabase.functions.invoke('evolution-api', {
+      let { data, error } = await supabase.functions.invoke('evolution-api', {
         body: { action: 'connect', instanceName: conn.instance_id },
       });
-      if (error) throw new Error(error.message || 'Falha ao invocar evolution-api');
-      if (data?.error === true) {
-        throw new Error(data?.message || 'Evolution API retornou erro');
+
+      // Se a instância não existe mais na Evolution API, recria e tenta novamente.
+      const notFound =
+        (data?.error === true && /does not exist|not found/i.test(String(data?.message ?? ''))) ||
+        (error && /does not exist|not found|404/i.test(String(error.message ?? '')));
+
+      if (notFound) {
+        toast.message(`Instância "${conn.instance_id}" não existe na Evolution API. Recriando...`);
+        const create = await supabase.functions.invoke('evolution-api', {
+          body: { action: 'create-instance', instanceName: conn.instance_id, qrcode: true },
+        });
+        if (create.error || create.data?.error === true) {
+          throw new Error(create.data?.message || create.error?.message || 'Falha ao recriar instância');
+        }
+        // Após criação, chama connect para garantir QR.
+        ({ data, error } = await supabase.functions.invoke('evolution-api', {
+          body: { action: 'connect', instanceName: conn.instance_id },
+        }));
       }
+
+      if (error) throw new Error(error.message || 'Falha ao invocar evolution-api');
+      if (data?.error === true) throw new Error(data?.message || 'Evolution API retornou erro');
+
       toast.success(`Reconectando ${conn.instance_id}... Abrindo tela de conexões para escanear o QR Code.`);
       window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
     } catch (e) {
