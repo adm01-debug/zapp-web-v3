@@ -1,0 +1,144 @@
+%%{init: {'flowchart': {'curve': 'basis'}}}%%
+flowchart LR
+
+  subgraph UI["1. Composicao e Envio (UI)"]
+    CIL["useChatInputLogic"]
+    MS["messageSender"]
+    IDK["buildSendIdempotencyKey"]
+  end
+
+  subgraph TRANSPORT["2. Transporte e Retry"]
+    ESR["evolutionSendRetry — fan-out critico"]
+    RETRY["lib/retry (withRetry)"]
+    RCFG["loadRetryConfig"]
+    DLQENQ["enqueueClientFailedMessage"]
+  end
+
+  subgraph BUS["3. Status Bus (in-memory)"]
+    EMIT["emitSendStatus"]
+    SUBALL["subscribeAllSendStatus"]
+    GETST["getSendStatus"]
+  end
+
+  subgraph PERSIST["4. Persistencia e Hooks de leitura"]
+    UM["useMessages"]
+    UMS["useMessageStatus"]
+    UMSS["useMessageSendStatus"]
+  end
+
+  subgraph RT["5. Realtime e Batching"]
+    BATCH["useMessageUpdateBatcher"]
+    URM["useRealtimeMessages"]
+    RUTL["realtimeUtils"]
+    URN["useRealtimeNotifications"]
+    UTN["useTranscriptionNotifications"]
+    URD["useRealtimeDashboard"]
+    UEM["useEvolutionMonitoring"]
+    AMP["AudioMessagePlayer"]
+  end
+
+  subgraph RENDER["6. Render"]
+    MSI["MessageStatusInline"]
+    VML["VirtualizedMessageList"]
+    MB["MessageBubble"]
+  end
+
+  subgraph BACKENDS["7. Backends"]
+    DB[("Lovable Cloud<br/>messages")]
+    EDGE[("Edge<br/>evolution-api/sendText")]
+    DLQ[("DLQ<br/>failed_messages")]
+  end
+
+  %% Composicao -> envio
+  CIL --> MS
+  MS --> IDK
+  MS --> ESR
+  MS ==> DB
+
+  %% Transporte
+  ESR --> RETRY
+  ESR --> RCFG
+  ESR --> EDGE
+  ESR -..-> DLQENQ
+  DLQENQ ==> DLQ
+
+  %% Status bus
+  MS -.-> EMIT
+  ESR -.-> EMIT
+  EMIT -.-> SUBALL
+  GETST -.-> UMSS
+  SUBALL -.-> UMSS
+  SUBALL -.-> UMS
+
+  %% Persistencia / leitura
+  UM ==> DB
+  UMS ==> DB
+
+  %% =====================================================================
+  %% FAN-OUT REALTIME — quem escuta postgres_changes na tabela 'messages'
+  %% =====================================================================
+  DB -.->|INSERT/UPDATE/DELETE| URM
+  DB -.->|INSERT/UPDATE/DELETE| UM
+  DB -.->|UPDATE status| UMS
+  DB -.->|INSERT novas| URN
+  DB -.->|UPDATE transcription| UTN
+  DB -.->|INSERT KPIs| URD
+  DB -.->|INSERT health| UEM
+  DB -.->|UPDATE media_url| AMP
+
+  %% Pipeline interno do realtime principal
+  URM --> BATCH
+  URM --> URN
+  URM --> RUTL
+  BATCH -.-> UM
+  BATCH --> RUTL
+
+  %% Render
+  UMSS --> MSI
+  UMS --> MSI
+  UM --> VML
+  VML --> MB
+  MSI --> MB
+  UTN -.-> MB
+
+  %% Links navegaveis
+  click CIL "src/components/inbox/chat/useChatInputLogic.ts"
+  click MS "src/hooks/realtime/messageSender.ts"
+  click IDK "src/lib/sendIdempotency.ts"
+  click ESR "src/lib/evolutionSendRetry.ts"
+  click RETRY "src/lib/retry.ts"
+  click RCFG "src/lib/retryConfig.ts"
+  click DLQENQ "src/lib/failedMessagesEnqueue.ts"
+  click EMIT "src/hooks/realtime/sendStatusBus.ts"
+  click SUBALL "src/hooks/realtime/sendStatusBus.ts"
+  click GETST "src/hooks/realtime/sendStatusBus.ts"
+  click UM "src/hooks/useMessages.ts"
+  click UMS "src/hooks/useMessageStatus.ts"
+  click UMSS "src/hooks/realtime/useMessageSendStatus.ts"
+  click BATCH "src/hooks/realtime/useMessageUpdateBatcher.ts"
+  click URM "src/hooks/useRealtimeMessages.ts"
+  click RUTL "src/hooks/realtime/realtimeUtils.ts"
+  click URN "src/hooks/realtime/useRealtimeNotifications.ts"
+  click UTN "src/hooks/useTranscriptionNotifications.ts"
+  click URD "src/hooks/useRealtimeDashboard.ts"
+  click UEM "src/components/monitoring/hooks/useEvolutionMonitoring.ts"
+  click AMP "src/components/inbox/AudioMessagePlayer.tsx"
+  click MSI "src/components/inbox/chat/MessageStatusInline.tsx"
+  click VML "src/components/inbox/VirtualizedMessageList.tsx"
+  click MB "src/components/inbox/chat/MessageBubble.tsx"
+
+%% Legenda das arestas:
+%%   -->   chamada sincrona / import
+%%   ==>   escrita persistente em DB
+%%   -.->  evento realtime / pub-sub in-memory
+%%   -..-> enqueue assincrona (DLQ)
+%% Fan-out realtime (postgres_changes 'messages'): 8 consumidores diretos
+%%   1. useRealtimeMessages — feed global do inbox (INSERT/UPDATE/DELETE)
+%%   2. useMessages         — lista por contato aberto (INSERT/UPDATE/DELETE)
+%%   3. useMessageStatus    — status sent/delivered/read por mensagem (UPDATE)
+%%   4. useRealtimeNotifications — toasts/badges de novas mensagens (INSERT)
+%%   5. useTranscriptionNotifications — alerta quando transcricao conclui (UPDATE)
+%%   6. useRealtimeDashboard — KPIs em tempo real (INSERT)
+%%   7. useEvolutionMonitoring — saude do webhook/instancia (INSERT)
+%%   8. AudioMessagePlayer  — refresh de media_url assinada (UPDATE)
+%% Gerado: 23/abr/2026 — escopo trilha de mensagens (send -> batching -> delivery)
