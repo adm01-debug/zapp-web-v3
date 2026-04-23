@@ -9237,6 +9237,7 @@ export type Database = {
       cleanup_connection_status_audit: { Args: never; Returns: number }
       cleanup_expired_challenges: { Args: never; Returns: undefined }
       cleanup_expired_event_keys: { Args: never; Returns: undefined }
+      cleanup_failed_messages: { Args: never; Returns: Json }
       cleanup_health_log: { Args: never; Returns: undefined }
       cleanup_old_connection_action_log: { Args: never; Returns: undefined }
       cleanup_old_evolution_incidents: { Args: never; Returns: number }
