@@ -134,7 +134,17 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   });
 
   useEffect(() => { initResolve(); }, [conversation.contact.id]);
-  useEffect(() => { messagesAreaRef.current?.scrollToBottom(); }, [messages.length, isContactTyping]);
+  const lastMsgIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const lastId = messages[messages.length - 1]?.id ?? null;
+    // Only auto-scroll when a new message was appended at the end (not when older ones were prepended)
+    if (lastId !== lastMsgIdRef.current) {
+      lastMsgIdRef.current = lastId;
+      messagesAreaRef.current?.scrollToBottom();
+    } else if (isContactTyping) {
+      messagesAreaRef.current?.scrollToBottom();
+    }
+  }, [messages, isContactTyping]);
   useEffect(() => {
     setActiveTool(null); setHighlightedMessageIds(new Set()); setActiveHighlightId(null); setSearchQuery('');
   }, [conversation.id]);
