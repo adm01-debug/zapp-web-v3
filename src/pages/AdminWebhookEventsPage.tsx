@@ -9,7 +9,7 @@ import { format, subDays, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Webhook, RefreshCw, Inbox, CheckCircle2, XCircle,
-  Eye, Filter, AlertTriangle,
+  Eye, Filter,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +43,23 @@ const EVENT_TYPES = [
 
 type EventTypeFilter = typeof EVENT_TYPES[number];
 
+// Tipos de mensagem mais comuns recebidos pela Evolution. `all` desliga o filtro.
+const MESSAGE_TYPES = [
+  'all', 'conversation', 'extendedTextMessage', 'imageMessage', 'videoMessage',
+  'audioMessage', 'documentMessage', 'stickerMessage', 'locationMessage',
+  'contactMessage', 'reactionMessage', 'pollCreationMessage', 'protocolMessage',
+] as const;
+type MessageTypeFilter = typeof MESSAGE_TYPES[number];
+
+// Status agregado (independe do filtro textual livre).
+const STATUS_OPTIONS = [
+  { value: 'all',       label: 'Todos' },
+  { value: 'processed', label: 'Processados' },
+  { value: 'pending',   label: 'Pendentes' },
+  { value: 'error',     label: 'Com erro' },
+] as const;
+type StatusFilter = typeof STATUS_OPTIONS[number]['value'];
+
 const RANGE_OPTIONS = [
   { value: '1', label: 'Última hora' },
   { value: '6', label: 'Últimas 6h' },
@@ -70,8 +87,11 @@ export default function AdminWebhookEventsPage() {
   const [hours, setHours] = useState<string>('24');
   const [eventType, setEventType] = useState<EventTypeFilter>('all');
   const [instance, setInstance] = useState<string>('all');
+  const [messageType, setMessageType] = useState<MessageTypeFilter>('all');
+  const [status, setStatus] = useState<StatusFilter>('all');
+  const [remoteJidFilter, setRemoteJidFilter] = useState('');
+  const [pushNameFilter, setPushNameFilter] = useState('');
   const [search, setSearch] = useState('');
-  const [onlyErrors, setOnlyErrors] = useState(false);
   const [selected, setSelected] = useState<EvolutionWebhookEvent | null>(null);
 
   const sinceISO = useMemo(
@@ -81,14 +101,33 @@ export default function AdminWebhookEventsPage() {
 
   // ── Fetch events ──────────────────────────────────────────────
   const { data, isLoading, isRefetching, refetch, error } = useQuery({
-    queryKey: ['admin-webhook-events', hours, eventType, instance, onlyErrors],
+    queryKey: [
+      'admin-webhook-events', hours, eventType, instance, messageType, status,
+      remoteJidFilter.trim().toLowerCase(), pushNameFilter.trim().toLowerCase(),
+    ],
     queryFn: async () => {
       const filters: { column: string; operator: string; value: unknown }[] = [
         { column: 'created_at', operator: 'gte', value: sinceISO },
       ];
       if (eventType !== 'all') filters.push({ column: 'event_type', operator: 'eq', value: eventType });
       if (instance !== 'all') filters.push({ column: 'instance_name', operator: 'eq', value: instance });
-      if (onlyErrors) filters.push({ column: 'error_message', operator: 'not.is', value: null });
+      if (messageType !== 'all') filters.push({ column: 'message_type', operator: 'eq', value: messageType });
+
+      // Status agregado — independe do search textual.
+      if (status === 'processed') {
+        filters.push({ column: 'processed', operator: 'eq', value: true });
+        filters.push({ column: 'error_message', operator: 'is', value: null });
+      } else if (status === 'pending') {
+        filters.push({ column: 'processed', operator: 'eq', value: false });
+        filters.push({ column: 'error_message', operator: 'is', value: null });
+      } else if (status === 'error') {
+        filters.push({ column: 'error_message', operator: 'not.is', value: null });
+      }
+
+      const jid = remoteJidFilter.trim();
+      if (jid) filters.push({ column: 'remote_jid', operator: 'ilike', value: `%${jid}%` });
+      const name = pushNameFilter.trim();
+      if (name) filters.push({ column: 'push_name', operator: 'ilike', value: `%${name}%` });
 
       const res = await queryExternalProxy<EvolutionWebhookEvent>({
         table: 'evolution_webhook_events',
@@ -212,26 +251,73 @@ export default function AdminWebhookEventsPage() {
             </Select>
           </FilterField>
 
-          <FilterField label="Buscar (JID, nome, evento, erro)">
+          <FilterField label="Tipo de mensagem">
+            <Select value={messageType} onValueChange={(v) => setMessageType(v as MessageTypeFilter)}>
+              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {MESSAGE_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>{t === 'all' ? 'Todos' : t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
+
+          <FilterField label="Status">
+            <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
+              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
+
+          <FilterField label="Remote JID">
             <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Ex: 5511… ou MESSAGES…"
-              className="w-[260px]"
+              value={remoteJidFilter}
+              onChange={(e) => setRemoteJidFilter(e.target.value)}
+              placeholder="Ex: 5511999"
+              className="w-[200px] font-mono"
             />
           </FilterField>
 
-          <FilterField label="Apenas com erro">
-            <Button
-              variant={onlyErrors ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setOnlyErrors((v) => !v)}
-              className="h-9"
-            >
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              {onlyErrors ? 'Sim' : 'Não'}
-            </Button>
+          <FilterField label="Push name">
+            <Input
+              value={pushNameFilter}
+              onChange={(e) => setPushNameFilter(e.target.value)}
+              placeholder="Ex: João"
+              className="w-[200px]"
+            />
           </FilterField>
+
+          <FilterField label="Refinar (texto livre)">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filtra resultado já carregado"
+              className="w-[240px]"
+            />
+          </FilterField>
+
+          {(remoteJidFilter || pushNameFilter || messageType !== 'all' || status !== 'all' || search) && (
+            <FilterField label=" ">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9"
+                onClick={() => {
+                  setRemoteJidFilter('');
+                  setPushNameFilter('');
+                  setMessageType('all');
+                  setStatus('all');
+                  setSearch('');
+                }}
+              >
+                Limpar filtros
+              </Button>
+            </FilterField>
+          )}
         </CardContent>
       </Card>
 
