@@ -28,6 +28,7 @@ import { InstanceFilterSelect } from './admin-webhook-secret-status/InstanceFilt
 import { InstanceStatusCards } from './admin-webhook-secret-status/InstanceStatusCards';
 import { InstanceBreakdownTable } from './admin-webhook-secret-status/InstanceBreakdownTable';
 import { AlertThresholdsPanel } from './admin-webhook-secret-status/AlertThresholdsPanel';
+import { WebhookAlertHistoryPanel } from './admin-webhook-secret-status/WebhookAlertHistoryPanel';
 import { AdvancedFiltersPanel } from './admin-webhook-secret-status/AdvancedFiltersPanel';
 import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
 import { useWebhookViewPreferences } from '@/hooks/useWebhookViewPreferences';
@@ -178,6 +179,8 @@ export default function AdminWebhookSecretStatusPage() {
     setConfig: setAlertConfig,
     activeBreaches,
     recentAlerts,
+    history: alertHistory,
+    reloadHistory,
   } = useWebhookHealthAlerts();
 
   // View preferences (status/reason/event-type/density/columns/pinned instance)
@@ -636,6 +639,9 @@ export default function AdminWebhookSecretStatusPage() {
         recentAlerts={recentAlerts}
         activeCount={activeBreaches.length}
       />
+
+      {/* Persistent alert history (audit) */}
+      <WebhookAlertHistoryPanel history={alertHistory} onCleared={reloadHistory} />
 
       <RecheckResultDialog
         open={recheckOpen}

@@ -27,6 +27,12 @@ import {
   type WebhookAlertBreach,
   type WebhookAlertConfig,
 } from '@/lib/webhookHealthAlerts';
+import {
+  appendAlertHistory,
+  buildHistoryEntry,
+  loadAlertHistory,
+  type AlertHistoryEntry,
+} from '@/lib/alertHistory';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('useWebhookHealthAlerts');
@@ -55,6 +61,8 @@ export interface UseWebhookHealthAlertsResult {
   setConfig: (next: WebhookAlertConfig) => void;
   activeBreaches: WebhookAlertBreach[];
   recentAlerts: RecentAlertEntry[];
+  history: AlertHistoryEntry[];
+  reloadHistory: () => void;
   isPolling: boolean;
 }
 
@@ -85,6 +93,8 @@ export function useWebhookHealthAlerts(
   const cooldownRef = useRef<Map<string, number>>(new Map());
   const [activeBreaches, setActiveBreaches] = useState<WebhookAlertBreach[]>([]);
   const [recentAlerts, setRecentAlerts] = useState<RecentAlertEntry[]>([]);
+  const [history, setHistory] = useState<AlertHistoryEntry[]>(() => loadAlertHistory());
+  const reloadHistory = useCallback(() => setHistory(loadAlertHistory()), []);
 
   // Pede permissão de notificação uma vez se habilitado.
   useEffect(() => {
@@ -187,6 +197,9 @@ export function useWebhookHealthAlerts(
 
     if (fired.length > 0) {
       setRecentAlerts((prev) => [...fired, ...prev].slice(0, MAX_RECENT_ALERTS));
+      const historyEntries = fired.map((f) => buildHistoryEntry(f, config, f.firedAt));
+      const next = appendAlertHistory(historyEntries);
+      setHistory(next);
     }
   }, [eventsQuery.data, config, settings.soundEnabled, settings.browserNotifications, isQuietHours]);
 
@@ -195,6 +208,8 @@ export function useWebhookHealthAlerts(
     setConfig,
     activeBreaches,
     recentAlerts,
+    history,
+    reloadHistory,
     isPolling: eventsQuery.isFetching,
   };
 }
