@@ -1,5 +1,6 @@
 // Shared proxy logic for Evolution API edge function
 import { logRetryMetric, type RetryReason } from './log-retry-metric.ts';
+import { enqueueFailedMessage } from './enqueue-failed-message.ts';
 
 const TIMEOUT_MS = 15000;
 const MAX_RETRIES = 2;
@@ -142,6 +143,19 @@ export async function proxyToEvolution(
           retry_reasons: retryReasons,
           total_duration_ms: Date.now() - startedAt,
         });
+        // DLQ: enqueue if POST /message/* with transient failure
+        enqueueFailedMessage({
+          instance_name: instanceInPath ?? '',
+          remote_jid: (body && typeof body === 'object' && 'number' in (body as Record<string, unknown>))
+            ? String((body as Record<string, unknown>).number ?? '')
+            : null,
+          path,
+          method,
+          payload: (body && typeof body === 'object') ? (body as Record<string, unknown>) : {},
+          http_status: response.status,
+          error_code: `http_${response.status}`,
+          error_message: friendlyMessage,
+        });
         return new Response(JSON.stringify(errorEnvelope), {
           status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -195,6 +209,22 @@ export async function proxyToEvolution(
     retry_reasons: retryReasons,
     total_duration_ms: Date.now() - startedAt,
   });
+  // DLQ: enqueue exhausted POST /message/*
+  {
+    const lastReason = retryReasons[retryReasons.length - 1]?.reason ?? 'exhausted';
+    enqueueFailedMessage({
+      instance_name: instanceInPath ?? '',
+      remote_jid: (body && typeof body === 'object' && 'number' in (body as Record<string, unknown>))
+        ? String((body as Record<string, unknown>).number ?? '')
+        : null,
+      path,
+      method,
+      payload: (body && typeof body === 'object') ? (body as Record<string, unknown>) : {},
+      http_status: lastHttpStatus,
+      error_code: lastReason,
+      error_message: lastError?.message ?? null,
+    });
+  }
   return new Response(JSON.stringify(timeoutEnvelope), {
     status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { RetryMetricsPanel } from './RetryMetricsPanel';
+import { DLQPanel } from './DLQPanel';
 import type { ConnectionInfo, WebhookTestResult, WebhookConfig } from './hooks/useEvolutionMonitoring';
 
 interface SecretStatus {
@@ -123,6 +124,9 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
 
       {/* Retry Metrics Panel */}
       <RetryMetricsPanel />
+
+      {/* Dead-Letter Queue Panel */}
+      <DLQPanel />
 
       {/* Auto-load config for first connection if not loaded */}
       {!webhookConfig && connections.length > 0 && (
