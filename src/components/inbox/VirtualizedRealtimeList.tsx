@@ -9,6 +9,8 @@ import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Pin, Gift } from 'lucide-react';
+import { TypingIndicatorCompact } from './TypingIndicator';
+import { useContactTyping } from '@/hooks/useContactTyping';
 
 interface VirtualizedRealtimeListProps {
   conversations: ConversationWithMessages[];

@@ -6,6 +6,8 @@ import { motion } from '@/components/ui/motion';
 import { SLAIndicator } from '../SLAIndicator';
 import { SentimentEmoji, getSentimentFromScore, type SentimentLevel } from '../SentimentIndicator';
 import { QuickPeek } from '@/components/ui/quick-peek';
+import { TypingIndicatorCompact } from '../TypingIndicator';
+import { useContactTyping } from '@/hooks/useContactTyping';
 import {
   Clock, CheckCircle2, AlertCircle, Loader2, ExternalLink,
   MessageCircle, Instagram, Mail, Phone, UserCheck, Archive, Pin, Star, AlarmClock,
@@ -54,6 +56,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
   const StatusIcon = statusIcons[conversation.status];
   const sentiment: SentimentLevel | null = conversation.sentiment || 
     (conversation.sentimentScore !== undefined ? getSentimentFromScore(conversation.sentimentScore) : null);
+  const isTyping = useContactTyping(conversation.contact.id);
 
   if (compact) {
     return (
@@ -87,7 +90,11 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 {conversation.unreadCount > 0 && <span className="min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center text-[9px] font-bold bg-primary text-primary-foreground">{conversation.unreadCount}</span>}
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground truncate">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
+            {isTyping ? (
+              <TypingIndicatorCompact isVisible={true} className="text-[11px]" />
+            ) : (
+              <p className="text-[11px] text-muted-foreground truncate">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
+            )}
           </div>
           {conversation.priority === 'high' && <div className="w-0.5 h-5 rounded-full bg-destructive flex-shrink-0" />}
         </div>
@@ -151,7 +158,11 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground truncate pr-2">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
+              {isTyping ? (
+                <TypingIndicatorCompact isVisible={true} />
+              ) : (
+                <p className="text-sm text-muted-foreground truncate pr-2">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
+              )}
               {conversation.unreadCount > 0 && <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-primary-foreground">{conversation.unreadCount}</span>}
             </div>
             <div className="flex items-center gap-0.5 mt-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
