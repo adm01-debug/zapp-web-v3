@@ -10,6 +10,7 @@ import { useGlobalSearchShortcut } from '@/hooks/useGlobalSearchShortcut';
 import { useInboxBulkActions } from '@/hooks/useInboxBulkActions';
 import { useInboxFilters } from '@/hooks/useInboxFilters';
 import { useRealtimeInbox } from '@/hooks/useRealtimeInbox';
+import { useRealtimeContacts } from '@/hooks/realtime/useRealtimeContacts';
 import { WifiOff, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -43,6 +44,8 @@ interface SearchResult {
 export function RealtimeInboxView() {
   const isMobile = useIsMobile();
   const inbox = useRealtimeInbox();
+  // Realtime sync of evolution_contacts (FATOR X) → React Query caches
+  useRealtimeContacts({ instance: 'wpp2' });
   const inboxFilters = useInboxFilters({ conversations: inbox.cachedConversations, profileId: inbox.profile?.id });
   const bulkActions = useInboxBulkActions({ refetch: inbox.refetch, filteredConversations: inboxFilters.filteredConversations });
   const pullToRefresh = usePullToRefresh({ onRefresh: async () => { await inbox.refetch(); }, disabled: !isMobile || !!inbox.selectedContactId });

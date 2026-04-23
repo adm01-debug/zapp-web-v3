@@ -78,6 +78,7 @@ export interface EvolutionContact {
   is_group: boolean;
   created_at: string;
   updated_at: string;
+  deleted_at?: string | null;
 }
 
 // ─── evolution_conversations ──────────────────────────────────
