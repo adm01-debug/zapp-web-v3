@@ -117,11 +117,23 @@ Deno.serve(async (req) => {
     const effectiveOffset = offset || 0
     query = query.range(effectiveOffset, effectiveOffset + effectiveLimit - 1)
 
-    const { data: queryData, error: queryError, count } = await query
+    let queryData: unknown, queryError: { message: string } | null = null, count: number | null = null
+    try {
+      const res = await withTimeout(query)
+      queryData = (res as { data: unknown }).data
+      queryError = (res as { error: { message: string } | null }).error
+      count = (res as { count: number | null }).count
+    } catch (e) {
+      if ((e as Error).message === 'proxy_timeout') return timeoutResponse()
+      throw e
+    }
 
     if (queryError) {
+      // Surface Postgres statement timeout as 504 instead of 400 for clarity
+      const isTimeout = /statement timeout|canceling statement/i.test(queryError.message)
       return new Response(JSON.stringify({ error: queryError.message }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: isTimeout ? 504 : 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
