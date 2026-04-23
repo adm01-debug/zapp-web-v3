@@ -87,8 +87,11 @@ export default function AdminWebhookEventsPage() {
   const [hours, setHours] = useState<string>('24');
   const [eventType, setEventType] = useState<EventTypeFilter>('all');
   const [instance, setInstance] = useState<string>('all');
+  const [messageType, setMessageType] = useState<MessageTypeFilter>('all');
+  const [status, setStatus] = useState<StatusFilter>('all');
+  const [remoteJidFilter, setRemoteJidFilter] = useState('');
+  const [pushNameFilter, setPushNameFilter] = useState('');
   const [search, setSearch] = useState('');
-  const [onlyErrors, setOnlyErrors] = useState(false);
   const [selected, setSelected] = useState<EvolutionWebhookEvent | null>(null);
 
   const sinceISO = useMemo(
@@ -98,14 +101,33 @@ export default function AdminWebhookEventsPage() {
 
   // ── Fetch events ──────────────────────────────────────────────
   const { data, isLoading, isRefetching, refetch, error } = useQuery({
-    queryKey: ['admin-webhook-events', hours, eventType, instance, onlyErrors],
+    queryKey: [
+      'admin-webhook-events', hours, eventType, instance, messageType, status,
+      remoteJidFilter.trim().toLowerCase(), pushNameFilter.trim().toLowerCase(),
+    ],
     queryFn: async () => {
       const filters: { column: string; operator: string; value: unknown }[] = [
         { column: 'created_at', operator: 'gte', value: sinceISO },
       ];
       if (eventType !== 'all') filters.push({ column: 'event_type', operator: 'eq', value: eventType });
       if (instance !== 'all') filters.push({ column: 'instance_name', operator: 'eq', value: instance });
-      if (onlyErrors) filters.push({ column: 'error_message', operator: 'not.is', value: null });
+      if (messageType !== 'all') filters.push({ column: 'message_type', operator: 'eq', value: messageType });
+
+      // Status agregado — independe do search textual.
+      if (status === 'processed') {
+        filters.push({ column: 'processed', operator: 'eq', value: true });
+        filters.push({ column: 'error_message', operator: 'is', value: null });
+      } else if (status === 'pending') {
+        filters.push({ column: 'processed', operator: 'eq', value: false });
+        filters.push({ column: 'error_message', operator: 'is', value: null });
+      } else if (status === 'error') {
+        filters.push({ column: 'error_message', operator: 'not.is', value: null });
+      }
+
+      const jid = remoteJidFilter.trim();
+      if (jid) filters.push({ column: 'remote_jid', operator: 'ilike', value: `%${jid}%` });
+      const name = pushNameFilter.trim();
+      if (name) filters.push({ column: 'push_name', operator: 'ilike', value: `%${name}%` });
 
       const res = await queryExternalProxy<EvolutionWebhookEvent>({
         table: 'evolution_webhook_events',
