@@ -24,6 +24,7 @@ import { IntegrationsPanel } from './IntegrationsPanel';
 import { NumberReputationMonitor } from './NumberReputationMonitor';
 import { ConnectionCard } from './ConnectionCard';
 import { DegradedQuickActions } from './DegradedQuickActions';
+import { QrCountdown } from './QrCountdown';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 
 export function ConnectionsView() {
@@ -135,6 +136,7 @@ export function ConnectionsView() {
                   <p>3. Toque em <strong>Aparelhos conectados</strong></p><p>4. Toque em <strong>Conectar um aparelho</strong></p><p>5. Aponte seu celular para esta tela</p>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" />Aguardando conexão...</div>
+                {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
               </>
             )}
             {(qrCodeDialog.status === 'pending' || qrCodeDialog.status === 'error') && (

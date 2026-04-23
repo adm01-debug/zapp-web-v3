@@ -29,6 +29,10 @@ export interface QrCodeDialogState {
   qrCode: string | null;
   status: 'loading' | 'pending' | 'connected' | 'error';
   errorMessage?: string;
+  /** Unix ms when current QR expires. null when not pending. */
+  expiresAt: number | null;
+  /** id of the qr_attempts row tied to current QR (for expiration update). */
+  attemptId: string | null;
 }
 
 const INITIAL_QR_STATE: QrCodeDialogState = {
@@ -37,13 +41,82 @@ const INITIAL_QR_STATE: QrCodeDialogState = {
   connectionName: '',
   qrCode: null,
   status: 'loading',
+  expiresAt: null,
+  attemptId: null,
 };
+
+const QR_TTL_MS = 60_000;
+const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
+
+interface PersistedQrState {
+  connectionId: string;
+  connectionName: string;
+  qrCode: string | null;
+  status: 'loading' | 'pending' | 'connected' | 'error';
+  expiresAt: number | null;
+  attemptId: string | null;
+  errorMessage?: string;
+}
+
+function loadPersistedQr(): PersistedQrState | null {
+  try {
+    const raw = sessionStorage.getItem(QR_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedQrState;
+    // discard if already expired
+    if (parsed.status === 'pending' && parsed.expiresAt && parsed.expiresAt <= Date.now()) {
+      sessionStorage.removeItem(QR_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function savePersistedQr(state: QrCodeDialogState) {
+  try {
+    if (!state.open || state.status === 'connected') {
+      sessionStorage.removeItem(QR_STORAGE_KEY);
+      return;
+    }
+    const payload: PersistedQrState = {
+      connectionId: state.connectionId,
+      connectionName: state.connectionName,
+      qrCode: state.qrCode,
+      status: state.status,
+      expiresAt: state.expiresAt,
+      attemptId: state.attemptId,
+      errorMessage: state.errorMessage,
+    };
+    sessionStorage.setItem(QR_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore storage errors (quota, private mode)
+  }
+}
+
+function clearPersistedQr() {
+  try { sessionStorage.removeItem(QR_STORAGE_KEY); } catch { /* noop */ }
+}
 
 export function useConnectionsManager() {
   const [connections, setConnections] = useState<WhatsAppConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [qrCodeDialog, setQrCodeDialog] = useState<QrCodeDialogState>(INITIAL_QR_STATE);
+  const [qrCodeDialog, setQrCodeDialog] = useState<QrCodeDialogState>(() => {
+    const persisted = loadPersistedQr();
+    if (!persisted) return INITIAL_QR_STATE;
+    return {
+      open: true,
+      connectionId: persisted.connectionId,
+      connectionName: persisted.connectionName,
+      qrCode: persisted.qrCode,
+      status: persisted.status,
+      errorMessage: persisted.errorMessage,
+      expiresAt: persisted.expiresAt,
+      attemptId: persisted.attemptId,
+    };
+  });
   const [newConnection, setNewConnection] = useState({ name: '', phone_number: '' });
   const [isCreating, setIsCreating] = useState(false);
   const [syncingHistory, setSyncingHistory] = useState<string | null>(null);
@@ -57,6 +130,11 @@ export function useConnectionsManager() {
     disconnectInstance,
     deleteInstance,
   } = useEvolutionApi();
+
+  // Persist QR dialog state across page reloads.
+  useEffect(() => {
+    savePersistedQr(qrCodeDialog);
+  }, [qrCodeDialog]);
 
   useEffect(() => {
     fetchConnections();
@@ -79,9 +157,14 @@ export function useConnectionsManager() {
             if (qrCodeDialog.open && qrCodeDialog.connectionId === (payload.new as WhatsAppConnection).id) {
               const newConn = payload.new as WhatsAppConnection;
               if (newConn.status === 'connected') {
-                setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null }));
+                setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
               } else if (newConn.qr_code) {
-                setQrCodeDialog((prev) => ({ ...prev, qrCode: newConn.qr_code, status: 'pending' }));
+                setQrCodeDialog((prev) => ({
+                  ...prev,
+                  qrCode: newConn.qr_code,
+                  status: 'pending',
+                  expiresAt: prev.expiresAt ?? Date.now() + QR_TTL_MS,
+                }));
               }
             }
           } else if (payload.eventType === 'INSERT') {
@@ -97,6 +180,7 @@ export function useConnectionsManager() {
       supabase.removeChannel(channel);
       if (pollingInterval) clearInterval(pollingInterval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchConnections = async () => {
@@ -151,7 +235,7 @@ export function useConnectionsManager() {
         if (result?.state === 'open' || result?.status === 'connected') {
           clearInterval(interval);
           setPollingInterval(null);
-          setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null }));
+          setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
           toast({ title: 'Conectado!', description: 'WhatsApp conectado com sucesso.' });
         }
       } catch (error) {
@@ -221,31 +305,45 @@ export function useConnectionsManager() {
       return;
     }
     setQrCodeDialog({
-      open: true, connectionId: connection.id, connectionName: connection.name,
+      open: true,
+      connectionId: connection.id,
+      connectionName: connection.name,
       qrCode: connection.qr_code,
       status: connection.status === 'connected' ? 'connected' : 'loading',
+      expiresAt: null,
+      attemptId: null,
     });
     if (connection.status !== 'connected') {
       const attemptId = await logQrAttempt(connection);
       try {
         const result = await connectInstance(connection.instance_id);
+        const expiresAt = Date.now() + QR_TTL_MS;
         if (result?.qrcode?.base64) {
-          setQrCodeDialog((prev) => ({ ...prev, qrCode: result.qrcode.base64, status: 'pending' }));
+          setQrCodeDialog((prev) => ({
+            ...prev,
+            qrCode: result.qrcode.base64,
+            status: 'pending',
+            expiresAt,
+            attemptId,
+          }));
+        } else {
+          setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
         }
         startStatusPolling(connection.instance_id, connection.id);
         // QR codes typically expire after ~60s — auto-mark expired if dialog still pending.
         setTimeout(() => {
           setQrCodeDialog((prev) => {
             if (prev.connectionId === connection.id && prev.status === 'pending') {
-              updateQrAttempt(attemptId, { status: 'expired' });
+              updateQrAttempt(prev.attemptId, { status: 'expired' });
+              return { ...prev, status: 'error', errorMessage: 'QR Code expirado. Gere um novo.', expiresAt: null };
             }
             return prev;
           });
-        }, 60_000);
+        }, QR_TTL_MS);
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar QR Code';
         await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
-        setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage }));
+        setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
       }
     }
   };
@@ -253,28 +351,37 @@ export function useConnectionsManager() {
   const handleRefreshQrCode = async () => {
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
-    setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null }));
+    setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
     try {
       const result = await connectInstance(connection.instance_id);
+      const expiresAt = Date.now() + QR_TTL_MS;
       if (result?.qrcode?.base64) {
-        setQrCodeDialog((prev) => ({ ...prev, qrCode: result.qrcode.base64, status: 'pending' }));
+        setQrCodeDialog((prev) => ({
+          ...prev,
+          qrCode: result.qrcode.base64,
+          status: 'pending',
+          expiresAt,
+          attemptId,
+        }));
+      } else {
+        setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
       }
       setTimeout(() => {
         setQrCodeDialog((prev) => {
           if (prev.connectionId === connection.id && prev.status === 'pending') {
-            updateQrAttempt(attemptId, { status: 'expired' });
+            updateQrAttempt(prev.attemptId, { status: 'expired' });
+            return { ...prev, status: 'error', errorMessage: 'QR Code expirado. Gere um novo.', expiresAt: null };
           }
           return prev;
         });
-      }, 60_000);
+      }, QR_TTL_MS);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
-      setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage }));
+      setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
     }
   };
-
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
     toast({ title: 'ID copiado!', description: 'O ID da conexão foi copiado para a área de transferência.' });
@@ -314,8 +421,50 @@ export function useConnectionsManager() {
 
   const closeQrDialog = () => {
     if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null); }
+    clearPersistedQr();
     setQrCodeDialog(INITIAL_QR_STATE);
   };
+
+  // After connections load (e.g. after a page refresh), if we have a restored
+  // pending QR, resume status polling and re-arm the expiration timer for the
+  // remaining time. This keeps the QR visible and the countdown accurate without
+  // forcing the user to manually generate a new QR before the existing one expires.
+  useEffect(() => {
+    if (loading) return;
+    if (!qrCodeDialog.open) return;
+    if (qrCodeDialog.status !== 'pending') return;
+    const conn = connections.find((c) => c.id === qrCodeDialog.connectionId);
+    if (!conn?.instance_id) return;
+
+    // If persisted QR already expired, surface the expired state instead of restoring it.
+    if (qrCodeDialog.expiresAt && qrCodeDialog.expiresAt <= Date.now()) {
+      void updateQrAttempt(qrCodeDialog.attemptId, { status: 'expired' });
+      setQrCodeDialog((prev) => ({
+        ...prev,
+        status: 'error',
+        errorMessage: 'QR Code expirado. Gere um novo.',
+        expiresAt: null,
+      }));
+      return;
+    }
+
+    startStatusPolling(conn.instance_id, conn.id);
+    const remaining = qrCodeDialog.expiresAt
+      ? Math.max(0, qrCodeDialog.expiresAt - Date.now())
+      : QR_TTL_MS;
+    const timer = setTimeout(() => {
+      setQrCodeDialog((prev) => {
+        if (prev.connectionId === conn.id && prev.status === 'pending') {
+          void updateQrAttempt(prev.attemptId, { status: 'expired' });
+          return { ...prev, status: 'error', errorMessage: 'QR Code expirado. Gere um novo.', expiresAt: null };
+        }
+        return prev;
+      });
+    }, remaining);
+    return () => clearTimeout(timer);
+    // We intentionally only run this when connections finish loading the first time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   return {
     connections,
