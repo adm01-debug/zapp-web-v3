@@ -62,12 +62,18 @@ export function createScrollLoaderController(opts: ScrollLoaderOptions): ScrollL
     });
   };
 
+  // preloadPx is captured per onScroll call so cancel can use the same threshold
+  // the consumer is currently applying to trigger loads.
+  let lastPreloadPx = 0;
+
   const maybeCancel = (currentTop: number) => {
-    if (
-      isFetching &&
-      currentTop > lastScrollTop + reverseCancelPx &&
-      opts.onCancelLoadOlder
-    ) {
+    // Cancel ONLY when the user has clearly left the top zone — i.e. they
+    // scrolled past the preload threshold AND moved down by more than
+    // reverseCancelPx. Prevents spurious cancellations from jitter near top.
+    if (!isFetching || !opts.onCancelLoadOlder) return;
+    const movedDownEnough = currentTop > lastScrollTop + reverseCancelPx;
+    const leftTopZone = currentTop > lastPreloadPx;
+    if (movedDownEnough && leftTopZone) {
       cancelled = true;
       opts.onCancelLoadOlder();
       savedScrollHeight = null;
@@ -77,6 +83,7 @@ export function createScrollLoaderController(opts: ScrollLoaderOptions): ScrollL
 
   return {
     onScroll(currentTop, preloadPx) {
+      lastPreloadPx = preloadPx;
       maybeCancel(currentTop);
       if (currentTop < preloadPx) triggerLoad();
       lastScrollTop = currentTop;
@@ -90,6 +97,7 @@ export function createScrollLoaderController(opts: ScrollLoaderOptions): ScrollL
       cancelled = false;
       lastTriggerAt = 0;
       lastScrollTop = 0;
+      lastPreloadPx = 0;
       savedScrollHeight = null;
     },
   };
