@@ -101,6 +101,7 @@ describe('parser de wildcard "*" — arestas do diagrama', () => {
   });
 });
 
+describe('parser de wildcard "*" — hooks (event: "*")', () => {
   it('event: "*" expande para INSERT, UPDATE e DELETE', () => {
     const body = `event: '*', schema: 'public', table: 'messages'`;
     expect(parseHookEventBlock(body)).toEqual(new Set(['INSERT', 'UPDATE', 'DELETE']));
