@@ -1,48 +1,84 @@
 
+## Corrigir a conexão com a Eco/Evolution API
 
-## Corrigir botão "Reconectar" do banner de desconexão
+### Problema confirmado
 
-### Problema
+O fluxo de reconexão já está chamando a função correta (`/functions/v1/evolution-api`). O erro atual não é mais de rota no frontend.
 
-A instância `wpp2` aparece desconectada e o botão **"Reconectar"** do banner topo (`EvolutionDisconnectBanner`) não funciona. Mostra toast de sucesso mas nada acontece no backend.
+A falha real está no backend integrado:
+- `action: "connect"` para a instância `wpp2`
+- tentativa de recriar a instância quando ela não existe
+- resposta da API externa: `401 Unauthorized`
 
-**Causa raiz**: o componente invoca a edge function com **caminho aninhado inválido**:
+Isso indica incompatibilidade entre `EVOLUTION_API_URL` e `EVOLUTION_API_KEY` (URL/chave de ambientes ou contas diferentes, chave inválida/expirada, ou chave sem permissão para criar instância).
 
-```ts
-supabase.functions.invoke('evolution-api/instance/connect', {
-  method: 'POST',
-  body: { instanceName: conn.instance_id },
-});
-```
+### O que será feito
 
-A edge function se chama apenas `evolution-api` e roteia internamente via `body.action`. O nome `'evolution-api/instance/connect'` não existe → request falha (404), mas o `try/catch` mostra `toast.success` antes de validar `error` corretamente em alguns caminhos, ou o erro é silenciado.
+#### 1. Endurecer a função `supabase/functions/evolution-api/index.ts`
+Ajustar o fluxo `connect` para tratar autenticação da API externa antes de seguir com recriação automática:
 
-Além disso, mesmo se o `connect` rodasse, ele apenas gera QR code no servidor — o usuário precisa **escanear** o QR. Hoje o banner diz "Escaneie o QR Code na tela de conexões" mas não leva o usuário até lá nem abre o dialog de QR.
+- detectar `401/403` tanto no `connect` quanto no `create-instance`
+- parar o fallback automático quando o erro for de credencial/permissão
+- retornar envelope consistente com:
+  - `error: true`
+  - `status`
+  - `message` claro e acionável
+  - `details` preservando a resposta original
 
-### Mudança 1 — `src/components/alerts/EvolutionDisconnectBanner.tsx`
+Também vou evitar respostas “400 genéricas” nesse caminho, para não quebrar a UI nem mascarar a causa real.
 
-Substituir `handleReconnect` para:
+#### 2. Validar configuração da integração no backend
+Revisar o par de secrets usados pela função:
+- `EVOLUTION_API_URL`
+- `EVOLUTION_API_KEY`
 
-1. Usar o contrato correto da edge function:
-   ```ts
-   const { data, error } = await supabase.functions.invoke('evolution-api', {
-     body: { action: 'connect', instanceName: conn.instance_id },
-   });
-   ```
-2. Em vez de só mostrar toast, **navegar o usuário para `/connections`** (ou disparar o evento `navigate-view` com detail `'connections'`, padrão já usado em `DegradedQuickActions`) para que ele veja o card e o QR Code apareça.
-3. Tratar erro real: se `error` ou `data?.error === true`, exibir `toast.error` com a mensagem retornada (envelope `EvolutionErrorEnvelope.message`).
+A correção prática será garantir que ambos apontem para a mesma instância/conta da Eco/Evolution API e que a chave tenha permissão para:
+- consultar instância
+- conectar instância
+- criar instância
 
-### Mudança 2 — Confirmar consistência
+Se a chave atual estiver incorreta, o ajuste necessário será atualizar o secret no backend.
 
-Verificação adicional: `MonitoringConnectionsList.reconnectInstance` usa `action: 'restart-instance'` que é diferente — apenas reinicia o processo na Evolution API sem gerar QR. Documentar no comentário que o banner usa `connect` (gera QR) enquanto monitoring usa `restart-instance` (recupera sessão sem rescan), e manter ambos como estão. Sem mudança de código aqui.
+#### 3. Melhorar a UX no frontend de conexões
+Nos fluxos que hoje exibem “Reconectar” / “Ver QR Code”:
+- mostrar mensagem específica quando o backend devolver erro de autenticação
+- não continuar tentando gerar QR indefinidamente em erro `401/403`
+- orientar claramente que a integração externa está sem autorização, em vez de parecer “instância desconectada comum”
+
+Arquivos principais:
+- `src/components/alerts/EvolutionDisconnectBanner.tsx`
+- `src/hooks/useConnectionsManager.ts`
+
+#### 4. Adicionar cobertura de testes Deno
+Criar testes para o edge function cobrindo:
+- `connect` falhando com `401 Unauthorized`
+- `connect` detectando instância ausente e `create-instance` falhando com `401`
+- garantia de que a resposta final mantém envelope padronizado e mensagem correta
+
+Arquivo alvo:
+- `supabase/functions/evolution-api/__tests__/connect-auth-errors.test.ts` (ou ampliar o teste já existente de missing instance)
+
+### Resultado esperado
+
+Após a correção:
+- se a chave estiver válida, `wpp2` poderá ser recriada/conectada e o QR será exibido normalmente
+- se a chave estiver inválida, a interface mostrará erro explícito de autorização da Eco/Evolution API, sem tela em branco e sem falso fluxo de reconexão
 
 ### Verificação
 
-1. Recarregar `/#connections` → banner aparece com "wpp2 desconectada".
-2. Clicar **Reconectar** → request a `evolution-api` com `action: 'connect'` retorna `qrcode.base64`, status atualiza para `pending`, usuário é levado para a tela de conexões e o QR Code fica disponível ao clicar **Conectar** no card.
-3. Inspecionar Network: deve haver chamada POST para `/functions/v1/evolution-api` (não `/evolution-api/instance/connect`).
+1. Chamar `POST /functions/v1/evolution-api` com:
+   ```json
+   { "action": "connect", "instanceName": "wpp2" }
+   ```
+2. Confirmar um dos dois comportamentos:
+   - sucesso com QR code
+   - erro controlado com mensagem de credencial/permissão
+3. Repetir pelo botão **Reconectar** e pelo botão **Ver QR Code**
+4. Garantir que não haja crash da interface e que o erro deixe de aparecer como falha genérica
 
 ### Arquivos afetados
 
-- `src/components/alerts/EvolutionDisconnectBanner.tsx` (corrigir invocação + adicionar navegação para `/connections`)
-
+- `supabase/functions/evolution-api/index.ts`
+- `src/hooks/useConnectionsManager.ts`
+- `src/components/alerts/EvolutionDisconnectBanner.tsx`
+- `supabase/functions/evolution-api/__tests__/connect-auth-errors.test.ts`
