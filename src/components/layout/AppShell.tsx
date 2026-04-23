@@ -7,6 +7,7 @@ import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist
 import { ViewRouter } from '@/pages/ViewRouter';
 import { ViewLoadingFallback } from '@/components/layout/ViewLoadingFallback';
 import { RouteLoadingBar } from '@/components/ui/route-loading-bar';
+import { FailedMessageAlertsMount } from '@/components/system/FailedMessageAlertsMount';
 import { MobileShell } from '@/components/mobile/MobileShell';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
@@ -111,6 +112,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
   return (
     <div className="flex h-screen max-h-screen min-h-screen bg-background overflow-hidden relative">
       <RouteLoadingBar isLoading={loading} />
+      <FailedMessageAlertsMount />
 
       {/* Skip to content — a11y */}
       <a
