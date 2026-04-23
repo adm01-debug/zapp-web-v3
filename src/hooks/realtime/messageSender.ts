@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 import { invokeEvolutionWithRetry } from '@/lib/evolutionSendRetry';
+import { buildSendIdempotencyKey } from '@/lib/sendIdempotency';
 import { toast } from '@/hooks/use-toast';
 import { emitSendStatus } from './sendStatusBus';
 
@@ -173,10 +174,16 @@ export async function sendMessageToContact(
 
     const { action, body } = buildEvolutionPayload(connection.instance_id, phone, content, messageType, mediaUrl, mediaPayload);
 
+    // Stable idempotency key per logical message — survives client retries
+    // and DLQ reprocess, so a network-recovery retry can't duplicate the
+    // WhatsApp message on Evolution's side.
+    const idemKey = buildSendIdempotencyKey(data.id);
+
     const { data: apiResult, error: apiError } = await invokeEvolutionWithRetry(
       action,
-      { body },
+      { body, headers: { 'Idempotency-Key': idemKey } },
       {
+        idempotencyKey: idemKey,
         maxRetries: MAX_RETRIES,
         onRetry: (attempt, total) => {
           emitSendStatus(data.id, { status: 'retrying', attempt, totalRetries: total });
