@@ -70,8 +70,25 @@ export function recordAuthFailureAndMaybePause(
   supabase: SupabaseClient<any, any, any>,
   instance: string | null | undefined,
   reason: 'invalid_signature' | 'auth_401' | 'auth_403',
+  source: 'webhook' | 'evolution-api' = 'webhook',
+  detail?: { http_status?: number; message?: string },
 ): void {
   if (!instance) return;
+
+  // Persiste o evento para a série temporal (fire-and-forget)
+  supabase.from('instance_auth_events').insert({
+    instance_name: instance,
+    reason,
+    source,
+    http_status: detail?.http_status ?? (reason === 'auth_401' ? 401 : reason === 'auth_403' ? 403 : null),
+    detail: detail?.message ?? null,
+  // deno-lint-ignore no-explicit-any
+  }).then((res: any) => {
+    if (res?.error) console.warn('[auth-events] insert failed:', res.error.message);
+  }).catch((e: unknown) => {
+    console.warn('[auth-events] insert threw:', e instanceof Error ? e.message : String(e));
+  });
+
   const now = Date.now();
   const cur = _authCounters.get(instance);
   if (!cur || now - cur.windowStart > WINDOW_SEC * 1000) {
