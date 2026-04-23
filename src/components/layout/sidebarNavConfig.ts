@@ -48,6 +48,7 @@ import {
   Building2,
   Sparkles,
   RefreshCw,
+  Pause,
   Landmark,
   HeartPulse,
   BarChartHorizontal,
@@ -142,6 +143,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'sicoob-bridge', icon: Landmark, label: 'Sicoob Bridge' },
   { id: 'evolution-monitor', icon: Activity, label: 'Monitor Evolution' },
   { id: 'webhook-secret', icon: ShieldCheck, label: 'Webhook Secret' },
+  { id: 'instance-pauses', icon: Pause, label: 'Pausas de Instância' },
 ] as const;
 
 // ── Backward-compat re-exports ────────────────────────────

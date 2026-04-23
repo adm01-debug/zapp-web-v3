@@ -20,6 +20,7 @@ import {
   handleIncomingMessage, handleOutgoingWhatsAppMessage,
 } from "../_shared/evolution-webhook-messages.ts";
 import { createWebhookValidator } from "../_shared/hmac-validation.ts";
+import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
 
 const WEBHOOK_SECRET = Deno.env.get('EVOLUTION_WEBHOOK_SECRET') || Deno.env.get('WEBHOOK_SECRET') || '';
 const STRICT_MODE = (Deno.env.get('EVOLUTION_WEBHOOK_STRICT') ?? 'true').toLowerCase() !== 'false';
@@ -46,10 +47,16 @@ serve(async (req) => {
 
   // HMAC validation before reading body as JSON so we can verify on raw text.
   let rawBody: string;
+  // Tenta extrair instância do header (alguns webhooks Evolution mandam) p/ contar falhas
+  // antes mesmo de parsear o body. Cai em 'unknown' se não houver.
+  const headerInstance = req.headers.get('x-evolution-instance') || req.headers.get('x-instance') || null;
+
   if (validateWebhook) {
     const result = await validateWebhook(req);
     if (!result.valid) {
       console.warn(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`);
+      // Auto-pause: conta invalid_signature na janela
+      recordAuthFailureAndMaybePause(supabase, headerInstance ?? 'unknown', 'invalid_signature');
       await auditWebhookEvent(supabase, {
         request_id: requestId, status: 'rejected',
         error_message: result.error ?? 'invalid_signature',
@@ -81,6 +88,22 @@ serve(async (req) => {
   const instance = payload.instance;
   const data = payload.data ?? {};
   const baseData = isRecord(data) ? data : {};
+
+  // Pause guard: se a instância foi pausada (manual ou auto), descarta o evento
+  // com 503 e audit 'rejected'. A Evolution costuma retry-arr, mas durante a
+  // janela de pausa preferimos isso a continuar processando lixo.
+  if (await isInstancePaused(supabase, instance)) {
+    await auditWebhookEvent(supabase, {
+      request_id: requestId, instance, event_type: event, status: 'rejected',
+      error_message: 'instance_paused',
+      duration_ms: Date.now() - startedAt,
+    });
+    console.warn(`[webhook][${requestId}] instance=${instance} is paused — skipping event ${event}`);
+    return new Response(
+      JSON.stringify({ error: 'instance_paused', instance, requestId }),
+      { status: 503, headers: { ...corsHeaders, 'Retry-After': '60' } },
+    );
+  }
 
   // Idempotency guard: dedup by hash of (instance + event + body). Evolution retries reuse
   // the same payload, so if we have seen this event_id we short-circuit with 200.
