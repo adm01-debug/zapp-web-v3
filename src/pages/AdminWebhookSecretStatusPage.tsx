@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { recheckWebhookSignature, type RecheckResult } from '@/lib/recheckWebhookSignature';
@@ -28,7 +28,9 @@ import { InstanceFilterSelect } from './admin-webhook-secret-status/InstanceFilt
 import { InstanceStatusCards } from './admin-webhook-secret-status/InstanceStatusCards';
 import { InstanceBreakdownTable } from './admin-webhook-secret-status/InstanceBreakdownTable';
 import { AlertThresholdsPanel } from './admin-webhook-secret-status/AlertThresholdsPanel';
+import { AdvancedFiltersPanel } from './admin-webhook-secret-status/AdvancedFiltersPanel';
 import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
+import { useWebhookViewPreferences } from '@/hooks/useWebhookViewPreferences';
 import {
   aggregateValidationByInstance,
   computeInstanceStatus,
@@ -177,6 +179,49 @@ export default function AdminWebhookSecretStatusPage() {
     activeBreaches,
     recentAlerts,
   } = useWebhookHealthAlerts();
+
+  // View preferences (status/reason/event-type/density/columns/pinned instance)
+  const {
+    prefs,
+    setPref,
+    setVisibleColumn,
+    clearFilters: clearAdvancedFilters,
+    resetPrefs,
+    activeFilterCount,
+  } = useWebhookViewPreferences();
+
+  // Auto-apply pinned instance once on mount, only if URL has no instance set.
+  const pinnedAppliedRef = useRef(false);
+  useEffect(() => {
+    if (pinnedAppliedRef.current) return;
+    pinnedAppliedRef.current = true;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get('instance') && prefs.pinnedInstance) {
+      setInstance(prefs.pinnedInstance);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Available event types from current dataset.
+  const availableEventTypes = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of events) if (e.event_type) set.add(e.event_type);
+    return Array.from(set).sort();
+  }, [events]);
+
+  // Apply advanced filters to events table only (not aggregated cards).
+  const filteredEvents = useMemo(() => {
+    const reason = prefs.reasonSearch.trim().toLowerCase();
+    return events.filter((e) => {
+      if (prefs.statusFilter === 'valid' && e.signature_valid !== true) return false;
+      if (prefs.statusFilter === 'invalid' && e.signature_valid !== false) return false;
+      if (prefs.statusFilter === 'unsigned' && e.signature_valid !== null) return false;
+      if (prefs.statusFilter === 'errored' && !e.error_message) return false;
+      if (prefs.eventTypeFilter && e.event_type !== prefs.eventTypeFilter) return false;
+      if (reason && !(e.error_message ?? '').toLowerCase().includes(reason)) return false;
+      return true;
+    });
+  }, [events, prefs.statusFilter, prefs.eventTypeFilter, prefs.reasonSearch]);
 
   // Recheck dialog state
   const [recheckOpen, setRecheckOpen] = useState(false);
@@ -458,10 +503,29 @@ export default function AdminWebhookSecretStatusPage() {
         </CardContent>
       </Card>
 
+      {/* Advanced filters & view preferences */}
+      <AdvancedFiltersPanel
+        prefs={prefs}
+        setPref={setPref}
+        setVisibleColumn={setVisibleColumn}
+        clearFilters={clearAdvancedFilters}
+        resetPrefs={resetPrefs}
+        activeFilterCount={activeFilterCount}
+        availableEventTypes={availableEventTypes}
+        currentInstance={selectedInstance}
+      />
+
       {/* Recent events table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Últimos eventos recebidos — {scopeLabel}</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            Últimos eventos recebidos — {scopeLabel}
+            {activeFilterCount > 0 && (
+              <Badge variant="secondary">
+                {filteredEvents.length} de {events.length}
+              </Badge>
+            )}
+          </CardTitle>
           <CardDescription>Top 20 eventos das últimas 24 horas — atualiza a cada 30s.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -475,62 +539,87 @@ export default function AdminWebhookSecretStatusPage() {
             <p className="text-sm text-muted-foreground py-8 text-center">
               Nenhum webhook recebido nas últimas 24h.
             </p>
+          ) : filteredEvents.length === 0 ? (
+            <div className="py-8 text-center space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Nenhum evento corresponde aos filtros atuais.
+              </p>
+              <Button variant="outline" size="sm" onClick={clearAdvancedFilters}>
+                Limpar filtros
+              </Button>
+            </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table
+                className={`w-full text-sm ${
+                  prefs.tableDensity === 'compact' ? '[&_td]:py-1 [&_th]:py-1' : ''
+                }`}
+              >
                 <thead>
                   <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                    <th className="py-2 pr-4">Quando</th>
-                    <th className="py-2 pr-4">Evento</th>
-                    <th className="py-2 pr-4">Instância</th>
-                    <th className="py-2 pr-4">Assinatura</th>
-                    <th className="py-2 pr-4">Status</th>
-                    <th className="py-2 pr-4 text-right">Ação</th>
+                    {prefs.visibleColumns.when && <th className="py-2 pr-4">Quando</th>}
+                    {prefs.visibleColumns.event && <th className="py-2 pr-4">Evento</th>}
+                    {prefs.visibleColumns.instance && <th className="py-2 pr-4">Instância</th>}
+                    {prefs.visibleColumns.signature && <th className="py-2 pr-4">Assinatura</th>}
+                    {prefs.visibleColumns.status && <th className="py-2 pr-4">Status</th>}
+                    {prefs.visibleColumns.action && <th className="py-2 pr-4 text-right">Ação</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {events.slice(0, 20).map((e) => (
+                  {filteredEvents.slice(0, 20).map((e) => (
                     <tr key={e.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="py-2 pr-4 whitespace-nowrap text-muted-foreground">
-                        {formatDistanceToNow(new Date(e.created_at), {
-                          addSuffix: true,
-                          locale: ptBR,
-                        })}
-                      </td>
-                      <td className="py-2 pr-4 font-mono text-xs">{e.event_type}</td>
-                      <td className="py-2 pr-4 text-xs">{e.instance_name ?? '—'}</td>
-                      <td className="py-2 pr-4">
-                        {e.signature_valid === true ? (
-                          <Badge variant="success">válida</Badge>
-                        ) : e.signature_valid === false ? (
-                          <Badge variant="destructive">inválida</Badge>
-                        ) : (
-                          <Badge variant="subtle">—</Badge>
-                        )}
-                      </td>
-                      <td className="py-2 pr-4">
-                        {e.error_message ? (
-                          <Badge variant="destructive">erro</Badge>
-                        ) : e.processed ? (
-                          <Badge variant="success">ok</Badge>
-                        ) : (
-                          <Badge variant="subtle">pendente</Badge>
-                        )}
-                      </td>
-                      <td className="py-2 pr-4 text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          disabled={recheckingId === e.id}
-                          onClick={() => handleRecheck(e.id ?? '')}
-                          aria-label="Revalidar assinatura"
-                        >
-                          <RefreshCw
-                            className={`h-3.5 w-3.5 ${recheckingId === e.id ? 'animate-spin' : ''}`}
-                          />
-                          <span className="ml-1 text-xs">Revalidar</span>
-                        </Button>
-                      </td>
+                      {prefs.visibleColumns.when && (
+                        <td className="py-2 pr-4 whitespace-nowrap text-muted-foreground">
+                          {formatDistanceToNow(new Date(e.created_at), {
+                            addSuffix: true,
+                            locale: ptBR,
+                          })}
+                        </td>
+                      )}
+                      {prefs.visibleColumns.event && (
+                        <td className="py-2 pr-4 font-mono text-xs">{e.event_type}</td>
+                      )}
+                      {prefs.visibleColumns.instance && (
+                        <td className="py-2 pr-4 text-xs">{e.instance_name ?? '—'}</td>
+                      )}
+                      {prefs.visibleColumns.signature && (
+                        <td className="py-2 pr-4">
+                          {e.signature_valid === true ? (
+                            <Badge variant="success">válida</Badge>
+                          ) : e.signature_valid === false ? (
+                            <Badge variant="destructive">inválida</Badge>
+                          ) : (
+                            <Badge variant="subtle">—</Badge>
+                          )}
+                        </td>
+                      )}
+                      {prefs.visibleColumns.status && (
+                        <td className="py-2 pr-4">
+                          {e.error_message ? (
+                            <Badge variant="destructive">erro</Badge>
+                          ) : e.processed ? (
+                            <Badge variant="success">ok</Badge>
+                          ) : (
+                            <Badge variant="subtle">pendente</Badge>
+                          )}
+                        </td>
+                      )}
+                      {prefs.visibleColumns.action && (
+                        <td className="py-2 pr-4 text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={recheckingId === e.id}
+                            onClick={() => handleRecheck(e.id ?? '')}
+                            aria-label="Revalidar assinatura"
+                          >
+                            <RefreshCw
+                              className={`h-3.5 w-3.5 ${recheckingId === e.id ? 'animate-spin' : ''}`}
+                            />
+                            <span className="ml-1 text-xs">Revalidar</span>
+                          </Button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
