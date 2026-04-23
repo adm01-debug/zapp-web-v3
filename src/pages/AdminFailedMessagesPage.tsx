@@ -35,6 +35,19 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/utils';
 import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
 import { toast } from 'sonner';
+import {
+  ALL_ROOT_CAUSES,
+  classifyRootCause,
+  getRootCauseMeta,
+  type RootCause,
+} from '@/lib/failureRootCause';
+
+const ROOT_CAUSE_TONE_CLASS: Record<'warning' | 'destructive' | 'info' | 'muted', string> = {
+  warning: 'bg-warning/15 text-warning-foreground border-warning/40',
+  destructive: 'bg-destructive/15 text-destructive border-destructive/40',
+  info: 'bg-primary/15 text-primary border-primary/40',
+  muted: 'bg-muted text-muted-foreground border-border',
+};
 
 const STATUS_LABEL: Record<FailedMessageStatus, string> = {
   pending: 'Pendente',
