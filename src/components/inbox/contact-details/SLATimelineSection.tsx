@@ -385,6 +385,28 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           <ToggleGroupItem value="30d" className="h-6 px-2 text-[10px]">30d</ToggleGroupItem>
           <ToggleGroupItem value="all" className="h-6 px-2 text-[10px]">Tudo</ToggleGroupItem>
         </ToggleGroup>
+        <ToggleGroup
+          type="single"
+          size="sm"
+          variant="outline"
+          value={scope}
+          onValueChange={(v) => v && setScope(v as SLAScope)}
+          aria-label="Escopo da regra de SLA"
+          className="flex-wrap justify-start gap-1"
+        >
+          <ToggleGroupItem value="current" className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary">
+            <Target className="w-3 h-3 mr-1" />Atual
+          </ToggleGroupItem>
+          <ToggleGroupItem value="queue" className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary">
+            <Users className="w-3 h-3 mr-1" />Fila
+          </ToggleGroupItem>
+          <ToggleGroupItem value="agent" className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary">
+            <User className="w-3 h-3 mr-1" />Agente
+          </ToggleGroupItem>
+          <ToggleGroupItem value="none" className="h-6 px-2 text-[10px] data-[state=on]:bg-muted data-[state=on]:text-muted-foreground">
+            <MinusCircle className="w-3 h-3 mr-1" />Sem SLA
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       {filteredMilestones.length === 0 ? (
