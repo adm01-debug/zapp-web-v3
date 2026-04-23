@@ -83,6 +83,7 @@ export default function AdminFailedMessagesPage() {
   const [hours, setHours] = useState(24);
   const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
   const [errorCodeFilter, setErrorCodeFilter] = useState<string>('all');
+  const [rootCauseFilter, setRootCauseFilter] = useState<RootCause | 'all'>('all');
   const [instanceFilter, setInstanceFilter] = useState<string>('all');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState<string | null>(null);
@@ -108,7 +109,7 @@ export default function AdminFailedMessagesPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(0);
-  }, [hours, statusFilter, errorCodeFilter, instanceFilter, customFrom, customTo]);
+  }, [hours, statusFilter, errorCodeFilter, rootCauseFilter, instanceFilter, customFrom, customTo]);
 
   const fromIso = customFrom ? new Date(customFrom).toISOString() : null;
   const toIso = customTo ? new Date(customTo).toISOString() : null;
