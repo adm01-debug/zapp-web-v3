@@ -98,8 +98,13 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.includes("/rest/v1/messages") && method === "PATCH") {
     return jsonRes(wrap({ id: "msg-1", ...(body as Record<string, unknown>) }));
   }
-  // Evolution API send
-  if (url.includes("/message/sendText/")) {
+  // Evolution send — covers both the legacy direct path and the new
+  // supabase.functions.invoke('evolution-api', ...) which POSTs to
+  // {SUPABASE_URL}/functions/v1/evolution-api.
+  if (
+    url.includes("/message/sendText/") ||
+    url.includes("/functions/v1/evolution-api")
+  ) {
     return jsonRes(evolutionResponse.body, evolutionResponse.ok ? 200 : 500);
   }
 
