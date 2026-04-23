@@ -70,8 +70,11 @@ export async function proxyToEvolution(
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       if (attempt > 0) {
-        const delay = RETRY_DELAY_MS * Math.pow(2, attempt - 1);
-        console.log(`[Evolution API] Retry ${attempt}/${MAX_RETRIES} after ${delay}ms for ${method} ${fullUrl}`);
+        // Exponential backoff with full jitter (AWS Architecture Blog pattern)
+        // Avoids thundering herd when many clients retry simultaneously.
+        const exp = RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+        const delay = Math.floor(Math.random() * exp);
+        console.log(`[Evolution API] Retry ${attempt}/${MAX_RETRIES} after ${delay}ms (jittered, base=${exp}ms) for ${method} ${fullUrl}`);
         await sleep(delay);
       }
 
