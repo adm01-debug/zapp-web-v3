@@ -4,9 +4,16 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useCurrentModule } from '@/hooks/useCurrentModule';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAriaAnnouncer } from '@/hooks/useAriaAnnouncer';
+import { useUserRole, type AppRole } from '@/hooks/useUserRole';
 import { ErrorBoundaryWithRetry } from '@/components/ui/error-boundary-retry';
+import { NotAuthorizedView } from '@/components/auth/NotAuthorizedView';
 
 import * as Views from './lazyViews';
+
+// Route-level role gates. Backend RPC/RLS remain the source of truth — this is a UX layer.
+const VIEW_REQUIRED_ROLES: Record<string, AppRole[]> = {
+  'failed-messages': ['admin', 'supervisor'],
+};
 
 interface ViewRouterProps {
   currentView: string;
@@ -157,9 +164,24 @@ export function ViewRouter({ currentView, userId, canGoBack, canGoForward, onGoB
   );
 }
 
-/** Per-view error boundary with automatic retry */
+/** Per-view error boundary with automatic retry + role gating. */
 function ErrorBoundaryView({ viewId, children }: { viewId: string; children: React.ReactNode }) {
   const mod = useCurrentModule(viewId);
+  const requiredRoles = VIEW_REQUIRED_ROLES[viewId];
+  const { hasRole, loading: rolesLoading } = useUserRole();
+
+  if (requiredRoles) {
+    if (rolesLoading) {
+      return (
+        <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground" role="status" aria-busy="true">
+          Verificando permissões…
+        </div>
+      );
+    }
+    const allowed = requiredRoles.some((r) => hasRole(r));
+    if (!allowed) return <NotAuthorizedView viewLabel={mod.label} />;
+  }
+
   return (
     <ErrorBoundaryWithRetry
       key={viewId}
