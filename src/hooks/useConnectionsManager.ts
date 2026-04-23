@@ -16,7 +16,7 @@ export interface WhatsAppConnection {
   is_default: boolean;
   created_at: string;
   /** 'evolution' = não-oficial (QR Code via Evolution/Baileys); 'official' = WhatsApp Cloud API (Meta, sem QR). */
-  api_type?: WhatsAppApiType;
+  api_type?: string;
   battery_level?: number | null;
   is_plugged?: boolean | null;
   retry_count?: number | null;
