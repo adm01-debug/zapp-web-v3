@@ -16,6 +16,7 @@ import { withRetry } from '@/lib/retry';
 import { getLogger } from '@/lib/logger';
 import { enqueueClientFailedMessage } from '@/lib/failedMessagesEnqueue';
 import { loadRetryConfig } from '@/lib/retryConfig';
+import { crossTabDedupe } from '@/lib/crossTabSendDedupe';
 
 const log = getLogger('EvolutionSendRetry');
 
@@ -91,8 +92,7 @@ export async function invokeEvolutionWithRetry<T = unknown>(
     mergedHeaders['Idempotency-Key'] = idempotencyKey;
   }
 
-  try {
-    return await withRetry(
+  const runRetryLoop = () => withRetry(
     async () => {
       const result = await supabase.functions.invoke(`evolution-api/${action}`, {
         method: opts.method || 'POST',
@@ -131,6 +131,14 @@ export async function invokeEvolutionWithRetry<T = unknown>(
       },
     }
   );
+
+  try {
+    // When we have a stable idempotency key, collapse duplicate sends across
+    // browser tabs: only the leader tab actually invokes the Edge Function;
+    // followers replay its response from BroadcastChannel.
+    return await (idempotencyKey
+      ? crossTabDedupe<EvolutionInvokeResult<T>>(`send:${idempotencyKey}`, runRetryLoop)
+      : runRetryLoop());
   } catch (err) {
     // Falha definitiva (esgotou retries OU erro permanente). Tenta enqueue na DLQ.
     if (instanceName && isTransient(err)) {

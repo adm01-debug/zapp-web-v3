@@ -1,0 +1,250 @@
+/**
+ * Cross-tab request dedupe.
+ *
+ * Why: Two tabs of the same agent can race the same logical action — clicking
+ * "Resend" twice across tabs, or one tab re-submitting from optimistic state
+ * while another already fired. The Evolution proxy already has server-side
+ * idempotency, but the round-trip + WhatsApp echo can still produce flicker
+ * and double-counted retries. This util collapses the duplicate at the
+ * **browser** level: only one tab actually invokes the function; the others
+ * await the response via BroadcastChannel and replay it locally.
+ *
+ * Scope: opt-in. Caller passes a stable `key` (we reuse the same
+ * `Idempotency-Key` used server-side: `msg:<row-id>`).
+ *
+ * Mechanism:
+ *  1. Leader claim — atomic write to `localStorage` with timestamp.
+ *     If another tab already claimed within the TTL window, we are a follower.
+ *  2. Leader runs the work and broadcasts `{ key, ok, value/error }` on done.
+ *  3. Follower subscribes to BroadcastChannel and awaits the message,
+ *     timing out at `ttlMs` (falls back to running locally — better duplicate
+ *     than stuck UI).
+ *
+ * Falls back to a no-op pass-through when BroadcastChannel/localStorage are
+ * unavailable (SSR, private mode quirks).
+ */
+
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('CrossTabDedupe');
+
+const CHANNEL_NAME = 'zappweb:send-dedupe:v1';
+const STORAGE_PREFIX = 'zappweb:dedupe:';
+const DEFAULT_TTL_MS = 60_000;
+const FOLLOWER_WAIT_BUFFER_MS = 250; // small grace beyond TTL
+
+interface ClaimRecord {
+  tabId: string;
+  at: number;
+}
+
+interface BroadcastDone {
+  type: 'done';
+  key: string;
+  ok: boolean;
+  /** Serialized JSON of the resolved value when ok=true. */
+  value?: string;
+  /** Serialized error message when ok=false. */
+  error?: string;
+  /** HTTP-ish status echoed for replay parity. */
+  status?: number;
+}
+
+const TAB_ID =
+  (typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `t_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`);
+
+let cachedChannel: BroadcastChannel | null | undefined;
+function getChannel(): BroadcastChannel | null {
+  if (cachedChannel !== undefined) return cachedChannel;
+  try {
+    cachedChannel = typeof BroadcastChannel !== 'undefined'
+      ? new BroadcastChannel(CHANNEL_NAME)
+      : null;
+  } catch {
+    cachedChannel = null;
+  }
+  return cachedChannel;
+}
+
+function getStorage(): Storage | null {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    // touch to detect quota / disabled
+    const probe = '__zw_probe__';
+    localStorage.setItem(probe, '1');
+    localStorage.removeItem(probe);
+    return localStorage;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Try to atomically claim leadership for `key`. Returns true if this tab
+ * is the leader. A claim from another tab within `ttlMs` keeps that tab
+ * the leader.
+ */
+function claimLeadership(key: string, ttlMs: number): boolean {
+  const storage = getStorage();
+  if (!storage) return true; // no coordination possible → behave as leader
+
+  const storageKey = STORAGE_PREFIX + key;
+  const now = Date.now();
+
+  try {
+    const raw = storage.getItem(storageKey);
+    if (raw) {
+      const parsed = JSON.parse(raw) as ClaimRecord;
+      if (parsed && typeof parsed.at === 'number' && now - parsed.at < ttlMs) {
+        // Active claim. If it's our own tab (re-entry), keep leadership.
+        return parsed.tabId === TAB_ID;
+      }
+    }
+    const record: ClaimRecord = { tabId: TAB_ID, at: now };
+    storage.setItem(storageKey, JSON.stringify(record));
+
+    // Re-read to detect a near-simultaneous write from another tab.
+    // Whichever tab's value persisted wins.
+    const verify = storage.getItem(storageKey);
+    if (!verify) return true;
+    const verifyParsed = JSON.parse(verify) as ClaimRecord;
+    return verifyParsed.tabId === TAB_ID;
+  } catch (e) {
+    log.warn('claimLeadership failed, defaulting to leader', e);
+    return true;
+  }
+}
+
+function releaseLeadership(key: string) {
+  const storage = getStorage();
+  if (!storage) return;
+  try {
+    const storageKey = STORAGE_PREFIX + key;
+    const raw = storage.getItem(storageKey);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as ClaimRecord;
+    if (parsed.tabId === TAB_ID) storage.removeItem(storageKey);
+  } catch {
+    /* no-op */
+  }
+}
+
+function broadcastDone(payload: BroadcastDone) {
+  const ch = getChannel();
+  if (!ch) return;
+  try {
+    ch.postMessage(payload);
+  } catch (e) {
+    log.warn('broadcast failed', e);
+  }
+}
+
+function awaitBroadcast<T>(key: string, ttlMs: number): Promise<{ value: T } | { error: Error }> {
+  return new Promise((resolve) => {
+    const ch = getChannel();
+    if (!ch) {
+      resolve({ error: new Error('CROSS_TAB_NO_CHANNEL') });
+      return;
+    }
+    const timer = setTimeout(() => {
+      ch.removeEventListener('message', onMessage);
+      resolve({ error: new Error('CROSS_TAB_TIMEOUT') });
+    }, ttlMs + FOLLOWER_WAIT_BUFFER_MS);
+
+    const onMessage = (ev: MessageEvent<BroadcastDone>) => {
+      const m = ev.data;
+      if (!m || m.type !== 'done' || m.key !== key) return;
+      clearTimeout(timer);
+      ch.removeEventListener('message', onMessage);
+      if (m.ok) {
+        try {
+          const parsed = m.value ? (JSON.parse(m.value) as T) : (undefined as T);
+          resolve({ value: parsed });
+        } catch (e) {
+          resolve({ error: e instanceof Error ? e : new Error('CROSS_TAB_PARSE_ERROR') });
+        }
+      } else {
+        const err = new Error(m.error || 'CROSS_TAB_REMOTE_ERROR');
+        if (typeof m.status === 'number') (err as Error & { status?: number }).status = m.status;
+        resolve({ error: err });
+      }
+    };
+    ch.addEventListener('message', onMessage);
+  });
+}
+
+export interface CrossTabDedupeOptions {
+  /** Lifetime of the leader claim. Followers wait at most this long. Default 60s. */
+  ttlMs?: number;
+  /**
+   * If true, the follower replays the leader's response. If false, the
+   * follower simply skips and resolves with `undefined as T` — caller must
+   * tolerate that. Default true.
+   */
+  replayResponse?: boolean;
+}
+
+/**
+ * Run `work()` at most once across all tabs sharing this origin for the same
+ * `key` within `ttlMs`. Other tabs receive the leader's resolved value.
+ *
+ * If `work()` throws on the leader, the rejection is broadcast and rethrown
+ * on followers as well, preserving caller-side error handling parity.
+ */
+export async function crossTabDedupe<T>(
+  key: string,
+  work: () => Promise<T>,
+  options: CrossTabDedupeOptions = {},
+): Promise<T> {
+  const ttlMs = options.ttlMs ?? DEFAULT_TTL_MS;
+  const replay = options.replayResponse ?? true;
+
+  const isLeader = claimLeadership(key, ttlMs);
+
+  if (!isLeader) {
+    log.info('follower → awaiting leader', { key });
+    if (!replay) {
+      // No-op variant: caller handles UI via realtime.
+      return undefined as T;
+    }
+    const outcome = await awaitBroadcast<T>(key, ttlMs);
+    if ('value' in outcome) return outcome.value;
+    // Timeout / channel gone → fall through and run locally (better dup than stuck).
+    log.warn('follower fallback → running locally', { key, reason: outcome.error.message });
+    return work();
+  }
+
+  log.info('leader → executing', { key });
+  try {
+    const value = await work();
+    let serialized: string | undefined;
+    try {
+      serialized = JSON.stringify(value);
+    } catch {
+      serialized = undefined; // unserializable — followers will parse undefined
+    }
+    broadcastDone({ type: 'done', key, ok: true, value: serialized });
+    return value;
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    const status = (e as { status?: number } | null)?.status;
+    broadcastDone({
+      type: 'done',
+      key,
+      ok: false,
+      error: err.message,
+      status: typeof status === 'number' ? status : undefined,
+    });
+    throw e;
+  } finally {
+    // Keep claim for `ttlMs` so racing followers still see it; release after.
+    setTimeout(() => releaseLeadership(key), ttlMs);
+  }
+}
+
+/** Test/cleanup helper. */
+export function __resetCrossTabDedupeForTests() {
+  cachedChannel = undefined;
+}
