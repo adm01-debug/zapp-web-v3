@@ -31,7 +31,7 @@ export function DegradedConnectionsBanner({ onNavigate, recentWindowMs = 10 * 60
     const since = new Date(Date.now() - recentWindowMs).toISOString();
     const { data } = await supabase
       .from('whatsapp_connections')
-      .select('id, instance_id, health_status, health_response_ms, last_health_check')
+      .select('id, instance_id, health_status, health_response_ms, last_health_check, degraded_at')
       .eq('health_status', 'degraded')
       .gte('last_health_check', since);
     setDegraded((data as DegradedInstance[]) ?? []);
