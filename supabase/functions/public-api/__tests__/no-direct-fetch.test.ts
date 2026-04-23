@@ -61,8 +61,7 @@ Deno.test("public-api 'send' (text) routes via evolution-api invoke and not dire
     "public-api 'send' handler must NOT call fetch() directly anymore",
   );
   assert(
-    block.includes("functions.invoke('evolution-api'") ||
-      block.includes('functions.invoke("evolution-api"'),
+    /functions\.invoke\(\s*['"]evolution-api['"]/.test(block),
     "public-api 'send' handler must use supabase.functions.invoke('evolution-api', ...)",
   );
 });
