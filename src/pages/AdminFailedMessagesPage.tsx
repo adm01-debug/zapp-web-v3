@@ -66,7 +66,7 @@ export default function AdminFailedMessagesPage() {
   const [confirmBulkAbandon, setConfirmBulkAbandon] = useState(false);
 
   const {
-    data: rows = [],
+    rows,
     isLoading,
     isRefetching,
     refetch,
