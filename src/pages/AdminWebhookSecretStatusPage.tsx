@@ -28,7 +28,9 @@ import { InstanceFilterSelect } from './admin-webhook-secret-status/InstanceFilt
 import { InstanceStatusCards } from './admin-webhook-secret-status/InstanceStatusCards';
 import { InstanceBreakdownTable } from './admin-webhook-secret-status/InstanceBreakdownTable';
 import { AlertThresholdsPanel } from './admin-webhook-secret-status/AlertThresholdsPanel';
+import { AdvancedFiltersPanel } from './admin-webhook-secret-status/AdvancedFiltersPanel';
 import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
+import { useWebhookViewPreferences } from '@/hooks/useWebhookViewPreferences';
 import {
   aggregateValidationByInstance,
   computeInstanceStatus,
