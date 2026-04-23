@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
+import { normalizeIdempotencyKey, deriveIdempotencyKey } from '@/lib/idempotency';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -71,13 +72,28 @@ export function useEvolutionApiCore() {
       const method: HttpMethod = opts.method ?? 'POST';
       const baseBackoffMs = opts.baseBackoffMs ?? 250;
       const timeoutMs = opts.timeoutMs ?? 30_000;
-      const canRetry = IDEMPOTENT_METHODS.has(method) || !!opts.idempotencyKey;
+
+      // Validate + sanitize user-provided key; only a valid user key enables POST retry semantics.
+      const userKey = normalizeIdempotencyKey(opts.idempotencyKey);
+      if (opts.idempotencyKey && userKey !== opts.idempotencyKey) {
+        log.debug('Idempotency key sanitized', {
+          originalLength: opts.idempotencyKey.length,
+          sanitizedPrefix: userKey?.slice(0, 16),
+        });
+      }
+      // Stable derived key (POST only, no user key) — used for in-flight dedupe ONLY (not retries, not header).
+      const derivedKey = !userKey && method === 'POST'
+        ? await deriveIdempotencyKey(action, body)
+        : undefined;
+      const effectiveKey = userKey ?? derivedKey;
+
+      const canRetry = IDEMPOTENT_METHODS.has(method) || !!userKey;
       const retries = Math.max(1, opts.retries ?? (canRetry ? 3 : 1));
 
-      // Dedupe identical in-flight requests for idempotent verbs OR any POST with an idempotencyKey.
-      const dedupeKey = canRetry
-        ? `${method}:${action}:${opts.idempotencyKey ?? JSON.stringify(body ?? {})}`
-        : '';
+      // Dedupe identical in-flight requests for idempotent verbs OR any POST with an effective key.
+      const dedupeKey = effectiveKey
+        ? `${method}:${action}:${effectiveKey}`
+        : (IDEMPOTENT_METHODS.has(method) ? `${method}:${action}` : '');
       if (dedupeKey) {
         const existing = inflightRef.current.get(dedupeKey);
         if (existing) return existing as Promise<T>;
@@ -100,8 +116,8 @@ export function useEvolutionApiCore() {
               body: body ?? {},
               signal: controller.signal,
             };
-            if (opts.idempotencyKey) {
-              invokeOpts.headers = { 'Idempotency-Key': opts.idempotencyKey };
+            if (userKey) {
+              invokeOpts.headers = { 'Idempotency-Key': userKey };
             }
             const { data, error } = await supabase.functions.invoke(`evolution-api/${action}`, invokeOpts);
             if (error) {
