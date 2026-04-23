@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_carts: {
+        Row: {
+          abandoned_at: string
+          attempt_count: number
+          contact_id: string
+          created_at: string
+          currency: string
+          external_cart_id: string | null
+          id: string
+          items: Json
+          last_attempt_at: string | null
+          metadata: Json | null
+          recovered_at: string | null
+          recovery_value: number | null
+          source: string
+          status: string
+          total_value: number
+          updated_at: string
+        }
+        Insert: {
+          abandoned_at?: string
+          attempt_count?: number
+          contact_id: string
+          created_at?: string
+          currency?: string
+          external_cart_id?: string | null
+          id?: string
+          items?: Json
+          last_attempt_at?: string | null
+          metadata?: Json | null
+          recovered_at?: string | null
+          recovery_value?: number | null
+          source?: string
+          status?: string
+          total_value?: number
+          updated_at?: string
+        }
+        Update: {
+          abandoned_at?: string
+          attempt_count?: number
+          contact_id?: string
+          created_at?: string
+          currency?: string
+          external_cart_id?: string | null
+          id?: string
+          items?: Json
+          last_attempt_at?: string | null
+          metadata?: Json | null
+          recovered_at?: string | null
+          recovery_value?: number | null
+          source?: string
+          status?: string
+          total_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abandoned_carts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_achievements: {
         Row: {
           achievement_description: string | null
@@ -227,6 +292,465 @@ export type Database = {
             columns: ["granted_by"]
             isOneToOne: false
             referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agent_contact_pauses: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          paused_by: string | null
+          paused_until: string
+          reason: string | null
+          remote_jid: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          paused_by?: string | null
+          paused_until: string
+          reason?: string | null
+          remote_jid: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          paused_by?: string | null
+          paused_until?: string
+          reason?: string | null
+          remote_jid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_contact_pauses_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_contact_pauses_paused_by_fkey"
+            columns: ["paused_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_contact_pauses_paused_by_fkey"
+            columns: ["paused_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agent_experiments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ended_at: string | null
+          id: string
+          is_active: boolean
+          name: string
+          started_at: string
+          traffic_split: number
+          updated_at: string
+          variant_a_id: string
+          variant_b_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          started_at?: string
+          traffic_split?: number
+          updated_at?: string
+          variant_a_id: string
+          variant_b_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          started_at?: string
+          traffic_split?: number
+          updated_at?: string
+          variant_a_id?: string
+          variant_b_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_experiments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_experiments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_experiments_variant_a_id_fkey"
+            columns: ["variant_a_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_experiments_variant_b_id_fkey"
+            columns: ["variant_b_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agent_knowledge: {
+        Row: {
+          agent_id: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_knowledge_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_knowledge_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_knowledge_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agent_runs: {
+        Row: {
+          agent_id: string
+          confidence: number | null
+          contact_remote_jid: string
+          created_at: string
+          decision: Database["public"]["Enums"]["ai_agent_decision"]
+          error_message: string | null
+          escalation_reason: string | null
+          experiment_id: string | null
+          human_feedback: string | null
+          human_feedback_at: string | null
+          human_feedback_by: string | null
+          human_feedback_note: string | null
+          id: string
+          input_tokens: number | null
+          instance_name: string | null
+          latency_ms: number | null
+          metadata: Json | null
+          model_used: string | null
+          output_tokens: number | null
+          reply_content: string | null
+          total_tokens: number | null
+          trigger_message_id: string | null
+          turns_count: number | null
+          variant: string | null
+        }
+        Insert: {
+          agent_id: string
+          confidence?: number | null
+          contact_remote_jid: string
+          created_at?: string
+          decision: Database["public"]["Enums"]["ai_agent_decision"]
+          error_message?: string | null
+          escalation_reason?: string | null
+          experiment_id?: string | null
+          human_feedback?: string | null
+          human_feedback_at?: string | null
+          human_feedback_by?: string | null
+          human_feedback_note?: string | null
+          id?: string
+          input_tokens?: number | null
+          instance_name?: string | null
+          latency_ms?: number | null
+          metadata?: Json | null
+          model_used?: string | null
+          output_tokens?: number | null
+          reply_content?: string | null
+          total_tokens?: number | null
+          trigger_message_id?: string | null
+          turns_count?: number | null
+          variant?: string | null
+        }
+        Update: {
+          agent_id?: string
+          confidence?: number | null
+          contact_remote_jid?: string
+          created_at?: string
+          decision?: Database["public"]["Enums"]["ai_agent_decision"]
+          error_message?: string | null
+          escalation_reason?: string | null
+          experiment_id?: string | null
+          human_feedback?: string | null
+          human_feedback_at?: string | null
+          human_feedback_by?: string | null
+          human_feedback_note?: string | null
+          id?: string
+          input_tokens?: number | null
+          instance_name?: string | null
+          latency_ms?: number | null
+          metadata?: Json | null
+          model_used?: string | null
+          output_tokens?: number | null
+          reply_content?: string | null
+          total_tokens?: number | null
+          trigger_message_id?: string | null
+          turns_count?: number | null
+          variant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_runs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_runs_human_feedback_by_fkey"
+            columns: ["human_feedback_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_runs_human_feedback_by_fkey"
+            columns: ["human_feedback_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agents: {
+        Row: {
+          auto_pause_on_degradation: boolean
+          business_hours_only: boolean
+          created_at: string
+          created_by: string | null
+          daily_token_budget: number
+          description: string | null
+          escalation_keywords: string[]
+          forbidden_topics: string[]
+          id: string
+          instance_name: string | null
+          intent_keywords: string[]
+          is_active: boolean
+          max_turns: number
+          min_confidence: number
+          min_seconds_between_replies: number
+          mode: Database["public"]["Enums"]["ai_agent_mode"]
+          model: string
+          name: string
+          persona: string
+          priority: number
+          queue_id: string | null
+          temperature: number
+          updated_at: string
+        }
+        Insert: {
+          auto_pause_on_degradation?: boolean
+          business_hours_only?: boolean
+          created_at?: string
+          created_by?: string | null
+          daily_token_budget?: number
+          description?: string | null
+          escalation_keywords?: string[]
+          forbidden_topics?: string[]
+          id?: string
+          instance_name?: string | null
+          intent_keywords?: string[]
+          is_active?: boolean
+          max_turns?: number
+          min_confidence?: number
+          min_seconds_between_replies?: number
+          mode?: Database["public"]["Enums"]["ai_agent_mode"]
+          model?: string
+          name: string
+          persona?: string
+          priority?: number
+          queue_id?: string | null
+          temperature?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_pause_on_degradation?: boolean
+          business_hours_only?: boolean
+          created_at?: string
+          created_by?: string | null
+          daily_token_budget?: number
+          description?: string | null
+          escalation_keywords?: string[]
+          forbidden_topics?: string[]
+          id?: string
+          instance_name?: string | null
+          intent_keywords?: string[]
+          is_active?: boolean
+          max_turns?: number
+          min_confidence?: number
+          min_seconds_between_replies?: number
+          mode?: Database["public"]["Enums"]["ai_agent_mode"]
+          model?: string
+          name?: string
+          persona?: string
+          priority?: number
+          queue_id?: string | null
+          temperature?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agents_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "queues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_autonomous_resolutions: {
+        Row: {
+          confidence: number | null
+          contact_id: string
+          created_at: string
+          csat_completed_at: string | null
+          csat_feedback: string | null
+          csat_rating: number | null
+          customer_confirmed: boolean | null
+          flow_id: string | null
+          id: string
+          matched_article: string | null
+          messages_count: number | null
+          resolution_message: string | null
+          resolved_at: string | null
+          state: string
+          transfer_reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          confidence?: number | null
+          contact_id: string
+          created_at?: string
+          csat_completed_at?: string | null
+          csat_feedback?: string | null
+          csat_rating?: number | null
+          customer_confirmed?: boolean | null
+          flow_id?: string | null
+          id?: string
+          matched_article?: string | null
+          messages_count?: number | null
+          resolution_message?: string | null
+          resolved_at?: string | null
+          state?: string
+          transfer_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          confidence?: number | null
+          contact_id?: string
+          created_at?: string
+          csat_completed_at?: string | null
+          csat_feedback?: string | null
+          csat_rating?: number | null
+          customer_confirmed?: boolean | null
+          flow_id?: string | null
+          id?: string
+          matched_article?: string | null
+          messages_count?: number | null
+          resolution_message?: string | null
+          resolved_at?: string | null
+          state?: string
+          transfer_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_autonomous_resolutions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_autonomous_resolutions_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_flows"
             referencedColumns: ["id"]
           },
         ]
@@ -491,6 +1015,33 @@ export type Database = {
           ip_address?: string | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      auth_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -1097,6 +1648,131 @@ export type Database = {
           },
         ]
       }
+      cart_recovery_attempts: {
+        Row: {
+          attempt_number: number
+          cart_id: string
+          channel: string
+          clicked: boolean | null
+          created_at: string
+          delivered: boolean | null
+          id: string
+          message_content: string | null
+          opened: boolean | null
+          outcome: string | null
+          responded: boolean | null
+          response_at: string | null
+          sent_at: string
+          template_id: string | null
+        }
+        Insert: {
+          attempt_number: number
+          cart_id: string
+          channel?: string
+          clicked?: boolean | null
+          created_at?: string
+          delivered?: boolean | null
+          id?: string
+          message_content?: string | null
+          opened?: boolean | null
+          outcome?: string | null
+          responded?: boolean | null
+          response_at?: string | null
+          sent_at?: string
+          template_id?: string | null
+        }
+        Update: {
+          attempt_number?: number
+          cart_id?: string
+          channel?: string
+          clicked?: boolean | null
+          created_at?: string
+          delivered?: boolean | null
+          id?: string
+          message_content?: string | null
+          opened?: boolean | null
+          outcome?: string | null
+          responded?: boolean | null
+          response_at?: string | null
+          sent_at?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_recovery_attempts_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "abandoned_carts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cart_recovery_templates: {
+        Row: {
+          channel: string
+          conversion_count: number
+          created_at: string
+          created_by: string | null
+          discount_code: string | null
+          discount_percent: number | null
+          id: string
+          is_active: boolean
+          language: string
+          message_content: string
+          name: string
+          stage: string
+          updated_at: string
+          use_count: number
+        }
+        Insert: {
+          channel?: string
+          conversion_count?: number
+          created_at?: string
+          created_by?: string | null
+          discount_code?: string | null
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean
+          language?: string
+          message_content: string
+          name: string
+          stage: string
+          updated_at?: string
+          use_count?: number
+        }
+        Update: {
+          channel?: string
+          conversion_count?: number
+          created_at?: string
+          created_by?: string | null
+          discount_code?: string | null
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean
+          language?: string
+          message_content?: string
+          name?: string
+          stage?: string
+          updated_at?: string
+          use_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_recovery_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_recovery_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_connections: {
         Row: {
           channel_type: Database["public"]["Enums"]["channel_type"]
@@ -1470,6 +2146,45 @@ export type Database = {
           },
         ]
       }
+      connection_action_log: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          instance: string
+          metadata: Json | null
+          request_id: string | null
+          status: string
+          triggered_by: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          instance: string
+          metadata?: Json | null
+          request_id?: string | null
+          status?: string
+          triggered_by?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          instance?: string
+          metadata?: Json | null
+          request_id?: string | null
+          status?: string
+          triggered_by?: string
+        }
+        Relationships: []
+      }
       connection_health_logs: {
         Row: {
           checked_at: string
@@ -1528,6 +2243,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      connection_recovery_attempts: {
+        Row: {
+          attempted_at: string
+          created_at: string
+          error_message: string | null
+          id: string
+          instance_id: string
+          instance_name: string | null
+          success: boolean
+          triggered_by: string
+        }
+        Insert: {
+          attempted_at?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          instance_id: string
+          instance_name?: string | null
+          success?: boolean
+          triggered_by?: string
+        }
+        Update: {
+          attempted_at?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          instance_id?: string
+          instance_name?: string | null
+          success?: boolean
+          triggered_by?: string
+        }
+        Relationships: []
+      }
+      connection_status_audit: {
+        Row: {
+          avg_latency_ms: number | null
+          connected_count: number
+          created_at: string
+          created_by: string | null
+          disconnected_count: number
+          id: string
+          new_status: string
+          online: boolean
+          pending_count: number
+          previous_status: string | null
+          trigger_reason: string
+        }
+        Insert: {
+          avg_latency_ms?: number | null
+          connected_count?: number
+          created_at?: string
+          created_by?: string | null
+          disconnected_count?: number
+          id?: string
+          new_status: string
+          online: boolean
+          pending_count?: number
+          previous_status?: string | null
+          trigger_reason: string
+        }
+        Update: {
+          avg_latency_ms?: number | null
+          connected_count?: number
+          created_at?: string
+          created_by?: string | null
+          disconnected_count?: number
+          id?: string
+          new_status?: string
+          online?: boolean
+          pending_count?: number
+          previous_status?: string | null
+          trigger_reason?: string
+        }
+        Relationships: []
       }
       contact_custom_fields: {
         Row: {
@@ -2175,6 +2965,78 @@ export type Database = {
           {
             foreignKeyName: "conversation_memory_updated_by_fkey"
             columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_qa_scores: {
+        Row: {
+          agent_id: string | null
+          clarity_score: number | null
+          compliance_score: number | null
+          contact_id: string
+          created_at: string
+          efficiency_score: number | null
+          empathy_score: number | null
+          id: string
+          improvements: string[] | null
+          message_count: number | null
+          model: string | null
+          overall_score: number
+          resolution_score: number | null
+          strengths: string[] | null
+          summary: string | null
+          tone_score: number | null
+        }
+        Insert: {
+          agent_id?: string | null
+          clarity_score?: number | null
+          compliance_score?: number | null
+          contact_id: string
+          created_at?: string
+          efficiency_score?: number | null
+          empathy_score?: number | null
+          id?: string
+          improvements?: string[] | null
+          message_count?: number | null
+          model?: string | null
+          overall_score: number
+          resolution_score?: number | null
+          strengths?: string[] | null
+          summary?: string | null
+          tone_score?: number | null
+        }
+        Update: {
+          agent_id?: string | null
+          clarity_score?: number | null
+          compliance_score?: number | null
+          contact_id?: string
+          created_at?: string
+          efficiency_score?: number | null
+          empathy_score?: number | null
+          id?: string
+          improvements?: string[] | null
+          message_count?: number | null
+          model?: string | null
+          overall_score?: number
+          resolution_score?: number | null
+          strengths?: string[] | null
+          summary?: string | null
+          tone_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_qa_scores_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_qa_scores_agent_id_fkey"
+            columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "profiles_public"
             referencedColumns: ["id"]
@@ -2930,6 +3792,87 @@ export type Database = {
           },
         ]
       }
+      favorite_templates: {
+        Row: {
+          created_at: string
+          id: string
+          template_id: string
+          template_source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          template_id: string
+          template_source?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          template_id?: string
+          template_source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          enabled: boolean
+          id: string
+          metadata: Json
+          name: string
+          rollout_percent: number
+          target_emails: string[]
+          target_roles: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          metadata?: Json
+          name: string
+          rollout_percent?: number
+          target_emails?: string[]
+          target_roles?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          metadata?: Json
+          name?: string
+          rollout_percent?: number
+          target_emails?: string[]
+          target_roles?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flags_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_flags_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       followup_executions: {
         Row: {
           completed_at: string | null
@@ -3258,6 +4201,36 @@ export type Database = {
           },
         ]
       }
+      integration_health_log: {
+        Row: {
+          checked_at: string
+          error: string | null
+          id: string
+          integration_key: string
+          latency_ms: number | null
+          metadata: Json | null
+          status: string
+        }
+        Insert: {
+          checked_at?: string
+          error?: string | null
+          id?: string
+          integration_key: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          status: string
+        }
+        Update: {
+          checked_at?: string
+          error?: string | null
+          id?: string
+          integration_key?: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       ip_whitelist: {
         Row: {
           added_by: string | null
@@ -3282,13 +4255,145 @@ export type Database = {
         }
         Relationships: []
       }
+      kb_article_chunks: {
+        Row: {
+          article_id: string
+          chunk_index: number
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          token_count: number | null
+        }
+        Insert: {
+          article_id: string
+          chunk_index: number
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          token_count?: number | null
+        }
+        Update: {
+          article_id?: string
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_article_chunks_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "kb_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kb_articles: {
+        Row: {
+          author_id: string | null
+          category: string
+          content: string
+          created_at: string
+          excerpt: string | null
+          helpful_count: number
+          id: string
+          language: string
+          not_helpful_count: number
+          published_at: string | null
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          author_id?: string | null
+          category?: string
+          content: string
+          created_at?: string
+          excerpt?: string | null
+          helpful_count?: number
+          id?: string
+          language?: string
+          not_helpful_count?: number
+          published_at?: string | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          author_id?: string | null
+          category?: string
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          helpful_count?: number
+          id?: string
+          language?: string
+          not_helpful_count?: number
+          published_at?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      kb_search_logs: {
+        Row: {
+          clicked_article_id: string | null
+          contact_id: string | null
+          created_at: string
+          id: string
+          query: string
+          results_count: number
+          user_id: string | null
+        }
+        Insert: {
+          clicked_article_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          query: string
+          results_count?: number
+          user_id?: string | null
+        }
+        Update: {
+          clicked_article_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          query?: string
+          results_count?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_search_logs_clicked_article_id_fkey"
+            columns: ["clicked_article_id"]
+            isOneToOne: false
+            referencedRelation: "kb_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_base_articles: {
         Row: {
           category: string | null
           content: string
           created_at: string | null
           created_by: string | null
+          embedding: string | null
           embedding_status: string | null
+          embedding_updated_at: string | null
           id: string
           is_published: boolean | null
           search_vector: unknown
@@ -3301,7 +4406,9 @@ export type Database = {
           content: string
           created_at?: string | null
           created_by?: string | null
+          embedding?: string | null
           embedding_status?: string | null
+          embedding_updated_at?: string | null
           id?: string
           is_published?: boolean | null
           search_vector?: unknown
@@ -3314,7 +4421,9 @@ export type Database = {
           content?: string
           created_at?: string | null
           created_by?: string | null
+          embedding?: string | null
           embedding_status?: string | null
+          embedding_updated_at?: string | null
           id?: string
           is_published?: boolean | null
           search_vector?: unknown
@@ -3416,6 +4525,51 @@ export type Database = {
           locked_until?: string | null
           updated_at?: string
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      mcp_clients: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          last_used_at: string | null
+          last_used_ip: string | null
+          name: string
+          revoked_at: string | null
+          scopes: string[]
+          token_hash: string
+          token_prefix: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_used_at?: string | null
+          last_used_ip?: string | null
+          name: string
+          revoked_at?: string | null
+          scopes?: string[]
+          token_hash: string
+          token_prefix: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_used_at?: string | null
+          last_used_ip?: string | null
+          name?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          token_hash?: string
+          token_prefix?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -4383,6 +5537,157 @@ export type Database = {
         }
         Relationships: []
       }
+      qa_evaluations: {
+        Row: {
+          agent_id: string | null
+          ai_auto_score: number | null
+          ai_suggestions: Json | null
+          contact_id: string
+          created_at: string
+          evaluated_at: string | null
+          feedback: string | null
+          id: string
+          max_possible_score: number | null
+          reviewer_id: string | null
+          scorecard_id: string | null
+          scores: Json
+          status: string
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          ai_auto_score?: number | null
+          ai_suggestions?: Json | null
+          contact_id: string
+          created_at?: string
+          evaluated_at?: string | null
+          feedback?: string | null
+          id?: string
+          max_possible_score?: number | null
+          reviewer_id?: string | null
+          scorecard_id?: string | null
+          scores?: Json
+          status?: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          ai_auto_score?: number | null
+          ai_suggestions?: Json | null
+          contact_id?: string
+          created_at?: string
+          evaluated_at?: string | null
+          feedback?: string | null
+          id?: string
+          max_possible_score?: number | null
+          reviewer_id?: string | null
+          scorecard_id?: string | null
+          scores?: Json
+          status?: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_evaluations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_evaluations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_evaluations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_evaluations_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_evaluations_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_evaluations_scorecard_id_fkey"
+            columns: ["scorecard_id"]
+            isOneToOne: false
+            referencedRelation: "qa_scorecards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qa_scorecards: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          max_score: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          max_score?: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          max_score?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_scorecards_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_scorecards_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       query_telemetry: {
         Row: {
           count_mode: string | null
@@ -4951,6 +6256,42 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_searches: {
+        Row: {
+          created_at: string
+          entities: string[]
+          id: string
+          last_used_at: string | null
+          name: string
+          query: string
+          updated_at: string
+          use_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entities?: string[]
+          id?: string
+          last_used_at?: string | null
+          name: string
+          query: string
+          updated_at?: string
+          use_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entities?: string[]
+          id?: string
+          last_used_at?: string | null
+          name?: string
+          query?: string
+          updated_at?: string
+          use_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       scheduled_messages: {
         Row: {
           contact_id: string
@@ -5154,6 +6495,42 @@ export type Database = {
         }
         Relationships: []
       }
+      search_analytics: {
+        Row: {
+          clicked_result_id: string | null
+          clicked_result_type: string | null
+          created_at: string
+          entities: string[]
+          id: string
+          query: string
+          result_count: number
+          used_vector: boolean
+          user_id: string | null
+        }
+        Insert: {
+          clicked_result_id?: string | null
+          clicked_result_type?: string | null
+          created_at?: string
+          entities?: string[]
+          id?: string
+          query: string
+          result_count?: number
+          used_vector?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          clicked_result_id?: string | null
+          clicked_result_type?: string | null
+          created_at?: string
+          entities?: string[]
+          id?: string
+          query?: string
+          result_count?: number
+          used_vector?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_alerts: {
         Row: {
           alert_type: string
@@ -5196,6 +6573,42 @@ export type Database = {
           severity?: string
           title?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      send_failures: {
+        Row: {
+          attempts: number
+          auto_reconnect_succeeded: boolean | null
+          auto_reconnect_tried: boolean
+          contact_jid: string
+          created_at: string
+          error_code: string
+          id: string
+          instance: string
+          request_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          auto_reconnect_succeeded?: boolean | null
+          auto_reconnect_tried?: boolean
+          contact_jid: string
+          created_at?: string
+          error_code?: string
+          id?: string
+          instance?: string
+          request_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          auto_reconnect_succeeded?: boolean | null
+          auto_reconnect_tried?: boolean
+          contact_jid?: string
+          created_at?: string
+          error_code?: string
+          id?: string
+          instance?: string
+          request_id?: string | null
         }
         Relationships: []
       }
@@ -5251,6 +6664,45 @@ export type Database = {
           },
         ]
       }
+      sla_alert_thresholds: {
+        Row: {
+          breached_grace_seconds: number
+          created_at: string
+          critical_pct: number
+          enabled: boolean
+          id: string
+          scope: string
+          scope_id: string | null
+          updated_at: string
+          updated_by: string | null
+          warning_pct: number
+        }
+        Insert: {
+          breached_grace_seconds?: number
+          created_at?: string
+          critical_pct?: number
+          enabled?: boolean
+          id?: string
+          scope?: string
+          scope_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          warning_pct?: number
+        }
+        Update: {
+          breached_grace_seconds?: number
+          created_at?: string
+          critical_pct?: number
+          enabled?: boolean
+          id?: string
+          scope?: string
+          scope_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          warning_pct?: number
+        }
+        Relationships: []
+      }
       sla_configurations: {
         Row: {
           created_at: string
@@ -5286,6 +6738,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sla_risk_acknowledgements: {
+        Row: {
+          acknowledged_at: string
+          acknowledged_by: string | null
+          contact_id: string
+          created_at: string
+          first_message_at: string | null
+          first_response_at: string | null
+          id: string
+          kind: string
+          note: string | null
+          remaining_ms_at_ack: number
+          resolved_at: string | null
+          severity: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          acknowledged_by?: string | null
+          contact_id: string
+          created_at?: string
+          first_message_at?: string | null
+          first_response_at?: string | null
+          id?: string
+          kind: string
+          note?: string | null
+          remaining_ms_at_ack: number
+          resolved_at?: string | null
+          severity: string
+        }
+        Update: {
+          acknowledged_at?: string
+          acknowledged_by?: string | null
+          contact_id?: string
+          created_at?: string
+          first_message_at?: string | null
+          first_response_at?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          remaining_ms_at_ack?: number
+          resolved_at?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_risk_acknowledgements_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sla_rules: {
         Row: {
@@ -5370,6 +6875,42 @@ export type Database = {
           },
         ]
       }
+      sla_runbook_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json
+          duration_ms: number | null
+          id: string
+          runbook_id: string
+          session_id: string
+          target: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json
+          duration_ms?: number | null
+          id?: string
+          runbook_id: string
+          session_id: string
+          target?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json
+          duration_ms?: number | null
+          id?: string
+          runbook_id?: string
+          session_id?: string
+          target?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       stickers: {
         Row: {
           category: string | null
@@ -5423,6 +6964,169 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_event_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expires_at: string | null
+          grace_until: string | null
+          id: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+          rotated_from_id: string | null
+          scopes: string[]
+          token_hash: string
+          token_prefix: string
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          grace_until?: string | null
+          id?: string
+          last_used_at?: string | null
+          name: string
+          revoked_at?: string | null
+          rotated_from_id?: string | null
+          scopes?: string[]
+          token_hash: string
+          token_prefix: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          grace_until?: string | null
+          id?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          rotated_from_id?: string | null
+          scopes?: string[]
+          token_hash?: string
+          token_prefix?: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_event_keys_rotated_from_id_fkey"
+            columns: ["rotated_from_id"]
+            isOneToOne: false
+            referencedRelation: "system_event_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_webhook_deliveries: {
+        Row: {
+          attempt: number
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          event: string
+          id: string
+          payload: Json
+          response_body: string | null
+          status_code: number | null
+          webhook_id: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          event: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          status_code?: number | null
+          webhook_id: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          event?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          status_code?: number | null
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "system_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_webhooks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          events: string[]
+          failure_count: number
+          headers: Json
+          id: string
+          is_active: boolean
+          last_status: string | null
+          last_triggered_at: string | null
+          name: string
+          secret_hmac: string
+          success_count: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          events?: string[]
+          failure_count?: number
+          headers?: Json
+          id?: string
+          is_active?: boolean
+          last_status?: string | null
+          last_triggered_at?: string | null
+          name: string
+          secret_hmac: string
+          success_count?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          events?: string[]
+          failure_count?: number
+          headers?: Json
+          id?: string
+          is_active?: boolean
+          last_status?: string | null
+          last_triggered_at?: string | null
+          name?: string
+          secret_hmac?: string
+          success_count?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
       }
       tags: {
         Row: {
@@ -5852,6 +7556,45 @@ export type Database = {
           },
         ]
       }
+      template_performance: {
+        Row: {
+          contact_id: string | null
+          got_response: boolean | null
+          id: string
+          led_to_conversion: boolean | null
+          metadata: Json | null
+          response_time_seconds: number | null
+          sentiment_score: number | null
+          template_id: string
+          used_at: string
+          user_id: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          got_response?: boolean | null
+          id?: string
+          led_to_conversion?: boolean | null
+          metadata?: Json | null
+          response_time_seconds?: number | null
+          sentiment_score?: number | null
+          template_id: string
+          used_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          got_response?: boolean | null
+          id?: string
+          led_to_conversion?: boolean | null
+          metadata?: Json | null
+          response_time_seconds?: number | null
+          sentiment_score?: number | null
+          template_id?: string
+          used_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       training_sessions: {
         Row: {
           completed_at: string | null
@@ -6071,6 +7814,7 @@ export type Database = {
           goal_sound_type: string | null
           id: string
           inactivity_timeout: number | null
+          inbox_filters: Json | null
           language: string | null
           mention_sound_type: string | null
           message_sound_type: string | null
@@ -6107,6 +7851,7 @@ export type Database = {
           goal_sound_type?: string | null
           id?: string
           inactivity_timeout?: number | null
+          inbox_filters?: Json | null
           language?: string | null
           mention_sound_type?: string | null
           message_sound_type?: string | null
@@ -6143,6 +7888,7 @@ export type Database = {
           goal_sound_type?: string | null
           id?: string
           inactivity_timeout?: number | null
+          inbox_filters?: Json | null
           language?: string | null
           mention_sound_type?: string | null
           message_sound_type?: string | null
@@ -6210,6 +7956,8 @@ export type Database = {
           id: string
           is_read: boolean | null
           message: string
+          resolved_at: string | null
+          resolved_reason: string | null
           source: string | null
           title: string
         }
@@ -6220,6 +7968,8 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message: string
+          resolved_at?: string | null
+          resolved_reason?: string | null
           source?: string | null
           title: string
         }
@@ -6230,6 +7980,8 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message?: string
+          resolved_at?: string | null
+          resolved_reason?: string | null
           source?: string | null
           title?: string
         }
@@ -6376,6 +8128,7 @@ export type Database = {
           is_plugged: boolean | null
           last_health_check: string | null
           max_retries: number | null
+          metadata: Json
           name: string
           phone_number: string
           qr_code: string | null
@@ -6397,6 +8150,7 @@ export type Database = {
           is_plugged?: boolean | null
           last_health_check?: string | null
           max_retries?: number | null
+          metadata?: Json
           name: string
           phone_number: string
           qr_code?: string | null
@@ -6418,6 +8172,7 @@ export type Database = {
           is_plugged?: boolean | null
           last_health_check?: string | null
           max_retries?: number | null
+          metadata?: Json
           name?: string
           phone_number?: string
           qr_code?: string | null
@@ -6954,6 +8709,18 @@ export type Database = {
         }
         Relationships: []
       }
+      v_top_searches_7d: {
+        Row: {
+          any_vector: boolean | null
+          avg_results: number | null
+          click_count: number | null
+          last_searched_at: string | null
+          query: string | null
+          search_count: number | null
+          zero_result_count: number | null
+        }
+        Relationships: []
+      }
       whatsapp_connections_agent: {
         Row: {
           id: string | null
@@ -7083,7 +8850,17 @@ export type Database = {
     }
     Functions: {
       calculate_level: { Args: { xp_amount: number }; Returns: number }
+      check_login_rate_limit: {
+        Args: { p_email: string; p_ip?: string }
+        Returns: Json
+      }
+      cleanup_connection_status_audit: { Args: never; Returns: number }
       cleanup_expired_challenges: { Args: never; Returns: undefined }
+      cleanup_expired_event_keys: { Args: never; Returns: undefined }
+      cleanup_health_log: { Args: never; Returns: undefined }
+      cleanup_old_connection_action_log: { Args: never; Returns: undefined }
+      cleanup_old_send_failures: { Args: never; Returns: undefined }
+      cleanup_webhook_deliveries: { Args: never; Returns: undefined }
       clear_login_attempts: { Args: { p_email: string }; Returns: undefined }
       contacts_count_by_type: {
         Args: never
@@ -7230,6 +9007,7 @@ export type Database = {
         Args: { check_country_code: string }
         Returns: boolean
       }
+      is_feature_enabled: { Args: { p_flag_name: string }; Returns: boolean }
       is_ip_blocked: { Args: { check_ip: string }; Returns: boolean }
       is_ip_whitelisted: { Args: { check_ip: string }; Returns: boolean }
       is_team_conversation_member: {
@@ -7250,6 +9028,32 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_audit_event_as: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_entity_id?: string
+          p_entity_type?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      match_kb_chunks: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          p_language?: string
+          query_embedding: string
+        }
+        Returns: {
+          article_category: string
+          article_id: string
+          article_title: string
+          chunk_id: string
+          content: string
+          similarity: number
+        }[]
+      }
       reassign_absent_agents: {
         Args: { inactive_minutes?: number }
         Returns: number
@@ -7263,6 +9067,33 @@ export type Database = {
           locked_until: string
         }[]
       }
+      record_login_attempt: {
+        Args: {
+          p_email: string
+          p_ip?: string
+          p_success?: boolean
+          p_user_agent?: string
+        }
+        Returns: undefined
+      }
+      rpc_log_search_event: {
+        Args: {
+          p_entities: string[]
+          p_query: string
+          p_result_count: number
+          p_used_vector: boolean
+        }
+        Returns: string
+      }
+      rpc_record_event_key_usage: {
+        Args: { p_key_id: string }
+        Returns: undefined
+      }
+      rpc_record_search_click: {
+        Args: { p_query: string; p_result_id: string; p_result_type: string }
+        Returns: undefined
+      }
+      rpc_search_insights: { Args: { p_days?: number }; Returns: Json }
       search_contacts: {
         Args: {
           company_filter?: string
@@ -7305,6 +9136,23 @@ export type Database = {
           title: string
         }[]
       }
+      search_knowledge_base_rag: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+          query_text?: string
+        }
+        Returns: {
+          category: string
+          content: string
+          id: string
+          similarity: number
+          tags: string[]
+          text_rank: number
+          title: string
+        }[]
+      }
       skill_based_assign: { Args: { p_queue_id: string }; Returns: string }
       update_own_profile: {
         Args: {
@@ -7324,6 +9172,13 @@ export type Database = {
       validate_reset_token: { Args: { p_token: string }; Returns: string }
     }
     Enums: {
+      ai_agent_decision:
+        | "replied"
+        | "escalated"
+        | "skipped"
+        | "failed"
+        | "requested_info"
+      ai_agent_mode: "autopilot" | "copilot"
       ai_provider_type:
         | "lovable_ai"
         | "openai_compatible"
@@ -7471,6 +9326,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_agent_decision: [
+        "replied",
+        "escalated",
+        "skipped",
+        "failed",
+        "requested_info",
+      ],
+      ai_agent_mode: ["autopilot", "copilot"],
       ai_provider_type: [
         "lovable_ai",
         "openai_compatible",
