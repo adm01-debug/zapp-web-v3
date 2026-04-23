@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     const baseUrl = evolutionUrl.replace(/\/+$/, '');
 
     const { data: connections, error: connError } = await supabase
-      .from('whatsapp_connections').select('id, instance_id, status, phone_number');
+      .from('whatsapp_connections').select('id, instance_id, status, phone_number, health_status');
 
     if (connError || !connections) return errorResponse('Failed to fetch connections', 500, req);
 
