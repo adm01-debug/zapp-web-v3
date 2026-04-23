@@ -153,6 +153,11 @@ export function RetryMetricsPanel() {
                 ))}
               </SelectContent>
             </Select>
+            <RetryAlertsConfig
+              value={thresholds}
+              onChange={setThresholds}
+              hasBreaches={breaches.length > 0}
+            />
             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
               <RefreshCw className={cn('w-3.5 h-3.5', isFetching && 'animate-spin')} />
             </Button>
@@ -167,6 +172,9 @@ export function RetryMetricsPanel() {
           <KpiCard label="p95 tentativas" value={agg?.p95Attempts ?? 0} subtitle={`p50: ${agg?.p50Attempts ?? 0}`} />
           <KpiCard label="Duração média" value={`${agg?.avgDurationMs ?? 0}ms`} />
         </div>
+
+        {/* Banner de alertas por instância */}
+        <RetryAlertsBanner breaches={breaches} />
 
         {/* Top reasons — bar chart (top 10) */}
         {agg && agg.topReasons.length > 0 && (
