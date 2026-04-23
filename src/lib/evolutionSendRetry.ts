@@ -14,6 +14,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry } from '@/lib/retry';
 import { getLogger } from '@/lib/logger';
+import { enqueueClientFailedMessage } from '@/lib/failedMessagesEnqueue';
 
 const log = getLogger('EvolutionSendRetry');
 
@@ -65,7 +66,13 @@ export async function invokeEvolutionWithRetry<T = unknown>(
 ): Promise<EvolutionInvokeResult<T>> {
   const { maxRetries = 3, onRetry } = config;
 
-  return withRetry(
+  // Snapshot pra DLQ caso falhe definitivamente
+  const instanceName = (opts.body?.instance_name ?? opts.body?.instanceName) as string | undefined;
+  const remoteJid = (opts.body?.remote_jid ?? opts.body?.number ?? opts.body?.to) as string | undefined;
+  const sendPath = `/message/${action}`;
+
+  try {
+    return await withRetry(
     async () => {
       const result = await supabase.functions.invoke(`evolution-api/${action}`, {
         method: opts.method || 'POST',
@@ -104,4 +111,25 @@ export async function invokeEvolutionWithRetry<T = unknown>(
       },
     }
   );
+  } catch (err) {
+    // Falha definitiva (esgotou retries OU erro permanente). Tenta enqueue na DLQ.
+    if (instanceName && isTransient(err)) {
+      const status = (err as { status?: number })?.status ?? null;
+      const message = err instanceof Error ? err.message : String(err);
+      const errorCode = status
+        ? `http_${status}`
+        : message.toLowerCase().includes('timeout') ? 'timeout' : 'network_error';
+      enqueueClientFailedMessage({
+        instance_name: instanceName,
+        remote_jid: remoteJid ?? null,
+        path: sendPath,
+        method: opts.method || 'POST',
+        payload: opts.body,
+        http_status: status,
+        error_code: errorCode,
+        error_message: message,
+      });
+    }
+    throw err;
+  }
 }
