@@ -16,6 +16,8 @@ interface SLAAlertParams {
   ruleName: string | null;
   awaitingMs: number | null;
   resolutionDurationMs: number | null;
+  /** Optional callback wired to the toast's "Abrir conversa" action button. */
+  onOpenConversation?: () => void;
 }
 
 function formatDurationMs(ms: number | null): string {
