@@ -7,6 +7,7 @@ import { ErrorBoundary } from '@/components/errors/ErrorBoundary';
 import { BulkActionsToolbar } from './BulkActionsToolbar';
 import { InboxFilters } from './InboxFilters';
 import { ContactTypeFilter, FILTER_OPTIONS } from './ContactTypeFilter';
+import { FailureCategoryFilter } from './FailureCategoryFilter';
 import { TicketTabs } from './TicketTabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -166,6 +167,13 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               {inboxFilters.showOnlyRetrying ? 'Mostrar todas' : `Apenas com retry/falha${inboxFilters.retryingCount > 0 ? ` (${inboxFilters.retryingCount})` : ''}`}
             </TooltipContent>
           </Tooltip>
+          {inboxFilters.showOnlyRetrying && (
+            <FailureCategoryFilter
+              value={inboxFilters.failureCategoryFilter}
+              onChange={inboxFilters.setFailureCategoryFilter}
+              counts={inboxFilters.failureCategoryCounts}
+            />
+          )}
         </div>
 
         <TicketTabs

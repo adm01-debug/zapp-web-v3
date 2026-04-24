@@ -7,6 +7,7 @@ import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
 import { filterByContactType } from '@/components/inbox/ContactTypeFilter';
 import { isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { MainTab, SubTab } from '@/components/inbox/TicketTabs';
+import { useFailureMetricsBatch, type FailureCategory } from '@/hooks/inbox/useFailureMetricsBatch';
 
 interface UseInboxFiltersProps {
   conversations: ConversationWithMessages[];
@@ -20,6 +21,13 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
   const [showOnlyRetrying, setShowOnlyRetrying] = useState(false);
+  const [failureCategoryFilter, setFailureCategoryFilter] = useState<FailureCategory | 'all'>('all');
+
+  // Carrega categorias de falha em lote quando o filtro de retry está ativo
+  const { data: failureCategoryById = {} } = useFailureMetricsBatch(
+    conversations,
+    showOnlyRetrying,
+  );
 
   const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
 
@@ -161,9 +169,22 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     // Retry/failed filter — show only conversations with messages currently retrying
     // or that finally failed after exhausting retries
     if (showOnlyRetrying) {
-      result = result.filter((c) =>
-        c.messages.some((m) => m.status === 'retrying' || m.status === 'failed_retries')
-      );
+      result = result.filter((c) => {
+        const failingMsgs = c.messages.filter(
+          (m) => m.status === 'retrying' || m.status === 'failed_retries' || m.status === 'failed' || m.status === 'failed_auth'
+        );
+        if (failingMsgs.length === 0) return false;
+
+        if (failureCategoryFilter === 'all') return true;
+
+        // 'retrying' não tem métrica final ainda — só passa quando filtro = 'all'
+        return failingMsgs.some((m) => {
+          if (m.status === 'retrying') return false;
+          if (m.status === 'failed_auth' && failureCategoryFilter === 'auth') return true;
+          const cat = failureCategoryById[m.id];
+          return cat === failureCategoryFilter;
+        });
+      });
     }
     // Smart sorting
     result.sort((a, b) => {
@@ -175,7 +196,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     });
 
     return result;
-  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, showOnlyRetrying, profileId, contactTagsMap]);
+  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, showOnlyRetrying, failureCategoryFilter, failureCategoryById, profileId, contactTagsMap]);
 
   const retryingCount = useMemo(
     () => conversations.filter((c) =>
@@ -184,6 +205,34 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     [conversations]
   );
 
+  // Contagem por categoria (apenas quando filtro retry está ativo e métricas carregadas)
+  const failureCategoryCounts = useMemo(() => {
+    const counts: Record<FailureCategory | 'all', number> = {
+      all: 0, auth: 0, http_4xx: 0, http_5xx: 0, network: 0, unknown: 0,
+    };
+    if (!showOnlyRetrying) return counts;
+    const seenConvs = new Set<string>();
+    const seenByCat: Record<string, Set<string>> = { auth: new Set(), http_4xx: new Set(), http_5xx: new Set(), network: new Set(), unknown: new Set() };
+    for (const c of conversations) {
+      const failing = c.messages?.filter(
+        (m) => m.status === 'failed' || m.status === 'failed_auth' || m.status === 'failed_retries'
+      ) || [];
+      if (failing.length === 0) continue;
+      seenConvs.add(c.contact.id);
+      for (const m of failing) {
+        const cat: FailureCategory = m.status === 'failed_auth' ? 'auth' : (failureCategoryById[m.id] ?? 'unknown');
+        seenByCat[cat].add(c.contact.id);
+      }
+    }
+    counts.all = seenConvs.size;
+    counts.auth = seenByCat.auth.size;
+    counts.http_4xx = seenByCat.http_4xx.size;
+    counts.http_5xx = seenByCat.http_5xx.size;
+    counts.network = seenByCat.network.size;
+    counts.unknown = seenByCat.unknown.size;
+    return counts;
+  }, [conversations, showOnlyRetrying, failureCategoryById]);
+
   return {
     mainTab, setMainTab,
     subTab, setSubTab,
@@ -191,6 +240,8 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     selectedQueueId, setSelectedQueueId,
     selectedContactType, handleContactTypeChange,
     showOnlyRetrying, setShowOnlyRetrying,
+    failureCategoryFilter, setFailureCategoryFilter,
+    failureCategoryCounts,
     retryingCount,
     filters, setFilters,
     search, setSearch,
