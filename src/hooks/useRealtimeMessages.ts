@@ -246,5 +246,6 @@ export function useRealtimeMessages() {
     refetch: fetchConversations, newMessageNotification,
     dismissNotification, setSelectedContact, setSoundEnabled,
     conversationSendState,
+    batcherStatus,
   };
 }
