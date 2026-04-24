@@ -7,7 +7,7 @@
 // - Erros permanentes (400/401/403/404/422) NÃO entram na fila.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { buildIdempotencyKey, computeBackoffMs } from './dlq-backoff.ts';
+import { buildIdempotencyKey, classifyRetryReason, computeBackoffMsByReason } from './dlq-backoff.ts';
 
 export interface EnqueueFailedMessageInput {
   instance_name: string;
@@ -72,6 +72,9 @@ export function enqueueFailedMessage(input: EnqueueFailedMessageInput): void {
 
   // Fire-and-forget: build key async, then insert. Conflito de chave (item já em fila)
   // é silenciosamente ignorado — não relança e não loga como erro fatal.
+  // Motivo classificado já no enqueue → primeiro next_attempt_at usa o perfil
+  // adequado (rate_limit espera 2min, timeout só 30s, etc).
+  const reason = classifyRetryReason(input.http_status ?? null, input.error_message ?? null);
   buildIdempotencyKey(input.instance_name, input.path, input.payload).then((idemKey) => {
     client
       .from('failed_messages')
@@ -85,9 +88,10 @@ export function enqueueFailedMessage(input: EnqueueFailedMessageInput): void {
         retry_count: 0,
         max_retries: MAX_RETRIES,
         status: 'pending',
-        // Primeira tentativa = backoff(attempt=1) com jitter (~60s ±15%).
-        next_attempt_at: new Date(Date.now() + computeBackoffMs(1)).toISOString(),
+        // Primeira tentativa = backoff(attempt=1, reason) com jitter ±15%.
+        next_attempt_at: new Date(Date.now() + computeBackoffMsByReason(1, reason)).toISOString(),
         idempotency_key: idemKey,
+        last_retry_reason: reason,
       })
       // PostgrestBuilder is a PromiseLike, not a Promise — use the two-arg
       // .then(onFulfilled, onRejected) form so type-checking succeeds.

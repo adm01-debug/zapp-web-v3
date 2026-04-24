@@ -3911,6 +3911,7 @@ export type Database = {
           idempotency_key: string | null
           instance_name: string
           last_attempt_at: string | null
+          last_retry_reason: string | null
           max_retries: number
           next_attempt_at: string | null
           payload: Json
@@ -3929,6 +3930,7 @@ export type Database = {
           idempotency_key?: string | null
           instance_name: string
           last_attempt_at?: string | null
+          last_retry_reason?: string | null
           max_retries?: number
           next_attempt_at?: string | null
           payload: Json
@@ -3947,6 +3949,7 @@ export type Database = {
           idempotency_key?: string | null
           instance_name?: string
           last_attempt_at?: string | null
+          last_retry_reason?: string | null
           max_retries?: number
           next_attempt_at?: string | null
           payload?: Json
