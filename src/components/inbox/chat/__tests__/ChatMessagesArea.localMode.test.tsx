@@ -16,9 +16,20 @@ import type { Message } from '@/types/chat';
  */
 
 // ---- Mocks pesados/irrelevantes ao foco do teste -------------------------
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: () => ({ update: () => ({ eq: () => Promise.resolve({}) }) }) },
-}));
+vi.mock('@/integrations/supabase/client', () => {
+  const channel = {
+    on: () => channel,
+    subscribe: () => channel,
+    unsubscribe: () => Promise.resolve('ok'),
+  };
+  return {
+    supabase: {
+      from: () => ({ update: () => ({ eq: () => Promise.resolve({}) }) }),
+      channel: () => channel,
+      removeChannel: () => Promise.resolve('ok'),
+    },
+  };
+});
 vi.mock('@/lib/logger', () => ({
   getLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
