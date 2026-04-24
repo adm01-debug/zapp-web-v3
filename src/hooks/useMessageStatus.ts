@@ -96,7 +96,7 @@ export const useMessageStatus = (contactId?: string) => {
           table: 'messages',
           filter: `contact_id=eq.${contactId}`,
         },
-        wrapMessagesHandler('useMessageStatus', (payload) => {
+        wrapMessagesHandler<{ new: Record<string, unknown>; old?: Record<string, unknown> }>('useMessageStatus', (payload) => {
           const newData = payload.new as {
             id: string;
             status: string;
