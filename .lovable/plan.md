@@ -1,139 +1,82 @@
-
-
 ## Objetivo
+Adicionar um **checklist de cobertura ponta-a-ponta** (send → batching → delivery → render de status inline) ao final de `TRILHA_MENSAGENS_NAVEGAVEL.mmd`, e fazer com que o regenerador (`scripts/regen-trilha-mensagens.ts`) emita esse mesmo checklist — assim ele sobrevive a futuros `bun run regen:trilha` sem ser apagado.
 
-Permitir que o reprocesso manual da DLQ (`failed_messages`) use **backoff específico por motivo** (root cause) em vez do exponencial único atual. Ex.: `429 rate_limit` espera mais tempo que `503 unavailable`, e `timeout`/`network` reprocessam mais rápido.
+O checklist será embutido como bloco de comentários Mermaid (`%% ...`) — não quebra o parse e mantém o `.mmd` como única fonte navegável.
 
-Hoje todos os reagendamentos usam `computeBackoffMs(attempt+1)` (60s→1h, exponencial cego), independente do motivo. Isso desperdiça janela em erros transientes leves e bombardeia APIs em rate-limit.
+## Onde encaixar
+`src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd`, logo após o bloco existente "Legenda das arestas" / "Fan-out realtime" e antes do `%% Gerado automaticamente …`.
 
-## Design
+## Conteúdo do checklist (organizado pelas 6 etapas do diagrama)
 
-### 1. Nova tabela de helpers — `supabase/functions/_shared/dlq-backoff.ts`
-
-Adicionar **sem quebrar** a função existente:
-
-```ts
-export type RetryReason =
-  | 'rate_limit' | 'unavailable' | 'timeout'
-  | 'network'   | 'server_error' | 'auth'
-  | 'invalid_payload' | 'not_found' | 'unknown';
-
-// Multiplicadores aplicados sobre o backoff base já calculado.
-// Cap final continua sendo MAX_DELAY_MS (1h).
-const REASON_PROFILE: Record<RetryReason, { multiplier: number; minDelayMs: number }> = {
-  rate_limit:      { multiplier: 4.0, minDelayMs: 120_000 }, // 2min mínimo, escala forte
-  unavailable:     { multiplier: 2.0, minDelayMs:  60_000 }, // 1min mínimo
-  server_error:    { multiplier: 2.0, minDelayMs:  60_000 },
-  timeout:         { multiplier: 1.0, minDelayMs:  30_000 }, // mais agressivo
-  network:         { multiplier: 1.0, minDelayMs:  30_000 },
-  auth:            { multiplier: 1.5, minDelayMs:  90_000 }, // raro, mas espera p/ refresh
-  invalid_payload: { multiplier: 1.0, minDelayMs:  60_000 }, // não vai resolver, mas respeita
-  not_found:       { multiplier: 1.0, minDelayMs:  60_000 },
-  unknown:         { multiplier: 1.0, minDelayMs:  60_000 }, // = comportamento atual
-};
-
-export function classifyRetryReason(httpStatus: number | null, errorMessage: string | null): RetryReason { /* ... */ }
-
-export function computeBackoffMsByReason(
-  attempt: number,
-  reason: RetryReason,
-  withJitter = true,
-): number {
-  const base = computeBackoffMs(attempt, false); // sem jitter ainda
-  const profile = REASON_PROFILE[reason];
-  const scaled = Math.max(profile.minDelayMs, base * profile.multiplier);
-  const capped = Math.min(scaled, 3_600_000);
-  if (!withJitter) return capped;
-  const jitter = capped * 0.15 * (Math.random() * 2 - 1);
-  return Math.max(1_000, Math.round(capped + jitter));
-}
+```text
+%% =====================================================================
+%% CHECKLIST DE COBERTURA — send -> batching -> delivery -> render
+%% Marque [x] ao validar cada item (manual ou via teste automatizado).
+%% =====================================================================
+%%
+%% 1. Composicao e envio (UI)
+%%   [ ] CIL (useChatInputLogic) -> dispara MS.sendMessage com payload normalizado
+%%   [ ] MS (messageSender) -> persiste linha 'sending' em DB (==> messages)
+%%   [ ] MS -> chama buildSendIdempotencyKey ANTES de ESR
+%%   [ ] MS -> emitSendStatus('sending', rowId) no bus
+%%
+%% 1b. Idempotencia (buildSendIdempotencyKey)
+%%   [ ] Gera 'mfp:s256:<hex>' quando ha SendFingerprint completo
+%%   [ ] Cai para 'msg:<rowId>' quando fingerprint ausente (call sites legacy)
+%%   [ ] timeBucket de 5min => mesma chave em retries dentro da janela
+%%   [ ] Mesma chave reutilizada por DLQRP (reprocess-failed-messages)
+%%
+%% 2. Transporte e retry
+%%   [ ] ESR envia Idempotency-Key em todas tentativas do withRetry
+%%   [ ] loadRetryConfig respeitado (max attempts / backoff)
+%%   [ ] Falha terminal -> enqueueClientFailedMessage (==> failed_messages)
+%%   [ ] reprocess-failed-messages reprocessa e atualiza status no DB
+%%
+%% 3. Status bus (in-memory)
+%%   [ ] emitSendStatus chamado nos pontos: optimistic, success, error, retry
+%%   [ ] subscribeAllSendStatus alimenta UMSS e UMS
+%%   [ ] getSendStatus retorna ultimo estado conhecido por rowId (sync read)
+%%
+%% 4. Persistencia / leitura
+%%   [ ] useMessages carrega historico inicial + aplica realtime
+%%   [ ] useMessageStatus mapeia status detalhado por message id
+%%   [ ] useMessageSendStatus combina bus in-memory + persistido
+%%
+%% 5. Realtime e batching
+%%   [ ] postgres_changes('messages') registrado pelos 7 hooks + AMP
+%%   [ ] useRealtimeMessages -> useMessageUpdateBatcher (coalescing)
+%%   [ ] BATCH -.-> useMessages (flush em janela curta, sem perder eventos)
+%%   [ ] realtimeUtils dedup por message id (sem update duplicado)
+%%   [ ] useTranscriptionNotifications dispara so em UPDATE de transcription
+%%   [ ] useRealtimeDashboard / useEvolutionMonitoring nao bloqueiam UI
+%%   [ ] AudioMessagePlayer reage a UPDATE de media_url (signed URL refresh)
+%%
+%% 6. Render de status inline
+%%   [ ] MessageBubble consome MessageStatusInline (icone + tooltip)
+%%   [ ] MSI reflete: pending -> sent -> delivered -> read -> failed
+%%   [ ] MSI atualiza sem remount do bubble (memo estavel por message id)
+%%   [ ] VirtualizedMessageList nao re-renderiza lista inteira em UPDATE de 1 msg
+%%   [ ] Falha terminal mostra acao 'Reenviar' (consome chave idempotente)
+%%
+%% Cobertura ponta-a-ponta (smoke):
+%%   [ ] Enviar texto -> bubble aparece 'sending' -> 'sent' -> 'delivered' -> 'read'
+%%   [ ] Enviar audio -> AMP toca apos UPDATE media_url (sem F5)
+%%   [ ] Forcar erro de rede -> retry transparente -> sucesso (mesma chave)
+%%   [ ] Forcar erro permanente -> entra DLQ -> cron reprocessa -> status final
+%%   [ ] Receber mensagem inbound -> aparece em <=1s sem refresh
 ```
 
-`classifyRetryReason` espelha a lógica de `src/lib/failureRootCause.ts` (status > heurística por mensagem). Mantemos os dois sincronizados via teste compartilhado.
+## Mudanças
 
-### 2. `reprocess-failed-messages/index.ts`
+1. **`src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd`** — inserir o bloco acima entre a legenda e a linha `%% Gerado automaticamente …` (regenerado pelo script).
 
-Trocar **todas as chamadas** `computeBackoffMs(attempt + 1)` por:
+2. **`scripts/regen-trilha-mensagens.ts`** — em `renderMmd()`, depois de emitir a legenda e a lista de fan-out, emitir o mesmo bloco de checklist (constante exportada `CHECKLIST_BLOCK: string[]`). Assim:
+   - `bun run regen:trilha` mantém o checklist
+   - `bun run check:trilha` continua passando (o `stripStamp` já normaliza só o timestamp; o resto do conteúdo é determinístico)
 
-```ts
-const reason = classifyRetryReason(resp.status, respText);
-const backoffMs = computeBackoffMsByReason(attempt + 1, reason);
-```
+3. Sem mudanças em código de runtime, hooks, testes ou rotas.
 
-E persistir o `reason` no row para visibilidade:
-
-```ts
-await supabase.from('failed_messages').update({
-  // ... campos existentes
-  last_retry_reason: reason,           // NOVA coluna
-  next_attempt_at: new Date(Date.now() + backoffMs).toISOString(),
-}).eq('id', row.id);
-```
-
-No `catch` (exceção sem `resp`), classificar como `'network'` ou `'timeout'` por inspeção da mensagem do erro.
-
-### 3. Migração — adicionar coluna `last_retry_reason`
-
-```sql
-ALTER TABLE public.failed_messages
-  ADD COLUMN IF NOT EXISTS last_retry_reason text;
-
-CREATE INDEX IF NOT EXISTS idx_failed_messages_last_retry_reason
-  ON public.failed_messages(last_retry_reason)
-  WHERE status IN ('pending', 'retrying');
-```
-
-Backfill opcional via UPDATE (deixa NULL para entradas antigas, sem dor).
-
-### 4. `enqueue-failed-message.ts` (primeira inserção)
-
-Já recebe `http_status`/`error_code`/`error_message`. Calcula reason e usa `computeBackoffMsByReason(1, reason)` para o **primeiro** `next_attempt_at`. Persiste `last_retry_reason` no insert inicial.
-
-### 5. UI — `RetryConfigPanel` / DLQ admin (read-only)
-
-Acrescentar **tabela informativa** "Backoff por motivo" no painel de retry, listando cada `RetryReason` com `min` e `multiplier`. Sem campos editáveis nesta entrega — primeiro provar a hipótese; tornar configurável vira backlog.
-
-Na lista da DLQ (se houver UI hoje, ou o painel de métricas), mostrar coluna `last_retry_reason` com badge colorido reusando `getRootCauseMeta()` de `src/lib/failureRootCause.ts`.
-
-### 6. Testes
-
-`supabase/functions/_shared/__tests__/dlq-backoff.test.ts` — adicionar:
-
-- `classifyRetryReason(429, ...) → 'rate_limit'`
-- `classifyRetryReason(503, ...) → 'unavailable'`
-- `classifyRetryReason(null, 'request timeout') → 'timeout'`
-- `computeBackoffMsByReason(1, 'rate_limit', false) >= 120_000`
-- `computeBackoffMsByReason(1, 'timeout', false) <= computeBackoffMsByReason(1, 'rate_limit', false)`
-- Cap em `MAX_DELAY_MS` para `attempt=10, multiplier=4`
-- `attempt=1, unknown` → equivalente a `computeBackoffMs(1)` (compat com comportamento antigo)
-
-`reprocess-failed-messages/__tests__/contract.test.ts` — adicionar regex assertions:
-- `classifyRetryReason\(`
-- `computeBackoffMsByReason\(`
-- `last_retry_reason:`
-
-## Arquivos tocados
-
-| Arquivo | Mudança |
-|---|---|
-| `supabase/functions/_shared/dlq-backoff.ts` | + `RetryReason`, `classifyRetryReason`, `computeBackoffMsByReason` |
-| `supabase/functions/reprocess-failed-messages/index.ts` | usar reason-aware backoff em sucesso/falha/exceção; persistir `last_retry_reason` |
-| `supabase/functions/_shared/enqueue-failed-message.ts` | usar reason-aware no primeiro agendamento; persistir `last_retry_reason` |
-| `supabase/functions/_shared/__tests__/dlq-backoff.test.ts` | +6 cases |
-| `supabase/functions/reprocess-failed-messages/__tests__/contract.test.ts` | +3 asserts |
-| Migração SQL | `+ column last_retry_reason`, índice parcial |
-| `src/components/admin/RetryConfigPanel.tsx` | tabela "Backoff por motivo" (read-only) |
-
-## Garantias
-
-- **Backwards compatible**: `computeBackoffMs` antigo permanece exportado e usado por `unknown`. Nenhum chamador externo quebra.
-- **Sem regressão de TTL**: cap continua 1h, jitter ±15% mantido.
-- **Determinístico nos testes**: `withJitter=false` em todos os asserts.
-- **Sem PII nova**: `last_retry_reason` é enum curto, não vaza payload.
-
-## Não objetivos
-
-- Não tornar os perfis editáveis via UI/`global_settings` nesta entrega.
-- Não trocar a fórmula base exponencial (`2^attempt`).
-- Não mexer no client-side `withRetry` (`src/lib/retry.ts`); ele já tem timeout próprio e roda fora da DLQ.
-
+## Validação após implementação
+- `bun run regen:trilha` → arquivo regenerado idêntico ao esperado, com o checklist presente.
+- `bun run check:trilha` → exit 0.
+- Abrir `.mmd` em qualquer renderer Mermaid → diagrama renderiza igual (comentários `%%` são ignorados pelo parser).

@@ -16,6 +16,7 @@ flowchart LR
     KEYROW["chave legacy: msg:&lt;rowId&gt;<br/>(fallback DLQ / call sites antigos)"]
   end
 
+
   subgraph TRANSPORT["2. Transporte e Retry"]
     ESR["evolutionSendRetry — fan-out critico"]
     RETRY["lib/retry (withRetry)"]
@@ -89,6 +90,8 @@ flowchart LR
   ESR -->|mesma chave em todas<br/>tentativas do withRetry<br/>=> servidor dedupa retry| EDGE
   DLQRP -->|reusa chave estavel<br/>=> servidor dedupa reenvio| EDGE
 
+
+
   %% Status bus
   MS -.-> EMIT
   ESR -.-> EMIT
@@ -127,7 +130,7 @@ flowchart LR
   MSI --> MB
   UTN -.-> MB
 
-  %% Links navegaveis (auto-gerado pelo regen-trilha-mensagens.ts)
+  %% Links navegaveis
   click CIL "src/components/inbox/chat/useChatInputLogic.ts"
   click MS "src/hooks/realtime/messageSender.ts"
   click IDK "src/lib/sendIdempotency.ts"
@@ -165,13 +168,116 @@ flowchart LR
 %%   ==>   escrita persistente em DB
 %%   -.->  evento realtime / pub-sub in-memory
 %%   -..-> enqueue assincrona (DLQ)
-%% Fan-out realtime (postgres_changes 'messages'): consumidores conhecidos:
-%%   - UM (useMessages) -> src/hooks/useMessages.ts
-%%   - UMS (useMessageStatus) -> src/hooks/useMessageStatus.ts
-%%   - URM (useRealtimeMessages) -> src/hooks/useRealtimeMessages.ts
-%%   - UTN (useTranscriptionNotifications) -> src/hooks/useTranscriptionNotifications.ts
-%%   - URD (useRealtimeDashboard) -> src/hooks/useRealtimeDashboard.ts
-%%   - UEM (useEvolutionMonitoring) -> src/components/monitoring/hooks/useEvolutionMonitoring.ts
-%%   - AMP (AudioMessagePlayer) -> src/components/inbox/AudioMessagePlayer.tsx
-%% Gerado automaticamente por scripts/regen-trilha-mensagens.ts
-%% Em: 2026-04-24T16:23:16.387Z
+%% Fan-out realtime (postgres_changes 'messages'): 7 consumidores diretos
+%%   1. useRealtimeMessages — feed global do inbox (INSERT/UPDATE/DELETE)
+%%   2. useMessages         — lista por contato aberto (INSERT/UPDATE/DELETE)
+%%   3. useMessageStatus    — status sent/delivered/read por mensagem (UPDATE)
+%%   4. useTranscriptionNotifications — alerta quando transcricao conclui (UPDATE)
+%%   5. useRealtimeDashboard — KPIs em tempo real (INSERT)
+%%   6. useEvolutionMonitoring — saude do webhook/instancia (INSERT)
+%%   7. AudioMessagePlayer  — refresh de media_url assinada (UPDATE)
+%% Reprocessamento DLQ:
+%%   reprocess-failed-messages (edge cron) le failed_messages, reenvia para o
+%%   Edge usando o MESMO Idempotency-Key estavel (msg:<row-id>) ou fingerprint
+%%   de conteudo, atualiza messages.status/retry_attempt e marca o item DLQ
+%%   como reprocessado/permanent-fail. Fecha o ciclo: falhas voltam para o fluxo
+%%   sem duplicar a mensagem do lado da Evolution.
+%% Gerado: 23/abr/2026 — escopo trilha de mensagens (send -> batching -> delivery)
+%%
+%% ============================================================================
+%% BLOCO DE VALIDACAO — checklist de clicks (no -> path)
+%% Para confirmar manualmente, rode na raiz do repo:
+%%   grep -nE '^\s*click ' src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd \
+%%     | sed -E 's/.*click +([A-Za-z0-9_]+) +"([^"]+)".*/\1|\2/' \
+%%     | while IFS='|' read n p; do test -f "$p" && echo "OK   $n $p" || echo "MISS $n $p"; done
+%%
+%% Ultima verificacao: 24/abr/2026 — 31/31 OK
+%%   [x] CIL    -> src/components/inbox/chat/useChatInputLogic.ts
+%%   [x] MS     -> src/hooks/realtime/messageSender.ts
+%%   [x] IDK    -> src/lib/sendIdempotency.ts
+%%   [x] FP     -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] NORM   -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] BUCKET -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] HASH   -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] KEYFP  -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] KEYROW -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] ESR    -> src/lib/evolutionSendRetry.ts
+%%   [x] RETRY  -> src/lib/retry.ts
+%%   [x] RCFG   -> src/lib/retryConfig.ts
+%%   [x] DLQENQ -> src/lib/failedMessagesEnqueue.ts
+%%   [x] DLQRP  -> supabase/functions/reprocess-failed-messages/index.ts
+%%   [x] EMIT   -> src/hooks/realtime/sendStatusBus.ts
+%%   [x] SUBALL -> src/hooks/realtime/sendStatusBus.ts
+%%   [x] GETST  -> src/hooks/realtime/sendStatusBus.ts
+%%   [x] UM     -> src/hooks/useMessages.ts
+%%   [x] UMS    -> src/hooks/useMessageStatus.ts
+%%   [x] UMSS   -> src/hooks/realtime/useMessageSendStatus.ts
+%%   [x] BATCH  -> src/hooks/realtime/useMessageUpdateBatcher.ts
+%%   [x] URM    -> src/hooks/useRealtimeMessages.ts
+%%   [x] RUTL   -> src/hooks/realtime/realtimeUtils.ts
+%%   [x] URN    -> src/hooks/realtime/useRealtimeNotifications.ts
+%%   [x] UTN    -> src/hooks/useTranscriptionNotifications.ts
+%%   [x] URD    -> src/hooks/useRealtimeDashboard.ts
+%%   [x] UEM    -> src/components/monitoring/hooks/useEvolutionMonitoring.ts
+%%   [x] AMP    -> src/components/inbox/AudioMessagePlayer.tsx
+%%   [x] MSI    -> src/components/inbox/chat/MessageStatusInline.tsx
+%%   [x] VML    -> src/components/inbox/VirtualizedMessageList.tsx
+%%   [x] MB     -> src/components/inbox/chat/MessageBubble.tsx
+%% ============================================================================
+%%
+%% ============================================================================
+%% CHECKLIST DE COBERTURA — send -> batching -> delivery -> render inline
+%% Marque [x] ao validar cada item (manual ou via teste automatizado).
+%% ============================================================================
+%%
+%% 1. Composicao e envio (UI)
+%%   [ ] CIL (useChatInputLogic) -> dispara MS.sendMessage com payload normalizado
+%%   [ ] MS (messageSender) -> persiste linha 'sending' em DB (==> messages)
+%%   [ ] MS -> chama buildSendIdempotencyKey ANTES de ESR
+%%   [ ] MS -> emitSendStatus('sending', rowId) no bus
+%%
+%% 1b. Idempotencia (buildSendIdempotencyKey)
+%%   [ ] Gera 'mfp:s256:<hex>' quando ha SendFingerprint completo
+%%   [ ] Cai para 'msg:<rowId>' quando fingerprint ausente (call sites legacy)
+%%   [ ] timeBucket de 5min => mesma chave em retries dentro da janela
+%%   [ ] Mesma chave reutilizada por DLQRP (reprocess-failed-messages)
+%%
+%% 2. Transporte e retry
+%%   [ ] ESR envia Idempotency-Key em todas tentativas do withRetry
+%%   [ ] loadRetryConfig respeitado (max attempts / backoff exponencial)
+%%   [ ] Falha terminal -> enqueueClientFailedMessage (==> failed_messages)
+%%   [ ] reprocess-failed-messages reprocessa e atualiza status no DB
+%%
+%% 3. Status bus (in-memory)
+%%   [ ] emitSendStatus chamado em: optimistic, success, error, retry
+%%   [ ] subscribeAllSendStatus alimenta UMSS e UMS
+%%   [ ] getSendStatus retorna ultimo estado conhecido por rowId (sync read)
+%%
+%% 4. Persistencia / leitura
+%%   [ ] useMessages carrega historico inicial + aplica realtime
+%%   [ ] useMessageStatus mapeia status detalhado por message id
+%%   [ ] useMessageSendStatus combina bus in-memory + status persistido
+%%
+%% 5. Realtime e batching (postgres_changes na tabela 'messages')
+%%   [ ] postgres_changes('messages') registrado pelos 7 hooks + AMP
+%%   [ ] useRealtimeMessages -> useMessageUpdateBatcher (coalescing)
+%%   [ ] BATCH -.-> useMessages (flush em janela curta, sem perder eventos)
+%%   [ ] realtimeUtils dedup por message id (sem update duplicado)
+%%   [ ] useTranscriptionNotifications dispara so em UPDATE de transcription
+%%   [ ] useRealtimeDashboard / useEvolutionMonitoring nao bloqueiam UI
+%%   [ ] AudioMessagePlayer reage a UPDATE de media_url (signed URL refresh)
+%%
+%% 6. Render de status inline
+%%   [ ] MessageBubble consome MessageStatusInline (icone + tooltip)
+%%   [ ] MSI reflete: pending -> sent -> delivered -> read -> failed
+%%   [ ] MSI atualiza sem remount do bubble (memo estavel por message id)
+%%   [ ] VirtualizedMessageList nao re-renderiza lista inteira em UPDATE de 1 msg
+%%   [ ] Falha terminal mostra acao 'Reenviar' (consome chave idempotente)
+%%
+%% Cobertura ponta-a-ponta (smoke):
+%%   [ ] Enviar texto -> bubble vai 'sending' -> 'sent' -> 'delivered' -> 'read'
+%%   [ ] Enviar audio -> AMP toca apos UPDATE media_url (sem F5)
+%%   [ ] Forcar erro de rede -> retry transparente -> sucesso (mesma chave)
+%%   [ ] Forcar erro permanente -> entra DLQ -> cron reprocessa -> status final
+%%   [ ] Receber mensagem inbound -> aparece em <=1s sem refresh
+%% ============================================================================
