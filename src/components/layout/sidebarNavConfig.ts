@@ -145,6 +145,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'media-migration', icon: HardDrive, label: 'Migração Mídia' },
   { id: 'sicoob-bridge', icon: Landmark, label: 'Sicoob Bridge' },
   { id: 'evolution-monitor', icon: Activity, label: 'Monitor Evolution' },
+  { id: 'evolution-api-logs', icon: Activity, label: 'Logs Evolution API', requiredRoles: ['admin', 'supervisor'] },
   { id: 'webhook-secret', icon: ShieldCheck, label: 'Webhook Secret' },
   { id: 'instance-pauses', icon: Pause, label: 'Pausas de Instância' },
   { id: 'search-insights', icon: Search, label: 'Search Insights', requiredRoles: ['admin'] },
