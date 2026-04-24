@@ -87,9 +87,23 @@ function shortJid(jid: string | null) {
 }
 
 export default function AdminWebhookEventsPage() {
+  // Drill-down do AdminWebhookOverviewPage: aplica filtros iniciais (uma vez)
+  // a partir do sessionStorage. Validamos contra a lista de tipos conhecidos
+  // para nunca aceitar input "envenenado".
+  const initialFilters = useMemo(() => {
+    const pending = consumePendingWebhookEventsFilters();
+    if (!pending) return null;
+    const eventType =
+      pending.eventType && (EVENT_TYPES as readonly string[]).includes(pending.eventType)
+        ? (pending.eventType as EventTypeFilter)
+        : undefined;
+    const instance = pending.instance && pending.instance.trim() ? pending.instance : undefined;
+    return { eventType, instance };
+  }, []);
+
   const [hours, setHours] = useState<string>('24');
-  const [eventType, setEventType] = useState<EventTypeFilter>('all');
-  const [instance, setInstance] = useState<string>('all');
+  const [eventType, setEventType] = useState<EventTypeFilter>(initialFilters?.eventType ?? 'all');
+  const [instance, setInstance] = useState<string>(initialFilters?.instance ?? 'all');
   const [messageType, setMessageType] = useState<MessageTypeFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [remoteJidFilter, setRemoteJidFilter] = useState('');
