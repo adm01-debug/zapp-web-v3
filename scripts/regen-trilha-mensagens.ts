@@ -339,8 +339,9 @@ function main() {
   const next = renderMmd();
 
   if (checkOnly) {
+    const stripStamp = (s: string) => s.replace(/^%% Em:.*$/m, '%% Em: <stamp>').trim();
     const current = readFileSync(FIXTURE, 'utf8');
-    if (current.trim() !== next.trim()) {
+    if (stripStamp(current) !== stripStamp(next)) {
       console.error('\n[check] .mmd está fora de sincronia. Rode sem --check para regenerar.');
       process.exit(1);
     }
