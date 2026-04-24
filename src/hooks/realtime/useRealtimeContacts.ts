@@ -24,8 +24,8 @@ type ContactChange = {
 
 /**
  * Fields whose change should force a re-sort of the conversations sidebar
- * (relevance ranking, scoping, pinning, etc.). Keep this list narrow to
- * avoid unnecessary refetches on noise (e.g. profile_picture_url updates).
+ * (relevance ranking, scoping, pinning, badges, etc.). Keep narrow to avoid
+ * unnecessary refetches on noise (e.g. profile_picture_url updates).
  */
 const REORDER_FIELDS = [
   'lead_status',
@@ -35,7 +35,17 @@ const REORDER_FIELDS = [
   'last_message_at',
   'unread_count',
   'deleted_at',
+  'tags',
 ] as const;
+
+/** Shallow array equality (order-sensitive). */
+function arraysEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
 
 function hasReorderingChange(
   oldRow: Partial<EvolutionContact> | null | undefined,
@@ -43,7 +53,11 @@ function hasReorderingChange(
 ): boolean {
   if (!oldRow || !newRow) return true; // unknown → be safe and reorder
   for (const f of REORDER_FIELDS) {
-    if ((oldRow as Record<string, unknown>)[f] !== (newRow as Record<string, unknown>)[f]) {
+    const ov = (oldRow as Record<string, unknown>)[f];
+    const nv = (newRow as Record<string, unknown>)[f];
+    if (f === 'tags') {
+      if (!arraysEqual(ov, nv)) return true;
+    } else if (ov !== nv) {
       return true;
     }
   }
