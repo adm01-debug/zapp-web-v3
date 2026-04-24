@@ -37,7 +37,7 @@ if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
   });
 }
 
-interface ChatPanelProps {
+interface ChatPanelProps extends LoadOlderProps {
   conversation: Conversation;
   messages: Message[];
   onSendMessage: (content: string) => void;
@@ -47,16 +47,12 @@ interface ChatPanelProps {
   onBack?: () => void;
   hideHeader?: boolean;
   /**
-   * Paginacao "carregar mensagens antigas". Veja `LoadOlderProps`:
+   * Paginacao "carregar mensagens antigas" herdada de `LoadOlderProps`:
    *  - Modo local: omitir (ou passar `undefined`) ambos os callbacks.
    *  - Modo externo: fornecer ambos; loadingOlder/hasMoreOlder refletem o
    *    estado real do fetcher remoto.
    */
 }
-
-// Importe inline acima para evitar reordenacao de tipos exportados.
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface _ChatPanelPropsLoadOlderMarker {}
 
 type DialogKey = 'quickReplies' | 'slashCommands' | 'transferDialog' | 'scheduleDialog' | 
   'callDialog' | 'globalSearch' | 'chatSearch' | 'interactiveBuilder' | 'forwardDialog' | 
