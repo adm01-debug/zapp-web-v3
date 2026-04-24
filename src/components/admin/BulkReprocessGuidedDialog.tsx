@@ -39,8 +39,8 @@ interface BulkReprocessGuidedDialogProps {
   onOpenChange: (open: boolean) => void;
   /** Linhas (já carregadas) correspondentes aos IDs selecionados. */
   selectedRows: FailedMessageRow[];
-  /** Mutation handler — recebe a lista de IDs e retorna o número afetado. */
-  onConfirm: (ids: string[]) => Promise<number>;
+  /** Mutation handler — recebe a lista de IDs e o motivo opcional, retorna o número afetado. */
+  onConfirm: (ids: string[], reason: string) => Promise<number>;
   /** Sinaliza pendência da mutation externa. */
   isPending: boolean;
 }
@@ -118,7 +118,7 @@ export function BulkReprocessGuidedDialog({
   const handleConfirm = async () => {
     try {
       const ids = selectedRows.map((r) => r.id);
-      const n = await onConfirm(ids);
+      const n = await onConfirm(ids, reason);
       setResultAffected(n);
       setStep('result');
     } catch {
