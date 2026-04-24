@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from '@/components/ui/motion';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { sendMessageToContact } from '@/hooks/realtime/messageSender';
 import { Link } from 'react-router-dom';
-import { RefreshCw, ShieldAlert } from 'lucide-react';
+import { RefreshCw, ShieldAlert, History } from 'lucide-react';
+import {
+  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import { MessageSendHistorySheet } from './MessageSendHistorySheet';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('MessageBubble');
