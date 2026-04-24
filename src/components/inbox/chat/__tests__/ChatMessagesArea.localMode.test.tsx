@@ -79,11 +79,6 @@ describe('ChatMessagesArea — modo local (sem onLoadOlder)', () => {
     vi.clearAllMocks();
   });
 
-  function eventsRegisteredOn(el: Element): string[] {
-    return addSpy.mock.calls
-      .filter((call: any) => call[2]?.__target === el || (addSpy.mock.instances as any[]).includes(el))
-      .map((c) => c[0] as string);
-  }
 
   it('nao registra listeners de scroll/wheel/touch no container', () => {
     const { container } = renderArea({});
