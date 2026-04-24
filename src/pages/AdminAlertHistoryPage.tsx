@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { AlertInstanceDetailDialog } from '@/components/admin/alerts/AlertInstanceDetailDialog';
 
 interface AlertRow {
   id: string;
@@ -74,6 +75,7 @@ export default function AdminAlertHistoryPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [instanceFilter, setInstanceFilter] = useState('');
+  const [detailInstance, setDetailInstance] = useState<string | null>(null);
 
   const since = useMemo(() => subHours(new Date(), Number(hoursBack)).toISOString(), [hoursBack]);
 
@@ -230,7 +232,11 @@ export default function AdminAlertHistoryPage() {
               {data?.map(row => {
                 const resolved = !!row.resolved_at;
                 return (
-                  <TableRow key={row.id} className={cn(!resolved && 'bg-warning/5')}>
+                  <TableRow
+                    key={row.id}
+                    className={cn(!resolved && 'bg-warning/5', 'cursor-pointer hover:bg-muted/50')}
+                    onClick={() => setDetailInstance(row.source ?? null)}
+                  >
                     <TableCell className="whitespace-nowrap text-xs">{formatDate(row.created_at)}</TableCell>
                     <TableCell><TypeBadge type={row.alert_type} /></TableCell>
                     <TableCell className="font-medium text-sm">{row.title}</TableCell>
@@ -248,7 +254,7 @@ export default function AdminAlertHistoryPage() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       {!resolved && (
                         <Button variant="ghost" size="icon" className="h-7 w-7" title="Marcar como resolvido" onClick={() => resolveAlert(row.id)}>
                           <CheckCheck className="w-3.5 h-3.5" />
@@ -262,6 +268,12 @@ export default function AdminAlertHistoryPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <AlertInstanceDetailDialog
+        open={!!detailInstance}
+        onOpenChange={(v) => !v && setDetailInstance(null)}
+        instance={detailInstance}
+      />
     </div>
   );
 }
