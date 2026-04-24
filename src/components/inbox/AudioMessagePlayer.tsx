@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { log } from '@/lib/logger';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 
 interface AudioMessagePlayerProps {
   audioUrl: string;
@@ -31,14 +32,15 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
 
   // Realtime subscription for transcription updates
   useEffect(() => {
+    logMessagesSubscribe('AudioMessagePlayer', { event: 'UPDATE', table: 'messages', filter: `id=eq.${messageId}` });
     const channel = supabase
       .channel(`transcription-${messageId}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `id=eq.${messageId}` },
-        (payload) => {
-          const newData = payload.new as { transcription_status?: string; transcription?: string };
+        wrapMessagesHandler<{ new: { transcription_status?: string; transcription?: string } }>('AudioMessagePlayer', (payload) => {
+          const newData = payload.new;
           if (newData.transcription_status) setTranscriptionStatus(newData.transcription_status);
           if (newData.transcription) { setTranscription(newData.transcription); setShowTranscription(true); }
-        }
+        })
       ).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [messageId]);

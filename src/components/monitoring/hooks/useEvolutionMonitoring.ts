@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { useMonitoringData } from './useMonitoringData';
 import { useMonitoringActions } from './useMonitoringActions';
 import { useMonitoringNotifications } from './useMonitoringNotifications';
@@ -47,10 +48,12 @@ export function useEvolutionMonitoring() {
 
   // Realtime subscription
   useEffect(() => {
+    logMessagesSubscribe('useEvolutionMonitoring', { event: 'INSERT', table: 'messages' });
     const channel = supabase
       .channel('monitoring-connections')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_connections' }, () => fetchData())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => fetchData())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
+        wrapMessagesHandler<{ new: Record<string, unknown> }>('useEvolutionMonitoring', () => fetchData()))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [fetchData]);

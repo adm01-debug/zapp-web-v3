@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
+import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import {
   subscribeAllSendStatus,
   getSendStatus,
@@ -84,6 +85,7 @@ export const useMessageStatus = (contactId?: string) => {
   useEffect(() => {
     if (!contactId) return;
 
+    logMessagesSubscribe('useMessageStatus', { event: 'UPDATE', table: 'messages', filter: `contact_id=eq.${contactId}` });
     const channel = supabase
       .channel(`message-status-${contactId}`)
       .on(
@@ -94,7 +96,7 @@ export const useMessageStatus = (contactId?: string) => {
           table: 'messages',
           filter: `contact_id=eq.${contactId}`,
         },
-        (payload) => {
+        wrapMessagesHandler<{ new: Record<string, unknown>; old?: Record<string, unknown> }>('useMessageStatus', (payload) => {
           const newData = payload.new as {
             id: string;
             status: string;
@@ -115,7 +117,7 @@ export const useMessageStatus = (contactId?: string) => {
               return updated;
             });
           }
-        }
+        })
       )
       .subscribe();
 

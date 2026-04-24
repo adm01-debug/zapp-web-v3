@@ -10,6 +10,7 @@ import {
 } from './realtime/realtimeUtils';
 import { useRealtimeNotifications } from './realtime/useRealtimeNotifications';
 import { useMessageUpdateBatcher, type MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
+import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 export type { MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 
 const log = getLogger('RealtimeMessages');
@@ -188,9 +189,13 @@ export function useRealtimeMessages() {
 
   useEffect(() => {
     fetchConversations();
+    logMessagesSubscribe('useRealtimeMessages', { event: 'INSERT', table: 'messages' });
+    logMessagesSubscribe('useRealtimeMessages', { event: 'UPDATE', table: 'messages' });
     const channel = supabase.channel('messages-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, handleNewMessage)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, handleMessageUpdate)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
+        wrapMessagesHandler('useRealtimeMessages', handleNewMessage))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' },
+        wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate))
       .subscribe((status) => { log.debug('Subscription status', { status }); });
     return () => { supabase.removeChannel(channel); };
   }, [fetchConversations, handleNewMessage, handleMessageUpdate]);
