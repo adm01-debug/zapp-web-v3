@@ -77,7 +77,7 @@ export interface Message {
   sender: 'contact' | 'agent';
   agentId?: string;
   timestamp: Date;
-  status: 'sending' | 'retrying' | 'sent' | 'delivered' | 'read' | 'failed' | 'failed_auth' | 'failed_retries';
+  status: 'sending' | 'retrying' | 'sent' | 'delivered' | 'read' | 'played' | 'failed' | 'failed_auth' | 'failed_retries';
   // Interactive message data
   interactive?: InteractiveMessage;
   // Button response data (when user clicks a button)

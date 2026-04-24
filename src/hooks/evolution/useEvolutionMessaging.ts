@@ -10,8 +10,20 @@ export function useEvolutionMessaging(
   // SEND MESSAGES
   // ============================================================
   
-  const sendTextMessage = useCallback((instanceName: string, number: string, text: string, options?: { delay?: number; quoted?: SendMessageParams['quoted']; mentioned?: string[] }) =>
-    callApi('send-text', { instanceName, number, text, ...options }), [callApi]);
+  const sendTextMessage = useCallback((
+    instanceName: string,
+    number: string,
+    text: string,
+    options?: {
+      delay?: number;
+      quoted?: SendMessageParams['quoted'];
+      mentioned?: string[];
+      /** Generate WhatsApp rich link preview when the text contains a URL. */
+      linkPreview?: boolean;
+      /** Mention every group participant (`@everyone`). Only effective on group JIDs. */
+      mentionsEveryOne?: boolean;
+    },
+  ) => callApi('send-text', { instanceName, number, text, ...options }), [callApi]);
 
   const sendMediaMessage = useCallback((params: SendMessageParams) =>
     callApi('send-media', params), [callApi]);
@@ -51,6 +63,41 @@ export function useEvolutionMessaging(
 
   const sendChatPresence = useCallback((instanceName: string, number: string, presence: 'composing' | 'recording' | 'paused', delay?: number) =>
     callApi('send-chat-presence', { instanceName, number, presence, delay }), [callApi]);
+
+  /**
+   * Humanized text sending — emits a `composing` presence signal for `pauseMs`
+   * (default 1200ms) before delivering the actual text. Used for long
+   * messages so the recipient sees the "typing…" indicator like a real user.
+   * Falls back to a normal send if the presence call fails (best-effort).
+   */
+  const sendTextHumanized = useCallback(async (
+    instanceName: string,
+    number: string,
+    text: string,
+    options?: {
+      pauseMs?: number;
+      minLengthForPause?: number;
+      delay?: number;
+      quoted?: SendMessageParams['quoted'];
+      mentioned?: string[];
+      linkPreview?: boolean;
+      mentionsEveryOne?: boolean;
+    },
+  ) => {
+    const pauseMs = options?.pauseMs ?? 1200;
+    const minLength = options?.minLengthForPause ?? 40;
+    const shouldSimulate = text.length >= minLength && pauseMs > 0;
+    if (shouldSimulate) {
+      try {
+        await callApi('send-chat-presence', { instanceName, number, presence: 'composing', delay: pauseMs });
+      } catch {
+        // Presence is best-effort — never block the actual send.
+      }
+      await new Promise((r) => setTimeout(r, pauseMs));
+    }
+    const { pauseMs: _pm, minLengthForPause: _ml, ...rest } = options ?? {};
+    return callApi('send-text', { instanceName, number, text, ...rest });
+  }, [callApi]);
 
   // ============================================================
   // MESSAGE MANAGEMENT (existing)
@@ -149,7 +196,7 @@ export function useEvolutionMessaging(
     sendTextMessage, sendMediaMessage, sendAudioMessage, sendStickerMessage,
     sendLocationMessage, sendContactMessage, sendReaction, sendPollMessage,
     sendListMessage, sendButtonsMessage, sendStatusMessage, sendTemplateMessage,
-    sendPtvMessage, sendChatPresence,
+    sendPtvMessage, sendChatPresence, sendTextHumanized,
     // Message management (existing)
     markMessageAsRead, markMessageAsUnread, archiveChat, deleteMessage,
     updateMessage, deleteMessageForEveryone, editMessage,
