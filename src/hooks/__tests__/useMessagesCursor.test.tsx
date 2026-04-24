@@ -158,7 +158,7 @@ describe('useMessagesCursor', () => {
 
     // Second rpc call carries the cursor
     const secondCall = rpcMock.mock.calls[1];
-    expect(secondCall[0]).toBe('rpc_list_messages');
+    expect(secondCall[0]).toBe('rpc_list_messages_lite');
     expect(secondCall[1].p_before_date).toBe('2026-04-23T10:01:00Z');
 
     expect(result.current.messages.map((m) => m.id)).toEqual(['m0a', 'm0b', 'm1', 'm2']);
