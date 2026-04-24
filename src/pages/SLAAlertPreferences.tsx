@@ -132,41 +132,71 @@ export default function SLAAlertPreferencesPage() {
             </div>
           ) : (
             <>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Tipos de alerta</CardTitle>
-                  <CardDescription>Quais marcos da conversa devem gerar notificação.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {KIND_ROWS.map((row) => (
-                    <PreferenceRow
-                      key={row.key}
-                      row={row}
-                      checked={draft[row.key]}
-                      onChange={update(row.key)}
-                    />
-                  ))}
+              {/* Master switch — turning this off silences toasts AND skips audit inserts. */}
+              <Card className={!draft.enabled ? 'border-warning/30 bg-warning/5' : undefined}>
+                <CardContent className="flex items-start gap-3 py-4">
+                  <div className="mt-0.5 w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                    <Bell className="w-4 h-4 text-primary" aria-hidden />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Label htmlFor="pref-enabled" className="text-sm font-medium cursor-pointer">
+                      Receber alertas de SLA
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Quando desligado, nenhum toast é exibido e nenhum registro de auditoria é
+                      gravado para este usuário. Os ajustes finos abaixo só se aplicam quando esta
+                      chave estiver ligada.
+                    </p>
+                  </div>
+                  <Switch
+                    id="pref-enabled"
+                    checked={draft.enabled}
+                    onCheckedChange={update('enabled')}
+                    aria-label="Ativar alertas de SLA"
+                  />
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Severidade</CardTitle>
-                  <CardDescription>
-                    Em qual nível de criticidade os alertas devem chegar até você.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {SEVERITY_ROWS.map((row) => (
-                    <PreferenceRow
-                      key={row.key}
-                      row={row}
-                      checked={draft[row.key]}
-                      onChange={update(row.key)}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
+              <div
+                className={!draft.enabled ? 'opacity-50 pointer-events-none select-none' : undefined}
+                aria-disabled={!draft.enabled}
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Tipos de alerta</CardTitle>
+                    <CardDescription>Quais marcos da conversa devem gerar notificação.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {KIND_ROWS.map((row) => (
+                      <PreferenceRow
+                        key={row.key}
+                        row={row}
+                        checked={draft[row.key]}
+                        onChange={update(row.key)}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle className="text-base">Severidade</CardTitle>
+                    <CardDescription>
+                      Em qual nível de criticidade os alertas devem chegar até você.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {SEVERITY_ROWS.map((row) => (
+                      <PreferenceRow
+                        key={row.key}
+                        row={row}
+                        checked={draft[row.key]}
+                        onChange={update(row.key)}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
 
               <div className="flex items-center justify-end gap-2 sticky bottom-0 bg-background/80 backdrop-blur py-3">
                 <Button
