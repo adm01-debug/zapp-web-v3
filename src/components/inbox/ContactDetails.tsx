@@ -103,7 +103,9 @@ export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
     <motion.div
       initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 100, opacity: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }} ref={panelRef} role="complementary" aria-label="Detalhes do contato"
-      className="w-80 h-full min-h-0 shrink-0 bg-card border-l border-border flex flex-col overflow-hidden"
+      data-contact-details data-contact-id={contact.id}
+      tabIndex={-1}
+      className="w-80 h-full min-h-0 shrink-0 bg-card border-l border-border flex flex-col overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40"
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-gradient-to-r from-card to-card/95 shrink-0">
         <div className="flex items-center gap-2">
