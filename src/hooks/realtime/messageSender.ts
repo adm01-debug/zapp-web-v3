@@ -150,7 +150,7 @@ export async function sendMessageToContact(
     throw error;
   }
 
-  emitSendStatus(data.id, { status: 'sending' });
+  emitSendStatus(data.id, { status: 'sending' }), { contactId, source: 'messageSender' });
 
   try {
     const { data: contact } = await supabase
@@ -202,7 +202,7 @@ export async function sendMessageToContact(
         idempotencyKey: idemKey,
         maxRetries: MAX_RETRIES,
         onRetry: (attempt, total) => {
-          emitSendStatus(data.id, { status: 'retrying', attempt, totalRetries: total });
+          emitSendStatus(data.id, { status: 'retrying', attempt, totalRetries: total }), { contactId, source: 'messageSender' });
           // Persist counters so the "2/3" indicator survives a page reload.
           // Fire-and-forget — never block the retry loop.
           supabase.from('messages').update({
@@ -237,14 +237,14 @@ export async function sendMessageToContact(
           error_code: auth.code ? String(auth.code) : null,
           error_reason: auth.reason || reason,
         }).eq('id', data.id);
-        emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason });
+        emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }), { contactId, source: 'messageSender' });
       } else {
         await supabase.from('messages').update({
           status: 'failed',
           whatsapp_connection_id: resolvedConnectionId,
           error_reason: reason,
         }).eq('id', data.id);
-        emitSendStatus(data.id, { status: 'failed', errorReason: reason });
+        emitSendStatus(data.id, { status: 'failed', errorReason: reason }), { contactId, source: 'messageSender' });
       }
       throw new Error(reason);
     }
@@ -257,7 +257,7 @@ export async function sendMessageToContact(
       retry_attempt: null,
       retry_total: null,
     }).eq('id', data.id);
-    emitSendStatus(data.id, { status: 'sent' });
+    emitSendStatus(data.id, { status: 'sent' }), { contactId, source: 'messageSender' });
   } catch (evolutionError) {
     log.error('Error sending via Evolution API:', evolutionError);
     const auth = classifyAuthError(evolutionError);
@@ -268,7 +268,7 @@ export async function sendMessageToContact(
         error_code: auth.code ? String(auth.code) : null,
         error_reason: auth.reason || reason,
       }).eq('id', data.id);
-      emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason });
+      emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }), { contactId, source: 'messageSender' });
     } else {
       // If error came from withRetry exhausting attempts, mark failed_retries.
       // Persist final attempt counters so the badge stays after a reload.
@@ -278,7 +278,7 @@ export async function sendMessageToContact(
         retry_attempt: MAX_RETRIES,
         retry_total: MAX_RETRIES,
       }).eq('id', data.id);
-      emitSendStatus(data.id, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason });
+      emitSendStatus(data.id, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason }), { contactId, source: 'messageSender' });
     }
     throw evolutionError;
   }
