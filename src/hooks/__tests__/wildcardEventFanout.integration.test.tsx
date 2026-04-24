@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Integracao: garante que o fan-out simulado de supabase.channel() entrega
