@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,6 +9,7 @@ import { SentimentEmoji, getSentimentFromScore, type SentimentLevel } from '../S
 import { QuickPeek } from '@/components/ui/quick-peek';
 import { TypingIndicatorCompact } from '../TypingIndicator';
 import { useContactTyping } from '@/hooks/useContactTyping';
+import { useInViewport } from '@/hooks/useInViewport';
 import {
   Clock, CheckCircle2, AlertCircle, Loader2, ExternalLink,
   MessageCircle, Instagram, Mail, Phone, UserCheck, Archive, Pin, Star, AlarmClock,
@@ -56,11 +58,18 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
   const StatusIcon = statusIcons[conversation.status];
   const sentiment: SentimentLevel | null = conversation.sentiment || 
     (conversation.sentimentScore !== undefined ? getSentimentFromScore(conversation.sentimentScore) : null);
-  const isTyping = useContactTyping(conversation.contact.id);
+
+  // Gating de visibilidade: o canal Realtime de typing só é assinado quando
+  // o card está (ou esteve recentemente) no viewport. Isso evita criar 1
+  // canal por conversa em listas longas. Margem 200px antecipa entrada;
+  // sticky 1500ms previne churn em scroll rápido.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inView = useInViewport(rootRef, { rootMargin: '200px', keepVisibleMs: 1500 });
+  const isTyping = useContactTyping(conversation.contact.id, inView);
 
   if (compact) {
     return (
-      <motion.div onClick={() => onSelect(conversation)} whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.15 }}
+      <motion.div ref={rootRef} onClick={() => onSelect(conversation)} whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.15 }}
         className={cn('relative p-[var(--density-padding-x)] rounded-lg cursor-pointer transition-all duration-200 h-full mx-2', isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent')}>
         {isSelected && <motion.div layoutId="conversationActiveCompact" className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full bg-primary" />}
         <div className="flex items-center gap-2 relative z-10">
@@ -115,7 +124,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
 
   return (
     <QuickPeek preview={quickPeekPreview} enabled={!isSelected} delay={500}>
-      <motion.div onClick={() => onSelect(conversation)} whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.15 }}
+      <motion.div ref={rootRef} onClick={() => onSelect(conversation)} whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.15 }}
         className={cn('relative p-[var(--density-padding-x)] rounded-xl cursor-pointer transition-all duration-200 group h-full mx-2', isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent')}>
         {isSelected && <motion.div layoutId="conversationActive" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-primary" />}
         <div className="flex items-start gap-3 relative z-10">
