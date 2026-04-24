@@ -4,6 +4,7 @@ import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import type { EvolutionContact } from '@/types/evolutionExternal';
 import { getLogger } from '@/lib/logger';
+import { setRealtimeContactsStatus } from './realtimeContactsStatusStore';
 
 const log = getLogger('RealtimeContacts');
 const FLUSH_DELAY_MS = 100;
@@ -35,7 +36,11 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!enabled || !isExternalConfigured || !externalSupabase) return;
+    if (!enabled || !isExternalConfigured || !externalSupabase) {
+      setRealtimeContactsStatus('disconnected');
+      return;
+    }
+    setRealtimeContactsStatus('connecting');
 
     const flush = () => {
       flushTimerRef.current = null;
@@ -143,7 +148,13 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
         },
         handlePayload,
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Map Supabase realtime states → app-facing 3-state model
+        if (status === 'SUBSCRIBED') setRealtimeContactsStatus('connected');
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setRealtimeContactsStatus('error');
+        else if (status === 'CLOSED') setRealtimeContactsStatus('disconnected');
+        else setRealtimeContactsStatus('connecting');
+      });
 
     return () => {
       if (flushTimerRef.current) {
@@ -151,6 +162,7 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
         flushTimerRef.current = null;
       }
       pendingRef.current = new Map();
+      setRealtimeContactsStatus('disconnected');
       void externalSupabase.removeChannel(channel);
     };
   }, [enabled, instance, queryClient]);
