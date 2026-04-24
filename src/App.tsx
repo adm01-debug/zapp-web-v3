@@ -67,6 +67,7 @@ const QueuesComparison = lazyWithRetry(() => import("./pages/QueuesComparison"))
 const SLADashboard = lazyWithRetry(() => import("./pages/SLADashboard"));
 const SLAHistory = lazyWithRetry(() => import("./pages/SLAHistory"));
 const SLAAlertPreferences = lazyWithRetry(() => import("./pages/SLAAlertPreferences"));
+const SLAAlertHistory = lazyWithRetry(() => import("./pages/SLAAlertHistory"));
 const RolesPage = lazyWithRetry(() => import("./pages/admin/RolesPage"));
 const RateLimitDashboard = lazyWithRetry(() => import("./pages/admin/RateLimitDashboard"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
@@ -171,6 +172,7 @@ function AppContent() {
             <Route path="/sla" element={<ProtectedRoute><SLADashboard /></ProtectedRoute>} />
             <Route path="/sla/history" element={<ProtectedRoute><SLAHistory /></ProtectedRoute>} />
             <Route path="/sla/preferences" element={<ProtectedRoute><SLAAlertPreferences /></ProtectedRoute>} />
+            <Route path="/sla/alerts" element={<ProtectedRoute><SLAAlertHistory /></ProtectedRoute>} />
             <Route path="/admin/roles" element={<ProtectedRoute requiredRoles={['admin']}><RolesPage /></ProtectedRoute>} />
             <Route path="/admin/rate-limit" element={<ProtectedRoute requiredRoles={['admin']}><RateLimitDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
