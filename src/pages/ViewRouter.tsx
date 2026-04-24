@@ -92,6 +92,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'failed-messages': Views.AdminFailedMessagesPage,
   'webhook-events': Views.AdminWebhookEventsPage,
   'evolution-api-logs': Views.AdminEvolutionApiLogsPage,
+  'alert-history': Views.AdminAlertHistoryPage,
   'webhook-overview': Views.AdminWebhookOverviewPage,
   'nps': Views.NPSDashboard,
   'team-chat': Views.TeamChatView,
