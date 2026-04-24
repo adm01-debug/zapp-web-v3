@@ -63,8 +63,8 @@ Deno.test("Esgotado: attempt >= max_retries => abandoned", () => {
 });
 
 Deno.test("Backoff exponencial limitado (cap em 1h)", () => {
-  // O worker delega o cálculo ao helper compartilhado `computeBackoffMs`.
-  assertMatch(SOURCE, /computeBackoffMs\(attempt \+ 1\)/);
+  // O worker delega o cálculo ao helper compartilhado, agora reason-aware.
+  assertMatch(SOURCE, /computeBackoffMsByReason\(attempt \+ 1, reason\)/);
   assertMatch(SOURCE, /from '\.\.\/_shared\/dlq-backoff\.ts'/);
   assertMatch(SOURCE, /next_attempt_at:/);
   // O helper mantém a fórmula base*2^(n-1) com teto em 1h (60_000 → 3_600_000).
