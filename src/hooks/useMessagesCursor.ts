@@ -239,8 +239,10 @@ export function useMessagesCursor({
           filter: `remote_jid=eq.${remoteJid}`,
         },
         (payload) => {
-          const m = payload.new;
-          if (!m || !m.id) return;
+          const raw = payload.new;
+          if (!raw || !raw.id) return;
+          // Realtime payloads are full rows; project to lite to keep memory low.
+          const m = toEvolutionMessageLite(raw);
           setPages((prev) => {
             for (const p of prev) {
               if (p.some((x) => x.id === m.id)) return prev;
@@ -260,8 +262,9 @@ export function useMessagesCursor({
           filter: `remote_jid=eq.${remoteJid}`,
         },
         (payload) => {
-          const m = payload.new;
-          if (!m || !m.id) return;
+          const raw = payload.new;
+          if (!raw || !raw.id) return;
+          const m = toEvolutionMessageLite(raw);
           setPages((prev) =>
             prev.map((page) => page.map((x) => (x.id === m.id ? { ...x, ...m } : x))),
           );
@@ -288,7 +291,10 @@ export function useMessagesCursor({
     };
   }, [enabled, remoteJid]);
 
-  const addMessage = useCallback((m: EvolutionMessage) => {
+  const addMessage = useCallback((input: EvolutionMessageLite | EvolutionMessage) => {
+    const m: EvolutionMessageLite = 'payload' in input || 'raw_data' in input
+      ? toEvolutionMessageLite(input)
+      : (input as EvolutionMessageLite);
     setPages((prev) => {
       for (const p of prev) if (p.some((x) => x.id === m.id)) return prev;
       if (prev.length === 0) return [[m]];
@@ -297,7 +303,7 @@ export function useMessagesCursor({
     });
   }, []);
 
-  const updateMessage = useCallback((id: string, updates: Partial<EvolutionMessage>) => {
+  const updateMessage = useCallback((id: string, updates: Partial<EvolutionMessageLite>) => {
     setPages((prev) =>
       prev.map((page) => page.map((x) => (x.id === id ? { ...x, ...updates } : x))),
     );
