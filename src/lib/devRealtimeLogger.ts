@@ -79,17 +79,18 @@ export function logMessagesSubscribe(hookName: string, bind: Bind): void {
  *   .on('postgres_changes', binding,
  *     wrapMessagesHandler('useMessages', handlePayload))
  */
-export function wrapMessagesHandler<T extends AnyPayload>(
+export function wrapMessagesHandler<T>(
   hookName: string,
   handler: (payload: T) => void,
 ): (payload: T) => void {
   if (!isDev) return handler;
   return (payload: T) => {
     try {
-      const evt = payload?.eventType ?? '?';
+      const p = payload as unknown as AnyPayload;
+      const evt = p?.eventType ?? '?';
       const id =
-        (payload?.new && (payload.new as { id?: string | number }).id) ??
-        (payload?.old && (payload.old as { id?: string | number }).id) ??
+        (p?.new && (p.new as { id?: string | number }).id) ??
+        (p?.old && (p.old as { id?: string | number }).id) ??
         '—';
       // eslint-disable-next-line no-console
       console.debug(
