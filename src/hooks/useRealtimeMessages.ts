@@ -10,6 +10,7 @@ import {
 } from './realtime/realtimeUtils';
 import { useRealtimeNotifications } from './realtime/useRealtimeNotifications';
 import { useMessageUpdateBatcher, type MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
+import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 export type { MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 
 const log = getLogger('RealtimeMessages');
