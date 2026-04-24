@@ -12,6 +12,7 @@ flowchart LR
     RETRY["lib/retry (withRetry)"]
     RCFG["loadRetryConfig"]
     DLQENQ["enqueueClientFailedMessage"]
+    DLQRP["reprocess-failed-messages<br/>(edge cron)"]
   end
 
   subgraph BUS["3. Status Bus (in-memory)"]
