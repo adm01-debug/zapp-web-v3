@@ -63,7 +63,7 @@ export function useMessagesCursor({
   pageSize = DEFAULT_PAGE_SIZE,
   enabled = true,
 }: UseMessagesCursorOptions): UseMessagesCursorReturn {
-  const [pages, setPages] = useState<EvolutionMessage[][]>([]);
+  const [pages, setPages] = useState<EvolutionMessageLite[][]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [hasMoreOlder, setHasMoreOlder] = useState(false);
@@ -88,14 +88,14 @@ export function useMessagesCursor({
   const messages = useMemo(() => dedupeAndSort(pages.flat()), [pages]);
 
   const fetchPage = useCallback(
-    async (beforeDate: string | null): Promise<EvolutionMessage[]> => {
+    async (beforeDate: string | null): Promise<EvolutionMessageLite[]> => {
       if (!isExternalConfigured || !externalSupabase || !remoteJid) return [];
 
       const controller = new AbortController();
       abortRef.current?.abort();
       abortRef.current = controller;
 
-      const builder = externalSupabase.rpc('rpc_list_messages', {
+      const builder = externalSupabase.rpc('rpc_list_messages_lite', {
         p_remote_jid: remoteJid,
         p_instance: instanceName,
         p_limit: pageSize,
@@ -117,7 +117,7 @@ export function useMessagesCursor({
       }
       if (rpcError) throw rpcError;
 
-      const rows = ((data || []) as EvolutionMessage[]).filter((m) => !!m && !!m.id);
+      const rows = ((data || []) as EvolutionMessageLite[]).filter((m) => !!m && !!m.id);
       // RPC retorna DESC por created_at; convertemos para ASC.
       return [...rows].sort(
         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
