@@ -160,6 +160,16 @@ export default function AdminWebhookOverviewPage() {
           >
             {includeUnprocessed ? 'Incluir pendentes' : 'Só processados'}
           </Button>
+          <Button
+            variant={errorsOnly ? 'destructive' : 'outline'}
+            size="sm"
+            onClick={() => setErrorsOnly((v) => !v)}
+            title="Filtra todos os indicadores e gráficos para mostrar apenas eventos com erro"
+            aria-pressed={errorsOnly}
+          >
+            <XCircle className="h-4 w-4 mr-2" />
+            {errorsOnly ? 'Mostrando só erros' : 'Só erros'}
+          </Button>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching}>
             <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
             Atualizar
