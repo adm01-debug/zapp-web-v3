@@ -187,6 +187,13 @@ export async function sendMessageToContact(
         maxRetries: MAX_RETRIES,
         onRetry: (attempt, total) => {
           emitSendStatus(data.id, { status: 'retrying', attempt, totalRetries: total });
+          // Persist counters so the "2/3" indicator survives a page reload.
+          // Fire-and-forget — never block the retry loop.
+          supabase.from('messages').update({
+            status: 'retrying',
+            retry_attempt: attempt,
+            retry_total: total,
+          }).eq('id', data.id).then(() => undefined, () => undefined);
           const last = lastInstabilityToastByContact.get(contactId) ?? 0;
           if (attempt === 1 && Date.now() - last > 60_000) {
             lastInstabilityToastByContact.set(contactId, Date.now());
@@ -227,7 +234,13 @@ export async function sendMessageToContact(
     }
 
     const externalId = extractEvolutionMessageId(apiResult);
-    await supabase.from('messages').update({ status: 'sent', external_id: externalId, whatsapp_connection_id: resolvedConnectionId }).eq('id', data.id);
+    await supabase.from('messages').update({
+      status: 'sent',
+      external_id: externalId,
+      whatsapp_connection_id: resolvedConnectionId,
+      retry_attempt: null,
+      retry_total: null,
+    }).eq('id', data.id);
     emitSendStatus(data.id, { status: 'sent' });
   } catch (evolutionError) {
     log.error('Error sending via Evolution API:', evolutionError);
@@ -241,10 +254,13 @@ export async function sendMessageToContact(
       }).eq('id', data.id);
       emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason });
     } else {
-      // If error came from withRetry exhausting attempts, mark failed_retries
+      // If error came from withRetry exhausting attempts, mark failed_retries.
+      // Persist final attempt counters so the badge stays after a reload.
       await supabase.from('messages').update({
         status: 'failed_retries',
         error_reason: reason,
+        retry_attempt: MAX_RETRIES,
+        retry_total: MAX_RETRIES,
       }).eq('id', data.id);
       emitSendStatus(data.id, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason });
     }

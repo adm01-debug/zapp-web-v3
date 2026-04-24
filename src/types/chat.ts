@@ -110,6 +110,9 @@ export interface Message {
   senderName?: string;
   created_at?: string;
   updated_at?: string;
+  // Persisted retry counters (survive page reload)
+  retry_attempt?: number | null;
+  retry_total?: number | null;
 }
 
 

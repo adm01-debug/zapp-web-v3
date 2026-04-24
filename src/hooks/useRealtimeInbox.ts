@@ -230,6 +230,8 @@ export function useRealtimeInbox() {
     transcriptionStatus: m.transcription_status as Message['transcriptionStatus'] || null,
     is_deleted: m.is_deleted ?? false,
     external_id: m.external_id || undefined,
+    retry_attempt: m.retry_attempt ?? null,
+    retry_total: m.retry_total ?? null,
   }));
 
   return {
