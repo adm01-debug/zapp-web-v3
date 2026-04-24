@@ -19,6 +19,7 @@ import { ChatDialogs } from './chat/ChatDialogs';
 import { ChatPanelHeader } from './chat/ChatPanelHeader';
 import { ChatAssignedBar } from './chat/ChatAssignedBar';
 import { ChatMessagesArea, ChatMessagesAreaRef } from './chat/ChatMessagesArea';
+import type { LoadOlderProps } from './chat/loadOlderTypes';
 import { ChatInputArea } from './chat/ChatInputArea';
 import { ChatDragOverlay } from './chat/ChatDragOverlay';
 import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
