@@ -101,12 +101,14 @@ export function useRealtimeDashboard() {
   useEffect(() => {
     fetchInitialData();
 
+    logMessagesSubscribe('useRealtimeDashboard', { event: 'INSERT', table: 'messages' });
+    logMessagesSubscribe('useRealtimeDashboard', { event: 'UPDATE', table: 'messages' });
     const channel = supabase
       .channel('dashboard-realtime')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
-        (payload) => {
+        wrapMessagesHandler<{ new: { sender?: string } }>('useRealtimeDashboard', (payload) => {
           log.debug('New message received in dashboard');
           minuteCountRef.current++;
           messageCountRef.current++;
@@ -117,7 +119,7 @@ export function useRealtimeDashboard() {
             lastMessageAt: new Date(),
             unreadMessages: payload.new.sender === 'contact' ? prev.unreadMessages + 1 : prev.unreadMessages,
           }));
-        }
+        })
       )
       .on(
         'postgres_changes',
@@ -132,14 +134,14 @@ export function useRealtimeDashboard() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'messages' },
-        (payload) => {
+        wrapMessagesHandler<{ new: { is_read?: boolean }; old?: { is_read?: boolean } }>('useRealtimeDashboard', (payload) => {
           if (payload.new.is_read && !payload.old?.is_read) {
             setState(prev => ({
               ...prev,
               unreadMessages: Math.max(0, prev.unreadMessages - 1),
             }));
           }
-        }
+        })
       )
       .subscribe((status) => {
         setState(prev => ({ ...prev, isConnected: status === 'SUBSCRIBED' }));

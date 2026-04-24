@@ -31,6 +31,7 @@ export function useTranscriptionNotifications(options: TranscriptionNotification
   useEffect(() => {
     if (!enabled || !settings.transcriptionNotificationEnabled) return;
 
+    logMessagesSubscribe('useTranscriptionNotifications', { event: 'UPDATE', table: 'messages' });
     const channel = supabase
       .channel('transcription-notifications')
       .on(
@@ -40,7 +41,7 @@ export function useTranscriptionNotifications(options: TranscriptionNotification
           schema: 'public',
           table: 'messages',
         },
-        async (payload) => {
+        wrapMessagesHandler<{ new: Record<string, unknown>; old?: Record<string, unknown> }>('useTranscriptionNotifications', async (payload) => {
           const newData = payload.new as { id: string; transcription_status?: string; transcription?: string; contact_id?: string };
           const oldData = payload.old as { transcription_status?: string } | undefined;
 
