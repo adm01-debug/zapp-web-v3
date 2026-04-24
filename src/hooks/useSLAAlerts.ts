@@ -32,6 +32,51 @@ function formatDurationMs(ms: number | null): string {
 const dedupeKey = (contactId: string, kind: AlertKind, severity: AlertSeverity) =>
   `${contactId}:${kind}:${severity}`;
 
+// localStorage layer — survives page refreshes and tab reloads. Same-origin only,
+// and TTL keeps the store from growing unbounded for stale conversations.
+const LOCAL_STORAGE_KEY = 'zappweb:sla-alert-dedupe:v1';
+const LOCAL_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
+type DedupeStore = Record<string, number>; // key -> firedAtMs
+
+function readDedupeStore(): DedupeStore {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    const now = Date.now();
+    const cleaned: DedupeStore = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof v === 'number' && now - v < LOCAL_TTL_MS) {
+        cleaned[k] = v;
+      }
+    }
+    return cleaned;
+  } catch {
+    return {};
+  }
+}
+
+function writeDedupeStore(store: DedupeStore): void {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(store));
+  } catch {
+    /* storage quota / private mode — accept that dedupe falls back to network layer */
+  }
+}
+
+function alreadyFiredLocal(key: string): boolean {
+  const store = readDedupeStore();
+  return key in store;
+}
+
+function markFiredLocal(key: string): void {
+  const store = readDedupeStore();
+  store[key] = Date.now();
+  writeDedupeStore(store);
+}
+
 /**
  * Persistent dedupe: checks `conversation_events` (event_type='sla_alert') for a previous
  * record with same kind+severity. Returns true if already fired (so we should skip).
@@ -63,11 +108,12 @@ async function alreadyFiredPersistent(
  * Dispara notificações in-app + auditoria quando o SLA da conversa atual entra
  * em risco ou é violado.
  *
- * Anti-spam em duas camadas:
- *  1. In-memory (sessão atual) — `firedRef` evita loops e re-disparo dentro da mesma sessão.
- *  2. Persistente — consulta `conversation_events` (já recebe nosso registro de auditoria) por
- *     (contact_id + event_type='sla_alert' + metadata{kind,severity}). Garante que mesmo após
- *     refresh ou troca de página o mesmo alerta não dispare novamente.
+ * Anti-spam em três camadas:
+ *  1. In-memory (`firedRef`/`inflightRef`) — evita loops e re-disparo dentro da mesma sessão.
+ *  2. localStorage (`zappweb:sla-alert-dedupe:v1`, TTL 24h) — sobrevive ao refresh do navegador
+ *     sem custo de rede. Verificado de forma síncrona antes de qualquer chamada.
+ *  3. `conversation_events` (banco) — fonte de verdade entre dispositivos/abas. Hidrata o
+ *     localStorage quando detecta que o alerta já foi disparado em outro lugar.
  *
  * Respeita escopo `'none'` — não dispara.
  */
@@ -92,18 +138,26 @@ export function useSLAAlerts(params: SLAAlertParams) {
 
       // Layer 1: in-memory (sync) — prevents re-entry from rapid effect runs.
       if (firedRef.current.has(key) || inflightRef.current.has(key)) return;
+
+      // Layer 2: localStorage (sync, survives refresh) — instant skip without network round-trip.
+      if (alreadyFiredLocal(key)) {
+        firedRef.current.add(key);
+        return;
+      }
+
       inflightRef.current.add(key);
 
       try {
-        // Layer 2: persistent — check audit history for prior alert with same key.
+        // Layer 3: persistent (DB) — handles cross-device/cross-tab and recovers if localStorage was wiped.
         const already = await alreadyFiredPersistent(contactId, kind, severity);
         if (already) {
-          // Mark as fired locally so subsequent renders skip the round-trip.
           firedRef.current.add(key);
+          markFiredLocal(key); // hydrate localStorage so next refresh is instant
           return;
         }
 
         firedRef.current.add(key);
+        markFiredLocal(key);
 
         const isBreach = severity === 'breached';
         const kindLabel = kind === 'first_response' ? '1ª resposta' : 'Resolução';
