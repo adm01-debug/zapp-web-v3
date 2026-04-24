@@ -28,6 +28,10 @@ interface MessageStatusInlineProps {
 
 const TRANSIENT = new Set(['sending', 'retrying']);
 const TERMINAL_FAILURES = new Set(['failed', 'failed_auth', 'failed_retries']);
+const TERMINAL_DB = new Set([
+  'sent', 'delivered', 'read',
+  'failed', 'failed_auth', 'failed_retries',
+]);
 
 export const MessageStatusInline = memo(function MessageStatusInline({
   message,
