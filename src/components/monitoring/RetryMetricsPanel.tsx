@@ -225,6 +225,9 @@ export function RetryMetricsPanel() {
         {/* Banner de alertas por instância */}
         <RetryAlertsBanner breaches={breaches} />
 
+        {/* Prévia do cronograma de tentativas/abort por instância */}
+        <RetrySchedulePreview instances={byInstance.map((b) => b.instance)} />
+
         {/* Top reasons — bar chart (top 10) */}
         {agg && agg.topReasons.length > 0 && (
           <TopReasonsChart
