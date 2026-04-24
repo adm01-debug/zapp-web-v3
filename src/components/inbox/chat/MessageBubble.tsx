@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from '@/components/ui/motion';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { sendMessageToContact } from '@/hooks/realtime/messageSender';
 import { Link } from 'react-router-dom';
-import { RefreshCw, ShieldAlert } from 'lucide-react';
+import { RefreshCw, ShieldAlert, History } from 'lucide-react';
+import {
+  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import { MessageSendHistorySheet } from './MessageSendHistorySheet';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('MessageBubble');
@@ -62,6 +66,7 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const { toast } = useToast();
   const { profile } = useAuth();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const isSent = message.sender === 'agent';
   const senderName = isSent ? 'Você' : message.senderName || 'Contato';
   const agentInitials = profile?.name ? profile.name.slice(0, 2).toUpperCase() : 'EU';
@@ -69,7 +74,7 @@ export function MessageBubble({
     message.status === 'failed' || message.status === 'failed_auth' || message.status === 'failed_retries'
   );
 
-  return (
+  const bubbleContent = (
       <SwipeableMessage onSwipeRight={() => onReply(message)} onSwipeLeft={() => onForward(message)}>
         <div
           ref={registerRef}
@@ -304,5 +309,31 @@ export function MessageBubble({
           )}
         </div>
       </SwipeableMessage>
+  );
+
+  if (!isSent) return bubbleContent;
+
+  return (
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div>{bubbleContent}</div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-56 bg-card border-border/50 shadow-xl">
+          <ContextMenuItem
+            onClick={() => setHistoryOpen(true)}
+            className="gap-2 cursor-pointer"
+          >
+            <History className="w-4 h-4" />
+            Ver histórico de envio
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+      <MessageSendHistorySheet
+        message={message}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
+    </>
   );
 }
