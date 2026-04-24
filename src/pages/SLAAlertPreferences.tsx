@@ -91,6 +91,7 @@ export default function SLAAlertPreferencesPage() {
   }, [preferences]);
 
   const isDirty =
+    draft.enabled !== preferences.enabled ||
     draft.alert_first_response !== preferences.alert_first_response ||
     draft.alert_resolution !== preferences.alert_resolution ||
     draft.severity_warning !== preferences.severity_warning ||
