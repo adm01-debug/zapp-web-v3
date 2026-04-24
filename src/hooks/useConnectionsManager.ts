@@ -557,17 +557,10 @@ export function useConnectionsManager() {
     if (!qrCodeDialog.open) return;
     if (qrCodeDialog.status !== 'pending') return;
     if (!qrCodeDialog.expiresAt) return;
-    const refreshAt = qrCodeDialog.expiresAt - 5_000;
-    const delay = refreshAt - Date.now();
+    const delay = qrCodeDialog.expiresAt - 5_000 - Date.now();
     if (delay <= 0) return;
     const timer = setTimeout(() => {
-      // Re-check inside the closure: avoid refreshing if user already connected/closed.
-      setQrCodeDialog((prev) => {
-        if (prev.open && prev.status === 'pending') {
-          void handleRefreshQrCode();
-        }
-        return prev;
-      });
+      void handleRefreshQrCode();
     }, delay);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
