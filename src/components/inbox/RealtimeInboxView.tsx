@@ -11,6 +11,7 @@ import { useInboxBulkActions } from '@/hooks/useInboxBulkActions';
 import { useInboxFilters } from '@/hooks/useInboxFilters';
 import { useRealtimeInbox } from '@/hooks/useRealtimeInbox';
 import { useRealtimeContacts } from '@/hooks/realtime/useRealtimeContacts';
+import { useRealtimeFallbackRefetch } from '@/hooks/realtime/useRealtimeFallbackRefetch';
 import { WifiOff, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
