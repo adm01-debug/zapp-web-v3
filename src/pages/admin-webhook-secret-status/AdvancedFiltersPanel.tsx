@@ -77,6 +77,7 @@ export function AdvancedFiltersPanel({
 }: Props) {
   const [open, setOpen] = useState(activeFilterCount > 0);
   const [reasonDraft, setReasonDraft] = useState(prefs.reasonSearch);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   // Debounce reason search input.
   useEffect(() => {
