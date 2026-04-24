@@ -134,10 +134,13 @@ export function RetryConfigPanel() {
               const range = RETRY_CONFIG_RANGES[field];
               const value = draft[field];
               const inheritedFromGlobal = selected !== GLOBAL && !hasInstanceOverride;
+              const fieldError = validationErrors[field];
               return (
                 <div key={field} className="space-y-2">
                   <div className="flex items-baseline justify-between gap-2">
-                    <Label className="text-sm font-medium">{meta.label}</Label>
+                    <Label className={cn('text-sm font-medium', fieldError && 'text-destructive')}>
+                      {meta.label}
+                    </Label>
                     <Input
                       type="number"
                       value={value}
@@ -145,7 +148,11 @@ export function RetryConfigPanel() {
                       max={range.max}
                       step={range.step}
                       onChange={(e) => updateField(field, Number(e.target.value))}
-                      className="w-28 h-8 text-right tabular-nums"
+                      aria-invalid={!!fieldError}
+                      className={cn(
+                        'w-28 h-8 text-right tabular-nums',
+                        fieldError && 'border-destructive focus-visible:ring-destructive',
+                      )}
                     />
                   </div>
                   <Slider
@@ -161,9 +168,36 @@ export function RetryConfigPanel() {
                       <span className="italic">global: {globalConfig[field]}{meta.unit}</span>
                     )}
                   </div>
+                  {fieldError && (
+                    <div className="flex items-start gap-1.5 text-xs text-destructive" role="alert">
+                      <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      <span>{fieldError}</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Validation summary */}
+        {isInvalid && (
+          <div
+            className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs flex items-start gap-2"
+            role="alert"
+            data-testid="retry-config-validation-banner"
+          >
+            <AlertCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
+            <div>
+              <div className="font-medium text-destructive mb-0.5">
+                Combinações inválidas — corrija antes de salvar
+              </div>
+              <ul className="list-disc list-inside text-destructive/90 space-y-0.5">
+                {Object.entries(validationErrors).map(([k, msg]) => (
+                  <li key={k}>{msg}</li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
 
@@ -178,7 +212,7 @@ export function RetryConfigPanel() {
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2 pt-2 border-t">
-          <Button size="sm" onClick={handleSave} disabled={!dirty || isSaving || isLoading}>
+          <Button size="sm" onClick={handleSave} disabled={!dirty || isSaving || isLoading || isInvalid}>
             <Save className="h-4 w-4 mr-2" />
             Salvar
           </Button>
