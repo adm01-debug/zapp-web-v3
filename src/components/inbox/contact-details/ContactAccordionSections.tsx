@@ -148,9 +148,11 @@ export function ContactAccordionSections({ contact, conversation, enrichedData, 
             <ContactStatsSection contactId={contact.id} />
           </AccordionContent>
         </AccordionItem>
-        <SharedMediaAccordionItem contactId={contact.id} onOpen={() => setMediaOpen(true)} />
+        <SharedMediaAccordionItem contactId={contact.id} onOpen={openMedia} />
       </motion.div>
-      <MediaGallery contactId={contact.id} open={mediaOpen} onOpenChange={setMediaOpen} />
+      {mediaMounted && (
+        <MediaGallery contactId={contact.id} open={mediaOpen} onOpenChange={setMediaOpen} />
+      )}
     </>
   );
 }
