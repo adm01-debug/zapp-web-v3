@@ -67,6 +67,7 @@ const QueuesComparison = lazyWithRetry(() => import("./pages/QueuesComparison"))
 const SLADashboard = lazyWithRetry(() => import("./pages/SLADashboard"));
 const SLAHistory = lazyWithRetry(() => import("./pages/SLAHistory"));
 const SLAAlertPreferences = lazyWithRetry(() => import("./pages/SLAAlertPreferences"));
+const SLAAlertHistory = lazyWithRetry(() => import("./pages/SLAAlertHistory"));
 const RolesPage = lazyWithRetry(() => import("./pages/admin/RolesPage"));
 const RateLimitDashboard = lazyWithRetry(() => import("./pages/admin/RateLimitDashboard"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
