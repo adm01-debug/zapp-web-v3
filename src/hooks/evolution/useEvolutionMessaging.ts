@@ -10,8 +10,20 @@ export function useEvolutionMessaging(
   // SEND MESSAGES
   // ============================================================
   
-  const sendTextMessage = useCallback((instanceName: string, number: string, text: string, options?: { delay?: number; quoted?: SendMessageParams['quoted']; mentioned?: string[] }) =>
-    callApi('send-text', { instanceName, number, text, ...options }), [callApi]);
+  const sendTextMessage = useCallback((
+    instanceName: string,
+    number: string,
+    text: string,
+    options?: {
+      delay?: number;
+      quoted?: SendMessageParams['quoted'];
+      mentioned?: string[];
+      /** Generate WhatsApp rich link preview when the text contains a URL. */
+      linkPreview?: boolean;
+      /** Mention every group participant (`@everyone`). Only effective on group JIDs. */
+      mentionsEveryOne?: boolean;
+    },
+  ) => callApi('send-text', { instanceName, number, text, ...options }), [callApi]);
 
   const sendMediaMessage = useCallback((params: SendMessageParams) =>
     callApi('send-media', params), [callApi]);
