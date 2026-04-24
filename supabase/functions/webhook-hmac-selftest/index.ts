@@ -75,16 +75,17 @@ Deno.serve(async (req) => {
   // 2) Signature with tampered secret (negative control)
   const badSig = await computeHmac(payload, secret + 'X');
 
-  const validator = createWebhookValidator(secret, false);
+  const validate = createWebhookValidator(secret, false);
 
-  const goodResult = await validator.validateRequest(
-    payload,
-    new Headers({ 'x-hub-signature-256': `sha256=${goodSig}` }),
-  );
-  const tamperedResult = await validator.validateRequest(
-    payload,
-    new Headers({ 'x-hub-signature-256': `sha256=${badSig}` }),
-  );
+  const makeReq = (sig: string) =>
+    new Request('https://selftest.local/', {
+      method: 'POST',
+      headers: { 'x-hub-signature-256': `sha256=${sig}`, 'content-type': 'application/json' },
+      body: payload,
+    });
+
+  const goodResult = await validate(makeReq(goodSig));
+  const tamperedResult = await validate(makeReq(badSig));
 
   const ok = goodResult.valid && !tamperedResult.valid;
 
