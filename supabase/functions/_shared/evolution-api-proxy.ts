@@ -8,6 +8,7 @@ import {
   storeSendCache,
   extractEvolutionMessageId,
 } from './send-idempotency.ts';
+import { logIdempotencyMiss } from './log-idempotency-miss.ts';
 
 const TIMEOUT_MS = 15000;
 const MAX_RETRIES = 2;
@@ -85,6 +86,14 @@ export async function proxyToEvolution(
         },
       });
     }
+    // Cache miss with a valid key — emit a structured signal so the
+    // frontend can detect spikes that indicate cache instability.
+    // Fire-and-forget; never blocks the send.
+    void logIdempotencyMiss({
+      idem_key: idemKey!,
+      instance_name: instanceInPath ?? null,
+      path,
+    });
   }
 
   const opts: RequestInit = {

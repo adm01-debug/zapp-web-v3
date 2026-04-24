@@ -28,6 +28,7 @@ import { NumberReputationMonitor } from './NumberReputationMonitor';
 import { ConnectionCard } from './ConnectionCard';
 import { DegradedQuickActions } from './DegradedQuickActions';
 import { QrCountdown } from './QrCountdown';
+import { IdempotencyMissBanner } from './IdempotencyMissBanner';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 
 export function ConnectionsView() {
@@ -179,6 +180,8 @@ export function ConnectionsView() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <IdempotencyMissBanner />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
