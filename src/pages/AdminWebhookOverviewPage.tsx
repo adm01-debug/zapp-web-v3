@@ -26,6 +26,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { queryExternalProxy } from '@/lib/externalProxy';
+import { openWebhookEventsWithFilters } from '@/lib/webhookEventsDeepLink';
 import { cn } from '@/lib/utils';
 import type { EvolutionWebhookEvent } from '@/types/evolutionExternal';
 import {
