@@ -224,3 +224,60 @@ flowchart LR
 %%   [x] VML    -> src/components/inbox/VirtualizedMessageList.tsx
 %%   [x] MB     -> src/components/inbox/chat/MessageBubble.tsx
 %% ============================================================================
+%%
+%% ============================================================================
+%% CHECKLIST DE COBERTURA — send -> batching -> delivery -> render inline
+%% Marque [x] ao validar cada item (manual ou via teste automatizado).
+%% ============================================================================
+%%
+%% 1. Composicao e envio (UI)
+%%   [ ] CIL (useChatInputLogic) -> dispara MS.sendMessage com payload normalizado
+%%   [ ] MS (messageSender) -> persiste linha 'sending' em DB (==> messages)
+%%   [ ] MS -> chama buildSendIdempotencyKey ANTES de ESR
+%%   [ ] MS -> emitSendStatus('sending', rowId) no bus
+%%
+%% 1b. Idempotencia (buildSendIdempotencyKey)
+%%   [ ] Gera 'mfp:s256:<hex>' quando ha SendFingerprint completo
+%%   [ ] Cai para 'msg:<rowId>' quando fingerprint ausente (call sites legacy)
+%%   [ ] timeBucket de 5min => mesma chave em retries dentro da janela
+%%   [ ] Mesma chave reutilizada por DLQRP (reprocess-failed-messages)
+%%
+%% 2. Transporte e retry
+%%   [ ] ESR envia Idempotency-Key em todas tentativas do withRetry
+%%   [ ] loadRetryConfig respeitado (max attempts / backoff exponencial)
+%%   [ ] Falha terminal -> enqueueClientFailedMessage (==> failed_messages)
+%%   [ ] reprocess-failed-messages reprocessa e atualiza status no DB
+%%
+%% 3. Status bus (in-memory)
+%%   [ ] emitSendStatus chamado em: optimistic, success, error, retry
+%%   [ ] subscribeAllSendStatus alimenta UMSS e UMS
+%%   [ ] getSendStatus retorna ultimo estado conhecido por rowId (sync read)
+%%
+%% 4. Persistencia / leitura
+%%   [ ] useMessages carrega historico inicial + aplica realtime
+%%   [ ] useMessageStatus mapeia status detalhado por message id
+%%   [ ] useMessageSendStatus combina bus in-memory + status persistido
+%%
+%% 5. Realtime e batching (postgres_changes na tabela 'messages')
+%%   [ ] postgres_changes('messages') registrado pelos 7 hooks + AMP
+%%   [ ] useRealtimeMessages -> useMessageUpdateBatcher (coalescing)
+%%   [ ] BATCH -.-> useMessages (flush em janela curta, sem perder eventos)
+%%   [ ] realtimeUtils dedup por message id (sem update duplicado)
+%%   [ ] useTranscriptionNotifications dispara so em UPDATE de transcription
+%%   [ ] useRealtimeDashboard / useEvolutionMonitoring nao bloqueiam UI
+%%   [ ] AudioMessagePlayer reage a UPDATE de media_url (signed URL refresh)
+%%
+%% 6. Render de status inline
+%%   [ ] MessageBubble consome MessageStatusInline (icone + tooltip)
+%%   [ ] MSI reflete: pending -> sent -> delivered -> read -> failed
+%%   [ ] MSI atualiza sem remount do bubble (memo estavel por message id)
+%%   [ ] VirtualizedMessageList nao re-renderiza lista inteira em UPDATE de 1 msg
+%%   [ ] Falha terminal mostra acao 'Reenviar' (consome chave idempotente)
+%%
+%% Cobertura ponta-a-ponta (smoke):
+%%   [ ] Enviar texto -> bubble vai 'sending' -> 'sent' -> 'delivered' -> 'read'
+%%   [ ] Enviar audio -> AMP toca apos UPDATE media_url (sem F5)
+%%   [ ] Forcar erro de rede -> retry transparente -> sucesso (mesma chave)
+%%   [ ] Forcar erro permanente -> entra DLQ -> cron reprocessa -> status final
+%%   [ ] Receber mensagem inbound -> aparece em <=1s sem refresh
+%% ============================================================================
