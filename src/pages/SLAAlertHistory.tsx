@@ -109,6 +109,7 @@ export default function SLAAlertHistory() {
   const { data, isLoading, refetch, isFetching } = useSLAAlertHistory();
   const [search, setSearch] = useState('');
   const [severity, setSeverity] = useState<SeverityFilter>('all');
+  const [currentView, setCurrentView] = useState('sla-history');
 
   const filtered = useMemo(() => {
     const items = data ?? [];
@@ -130,7 +131,8 @@ export default function SLAAlertHistory() {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar />
+      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
+
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto p-6 space-y-6">
           <header className="flex items-start justify-between gap-4 flex-wrap">
