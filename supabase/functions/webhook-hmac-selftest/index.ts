@@ -8,8 +8,12 @@
  * Retorna diagnóstico — sem expor o secret. Útil para confirmar que o secret
  * configurado na borda bate com o assinador remoto.
  */
-import { corsHeaders } from '@supabase/supabase-js/cors';
 import { createWebhookValidator } from '../_shared/hmac-validation.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 function toHex(buf: ArrayBuffer): string {
   return Array.from(new Uint8Array(buf))
@@ -71,16 +75,17 @@ Deno.serve(async (req) => {
   // 2) Signature with tampered secret (negative control)
   const badSig = await computeHmac(payload, secret + 'X');
 
-  const validator = createWebhookValidator(secret, false);
+  const validate = createWebhookValidator(secret, false);
 
-  const goodResult = await validator.validateRequest(
-    payload,
-    new Headers({ 'x-hub-signature-256': `sha256=${goodSig}` }),
-  );
-  const tamperedResult = await validator.validateRequest(
-    payload,
-    new Headers({ 'x-hub-signature-256': `sha256=${badSig}` }),
-  );
+  const makeReq = (sig: string) =>
+    new Request('https://selftest.local/', {
+      method: 'POST',
+      headers: { 'x-hub-signature-256': `sha256=${sig}`, 'content-type': 'application/json' },
+      body: payload,
+    });
+
+  const goodResult = await validate(makeReq(goodSig));
+  const tamperedResult = await validate(makeReq(badSig));
 
   const ok = goodResult.valid && !tamperedResult.valid;
 
