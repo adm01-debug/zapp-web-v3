@@ -72,6 +72,8 @@ const EMPTY: SLATimelineData = {
   awaitingMs: null,
   totalMessages: 0,
   firstResponseBy: null,
+  firstResponseAttributionWindow: null,
+  firstResponseAttributionSource: 'not-applicable',
   resolvedBy: null,
 };
 
