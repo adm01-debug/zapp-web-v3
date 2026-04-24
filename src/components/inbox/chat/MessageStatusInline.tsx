@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
 import { MessageStatusIcon } from './messageUtils';
 import { useMessageSendStatus } from '@/hooks/realtime/useMessageSendStatus';
+import { useFailureReason, formatFailureReason } from '@/hooks/inbox/useFailureReason';
 
 interface MessageStatusInlineProps {
   message: Pick<Message, 'id' | 'status'>;
@@ -22,6 +23,7 @@ interface MessageStatusInlineProps {
 }
 
 const TRANSIENT = new Set(['sending', 'retrying']);
+const TERMINAL_FAILURES = new Set(['failed', 'failed_auth', 'failed_retries']);
 
 export const MessageStatusInline = memo(function MessageStatusInline({
   message,
@@ -36,17 +38,27 @@ export const MessageStatusInline = memo(function MessageStatusInline({
       : message.status;
 
   const isRetrying = effectiveStatus === 'retrying';
+  const isTerminalFailure = TERMINAL_FAILURES.has(effectiveStatus);
   const showAttemptBadge =
     isRetrying && typeof bus?.attempt === 'number' && typeof bus?.totalRetries === 'number';
   const showFailedAfterRetries = effectiveStatus === 'failed_retries' && typeof bus?.totalRetries === 'number';
 
-  const tooltip = isRetrying
+  // Lazy lookup do motivo final no evolution_retry_metrics — só roda em falha.
+  const { data: failure } = useFailureReason(message.id, isTerminalFailure);
+
+  const baseTooltip = isRetrying
     ? showAttemptBadge
       ? `Tentando reenviar (${bus!.attempt}/${bus!.totalRetries})…`
       : 'Tentando reenviar…'
     : showFailedAfterRetries
       ? `Falhou após ${bus!.totalRetries} tentativas`
-      : undefined;
+      : isTerminalFailure
+        ? 'Falha no envio'
+        : undefined;
+
+  const tooltip = isTerminalFailure && failure
+    ? `${baseTooltip} — ${formatFailureReason(failure.reason)} (após ${failure.attempts} tentativa${failure.attempts === 1 ? '' : 's'})`
+    : baseTooltip;
 
   return (
     <span

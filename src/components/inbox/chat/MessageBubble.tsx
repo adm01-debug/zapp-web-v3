@@ -65,6 +65,9 @@ export function MessageBubble({
   const isSent = message.sender === 'agent';
   const senderName = isSent ? 'Você' : message.senderName || 'Contato';
   const agentInitials = profile?.name ? profile.name.slice(0, 2).toUpperCase() : 'EU';
+  const isFailedTerminal = isSent && !message.is_deleted && (
+    message.status === 'failed' || message.status === 'failed_auth' || message.status === 'failed_retries'
+  );
 
   return (
       <SwipeableMessage onSwipeRight={() => onReply(message)} onSwipeLeft={() => onForward(message)}>
@@ -151,7 +154,8 @@ export function MessageBubble({
                         isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-bl-md',
                         isFirstInGroup && !isLastInGroup && 'rounded-2xl rounded-bl-sm',
                         !isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-tl-sm rounded-bl-md',
-                        !isFirstInGroup && !isLastInGroup && 'rounded-xl rounded-tl-sm rounded-bl-sm')
+                        !isFirstInGroup && !isLastInGroup && 'rounded-xl rounded-tl-sm rounded-bl-sm'),
+                  isFailedTerminal && 'ring-1 ring-destructive/50 border border-destructive/40'
                 )}
               >
                 {message.replyTo && <QuotedMessage replyTo={message.replyTo} isSent={isSent} onClick={() => onScrollToMessage(message.replyTo!.messageId)} />}
