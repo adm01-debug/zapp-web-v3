@@ -1,7 +1,7 @@
 // Reprocessa entradas pendentes na DLQ `failed_messages`.
 // Chamada por pg_cron a cada 15min ou manualmente por admin.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
-import { computeBackoffMs } from '../_shared/dlq-backoff.ts';
+import { computeBackoffMs, classifyRetryReason, computeBackoffMsByReason } from '../_shared/dlq-backoff.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -74,16 +74,19 @@ Deno.serve(async (req) => {
         }).eq('id', row.id);
         succeeded++;
       } else if (attempt >= row.max_retries) {
+        const reason = classifyRetryReason(resp.status, respText);
         await supabase.from('failed_messages').update({
           status: 'abandoned',
           retry_count: attempt,
           last_attempt_at: new Date().toISOString(),
           http_status: resp.status,
           error_message: respText.slice(0, 500),
+          last_retry_reason: reason,
         }).eq('id', row.id);
         abandoned++;
       } else {
-        const backoffMs = computeBackoffMs(attempt + 1);
+        const reason = classifyRetryReason(resp.status, respText);
+        const backoffMs = computeBackoffMsByReason(attempt + 1, reason);
         await supabase.from('failed_messages').update({
           status: 'retrying',
           retry_count: attempt,
@@ -91,12 +94,15 @@ Deno.serve(async (req) => {
           next_attempt_at: new Date(Date.now() + backoffMs).toISOString(),
           http_status: resp.status,
           error_message: respText.slice(0, 500),
+          last_retry_reason: reason,
         }).eq('id', row.id);
         failed++;
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      const backoffMs = computeBackoffMs(attempt + 1);
+      // Sem resp: deduz motivo da mensagem (timeout/network → caso comum).
+      const reason = classifyRetryReason(null, msg);
+      const backoffMs = computeBackoffMsByReason(attempt + 1, reason);
       const next = attempt >= row.max_retries ? 'abandoned' : 'retrying';
       await supabase.from('failed_messages').update({
         status: next,
@@ -104,6 +110,7 @@ Deno.serve(async (req) => {
         last_attempt_at: new Date().toISOString(),
         next_attempt_at: new Date(Date.now() + backoffMs).toISOString(),
         error_message: msg.slice(0, 500),
+        last_retry_reason: reason,
       }).eq('id', row.id);
       if (next === 'abandoned') abandoned++; else failed++;
     }

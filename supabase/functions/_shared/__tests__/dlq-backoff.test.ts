@@ -2,7 +2,13 @@
 // Rodar: deno test supabase/functions/_shared/__tests__/dlq-backoff.test.ts
 
 import { assert, assertEquals, assertNotEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-import { computeBackoffMs, stableStringify, buildIdempotencyKey } from '../dlq-backoff.ts';
+import {
+  computeBackoffMs,
+  stableStringify,
+  buildIdempotencyKey,
+  classifyRetryReason,
+  computeBackoffMsByReason,
+} from '../dlq-backoff.ts';
 
 Deno.test('computeBackoffMs sem jitter é determinístico e cresce exponencialmente', () => {
   assertEquals(computeBackoffMs(1, false), 60_000);
