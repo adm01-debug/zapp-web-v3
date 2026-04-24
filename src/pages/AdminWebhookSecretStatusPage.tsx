@@ -97,7 +97,7 @@ export default function AdminWebhookSecretStatusPage() {
       const res = await queryExternalProxy<SecretStatusEvent>({
         table: 'evolution_webhook_events',
         select:
-          'id,event_type,instance_name,processed,processed_at,error_message,created_at',
+          'id,event_type,instance_name,signature_valid,processed,processed_at,error_message,created_at',
         filters: filtersArr,
         order: { column: 'created_at', ascending: false },
         limit: 500,
