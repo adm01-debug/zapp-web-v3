@@ -139,6 +139,10 @@ export function useConversationSLATimeline(remoteJid: string | null, contactId: 
       let reopenedAt: Date | null = null;
       let resolvedBy: SLAAttribution | null = null;
       let firstResponseBy: SLAAttribution | null = null;
+      let firstResponseAttributionWindow: { from: Date; to: Date } | null = null;
+      let firstResponseAttributionSource: FirstResponseAttributionSource = firstResponseAt
+        ? 'insufficient-events'
+        : 'not-applicable';
 
       if (contactId) {
         const { data: events } = await supabase
@@ -176,21 +180,53 @@ export function useConversationSLATimeline(remoteJid: string | null, contactId: 
           resolvedBy = null;
         }
 
-        // First response attribution: pick the latest assign event whose created_at <= firstResponseAt
+        // First-response attribution.
+        // Canonical rule: window = [first assign at-or-after firstContactAt, firstResponseAt].
+        // The agent/queue shown is the one held by the LAST assign that landed inside that window
+        // (so handoffs that happened before the agent actually replied still count).
         if (firstResponseAt) {
           const assignsAsc = eventRows
             .filter((e) => e.event_type === 'assign')
             .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-          const activeAssign = [...assignsAsc]
-            .reverse()
-            .find((e) => new Date(e.created_at).getTime() <= firstResponseAt.getTime());
-          if (activeAssign) {
+
+          const responseTs = firstResponseAt.getTime();
+          const contactTs = firstContactAt?.getTime() ?? -Infinity;
+
+          const inWindow = assignsAsc.filter((e) => {
+            const ts = new Date(e.created_at).getTime();
+            return ts >= contactTs && ts <= responseTs;
+          });
+
+          if (inWindow.length > 0) {
+            const firstAssign = inWindow[0];
+            const lastAssign = inWindow[inWindow.length - 1];
             firstResponseBy = {
-              agentId: activeAssign.to_agent?.id ?? activeAssign.to_agent_id ?? null,
-              agentName: activeAssign.to_agent?.name ?? null,
-              queueId: activeAssign.to_queue?.id ?? activeAssign.to_queue_id ?? null,
-              queueName: activeAssign.to_queue?.name ?? null,
+              agentId: lastAssign.to_agent?.id ?? lastAssign.to_agent_id ?? null,
+              agentName: lastAssign.to_agent?.name ?? null,
+              queueId: lastAssign.to_queue?.id ?? lastAssign.to_queue_id ?? null,
+              queueName: lastAssign.to_queue?.name ?? null,
             };
+            firstResponseAttributionWindow = {
+              from: new Date(firstAssign.created_at),
+              to: firstResponseAt,
+            };
+            firstResponseAttributionSource = 'assign-event';
+          } else {
+            // Weaker fallback: an assign exists, but only BEFORE firstContactAt.
+            const preContact = [...assignsAsc]
+              .reverse()
+              .find((e) => new Date(e.created_at).getTime() < contactTs);
+            if (preContact) {
+              firstResponseBy = {
+                agentId: preContact.to_agent?.id ?? preContact.to_agent_id ?? null,
+                agentName: preContact.to_agent?.name ?? null,
+                queueId: preContact.to_queue?.id ?? preContact.to_queue_id ?? null,
+                queueName: preContact.to_queue?.name ?? null,
+              };
+              firstResponseAttributionSource = 'pre-contact-assign';
+            } else {
+              firstResponseAttributionSource = 'insufficient-events';
+            }
           }
         }
       }
@@ -212,6 +248,8 @@ export function useConversationSLATimeline(remoteJid: string | null, contactId: 
         awaitingMs,
         totalMessages: sorted.length,
         firstResponseBy,
+        firstResponseAttributionWindow,
+        firstResponseAttributionSource,
         resolvedBy,
       };
     },
