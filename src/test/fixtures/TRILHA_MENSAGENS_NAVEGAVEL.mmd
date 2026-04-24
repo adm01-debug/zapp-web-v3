@@ -66,18 +66,24 @@ flowchart LR
   MS --> ESR
   MS ==> DB
 
-  %% Transporte
-  ESR --> RETRY
-  ESR --> RCFG
-  ESR --> EDGE
-  ESR -..-> DLQENQ
-  DLQENQ ==> DLQ
+  %% Composicao -> envio
+  CIL --> MS
+  MS --> IDK
+  MS --> ESR
+  MS ==> DB
 
-  %% Reprocessamento DLQ — fecha o ciclo: mensagens falhadas voltam ao fluxo
-  DLQ -.->|cron / manual trigger| DLQRP
-  DLQRP -->|reenvia respeitando<br/>Idempotency-Key estavel| EDGE
-  DLQRP ==>|atualiza status / retry_attempt| DB
-  DLQRP -.->|registra outcome| DLQ
+  %% Idempotencia — como a chave e construida e onde dedupa
+  IDK --> FP
+  FP --> NORM
+  NORM --> BUCKET
+  BUCKET --> HASH
+  HASH --> KEYFP
+  IDK -.->|fallback se nao ha fingerprint| KEYROW
+  KEYFP -->|Idempotency-Key header| ESR
+  KEYROW -->|Idempotency-Key header| ESR
+  ESR -->|mesma chave em todas<br/>tentativas do withRetry| EDGE
+  DLQRP -->|reusa chave estavel<br/>=> servidor dedupa reenvio| EDGE
+
 
   %% Status bus
   MS -.-> EMIT
