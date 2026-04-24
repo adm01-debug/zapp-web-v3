@@ -19,7 +19,8 @@
  */
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
-import type { EvolutionMessage } from '@/types/evolutionExternal';
+import type { EvolutionMessage, EvolutionMessageLite } from '@/types/evolutionExternal';
+import { toEvolutionMessageLite } from '@/types/evolutionExternal';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('useMessagesCursor');
@@ -35,7 +36,7 @@ export interface UseMessagesCursorOptions {
 }
 
 export interface UseMessagesCursorReturn {
-  messages: EvolutionMessage[];
+  messages: EvolutionMessageLite[];
   loading: boolean;
   loadingOlder: boolean;
   hasMoreOlder: boolean;
@@ -43,13 +44,13 @@ export interface UseMessagesCursorReturn {
   loadOlder: () => Promise<void>;
   cancelLoadOlder: () => void;
   refetch: () => Promise<void>;
-  addMessage: (message: EvolutionMessage) => void;
-  updateMessage: (id: string, updates: Partial<EvolutionMessage>) => void;
+  addMessage: (message: EvolutionMessageLite | EvolutionMessage) => void;
+  updateMessage: (id: string, updates: Partial<EvolutionMessageLite>) => void;
   removeMessage: (id: string) => void;
 }
 
-function dedupeAndSort(rows: EvolutionMessage[]): EvolutionMessage[] {
-  const seen = new Map<string, EvolutionMessage>();
+function dedupeAndSort(rows: EvolutionMessageLite[]): EvolutionMessageLite[] {
+  const seen = new Map<string, EvolutionMessageLite>();
   for (const r of rows) seen.set(r.id, r);
   return Array.from(seen.values()).sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
