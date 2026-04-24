@@ -93,14 +93,41 @@ describe('ChatMessagesArea — modo local (sem onLoadOlder)', () => {
     expect(eventsOnContainer).not.toContain('touchmove');
   });
 
-  it('nao renderiza nenhuma UI de cancelamento ou carregamento', () => {
+  it('nao renderiza nenhuma UI de carregamento/cancelamento (com lista vazia, tampouco fallback)', () => {
     renderArea({});
     expect(screen.queryByTestId('load-older-cancelled')).toBeNull();
     expect(screen.queryByTestId('load-older-retry')).toBeNull();
     expect(screen.queryByText(/Carregando mensagens anteriores/i)).toBeNull();
     expect(screen.queryByText(/Carregamento cancelado/i)).toBeNull();
     expect(screen.queryByText(/Carregamento interrompido/i)).toBeNull();
+    // Lista vazia: nem o fallback "Inicio da conversa" do modo local aparece.
+    expect(screen.queryByTestId('chat-local-mode-top')).toBeNull();
     expect(screen.queryByText(/Inicio da conversa|Início da conversa/)).toBeNull();
+  });
+
+  it('com mensagens, exibe APENAS o fallback estatico "Inicio da conversa" do modo local', () => {
+    const messages = [
+      {
+        id: 'm1', content: 'oi', timestamp: new Date('2026-04-01T10:00:00Z'),
+        fromMe: false, status: 'delivered', type: 'text',
+      },
+    ] as unknown as Message[];
+    renderArea({ messages });
+
+    // Fallback estatico presente, com marcador semantico data-mode="local".
+    const topEl = screen.getByTestId('chat-local-mode-top');
+    expect(topEl).toBeTruthy();
+    expect(topEl.getAttribute('data-mode')).toBe('local');
+    expect(topEl.textContent ?? '').toMatch(/Início da conversa/);
+
+    // Garantia explicita: NENHUM indicador de carregamento/cancelamento.
+    expect(screen.queryByTestId('load-older-cancelled')).toBeNull();
+    expect(screen.queryByTestId('load-older-retry')).toBeNull();
+    expect(screen.queryByText(/Carregando mensagens anteriores/i)).toBeNull();
+    expect(screen.queryByText(/Carregamento cancelado/i)).toBeNull();
+    expect(screen.queryByText(/Carregamento interrompido/i)).toBeNull();
+    // Sem aria-live no fallback (nao e atualizacao dinamica).
+    expect(topEl.getAttribute('aria-live')).toBeNull();
   });
 
   it('disparar scroll programatico no container nao chama onCancelLoadOlder', () => {
