@@ -13,12 +13,13 @@
  *    hydrate from the persisted `retry_attempt` / `retry_total` columns so
  *    the "2/3" badge survives navigation.
  */
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
 import { MessageStatusIcon } from './messageUtils';
 import { useMessageSendStatus } from '@/hooks/realtime/useMessageSendStatus';
 import { useFailureReason, formatFailureReason } from '@/hooks/inbox/useFailureReason';
+import { clearSendStatus } from '@/hooks/realtime/sendStatusBus';
 
 interface MessageStatusInlineProps {
   message: Pick<Message, 'id' | 'status' | 'retry_attempt' | 'retry_total'>;
@@ -27,12 +28,32 @@ interface MessageStatusInlineProps {
 
 const TRANSIENT = new Set(['sending', 'retrying']);
 const TERMINAL_FAILURES = new Set(['failed', 'failed_auth', 'failed_retries']);
+const TERMINAL_DB = new Set([
+  'sent', 'delivered', 'read',
+  'failed', 'failed_auth', 'failed_retries',
+]);
 
 export const MessageStatusInline = memo(function MessageStatusInline({
   message,
   className,
 }: MessageStatusInlineProps) {
   const bus = useMessageSendStatus(message.id);
+
+  // Reconciliation: when the persisted DB status reaches a terminal state but
+  // the in-memory bus still holds a stale transient (sending/retrying) — a
+  // classic race condition where the DB realtime update arrives after the
+  // optimistic bus emission — clear the bus entry so the persisted status wins
+  // and the "2/3" badge does not get stuck.
+  useEffect(() => {
+    if (!message.status || !bus) return;
+    if (!TERMINAL_DB.has(message.status)) return;
+    // Only clear if the bus is still transient OR contradicts the DB terminal.
+    const busIsTransient = TRANSIENT.has(bus.status);
+    const busDisagrees = bus.status !== message.status && !TRANSIENT.has(bus.status);
+    if (busIsTransient || busDisagrees) {
+      clearSendStatus(message.id);
+    }
+  }, [message.id, message.status, bus]);
 
   // Decide which status to render
   const effectiveStatus =
