@@ -4,8 +4,18 @@ flowchart LR
   subgraph UI["1. Composicao e Envio (UI)"]
     CIL["useChatInputLogic"]
     MS["messageSender"]
-    IDK["buildSendIdempotencyKey"]
+    IDK["buildSendIdempotencyKey<br/>(roteador legacy/fingerprint)"]
   end
+
+  subgraph IDEMP["1b. Deduplicacao — buildSendIdempotencyKey"]
+    FP["SendFingerprint<br/>{contactId, type, content, mediaUrl}"]
+    NORM["normalize()<br/>trim + JSON estavel"]
+    BUCKET["timeBucket = floor(now / 5min)"]
+    HASH["SHA-256 (SubtleCrypto)<br/>fallback FNV-1a"]
+    KEYFP["chave: mfp:s256:&lt;hex&gt;<br/>(content-aware, estavel por 5min)"]
+    KEYROW["chave legacy: msg:&lt;rowId&gt;<br/>(fallback DLQ / call sites antigos)"]
+  end
+
 
   subgraph TRANSPORT["2. Transporte e Retry"]
     ESR["evolutionSendRetry — fan-out critico"]
@@ -65,9 +75,22 @@ flowchart LR
 
   %% Reprocessamento DLQ — fecha o ciclo: mensagens falhadas voltam ao fluxo
   DLQ -.->|cron / manual trigger| DLQRP
-  DLQRP -->|reenvia respeitando<br/>Idempotency-Key estavel| EDGE
   DLQRP ==>|atualiza status / retry_attempt| DB
   DLQRP -.->|registra outcome| DLQ
+
+  %% Idempotencia — como a chave e construida e onde dedupa
+  IDK --> FP
+  FP --> NORM
+  NORM --> BUCKET
+  BUCKET --> HASH
+  HASH --> KEYFP
+  IDK -.->|fallback se nao ha fingerprint| KEYROW
+  KEYFP -->|Idempotency-Key header| ESR
+  KEYROW -->|Idempotency-Key header| ESR
+  ESR -->|mesma chave em todas<br/>tentativas do withRetry<br/>=> servidor dedupa retry| EDGE
+  DLQRP -->|reusa chave estavel<br/>=> servidor dedupa reenvio| EDGE
+
+
 
   %% Status bus
   MS -.-> EMIT
@@ -111,6 +134,12 @@ flowchart LR
   click CIL "src/components/inbox/chat/useChatInputLogic.ts"
   click MS "src/hooks/realtime/messageSender.ts"
   click IDK "src/lib/sendIdempotency.ts"
+  click FP "src/lib/sendIdempotency.ts"
+  click NORM "src/lib/sendIdempotency.ts"
+  click BUCKET "src/lib/sendIdempotency.ts"
+  click HASH "src/lib/sendIdempotency.ts"
+  click KEYFP "src/lib/sendIdempotency.ts"
+  click KEYROW "src/lib/sendIdempotency.ts"
   click ESR "src/lib/evolutionSendRetry.ts"
   click RETRY "src/lib/retry.ts"
   click RCFG "src/lib/retryConfig.ts"
@@ -162,14 +191,21 @@ flowchart LR
 %%     | sed -E 's/.*click +([A-Za-z0-9_]+) +"([^"]+)".*/\1|\2/' \
 %%     | while IFS='|' read n p; do test -f "$p" && echo "OK   $n $p" || echo "MISS $n $p"; done
 %%
-%% Ultima verificacao: 24/abr/2026 — 24/24 OK
+%% Ultima verificacao: 24/abr/2026 — 31/31 OK
 %%   [x] CIL    -> src/components/inbox/chat/useChatInputLogic.ts
 %%   [x] MS     -> src/hooks/realtime/messageSender.ts
 %%   [x] IDK    -> src/lib/sendIdempotency.ts
+%%   [x] FP     -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] NORM   -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] BUCKET -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] HASH   -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] KEYFP  -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] KEYROW -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
 %%   [x] ESR    -> src/lib/evolutionSendRetry.ts
 %%   [x] RETRY  -> src/lib/retry.ts
 %%   [x] RCFG   -> src/lib/retryConfig.ts
 %%   [x] DLQENQ -> src/lib/failedMessagesEnqueue.ts
+%%   [x] DLQRP  -> supabase/functions/reprocess-failed-messages/index.ts
 %%   [x] EMIT   -> src/hooks/realtime/sendStatusBus.ts
 %%   [x] SUBALL -> src/hooks/realtime/sendStatusBus.ts
 %%   [x] GETST  -> src/hooks/realtime/sendStatusBus.ts
@@ -187,9 +223,4 @@ flowchart LR
 %%   [x] MSI    -> src/components/inbox/chat/MessageStatusInline.tsx
 %%   [x] VML    -> src/components/inbox/VirtualizedMessageList.tsx
 %%   [x] MB     -> src/components/inbox/chat/MessageBubble.tsx
-%%
-%% Pendente (no citado em iteracao anterior, ainda nao presente neste arquivo):
-%%   [ ] DLQRP  -> supabase/functions/reprocess-failed-messages/index.ts
-%%       (arquivo existe no repo; reintroduzir nodo + click quando o subgraph
-%%        "Transporte e Retry" for reaberto)
 %% ============================================================================
