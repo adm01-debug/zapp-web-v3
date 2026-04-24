@@ -34,6 +34,8 @@ import {
 import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/utils';
 import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
+import { BulkReprocessGuidedDialog } from '@/components/admin/BulkReprocessGuidedDialog';
+import { DLQAuditHistory } from '@/components/monitoring/DLQAuditHistory';
 import { toast } from 'sonner';
 import {
   ALL_ROOT_CAUSES,
@@ -96,6 +98,7 @@ export default function AdminFailedMessagesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmBulkAbandon, setConfirmBulkAbandon] = useState(false);
   const [bulkReason, setBulkReason] = useState('');
+  const [guidedReprocessOpen, setGuidedReprocessOpen] = useState(false);
 
   // Debounce search input
   useEffect(() => {
