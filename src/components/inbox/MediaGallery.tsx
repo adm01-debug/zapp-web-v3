@@ -127,6 +127,31 @@ export function MediaGallery({ contactId, open, onOpenChange }: MediaGalleryProp
           <ScrollArea className="flex-1 min-h-[300px]">
             {isLoading ? (
               <div className="grid grid-cols-4 gap-2 p-2">{[...Array(8)].map((_, i) => <Skeleton key={i} className="aspect-square rounded-lg" />)}</div>
+            ) : isError ? (
+              <div
+                role="alert"
+                className="flex flex-col items-center justify-center gap-3 py-12 px-4 text-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-destructive" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">Não foi possível carregar a mídia</p>
+                  <p className="text-xs text-muted-foreground max-w-sm">
+                    {error instanceof Error && error.message ? error.message : 'Verifique sua conexão e tente novamente.'}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetch()}
+                  disabled={isFetching}
+                  className="gap-2"
+                >
+                  {isFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  Tentar novamente
+                </Button>
+              </div>
             ) : filteredItems.length === 0 ? (
               <GenericEmptyState icon={Image} title="Sem mídias" description="Nenhuma mídia encontrada nesta conversa" className="py-8" />
             ) : viewMode === 'grid' ? (
