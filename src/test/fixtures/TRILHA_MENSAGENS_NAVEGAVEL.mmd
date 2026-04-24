@@ -4,8 +4,18 @@ flowchart LR
   subgraph UI["1. Composicao e Envio (UI)"]
     CIL["useChatInputLogic"]
     MS["messageSender"]
-    IDK["buildSendIdempotencyKey"]
+    IDK["buildSendIdempotencyKey<br/>(roteador legacy/fingerprint)"]
   end
+
+  subgraph IDEMP["1b. Deduplicacao — buildSendIdempotencyKey"]
+    FP["SendFingerprint<br/>{contactId, type, content, mediaUrl}"]
+    NORM["normalize()<br/>trim + JSON estavel"]
+    BUCKET["timeBucket = floor(now / 5min)"]
+    HASH["SHA-256 (SubtleCrypto)<br/>fallback FNV-1a"]
+    KEYFP["chave: mfp:s256:&lt;hex&gt;<br/>(content-aware, estavel por 5min)"]
+    KEYROW["chave legacy: msg:&lt;rowId&gt;<br/>(fallback DLQ / call sites antigos)"]
+  end
+
 
   subgraph TRANSPORT["2. Transporte e Retry"]
     ESR["evolutionSendRetry — fan-out critico"]
