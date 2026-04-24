@@ -305,11 +305,18 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           }),
         );
       } catch { /* SSR / older browsers — no-op */ }
-      // Best-effort focus: scroll the chat panel into view if it exists in the DOM.
-      const panel = document.querySelector<HTMLElement>('[data-chat-panel]');
-      if (panel) {
-        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        panel.focus({ preventScroll: true });
+
+      // Open the conversation details panel for THIS contact first, then any open
+      // details panel, then fall back to the chat panel.
+      const detailsPanel =
+        document.querySelector<HTMLElement>(
+          `[data-contact-details][data-contact-id="${contact.id}"]`,
+        ) || document.querySelector<HTMLElement>('[data-contact-details]');
+
+      const target = detailsPanel || document.querySelector<HTMLElement>('[data-chat-panel]');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.focus({ preventScroll: true });
       }
     };
   }, [contact.id, remoteJid, conversation.id]);
