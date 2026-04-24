@@ -9,6 +9,20 @@ export interface SLAAttribution {
   queueName: string | null;
 }
 
+/**
+ * How the first-response attribution was determined.
+ * - 'assign-event': an `assign` event sits between firstContactAt and firstResponseAt (canonical).
+ * - 'pre-contact-assign': only an assign before firstContactAt exists; used as a weaker signal.
+ * - 'insufficient-events': no usable assign event was found — UI must show a fallback label
+ *   (callers may then fall back to the conversation's current `assignedTo`/`queue`).
+ * - 'not-applicable': there is no first response yet.
+ */
+export type FirstResponseAttributionSource =
+  | 'assign-event'
+  | 'pre-contact-assign'
+  | 'insufficient-events'
+  | 'not-applicable';
+
 export interface SLATimelineData {
   firstContactAt: Date | null;
   firstResponseAt: Date | null;
@@ -21,6 +35,9 @@ export interface SLATimelineData {
   awaitingMs: number | null;
   totalMessages: number;
   firstResponseBy: SLAAttribution | null;
+  /** Window used for attribution: [firstAssignAt, firstResponseAt]. Null when no valid window. */
+  firstResponseAttributionWindow: { from: Date; to: Date } | null;
+  firstResponseAttributionSource: FirstResponseAttributionSource;
   resolvedBy: SLAAttribution | null;
 }
 
