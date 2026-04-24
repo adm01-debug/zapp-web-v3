@@ -85,23 +85,30 @@ export function RetryMetricsPanel() {
     [byInstance, thresholds, perInstance],
   );
 
-  // Toast quando aparece nova violação. Dedupe por (instância × janela de horas):
-  // cada instância dispara no máx. 1 toast por janela; trocar `hours` reseta o set.
-  const notifiedRef = useRef<Set<string>>(new Set());
+  // Toast quando há violação. Dedupe por (instância × tipo de breach) com cooldown
+  // de 5 min — espelha o padrão de webhookHealthAlerts. Garante que um problema
+  // que regrede e volta dispare novamente após o cooldown, em vez de silenciar
+  // pra sempre na janela atual.
+  const cooldownRef = useRef<Map<string, number>>(new Map());
   useEffect(() => {
     // Reset apenas quando a janela muda — edições de thresholds não re-disparam.
-    notifiedRef.current = new Set();
+    cooldownRef.current = new Map();
   }, [hours]);
 
   useEffect(() => {
     for (const b of breaches) {
-      const key = `${b.instance}|${hours}h`;
-      if (notifiedRef.current.has(key)) continue;
-      notifiedRef.current.add(key);
-      toast.error(`Retry degradado em ${b.instance}`, {
-        description: b.reasons.join(' · '),
-        duration: 6000,
-      });
+      // Uma notificação por kind: instância pode ter p95 e failure_rate ao mesmo tempo
+      // e queremos visibilidade dos dois.
+      for (const d of b.details) {
+        const key = `${b.instance}|${d.kind}|${hours}h`;
+        if (!shouldFireRetryAlert(key, RETRY_ALERT_COOLDOWN_MS, cooldownRef.current)) continue;
+        const kindLabel = d.kind === 'p95' ? 'p95 alto' : '% falha alta';
+        const overrideTag = b.hasOverride ? ' (override próprio)' : '';
+        toast.error(`Retry degradado em ${b.instance} — ${kindLabel}${overrideTag}`, {
+          description: `${d.label} · janela ${hours}h · ${b.metrics.total} runs`,
+          duration: 8000,
+        });
+      }
     }
   }, [breaches, hours]);
 
