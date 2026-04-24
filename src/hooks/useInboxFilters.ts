@@ -240,6 +240,8 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     selectedQueueId, setSelectedQueueId,
     selectedContactType, handleContactTypeChange,
     showOnlyRetrying, setShowOnlyRetrying,
+    failureCategoryFilter, setFailureCategoryFilter,
+    failureCategoryCounts,
     retryingCount,
     filters, setFilters,
     search, setSearch,
