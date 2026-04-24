@@ -206,6 +206,10 @@ export default function AdminWebhookOverviewPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Top eventos por tipo</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Clique numa barra para abrir o log filtrado por esse tipo
+                  {instance !== 'all' ? ` na instância ${instance}` : ''}.
+                </p>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={Math.max(220, byType.length * 28)}>
@@ -226,7 +230,20 @@ export default function AdminWebhookOverviewPage() {
                         fontSize: 12,
                       }}
                     />
-                    <Bar dataKey="total" name="Eventos" radius={[0, 4, 4, 0]}>
+                    <Bar
+                      dataKey="total"
+                      name="Eventos"
+                      radius={[0, 4, 4, 0]}
+                      cursor="pointer"
+                      onClick={(payload: { type?: string } | undefined) => {
+                        const t = payload?.type;
+                        if (!t) return;
+                        openWebhookEventsWithFilters({
+                          eventType: t,
+                          instance: instance !== 'all' ? instance : undefined,
+                        });
+                      }}
+                    >
                       {byType.slice(0, 10).map((entry) => (
                         <Cell key={entry.type} fill={categoryFill(entry.type)} />
                       ))}
