@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface SLAAlertPreferences {
+  enabled: boolean;
   alert_first_response: boolean;
   alert_resolution: boolean;
   severity_warning: boolean;
@@ -10,6 +11,7 @@ export interface SLAAlertPreferences {
 }
 
 export const DEFAULT_SLA_ALERT_PREFERENCES: SLAAlertPreferences = {
+  enabled: true,
   alert_first_response: true,
   alert_resolution: true,
   severity_warning: true,
