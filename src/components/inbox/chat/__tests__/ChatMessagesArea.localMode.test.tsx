@@ -29,7 +29,7 @@ vi.mock('../loadOlderMetrics', () => ({
 }));
 vi.mock('../MessageBubble', () => ({ MessageBubble: () => null }));
 vi.mock('../TypingIndicator', () => ({ TypingIndicator: () => null }));
-vi.mock('../ChatWatermark', () => ({ ChatWatermark: () => null }));
+vi.mock('./ChatWatermark', () => ({ ChatWatermark: () => null }));
 vi.mock('@/components/ui/motion', () => ({
   motion: { div: (p: any) => <div {...p} />, span: (p: any) => <span {...p} /> },
   StaggeredList: ({ children }: any) => <div>{children}</div>,
