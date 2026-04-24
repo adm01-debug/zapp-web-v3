@@ -11,6 +11,7 @@ import { useInboxBulkActions } from '@/hooks/useInboxBulkActions';
 import { useInboxFilters } from '@/hooks/useInboxFilters';
 import { useRealtimeInbox } from '@/hooks/useRealtimeInbox';
 import { useRealtimeContacts } from '@/hooks/realtime/useRealtimeContacts';
+import { useRealtimeFallbackRefetch } from '@/hooks/realtime/useRealtimeFallbackRefetch';
 import { WifiOff, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,9 @@ export function RealtimeInboxView() {
   const inbox = useRealtimeInbox();
   // Realtime sync of evolution_contacts (FATOR X) → React Query caches
   useRealtimeContacts({ instance: 'wpp2' });
+  // Safety net: periodic + on-reconnect refetch in case the realtime
+  // channel drops temporarily and caches drift from source of truth.
+  useRealtimeFallbackRefetch();
   const inboxFilters = useInboxFilters({ conversations: inbox.cachedConversations, profileId: inbox.profile?.id });
   const bulkActions = useInboxBulkActions({ refetch: inbox.refetch, filteredConversations: inboxFilters.filteredConversations });
   const pullToRefresh = usePullToRefresh({ onRefresh: async () => { await inbox.refetch(); }, disabled: !isMobile || !!inbox.selectedContactId });
