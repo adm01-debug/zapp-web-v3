@@ -7,6 +7,7 @@ import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
 import { filterByContactType } from '@/components/inbox/ContactTypeFilter';
 import { isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { MainTab, SubTab } from '@/components/inbox/TicketTabs';
+import { useFailureMetricsBatch, type FailureCategory } from '@/hooks/inbox/useFailureMetricsBatch';
 
 interface UseInboxFiltersProps {
   conversations: ConversationWithMessages[];
