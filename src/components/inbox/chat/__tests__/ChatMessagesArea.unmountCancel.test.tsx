@@ -199,9 +199,11 @@ describe('ChatMessagesArea — unmount/cancel no modo local', () => {
     act(() => { unmount(); });
 
     // eslint-disable-next-line no-console
-    console.log('DBG metrics.started.calls', metrics.recordLoadOlderStarted.mock.calls.length);
+    const realModule = await import('../loadOlderMetrics');
     // eslint-disable-next-line no-console
-    console.log('DBG metrics.cancelled.calls', metrics.recordLoadOlderCancelled.mock.calls);
+    console.log('DBG isMockSame', realModule.recordLoadOlderStarted === metrics.recordLoadOlderStarted);
+    // eslint-disable-next-line no-console
+    console.log('DBG metrics.started.calls', metrics.recordLoadOlderStarted.mock.calls.length);
     expect(onCancelLoadOlder).toHaveBeenCalledTimes(1);
     // Diagnostico: started deve ter sido chamado pela trigger inicial.
     expect(metrics.recordLoadOlderStarted).toHaveBeenCalled();
