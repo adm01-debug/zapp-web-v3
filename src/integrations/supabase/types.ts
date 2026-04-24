@@ -4959,6 +4959,8 @@ export type Database = {
           media_url: string | null
           message_type: string
           request_id: string | null
+          retry_attempt: number | null
+          retry_total: number | null
           sender: string
           status: string | null
           status_updated_at: string | null
@@ -4984,6 +4986,8 @@ export type Database = {
           media_url?: string | null
           message_type?: string
           request_id?: string | null
+          retry_attempt?: number | null
+          retry_total?: number | null
           sender: string
           status?: string | null
           status_updated_at?: string | null
@@ -5009,6 +5013,8 @@ export type Database = {
           media_url?: string | null
           message_type?: string
           request_id?: string | null
+          retry_attempt?: number | null
+          retry_total?: number | null
           sender?: string
           status?: string | null
           status_updated_at?: string | null
