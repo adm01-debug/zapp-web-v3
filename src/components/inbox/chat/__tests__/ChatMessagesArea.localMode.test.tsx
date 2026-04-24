@@ -140,9 +140,12 @@ describe('ChatMessagesArea — modo local (sem onLoadOlder)', () => {
   });
 
   it('controle: com onLoadOlder, listeners SAO registrados (sanity check)', () => {
-    renderArea({ onLoadOlder: vi.fn(), onCancelLoadOlder: vi.fn() });
-    const eventTypes = addSpy.mock.calls.map((c) => c[0]);
-    expect(eventTypes).toContain('scroll');
-    expect(eventTypes).toContain('wheel');
+    const { container } = renderArea({ onLoadOlder: vi.fn(), onCancelLoadOlder: vi.fn() });
+    const scrollDiv = container.querySelector('[role="log"]') as HTMLElement;
+    const eventsOnContainer = addSpy.mock.calls
+      .filter((_call, i) => addSpy.mock.instances[i] === scrollDiv)
+      .map((c) => c[0] as string);
+    expect(eventsOnContainer).toContain('scroll');
+    expect(eventsOnContainer).toContain('wheel');
   });
 });
