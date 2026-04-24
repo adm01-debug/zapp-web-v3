@@ -32,6 +32,51 @@ function formatDurationMs(ms: number | null): string {
 const dedupeKey = (contactId: string, kind: AlertKind, severity: AlertSeverity) =>
   `${contactId}:${kind}:${severity}`;
 
+// localStorage layer — survives page refreshes and tab reloads. Same-origin only,
+// and TTL keeps the store from growing unbounded for stale conversations.
+const LOCAL_STORAGE_KEY = 'zappweb:sla-alert-dedupe:v1';
+const LOCAL_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
+type DedupeStore = Record<string, number>; // key -> firedAtMs
+
+function readDedupeStore(): DedupeStore {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    const now = Date.now();
+    const cleaned: DedupeStore = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof v === 'number' && now - v < LOCAL_TTL_MS) {
+        cleaned[k] = v;
+      }
+    }
+    return cleaned;
+  } catch {
+    return {};
+  }
+}
+
+function writeDedupeStore(store: DedupeStore): void {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(store));
+  } catch {
+    /* storage quota / private mode — accept that dedupe falls back to network layer */
+  }
+}
+
+function alreadyFiredLocal(key: string): boolean {
+  const store = readDedupeStore();
+  return key in store;
+}
+
+function markFiredLocal(key: string): void {
+  const store = readDedupeStore();
+  store[key] = Date.now();
+  writeDedupeStore(store);
+}
+
 /**
  * Persistent dedupe: checks `conversation_events` (event_type='sla_alert') for a previous
  * record with same kind+severity. Returns true if already fired (so we should skip).
