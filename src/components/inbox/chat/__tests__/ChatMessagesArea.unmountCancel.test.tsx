@@ -41,7 +41,7 @@ const metrics = vi.hoisted(() => ({
   recordLoadOlderCancelled: vi.fn(),
   recordLoadOlderCompleted: vi.fn(),
 }));
-vi.mock('./loadOlderMetrics', () => metrics);
+vi.mock('../loadOlderMetrics', () => metrics);
 vi.mock('../MessageBubble', () => ({
   MessageBubble: ({ message }: { message: { id: string } }) => (
     <div data-testid={`bubble-${message.id}`} />
