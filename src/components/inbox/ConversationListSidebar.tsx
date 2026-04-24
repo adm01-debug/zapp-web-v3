@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface ConversationListSidebarProps {
@@ -59,7 +60,18 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <h2 className="text-xs font-semibold text-foreground tracking-tight">Conversas</h2>
-              <span className={cn('w-1.5 h-1.5 rounded-full', inbox.isOnline ? 'bg-success' : 'bg-destructive')} />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className={cn('w-1.5 h-1.5 rounded-full', inbox.isOnline ? 'bg-success' : 'bg-destructive')}
+                    aria-label={inbox.isOnline ? 'Mensagens: online' : 'Mensagens: offline'}
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="text-[10px] font-medium">
+                  Mensagens: {inbox.isOnline ? 'tempo real ativo' : 'desconectado'}
+                </TooltipContent>
+              </Tooltip>
+              <RealtimeContactsIndicator />
             </div>
             <div className="flex items-center gap-0.5">
               <Tooltip>
