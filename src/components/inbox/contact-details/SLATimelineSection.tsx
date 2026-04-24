@@ -74,9 +74,16 @@ interface MilestoneProps {
   iconColor?: string;
   agentName?: string | null;
   queueName?: string | null;
+  /** Optional disclaimer shown below the chips (e.g. "atribuição parcial"). */
+  attributionNote?: string | null;
+  /** Style of the note: 'fallback' = warning tone, 'info' = neutral. */
+  attributionTone?: 'fallback' | 'info';
 }
 
-function Milestone({ index, icon: Icon, label, timestamp, durationLabel, status, pulse, iconColor, agentName, queueName }: MilestoneProps) {
+function Milestone({
+  index, icon: Icon, label, timestamp, durationLabel, status, pulse, iconColor,
+  agentName, queueName, attributionNote, attributionTone = 'info',
+}: MilestoneProps) {
   const statusStyle = status ? STATUS_STYLES[status] : null;
   return (
     <motion.div
@@ -121,6 +128,20 @@ function Milestone({ index, icon: Icon, label, timestamp, durationLabel, status,
                 <span className="text-foreground/80">{queueName}</span>
               </span>
             )}
+          </div>
+        )}
+        {attributionNote && (
+          <div
+            className={cn(
+              'mt-1 inline-flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5',
+              attributionTone === 'fallback'
+                ? 'bg-warning/10 text-warning border border-warning/30'
+                : 'bg-muted/40 text-muted-foreground'
+            )}
+            role="note"
+          >
+            <AlertTriangle className="w-2.5 h-2.5" />
+            <span>{attributionNote}</span>
           </div>
         )}
       </div>
