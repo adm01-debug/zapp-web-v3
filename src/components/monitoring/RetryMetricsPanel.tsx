@@ -19,6 +19,7 @@ import {
   loadThresholds,
   loadPerInstanceThresholds,
   shouldFireRetryAlert,
+  subscribeRetryAlertsStorage,
   RETRY_ALERT_COOLDOWN_MS,
   type RetryThresholds,
   type PerInstanceThresholds,
@@ -84,6 +85,17 @@ export function RetryMetricsPanel() {
     () => evaluateAllInstances(byInstance, thresholds, perInstance),
     [byInstance, thresholds, perInstance],
   );
+
+  // Sincroniza thresholds salvos em outras abas via `window.storage` event,
+  // sem esperar TTL/refetch. O evento só dispara em outras abas, então a aba
+  // que salvou continua usando o estado já setado por `onChange` do dialog.
+  useEffect(() => {
+    return subscribeRetryAlertsStorage(({ thresholds: t, perInstance: p }) => {
+      setThresholds(t);
+      setPerInstance(p);
+      toast.message('Configurações de alerta atualizadas em outra aba.', { duration: 3500 });
+    });
+  }, []);
 
   // Toast quando há violação. Dedupe por (instância × tipo de breach) com cooldown
   // de 5 min — espelha o padrão de webhookHealthAlerts. Garante que um problema
