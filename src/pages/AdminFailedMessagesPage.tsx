@@ -160,6 +160,13 @@ export default function AdminFailedMessagesPage() {
   const allVisibleSelected = sorted.length > 0 && sorted.every((r) => selectedIds.has(r.id));
   const someVisibleSelected = sorted.some((r) => selectedIds.has(r.id));
 
+  // Linhas correspondentes aos IDs selecionados — usadas pelo diálogo guiado
+  // para pré-visualizar impacto sem precisar de nova consulta.
+  const selectedRows = useMemo(
+    () => sorted.filter((r) => selectedIds.has(r.id)),
+    [sorted, selectedIds],
+  );
+
   function toggleAll() {
     if (allVisibleSelected) {
       setSelectedIds(new Set());
@@ -484,11 +491,7 @@ export default function AdminFailedMessagesPage() {
               </Button>
               <Button
                 size="sm"
-                onClick={() => {
-                  bulkRetry.mutate(Array.from(selectedIds), {
-                    onSuccess: () => setSelectedIds(new Set()),
-                  });
-                }}
+                onClick={() => setGuidedReprocessOpen(true)}
                 disabled={bulkRetry.isPending}
               >
                 <RotateCw className={cn('h-4 w-4 mr-2', bulkRetry.isPending && 'animate-spin')} />
