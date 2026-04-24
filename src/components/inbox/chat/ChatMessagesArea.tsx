@@ -324,35 +324,42 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
               <span>Carregando mensagens anteriores…</span>
             </div>
           )}
-          {!loadingOlder && loadCancelled && (
-            <div
-              role="status"
-              data-testid="load-older-cancelled"
-              className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 backdrop-blur-sm pl-3 pr-1 py-1 rounded-full border border-border/30"
-            >
-              <Ban className="h-3 w-3" />
-              <span>Carregamento cancelado</span>
-              <button
-                type="button"
-                data-testid="load-older-retry"
-                onClick={() => {
-                  // Limpa o badge imediatamente e reexecuta o loadOlder.
-                  setLoadCancelled(false);
-                  if (cancelBadgeTimerRef.current) {
-                    clearTimeout(cancelBadgeTimerRef.current);
-                    cancelBadgeTimerRef.current = null;
-                  }
-                  cancelledRef.current = false;
-                  void onLoadOlder?.();
-                }}
-                className="inline-flex items-center gap-1 ml-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-foreground bg-background/80 hover:bg-background border border-border/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Tentar carregar mensagens anteriores novamente"
+          {!loadingOlder && loadCancelled && (() => {
+            const isNav = cancelReason === 'navigation';
+            const Icon = isNav ? Navigation2 : Ban;
+            const text = isNav
+              ? 'Carregamento interrompido pela navegação'
+              : 'Carregamento cancelado pela rolagem';
+            return (
+              <div
+                role="status"
+                data-testid="load-older-cancelled"
+                data-cancel-reason={cancelReason}
+                className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 backdrop-blur-sm pl-3 pr-1 py-1 rounded-full border border-border/30"
               >
-                <RotateCw className="h-3 w-3" />
-                Tentar carregar de novo
-              </button>
-            </div>
-          )}
+                <Icon className="h-3 w-3" />
+                <span>{text}</span>
+                <button
+                  type="button"
+                  data-testid="load-older-retry"
+                  onClick={() => {
+                    setLoadCancelled(false);
+                    if (cancelBadgeTimerRef.current) {
+                      clearTimeout(cancelBadgeTimerRef.current);
+                      cancelBadgeTimerRef.current = null;
+                    }
+                    cancelledRef.current = false;
+                    void onLoadOlder?.();
+                  }}
+                  className="inline-flex items-center gap-1 ml-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-foreground bg-background/80 hover:bg-background border border-border/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Tentar carregar mensagens anteriores novamente"
+                >
+                  <RotateCw className="h-3 w-3" />
+                  Tentar carregar de novo
+                </button>
+              </div>
+            );
+          })()}
           {!loadingOlder && !loadCancelled && !hasMoreOlder && messages.length > 0 && (
             <span className="text-[11px] text-muted-foreground/60 italic">Início da conversa</span>
           )}
