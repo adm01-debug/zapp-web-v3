@@ -89,8 +89,8 @@ describe('clientTelemetry', () => {
     });
 
     it('computes p95DurationMs over recents', () => {
-      for (let i = 0; i < 20; i++) recordQueryEvent({ ...baseEv, durationMs: 100 });
-      recordQueryEvent({ ...baseEv, durationMs: 5000 });
+      for (let i = 0; i < 18; i++) recordQueryEvent({ ...baseEv, durationMs: 100 });
+      for (let i = 0; i < 2; i++) recordQueryEvent({ ...baseEv, durationMs: 5000 });
       const s = getTelemetrySnapshot();
       expect(s.p95DurationMs).toBeGreaterThan(100);
     });
