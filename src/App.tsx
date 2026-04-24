@@ -170,6 +170,7 @@ function AppContent() {
             <Route path="/queues/comparison" element={<ProtectedRoute><QueuesComparison /></ProtectedRoute>} />
             <Route path="/sla" element={<ProtectedRoute><SLADashboard /></ProtectedRoute>} />
             <Route path="/sla/history" element={<ProtectedRoute><SLAHistory /></ProtectedRoute>} />
+            <Route path="/sla/preferences" element={<ProtectedRoute><SLAAlertPreferences /></ProtectedRoute>} />
             <Route path="/admin/roles" element={<ProtectedRoute requiredRoles={['admin']}><RolesPage /></ProtectedRoute>} />
             <Route path="/admin/rate-limit" element={<ProtectedRoute requiredRoles={['admin']}><RateLimitDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
