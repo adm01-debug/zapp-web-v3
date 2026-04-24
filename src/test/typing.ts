@@ -57,8 +57,8 @@ export function mockOf<T>(partial: Partial<T> = {}): T {
  *   asMock(toast.error).mockClear();
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function asMock<T extends (...args: any[]) => any>(fn: T): Mock<Parameters<T>, ReturnType<T>> {
-  return fn as unknown as Mock<Parameters<T>, ReturnType<T>>;
+export function asMock<T extends (...args: any[]) => any>(fn: T): Mock<T> {
+  return fn as unknown as Mock<T>;
 }
 
 /**
