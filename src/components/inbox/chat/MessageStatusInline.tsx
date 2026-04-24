@@ -39,6 +39,22 @@ export const MessageStatusInline = memo(function MessageStatusInline({
 }: MessageStatusInlineProps) {
   const bus = useMessageSendStatus(message.id);
 
+  // Reconciliation: when the persisted DB status reaches a terminal state but
+  // the in-memory bus still holds a stale transient (sending/retrying) — a
+  // classic race condition where the DB realtime update arrives after the
+  // optimistic bus emission — clear the bus entry so the persisted status wins
+  // and the "2/3" badge does not get stuck.
+  useEffect(() => {
+    if (!message.status || !bus) return;
+    if (!TERMINAL_DB.has(message.status)) return;
+    // Only clear if the bus is still transient OR contradicts the DB terminal.
+    const busIsTransient = TRANSIENT.has(bus.status);
+    const busDisagrees = bus.status !== message.status && !TRANSIENT.has(bus.status);
+    if (busIsTransient || busDisagrees) {
+      clearSendStatus(message.id);
+    }
+  }, [message.id, message.status, bus]);
+
   // Decide which status to render
   const effectiveStatus =
     bus && (TRANSIENT.has(bus.status) || bus.status === 'failed_retries' || bus.status === 'failed_auth')
