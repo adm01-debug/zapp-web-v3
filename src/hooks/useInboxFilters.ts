@@ -21,6 +21,13 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
   const [showOnlyRetrying, setShowOnlyRetrying] = useState(false);
+  const [failureCategoryFilter, setFailureCategoryFilter] = useState<FailureCategory | 'all'>('all');
+
+  // Carrega categorias de falha em lote quando o filtro de retry está ativo
+  const { data: failureCategoryById = {} } = useFailureMetricsBatch(
+    conversations,
+    showOnlyRetrying,
+  );
 
   const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
 
