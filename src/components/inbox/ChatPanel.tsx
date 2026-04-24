@@ -19,6 +19,7 @@ import { ChatDialogs } from './chat/ChatDialogs';
 import { ChatPanelHeader } from './chat/ChatPanelHeader';
 import { ChatAssignedBar } from './chat/ChatAssignedBar';
 import { ChatMessagesArea, ChatMessagesAreaRef } from './chat/ChatMessagesArea';
+import type { LoadOlderProps } from './chat/loadOlderTypes';
 import { ChatInputArea } from './chat/ChatInputArea';
 import { ChatDragOverlay } from './chat/ChatDragOverlay';
 import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
@@ -36,7 +37,7 @@ if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
   });
 }
 
-interface ChatPanelProps {
+interface ChatPanelProps extends LoadOlderProps {
   conversation: Conversation;
   messages: Message[];
   onSendMessage: (content: string) => void;
@@ -45,10 +46,12 @@ interface ChatPanelProps {
   onToggleDetails?: () => void;
   onBack?: () => void;
   hideHeader?: boolean;
-  onLoadOlder?: () => void | Promise<void>;
-  onCancelLoadOlder?: () => void;
-  loadingOlder?: boolean;
-  hasMoreOlder?: boolean;
+  /**
+   * Paginacao "carregar mensagens antigas" herdada de `LoadOlderProps`:
+   *  - Modo local: omitir (ou passar `undefined`) ambos os callbacks.
+   *  - Modo externo: fornecer ambos; loadingOlder/hasMoreOlder refletem o
+   *    estado real do fetcher remoto.
+   */
 }
 
 type DialogKey = 'quickReplies' | 'slashCommands' | 'transferDialog' | 'scheduleDialog' | 

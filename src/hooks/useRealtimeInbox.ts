@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 import { Conversation, Message } from '@/types/chat';
 import { toast } from 'sonner';
+import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/components/inbox/chat/loadOlderTypes';
 
 const log = getLogger('useRealtimeInbox');
 
@@ -57,15 +58,16 @@ export function useRealtimeInbox() {
   const refetchSelectedMessages = USE_EXTERNAL_DB ? externalMsgs.refetch : localMsgs.refetch;
 
   // Pagination (older messages) — only meaningful in external mode for now.
-  // In local mode, expose undefined for the callbacks so ChatMessagesArea skips
-  // wiring its scroll-trigger effect entirely (avoiding spurious re-renders from
-  // stub callback identities) and the loader UI stays stable.
-  const loadOlderMessages = useMemo(
-    () => (USE_EXTERNAL_DB ? () => externalMsgs.loadOlder() : undefined),
+  // In local mode, expose `undefined` for the callbacks (per `LoadOlderProps`
+  // contract) so ChatMessagesArea skips wiring its scroll-trigger effect
+  // entirely (avoiding spurious re-renders from stub callback identities) and
+  // the loader UI stays stable.
+  const loadOlderMessages = useMemo<LoadOlderCallback | undefined>(
+    () => (USE_EXTERNAL_DB ? () => { void externalMsgs.loadOlder(); } : undefined),
     [externalMsgs],
   );
-  const cancelLoadOlderMessages = useMemo(
-    () => (USE_EXTERNAL_DB ? () => externalMsgs.cancelLoadOlder() : undefined),
+  const cancelLoadOlderMessages = useMemo<CancelLoadOlderCallback | undefined>(
+    () => (USE_EXTERNAL_DB ? () => { externalMsgs.cancelLoadOlder(); } : undefined),
     [externalMsgs],
   );
   const loadingOlderMessages = USE_EXTERNAL_DB ? externalMsgs.loadingOlder : false;
