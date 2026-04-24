@@ -32,7 +32,7 @@ export function MediaGallery({ contactId, open, onOpenChange }: MediaGalleryProp
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const { data: messages, isLoading } = useQuery({
+  const { data: messages, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['media-gallery', contactId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -45,6 +45,7 @@ export function MediaGallery({ contactId, open, onOpenChange }: MediaGalleryProp
       return data || [];
     },
     enabled: open && !!contactId,
+    retry: 1,
   });
 
   const mediaItems = useMemo((): MediaItem[] => {
