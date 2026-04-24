@@ -254,10 +254,13 @@ export async function sendMessageToContact(
       }).eq('id', data.id);
       emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason });
     } else {
-      // If error came from withRetry exhausting attempts, mark failed_retries
+      // If error came from withRetry exhausting attempts, mark failed_retries.
+      // Persist final attempt counters so the badge stays after a reload.
       await supabase.from('messages').update({
         status: 'failed_retries',
         error_reason: reason,
+        retry_attempt: MAX_RETRIES,
+        retry_total: MAX_RETRIES,
       }).eq('id', data.id);
       emitSendStatus(data.id, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason });
     }
