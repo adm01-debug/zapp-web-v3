@@ -61,6 +61,10 @@ export default function AdminWebhookOverviewPage() {
   const [hours, setHours] = useState<string>('24');
   const [instance, setInstance] = useState<string>('all');
   const [includeUnprocessed, setIncludeUnprocessed] = useState<boolean>(true);
+  // Quando ativo, restringe TODAS as agregações (KPIs, top-tipos, série
+  // temporal, heatmap e tabela) a eventos com `error_message`. Isso é puro
+  // filtro client-side sobre o mesmo dataset já carregado — não há refetch.
+  const [errorsOnly, setErrorsOnly] = useState<boolean>(false);
 
   const sinceISO = useMemo(
     () => subHours(new Date(), Number(hours)).toISOString(),
@@ -90,10 +94,11 @@ export default function AdminWebhookOverviewPage() {
   });
 
   const filtered = useMemo(() => {
-    const rows = data ?? [];
-    if (instance === 'all') return rows;
-    return rows.filter((r) => r.instance_name === instance);
-  }, [data, instance]);
+    let rows = data ?? [];
+    if (instance !== 'all') rows = rows.filter((r) => r.instance_name === instance);
+    if (errorsOnly) rows = rows.filter((r) => !!r.error_message);
+    return rows;
+  }, [data, instance, errorsOnly]);
 
   const byType = useMemo(() => aggregateByType(filtered), [filtered]);
   const matrix = useMemo(() => aggregateByTypeAndInstance(filtered), [filtered]);
@@ -154,6 +159,16 @@ export default function AdminWebhookOverviewPage() {
             title="Inclui eventos ainda não processados"
           >
             {includeUnprocessed ? 'Incluir pendentes' : 'Só processados'}
+          </Button>
+          <Button
+            variant={errorsOnly ? 'destructive' : 'outline'}
+            size="sm"
+            onClick={() => setErrorsOnly((v) => !v)}
+            title="Filtra todos os indicadores e gráficos para mostrar apenas eventos com erro"
+            aria-pressed={errorsOnly}
+          >
+            <XCircle className="h-4 w-4 mr-2" />
+            {errorsOnly ? 'Mostrando só erros' : 'Só erros'}
           </Button>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching}>
             <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
@@ -241,6 +256,7 @@ export default function AdminWebhookOverviewPage() {
                         openWebhookEventsWithFilters({
                           eventType: t,
                           instance: instance !== 'all' ? instance : undefined,
+                          status: errorsOnly ? 'error' : undefined,
                         });
                       }}
                     >
@@ -352,7 +368,7 @@ export default function AdminWebhookOverviewPage() {
                                   {count > 0 ? (
                                     <button
                                       type="button"
-                                      onClick={() => openWebhookEventsWithFilters({ eventType: t, instance: i })}
+                                      onClick={() => openWebhookEventsWithFilters({ eventType: t, instance: i, status: errorsOnly ? 'error' : undefined })}
                                       title={`Abrir log: ${t} em ${i} (${count} evento${count === 1 ? '' : 's'})`}
                                       className="w-full h-full px-2 py-2 cursor-pointer hover:ring-2 hover:ring-primary/40 hover:ring-inset focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset transition-shadow"
                                     >
