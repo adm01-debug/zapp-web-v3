@@ -299,11 +299,6 @@ export function BulkReprocessGuidedDialog({
           <Progress value={undefined as unknown as number} className="h-1 mt-2" />
         )}
 
-        {/* Reason consumido apenas para audit; chamada real fica em onConfirm.
-            Mantemos a referência aqui para evitar warning de unused — o motivo
-            é injetado pelo wrapper externo via closure se necessário. */}
-        {/* eslint-disable-next-line @typescript-eslint/no-unused-expressions */}
-        {reason && null}
       </DialogContent>
     </Dialog>
   );
