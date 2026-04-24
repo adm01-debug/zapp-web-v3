@@ -292,8 +292,9 @@ export function useMessagesCursor({
   }, [enabled, remoteJid]);
 
   const addMessage = useCallback((input: EvolutionMessageLite | EvolutionMessage) => {
-    const m: EvolutionMessageLite = 'payload' in input || 'raw_data' in input
-      ? toEvolutionMessageLite(input)
+    const isFull = 'payload' in (input as Record<string, unknown>) || 'raw_data' in (input as Record<string, unknown>);
+    const m: EvolutionMessageLite = isFull
+      ? toEvolutionMessageLite(input as Partial<EvolutionMessage> & { id: string })
       : (input as EvolutionMessageLite);
     setPages((prev) => {
       for (const p of prev) if (p.some((x) => x.id === m.id)) return prev;
