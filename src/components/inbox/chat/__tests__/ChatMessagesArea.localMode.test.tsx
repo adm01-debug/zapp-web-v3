@@ -114,34 +114,17 @@ describe('ChatMessagesArea — modo local (sem onLoadOlder)', () => {
 
   it('trocar de contato com onCancelLoadOlder presente nao dispara cancel', () => {
     const onCancelLoadOlder = vi.fn();
-    const messages: Message[] = [];
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const props1 = { ...baseProps(), contactJid: 'jid-1', onCancelLoadOlder };
+    const props2 = { ...baseProps(), contactJid: 'jid-2', onCancelLoadOlder };
     const { rerender } = render(
       <QueryClientProvider client={client}>
-        <ChatMessagesArea
-          messages={messages}
-          isContactTyping={false}
-          typingUserName=""
-          ttsLoading={false}
-          ttsPlaying={false}
-          ttsMessageId={null}
-          contactJid="jid-1"
-          onCancelLoadOlder={onCancelLoadOlder}
-        />
+        <ChatMessagesArea {...props1} />
       </QueryClientProvider>,
     );
     rerender(
       <QueryClientProvider client={client}>
-        <ChatMessagesArea
-          messages={messages}
-          isContactTyping={false}
-          typingUserName=""
-          ttsLoading={false}
-          ttsPlaying={false}
-          ttsMessageId={null}
-          contactJid="jid-2"
-          onCancelLoadOlder={onCancelLoadOlder}
-        />
+        <ChatMessagesArea {...props2} />
       </QueryClientProvider>,
     );
     expect(onCancelLoadOlder).not.toHaveBeenCalled();
