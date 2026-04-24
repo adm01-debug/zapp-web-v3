@@ -47,6 +47,7 @@ export const AdminTelemetriaPage = lazyWithRetry(() => import('@/pages/AdminTele
 export const AdminFailedMessagesPage = lazyWithRetry(() => import('@/pages/AdminFailedMessagesPage'));
 export const AdminSearchInsightsPage = lazyWithRetry(() => import('@/pages/AdminSearchInsightsPage'));
 export const AdminWebhookEventsPage = lazyWithRetry(() => import('@/pages/AdminWebhookEventsPage'));
+export const AdminEvolutionApiLogsPage = lazyWithRetry(() => import('@/pages/AdminEvolutionApiLogsPage'));
 export const AdminWebhookOverviewPage = lazyWithRetry(() => import('@/pages/AdminWebhookOverviewPage'));
 export const NPSDashboard = lazyWithRetry(() => import('@/components/nps/NPSDashboard').then(m => ({ default: m.NPSDashboard })));
 export const SLADashboardView = lazyWithRetry(() => import('@/components/queues/SLADashboard').then(m => ({ default: m.SLADashboard })));
