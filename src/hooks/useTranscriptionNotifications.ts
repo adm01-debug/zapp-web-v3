@@ -101,7 +101,7 @@ export function useTranscriptionNotifications(options: TranscriptionNotification
               );
             }
           }
-        }
+        })
       )
       .subscribe();
 
