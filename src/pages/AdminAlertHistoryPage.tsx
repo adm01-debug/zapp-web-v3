@@ -268,6 +268,12 @@ export default function AdminAlertHistoryPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <AlertInstanceDetailDialog
+        open={!!detailInstance}
+        onOpenChange={(v) => !v && setDetailInstance(null)}
+        instance={detailInstance}
+      />
     </div>
   );
 }
