@@ -68,25 +68,34 @@ function renderArea(extra: Record<string, unknown> = {}) {
 
 describe('ChatMessagesArea — modo local (sem onLoadOlder)', () => {
   let addSpy: ReturnType<typeof vi.spyOn>;
-  let removeSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    // Espionamos a chamada no proprio prototype, mas filtramos pelo target
+    // (this) para considerar somente o container do chat (role="log").
     addSpy = vi.spyOn(HTMLDivElement.prototype, 'addEventListener');
-    removeSpy = vi.spyOn(HTMLDivElement.prototype, 'removeEventListener');
   });
   afterEach(() => {
     addSpy.mockRestore();
-    removeSpy.mockRestore();
     vi.clearAllMocks();
   });
 
+  function eventsRegisteredOn(el: Element): string[] {
+    return addSpy.mock.calls
+      .filter((call: any) => call[2]?.__target === el || (addSpy.mock.instances as any[]).includes(el))
+      .map((c) => c[0] as string);
+  }
+
   it('nao registra listeners de scroll/wheel/touch no container', () => {
-    renderArea({});
-    const eventTypes = addSpy.mock.calls.map((c) => c[0]);
-    expect(eventTypes).not.toContain('scroll');
-    expect(eventTypes).not.toContain('wheel');
-    expect(eventTypes).not.toContain('touchstart');
-    expect(eventTypes).not.toContain('touchmove');
+    const { container } = renderArea({});
+    const scrollDiv = container.querySelector('[role="log"]') as HTMLElement;
+    // Filtra apenas chamadas onde o "this" foi o container do chat.
+    const eventsOnContainer = addSpy.mock.calls
+      .filter((_call, i) => addSpy.mock.instances[i] === scrollDiv)
+      .map((c) => c[0] as string);
+    expect(eventsOnContainer).not.toContain('scroll');
+    expect(eventsOnContainer).not.toContain('wheel');
+    expect(eventsOnContainer).not.toContain('touchstart');
+    expect(eventsOnContainer).not.toContain('touchmove');
   });
 
   it('nao renderiza nenhuma UI de cancelamento ou carregamento', () => {
