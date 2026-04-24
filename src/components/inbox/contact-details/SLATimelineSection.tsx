@@ -448,6 +448,7 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           iconColor="text-success"
           agentName={timeline.resolvedBy?.agentName ?? null}
           queueName={timeline.resolvedBy?.queueName ?? null}
+          onOpenConversation={handleOpenConversation}
         />
       ),
     });
