@@ -61,11 +61,11 @@ export function useContactTyping(remoteJid?: string | null): boolean {
       setIsTyping(typing);
 
       if (typing) {
-        // Auto-clear se não vier novo composing em 5s
+        // Auto-clear se não vier novo composing dentro do TTL configurado
         clearTimeoutRef.current = setTimeout(() => {
           setIsTyping(false);
           clearTimeoutRef.current = null;
-        }, 5000);
+        }, TYPING_AUTO_CLEAR_MS);
       }
     });
 
