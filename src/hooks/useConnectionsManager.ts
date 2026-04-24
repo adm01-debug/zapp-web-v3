@@ -550,6 +550,29 @@ export function useConnectionsManager() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
+  // Auto-refresh: regenerate the QR ~5s before it expires (at 55s of the 60s TTL)
+  // so the user never has to manually click "Atualizar" mid-scan. Only runs while
+  // the dialog is open and the QR is in `pending`. Each new QR resets the timer.
+  useEffect(() => {
+    if (!qrCodeDialog.open) return;
+    if (qrCodeDialog.status !== 'pending') return;
+    if (!qrCodeDialog.expiresAt) return;
+    const refreshAt = qrCodeDialog.expiresAt - 5_000;
+    const delay = refreshAt - Date.now();
+    if (delay <= 0) return;
+    const timer = setTimeout(() => {
+      // Re-check inside the closure: avoid refreshing if user already connected/closed.
+      setQrCodeDialog((prev) => {
+        if (prev.open && prev.status === 'pending') {
+          void handleRefreshQrCode();
+        }
+        return prev;
+      });
+    }, delay);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qrCodeDialog.open, qrCodeDialog.status, qrCodeDialog.expiresAt, qrCodeDialog.attemptId]);
+
   return {
     connections,
     loading,
