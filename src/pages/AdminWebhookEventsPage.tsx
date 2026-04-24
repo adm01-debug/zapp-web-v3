@@ -288,7 +288,7 @@ export default function AdminWebhookEventsPage() {
 
           <FilterField label="Tipo de mensagem">
             <Select value={messageType} onValueChange={(v) => setMessageType(v as MessageTypeFilter)}>
-              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[200px]" data-testid="filter-webhook-message-type"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {MESSAGE_TYPES.map((t) => (
                   <SelectItem key={t} value={t}>{t === 'all' ? 'Todos' : t}</SelectItem>
@@ -299,7 +299,7 @@ export default function AdminWebhookEventsPage() {
 
           <FilterField label="Status">
             <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
-              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[160px]" data-testid="filter-webhook-status"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -314,6 +314,7 @@ export default function AdminWebhookEventsPage() {
               onChange={(e) => setRemoteJidFilter(e.target.value)}
               placeholder="Ex: 5511999"
               className="w-[200px] font-mono"
+              data-testid="filter-webhook-remote-jid"
             />
           </FilterField>
 
@@ -323,6 +324,7 @@ export default function AdminWebhookEventsPage() {
               onChange={(e) => setPushNameFilter(e.target.value)}
               placeholder="Ex: João"
               className="w-[200px]"
+              data-testid="filter-webhook-push-name"
             />
           </FilterField>
 
@@ -332,6 +334,7 @@ export default function AdminWebhookEventsPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Filtra resultado já carregado"
               className="w-[240px]"
+              data-testid="filter-webhook-search"
             />
           </FilterField>
 
@@ -341,6 +344,7 @@ export default function AdminWebhookEventsPage() {
                 variant="ghost"
                 size="sm"
                 className="h-9"
+                data-testid="filter-webhook-clear"
                 onClick={() => {
                   setRemoteJidFilter('');
                   setPushNameFilter('');
@@ -378,7 +382,11 @@ export default function AdminWebhookEventsPage() {
       {viewMode === 'events' && (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle
+            className="text-sm font-medium flex items-center gap-2"
+            data-testid="webhook-events-results-count"
+            data-results-count={filtered.length}
+          >
             <Inbox className="h-4 w-4" />
             {filtered.length} evento{filtered.length === 1 ? '' : 's'}
             {filtered.length !== aggregates.total && (
@@ -417,7 +425,7 @@ export default function AdminWebhookEventsPage() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((row) => (
-                    <TableRow key={row.id}>
+                    <TableRow key={row.id} data-testid="webhook-event-row">
                       <TableCell className="text-xs whitespace-nowrap">
                         {formatDate(row.created_at)}
                       </TableCell>
@@ -429,7 +437,7 @@ export default function AdminWebhookEventsPage() {
                       <TableCell className="font-mono text-xs">{row.instance_name}</TableCell>
                       <TableCell className="text-xs">
                         <div className="flex flex-col">
-                          <span className="font-mono">{shortJid(row.remote_jid)}</span>
+                          <span className="font-mono" data-testid="webhook-event-jid">{shortJid(row.remote_jid)}</span>
                           {row.push_name && (
                             <span className="text-muted-foreground truncate max-w-[200px]">
                               {row.push_name}
@@ -437,7 +445,7 @@ export default function AdminWebhookEventsPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-testid="webhook-event-status">
                         {row.error_message ? (
                           <Badge variant="destructive" className="text-xs">Erro</Badge>
                         ) : row.processed ? (
