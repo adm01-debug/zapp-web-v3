@@ -138,7 +138,7 @@ export function useRealtimeMessages() {
     [commitConversations, fetchContactsByIds, notifyAboutIncomingMessage]
   );
 
-  const { handleMessageUpdate } = useMessageUpdateBatcher(conversationsRef, commitConversations, hydrateConversationForMessage);
+  const { handleMessageUpdate, batcherStatus } = useMessageUpdateBatcher(conversationsRef, commitConversations, hydrateConversationForMessage);
 
   const handleNewMessage = useCallback(
     (payload: RealtimePostgresChangesPayload<RealtimeMessage>) => {
