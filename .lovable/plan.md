@@ -2,120 +2,138 @@
 
 ## Objetivo
 
-Nova tela no inbox, **"Painel de Atendentes"**, mostrando para cada agente:
-- Status de presença (online / away / offline)
-- Filas em que participa
-- Contagem de **mensagens pendentes** (status `pending`/`failed`) atribuídas
-- **Últimos envios com idempotência** (com `idem_key`, `http_status`, `external_message_id`, instância)
-- E, no topo, um **resumo das conexões WhatsApp** (status + health) para contexto operacional.
+Permitir que o reprocesso manual da DLQ (`failed_messages`) use **backoff específico por motivo** (root cause) em vez do exponencial único atual. Ex.: `429 rate_limit` espera mais tempo que `503 unavailable`, e `timeout`/`network` reprocessam mais rápido.
 
-Painel read-only, admin/supervisor-only (consistente com `mem://auth/roles-and-visibility`).
+Hoje todos os reagendamentos usam `computeBackoffMs(attempt+1)` (60s→1h, exponencial cego), independente do motivo. Isso desperdiça janela em erros transientes leves e bombardeia APIs em rate-limit.
 
-## Onde fica
+## Design
 
-- Rota: `/inbox/agentes-online` (lazy-loaded em `App.tsx`).
-- Item no `sidebarNavConfig.ts`, dentro do grupo **Inbox** (Operação), label "Atendentes Online", ícone `Users`, gate por role `admin|supervisor`.
-- Não toca o ChatPanel/inbox principal — é uma página irmã.
+### 1. Nova tabela de helpers — `supabase/functions/_shared/dlq-backoff.ts`
 
-## Componentes novos
+Adicionar **sem quebrar** a função existente:
 
+```ts
+export type RetryReason =
+  | 'rate_limit' | 'unavailable' | 'timeout'
+  | 'network'   | 'server_error' | 'auth'
+  | 'invalid_payload' | 'not_found' | 'unknown';
+
+// Multiplicadores aplicados sobre o backoff base já calculado.
+// Cap final continua sendo MAX_DELAY_MS (1h).
+const REASON_PROFILE: Record<RetryReason, { multiplier: number; minDelayMs: number }> = {
+  rate_limit:      { multiplier: 4.0, minDelayMs: 120_000 }, // 2min mínimo, escala forte
+  unavailable:     { multiplier: 2.0, minDelayMs:  60_000 }, // 1min mínimo
+  server_error:    { multiplier: 2.0, minDelayMs:  60_000 },
+  timeout:         { multiplier: 1.0, minDelayMs:  30_000 }, // mais agressivo
+  network:         { multiplier: 1.0, minDelayMs:  30_000 },
+  auth:            { multiplier: 1.5, minDelayMs:  90_000 }, // raro, mas espera p/ refresh
+  invalid_payload: { multiplier: 1.0, minDelayMs:  60_000 }, // não vai resolver, mas respeita
+  not_found:       { multiplier: 1.0, minDelayMs:  60_000 },
+  unknown:         { multiplier: 1.0, minDelayMs:  60_000 }, // = comportamento atual
+};
+
+export function classifyRetryReason(httpStatus: number | null, errorMessage: string | null): RetryReason { /* ... */ }
+
+export function computeBackoffMsByReason(
+  attempt: number,
+  reason: RetryReason,
+  withJitter = true,
+): number {
+  const base = computeBackoffMs(attempt, false); // sem jitter ainda
+  const profile = REASON_PROFILE[reason];
+  const scaled = Math.max(profile.minDelayMs, base * profile.multiplier);
+  const capped = Math.min(scaled, 3_600_000);
+  if (!withJitter) return capped;
+  const jitter = capped * 0.15 * (Math.random() * 2 - 1);
+  return Math.max(1_000, Math.round(capped + jitter));
+}
 ```
-src/pages/inbox/AgentsOperationsPage.tsx           ← container da rota
-src/components/inbox/agents-ops/
-  ├─ AgentsConnectionsHeader.tsx                   ← chips por whatsapp_connection
-  ├─ AgentOpsTable.tsx                             ← tabela principal (uma linha por agente)
-  ├─ AgentRecentSendsPopover.tsx                   ← sub-detalhes "últimos envios"
-  └─ __tests__/AgentOpsTable.test.tsx
-src/hooks/inbox/
-  ├─ useAgentPendingCounts.ts                      ← messages.status IN (pending|failed) by assigned_to
-  └─ useAgentRecentSends.ts                        ← evolution_send_idempotency JOIN messages.id (lookup local)
+
+`classifyRetryReason` espelha a lógica de `src/lib/failureRootCause.ts` (status > heurística por mensagem). Mantemos os dois sincronizados via teste compartilhado.
+
+### 2. `reprocess-failed-messages/index.ts`
+
+Trocar **todas as chamadas** `computeBackoffMs(attempt + 1)` por:
+
+```ts
+const reason = classifyRetryReason(resp.status, respText);
+const backoffMs = computeBackoffMsByReason(attempt + 1, reason);
 ```
 
-## Fontes de dados (reaproveitando o existente)
+E persistir o `reason` no row para visibilidade:
 
-| Bloco | Fonte | Hook |
-|---|---|---|
-| Status / queues / total chats ativos | `profiles` + `queue_members` + `contacts.assigned_to` | `useAgents` (existente) |
-| Conexões + health | `whatsapp_connections` (Lovable Cloud) | reusar `useConnectionsManager` (já carrega) |
-| Pendentes por agente | `messages` (Lovable Cloud) — `status IN ('pending','failed')` agrupado por `contacts.assigned_to` | **`useAgentPendingCounts` (novo)** |
-| Últimos envios c/ idempotência | `evolution_send_idempotency` últimos 50 + JOIN local com `messages` (Lovable Cloud) por `idem_key='msg:<messageRowId>'` para descobrir `assigned_to` | **`useAgentRecentSends` (novo)** |
+```ts
+await supabase.from('failed_messages').update({
+  // ... campos existentes
+  last_retry_reason: reason,           // NOVA coluna
+  next_attempt_at: new Date(Date.now() + backoffMs).toISOString(),
+}).eq('id', row.id);
+```
 
-`useAgentRecentSends`:
-1. `select id, idem_key, instance_name, http_status, external_message_id, created_at, path from evolution_send_idempotency order by created_at desc limit 200`
-2. Extrai `messageRowId` do `idem_key` (`/^msg:(.+)$/`)
-3. Lookup batch `messages.select('id, contact_id, contacts(assigned_to)').in('id', ids)` — Lovable Cloud
-4. Agrupa por `contacts.assigned_to`. Retorna `Map<profileId, RecentSend[]>` com no máx. 5 envios por agente
-5. `staleTime: 30s` + realtime opcional na tabela (`postgres_changes` em `evolution_send_idempotency` INSERT) para acrescer no topo sem refetch
+No `catch` (exceção sem `resp`), classificar como `'network'` ou `'timeout'` por inspeção da mensagem do erro.
 
-`useAgentPendingCounts`:
-- `select assigned_to, count(*) from messages where status in ('pending','failed') and from_me = true group by assigned_to` — feito client-side via `select('contact_id, status, contacts!inner(assigned_to)')` filtrado, count em `useMemo`.
-- `staleTime: 15s`.
+### 3. Migração — adicionar coluna `last_retry_reason`
 
-## UI
+```sql
+ALTER TABLE public.failed_messages
+  ADD COLUMN IF NOT EXISTS last_retry_reason text;
 
-**Header** (`AgentsConnectionsHeader`): linha horizontal de chips, um por `whatsapp_connection`, mostrando `instance_id`, badge colorido (`connected`/`degraded`/`disconnected`), latência (`health_response_ms`). Só renderiza se houver ≥1 conexão.
+CREATE INDEX IF NOT EXISTS idx_failed_messages_last_retry_reason
+  ON public.failed_messages(last_retry_reason)
+  WHERE status IN ('pending', 'retrying');
+```
 
-**Tabela** (`AgentOpsTable`) — uma linha por agente:
+Backfill opcional via UPDATE (deixa NULL para entradas antigas, sem dor).
 
-| Atendente | Status | Filas | Em atendimento | Pendentes | Últimos envios |
-|---|---|---|---|---|---|
-| Avatar + nome + role | `online`/`away`/`offline` (badge colorido + dot) | até 3 chips de queue (color+name) com "+N" | `activeChats / max_chats` (Progress) | número (warning se >0) | botão "Ver últimos 5" → popover |
+### 4. `enqueue-failed-message.ts` (primeira inserção)
 
-Popover de últimos envios mostra para cada send:
-- timestamp curto (`HH:mm:ss`)
-- `instance_name` (chip)
-- `http_status` (verde 2xx / vermelho 4xx-5xx)
-- `idem_key` truncado com tooltip (cópia)
-- `external_message_id` (badge se presente, "—" se null)
+Já recebe `http_status`/`error_code`/`error_message`. Calcula reason e usa `computeBackoffMsByReason(1, reason)` para o **primeiro** `next_attempt_at`. Persiste `last_retry_reason` no insert inicial.
 
-Vazio: `GenericEmptyState` "Nenhum envio rastreado nesta janela".
+### 5. UI — `RetryConfigPanel` / DLQ admin (read-only)
 
-**Filtros mínimos** no topo: busca por nome + select de status (`todos`/`online`/`away`/`offline`).
+Acrescentar **tabela informativa** "Backoff por motivo" no painel de retry, listando cada `RetryReason` com `min` e `multiplier`. Sem campos editáveis nesta entrega — primeiro provar a hipótese; tornar configurável vira backlog.
 
-**Auto-refresh**: `refetchInterval: 30s` em ambos os hooks novos. Não usa websocket pesado.
+Na lista da DLQ (se houver UI hoje, ou o painel de métricas), mostrar coluna `last_retry_reason` com badge colorido reusando `getRootCauseMeta()` de `src/lib/failureRootCause.ts`.
 
-## Segurança & permissões
+### 6. Testes
 
-- Rota gateada via `useUserRole` → `admin|supervisor`. Agentes comuns não veem item no menu nem acessam URL direto (redirect para `/inbox`).
-- Idempotency key e `external_message_id` não são PII direta, mas tela respeita política Zero Export — sem botão "exportar CSV". Só tooltip + click-to-copy individual.
-- Logs via `log` de `@/lib/logger`, sem `console.log`.
+`supabase/functions/_shared/__tests__/dlq-backoff.test.ts` — adicionar:
 
-## Testes
+- `classifyRetryReason(429, ...) → 'rate_limit'`
+- `classifyRetryReason(503, ...) → 'unavailable'`
+- `classifyRetryReason(null, 'request timeout') → 'timeout'`
+- `computeBackoffMsByReason(1, 'rate_limit', false) >= 120_000`
+- `computeBackoffMsByReason(1, 'timeout', false) <= computeBackoffMsByReason(1, 'rate_limit', false)`
+- Cap em `MAX_DELAY_MS` para `attempt=10, multiplier=4`
+- `attempt=1, unknown` → equivalente a `computeBackoffMs(1)` (compat com comportamento antigo)
 
-`AgentOpsTable.test.tsx`:
-1. Renderiza linha por agente passada via prop.
-2. Mostra "0" pendentes quando map vazio.
-3. Status badge usa cor correta para `online`/`away`/`offline`.
-4. Click em "Ver últimos 5" abre popover com `data-testid="recent-sends-popover"`.
+`reprocess-failed-messages/__tests__/contract.test.ts` — adicionar regex assertions:
+- `classifyRetryReason\(`
+- `computeBackoffMsByReason\(`
+- `last_retry_reason:`
 
-`useAgentRecentSends.test.tsx`:
-1. Filtra `idem_key` com prefixo `msg:`.
-2. Faz lookup em `messages` apenas para os IDs encontrados.
-3. Agrupa por `assigned_to`, limita a 5 por agente, ordenado desc por `created_at`.
-4. Ignora envios cujo `messages.contact_id.assigned_to` é null.
+## Arquivos tocados
 
-`useAgentPendingCounts.test.tsx`:
-1. Conta apenas `status IN ('pending','failed')`.
-2. Conta apenas `from_me = true`.
-3. Retorna `Record<profileId, number>` com chaves só para agentes com >0.
-
-## Memória
-
-Após concluir, atualizar `mem://features/inbox/operational-and-ui-standards` para registrar a existência do painel e o gate por role (uma linha — não criar arquivo novo).
-
-## Não-objetivos
-
-- Não cria tabela nova; reusa `evolution_send_idempotency` (já populado pela edge `_shared/send-idempotency.ts`).
-- Não implementa "kick agent / forçar logoff".
-- Não mostra histórico longo de envios — só janela recente (200 sends top, ~5 por agente).
-- Não modifica regra de presença existente (`updated_at` window). Migração para Supabase Presence fica fora do escopo.
-
-## Riscos e mitigações
-
-| Risco | Mitigação |
+| Arquivo | Mudança |
 |---|---|
-| `evolution_send_idempotency` populada apenas para envios que passam pelo proxy `/message/*` — sends locais que falharam antes podem não aparecer | Documentado no header da tela ("Inclui apenas envios processados via Evolution proxy"). |
-| Query `messages.in('id', [200 ids])` cara em pico | Limit de 200 sends + `staleTime 30s`. |
-| Idem key `msg:<uuid>` muda formato no futuro | Parse já está centralizado em `sendIdempotency.ts`; novo hook depende exclusivamente do prefixo `msg:`. Quebra é detectada por teste unitário. |
-| Agente sem `assigned_to` em nenhum contato | Linha aparece com 0/0/0 — comportamento esperado (status presença ainda relevante). |
+| `supabase/functions/_shared/dlq-backoff.ts` | + `RetryReason`, `classifyRetryReason`, `computeBackoffMsByReason` |
+| `supabase/functions/reprocess-failed-messages/index.ts` | usar reason-aware backoff em sucesso/falha/exceção; persistir `last_retry_reason` |
+| `supabase/functions/_shared/enqueue-failed-message.ts` | usar reason-aware no primeiro agendamento; persistir `last_retry_reason` |
+| `supabase/functions/_shared/__tests__/dlq-backoff.test.ts` | +6 cases |
+| `supabase/functions/reprocess-failed-messages/__tests__/contract.test.ts` | +3 asserts |
+| Migração SQL | `+ column last_retry_reason`, índice parcial |
+| `src/components/admin/RetryConfigPanel.tsx` | tabela "Backoff por motivo" (read-only) |
+
+## Garantias
+
+- **Backwards compatible**: `computeBackoffMs` antigo permanece exportado e usado por `unknown`. Nenhum chamador externo quebra.
+- **Sem regressão de TTL**: cap continua 1h, jitter ±15% mantido.
+- **Determinístico nos testes**: `withJitter=false` em todos os asserts.
+- **Sem PII nova**: `last_retry_reason` é enum curto, não vaza payload.
+
+## Não objetivos
+
+- Não tornar os perfis editáveis via UI/`global_settings` nesta entrega.
+- Não trocar a fórmula base exponencial (`2^attempt`).
+- Não mexer no client-side `withRetry` (`src/lib/retry.ts`); ele já tem timeout próprio e roda fora da DLQ.
 
