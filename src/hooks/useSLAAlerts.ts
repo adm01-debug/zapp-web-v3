@@ -171,5 +171,6 @@ export function useSLAAlerts(params: SLAAlertParams) {
     params.resolutionDurationMs,
     params.ruleName,
     params.contactName,
+    preferences,
   ]);
 }
