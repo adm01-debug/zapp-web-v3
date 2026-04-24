@@ -30,6 +30,7 @@ import { InstanceBreakdownTable } from './admin-webhook-secret-status/InstanceBr
 import { AlertThresholdsPanel } from './admin-webhook-secret-status/AlertThresholdsPanel';
 import { WebhookAlertHistoryPanel } from './admin-webhook-secret-status/WebhookAlertHistoryPanel';
 import { AdvancedFiltersPanel } from './admin-webhook-secret-status/AdvancedFiltersPanel';
+import { HmacSelfTestButton } from './admin-webhook-secret-status/HmacSelfTestButton';
 import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
 import { useWebhookViewPreferences } from '@/hooks/useWebhookViewPreferences';
 import {
@@ -282,6 +283,7 @@ export default function AdminWebhookSecretStatusPage() {
             onChange={setInstance}
             disabled={instancesQuery.isLoading}
           />
+          <HmacSelfTestButton instance={selectedInstance} />
           <Button
             variant="outline"
             size="sm"
