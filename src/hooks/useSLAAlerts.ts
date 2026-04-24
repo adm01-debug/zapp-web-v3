@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useSLAAlertPreferences } from '@/hooks/useSLAAlertPreferences';
 
 type SLAStatus = 'ok' | 'warning' | 'breached' | 'na';
 type SLAScope = 'current' | 'queue' | 'agent' | 'none';
@@ -73,12 +74,20 @@ async function alreadyFiredPersistent(
 export function useSLAAlerts(params: SLAAlertParams) {
   const firedRef = useRef<Set<string>>(new Set());
   const inflightRef = useRef<Set<string>>(new Set());
+  const { preferences } = useSLAAlertPreferences();
 
   useEffect(() => {
     if (params.scope === 'none' || !params.contactId) return;
     const contactId = params.contactId;
 
     const fire = async (kind: AlertKind, severity: AlertSeverity, durationMs: number | null) => {
+      // Respect per-user preferences. Defaults are all-on, so users without a row keep current behavior.
+      const kindEnabled =
+        kind === 'first_response' ? preferences.alert_first_response : preferences.alert_resolution;
+      const severityEnabled =
+        severity === 'breached' ? preferences.severity_breached : preferences.severity_warning;
+      if (!kindEnabled || !severityEnabled) return;
+
       const key = dedupeKey(contactId, kind, severity);
 
       // Layer 1: in-memory (sync) — prevents re-entry from rapid effect runs.
@@ -162,5 +171,6 @@ export function useSLAAlerts(params: SLAAlertParams) {
     params.resolutionDurationMs,
     params.ruleName,
     params.contactName,
+    preferences,
   ]);
 }

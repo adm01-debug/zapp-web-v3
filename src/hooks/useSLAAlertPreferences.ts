@@ -1,0 +1,73 @@
+import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+
+export interface SLAAlertPreferences {
+  alert_first_response: boolean;
+  alert_resolution: boolean;
+  severity_warning: boolean;
+  severity_breached: boolean;
+}
+
+export const DEFAULT_SLA_ALERT_PREFERENCES: SLAAlertPreferences = {
+  alert_first_response: true,
+  alert_resolution: true,
+  severity_warning: true,
+  severity_breached: true,
+};
+
+/**
+ * Per-user SLA alert preferences. Stored in `public.sla_alert_preferences` (RLS scoped to auth.uid()).
+ * Falls back to "all enabled" defaults when the user has no row yet or while loading.
+ */
+export function useSLAAlertPreferences() {
+  const { user } = useAuth();
+  const [preferences, setPreferences] = useState<SLAAlertPreferences>(DEFAULT_SLA_ALERT_PREFERENCES);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    void supabase
+      .from('sla_alert_preferences')
+      .select('alert_first_response, alert_resolution, severity_warning, severity_breached')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (!error && data) {
+          setPreferences({
+            alert_first_response: data.alert_first_response,
+            alert_resolution: data.alert_resolution,
+            severity_warning: data.severity_warning,
+            severity_breached: data.severity_breached,
+          });
+        }
+        setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  const save = useCallback(
+    async (next: SLAAlertPreferences) => {
+      if (!user?.id) return { error: new Error('Not authenticated') };
+      setIsSaving(true);
+      const { error } = await supabase
+        .from('sla_alert_preferences')
+        .upsert({ user_id: user.id, ...next }, { onConflict: 'user_id' });
+      setIsSaving(false);
+      if (!error) setPreferences(next);
+      return { error };
+    },
+    [user?.id],
+  );
+
+  return { preferences, setPreferences, save, isLoading, isSaving };
+}
