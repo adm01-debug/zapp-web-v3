@@ -11,6 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { Pin, Gift } from 'lucide-react';
 import { TypingIndicatorCompact } from './TypingIndicator';
 import { useContactTyping } from '@/hooks/useContactTyping';
+import { useInViewport } from '@/hooks/useInViewport';
 
 interface VirtualizedRealtimeListProps {
   conversations: ConversationWithMessages[];
@@ -32,18 +33,25 @@ const EMPTY_SET = new Set<string>();
  * Linha de preview que escuta o canal `typing:${contactId}` e troca o conteúdo
  * por "digitando…" enquanto o contato está compondo. Sub-componente para que o
  * hook `useContactTyping` seja chamado por linha (regra dos Hooks).
+ *
+ * Otimização: o canal Realtime só é assinado quando a linha está dentro do
+ * viewport (via `useInViewport`), evitando 1 canal por conversa em listas
+ * longas. Margem de 200px antecipa a entrada e sticky de 1.5s reduz churn.
  */
 const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; fallback: string }>(
-  function ConversationPreviewLine({ contactId, fallback }, ref) {
-    const isTyping = useContactTyping(contactId);
-    if (isTyping) {
-      return (
-        <div ref={ref} className="text-[13px]">
+  function ConversationPreviewLine({ contactId, fallback }, _ref) {
+    const localRef = useRef<HTMLDivElement>(null);
+    const inView = useInViewport(localRef, { rootMargin: '200px', keepVisibleMs: 1500 });
+    const isTyping = useContactTyping(contactId, inView);
+    return (
+      <div ref={localRef} className="text-[13px] min-h-[1em]">
+        {isTyping ? (
           <TypingIndicatorCompact isVisible={true} />
-        </div>
-      );
-    }
-    return <p ref={ref as React.Ref<HTMLParagraphElement>} className="text-[13px] text-muted-foreground truncate">{fallback}</p>;
+        ) : (
+          <p className="text-muted-foreground truncate">{fallback}</p>
+        )}
+      </div>
+    );
   }
 );
 
