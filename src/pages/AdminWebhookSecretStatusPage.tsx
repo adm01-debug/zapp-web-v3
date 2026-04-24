@@ -194,6 +194,19 @@ export default function AdminWebhookSecretStatusPage() {
     activeFilterCount,
   } = useWebhookViewPreferences();
 
+  // Clears advanced filters AND removes all query params from the URL
+  // (instance, q, status, etc.). Pinned instance stays in prefs but is
+  // not auto-reapplied because pinnedAppliedRef is already true post-mount.
+  const clearAllFiltersAndUrl = useCallback(() => {
+    clearAdvancedFilters();
+    const url = new URL(window.location.href);
+    // Wipe every search param (keep pathname + hash intact).
+    url.search = '';
+    window.history.replaceState({}, '', url.toString());
+    // Force useUrlFilters to re-read so derived state updates.
+    setFilters({ search: '' });
+  }, [clearAdvancedFilters, setFilters]);
+
   // Auto-apply pinned instance once on mount, only if URL has no instance set.
   const pinnedAppliedRef = useRef(false);
   useEffect(() => {
