@@ -75,6 +75,7 @@ export default function AdminAlertHistoryPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [instanceFilter, setInstanceFilter] = useState('');
+  const [detailInstance, setDetailInstance] = useState<string | null>(null);
 
   const since = useMemo(() => subHours(new Date(), Number(hoursBack)).toISOString(), [hoursBack]);
 
