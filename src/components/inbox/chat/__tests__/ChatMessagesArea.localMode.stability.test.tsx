@@ -30,10 +30,10 @@ const metrics = {
 };
 vi.mock('./loadOlderMetrics', () => metrics);
 
-const hoisted = vi.hoisted(() => ({ bubbleRenderCount: { value: 0 } }));
+const hoisted = vi.hoisted(() => ({ hoisted.bubbleRenderCount.value: { value: 0 } }));
 vi.mock('./MessageBubble', () => ({
   MessageBubble: ({ message }: { message: { id: string } }) => {
-    hoisted.bubbleRenderCount.value++;
+    hoisted.hoisted.bubbleRenderCount.value.value++;
     return <div data-testid={`bubble-${message.id}`} />;
   },
 }));
@@ -82,7 +82,7 @@ describe('ChatMessagesArea — estabilidade no modo local', () => {
   let addSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    bubbleRenderCount = 0;
+    hoisted.hoisted.bubbleRenderCount.value.value = 0;
     addSpy = vi.spyOn(HTMLDivElement.prototype, 'addEventListener');
   });
   afterEach(() => {
@@ -168,7 +168,7 @@ describe('ChatMessagesArea — estabilidade no modo local', () => {
         <ChatMessagesArea {...props} />
       </QueryClientProvider>,
     );
-    const after1 = bubbleRenderCount;
+    const after1 = hoisted.bubbleRenderCount.value;
     expect(after1).toBe(3);
 
     // Mesmo objeto de props (mesmas refs) — memo deve barrar re-render.
@@ -177,7 +177,7 @@ describe('ChatMessagesArea — estabilidade no modo local', () => {
         <ChatMessagesArea {...props} />
       </QueryClientProvider>,
     );
-    expect(bubbleRenderCount).toBe(after1);
+    expect(hoisted.bubbleRenderCount.value).toBe(after1);
   });
 
   it('toggle de isContactTyping nao re-monta o container nem cria listeners de scroll', () => {
