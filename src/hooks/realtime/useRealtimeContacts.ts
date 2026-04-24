@@ -24,8 +24,8 @@ type ContactChange = {
 
 /**
  * Fields whose change should force a re-sort of the conversations sidebar
- * (relevance ranking, scoping, pinning, etc.). Keep this list narrow to
- * avoid unnecessary refetches on noise (e.g. profile_picture_url updates).
+ * (relevance ranking, scoping, pinning, badges, etc.). Keep narrow to avoid
+ * unnecessary refetches on noise (e.g. profile_picture_url updates).
  */
 const REORDER_FIELDS = [
   'lead_status',
@@ -35,7 +35,17 @@ const REORDER_FIELDS = [
   'last_message_at',
   'unread_count',
   'deleted_at',
+  'tags',
 ] as const;
+
+/** Shallow array equality (order-sensitive). */
+function arraysEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
 
 function hasReorderingChange(
   oldRow: Partial<EvolutionContact> | null | undefined,
@@ -43,11 +53,33 @@ function hasReorderingChange(
 ): boolean {
   if (!oldRow || !newRow) return true; // unknown → be safe and reorder
   for (const f of REORDER_FIELDS) {
-    if ((oldRow as Record<string, unknown>)[f] !== (newRow as Record<string, unknown>)[f]) {
+    const ov = (oldRow as Record<string, unknown>)[f];
+    const nv = (newRow as Record<string, unknown>)[f];
+    if (f === 'tags') {
+      if (!arraysEqual(ov, nv)) return true;
+    } else if (ov !== nv) {
       return true;
     }
   }
   return false;
+}
+
+/**
+ * Shallow merge that preserves existing values when the incoming payload
+ * omits a key (value === undefined). Critical for fields like `tags`: a
+ * partial UPDATE that only changes `lead_status` must NOT wipe the
+ * previously-known tags array out of the cache.
+ */
+function mergeContact<T extends Partial<EvolutionContact>>(
+  prev: T,
+  next: Partial<EvolutionContact>,
+): T {
+  const out: Record<string, unknown> = { ...(prev as Record<string, unknown>) };
+  for (const k in next) {
+    const v = (next as Record<string, unknown>)[k];
+    if (v !== undefined) out[k] = v;
+  }
+  return out as T;
 }
 
 /**
@@ -87,14 +119,14 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
         const { contact } = change;
         const remoteJid = contact.remote_jid;
 
-        // Patch individual contact cache if present
+        // Patch individual contact cache if present (preserves omitted fields)
         queryClient.setQueriesData<EvolutionContact | undefined>(
           { queryKey: ['contact', remoteJid] },
-          (prev) => (prev ? { ...prev, ...contact } : prev),
+          (prev) => (prev ? mergeContact(prev, contact) : prev),
         );
         queryClient.setQueriesData<EvolutionContact | undefined>(
           { queryKey: ['external-evolution', 'contact', remoteJid] },
-          (prev) => (prev ? { ...prev, ...contact } : prev),
+          (prev) => (prev ? mergeContact(prev, contact) : prev),
         );
 
         // INSERT/DELETE always invalidate the list (ordering changes)
@@ -113,12 +145,12 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
               if (idx < 0) return prev;
               patched = true;
               const next = prev.slice();
-              next[idx] = { ...(next[idx] as object), ...contact };
+              next[idx] = mergeContact(next[idx] as EvolutionContact, contact);
               return next;
             },
           );
           // Even if patched in-place, force a re-sort when ranking-relevant
-          // fields changed (lead_status, assigned_to, pinned, etc.).
+          // fields changed (lead_status, assigned_to, pinned, tags, etc.).
           if (!patched || change.reorder) invalidateConversations = true;
         }
 
@@ -171,12 +203,17 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
             )
           : true;
 
-      // Coalesce: if a previous pending change already requested reorder,
-      // keep that flag sticky across the burst window.
+      // Coalesce within the 100ms window: merge into prior pending change so
+      // that bursts of partial UPDATEs (e.g. one touches lead_status, another
+      // touches tags) end up with the union of all non-undefined fields.
+      // Reorder flag is sticky across the burst.
       const prev = pendingRef.current.get(row.remote_jid);
+      const mergedContact = prev ? mergeContact(prev.contact, row) : row;
+      // DELETE always wins over earlier INSERT/UPDATE in the same burst.
+      const mergedType = type === 'DELETE' ? 'DELETE' : (prev?.type === 'INSERT' ? 'INSERT' : type);
       pendingRef.current.set(row.remote_jid, {
-        type,
-        contact: row,
+        type: mergedType,
+        contact: mergedContact,
         reorder: reorder || prev?.reorder,
       });
       scheduleFlush();

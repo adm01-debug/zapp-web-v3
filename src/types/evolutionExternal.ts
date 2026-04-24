@@ -137,6 +137,7 @@ export interface EvolutionContact {
   profile_picture_url: string | null;
   instance_name: string;
   is_group: boolean;
+  tags: string[] | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
