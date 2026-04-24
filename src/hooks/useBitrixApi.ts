@@ -197,7 +197,7 @@ export const useBitrixApi = () => {
   const syncContactsFromBitrix = async (filters?: Record<string, unknown>) => {
     const result = await callBitrixApi('sync_contacts', undefined, undefined, undefined, filters);
     if (isSuccessful(result)) {
-      toast.success(`${result.synced} contatos sincronizados do Bitrix`);
+      toast.success(`${readNumber(result, 'synced')} contatos sincronizados do Bitrix`);
     }
     return result;
   };
