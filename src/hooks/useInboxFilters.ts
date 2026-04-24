@@ -169,9 +169,22 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     // Retry/failed filter — show only conversations with messages currently retrying
     // or that finally failed after exhausting retries
     if (showOnlyRetrying) {
-      result = result.filter((c) =>
-        c.messages.some((m) => m.status === 'retrying' || m.status === 'failed_retries')
-      );
+      result = result.filter((c) => {
+        const failingMsgs = c.messages.filter(
+          (m) => m.status === 'retrying' || m.status === 'failed_retries' || m.status === 'failed' || m.status === 'failed_auth'
+        );
+        if (failingMsgs.length === 0) return false;
+
+        if (failureCategoryFilter === 'all') return true;
+
+        // 'retrying' não tem métrica final ainda — só passa quando filtro = 'all'
+        return failingMsgs.some((m) => {
+          if (m.status === 'retrying') return false;
+          if (m.status === 'failed_auth' && failureCategoryFilter === 'auth') return true;
+          const cat = failureCategoryById[m.id];
+          return cat === failureCategoryFilter;
+        });
+      });
     }
     // Smart sorting
     result.sort((a, b) => {
