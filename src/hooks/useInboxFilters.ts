@@ -19,6 +19,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
   const [showAll, setShowAll] = useState(false);
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
+  const [showOnlyRetrying, setShowOnlyRetrying] = useState(false);
 
   const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
 
@@ -157,6 +158,13 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     // Contact type filter
     result = filterByContactType(result, selectedContactType);
 
+    // Retry/failed filter — show only conversations with messages currently retrying
+    // or that finally failed after exhausting retries
+    if (showOnlyRetrying) {
+      result = result.filter((c) =>
+        c.messages.some((m) => m.status === 'retrying' || m.status === 'failed_retries')
+      );
+    }
     // Smart sorting
     result.sort((a, b) => {
       if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
@@ -167,7 +175,14 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     });
 
     return result;
-  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, profileId, contactTagsMap]);
+  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, showOnlyRetrying, profileId, contactTagsMap]);
+
+  const retryingCount = useMemo(
+    () => conversations.filter((c) =>
+      c.messages?.some((m) => m.status === 'retrying' || m.status === 'failed_retries')
+    ).length,
+    [conversations]
+  );
 
   return {
     mainTab, setMainTab,
@@ -175,6 +190,8 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     showAll, setShowAll,
     selectedQueueId, setSelectedQueueId,
     selectedContactType, handleContactTypeChange,
+    showOnlyRetrying, setShowOnlyRetrying,
+    retryingCount,
     filters, setFilters,
     search, setSearch,
     filteredConversations,

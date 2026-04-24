@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X } from 'lucide-react';
+import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
 
@@ -135,6 +135,37 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
           <div className={cn("shrink-0", isMobile ? "w-[130px]" : "w-[130px]")}>
             <ContactTypeFilter value={inboxFilters.selectedContactType} onChange={inboxFilters.handleContactTypeChange} conversations={inbox.cachedConversations} />
           </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={inboxFilters.showOnlyRetrying ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => inboxFilters.setShowOnlyRetrying(!inboxFilters.showOnlyRetrying)}
+                className={cn(
+                  'shrink-0 relative active:scale-90 transition-all duration-150',
+                  isMobile ? 'w-8 h-8 rounded-lg' : 'w-7 h-7 rounded-md',
+                  inboxFilters.showOnlyRetrying
+                    ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                    : 'hover:bg-muted/60 text-muted-foreground'
+                )}
+                aria-label={inboxFilters.showOnlyRetrying ? 'Mostrar todas as conversas' : 'Mostrar apenas conversas com retry/falha'}
+                aria-pressed={inboxFilters.showOnlyRetrying}
+              >
+                <AlertTriangle className={cn(isMobile ? 'w-4 h-4' : 'w-3.5 h-3.5')} />
+                {inboxFilters.retryingCount > 0 && !inboxFilters.showOnlyRetrying && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-destructive text-destructive-foreground text-[9px] font-semibold leading-none flex items-center justify-center tabular-nums"
+                    aria-label={`${inboxFilters.retryingCount} conversas com retry ou falha`}
+                  >
+                    {inboxFilters.retryingCount > 99 ? '99+' : inboxFilters.retryingCount}
+                  </span>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="text-[10px] font-medium">
+              {inboxFilters.showOnlyRetrying ? 'Mostrar todas' : `Apenas com retry/falha${inboxFilters.retryingCount > 0 ? ` (${inboxFilters.retryingCount})` : ''}`}
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <TicketTabs
