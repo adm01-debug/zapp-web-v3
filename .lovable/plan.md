@@ -1,185 +1,121 @@
 
+
 ## Objetivo
 
-Reduzir o peso da listagem de mensagens carregando primeiro **versão "lite"** (sem `payload` / `raw_data` / `notes` / `tags` etc.) e buscando os campos pesados **sob demanda** quando a UI precisar (ex.: dialog "Detalhes do envio", debug, retry).
+Nova tela no inbox, **"Painel de Atendentes"**, mostrando para cada agente:
+- Status de presença (online / away / offline)
+- Filas em que participa
+- Contagem de **mensagens pendentes** (status `pending`/`failed`) atribuídas
+- **Últimos envios com idempotência** (com `idem_key`, `http_status`, `external_message_id`, instância)
+- E, no topo, um **resumo das conexões WhatsApp** (status + health) para contexto operacional.
 
-## Contexto
+Painel read-only, admin/supervisor-only (consistente com `mem://auth/roles-and-visibility`).
 
-Hoje:
-- `rpc_list_messages(p_remote_jid, p_instance, p_limit, p_before_date)` retorna `evolution_messages*` — incluindo `payload` (jsonb potencialmente grande, principalmente em mídia/template) e `raw_data` (webhook bruto, frequentemente >5KB).
-- `useMessagesCursor` faz `pages` de 50 mensagens. Em conversa com mídia, isso traz centenas de KB desnecessários por página.
-- Apenas dois lugares hoje precisam de payload/raw_data: `AdminFailedMessagesPage` (debug admin) e o futuro "abrir detalhes do envio" no chat.
+## Onde fica
 
-Lacuna: não existe variante lite da RPC nem hook de hidratação on-demand.
+- Rota: `/inbox/agentes-online` (lazy-loaded em `App.tsx`).
+- Item no `sidebarNavConfig.ts`, dentro do grupo **Inbox** (Operação), label "Atendentes Online", ícone `Users`, gate por role `admin|supervisor`.
+- Não toca o ChatPanel/inbox principal — é uma página irmã.
 
-## Mudança proposta
+## Componentes novos
 
-### 1. Migração SQL — duas novas RPCs no FATOR X
-
-Criar via migration:
-
-```sql
--- Versão leve: campos essenciais para render do chat
-CREATE OR REPLACE FUNCTION public.rpc_list_messages_lite(
-  p_remote_jid text,
-  p_instance text DEFAULT 'wpp2',
-  p_limit int DEFAULT 50,
-  p_before_date timestamptz DEFAULT NULL
-)
-RETURNS TABLE (
-  id uuid,
-  message_id text,
-  remote_jid text,
-  from_me boolean,
-  direction text,
-  status text,
-  message_type text,
-  content text,
-  media_url text,
-  media_mimetype text,
-  media_type text,
-  media_filename text,
-  caption text,
-  quoted_message_id text,
-  is_starred boolean,
-  is_important boolean,
-  sent_by_bot boolean,
-  push_name text,
-  instance_name text,
-  created_at timestamptz,
-  status_at timestamptz,
-  deleted_at timestamptz
-)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT id, message_id, remote_jid, from_me, direction, status,
-         message_type, content, media_url, media_mimetype, media_type,
-         media_filename, caption, quoted_message_id, is_starred,
-         is_important, sent_by_bot, push_name, instance_name,
-         created_at, status_at, deleted_at
-  FROM evolution_messages
-  WHERE remote_jid = p_remote_jid
-    AND instance_name = p_instance
-    AND deleted_at IS NULL
-    AND (p_before_date IS NULL OR created_at < p_before_date)
-  ORDER BY created_at DESC
-  LIMIT p_limit;
-$$;
-
--- Detalhe completo de UMA mensagem (inclui payload, raw_data, notes, tags etc.)
-CREATE OR REPLACE FUNCTION public.rpc_get_message_details(
-  p_message_id uuid
-)
-RETURNS evolution_messages
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT * FROM evolution_messages WHERE id = p_message_id LIMIT 1;
-$$;
+```
+src/pages/inbox/AgentsOperationsPage.tsx           ← container da rota
+src/components/inbox/agents-ops/
+  ├─ AgentsConnectionsHeader.tsx                   ← chips por whatsapp_connection
+  ├─ AgentOpsTable.tsx                             ← tabela principal (uma linha por agente)
+  ├─ AgentRecentSendsPopover.tsx                   ← sub-detalhes "últimos envios"
+  └─ __tests__/AgentOpsTable.test.tsx
+src/hooks/inbox/
+  ├─ useAgentPendingCounts.ts                      ← messages.status IN (pending|failed) by assigned_to
+  └─ useAgentRecentSends.ts                        ← evolution_send_idempotency JOIN messages.id (lookup local)
 ```
 
-Migration roda no projeto Lovable Cloud para manter histórico, mas as RPCs vivem no FATOR X (`tdprnylgyrogbbhgdoik`). Operador aplica via supabase migration tool apontando ao projeto externo OU coordenamos pedido (como está documentado em `mem://database/migration/external-fator-x-transition`). Atualizar `mem://database/migration/fator-x-schema-refactor` ao concluir.
+## Fontes de dados (reaproveitando o existente)
 
-### 2. Tipo `EvolutionMessageLite` — `src/types/evolutionExternal.ts`
+| Bloco | Fonte | Hook |
+|---|---|---|
+| Status / queues / total chats ativos | `profiles` + `queue_members` + `contacts.assigned_to` | `useAgents` (existente) |
+| Conexões + health | `whatsapp_connections` (Lovable Cloud) | reusar `useConnectionsManager` (já carrega) |
+| Pendentes por agente | `messages` (Lovable Cloud) — `status IN ('pending','failed')` agrupado por `contacts.assigned_to` | **`useAgentPendingCounts` (novo)** |
+| Últimos envios c/ idempotência | `evolution_send_idempotency` últimos 50 + JOIN local com `messages` (Lovable Cloud) por `idem_key='msg:<messageRowId>'` para descobrir `assigned_to` | **`useAgentRecentSends` (novo)** |
 
-```ts
-export type EvolutionMessageLite = Pick<EvolutionMessage,
-  | 'id' | 'message_id' | 'remote_jid' | 'from_me' | 'direction'
-  | 'status' | 'message_type' | 'content' | 'media_url' | 'media_mimetype'
-  | 'media_type' | 'media_filename' | 'caption' | 'quoted_message_id'
-  | 'is_starred' | 'is_important' | 'sent_by_bot' | 'push_name'
-  | 'instance_name' | 'created_at' | 'status_at' | 'deleted_at'
->;
-```
+`useAgentRecentSends`:
+1. `select id, idem_key, instance_name, http_status, external_message_id, created_at, path from evolution_send_idempotency order by created_at desc limit 200`
+2. Extrai `messageRowId` do `idem_key` (`/^msg:(.+)$/`)
+3. Lookup batch `messages.select('id, contact_id, contacts(assigned_to)').in('id', ids)` — Lovable Cloud
+4. Agrupa por `contacts.assigned_to`. Retorna `Map<profileId, RecentSend[]>` com no máx. 5 envios por agente
+5. `staleTime: 30s` + realtime opcional na tabela (`postgres_changes` em `evolution_send_idempotency` INSERT) para acrescer no topo sem refetch
 
-`EvolutionMessage` continua existindo para detail view (mantém compat).
+`useAgentPendingCounts`:
+- `select assigned_to, count(*) from messages where status in ('pending','failed') and from_me = true group by assigned_to` — feito client-side via `select('contact_id, status, contacts!inner(assigned_to)')` filtrado, count em `useMemo`.
+- `staleTime: 15s`.
 
-### 3. `useMessagesCursor` migra para `rpc_list_messages_lite`
+## UI
 
-Mudanças mínimas:
-- Trocar nome da RPC.
-- Trocar tipo do estado para `EvolutionMessageLite[][]`.
-- Tipo de retorno do hook: `messages: EvolutionMessageLite[]`.
-- Realtime continua chegando com payload completo — ao receber INSERT/UPDATE, **projetar** para Lite descartando campos pesados antes de armazenar (helper `toLite(m)`).
+**Header** (`AgentsConnectionsHeader`): linha horizontal de chips, um por `whatsapp_connection`, mostrando `instance_id`, badge colorido (`connected`/`degraded`/`disconnected`), latência (`health_response_ms`). Só renderiza se houver ≥1 conexão.
 
-Resultado: payload de página cai ~70-90% em conversas com mídia/templates.
+**Tabela** (`AgentOpsTable`) — uma linha por agente:
 
-### 4. Novo hook: `src/hooks/useMessageDetails.ts`
+| Atendente | Status | Filas | Em atendimento | Pendentes | Últimos envios |
+|---|---|---|---|---|---|
+| Avatar + nome + role | `online`/`away`/`offline` (badge colorido + dot) | até 3 chips de queue (color+name) com "+N" | `activeChats / max_chats` (Progress) | número (warning se >0) | botão "Ver últimos 5" → popover |
 
-Hidratação on-demand via React Query:
+Popover de últimos envios mostra para cada send:
+- timestamp curto (`HH:mm:ss`)
+- `instance_name` (chip)
+- `http_status` (verde 2xx / vermelho 4xx-5xx)
+- `idem_key` truncado com tooltip (cópia)
+- `external_message_id` (badge se presente, "—" se null)
 
-```ts
-export function useMessageDetails(messageId: string | null, opts?: { enabled?: boolean })
-  : { data: EvolutionMessage | null; isLoading: boolean; error: Error | null }
-```
+Vazio: `GenericEmptyState` "Nenhum envio rastreado nesta janela".
 
-- `queryKey: ['message-details', messageId]`
-- `enabled: !!messageId && opts?.enabled !== false`
-- `staleTime: 5 * 60_000` (payload imutável após gravação — cache longo)
-- Chama `externalSupabase.rpc('rpc_get_message_details', { p_message_id })`.
-- Instrumentado via `timedRpc` (telemetria do plano anterior).
+**Filtros mínimos** no topo: busca por nome + select de status (`todos`/`online`/`away`/`offline`).
 
-### 5. Componente: `src/components/inbox/chat/MessageDetailsDialog.tsx`
+**Auto-refresh**: `refetchInterval: 30s` em ambos os hooks novos. Não usa websocket pesado.
 
-Dialog reutilizável que abre via prop `messageId` e renderiza:
-- Cabeçalho: `id`, `message_id`, `created_at`, `direction`, `status`, `message_type`, `instance_name`.
-- Tabs: **Conteúdo** (content/caption/media), **Payload** (`<pre>` JSON pretty), **Raw Data** (`<pre>` JSON pretty), **Histórico** (futuras mudanças de status).
-- Loading inline enquanto `useMessageDetails` busca.
-- Botão "Copiar JSON" para payload e raw_data (respeitando política Zero Export — copy é permitido para admin/supervisor; gating via `useAuth().role`).
+## Segurança & permissões
 
-### 6. Wiring: gatilho no `MessageBubble`
+- Rota gateada via `useUserRole` → `admin|supervisor`. Agentes comuns não veem item no menu nem acessam URL direto (redirect para `/inbox`).
+- Idempotency key e `external_message_id` não são PII direta, mas tela respeita política Zero Export — sem botão "exportar CSV". Só tooltip + click-to-copy individual.
+- Logs via `log` de `@/lib/logger`, sem `console.log`.
 
-No menu de contexto da mensagem (long-press / right-click), adicionar item **"Detalhes do envio"** visível apenas para `admin`/`supervisor`. Clique → `setDetailsMessageId(msg.id)` → renderiza `MessageDetailsDialog`. Estado vive no `ChatPanel` para evitar re-mount por mensagem.
+## Testes
 
-### 7. Atualizar consumidores que dependiam de payload no list
+`AgentOpsTable.test.tsx`:
+1. Renderiza linha por agente passada via prop.
+2. Mostra "0" pendentes quando map vazio.
+3. Status badge usa cor correta para `online`/`away`/`offline`.
+4. Click em "Ver últimos 5" abre popover com `data-testid="recent-sends-popover"`.
 
-- `useConversationSLATimeline.ts`: já usa `rpc_list_messages` para pegar timestamps — campos lite já são suficientes. Trocar para `rpc_list_messages_lite`.
-- `AdminFailedMessagesPage` consulta `messages` do Lovable Cloud (não FATOR X) — não muda.
-- Qualquer outro consumidor real-time de payload (`useRealtimeMessages`, etc.) é fora do escopo: continuam acessando full row (são poucos eventos).
+`useAgentRecentSends.test.tsx`:
+1. Filtra `idem_key` com prefixo `msg:`.
+2. Faz lookup em `messages` apenas para os IDs encontrados.
+3. Agrupa por `assigned_to`, limita a 5 por agente, ordenado desc por `created_at`.
+4. Ignora envios cujo `messages.contact_id.assigned_to` é null.
 
-### 8. Testes
+`useAgentPendingCounts.test.tsx`:
+1. Conta apenas `status IN ('pending','failed')`.
+2. Conta apenas `from_me = true`.
+3. Retorna `Record<profileId, number>` com chaves só para agentes com >0.
 
-`src/hooks/__tests__/useMessagesCursor.test.tsx` (atualizar):
-- Verifica que mock de `rpc_list_messages_lite` é chamada (nome novo).
-- Mock retorna rows sem `payload`/`raw_data` — assert que hook não quebra.
+## Memória
 
-`src/hooks/__tests__/useMessageDetails.test.tsx` (novo):
-1. Não dispara fetch quando `messageId` é null.
-2. Dispara `rpc_get_message_details` com `p_message_id` correto.
-3. Cache hit em segunda chamada com mesmo id (staleTime > 0).
-4. Erro propagado em `error`.
-
-`src/components/inbox/chat/__tests__/MessageDetailsDialog.test.tsx`:
-1. Renderiza spinner enquanto carrega.
-2. Renderiza tabs Payload/RawData com JSON pretty.
-3. Botão "Copiar JSON" só aparece para admin/supervisor.
-
-## Arquivos
-
-| Ação | Arquivo |
-|---|---|
-| Criar | `supabase/migrations/<ts>_rpc_list_messages_lite.sql` (no projeto FATOR X) |
-| Editar | `src/types/evolutionExternal.ts` (adicionar `EvolutionMessageLite`) |
-| Editar | `src/hooks/useMessagesCursor.ts` (lite + helper `toLite`) |
-| Editar | `src/hooks/__tests__/useMessagesCursor.test.tsx` |
-| Editar | `src/hooks/useConversationSLATimeline.ts` (RPC lite) |
-| Criar | `src/hooks/useMessageDetails.ts` |
-| Criar | `src/hooks/__tests__/useMessageDetails.test.tsx` |
-| Criar | `src/components/inbox/chat/MessageDetailsDialog.tsx` |
-| Criar | `src/components/inbox/chat/__tests__/MessageDetailsDialog.test.tsx` |
-| Editar | `src/components/inbox/chat/MessageBubble.tsx` (item "Detalhes do envio") |
-| Editar | `src/components/inbox/ChatPanel.tsx` (estado `detailsMessageId` + dialog) |
+Após concluir, atualizar `mem://features/inbox/operational-and-ui-standards` para registrar a existência do painel e o gate por role (uma linha — não criar arquivo novo).
 
 ## Não-objetivos
 
-- Não remover `rpc_list_messages` original — outros call sites podem precisar; depreciação fica para um próximo lote.
-- Não migrar `useMessages` (Lovable Cloud) — escopo é FATOR X.
-- Não tocar em `evolution_audit_log` (que tem seu próprio detail).
-- Não implementar prefetch de detalhes em hover — sob demanda apenas, conforme pedido.
+- Não cria tabela nova; reusa `evolution_send_idempotency` (já populado pela edge `_shared/send-idempotency.ts`).
+- Não implementa "kick agent / forçar logoff".
+- Não mostra histórico longo de envios — só janela recente (200 sends top, ~5 por agente).
+- Não modifica regra de presença existente (`updated_at` window). Migração para Supabase Presence fica fora do escopo.
 
 ## Riscos e mitigações
 
 | Risco | Mitigação |
 |---|---|
-| Migration SQL precisa ser aplicada no projeto FATOR X (externo), não no Lovable Cloud | Operador executa via tool de migração apontando para `tdprnylgyrogbbhgdoik`. Plano deixa SQL pronto. |
-| Realtime traz payload completo e infla memória | Helper `toLite(m)` projeta o objeto antes de `setPages`. |
-| Algum consumidor existente acessa `m.payload` no array da lista | Tipo `EvolutionMessageLite` é estritamente menor → TS aponta erro em build. Resolvemos caso a caso. |
-| Política Zero Export no MessageDetailsDialog | "Copiar JSON" só para admin/supervisor; sem botão de download de arquivo, conforme `mem://security/data-export-and-protection-policy`. |
-| Cache stale de detalhes após edição | UPDATE realtime no `useMessagesCursor` invalida `['message-details', id]` via queryClient. |
+| `evolution_send_idempotency` populada apenas para envios que passam pelo proxy `/message/*` — sends locais que falharam antes podem não aparecer | Documentado no header da tela ("Inclui apenas envios processados via Evolution proxy"). |
+| Query `messages.in('id', [200 ids])` cara em pico | Limit de 200 sends + `staleTime 30s`. |
+| Idem key `msg:<uuid>` muda formato no futuro | Parse já está centralizado em `sendIdempotency.ts`; novo hook depende exclusivamente do prefixo `msg:`. Quebra é detectada por teste unitário. |
+| Agente sem `assigned_to` em nenhum contato | Linha aparece com 0/0/0 — comportamento esperado (status presença ainda relevante). |
+
