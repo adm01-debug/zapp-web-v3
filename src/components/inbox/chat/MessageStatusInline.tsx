@@ -9,6 +9,9 @@
  *  - bus state wins for transient statuses (sending/retrying)
  *  - bus state wins on terminal statuses if it is more recent than the DB row
  *  - otherwise we fall back to `message.status`
+ *  - when the bus has no attempt counters (e.g. after a page reload), we
+ *    hydrate from the persisted `retry_attempt` / `retry_total` columns so
+ *    the "2/3" badge survives navigation.
  */
 import { memo } from 'react';
 import { cn } from '@/lib/utils';
@@ -18,7 +21,7 @@ import { useMessageSendStatus } from '@/hooks/realtime/useMessageSendStatus';
 import { useFailureReason, formatFailureReason } from '@/hooks/inbox/useFailureReason';
 
 interface MessageStatusInlineProps {
-  message: Pick<Message, 'id' | 'status'>;
+  message: Pick<Message, 'id' | 'status' | 'retry_attempt' | 'retry_total'>;
   className?: string;
 }
 
@@ -39,19 +42,25 @@ export const MessageStatusInline = memo(function MessageStatusInline({
 
   const isRetrying = effectiveStatus === 'retrying';
   const isTerminalFailure = TERMINAL_FAILURES.has(effectiveStatus);
+
+  // Counters: prefer the live bus, fall back to persisted DB columns.
+  const attempt = bus?.attempt ?? message.retry_attempt ?? undefined;
+  const totalRetries = bus?.totalRetries ?? message.retry_total ?? undefined;
+
   const showAttemptBadge =
-    isRetrying && typeof bus?.attempt === 'number' && typeof bus?.totalRetries === 'number';
-  const showFailedAfterRetries = effectiveStatus === 'failed_retries' && typeof bus?.totalRetries === 'number';
+    isRetrying && typeof attempt === 'number' && typeof totalRetries === 'number';
+  const showFailedAfterRetries =
+    effectiveStatus === 'failed_retries' && typeof totalRetries === 'number';
 
   // Lazy lookup do motivo final no evolution_retry_metrics — só roda em falha.
   const { data: failure } = useFailureReason(message.id, isTerminalFailure);
 
   const baseTooltip = isRetrying
     ? showAttemptBadge
-      ? `Tentando reenviar (${bus!.attempt}/${bus!.totalRetries})…`
+      ? `Tentando reenviar (${attempt}/${totalRetries})…`
       : 'Tentando reenviar…'
     : showFailedAfterRetries
-      ? `Falhou após ${bus!.totalRetries} tentativas`
+      ? `Falhou após ${totalRetries} tentativas`
       : isTerminalFailure
         ? 'Falha no envio'
         : undefined;
@@ -66,23 +75,23 @@ export const MessageStatusInline = memo(function MessageStatusInline({
       title={tooltip}
       data-testid="message-status-inline"
       data-status={effectiveStatus}
-      data-attempt={showAttemptBadge ? bus!.attempt : undefined}
+      data-attempt={showAttemptBadge ? attempt : undefined}
     >
       <MessageStatusIcon status={effectiveStatus} />
       {showAttemptBadge && (
         <span
           className="text-[9px] font-semibold leading-none text-warning tabular-nums px-0.5"
-          aria-label={`Tentativa ${bus!.attempt} de ${bus!.totalRetries}`}
+          aria-label={`Tentativa ${attempt} de ${totalRetries}`}
         >
-          {bus!.attempt}/{bus!.totalRetries}
+          {attempt}/{totalRetries}
         </span>
       )}
       {showFailedAfterRetries && (
         <span
           className="text-[9px] font-semibold leading-none text-destructive tabular-nums px-0.5"
-          aria-label={`Falhou após ${bus!.totalRetries} tentativas`}
+          aria-label={`Falhou após ${totalRetries} tentativas`}
         >
-          ×{bus!.totalRetries}
+          ×{totalRetries}
         </span>
       )}
     </span>
