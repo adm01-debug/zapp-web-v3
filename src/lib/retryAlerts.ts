@@ -54,6 +54,26 @@ export const DEFAULT_THRESHOLDS: RetryThresholds = {
   minSampleSize: 5,
 };
 
+/** Cooldown padrão entre re-disparos do mesmo (instance × kind) — espelha webhookHealthAlerts. */
+export const RETRY_ALERT_COOLDOWN_MS = 5 * 60 * 1000;
+
+/**
+ * Decide se um alerta de retry deve disparar respeitando cooldown.
+ * Retorna `true` quando passou tempo suficiente desde o último disparo
+ * para a chave (ex.: `instance|kind`).
+ */
+export function shouldFireRetryAlert(
+  key: string,
+  cooldownMs: number,
+  lastFired: Map<string, number>,
+  nowMs: number = Date.now(),
+): boolean {
+  const last = lastFired.get(key) ?? 0;
+  if (nowMs - last < cooldownMs) return false;
+  lastFired.set(key, nowMs);
+  return true;
+}
+
 const STORAGE_KEY = 'zappweb:retry-alert-thresholds';
 const PER_INSTANCE_STORAGE_KEY = 'zappweb:retry-alert-thresholds:per-instance';
 
