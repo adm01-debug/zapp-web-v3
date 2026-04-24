@@ -13,12 +13,13 @@
  *    hydrate from the persisted `retry_attempt` / `retry_total` columns so
  *    the "2/3" badge survives navigation.
  */
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
 import { MessageStatusIcon } from './messageUtils';
 import { useMessageSendStatus } from '@/hooks/realtime/useMessageSendStatus';
 import { useFailureReason, formatFailureReason } from '@/hooks/inbox/useFailureReason';
+import { clearSendStatus } from '@/hooks/realtime/sendStatusBus';
 
 interface MessageStatusInlineProps {
   message: Pick<Message, 'id' | 'status' | 'retry_attempt' | 'retry_total'>;
