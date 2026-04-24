@@ -101,10 +101,14 @@ export function useSLAAlerts(params: SLAAlertParams) {
         const title = `SLA ${isBreach ? 'violado' : 'em risco'} — ${params.contactName}`;
         const description = `${kindLabel} · ${formatDurationMs(durationMs)} · ${params.ruleName ?? 'regra padrão'}`;
 
+        const action = params.onOpenConversation
+          ? { label: 'Abrir conversa', onClick: () => params.onOpenConversation?.() }
+          : undefined;
+
         if (isBreach) {
-          toast.error(title, { description, duration: 10_000 });
+          toast.error(title, { description, duration: 10_000, action });
         } else {
-          toast.warning(title, { description, duration: 6_000 });
+          toast.warning(title, { description, duration: 6_000, action });
         }
 
         // Audit (best-effort, fire-and-forget). Also serves as the persistent dedupe record.
