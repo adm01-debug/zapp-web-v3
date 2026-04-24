@@ -158,6 +158,10 @@ export function ContactAccordionSections({ contact, conversation, enrichedData, 
 }
 
 function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; onOpen: () => void }) {
+  const queryClient = useQueryClient();
+  const itemRef = useRef<HTMLDivElement>(null);
+  const prefetchedRef = useRef(false);
+
   const { data: count, isLoading } = useQuery({
     queryKey: ['shared-media-count', contactId],
     queryFn: async () => {
@@ -173,6 +177,47 @@ function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; on
     staleTime: 60_000,
   });
 
+  // Reseta o flag ao trocar de contato para permitir nova prefetch.
+  useEffect(() => { prefetchedRef.current = false; }, [contactId]);
+
+  // Observa o data-state do AccordionItem (Radix). Quando abre pela primeira
+  // vez, faz prefetch da primeira página de mídia para a galeria abrir
+  // instantânea, sem precisar montar o modal.
+  useEffect(() => {
+    const el = itemRef.current;
+    if (!el || !contactId) return;
+
+    const PAGE_SIZE = 24;
+    const prefetchFirstPage = () => {
+      if (prefetchedRef.current) return;
+      prefetchedRef.current = true;
+      // Mesma queryKey usada por MediaGallery — quando o modal montar,
+      // pega do cache sem refetch.
+      queryClient.prefetchQuery({
+        queryKey: ['media-gallery', contactId],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from('messages')
+            .select('id, media_url, message_type, content, created_at')
+            .eq('contact_id', contactId)
+            .not('media_url', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(PAGE_SIZE);
+          if (error) throw error;
+          return data || [];
+        },
+        staleTime: 30_000,
+      });
+    };
+
+    if (el.getAttribute('data-state') === 'open') prefetchFirstPage();
+    const obs = new MutationObserver(() => {
+      if (el.getAttribute('data-state') === 'open') prefetchFirstPage();
+    });
+    obs.observe(el, { attributes: true, attributeFilter: ['data-state'] });
+    return () => obs.disconnect();
+  }, [contactId, queryClient]);
+
   const label = isLoading
     ? '…'
     : count === 0
@@ -180,7 +225,7 @@ function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; on
       : `${count} ${count === 1 ? 'arquivo' : 'arquivos'}`;
 
   return (
-    <AccordionItem value="media" className="border-border/30">
+    <AccordionItem ref={itemRef} value="media" className="border-border/30">
       <AccordionTrigger className="px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider hover:no-underline hover:bg-muted/10">
         <div className="flex items-center justify-between gap-2 w-full pr-2">
           <div className="flex items-center gap-2"><Image className="w-3.5 h-3.5" />Mídia Compartilhada</div>
