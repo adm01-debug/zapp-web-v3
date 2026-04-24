@@ -59,7 +59,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 function useWildcardMessages() {
   const [events, setEvents] = useState<Array<{ type: Evt; id: string }>>([]);
   useEffect(() => {
-    const { supabase } = require('@/integrations/supabase/client');
+
     const ch = supabase
       .channel('wildcard-messages')
       .on(
@@ -80,7 +80,7 @@ function useWildcardMessages() {
 function useSpecificMessages() {
   const [log, setLog] = useState<string[]>([]);
   useEffect(() => {
-    const { supabase } = require('@/integrations/supabase/client');
+
     const ch = supabase
       .channel('specific-messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
