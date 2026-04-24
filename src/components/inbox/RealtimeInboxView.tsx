@@ -106,6 +106,8 @@ export function RealtimeInboxView() {
 
       <NewMessageIndicator show={!!inbox.newMessageNotification} contactName={inbox.newMessageNotification?.contactName || ''} contactAvatar={inbox.newMessageNotification?.contactAvatar} message={inbox.newMessageNotification?.message || ''} onView={inbox.handleNotificationView} onDismiss={inbox.dismissNotification} />
 
+      <MessageBatcherIndicator status={inbox.batcherStatus} />
+
       {inbox.showNewConversation && (
         <Suspense fallback={null}>
           <NewConversationModal open={inbox.showNewConversation} onOpenChange={inbox.setShowNewConversation} onConversationStarted={(contactId) => { inbox.setSelectedContactId(contactId); inbox.refetch(); }} />
