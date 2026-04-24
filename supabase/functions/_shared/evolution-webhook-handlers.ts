@@ -180,24 +180,43 @@ export async function handlePresenceUpdate(supabase: any, instance: string, data
   const jid = (presenceData.id as string) || (presenceData.remoteJid as string);
   const presences = presenceData.presences as Record<string, Record<string, unknown>> | undefined;
 
-  if (jid && !jid.endsWith('@g.us')) {
+  if (jid) {
+    // Defesa: ignorar broadcasts (status@broadcast, *@broadcast)
+    if (jid.endsWith('@broadcast')) {
+      return;
+    }
+
+    const isGroup = jid.endsWith('@g.us');
     let isComposing = false;
+    // Em grupos, o WhatsApp envia presences keyed pelo participant (quem digita).
+    // Capturamos o primeiro participant em estado composing para enviar no payload.
+    let typingParticipant: string | null = null;
+
     if (presences) {
-      for (const [, pState] of Object.entries(presences)) {
-        if (pState?.lastKnownPresence === 'composing' || pState?.status === 'composing') { isComposing = true; break; }
+      for (const [participantJid, pState] of Object.entries(presences)) {
+        if (pState?.lastKnownPresence === 'composing' || pState?.status === 'composing') {
+          isComposing = true;
+          typingParticipant = participantJid;
+          break;
+        }
       }
     } else {
       const directStatus = presenceData.status as string || presenceData.lastKnownPresence as string;
       isComposing = directStatus === 'composing';
+      typingParticipant = (presenceData.participant as string) || null;
     }
 
-    // Defesa: ignorar broadcasts/grupos
-    if (jid.endsWith('@broadcast') || jid.endsWith('@g.us')) {
+    // Em grupos só faz sentido emitir se tivermos identificado o participant.
+    if (isGroup && !typingParticipant) {
       return;
     }
 
     const timestamp = new Date().toISOString();
-    const basePayload = { isTyping: isComposing, remoteJid: jid, timestamp };
+    const basePayload: Record<string, unknown> = { isTyping: isComposing, remoteJid: jid, timestamp };
+    if (isGroup) {
+      basePayload.isGroup = true;
+      basePayload.participant = typingParticipant;
+    }
 
     // Novo (FATOR X): canal por remote_jid — chave estável compartilhada entre webhook → preview → chat aberto
     try {
