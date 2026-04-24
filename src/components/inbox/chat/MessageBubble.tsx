@@ -65,6 +65,9 @@ export function MessageBubble({
   const isSent = message.sender === 'agent';
   const senderName = isSent ? 'Você' : message.senderName || 'Contato';
   const agentInitials = profile?.name ? profile.name.slice(0, 2).toUpperCase() : 'EU';
+  const isFailedTerminal = isSent && !message.is_deleted && (
+    message.status === 'failed' || message.status === 'failed_auth' || message.status === 'failed_retries'
+  );
 
   return (
       <SwipeableMessage onSwipeRight={() => onReply(message)} onSwipeLeft={() => onForward(message)}>
