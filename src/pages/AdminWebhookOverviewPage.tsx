@@ -256,6 +256,7 @@ export default function AdminWebhookOverviewPage() {
                         openWebhookEventsWithFilters({
                           eventType: t,
                           instance: instance !== 'all' ? instance : undefined,
+                          status: errorsOnly ? 'error' : undefined,
                         });
                       }}
                     >
@@ -367,7 +368,7 @@ export default function AdminWebhookOverviewPage() {
                                   {count > 0 ? (
                                     <button
                                       type="button"
-                                      onClick={() => openWebhookEventsWithFilters({ eventType: t, instance: i })}
+                                      onClick={() => openWebhookEventsWithFilters({ eventType: t, instance: i, status: errorsOnly ? 'error' : undefined })}
                                       title={`Abrir log: ${t} em ${i} (${count} evento${count === 1 ? '' : 's'})`}
                                       className="w-full h-full px-2 py-2 cursor-pointer hover:ring-2 hover:ring-primary/40 hover:ring-inset focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset transition-shadow"
                                     >
