@@ -317,11 +317,26 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-6 md:px-8 space-y-4 scrollbar-thin bg-background/50 relative">
       <ChatWatermark />
 
-      {onLoadOlder && (
+      {/*
+        Topo da lista — duas modalidades mutuamente exclusivas:
+
+        1) MODO EXTERNO (`onLoadOlder` definido):
+           Renderiza spinner de carregamento, badge de cancelamento (com
+           retry) ou marcador "Inicio da conversa" quando nao ha mais.
+
+        2) MODO LOCAL (`onLoadOlder` indefinido):
+           NUNCA renderiza spinner, badge ou qualquer indicador de
+           paginacao. Em vez disso, mostra um marcador estatico de
+           "Inicio da conversa (modo local)" que deixa explicito ao usuario
+           que esta visualizando todas as mensagens disponiveis e que nao
+           ha carregamento adicional. Este marcador e puramente visual:
+           sem listeners, sem efeitos, sem custo de runtime alem do render.
+      */}
+      {onLoadOlder ? (
         <div className="flex justify-center py-2" aria-live="polite">
           {loadingOlder && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/30">
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
               <span>Carregando mensagens anteriores…</span>
             </div>
           )}
@@ -344,7 +359,23 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
             <span className="text-[11px] text-muted-foreground/60 italic">Início da conversa</span>
           )}
         </div>
+      ) : (
+        messages.length > 0 && (
+          <div
+            className="flex justify-center py-2"
+            data-testid="chat-local-mode-top"
+            data-mode="local"
+          >
+            <span
+              className="text-[11px] text-muted-foreground/60 italic"
+              title="Modo local: voce esta vendo todas as mensagens disponiveis. Nao ha carregamento de mensagens anteriores."
+            >
+              Início da conversa
+            </span>
+          </div>
+        )
       )}
+
 
       {Object.entries(groupedMessages).map(([dateKey, dayMessages]) => (
         <div key={dateKey}>
