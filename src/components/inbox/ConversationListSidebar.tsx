@@ -7,6 +7,7 @@ import { ErrorBoundary } from '@/components/errors/ErrorBoundary';
 import { BulkActionsToolbar } from './BulkActionsToolbar';
 import { InboxFilters } from './InboxFilters';
 import { ContactTypeFilter, FILTER_OPTIONS } from './ContactTypeFilter';
+import { FailureCategoryFilter } from './FailureCategoryFilter';
 import { TicketTabs } from './TicketTabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
