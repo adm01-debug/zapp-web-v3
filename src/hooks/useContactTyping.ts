@@ -46,6 +46,26 @@ function resolveStopDebounceMs(): number {
 export const TYPING_STOP_DEBOUNCE_MS = resolveStopDebounceMs();
 
 /**
+ * Resultado expandido para grupos: além de `isTyping`, expõe quem está
+ * digitando (`participant` JID). Para chats 1:1, `participant` é sempre null.
+ */
+export interface ContactTypingState {
+  isTyping: boolean;
+  participant: string | null;
+}
+
+export interface UseContactTypingOptions {
+  /** Habilita/desabilita o subscribe (gating por viewport). Default true. */
+  enabled?: boolean;
+  /**
+   * Permite assinar JIDs `@g.us` (grupos). Default false — listas/preview
+   * continuam ignorando grupos para evitar ruído. Ative apenas quando o
+   * chat aberto for de grupo.
+   */
+  allowGroups?: boolean;
+}
+
+/**
  * Hook leve read-only para escutar o broadcast `contact_typing` no canal
  * `typing:${remoteJid}`. Usado em listas (ConversationItem,
  * VirtualizedRealtimeList) onde queremos mostrar "digitando…" sem o overhead
@@ -53,31 +73,56 @@ export const TYPING_STOP_DEBOUNCE_MS = resolveStopDebounceMs();
  *
  * Auto-clear configurável via `VITE_TYPING_AUTO_CLEAR_MS` (default 5000ms).
  * Stop-debounce configurável via `VITE_TYPING_STOP_DEBOUNCE_MS` (default 600ms).
- * Defesa broadcast: ignora JIDs `@broadcast` e `@g.us`.
+ *
+ * Defesa: ignora `@broadcast` sempre. Ignora `@g.us` por padrão; passe
+ * `allowGroups=true` para assinar grupos (somente quando o chat aberto é
+ * o próprio grupo). Em grupos, o payload inclui `participant` (quem digita).
  *
  * Otimização: passe `enabled=false` para suspender a subscrição (ex.: cards
- * fora do viewport em listas longas) e evitar criar 1 canal por conversa.
+ * fora do viewport em listas longas).
+ *
+ * Compat: aceita o segundo argumento como `boolean` (legacy) ou
+ * `UseContactTypingOptions`.
  */
-export function useContactTyping(remoteJid?: string | null, enabled: boolean = true): boolean {
+export function useContactTyping(
+  remoteJid?: string | null,
+  enabledOrOptions: boolean | UseContactTypingOptions = true,
+): boolean {
+  return useContactTypingState(remoteJid, enabledOrOptions).isTyping;
+}
+
+/**
+ * Versão expandida do hook que retorna `{ isTyping, participant }`.
+ * Use em headers de chat de grupo para exibir "<nome> está digitando…".
+ */
+export function useContactTypingState(
+  remoteJid?: string | null,
+  enabledOrOptions: boolean | UseContactTypingOptions = true,
+): ContactTypingState {
+  const opts: UseContactTypingOptions =
+    typeof enabledOrOptions === 'boolean' ? { enabled: enabledOrOptions } : enabledOrOptions;
+  const enabled = opts.enabled !== false;
+  const allowGroups = opts.allowGroups === true;
+
   const [isTyping, setIsTyping] = useState(false);
-  // Auto-clear (TTL longo) — limpa caso o emissor pare de enviar `composing`.
+  const [participant, setParticipant] = useState<string | null>(null);
   const clearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Stop-debounce (TTL curto) — adia a transição true→false para evitar
-  // flicker em alternâncias rápidas composing↔paused vindas do WhatsApp.
   const stopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !remoteJid) {
       setIsTyping(false);
+      setParticipant(null);
       return;
     }
-    if (!remoteJid) {
+    if (remoteJid.endsWith('@broadcast')) {
       setIsTyping(false);
+      setParticipant(null);
       return;
     }
-    // Defesa broadcast: nunca subscrever JIDs de broadcast/grupo
-    if (remoteJid.endsWith('@broadcast') || remoteJid.endsWith('@g.us')) {
+    if (remoteJid.endsWith('@g.us') && !allowGroups) {
       setIsTyping(false);
+      setParticipant(null);
       return;
     }
 
@@ -97,28 +142,28 @@ export function useContactTyping(remoteJid?: string | null, enabled: boolean = t
     const channel = supabase.channel(`typing:${remoteJid}`);
 
     channel.on('broadcast', { event: 'contact_typing' }, ({ payload }) => {
-      const typing = (payload as { isTyping?: boolean })?.isTyping === true;
+      const p = payload as { isTyping?: boolean; participant?: string | null } | undefined;
+      const typing = p?.isTyping === true;
+      const who = p?.participant ?? null;
 
       if (typing) {
-        // START: aplica imediatamente e cancela qualquer stop pendente para
-        // que um STOP recente seguido de START não pisque o indicador.
         clearStopDebounce();
         clearAutoClear();
         setIsTyping(true);
+        setParticipant(who);
 
-        // Auto-clear se o emissor parar de enviar composing.
         clearTimeoutRef.current = setTimeout(() => {
           setIsTyping(false);
+          setParticipant(null);
           clearTimeoutRef.current = null;
         }, TYPING_AUTO_CLEAR_MS);
         return;
       }
 
-      // STOP: adia a confirmação por TYPING_STOP_DEBOUNCE_MS. Se um novo
-      // START chegar dentro da janela, o stop é cancelado acima.
       clearStopDebounce();
       stopTimeoutRef.current = setTimeout(() => {
         setIsTyping(false);
+        setParticipant(null);
         stopTimeoutRef.current = null;
         clearAutoClear();
       }, TYPING_STOP_DEBOUNCE_MS);
@@ -135,7 +180,7 @@ export function useContactTyping(remoteJid?: string | null, enabled: boolean = t
       clearStopDebounce();
       supabase.removeChannel(channel);
     };
-  }, [remoteJid, enabled]);
+  }, [remoteJid, enabled, allowGroups]);
 
-  return isTyping;
+  return { isTyping, participant };
 }
