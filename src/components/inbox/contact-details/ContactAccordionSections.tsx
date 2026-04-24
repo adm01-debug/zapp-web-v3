@@ -189,11 +189,6 @@ function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; on
     </AccordionItem>
   );
 }
-      </motion.div>
-      <MediaGallery contactId={contact.id} open={mediaOpen} onOpenChange={setMediaOpen} />
-    </>
-  );
-}
 
 // Reusable accordion section wrapper
 function Section({ index, value, icon, label, badge, children }: {
