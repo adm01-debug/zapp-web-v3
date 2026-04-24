@@ -24,6 +24,7 @@ import {
   FileText,
   Globe,
   Inbox,
+  Bell,
   FileBarChart,
   ClipboardList,
   AlertTriangle,
