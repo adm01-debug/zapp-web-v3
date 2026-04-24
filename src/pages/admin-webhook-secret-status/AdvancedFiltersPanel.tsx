@@ -46,6 +46,8 @@ interface Props {
   activeFilterCount: number;
   availableEventTypes: string[];
   currentInstance: string | null;
+  /** Optional: clear the instance filter (URL param). When omitted, the instance chip is shown without a remove button. */
+  onClearInstance?: () => void;
 }
 
 const STATUS_OPTIONS: Array<{ value: WebhookStatusFilter; label: string }> = [
