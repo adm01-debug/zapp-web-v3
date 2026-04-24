@@ -43,6 +43,8 @@ export interface RealtimeMessage {
   transcription: string | null;
   transcription_status: string | null;
   is_deleted: boolean | null;
+  retry_attempt?: number | null;
+  retry_total?: number | null;
 }
 
 export interface ConversationContact {
