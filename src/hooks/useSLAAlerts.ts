@@ -108,11 +108,12 @@ async function alreadyFiredPersistent(
  * Dispara notificações in-app + auditoria quando o SLA da conversa atual entra
  * em risco ou é violado.
  *
- * Anti-spam em duas camadas:
- *  1. In-memory (sessão atual) — `firedRef` evita loops e re-disparo dentro da mesma sessão.
- *  2. Persistente — consulta `conversation_events` (já recebe nosso registro de auditoria) por
- *     (contact_id + event_type='sla_alert' + metadata{kind,severity}). Garante que mesmo após
- *     refresh ou troca de página o mesmo alerta não dispare novamente.
+ * Anti-spam em três camadas:
+ *  1. In-memory (`firedRef`/`inflightRef`) — evita loops e re-disparo dentro da mesma sessão.
+ *  2. localStorage (`zappweb:sla-alert-dedupe:v1`, TTL 24h) — sobrevive ao refresh do navegador
+ *     sem custo de rede. Verificado de forma síncrona antes de qualquer chamada.
+ *  3. `conversation_events` (banco) — fonte de verdade entre dispositivos/abas. Hidrata o
+ *     localStorage quando detecta que o alerta já foi disparado em outro lugar.
  *
  * Respeita escopo `'none'` — não dispara.
  */
