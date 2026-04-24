@@ -161,7 +161,22 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
             ? 'INSERT'
             : 'UPDATE';
 
-      pendingRef.current.set(row.remote_jid, { type, contact: row });
+      const reorder =
+        type === 'UPDATE'
+          ? hasReorderingChange(
+              payload.old as Partial<EvolutionContact> | undefined,
+              payload.new as Partial<EvolutionContact> | undefined,
+            )
+          : true;
+
+      // Coalesce: if a previous pending change already requested reorder,
+      // keep that flag sticky across the burst window.
+      const prev = pendingRef.current.get(row.remote_jid);
+      pendingRef.current.set(row.remote_jid, {
+        type,
+        contact: row,
+        reorder: reorder || prev?.reorder,
+      });
       scheduleFlush();
     };
 
