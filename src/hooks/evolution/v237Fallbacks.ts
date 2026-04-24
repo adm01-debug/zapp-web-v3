@@ -11,7 +11,7 @@
  *  - find-contacts     → rpc_list_contacts
  *  - fetch-profile     → rpc_get_contact + evolution_contacts.profile_pic_url
  */
-import { externalClient } from '@/integrations/supabase/externalClient';
+import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('EvolutionV237');
@@ -57,8 +57,16 @@ export async function withV237Fallback<T>(
 
 // ─── Specific fallbacks ─────────────────────────────────────────────────────
 
+function ensureExternal() {
+  if (!isExternalConfigured || !externalSupabase) {
+    throw new Error('FATOR X external client is not configured');
+  }
+  return externalSupabase;
+}
+
 export async function fallbackFindChats(instanceName: string, limit = 200): Promise<unknown[]> {
-  const { data, error } = await externalClient.rpc('rpc_list_conversations', {
+  const client = ensureExternal();
+  const { data, error } = await client.rpc('rpc_list_conversations' as never, {
     p_instance: instanceName,
     p_status: null,
     p_assigned_to: null,
@@ -69,7 +77,8 @@ export async function fallbackFindChats(instanceName: string, limit = 200): Prom
 }
 
 export async function fallbackFindContacts(instanceName: string, limit = 500): Promise<unknown[]> {
-  const { data, error } = await externalClient.rpc('rpc_list_contacts', {
+  const client = ensureExternal();
+  const { data, error } = await client.rpc('rpc_list_contacts' as never, {
     p_instance: instanceName,
     p_lead_status: null,
     p_assigned_to: null,
@@ -82,7 +91,8 @@ export async function fallbackFindContacts(instanceName: string, limit = 500): P
 }
 
 export async function fallbackFetchProfile(remoteJid: string, instanceName: string): Promise<unknown | null> {
-  const { data, error } = await externalClient.rpc('rpc_get_contact', {
+  const client = ensureExternal();
+  const { data, error } = await client.rpc('rpc_get_contact' as never, {
     p_remote_jid: remoteJid,
     p_instance: instanceName,
   } as never);
