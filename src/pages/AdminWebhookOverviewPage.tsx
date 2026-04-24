@@ -61,6 +61,10 @@ export default function AdminWebhookOverviewPage() {
   const [hours, setHours] = useState<string>('24');
   const [instance, setInstance] = useState<string>('all');
   const [includeUnprocessed, setIncludeUnprocessed] = useState<boolean>(true);
+  // Quando ativo, restringe TODAS as agregações (KPIs, top-tipos, série
+  // temporal, heatmap e tabela) a eventos com `error_message`. Isso é puro
+  // filtro client-side sobre o mesmo dataset já carregado — não há refetch.
+  const [errorsOnly, setErrorsOnly] = useState<boolean>(false);
 
   const sinceISO = useMemo(
     () => subHours(new Date(), Number(hours)).toISOString(),
@@ -90,10 +94,11 @@ export default function AdminWebhookOverviewPage() {
   });
 
   const filtered = useMemo(() => {
-    const rows = data ?? [];
-    if (instance === 'all') return rows;
-    return rows.filter((r) => r.instance_name === instance);
-  }, [data, instance]);
+    let rows = data ?? [];
+    if (instance !== 'all') rows = rows.filter((r) => r.instance_name === instance);
+    if (errorsOnly) rows = rows.filter((r) => !!r.error_message);
+    return rows;
+  }, [data, instance, errorsOnly]);
 
   const byType = useMemo(() => aggregateByType(filtered), [filtered]);
   const matrix = useMemo(() => aggregateByTypeAndInstance(filtered), [filtered]);
