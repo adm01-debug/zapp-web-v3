@@ -167,6 +167,13 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               {inboxFilters.showOnlyRetrying ? 'Mostrar todas' : `Apenas com retry/falha${inboxFilters.retryingCount > 0 ? ` (${inboxFilters.retryingCount})` : ''}`}
             </TooltipContent>
           </Tooltip>
+          {inboxFilters.showOnlyRetrying && (
+            <FailureCategoryFilter
+              value={inboxFilters.failureCategoryFilter}
+              onChange={inboxFilters.setFailureCategoryFilter}
+              counts={inboxFilters.failureCategoryCounts}
+            />
+          )}
         </div>
 
         <TicketTabs
