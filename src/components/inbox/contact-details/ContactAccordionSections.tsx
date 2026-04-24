@@ -50,12 +50,22 @@ interface ContactAccordionSectionsProps {
 
 export function ContactAccordionSections({ contact, conversation, enrichedData, aiTags, slaInfo, profileId }: ContactAccordionSectionsProps) {
   const [mediaOpen, setMediaOpen] = useState(false);
+  // Lazy: só montamos o componente da galeria depois do primeiro clique,
+  // garantindo zero requisições/efeitos enquanto o usuário só navega no inbox.
+  const [mediaMounted, setMediaMounted] = useState(false);
 
-  // Fecha a galeria automaticamente ao trocar de contato para evitar
-  // que ela permaneça aberta exibindo dados do contato anterior.
+  // Fecha a galeria e descarta o componente ao trocar de contato para
+  // evitar estado aberto indevido e liberar a query da lista.
   useEffect(() => {
     setMediaOpen(false);
+    setMediaMounted(false);
   }, [contact.id]);
+
+  const openMedia = () => {
+    setMediaMounted(true);
+    setMediaOpen(true);
+  };
+
 
   return (
     <>
@@ -138,9 +148,11 @@ export function ContactAccordionSections({ contact, conversation, enrichedData, 
             <ContactStatsSection contactId={contact.id} />
           </AccordionContent>
         </AccordionItem>
-        <SharedMediaAccordionItem contactId={contact.id} onOpen={() => setMediaOpen(true)} />
+        <SharedMediaAccordionItem contactId={contact.id} onOpen={openMedia} />
       </motion.div>
-      <MediaGallery contactId={contact.id} open={mediaOpen} onOpenChange={setMediaOpen} />
+      {mediaMounted && (
+        <MediaGallery contactId={contact.id} open={mediaOpen} onOpenChange={setMediaOpen} />
+      )}
     </>
   );
 }
