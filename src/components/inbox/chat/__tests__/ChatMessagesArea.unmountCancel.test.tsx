@@ -198,18 +198,12 @@ describe('ChatMessagesArea — unmount/cancel no modo local', () => {
 
     act(() => { unmount(); });
 
-    // eslint-disable-next-line no-console
-    const realModule = await import('../loadOlderMetrics');
-    // eslint-disable-next-line no-console
-    console.log('DBG isMockSame', realModule.recordLoadOlderStarted === metrics.recordLoadOlderStarted);
-    // eslint-disable-next-line no-console
-    console.log('DBG metrics.started.calls', metrics.recordLoadOlderStarted.mock.calls.length);
     expect(onCancelLoadOlder).toHaveBeenCalledTimes(1);
-    // Diagnostico: started deve ter sido chamado pela trigger inicial.
     expect(metrics.recordLoadOlderStarted).toHaveBeenCalled();
     expect(metrics.recordLoadOlderCancelled).toHaveBeenCalled();
-    const cancelCalls = metrics.recordLoadOlderCancelled.mock.calls;
-    const reasons = cancelCalls.map((c) => (c[1] as { reason?: string })?.reason);
+    const reasons = metrics.recordLoadOlderCancelled.mock.calls.map(
+      (c) => (c[1] as { reason?: string })?.reason,
+    );
     expect(reasons).toContain('unmount');
 
     // Resolve a promise pendente para limpar microtasks.
