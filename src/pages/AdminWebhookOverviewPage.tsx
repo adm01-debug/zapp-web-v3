@@ -26,6 +26,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { queryExternalProxy } from '@/lib/externalProxy';
+import { openWebhookEventsWithFilters } from '@/lib/webhookEventsDeepLink';
 import { cn } from '@/lib/utils';
 import type { EvolutionWebhookEvent } from '@/types/evolutionExternal';
 import {
@@ -205,6 +206,10 @@ export default function AdminWebhookOverviewPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Top eventos por tipo</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Clique numa barra para abrir o log filtrado por esse tipo
+                  {instance !== 'all' ? ` na instância ${instance}` : ''}.
+                </p>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={Math.max(220, byType.length * 28)}>
@@ -225,7 +230,20 @@ export default function AdminWebhookOverviewPage() {
                         fontSize: 12,
                       }}
                     />
-                    <Bar dataKey="total" name="Eventos" radius={[0, 4, 4, 0]}>
+                    <Bar
+                      dataKey="total"
+                      name="Eventos"
+                      radius={[0, 4, 4, 0]}
+                      cursor="pointer"
+                      onClick={(payload: { type?: string } | undefined) => {
+                        const t = payload?.type;
+                        if (!t) return;
+                        openWebhookEventsWithFilters({
+                          eventType: t,
+                          instance: instance !== 'all' ? instance : undefined,
+                        });
+                      }}
+                    >
                       {byType.slice(0, 10).map((entry) => (
                         <Cell key={entry.type} fill={categoryFill(entry.type)} />
                       ))}
@@ -283,13 +301,17 @@ export default function AdminWebhookOverviewPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Distribuição: tipo × instância</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Clique numa célula para abrir o log filtrado por tipo + instância.
+                </p>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="max-h-[420px]">
                   <Table>
                     <caption className="sr-only">
                       Contagem de eventos de webhook por tipo e instância, com cor de
-                      intensidade representando volume relativo.
+                      intensidade representando volume relativo. Células com volume
+                      são clicáveis e abrem o log filtrado correspondente.
                     </caption>
                     <TableHeader className="sticky top-0 bg-background z-10">
                       <TableRow>
@@ -318,18 +340,27 @@ export default function AdminWebhookOverviewPage() {
                             {matrix.instances.map((i) => {
                               const count = matrix.matrix[t]?.[i] ?? 0;
                               const intensity = count === 0 ? 0 : Math.min(1, count / max);
+                              const cellStyle = count
+                                ? { backgroundColor: `hsl(var(--primary) / ${(intensity * 0.35).toFixed(2)})` }
+                                : undefined;
                               return (
                                 <TableCell
                                   key={i}
-                                  className="text-center text-xs font-mono"
-                                  title={`${t} em ${i}: ${count} evento${count === 1 ? '' : 's'}`}
-                                  style={{
-                                    backgroundColor: count
-                                      ? `hsl(var(--primary) / ${(intensity * 0.35).toFixed(2)})`
-                                      : undefined,
-                                  }}
+                                  className="p-0 text-center text-xs font-mono"
+                                  style={cellStyle}
                                 >
-                                  {count || '—'}
+                                  {count > 0 ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => openWebhookEventsWithFilters({ eventType: t, instance: i })}
+                                      title={`Abrir log: ${t} em ${i} (${count} evento${count === 1 ? '' : 's'})`}
+                                      className="w-full h-full px-2 py-2 cursor-pointer hover:ring-2 hover:ring-primary/40 hover:ring-inset focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset transition-shadow"
+                                    >
+                                      {count}
+                                    </button>
+                                  ) : (
+                                    <span className="block px-2 py-2 text-muted-foreground">—</span>
+                                  )}
                                 </TableCell>
                               );
                             })}
