@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { recheckWebhookSignature, type RecheckResult } from '@/lib/recheckWebhookSignature';
@@ -193,6 +193,19 @@ export default function AdminWebhookSecretStatusPage() {
     resetPrefs,
     activeFilterCount,
   } = useWebhookViewPreferences();
+
+  // Clears advanced filters AND removes all query params from the URL
+  // (instance, q, status, etc.). Pinned instance stays in prefs but is
+  // not auto-reapplied because pinnedAppliedRef is already true post-mount.
+  const clearAllFiltersAndUrl = useCallback(() => {
+    clearAdvancedFilters();
+    const url = new URL(window.location.href);
+    // Wipe every search param (keep pathname + hash intact).
+    url.search = '';
+    window.history.replaceState({}, '', url.toString());
+    // Force useUrlFilters to re-read so derived state updates.
+    setFilters({ search: '' });
+  }, [clearAdvancedFilters, setFilters]);
 
   // Auto-apply pinned instance once on mount, only if URL has no instance set.
   const pinnedAppliedRef = useRef(false);
@@ -513,7 +526,7 @@ export default function AdminWebhookSecretStatusPage() {
         prefs={prefs}
         setPref={setPref}
         setVisibleColumn={setVisibleColumn}
-        clearFilters={clearAdvancedFilters}
+        clearFilters={clearAllFiltersAndUrl}
         resetPrefs={resetPrefs}
         activeFilterCount={activeFilterCount}
         availableEventTypes={availableEventTypes}
@@ -549,7 +562,7 @@ export default function AdminWebhookSecretStatusPage() {
               <p className="text-sm text-muted-foreground">
                 Nenhum evento corresponde aos filtros atuais.
               </p>
-              <Button variant="outline" size="sm" onClick={clearAdvancedFilters}>
+              <Button variant="outline" size="sm" onClick={clearAllFiltersAndUrl}>
                 Limpar filtros
               </Button>
             </div>
