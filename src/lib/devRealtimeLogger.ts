@@ -30,6 +30,63 @@ type AnyPayload = {
   [k: string]: unknown;
 };
 
+// ---------------------------------------------------------------------------
+// Lightweight pub/sub for the "Realtime Fan-out" debug panel.
+// Runs in dev AND prod (the panel is opt-in via a route) but stays cheap:
+// only stores the *last* event per consumer, plus the last 50 globally.
+// ---------------------------------------------------------------------------
+
+export interface FanoutSubscriptionRecord {
+  hookName: string;
+  bind: Bind;
+  registeredAt: number;
+}
+
+export interface FanoutEventRecord {
+  hookName: string;
+  eventType: string;
+  rowId: string | null;
+  receivedAt: number;
+}
+
+const subscriptions = new Map<string, FanoutSubscriptionRecord>();
+const lastEventByHook = new Map<string, FanoutEventRecord>();
+const recentEvents: FanoutEventRecord[] = [];
+const RECENT_EVENT_CAP = 50;
+
+type Listener = () => void;
+const listeners = new Set<Listener>();
+
+function notify(): void {
+  listeners.forEach((l) => {
+    try { l(); } catch { /* noop */ }
+  });
+}
+
+export function subscribeFanoutBus(listener: Listener): () => void {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+
+export function getFanoutSubscriptions(): FanoutSubscriptionRecord[] {
+  return Array.from(subscriptions.values());
+}
+
+export function getFanoutLastEvents(): Map<string, FanoutEventRecord> {
+  return new Map(lastEventByHook);
+}
+
+export function getFanoutRecentEvents(): FanoutEventRecord[] {
+  return [...recentEvents];
+}
+
+export function clearFanoutHistory(): void {
+  lastEventByHook.clear();
+  recentEvents.length = 0;
+  notify();
+}
+
+
 const STYLE_REG = 'color:#888;font-weight:600';
 const STYLE_HOOK = 'color:#3b82f6;font-weight:700';
 const STYLE_EVENT_INSERT = 'color:#16a34a;font-weight:600';
