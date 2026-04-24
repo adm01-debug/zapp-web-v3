@@ -256,8 +256,10 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
   });
 
   const bulkRetry = useMutation({
-    mutationFn: async (ids: string[]) => {
+    mutationFn: async (input: string[] | { ids: string[]; reason?: string }) => {
       if (!isAdmin) throw new Error(ADMIN_ONLY_MSG);
+      const ids = Array.isArray(input) ? input : input.ids;
+      const reason = Array.isArray(input) ? '' : (input.reason ?? '');
       if (ids.length === 0) return 0;
       // No bulk RPC for retry — sequential calls, fast since they're just UPDATEs
       let n = 0;
@@ -270,7 +272,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
           succeededIds.push(id);
         }
       }
-      if (succeededIds.length > 0) await logItemAction('bulk_retry', succeededIds);
+      if (succeededIds.length > 0) await logItemAction('bulk_retry', succeededIds, reason || undefined);
       return n;
     },
     onSuccess: (n) => {

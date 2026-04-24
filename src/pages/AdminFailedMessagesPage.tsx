@@ -34,6 +34,8 @@ import {
 import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/utils';
 import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
+import { BulkReprocessGuidedDialog } from '@/components/admin/BulkReprocessGuidedDialog';
+import { DLQAuditHistory } from '@/components/monitoring/DLQAuditHistory';
 import { toast } from 'sonner';
 import {
   ALL_ROOT_CAUSES,
@@ -96,6 +98,7 @@ export default function AdminFailedMessagesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmBulkAbandon, setConfirmBulkAbandon] = useState(false);
   const [bulkReason, setBulkReason] = useState('');
+  const [guidedReprocessOpen, setGuidedReprocessOpen] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -156,6 +159,13 @@ export default function AdminFailedMessagesPage() {
 
   const allVisibleSelected = sorted.length > 0 && sorted.every((r) => selectedIds.has(r.id));
   const someVisibleSelected = sorted.some((r) => selectedIds.has(r.id));
+
+  // Linhas correspondentes aos IDs selecionados — usadas pelo diálogo guiado
+  // para pré-visualizar impacto sem precisar de nova consulta.
+  const selectedRows = useMemo(
+    () => sorted.filter((r) => selectedIds.has(r.id)),
+    [sorted, selectedIds],
+  );
 
   function toggleAll() {
     if (allVisibleSelected) {
@@ -481,11 +491,7 @@ export default function AdminFailedMessagesPage() {
               </Button>
               <Button
                 size="sm"
-                onClick={() => {
-                  bulkRetry.mutate(Array.from(selectedIds), {
-                    onSuccess: () => setSelectedIds(new Set()),
-                  });
-                }}
+                onClick={() => setGuidedReprocessOpen(true)}
                 disabled={bulkRetry.isPending}
               >
                 <RotateCw className={cn('h-4 w-4 mr-2', bulkRetry.isPending && 'animate-spin')} />
@@ -852,6 +858,30 @@ export default function AdminFailedMessagesPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Guided bulk reprocess dialog (admin only) */}
+      {isAdmin && (
+        <BulkReprocessGuidedDialog
+          open={guidedReprocessOpen}
+          onOpenChange={(o) => {
+            setGuidedReprocessOpen(o);
+            if (!o && !bulkRetry.isPending) {
+              // não limpa seleção em caso de cancelamento — usuário pode querer ajustar
+            }
+          }}
+          selectedRows={selectedRows}
+          isPending={bulkRetry.isPending}
+          onConfirm={async (ids, reason) => {
+            const affected = await bulkRetry.mutateAsync({ ids, reason });
+            // Após sucesso, limpamos a seleção (o passo de resultado ainda fica visível).
+            setSelectedIds(new Set());
+            return affected;
+          }}
+        />
+      )}
+
+      {/* Histórico de reprocesso e ações DLQ */}
+      <DLQAuditHistory />
     </div>
   );
 }
