@@ -137,18 +137,26 @@ export function useSLAAlerts(params: SLAAlertParams) {
 
       // Layer 1: in-memory (sync) — prevents re-entry from rapid effect runs.
       if (firedRef.current.has(key) || inflightRef.current.has(key)) return;
+
+      // Layer 2: localStorage (sync, survives refresh) — instant skip without network round-trip.
+      if (alreadyFiredLocal(key)) {
+        firedRef.current.add(key);
+        return;
+      }
+
       inflightRef.current.add(key);
 
       try {
-        // Layer 2: persistent — check audit history for prior alert with same key.
+        // Layer 3: persistent (DB) — handles cross-device/cross-tab and recovers if localStorage was wiped.
         const already = await alreadyFiredPersistent(contactId, kind, severity);
         if (already) {
-          // Mark as fired locally so subsequent renders skip the round-trip.
           firedRef.current.add(key);
+          markFiredLocal(key); // hydrate localStorage so next refresh is instant
           return;
         }
 
         firedRef.current.add(key);
+        markFiredLocal(key);
 
         const isBreach = severity === 'breached';
         const kindLabel = kind === 'first_response' ? '1ª resposta' : 'Resolução';
