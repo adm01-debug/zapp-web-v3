@@ -297,8 +297,34 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
     });
   }
 
-  const firstResponseAgentName = timeline.firstResponseBy?.agentName ?? assignedTo?.name ?? null;
-  const firstResponseQueueName = timeline.firstResponseBy?.queueName ?? queue?.name ?? null;
+  const attributionSource = timeline.firstResponseAttributionSource;
+  // Only trust event-based attribution (assign within window). For weaker sources
+  // fall back to the conversation's CURRENT assignment, but flag it to the user.
+  const attributionFromEvents = attributionSource === 'assign-event';
+  const firstResponseAgentName = attributionFromEvents
+    ? timeline.firstResponseBy?.agentName ?? null
+    : assignedTo?.name ?? null;
+  const firstResponseQueueName = attributionFromEvents
+    ? timeline.firstResponseBy?.queueName ?? null
+    : queue?.name ?? null;
+
+  let attributionNote: string | null = null;
+  let attributionTone: 'fallback' | 'info' = 'info';
+  if (timeline.firstResponseAt && !timeline.isAwaitingFirstResponse) {
+    if (attributionSource === 'assign-event' && timeline.firstResponseAttributionWindow) {
+      const w = timeline.firstResponseAttributionWindow;
+      attributionNote = `Atribuição calculada do assign em ${format(w.from, 'HH:mm', { locale: ptBR })} até a resposta em ${format(w.to, 'HH:mm', { locale: ptBR })}`;
+      attributionTone = 'info';
+    } else if (attributionSource === 'pre-contact-assign') {
+      attributionNote = 'Sem evento de assign após o contato — exibindo a atribuição atual da conversa';
+      attributionTone = 'fallback';
+    } else if (attributionSource === 'insufficient-events') {
+      attributionNote = firstResponseAgentName || firstResponseQueueName
+        ? 'Sem eventos de assign no período — atribuição estimada pelo estado atual'
+        : 'Sem eventos suficientes para identificar agente/fila';
+      attributionTone = 'fallback';
+    }
+  }
 
   if (timeline.firstResponseAt || timeline.isAwaitingFirstResponse) {
     milestones.push({
@@ -319,6 +345,8 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           iconColor={timeline.isAwaitingFirstResponse ? 'text-warning' : 'text-success'}
           agentName={timeline.isAwaitingFirstResponse ? null : firstResponseAgentName}
           queueName={timeline.isAwaitingFirstResponse ? null : firstResponseQueueName}
+          attributionNote={timeline.isAwaitingFirstResponse ? null : attributionNote}
+          attributionTone={attributionTone}
         />
       ),
     });
