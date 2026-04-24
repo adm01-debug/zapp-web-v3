@@ -38,21 +38,30 @@ vi.mock('@/components/ui/motion', () => ({
 
 const { ChatMessagesArea } = await import('../ChatMessagesArea');
 
-function renderArea(extra: Record<string, unknown>) {
-  const messages: Message[] = [];
+function baseProps() {
+  return {
+    messages: [] as Message[],
+    isContactTyping: false,
+    typingUserName: '',
+    ttsLoading: false,
+    ttsPlaying: false,
+    ttsMessageId: null,
+    contactJid: 'jid-1',
+    onSpeak: vi.fn(),
+    onStop: vi.fn(),
+    onReply: vi.fn(),
+    onForward: vi.fn(),
+    onCopy: vi.fn(),
+    onScrollToMessage: vi.fn(),
+    onInteractiveButtonClick: vi.fn(),
+  };
+}
+
+function renderArea(extra: Record<string, unknown> = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <ChatMessagesArea
-        messages={messages}
-        isContactTyping={false}
-        typingUserName=""
-        ttsLoading={false}
-        ttsPlaying={false}
-        ttsMessageId={null}
-        contactJid="jid-1"
-        {...extra}
-      />
+      <ChatMessagesArea {...baseProps()} {...extra} />
     </QueryClientProvider>,
   );
 }
