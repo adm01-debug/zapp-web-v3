@@ -1,6 +1,6 @@
 import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, Ban, RotateCw } from 'lucide-react';
+import { Loader2, Ban, RotateCw, Navigation2 } from 'lucide-react';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('ChatMessagesArea');
@@ -44,7 +44,11 @@ interface ChatMessagesAreaProps {
   onCancelLoadOlder?: () => void;
   loadingOlder?: boolean;
   hasMoreOlder?: boolean;
+  /** Duração em ms do badge "Carregamento cancelado". Default: 2500ms. */
+  loadOlderCancelBadgeMs?: number;
 }
+
+export type LoadOlderCancelReason = 'reverse-scroll' | 'navigation';
 
 export interface ChatMessagesAreaRef {
   scrollToBottom: () => void;
@@ -57,6 +61,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   instanceName, contactJid, contactAvatar, onSpeak, onStop, onReply, onForward, onCopy,
   onScrollToMessage, onInteractiveButtonClick, onEditStart, highlightedMessageIds, activeHighlightId, searchQuery,
   onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false,
+  loadOlderCancelBadgeMs = 2500,
 }, ref) => {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -70,13 +75,24 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   const lastScrollTopRef = useRef<number>(0);
   const lastTriggerAtRef = useRef<number>(0);
   const [loadCancelled, setLoadCancelled] = useState(false);
+  const [cancelReason, setCancelReason] = useState<LoadOlderCancelReason>('reverse-scroll');
   const cancelBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevContactJidRef = useRef<string | undefined>(contactJid);
 
-  const flagCancelled = useCallback(() => {
+  const flagCancelled = useCallback((reason: LoadOlderCancelReason = 'reverse-scroll') => {
+    setCancelReason(reason);
     setLoadCancelled(true);
     if (cancelBadgeTimerRef.current) clearTimeout(cancelBadgeTimerRef.current);
-    cancelBadgeTimerRef.current = setTimeout(() => setLoadCancelled(false), 2500);
-  }, []);
+    cancelBadgeTimerRef.current = setTimeout(() => setLoadCancelled(false), loadOlderCancelBadgeMs);
+  }, [loadOlderCancelBadgeMs]);
+
+  // Detecta troca de contato com load em andamento → cancelamento por navegação.
+  useEffect(() => {
+    if (prevContactJidRef.current !== undefined && prevContactJidRef.current !== contactJid && isFetchingOlderRef.current) {
+      flagCancelled('navigation');
+    }
+    prevContactJidRef.current = contactJid;
+  }, [contactJid, flagCancelled]);
 
   useEffect(() => () => {
     if (cancelBadgeTimerRef.current) clearTimeout(cancelBadgeTimerRef.current);
@@ -308,35 +324,42 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
               <span>Carregando mensagens anteriores…</span>
             </div>
           )}
-          {!loadingOlder && loadCancelled && (
-            <div
-              role="status"
-              data-testid="load-older-cancelled"
-              className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 backdrop-blur-sm pl-3 pr-1 py-1 rounded-full border border-border/30"
-            >
-              <Ban className="h-3 w-3" />
-              <span>Carregamento cancelado</span>
-              <button
-                type="button"
-                data-testid="load-older-retry"
-                onClick={() => {
-                  // Limpa o badge imediatamente e reexecuta o loadOlder.
-                  setLoadCancelled(false);
-                  if (cancelBadgeTimerRef.current) {
-                    clearTimeout(cancelBadgeTimerRef.current);
-                    cancelBadgeTimerRef.current = null;
-                  }
-                  cancelledRef.current = false;
-                  void onLoadOlder?.();
-                }}
-                className="inline-flex items-center gap-1 ml-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-foreground bg-background/80 hover:bg-background border border-border/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Tentar carregar mensagens anteriores novamente"
+          {!loadingOlder && loadCancelled && (() => {
+            const isNav = cancelReason === 'navigation';
+            const Icon = isNav ? Navigation2 : Ban;
+            const text = isNav
+              ? 'Carregamento interrompido pela navegação'
+              : 'Carregamento cancelado pela rolagem';
+            return (
+              <div
+                role="status"
+                data-testid="load-older-cancelled"
+                data-cancel-reason={cancelReason}
+                className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 backdrop-blur-sm pl-3 pr-1 py-1 rounded-full border border-border/30"
               >
-                <RotateCw className="h-3 w-3" />
-                Tentar carregar de novo
-              </button>
-            </div>
-          )}
+                <Icon className="h-3 w-3" />
+                <span>{text}</span>
+                <button
+                  type="button"
+                  data-testid="load-older-retry"
+                  onClick={() => {
+                    setLoadCancelled(false);
+                    if (cancelBadgeTimerRef.current) {
+                      clearTimeout(cancelBadgeTimerRef.current);
+                      cancelBadgeTimerRef.current = null;
+                    }
+                    cancelledRef.current = false;
+                    void onLoadOlder?.();
+                  }}
+                  className="inline-flex items-center gap-1 ml-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-foreground bg-background/80 hover:bg-background border border-border/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Tentar carregar mensagens anteriores novamente"
+                >
+                  <RotateCw className="h-3 w-3" />
+                  Tentar carregar de novo
+                </button>
+              </div>
+            );
+          })()}
           {!loadingOlder && !loadCancelled && !hasMoreOlder && messages.length > 0 && (
             <span className="text-[11px] text-muted-foreground/60 italic">Início da conversa</span>
           )}
