@@ -84,6 +84,7 @@ export const useMessageStatus = (contactId?: string) => {
   useEffect(() => {
     if (!contactId) return;
 
+    logMessagesSubscribe('useMessageStatus', { event: 'UPDATE', table: 'messages', filter: `contact_id=eq.${contactId}` });
     const channel = supabase
       .channel(`message-status-${contactId}`)
       .on(
@@ -94,7 +95,7 @@ export const useMessageStatus = (contactId?: string) => {
           table: 'messages',
           filter: `contact_id=eq.${contactId}`,
         },
-        (payload) => {
+        wrapMessagesHandler('useMessageStatus', (payload) => {
           const newData = payload.new as {
             id: string;
             status: string;
