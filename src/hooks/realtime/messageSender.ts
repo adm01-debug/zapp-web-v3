@@ -174,10 +174,26 @@ export async function sendMessageToContact(
 
     const { action, body } = buildEvolutionPayload(connection.instance_id, phone, content, messageType, mediaUrl, mediaPayload);
 
-    // Stable idempotency key per logical message — survives client retries
-    // and DLQ reprocess, so a network-recovery retry can't duplicate the
-    // WhatsApp message on Evolution's side.
-    const idemKey = buildSendIdempotencyKey(data.id);
+    // Stable idempotency key per logical message. We prefer a content-aware
+    // fingerprint (contact + type + content + media + 5min bucket) so that:
+    //   - Automatic retries of THIS row converge (same fingerprint, same row).
+    //   - Manual "Reenviar" clicks create a new row but produce the SAME key,
+    //     letting Evolution dedupe on its side and preventing the recipient
+    //     from receiving the same message twice.
+    // We fall back to the row-id form if fingerprint hashing fails for any
+    // reason (very old browser, sandboxed crypto), so the send still proceeds.
+    let idemKey: string;
+    try {
+      idemKey = await buildSendIdempotencyKeyFromFingerprint({
+        contactId,
+        messageType,
+        content,
+        mediaUrl: mediaUrl ?? null,
+      });
+    } catch (e) {
+      log.warn('Fingerprint key generation failed; falling back to row id', e);
+      idemKey = buildSendIdempotencyKey(data.id);
+    }
 
     const { data: apiResult, error: apiError } = await invokeEvolutionWithRetry(
       action,
