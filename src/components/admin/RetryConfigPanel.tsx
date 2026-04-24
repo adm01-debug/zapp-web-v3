@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Settings2, RotateCcw, Save, Info } from 'lucide-react';
+import { Settings2, RotateCcw, Save, Info, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,11 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 import { useInstanceRetryConfig } from '@/hooks/messaging/useInstanceRetryConfig';
 import {
   RETRY_CONFIG_RANGES,
   RETRY_CONFIG_FIELDS,
   DEFAULT_RETRY_CONFIG,
+  validateRetryConfig,
+  hasRetryConfigErrors,
   type RetryConfig,
 } from '@/lib/retryConfig';
 
