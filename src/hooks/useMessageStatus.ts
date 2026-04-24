@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
+import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import {
   subscribeAllSendStatus,
   getSendStatus,
@@ -116,7 +117,7 @@ export const useMessageStatus = (contactId?: string) => {
               return updated;
             });
           }
-        }
+        })
       )
       .subscribe();
 
