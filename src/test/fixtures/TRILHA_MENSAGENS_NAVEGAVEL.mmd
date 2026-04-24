@@ -63,6 +63,12 @@ flowchart LR
   ESR -..-> DLQENQ
   DLQENQ ==> DLQ
 
+  %% Reprocessamento DLQ — fecha o ciclo: mensagens falhadas voltam ao fluxo
+  DLQ -.->|cron / manual trigger| DLQRP
+  DLQRP -->|reenvia respeitando<br/>Idempotency-Key estavel| EDGE
+  DLQRP ==>|atualiza status / retry_attempt| DB
+  DLQRP -.->|registra outcome| DLQ
+
   %% Status bus
   MS -.-> EMIT
   ESR -.-> EMIT
