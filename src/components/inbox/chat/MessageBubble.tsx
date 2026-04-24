@@ -154,7 +154,8 @@ export function MessageBubble({
                         isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-bl-md',
                         isFirstInGroup && !isLastInGroup && 'rounded-2xl rounded-bl-sm',
                         !isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-tl-sm rounded-bl-md',
-                        !isFirstInGroup && !isLastInGroup && 'rounded-xl rounded-tl-sm rounded-bl-sm')
+                        !isFirstInGroup && !isLastInGroup && 'rounded-xl rounded-tl-sm rounded-bl-sm'),
+                  isFailedTerminal && 'ring-1 ring-destructive/50 border border-destructive/40'
                 )}
               >
                 {message.replyTo && <QuotedMessage replyTo={message.replyTo} isSent={isSent} onClick={() => onScrollToMessage(message.replyTo!.messageId)} />}
