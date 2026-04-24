@@ -74,8 +74,35 @@ export function shouldFireRetryAlert(
   return true;
 }
 
-const STORAGE_KEY = 'zappweb:retry-alert-thresholds';
-const PER_INSTANCE_STORAGE_KEY = 'zappweb:retry-alert-thresholds:per-instance';
+export const RETRY_THRESHOLDS_STORAGE_KEY = 'zappweb:retry-alert-thresholds';
+export const RETRY_PER_INSTANCE_STORAGE_KEY = 'zappweb:retry-alert-thresholds:per-instance';
+
+// Aliases internos curtos (compat com o resto deste arquivo).
+const STORAGE_KEY = RETRY_THRESHOLDS_STORAGE_KEY;
+const PER_INSTANCE_STORAGE_KEY = RETRY_PER_INSTANCE_STORAGE_KEY;
+
+/**
+ * Assina mudanças cross-tab dos thresholds de retry (globais e/ou por-instância)
+ * via `window.storage`. O evento só dispara em **outras abas**, então é seguro
+ * usar como gatilho de re-leitura sem provocar loops na aba que salvou.
+ *
+ * `cb` recebe o estado fresco lido do localStorage. Retorna função de cleanup.
+ *
+ * SSR-safe: se `window` não existe (test/server), retorna no-op.
+ */
+export function subscribeRetryAlertsStorage(
+  cb: (next: { thresholds: RetryThresholds; perInstance: PerInstanceThresholds }) => void,
+): () => void {
+  if (typeof window === 'undefined') return () => { /* no-op */ };
+  const handler = (e: StorageEvent) => {
+    // `key === null` acontece em `localStorage.clear()` — relemos tudo.
+    if (e.key !== null && e.key !== STORAGE_KEY && e.key !== PER_INSTANCE_STORAGE_KEY) return;
+    cb({ thresholds: loadThresholds(), perInstance: loadPerInstanceThresholds() });
+  };
+  window.addEventListener('storage', handler);
+  return () => window.removeEventListener('storage', handler);
+}
+
 
 export function loadThresholds(): RetryThresholds {
   const raw = safeGetJSON<Partial<RetryThresholds> | null>(STORAGE_KEY, null);
