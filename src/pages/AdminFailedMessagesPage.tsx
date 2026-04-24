@@ -362,6 +362,7 @@ export default function AdminFailedMessagesPage() {
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="ex.: 5511..., ETIMEDOUT, 503"
                 className="pl-8"
+                data-testid="filter-failed-search"
               />
             </div>
           </div>
@@ -415,7 +416,7 @@ export default function AdminFailedMessagesPage() {
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">Status</label>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[180px]" data-testid="filter-failed-status"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="pending">Pendente</SelectItem>
@@ -514,7 +515,11 @@ export default function AdminFailedMessagesPage() {
       {/* Table */}
       <Card>
         <CardHeader className="pb-3 flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle
+            className="text-sm font-medium flex items-center gap-2"
+            data-testid="failed-messages-results-count"
+            data-results-count={total}
+          >
             <Inbox className="h-4 w-4" />
             {total} item{total === 1 ? '' : 's'}
             {total > pageSize && (
@@ -565,6 +570,7 @@ export default function AdminFailedMessagesPage() {
                 {sorted.map((row) => (
                   <TableRow
                     key={row.id}
+                    data-testid="failed-message-row"
                     data-state={selectedIds.has(row.id) ? 'selected' : undefined}
                     className="cursor-pointer"
                     onClick={() => setSelected(row)}
@@ -578,7 +584,7 @@ export default function AdminFailedMessagesPage() {
                         />
                       </TableCell>
                     )}
-                    <TableCell>
+                    <TableCell data-testid="failed-message-status">
                       <Badge variant={STATUS_VARIANT[row.status]}>
                         {STATUS_LABEL[row.status]}
                       </Badge>
