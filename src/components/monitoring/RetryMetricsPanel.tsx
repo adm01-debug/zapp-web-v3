@@ -14,6 +14,7 @@ import { useRetryMetrics, type RetryMetricsFilters } from '@/hooks/monitoring/us
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, Legend } from 'recharts';
 import { RetryAlertsConfig } from './RetryAlertsConfig';
 import { RetryAlertsBanner } from './RetryAlertsBanner';
+import { RetrySchedulePreview } from './RetrySchedulePreview';
 import {
   evaluateAllInstances,
   loadThresholds,
@@ -223,6 +224,9 @@ export function RetryMetricsPanel() {
 
         {/* Banner de alertas por instância */}
         <RetryAlertsBanner breaches={breaches} />
+
+        {/* Prévia do cronograma de tentativas/abort por instância */}
+        <RetrySchedulePreview instances={byInstance.map((b) => b.instance)} />
 
         {/* Top reasons — bar chart (top 10) */}
         {agg && agg.topReasons.length > 0 && (
