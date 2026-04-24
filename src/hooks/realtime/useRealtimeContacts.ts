@@ -203,12 +203,17 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
             )
           : true;
 
-      // Coalesce: if a previous pending change already requested reorder,
-      // keep that flag sticky across the burst window.
+      // Coalesce within the 100ms window: merge into prior pending change so
+      // that bursts of partial UPDATEs (e.g. one touches lead_status, another
+      // touches tags) end up with the union of all non-undefined fields.
+      // Reorder flag is sticky across the burst.
       const prev = pendingRef.current.get(row.remote_jid);
+      const mergedContact = prev ? mergeContact(prev.contact, row) : row;
+      // DELETE always wins over earlier INSERT/UPDATE in the same burst.
+      const mergedType = type === 'DELETE' ? 'DELETE' : (prev?.type === 'INSERT' ? 'INSERT' : type);
       pendingRef.current.set(row.remote_jid, {
-        type,
-        contact: row,
+        type: mergedType,
+        contact: mergedContact,
         reorder: reorder || prev?.reorder,
       });
       scheduleFlush();
