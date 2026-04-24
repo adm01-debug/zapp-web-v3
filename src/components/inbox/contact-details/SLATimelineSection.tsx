@@ -402,6 +402,7 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           queueName={timeline.isAwaitingFirstResponse ? null : firstResponseQueueName}
           attributionNote={timeline.isAwaitingFirstResponse ? null : attributionNote}
           attributionTone={attributionTone}
+          onOpenConversation={handleOpenConversation}
         />
       ),
     });
