@@ -9,7 +9,8 @@ import {
   getUniqueMessageContactIds, chunkArray,
 } from './realtime/realtimeUtils';
 import { useRealtimeNotifications } from './realtime/useRealtimeNotifications';
-import { useMessageUpdateBatcher } from './realtime/useMessageUpdateBatcher';
+import { useMessageUpdateBatcher, type MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
+export type { MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 
 const log = getLogger('RealtimeMessages');
 const SEEDED_CONTACT_LIMIT = 500;
