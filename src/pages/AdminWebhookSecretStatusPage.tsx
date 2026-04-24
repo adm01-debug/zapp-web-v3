@@ -562,7 +562,7 @@ export default function AdminWebhookSecretStatusPage() {
               <p className="text-sm text-muted-foreground">
                 Nenhum evento corresponde aos filtros atuais.
               </p>
-              <Button variant="outline" size="sm" onClick={clearAdvancedFilters}>
+              <Button variant="outline" size="sm" onClick={clearAllFiltersAndUrl}>
                 Limpar filtros
               </Button>
             </div>
