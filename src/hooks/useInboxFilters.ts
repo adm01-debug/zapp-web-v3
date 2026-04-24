@@ -19,6 +19,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
   const [showAll, setShowAll] = useState(false);
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
+  const [showOnlyRetrying, setShowOnlyRetrying] = useState(false);
 
   const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
 
