@@ -537,7 +537,7 @@ export default function AdminWebhookSecretStatusPage() {
         setPref={setPref}
         setVisibleColumn={setVisibleColumn}
         clearFilters={clearAllFiltersAndUrl}
-        resetPrefs={resetPrefs}
+        resetPrefs={resetAllPrefsAndUrl}
         activeFilterCount={activeFilterCount}
         availableEventTypes={availableEventTypes}
         currentInstance={selectedInstance}
