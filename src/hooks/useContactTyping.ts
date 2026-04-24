@@ -52,9 +52,13 @@ export const TYPING_STOP_DEBOUNCE_MS = resolveStopDebounceMs();
  * de presence/track do hook completo `useTypingPresence`.
  *
  * Auto-clear configurável via `VITE_TYPING_AUTO_CLEAR_MS` (default 5000ms).
+ * Stop-debounce configurável via `VITE_TYPING_STOP_DEBOUNCE_MS` (default 600ms).
  * Defesa broadcast: ignora JIDs `@broadcast` e `@g.us`.
+ *
+ * Otimização: passe `enabled=false` para suspender a subscrição (ex.: cards
+ * fora do viewport em listas longas) e evitar criar 1 canal por conversa.
  */
-export function useContactTyping(remoteJid?: string | null): boolean {
+export function useContactTyping(remoteJid?: string | null, enabled: boolean = true): boolean {
   const [isTyping, setIsTyping] = useState(false);
   // Auto-clear (TTL longo) — limpa caso o emissor pare de enviar `composing`.
   const clearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -63,6 +67,10 @@ export function useContactTyping(remoteJid?: string | null): boolean {
   const stopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      setIsTyping(false);
+      return;
+    }
     if (!remoteJid) {
       setIsTyping(false);
       return;
@@ -127,7 +135,7 @@ export function useContactTyping(remoteJid?: string | null): boolean {
       clearStopDebounce();
       supabase.removeChannel(channel);
     };
-  }, [remoteJid]);
+  }, [remoteJid, enabled]);
 
   return isTyping;
 }
