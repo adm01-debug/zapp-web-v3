@@ -30,10 +30,10 @@ const metrics = {
 };
 vi.mock('./loadOlderMetrics', () => metrics);
 
-let bubbleRenderCount = 0;
+const hoisted = vi.hoisted(() => ({ bubbleRenderCount: { value: 0 } }));
 vi.mock('./MessageBubble', () => ({
-  MessageBubble: ({ message }: { message: Message }) => {
-    bubbleRenderCount++;
+  MessageBubble: ({ message }: { message: { id: string } }) => {
+    hoisted.bubbleRenderCount.value++;
     return <div data-testid={`bubble-${message.id}`} />;
   },
 }));
