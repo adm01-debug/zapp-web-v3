@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
+import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 
 const log = getLogger('RealtimeDashboard');
 
