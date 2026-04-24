@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
@@ -129,25 +131,62 @@ export function ContactAccordionSections({ contact, conversation, enrichedData, 
             <ContactStatsSection contactId={contact.id} />
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="media" className="border-border/30">
-          <AccordionTrigger className="px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider hover:no-underline hover:bg-muted/10">
-            <div className="flex items-center gap-2"><Image className="w-3.5 h-3.5" />Mídia Compartilhada</div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-center gap-2"
-              onClick={() => setMediaOpen(true)}
-            >
-              <Image className="w-3.5 h-3.5" />
-              Abrir galeria
-            </Button>
-          </AccordionContent>
-        </AccordionItem>
+        <SharedMediaAccordionItem contactId={contact.id} onOpen={() => setMediaOpen(true)} />
       </motion.div>
       <MediaGallery contactId={contact.id} open={mediaOpen} onOpenChange={setMediaOpen} />
     </>
+  );
+}
+
+function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; onOpen: () => void }) {
+  const { data: count, isLoading } = useQuery({
+    queryKey: ['shared-media-count', contactId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('contact_id', contactId)
+        .not('media_url', 'is', null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!contactId,
+    staleTime: 60_000,
+  });
+
+  const label = isLoading
+    ? '…'
+    : count === 0
+      ? 'vazio'
+      : `${count} ${count === 1 ? 'arquivo' : 'arquivos'}`;
+
+  return (
+    <AccordionItem value="media" className="border-border/30">
+      <AccordionTrigger className="px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider hover:no-underline hover:bg-muted/10">
+        <div className="flex items-center justify-between gap-2 w-full pr-2">
+          <div className="flex items-center gap-2"><Image className="w-3.5 h-3.5" />Mídia Compartilhada</div>
+          <Badge
+            variant="secondary"
+            className="h-5 px-1.5 text-[10px] font-medium normal-case tracking-normal"
+            aria-label={`${count ?? 0} arquivos compartilhados`}
+          >
+            {label}
+          </Badge>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="px-4 pb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-center gap-2"
+          onClick={onOpen}
+          disabled={count === 0}
+        >
+          <Image className="w-3.5 h-3.5" />
+          {count && count > 0 ? `Abrir galeria (${count})` : 'Sem mídias compartilhadas'}
+        </Button>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
 
