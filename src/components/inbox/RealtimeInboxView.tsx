@@ -47,6 +47,9 @@ export function RealtimeInboxView() {
   const inbox = useRealtimeInbox();
   // Realtime sync of evolution_contacts (FATOR X) → React Query caches
   useRealtimeContacts({ instance: 'wpp2' });
+  // Safety net: periodic + on-reconnect refetch in case the realtime
+  // channel drops temporarily and caches drift from source of truth.
+  useRealtimeFallbackRefetch();
   const inboxFilters = useInboxFilters({ conversations: inbox.cachedConversations, profileId: inbox.profile?.id });
   const bulkActions = useInboxBulkActions({ refetch: inbox.refetch, filteredConversations: inboxFilters.filteredConversations });
   const pullToRefresh = usePullToRefresh({ onRefresh: async () => { await inbox.refetch(); }, disabled: !isMobile || !!inbox.selectedContactId });
