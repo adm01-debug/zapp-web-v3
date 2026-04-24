@@ -541,6 +541,7 @@ export default function AdminWebhookSecretStatusPage() {
         activeFilterCount={activeFilterCount}
         availableEventTypes={availableEventTypes}
         currentInstance={selectedInstance}
+        onClearInstance={() => setInstance(null)}
       />
 
       {/* Recent events table */}

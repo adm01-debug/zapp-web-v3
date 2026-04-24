@@ -46,6 +46,8 @@ interface Props {
   activeFilterCount: number;
   availableEventTypes: string[];
   currentInstance: string | null;
+  /** Optional: clear the instance filter (URL param). When omitted, the instance chip is shown without a remove button. */
+  onClearInstance?: () => void;
 }
 
 const STATUS_OPTIONS: Array<{ value: WebhookStatusFilter; label: string }> = [
@@ -74,6 +76,7 @@ export function AdvancedFiltersPanel({
   activeFilterCount,
   availableEventTypes,
   currentInstance,
+  onClearInstance,
 }: Props) {
   const [open, setOpen] = useState(activeFilterCount > 0);
   const [reasonDraft, setReasonDraft] = useState(prefs.reasonSearch);
@@ -168,6 +171,65 @@ export function AdvancedFiltersPanel({
             </Button>
           </div>
         </div>
+
+        {/* Active filters summary — always visible, auto-updates on any pref change */}
+        {(() => {
+          const chips: Array<{ key: string; label: string; onClear: () => void }> = [];
+          if (currentInstance) {
+            chips.push({
+              key: 'instance',
+              label: `Instância: ${currentInstance}`,
+              onClear: onClearInstance ?? (() => {}),
+            });
+          }
+          if (prefs.statusFilter !== 'all') {
+            const statusLabel =
+              STATUS_OPTIONS.find((o) => o.value === prefs.statusFilter)?.label ??
+              prefs.statusFilter;
+            chips.push({
+              key: 'status',
+              label: `Status: ${statusLabel}`,
+              onClear: () => setPref('statusFilter', 'all'),
+            });
+          }
+          if (prefs.reasonSearch.trim()) {
+            chips.push({
+              key: 'reason',
+              label: `Motivo: "${prefs.reasonSearch.trim()}"`,
+              onClear: () => setPref('reasonSearch', ''),
+            });
+          }
+          if (prefs.eventTypeFilter) {
+            chips.push({
+              key: 'event',
+              label: `Tipo: ${prefs.eventTypeFilter}`,
+              onClear: () => setPref('eventTypeFilter', null),
+            });
+          }
+          if (chips.length === 0) return null;
+          return (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-live="polite">
+              <span className="text-xs text-muted-foreground mr-1">Filtros ativos:</span>
+              {chips.map((c) => (
+                <Badge
+                  key={c.key}
+                  variant="secondary"
+                  className="gap-1 pl-2 pr-1 py-0.5"
+                >
+                  <span className="text-xs">{c.label}</span>
+                  <button
+                    type="button"
+                    onClick={c.onClear}
+                    className="ml-0.5 rounded-sm hover:bg-muted-foreground/20 p-0.5"
+                    aria-label={`Remover filtro ${c.label}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          );
+        })()}
 
         {open && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
