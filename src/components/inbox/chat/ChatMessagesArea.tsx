@@ -19,7 +19,9 @@ import {
   recordLoadOlderCompleted,
 } from './loadOlderMetrics';
 
-interface ChatMessagesAreaProps {
+import type { LoadOlderProps } from './loadOlderTypes';
+
+interface ChatMessagesAreaProps extends LoadOlderProps {
   messages: Message[];
   isContactTyping: boolean;
   typingUserName: string;
@@ -40,11 +42,10 @@ interface ChatMessagesAreaProps {
   highlightedMessageIds?: Set<string>;
   activeHighlightId?: string | null;
   searchQuery?: string;
-  onLoadOlder?: () => void | Promise<void>;
-  onCancelLoadOlder?: () => void;
-  loadingOlder?: boolean;
-  hasMoreOlder?: boolean;
-  /** Duração em ms do badge "Carregamento cancelado". Default: 2500ms. */
+  /**
+   * Duração em ms do badge "Carregamento cancelado". Default: 2500ms.
+   * Ignorado em modo local (sem `onLoadOlder`), pois o badge nunca aparece.
+   */
   loadOlderCancelBadgeMs?: number;
 }
 
