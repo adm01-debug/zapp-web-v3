@@ -66,6 +66,7 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const { toast } = useToast();
   const { profile } = useAuth();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const isSent = message.sender === 'agent';
   const senderName = isSent ? 'Você' : message.senderName || 'Contato';
   const agentInitials = profile?.name ? profile.name.slice(0, 2).toUpperCase() : 'EU';
@@ -73,7 +74,7 @@ export function MessageBubble({
     message.status === 'failed' || message.status === 'failed_auth' || message.status === 'failed_retries'
   );
 
-  return (
+  const bubbleContent = (
       <SwipeableMessage onSwipeRight={() => onReply(message)} onSwipeLeft={() => onForward(message)}>
         <div
           ref={registerRef}
