@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
@@ -50,6 +50,13 @@ interface ContactAccordionSectionsProps {
 
 export function ContactAccordionSections({ contact, conversation, enrichedData, aiTags, slaInfo, profileId }: ContactAccordionSectionsProps) {
   const [mediaOpen, setMediaOpen] = useState(false);
+
+  // Fecha a galeria automaticamente ao trocar de contato para evitar
+  // que ela permaneça aberta exibindo dados do contato anterior.
+  useEffect(() => {
+    setMediaOpen(false);
+  }, [contact.id]);
+
   return (
     <>
       <Section index={0} value="info" icon={<Info className="w-3.5 h-3.5 text-primary" />} label="Informações">
