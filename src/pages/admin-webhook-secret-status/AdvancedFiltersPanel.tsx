@@ -76,6 +76,7 @@ export function AdvancedFiltersPanel({
   activeFilterCount,
   availableEventTypes,
   currentInstance,
+  onClearInstance,
 }: Props) {
   const [open, setOpen] = useState(activeFilterCount > 0);
   const [reasonDraft, setReasonDraft] = useState(prefs.reasonSearch);
