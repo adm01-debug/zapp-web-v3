@@ -39,7 +39,7 @@ export const useBitrixApi = () => {
     entityId?: string,
     data?: Record<string, unknown>,
     filters?: Record<string, unknown>
-  ) => {
+  ): Promise<BitrixApiResponse | null> => {
     setLoading(true);
     setError(null);
 
@@ -52,11 +52,11 @@ export const useBitrixApi = () => {
         throw new Error(invokeError.message);
       }
 
-      if (response?.error) {
+      if (hasField(response, 'error') && typeof response.error === 'string') {
         throw new Error(response.error);
       }
 
-      return response;
+      return (response ?? null) as BitrixApiResponse | null;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao comunicar com Bitrix';
       setError(errorMessage);
