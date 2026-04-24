@@ -145,5 +145,49 @@ describe('getRetryConfigSync', () => {
     mockSelect([{ key: 'retry.global.maxRetries', value: '6' }]);
     await loadRetryConfig();
     expect(getRetryConfigSync('wpp2').maxRetries).toBe(6);
+});
+
+describe('validateRetryConfig', () => {
+  const ok = { maxRetries: 3, baseBackoffMs: 800, maxBackoffMs: 6000, timeoutMs: 30_000 };
+
+  it('aceita configuração default', () => {
+    const errs = validateRetryConfig(DEFAULT_RETRY_CONFIG);
+    expect(hasRetryConfigErrors(errs)).toBe(false);
   });
+
+  it('rejeita maxBackoffMs < baseBackoffMs', () => {
+    const errs = validateRetryConfig({ ...ok, baseBackoffMs: 5000, maxBackoffMs: 1000 });
+    expect(errs.maxBackoffMs).toBeDefined();
+    expect(errs.maxBackoffMs).toMatch(/backoff inicial/i);
+  });
+
+  it('aceita maxBackoffMs == baseBackoffMs', () => {
+    const errs = validateRetryConfig({ ...ok, baseBackoffMs: 1000, maxBackoffMs: 1000 });
+    expect(errs.maxBackoffMs).toBeUndefined();
+  });
+
+  it('rejeita timeoutMs < baseBackoffMs', () => {
+    const errs = validateRetryConfig({ ...ok, baseBackoffMs: 9000, timeoutMs: 5000 });
+    expect(errs.timeoutMs).toBeDefined();
+  });
+
+  it('acumula múltiplos erros simultâneos', () => {
+    const errs = validateRetryConfig({
+      maxRetries: 3,
+      baseBackoffMs: 9000,
+      maxBackoffMs: 1000,
+      timeoutMs: 5000,
+    });
+    expect(errs.maxBackoffMs).toBeDefined();
+    expect(errs.timeoutMs).toBeDefined();
+  });
+
+  it('RetryConfigValidationError carrega o mapa de erros', () => {
+    const errs = validateRetryConfig({ ...ok, baseBackoffMs: 5000, maxBackoffMs: 1000 });
+    const err = new RetryConfigValidationError(errs);
+    expect(err.errors).toEqual(errs);
+    expect(err.message).toMatch(/backoff/i);
+    expect(err.name).toBe('RetryConfigValidationError');
+  });
+});
 });
