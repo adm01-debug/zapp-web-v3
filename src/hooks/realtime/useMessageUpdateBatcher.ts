@@ -1,10 +1,22 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { normalizeMessage, buildConversation } from './realtimeUtils';
 import type { ConversationWithMessages, RealtimeMessage } from '../useRealtimeMessages';
 
+export interface MessageBatcherStatus {
+  /** True while there are pending updates waiting for the debounce window to flush. */
+  isBatching: boolean;
+  /** Number of distinct messages currently queued for the next flush. */
+  pendingCount: number;
+  /** Total number of flushes performed since the batcher mounted (useful for debugging). */
+  flushedBatches: number;
+}
+
 /**
  * Batches rapid message UPDATE events (e.g. status changes) to reduce renders.
+ *
+ * Also exposes an observable `status` so the UI can show when updates are being
+ * aggregated and how many are pending.
  */
 export function useMessageUpdateBatcher(
   conversationsRef: React.MutableRefObject<ConversationWithMessages[]>,
@@ -14,9 +26,33 @@ export function useMessageUpdateBatcher(
   const pendingUpdatesRef = useRef<Map<string, RealtimeMessage>>(new Map());
   const updateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [status, setStatus] = useState<MessageBatcherStatus>({
+    isBatching: false,
+    pendingCount: 0,
+    flushedBatches: 0,
+  });
+
+  const publishStatus = useCallback((isBatching: boolean, didFlush = false) => {
+    const pendingCount = pendingUpdatesRef.current.size;
+    setStatus((prev) => {
+      const flushedBatches = didFlush ? prev.flushedBatches + 1 : prev.flushedBatches;
+      if (
+        prev.isBatching === isBatching &&
+        prev.pendingCount === pendingCount &&
+        prev.flushedBatches === flushedBatches
+      ) {
+        return prev;
+      }
+      return { isBatching, pendingCount, flushedBatches };
+    });
+  }, []);
+
   const flushPendingUpdates = useCallback(() => {
     const pending = pendingUpdatesRef.current;
-    if (pending.size === 0) return;
+    if (pending.size === 0) {
+      publishStatus(false);
+      return;
+    }
 
     const updates = Array.from(pending.values());
     pendingUpdatesRef.current = new Map();
@@ -40,7 +76,9 @@ export function useMessageUpdateBatcher(
 
       return changed ? next : prev;
     });
-  }, [commitConversations]);
+
+    publishStatus(false, true);
+  }, [commitConversations, publishStatus]);
 
   const handleMessageUpdate = useCallback(
     (payload: RealtimePostgresChangesPayload<RealtimeMessage>) => {
@@ -59,9 +97,10 @@ export function useMessageUpdateBatcher(
       pendingUpdatesRef.current.set(updatedMessage.id, updatedMessage);
       if (updateTimerRef.current) clearTimeout(updateTimerRef.current);
       updateTimerRef.current = setTimeout(flushPendingUpdates, 100);
+      publishStatus(true);
     },
-    [flushPendingUpdates, hydrateConversationForMessage, conversationsRef]
+    [flushPendingUpdates, hydrateConversationForMessage, conversationsRef, publishStatus]
   );
 
-  return { handleMessageUpdate };
+  return { handleMessageUpdate, batcherStatus: status };
 }
