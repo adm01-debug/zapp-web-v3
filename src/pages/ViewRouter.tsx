@@ -14,6 +14,7 @@ import * as Views from './lazyViews';
 const VIEW_REQUIRED_ROLES: Record<string, AppRole[]> = {
   'failed-messages': ['admin', 'supervisor'],
   'search-insights': ['admin'],
+  'agents-ops': ['admin', 'supervisor'],
 };
 
 interface ViewRouterProps {
@@ -106,6 +107,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'evolution-monitor': Views.EvolutionMonitoringDashboard,
   'webhook-secret': Views.AdminWebhookSecretStatusPage,
   'search-insights': Views.AdminSearchInsightsPage,
+  'agents-ops': Views.AgentsOperationsPage,
 };
 
 // Views that need custom props
