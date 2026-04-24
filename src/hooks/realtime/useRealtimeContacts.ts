@@ -65,6 +65,24 @@ function hasReorderingChange(
 }
 
 /**
+ * Shallow merge that preserves existing values when the incoming payload
+ * omits a key (value === undefined). Critical for fields like `tags`: a
+ * partial UPDATE that only changes `lead_status` must NOT wipe the
+ * previously-known tags array out of the cache.
+ */
+function mergeContact<T extends Partial<EvolutionContact>>(
+  prev: T,
+  next: Partial<EvolutionContact>,
+): T {
+  const out: Record<string, unknown> = { ...(prev as Record<string, unknown>) };
+  for (const k in next) {
+    const v = (next as Record<string, unknown>)[k];
+    if (v !== undefined) out[k] = v;
+  }
+  return out as T;
+}
+
+/**
  * Subscribes to evolution_contacts changes on FATOR X and updates
  * React Query caches in real time. Batched to 100ms to coalesce bursts.
  *
