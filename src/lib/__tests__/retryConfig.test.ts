@@ -16,6 +16,9 @@ import {
   __resetRetryConfigCache,
   DEFAULT_RETRY_CONFIG,
   settingKeyFor,
+  validateRetryConfig,
+  hasRetryConfigErrors,
+  RetryConfigValidationError,
 } from '../retryConfig';
 
 function mockSelect(rows: Array<{ key: string; value: string | null }>) {
