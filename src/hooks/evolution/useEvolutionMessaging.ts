@@ -196,7 +196,7 @@ export function useEvolutionMessaging(
     sendTextMessage, sendMediaMessage, sendAudioMessage, sendStickerMessage,
     sendLocationMessage, sendContactMessage, sendReaction, sendPollMessage,
     sendListMessage, sendButtonsMessage, sendStatusMessage, sendTemplateMessage,
-    sendPtvMessage, sendChatPresence,
+    sendPtvMessage, sendChatPresence, sendTextHumanized,
     // Message management (existing)
     markMessageAsRead, markMessageAsUnread, archiveChat, deleteMessage,
     updateMessage, deleteMessageForEveryone, editMessage,
