@@ -8,8 +8,12 @@
  * Retorna diagnóstico — sem expor o secret. Útil para confirmar que o secret
  * configurado na borda bate com o assinador remoto.
  */
-import { corsHeaders } from '@supabase/supabase-js/cors';
 import { createWebhookValidator } from '../_shared/hmac-validation.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 function toHex(buf: ArrayBuffer): string {
   return Array.from(new Uint8Array(buf))
