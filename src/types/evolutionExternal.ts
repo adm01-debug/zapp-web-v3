@@ -40,6 +40,67 @@ export interface EvolutionMessage {
   deleted_at: string | null;
 }
 
+// ─── evolution_messages (lite) ────────────────────────────────
+// Lightweight projection used by chat list rendering. Excludes payload,
+// raw_data, notes, tags, follow_up_*, contact_id, conversation_id, status,
+// status_at duplicates, etc. Heavy fields are fetched on-demand via
+// `useMessageDetails` (rpc_get_message_details).
+export type EvolutionMessageLite = Pick<EvolutionMessage,
+  | 'id'
+  | 'message_id'
+  | 'remote_jid'
+  | 'from_me'
+  | 'direction'
+  | 'status'
+  | 'message_type'
+  | 'content'
+  | 'media_url'
+  | 'media_mimetype'
+  | 'media_type'
+  | 'media_filename'
+  | 'caption'
+  | 'quoted_message_id'
+  | 'is_starred'
+  | 'is_important'
+  | 'sent_by_bot'
+  | 'push_name'
+  | 'instance_name'
+  | 'created_at'
+  | 'status_at'
+  | 'deleted_at'
+>;
+
+/**
+ * Project a full EvolutionMessage (e.g. from a realtime payload) into the
+ * lite shape, dropping heavy fields. Tolerant of missing keys.
+ */
+export function toEvolutionMessageLite(m: Partial<EvolutionMessage> & { id: string }): EvolutionMessageLite {
+  return {
+    id: m.id,
+    message_id: m.message_id ?? '',
+    remote_jid: m.remote_jid ?? '',
+    from_me: m.from_me ?? false,
+    direction: m.direction ?? 'inbound',
+    status: m.status ?? 'received',
+    message_type: m.message_type ?? 'text',
+    content: m.content ?? null,
+    media_url: m.media_url ?? null,
+    media_mimetype: m.media_mimetype ?? null,
+    media_type: m.media_type ?? null,
+    media_filename: m.media_filename ?? null,
+    caption: m.caption ?? null,
+    quoted_message_id: m.quoted_message_id ?? null,
+    is_starred: m.is_starred ?? false,
+    is_important: m.is_important ?? false,
+    sent_by_bot: m.sent_by_bot ?? false,
+    push_name: m.push_name ?? null,
+    instance_name: m.instance_name ?? '',
+    created_at: m.created_at ?? new Date().toISOString(),
+    status_at: m.status_at ?? null,
+    deleted_at: m.deleted_at ?? null,
+  };
+}
+
 // ─── evolution_webhook_events ─────────────────────────────────
 export interface EvolutionWebhookEvent {
   id: string;

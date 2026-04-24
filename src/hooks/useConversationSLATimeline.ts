@@ -78,7 +78,8 @@ export function useConversationSLATimeline(remoteJid: string | null, contactId: 
       if (!remoteJid || !externalSupabase) return EMPTY;
 
       // 1. Messages — first inbound, first outbound, last
-      const { data: msgs, error: msgErr } = await externalSupabase.rpc('rpc_list_messages', {
+      // Uses the lite RPC (no payload/raw_data) — only timestamps/direction needed for SLA math.
+      const { data: msgs, error: msgErr } = await externalSupabase.rpc('rpc_list_messages_lite', {
         p_remote_jid: remoteJid,
         p_instance: 'wpp2',
         p_limit: 500,

@@ -19,7 +19,8 @@
  */
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
-import type { EvolutionMessage } from '@/types/evolutionExternal';
+import type { EvolutionMessage, EvolutionMessageLite } from '@/types/evolutionExternal';
+import { toEvolutionMessageLite } from '@/types/evolutionExternal';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('useMessagesCursor');
@@ -35,7 +36,7 @@ export interface UseMessagesCursorOptions {
 }
 
 export interface UseMessagesCursorReturn {
-  messages: EvolutionMessage[];
+  messages: EvolutionMessageLite[];
   loading: boolean;
   loadingOlder: boolean;
   hasMoreOlder: boolean;
@@ -43,13 +44,13 @@ export interface UseMessagesCursorReturn {
   loadOlder: () => Promise<void>;
   cancelLoadOlder: () => void;
   refetch: () => Promise<void>;
-  addMessage: (message: EvolutionMessage) => void;
-  updateMessage: (id: string, updates: Partial<EvolutionMessage>) => void;
+  addMessage: (message: EvolutionMessageLite | EvolutionMessage) => void;
+  updateMessage: (id: string, updates: Partial<EvolutionMessageLite>) => void;
   removeMessage: (id: string) => void;
 }
 
-function dedupeAndSort(rows: EvolutionMessage[]): EvolutionMessage[] {
-  const seen = new Map<string, EvolutionMessage>();
+function dedupeAndSort(rows: EvolutionMessageLite[]): EvolutionMessageLite[] {
+  const seen = new Map<string, EvolutionMessageLite>();
   for (const r of rows) seen.set(r.id, r);
   return Array.from(seen.values()).sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
@@ -62,7 +63,7 @@ export function useMessagesCursor({
   pageSize = DEFAULT_PAGE_SIZE,
   enabled = true,
 }: UseMessagesCursorOptions): UseMessagesCursorReturn {
-  const [pages, setPages] = useState<EvolutionMessage[][]>([]);
+  const [pages, setPages] = useState<EvolutionMessageLite[][]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [hasMoreOlder, setHasMoreOlder] = useState(false);
@@ -87,14 +88,14 @@ export function useMessagesCursor({
   const messages = useMemo(() => dedupeAndSort(pages.flat()), [pages]);
 
   const fetchPage = useCallback(
-    async (beforeDate: string | null): Promise<EvolutionMessage[]> => {
+    async (beforeDate: string | null): Promise<EvolutionMessageLite[]> => {
       if (!isExternalConfigured || !externalSupabase || !remoteJid) return [];
 
       const controller = new AbortController();
       abortRef.current?.abort();
       abortRef.current = controller;
 
-      const builder = externalSupabase.rpc('rpc_list_messages', {
+      const builder = externalSupabase.rpc('rpc_list_messages_lite', {
         p_remote_jid: remoteJid,
         p_instance: instanceName,
         p_limit: pageSize,
@@ -116,7 +117,7 @@ export function useMessagesCursor({
       }
       if (rpcError) throw rpcError;
 
-      const rows = ((data || []) as EvolutionMessage[]).filter((m) => !!m && !!m.id);
+      const rows = ((data || []) as EvolutionMessageLite[]).filter((m) => !!m && !!m.id);
       // RPC retorna DESC por created_at; convertemos para ASC.
       return [...rows].sort(
         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
@@ -238,8 +239,10 @@ export function useMessagesCursor({
           filter: `remote_jid=eq.${remoteJid}`,
         },
         (payload) => {
-          const m = payload.new;
-          if (!m || !m.id) return;
+          const raw = payload.new;
+          if (!raw || !raw.id) return;
+          // Realtime payloads are full rows; project to lite to keep memory low.
+          const m = toEvolutionMessageLite(raw);
           setPages((prev) => {
             for (const p of prev) {
               if (p.some((x) => x.id === m.id)) return prev;
@@ -259,8 +262,9 @@ export function useMessagesCursor({
           filter: `remote_jid=eq.${remoteJid}`,
         },
         (payload) => {
-          const m = payload.new;
-          if (!m || !m.id) return;
+          const raw = payload.new;
+          if (!raw || !raw.id) return;
+          const m = toEvolutionMessageLite(raw);
           setPages((prev) =>
             prev.map((page) => page.map((x) => (x.id === m.id ? { ...x, ...m } : x))),
           );
@@ -287,7 +291,11 @@ export function useMessagesCursor({
     };
   }, [enabled, remoteJid]);
 
-  const addMessage = useCallback((m: EvolutionMessage) => {
+  const addMessage = useCallback((input: EvolutionMessageLite | EvolutionMessage) => {
+    const isFull = 'payload' in (input as Record<string, unknown>) || 'raw_data' in (input as Record<string, unknown>);
+    const m: EvolutionMessageLite = isFull
+      ? toEvolutionMessageLite(input as Partial<EvolutionMessage> & { id: string })
+      : (input as EvolutionMessageLite);
     setPages((prev) => {
       for (const p of prev) if (p.some((x) => x.id === m.id)) return prev;
       if (prev.length === 0) return [[m]];
@@ -296,7 +304,7 @@ export function useMessagesCursor({
     });
   }, []);
 
-  const updateMessage = useCallback((id: string, updates: Partial<EvolutionMessage>) => {
+  const updateMessage = useCallback((id: string, updates: Partial<EvolutionMessageLite>) => {
     setPages((prev) =>
       prev.map((page) => page.map((x) => (x.id === id ? { ...x, ...updates } : x))),
     );
