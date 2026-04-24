@@ -17,9 +17,23 @@ import type { Message } from '@/types/chat';
  *   4. onCancelLoadOlder permanece NUNCA chamado durante a sequencia.
  */
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: () => ({ update: () => ({ eq: () => Promise.resolve({}) }) }) },
-}));
+vi.mock('@/integrations/supabase/client', () => {
+  const channel = {
+    on: () => channel,
+    subscribe: () => channel,
+    unsubscribe: () => Promise.resolve('ok'),
+  };
+  return {
+    supabase: {
+      from: () => ({
+        update: () => ({ eq: () => Promise.resolve({}) }),
+        select: () => ({ eq: () => ({ in: () => Promise.resolve({ data: [], error: null }) }) }),
+      }),
+      channel: () => channel,
+      removeChannel: () => Promise.resolve('ok'),
+    },
+  };
+});
 vi.mock('@/lib/logger', () => ({
   getLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
