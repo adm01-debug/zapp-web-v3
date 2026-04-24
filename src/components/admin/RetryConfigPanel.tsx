@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Settings2, RotateCcw, Save, Info } from 'lucide-react';
+import { Settings2, RotateCcw, Save, Info, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,11 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 import { useInstanceRetryConfig } from '@/hooks/messaging/useInstanceRetryConfig';
 import {
   RETRY_CONFIG_RANGES,
   RETRY_CONFIG_FIELDS,
   DEFAULT_RETRY_CONFIG,
+  validateRetryConfig,
+  hasRetryConfigErrors,
   type RetryConfig,
 } from '@/lib/retryConfig';
 
@@ -69,6 +72,8 @@ export function RetryConfigPanel() {
   }, []);
 
   const dirty = useMemo(() => RETRY_CONFIG_FIELDS.some((f) => draft[f] !== config[f]), [draft, config]);
+  const validationErrors = useMemo(() => validateRetryConfig(draft), [draft]);
+  const isInvalid = hasRetryConfigErrors(validationErrors);
 
   function updateField(field: keyof RetryConfig, value: number) {
     const r = RETRY_CONFIG_RANGES[field];
@@ -77,9 +82,14 @@ export function RetryConfigPanel() {
   }
 
   async function handleSave() {
+    if (isInvalid) return;
     const partial: Partial<RetryConfig> = {};
     RETRY_CONFIG_FIELDS.forEach((f) => { if (draft[f] !== config[f]) partial[f] = draft[f]; });
-    await save(partial);
+    try {
+      await save(partial);
+    } catch {
+      // Erros de validação/persistência já mostram toast no hook.
+    }
   }
 
   return (
@@ -124,10 +134,13 @@ export function RetryConfigPanel() {
               const range = RETRY_CONFIG_RANGES[field];
               const value = draft[field];
               const inheritedFromGlobal = selected !== GLOBAL && !hasInstanceOverride;
+              const fieldError = validationErrors[field];
               return (
                 <div key={field} className="space-y-2">
                   <div className="flex items-baseline justify-between gap-2">
-                    <Label className="text-sm font-medium">{meta.label}</Label>
+                    <Label className={cn('text-sm font-medium', fieldError && 'text-destructive')}>
+                      {meta.label}
+                    </Label>
                     <Input
                       type="number"
                       value={value}
@@ -135,7 +148,11 @@ export function RetryConfigPanel() {
                       max={range.max}
                       step={range.step}
                       onChange={(e) => updateField(field, Number(e.target.value))}
-                      className="w-28 h-8 text-right tabular-nums"
+                      aria-invalid={!!fieldError}
+                      className={cn(
+                        'w-28 h-8 text-right tabular-nums',
+                        fieldError && 'border-destructive focus-visible:ring-destructive',
+                      )}
                     />
                   </div>
                   <Slider
@@ -151,9 +168,36 @@ export function RetryConfigPanel() {
                       <span className="italic">global: {globalConfig[field]}{meta.unit}</span>
                     )}
                   </div>
+                  {fieldError && (
+                    <div className="flex items-start gap-1.5 text-xs text-destructive" role="alert">
+                      <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      <span>{fieldError}</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Validation summary */}
+        {isInvalid && (
+          <div
+            className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs flex items-start gap-2"
+            role="alert"
+            data-testid="retry-config-validation-banner"
+          >
+            <AlertCircle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
+            <div>
+              <div className="font-medium text-destructive mb-0.5">
+                Combinações inválidas — corrija antes de salvar
+              </div>
+              <ul className="list-disc list-inside text-destructive/90 space-y-0.5">
+                {Object.entries(validationErrors).map(([k, msg]) => (
+                  <li key={k}>{msg}</li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
 
@@ -168,7 +212,7 @@ export function RetryConfigPanel() {
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2 pt-2 border-t">
-          <Button size="sm" onClick={handleSave} disabled={!dirty || isSaving || isLoading}>
+          <Button size="sm" onClick={handleSave} disabled={!dirty || isSaving || isLoading || isInvalid}>
             <Save className="h-4 w-4 mr-2" />
             Salvar
           </Button>

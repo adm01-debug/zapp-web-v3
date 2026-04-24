@@ -158,3 +158,50 @@ export const RETRY_CONFIG_FIELDS: (keyof RetryConfig)[] = [
   'maxBackoffMs',
   'timeoutMs',
 ];
+
+export type RetryConfigErrors = Partial<Record<keyof RetryConfig, string>> & { _form?: string };
+
+/**
+ * Valida combinações cruzadas inválidas antes de persistir.
+ * Cada campo individual já é clampado pelo `clampToRange`, mas combinações
+ * (ex.: maxBackoff < baseBackoff) só fazem sentido em conjunto.
+ *
+ * Regras:
+ *  1. `maxBackoffMs >= baseBackoffMs` — backoff teto não pode ser menor que o piso.
+ *  2. `timeoutMs >= baseBackoffMs` — abort precisa ser maior que a primeira espera,
+ *     senão a 2ª tentativa é abortada antes de começar.
+ *  3. `timeoutMs >= 1000` (já garantido por range, defensivo).
+ *  4. `maxRetries >= 1` (já garantido por range, defensivo).
+ *
+ * Devolve `{}` quando válido. Caso contrário, mapa de campo→mensagem
+ * (com possível `_form` para erros sem campo único responsável).
+ */
+export function validateRetryConfig(c: RetryConfig): RetryConfigErrors {
+  const errors: RetryConfigErrors = {};
+
+  if (c.maxBackoffMs < c.baseBackoffMs) {
+    errors.maxBackoffMs = `Deve ser ≥ backoff inicial (${c.baseBackoffMs}ms).`;
+  }
+  if (c.timeoutMs < c.baseBackoffMs) {
+    errors.timeoutMs = `Deve ser ≥ backoff inicial (${c.baseBackoffMs}ms), senão tentativas são abortadas antes de iniciar.`;
+  }
+  if (c.maxRetries < 1) {
+    errors.maxRetries = 'Deve ser ≥ 1.';
+  }
+
+  return errors;
+}
+
+export function hasRetryConfigErrors(errors: RetryConfigErrors): boolean {
+  return Object.keys(errors).length > 0;
+}
+
+export class RetryConfigValidationError extends Error {
+  errors: RetryConfigErrors;
+  constructor(errors: RetryConfigErrors) {
+    const first = Object.values(errors)[0] ?? 'Configuração de retry inválida';
+    super(first);
+    this.name = 'RetryConfigValidationError';
+    this.errors = errors;
+  }
+}
