@@ -11,6 +11,8 @@ Cobrimos os fluxos críticos do ZAPP Web com Playwright:
 | `e2e/send-message.spec.ts` | Envio otimista, fallback Eco offline |
 | `e2e/inbox-realtime.spec.ts` | Lista, abrir conversa, contador zero |
 | `e2e/evolution-retry-failure.spec.ts` | Falhas intermitentes Evolution: marca `failed` só após esgotar retries; recupera no meio sem marcar |
+| `e2e/admin-webhook-filters.spec.ts` | Filtros estruturados (remote_jid, push_name, message_type, status) em `/admin/webhook-events`. Garante ortogonalidade com a busca textual: filtros e busca operam por interseção, nunca união. Skip se bot não for admin. |
+| `e2e/admin-failed-messages-filters.spec.ts` | Filtros estruturados (status, search) em `/admin/failed-messages`. Mesma garantia de ortogonalidade. Skip se bot não for admin. |
 
 ## Rodando local
 
