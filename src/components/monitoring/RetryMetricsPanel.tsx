@@ -14,6 +14,7 @@ import { useRetryMetrics, type RetryMetricsFilters } from '@/hooks/monitoring/us
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, Legend } from 'recharts';
 import { RetryAlertsConfig } from './RetryAlertsConfig';
 import { RetryAlertsBanner } from './RetryAlertsBanner';
+import { RetrySchedulePreview } from './RetrySchedulePreview';
 import {
   evaluateAllInstances,
   loadThresholds,
