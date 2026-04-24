@@ -82,7 +82,7 @@ describe('ChatMessagesArea — estabilidade no modo local', () => {
   let addSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    hoisted.hoisted.bubbleRenderCount.value.value = 0;
+    hoisted.count = 0;
     addSpy = vi.spyOn(HTMLDivElement.prototype, 'addEventListener');
   });
   afterEach(() => {
@@ -168,7 +168,7 @@ describe('ChatMessagesArea — estabilidade no modo local', () => {
         <ChatMessagesArea {...props} />
       </QueryClientProvider>,
     );
-    const after1 = hoisted.bubbleRenderCount.value;
+    const after1 = hoisted.count;
     expect(after1).toBe(3);
 
     // Mesmo objeto de props (mesmas refs) — memo deve barrar re-render.
@@ -177,7 +177,7 @@ describe('ChatMessagesArea — estabilidade no modo local', () => {
         <ChatMessagesArea {...props} />
       </QueryClientProvider>,
     );
-    expect(hoisted.bubbleRenderCount.value).toBe(after1);
+    expect(hoisted.count).toBe(after1);
   });
 
   it('toggle de isContactTyping nao re-monta o container nem cria listeners de scroll', () => {
