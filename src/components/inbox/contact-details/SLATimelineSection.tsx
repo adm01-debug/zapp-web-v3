@@ -4,7 +4,7 @@ import { format, formatDistanceStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   MessageCircle, Reply, Clock, CheckCircle2, RotateCcw, Activity, AlertTriangle,
-  Filter, XCircle, Target, Users, User, MinusCircle,
+  Filter, XCircle, Target, Users, User, MinusCircle, ExternalLink,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
