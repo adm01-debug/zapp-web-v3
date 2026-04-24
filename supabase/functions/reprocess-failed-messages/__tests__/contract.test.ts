@@ -89,3 +89,9 @@ Deno.test("Resposta: contadores processed/succeeded/failed/abandoned", () => {
 Deno.test("Logs: marca dlq-reprocess com identificadores chave", () => {
   assertMatch(SOURCE, /\[dlq-reprocess\]/);
 });
+
+Deno.test('Reason-aware backoff: usa classifyRetryReason + computeBackoffMsByReason', () => {
+  assertMatch(SOURCE, /classifyRetryReason\(/);
+  assertMatch(SOURCE, /computeBackoffMsByReason\(/);
+  assertMatch(SOURCE, /last_retry_reason:/);
+});
