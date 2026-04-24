@@ -149,6 +149,10 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   useEffect(() => {
     if (!enabled || !contactId) return;
 
+    logMessagesSubscribe('useMessages', { event: 'INSERT', table: 'messages', filter: `contact_id=eq.${contactId}` });
+    logMessagesSubscribe('useMessages', { event: 'UPDATE', table: 'messages', filter: `contact_id=eq.${contactId}` });
+    logMessagesSubscribe('useMessages', { event: 'DELETE', table: 'messages', filter: `contact_id=eq.${contactId}` });
+
     const channel = supabase
       .channel(`messages:${contactId}`)
       .on(
@@ -159,7 +163,7 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
           table: 'messages',
           filter: `contact_id=eq.${contactId}`,
         },
-        handleNewMessage
+        wrapMessagesHandler('useMessages', handleNewMessage)
       )
       .on(
         'postgres_changes',
@@ -169,7 +173,7 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
           table: 'messages',
           filter: `contact_id=eq.${contactId}`,
         },
-        handleMessageUpdate
+        wrapMessagesHandler('useMessages', handleMessageUpdate)
       )
       .on(
         'postgres_changes',
@@ -179,7 +183,7 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
           table: 'messages',
           filter: `contact_id=eq.${contactId}`,
         },
-        handleMessageDelete
+        wrapMessagesHandler('useMessages', handleMessageDelete)
       )
       .subscribe((status) => {
         log.debug(`Messages realtime subscription (${contactId}):`, status);
