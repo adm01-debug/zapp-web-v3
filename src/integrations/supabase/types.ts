@@ -7071,6 +7071,39 @@ export type Database = {
           },
         ]
       }
+      sla_alert_preferences: {
+        Row: {
+          alert_first_response: boolean
+          alert_resolution: boolean
+          created_at: string
+          id: string
+          severity_breached: boolean
+          severity_warning: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_first_response?: boolean
+          alert_resolution?: boolean
+          created_at?: string
+          id?: string
+          severity_breached?: boolean
+          severity_warning?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_first_response?: boolean
+          alert_resolution?: boolean
+          created_at?: string
+          id?: string
+          severity_breached?: boolean
+          severity_warning?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sla_alert_thresholds: {
         Row: {
           breached_grace_seconds: number
