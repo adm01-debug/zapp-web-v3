@@ -310,4 +310,30 @@ export function MessageBubble({
         </div>
       </SwipeableMessage>
   );
+
+  if (!isSent) return bubbleContent;
+
+  return (
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div>{bubbleContent}</div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-56 bg-card border-border/50 shadow-xl">
+          <ContextMenuItem
+            onClick={() => setHistoryOpen(true)}
+            className="gap-2 cursor-pointer"
+          >
+            <History className="w-4 h-4" />
+            Ver histórico de envio
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+      <MessageSendHistorySheet
+        message={message}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
+    </>
+  );
 }
