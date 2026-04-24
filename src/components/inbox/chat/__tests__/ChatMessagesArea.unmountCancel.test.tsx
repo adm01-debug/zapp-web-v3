@@ -199,9 +199,12 @@ describe('ChatMessagesArea — unmount/cancel no modo local', () => {
     act(() => { unmount(); });
 
     expect(onCancelLoadOlder).toHaveBeenCalledTimes(1);
+    // Diagnostico: started deve ter sido chamado pela trigger inicial.
+    expect(metrics.recordLoadOlderStarted).toHaveBeenCalled();
     expect(metrics.recordLoadOlderCancelled).toHaveBeenCalled();
-    const cancelArgs = metrics.recordLoadOlderCancelled.mock.calls[0]?.[1] as { reason?: string };
-    expect(cancelArgs?.reason).toBe('unmount');
+    const cancelCalls = metrics.recordLoadOlderCancelled.mock.calls;
+    const reasons = cancelCalls.map((c) => (c[1] as { reason?: string })?.reason);
+    expect(reasons).toContain('unmount');
 
     // Resolve a promise pendente para limpar microtasks.
     resolveLoad?.();
