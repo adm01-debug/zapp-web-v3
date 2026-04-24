@@ -25,6 +25,27 @@ function resolveAutoClearMs(): number {
 export const TYPING_AUTO_CLEAR_MS = resolveAutoClearMs();
 
 /**
+ * Debounce do STOP (`isTyping=false`) para evitar flicker quando o WhatsApp
+ * alterna rapidamente entre `composing` → `paused` → `composing`. O START
+ * (`true`) é aplicado imediatamente; o STOP só é confirmado após
+ * `VITE_TYPING_STOP_DEBOUNCE_MS` ms sem reativação. Clamp: 100ms–5s.
+ * Default: 600ms.
+ */
+const DEFAULT_STOP_DEBOUNCE_MS = 600;
+const MIN_STOP_DEBOUNCE_MS = 100;
+const MAX_STOP_DEBOUNCE_MS = 5000;
+
+function resolveStopDebounceMs(): number {
+  const raw = (import.meta.env?.VITE_TYPING_STOP_DEBOUNCE_MS as string | undefined)?.trim();
+  if (!raw) return DEFAULT_STOP_DEBOUNCE_MS;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return DEFAULT_STOP_DEBOUNCE_MS;
+  return Math.min(MAX_STOP_DEBOUNCE_MS, Math.max(MIN_STOP_DEBOUNCE_MS, Math.round(n)));
+}
+
+export const TYPING_STOP_DEBOUNCE_MS = resolveStopDebounceMs();
+
+/**
  * Hook leve read-only para escutar o broadcast `contact_typing` no canal
  * `typing:${remoteJid}`. Usado em listas (ConversationItem,
  * VirtualizedRealtimeList) onde queremos mostrar "digitando…" sem o overhead
@@ -35,7 +56,11 @@ export const TYPING_AUTO_CLEAR_MS = resolveAutoClearMs();
  */
 export function useContactTyping(remoteJid?: string | null): boolean {
   const [isTyping, setIsTyping] = useState(false);
+  // Auto-clear (TTL longo) — limpa caso o emissor pare de enviar `composing`.
   const clearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Stop-debounce (TTL curto) — adia a transição true→false para evitar
+  // flicker em alternâncias rápidas composing↔paused vindas do WhatsApp.
+  const stopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!remoteJid) {
@@ -48,25 +73,47 @@ export function useContactTyping(remoteJid?: string | null): boolean {
       return;
     }
 
+    const clearAutoClear = () => {
+      if (clearTimeoutRef.current) {
+        clearTimeout(clearTimeoutRef.current);
+        clearTimeoutRef.current = null;
+      }
+    };
+    const clearStopDebounce = () => {
+      if (stopTimeoutRef.current) {
+        clearTimeout(stopTimeoutRef.current);
+        stopTimeoutRef.current = null;
+      }
+    };
+
     const channel = supabase.channel(`typing:${remoteJid}`);
 
     channel.on('broadcast', { event: 'contact_typing' }, ({ payload }) => {
       const typing = (payload as { isTyping?: boolean })?.isTyping === true;
 
-      if (clearTimeoutRef.current) {
-        clearTimeout(clearTimeoutRef.current);
-        clearTimeoutRef.current = null;
-      }
-
-      setIsTyping(typing);
-
       if (typing) {
-        // Auto-clear se não vier novo composing dentro do TTL configurado
+        // START: aplica imediatamente e cancela qualquer stop pendente para
+        // que um STOP recente seguido de START não pisque o indicador.
+        clearStopDebounce();
+        clearAutoClear();
+        setIsTyping(true);
+
+        // Auto-clear se o emissor parar de enviar composing.
         clearTimeoutRef.current = setTimeout(() => {
           setIsTyping(false);
           clearTimeoutRef.current = null;
         }, TYPING_AUTO_CLEAR_MS);
+        return;
       }
+
+      // STOP: adia a confirmação por TYPING_STOP_DEBOUNCE_MS. Se um novo
+      // START chegar dentro da janela, o stop é cancelado acima.
+      clearStopDebounce();
+      stopTimeoutRef.current = setTimeout(() => {
+        setIsTyping(false);
+        stopTimeoutRef.current = null;
+        clearAutoClear();
+      }, TYPING_STOP_DEBOUNCE_MS);
     });
 
     channel.subscribe((status) => {
@@ -76,10 +123,8 @@ export function useContactTyping(remoteJid?: string | null): boolean {
     });
 
     return () => {
-      if (clearTimeoutRef.current) {
-        clearTimeout(clearTimeoutRef.current);
-        clearTimeoutRef.current = null;
-      }
+      clearAutoClear();
+      clearStopDebounce();
       supabase.removeChannel(channel);
     };
   }, [remoteJid]);
