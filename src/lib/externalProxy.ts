@@ -1,7 +1,11 @@
 /**
- * Client helper for calling the external-db-proxy edge function
+ * Client helper for calling the external-db-proxy edge function.
+ *
+ * Every call is timed and recorded via `clientTelemetry` so DevTools can
+ * inspect duration, limit, filters, recordCount and severity in one place.
  */
 import { supabase } from '@/integrations/supabase/client';
+import { recordQueryEvent, classifySeverity, type QueryOperation } from '@/lib/clientTelemetry';
 
 interface ProxySelectParams {
   table: string;
@@ -41,6 +45,37 @@ interface ProxyResponse<T = unknown> {
   error?: string;
 }
 
+function deriveTelemetryMeta(body: Record<string, unknown>): {
+  operation: QueryOperation;
+  target: string;
+  limit: number | null;
+  offset: number | null;
+  filters: Record<string, unknown> | null;
+} {
+  const action = body.action as string | undefined;
+  let operation: QueryOperation = 'select';
+  if (action === 'rpc') operation = 'rpc';
+  else if (action === 'insert') operation = 'insert';
+  else if (action === 'update') operation = 'update';
+  else if (action === 'delete') operation = 'delete';
+
+  const target =
+    (body.rpc as string | undefined) ??
+    (body.table as string | undefined) ??
+    'unknown';
+
+  const limit = typeof body.limit === 'number' ? body.limit : null;
+  const offset = typeof body.offset === 'number' ? body.offset : null;
+
+  let filters: Record<string, unknown> | null = null;
+  if (body.filters) filters = { filters: body.filters };
+  else if (body.match) filters = { match: body.match };
+  else if (body.params) filters = body.params as Record<string, unknown>;
+  else if (body.cursor) filters = { cursor: body.cursor };
+
+  return { operation, target, limit, offset, filters };
+}
+
 export async function queryExternalProxy<T = unknown>(params: ProxyParams): Promise<ProxyResponse<T>> {
   // Extract signal so it isn't sent in the JSON body.
   const { signal, ...body } = params as ProxyParams & { signal?: AbortSignal };
@@ -49,23 +84,84 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
   const invokeOptions: { body: unknown; signal?: AbortSignal } = { body };
   if (signal) invokeOptions.signal = signal;
 
-  const { data, error } = await supabase.functions.invoke('external-db-proxy', invokeOptions);
+  const startedAt = performance.now();
+  const meta = deriveTelemetryMeta(body as Record<string, unknown>);
 
-  if (error) {
-    // Normalize abort: supabase may surface AbortError via FunctionsFetchError
-    const name = (error as { name?: string }).name;
-    const message = error.message || '';
-    if (name === 'AbortError' || /aborted/i.test(message)) {
-      const abortErr = new Error('Aborted');
-      abortErr.name = 'AbortError';
-      throw abortErr;
+  try {
+    const { data, error } = await supabase.functions.invoke('external-db-proxy', invokeOptions);
+
+    if (error) {
+      const name = (error as { name?: string }).name;
+      const message = error.message || '';
+      const isAbort = name === 'AbortError' || /aborted/i.test(message);
+      const isTimeout = name === 'TimeoutError' || /timeout/i.test(message);
+      const durationMs = Math.round(performance.now() - startedAt);
+
+      recordQueryEvent({
+        ...meta,
+        source: 'externalProxy',
+        durationMs,
+        recordCount: null,
+        errorMessage: message || 'External DB proxy error',
+        severity: isTimeout ? 'timeout' : 'error',
+        startedAt,
+      });
+
+      if (isAbort) {
+        const abortErr = new Error('Aborted');
+        abortErr.name = 'AbortError';
+        throw abortErr;
+      }
+      throw new Error(message || 'External DB proxy error');
     }
-    throw new Error(message || 'External DB proxy error');
-  }
 
-  if (data?.error) {
-    throw new Error(data.error);
-  }
+    if (data?.error) {
+      const durationMs = Math.round(performance.now() - startedAt);
+      recordQueryEvent({
+        ...meta,
+        source: 'externalProxy',
+        durationMs,
+        recordCount: null,
+        errorMessage: data.error,
+        severity: classifySeverity(durationMs, true, false),
+        startedAt,
+      });
+      throw new Error(data.error);
+    }
 
-  return data as ProxyResponse<T>;
+    const durationMs = Math.round(performance.now() - startedAt);
+    const recordCount = Array.isArray(data?.data) ? data.data.length : null;
+    recordQueryEvent({
+      ...meta,
+      source: 'externalProxy',
+      durationMs,
+      recordCount,
+      startedAt,
+    });
+
+    return data as ProxyResponse<T>;
+  } catch (err) {
+    // If we already recorded above (error branch), avoid double-recording by
+    // checking if the error is already a known shape — but most paths above
+    // already returned/threw. Network exceptions fall here:
+    const name = (err as Error)?.name;
+    const message = (err as Error)?.message ?? '';
+    if (name === 'AbortError') throw err;
+
+    // Only record if this looks like an unexpected throw (not already recorded).
+    if (!/External DB proxy error|Aborted/i.test(message)) {
+      const durationMs = Math.round(performance.now() - startedAt);
+      const isTimeout = name === 'TimeoutError' || /timeout/i.test(message);
+      recordQueryEvent({
+        ...meta,
+        source: 'externalProxy',
+        durationMs,
+        recordCount: null,
+        errorMessage: message || 'unknown',
+        severity: isTimeout ? 'timeout' : 'error',
+        startedAt,
+      });
+    }
+    throw err;
+  }
 }
