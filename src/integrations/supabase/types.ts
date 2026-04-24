@@ -7076,6 +7076,7 @@ export type Database = {
           alert_first_response: boolean
           alert_resolution: boolean
           created_at: string
+          enabled: boolean
           id: string
           severity_breached: boolean
           severity_warning: boolean
@@ -7086,6 +7087,7 @@ export type Database = {
           alert_first_response?: boolean
           alert_resolution?: boolean
           created_at?: string
+          enabled?: boolean
           id?: string
           severity_breached?: boolean
           severity_warning?: boolean
@@ -7096,6 +7098,7 @@ export type Database = {
           alert_first_response?: boolean
           alert_resolution?: boolean
           created_at?: string
+          enabled?: boolean
           id?: string
           severity_breached?: boolean
           severity_warning?: boolean

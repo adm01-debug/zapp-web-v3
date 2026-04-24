@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface SLAAlertPreferences {
+  enabled: boolean;
   alert_first_response: boolean;
   alert_resolution: boolean;
   severity_warning: boolean;
@@ -10,6 +11,7 @@ export interface SLAAlertPreferences {
 }
 
 export const DEFAULT_SLA_ALERT_PREFERENCES: SLAAlertPreferences = {
+  enabled: true,
   alert_first_response: true,
   alert_resolution: true,
   severity_warning: true,
@@ -35,13 +37,14 @@ export function useSLAAlertPreferences() {
     setIsLoading(true);
     void supabase
       .from('sla_alert_preferences')
-      .select('alert_first_response, alert_resolution, severity_warning, severity_breached')
+      .select('enabled, alert_first_response, alert_resolution, severity_warning, severity_breached')
       .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data, error }) => {
         if (cancelled) return;
         if (!error && data) {
           setPreferences({
+            enabled: data.enabled,
             alert_first_response: data.alert_first_response,
             alert_resolution: data.alert_resolution,
             severity_warning: data.severity_warning,
