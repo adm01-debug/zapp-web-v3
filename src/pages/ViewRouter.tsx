@@ -91,6 +91,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'telemetry': Views.AdminTelemetriaPage,
   'failed-messages': Views.AdminFailedMessagesPage,
   'webhook-events': Views.AdminWebhookEventsPage,
+  'evolution-api-logs': Views.AdminEvolutionApiLogsPage,
   'webhook-overview': Views.AdminWebhookOverviewPage,
   'nps': Views.NPSDashboard,
   'team-chat': Views.TeamChatView,
