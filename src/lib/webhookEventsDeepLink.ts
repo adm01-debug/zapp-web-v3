@@ -14,8 +14,6 @@ export interface WebhookEventsDeepLinkFilters {
   eventType?: string;
   /** Nome da instância (ex.: 'wpp2'). 'all' equivale a sem filtro. */
   instance?: string;
-  /** Status agregado (ex.: 'error'). 'all' equivale a sem filtro. */
-  status?: 'all' | 'processed' | 'pending' | 'error';
 }
 
 export function setPendingWebhookEventsFilters(filters: WebhookEventsDeepLinkFilters): void {

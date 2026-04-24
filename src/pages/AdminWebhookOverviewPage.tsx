@@ -4,7 +4,7 @@
  * with charts and per-instance breakdown. Drill-down lives in
  * `AdminWebhookEventsPage`.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -20,6 +20,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { safeGetItem, safeSetItem } from '@/lib/safeStorage';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -57,14 +60,22 @@ function formatTime(iso: string | null): string {
   }
 }
 
+const AUTO_REFRESH_STORAGE_KEY = 'zappweb:webhook-overview:auto-refresh';
+const AUTO_REFRESH_INTERVAL_MS = 60_000;
+
 export default function AdminWebhookOverviewPage() {
   const [hours, setHours] = useState<string>('24');
   const [instance, setInstance] = useState<string>('all');
   const [includeUnprocessed, setIncludeUnprocessed] = useState<boolean>(true);
-  // Quando ativo, restringe TODAS as agregações (KPIs, top-tipos, série
-  // temporal, heatmap e tabela) a eventos com `error_message`. Isso é puro
-  // filtro client-side sobre o mesmo dataset já carregado — não há refetch.
-  const [errorsOnly, setErrorsOnly] = useState<boolean>(false);
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(() => {
+    const stored = safeGetItem(AUTO_REFRESH_STORAGE_KEY);
+    // Default ON when nothing stored — preserves prior behavior.
+    return stored === null ? true : stored === 'true';
+  });
+
+  useEffect(() => {
+    safeSetItem(AUTO_REFRESH_STORAGE_KEY, String(autoRefresh));
+  }, [autoRefresh]);
 
   const sinceISO = useMemo(
     () => subHours(new Date(), Number(hours)).toISOString(),
@@ -90,15 +101,14 @@ export default function AdminWebhookOverviewPage() {
       return (res.data ?? []) as WebhookEventLite[];
     },
     staleTime: 30_000,
-    refetchInterval: 60_000,
+    refetchInterval: autoRefresh ? AUTO_REFRESH_INTERVAL_MS : false,
   });
 
   const filtered = useMemo(() => {
-    let rows = data ?? [];
-    if (instance !== 'all') rows = rows.filter((r) => r.instance_name === instance);
-    if (errorsOnly) rows = rows.filter((r) => !!r.error_message);
-    return rows;
-  }, [data, instance, errorsOnly]);
+    const rows = data ?? [];
+    if (instance === 'all') return rows;
+    return rows.filter((r) => r.instance_name === instance);
+  }, [data, instance]);
 
   const byType = useMemo(() => aggregateByType(filtered), [filtered]);
   const matrix = useMemo(() => aggregateByTypeAndInstance(filtered), [filtered]);
@@ -160,16 +170,27 @@ export default function AdminWebhookOverviewPage() {
           >
             {includeUnprocessed ? 'Incluir pendentes' : 'Só processados'}
           </Button>
-          <Button
-            variant={errorsOnly ? 'destructive' : 'outline'}
-            size="sm"
-            onClick={() => setErrorsOnly((v) => !v)}
-            title="Filtra todos os indicadores e gráficos para mostrar apenas eventos com erro"
-            aria-pressed={errorsOnly}
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md border bg-muted/30"
+            title={
+              autoRefresh
+                ? 'Atualizando automaticamente a cada 60s'
+                : 'Auto-refresh desligado — use Atualizar para recarregar'
+            }
           >
-            <XCircle className="h-4 w-4 mr-2" />
-            {errorsOnly ? 'Mostrando só erros' : 'Só erros'}
-          </Button>
+            <Switch
+              id="webhook-overview-auto-refresh"
+              checked={autoRefresh}
+              onCheckedChange={setAutoRefresh}
+              aria-label="Alternar atualização automática"
+            />
+            <Label
+              htmlFor="webhook-overview-auto-refresh"
+              className="text-xs cursor-pointer select-none"
+            >
+              Auto-refresh 60s
+            </Label>
+          </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching}>
             <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
             Atualizar
@@ -256,7 +277,6 @@ export default function AdminWebhookOverviewPage() {
                         openWebhookEventsWithFilters({
                           eventType: t,
                           instance: instance !== 'all' ? instance : undefined,
-                          status: errorsOnly ? 'error' : undefined,
                         });
                       }}
                     >
@@ -368,7 +388,7 @@ export default function AdminWebhookOverviewPage() {
                                   {count > 0 ? (
                                     <button
                                       type="button"
-                                      onClick={() => openWebhookEventsWithFilters({ eventType: t, instance: i, status: errorsOnly ? 'error' : undefined })}
+                                      onClick={() => openWebhookEventsWithFilters({ eventType: t, instance: i })}
                                       title={`Abrir log: ${t} em ${i} (${count} evento${count === 1 ? '' : 's'})`}
                                       className="w-full h-full px-2 py-2 cursor-pointer hover:ring-2 hover:ring-primary/40 hover:ring-inset focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset transition-shadow"
                                     >
