@@ -147,4 +147,10 @@ flowchart LR
 %%   5. useRealtimeDashboard — KPIs em tempo real (INSERT)
 %%   6. useEvolutionMonitoring — saude do webhook/instancia (INSERT)
 %%   7. AudioMessagePlayer  — refresh de media_url assinada (UPDATE)
+%% Reprocessamento DLQ:
+%%   reprocess-failed-messages (edge cron) le failed_messages, reenvia para o
+%%   Edge usando o MESMO Idempotency-Key estavel (msg:<row-id>) ou fingerprint
+%%   de conteudo, atualiza messages.status/retry_attempt e marca o item DLQ
+%%   como reprocessado/permanent-fail. Fecha o ciclo: falhas voltam para o fluxo
+%%   sem duplicar a mensagem do lado da Evolution.
 %% Gerado: 23/abr/2026 — escopo trilha de mensagens (send -> batching -> delivery)
