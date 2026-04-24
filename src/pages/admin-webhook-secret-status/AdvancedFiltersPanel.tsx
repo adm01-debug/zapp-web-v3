@@ -18,6 +18,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ChevronDown, ChevronUp, Filter, RotateCcw, X, Columns3, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -67,6 +77,7 @@ export function AdvancedFiltersPanel({
 }: Props) {
   const [open, setOpen] = useState(activeFilterCount > 0);
   const [reasonDraft, setReasonDraft] = useState(prefs.reasonSearch);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   // Debounce reason search input.
   useEffect(() => {
@@ -137,7 +148,7 @@ export function AdvancedFiltersPanel({
             <Button
               variant="outline"
               size="sm"
-              onClick={handleClearFilters}
+              onClick={() => setConfirmClearOpen(true)}
               disabled={activeFilterCount === 0}
               className="gap-1"
               aria-label="Limpar filtros"
@@ -284,6 +295,32 @@ export function AdvancedFiltersPanel({
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar filtros atuais?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Os {activeFilterCount} filtro{activeFilterCount > 1 ? 's' : ''} ativo
+              {activeFilterCount > 1 ? 's' : ''} (status, motivo, tipo de evento e
+              instância selecionada) ser{activeFilterCount > 1 ? 'ão' : 'á'} removido
+              {activeFilterCount > 1 ? 's' : ''}. Suas preferências salvas (colunas,
+              densidade e instância fixada) permanecem intactas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                handleClearFilters();
+                setConfirmClearOpen(false);
+              }}
+            >
+              Limpar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
