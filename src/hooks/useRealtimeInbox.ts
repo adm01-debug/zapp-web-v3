@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 import { Conversation, Message } from '@/types/chat';
 import { toast } from 'sonner';
+import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/components/inbox/chat/loadOlderTypes';
 
 const log = getLogger('useRealtimeInbox');
 
