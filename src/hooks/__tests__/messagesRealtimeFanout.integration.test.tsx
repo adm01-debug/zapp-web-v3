@@ -194,7 +194,7 @@ describe('messages realtime fan-out (integration)', () => {
     act(() => dispatch('UPDATE', buildRow({ id: 'm99', status: 'delivered', status_updated_at: '2026-04-24T10:00:01Z' })));
 
     await waitFor(() => {
-      const detail = result.current.getStatus('m99');
+      const detail = result.current.getMessageStatusDetail('m99');
       expect(detail?.status).toBe('delivered');
     });
   });
@@ -229,7 +229,7 @@ describe('messages realtime fan-out (integration)', () => {
 
     await waitFor(() => {
       expect(messagesHook.result.current.messages[0].status).toBe('read');
-      expect(statusHook.result.current.getStatus('shared')?.status).toBe('read');
+      expect(statusHook.result.current.getMessageStatusDetail('shared')?.status).toBe('read');
     });
   });
 });
