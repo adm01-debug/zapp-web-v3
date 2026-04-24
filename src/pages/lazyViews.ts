@@ -63,6 +63,7 @@ export const TalkXView = lazyWithRetry(() => import('@/components/talkx/TalkXVie
 export const EvolutionMonitoringDashboard = lazyWithRetry(() => import('@/components/monitoring/EvolutionMonitoringDashboard').then(m => ({ default: m.EvolutionMonitoringDashboard })));
 export const AdminWebhookSecretStatusPage = lazyWithRetry(() => import('@/pages/AdminWebhookSecretStatusPage'));
 export const AdminInstancePausesPage = lazyWithRetry(() => import('@/pages/AdminInstancePausesPage'));
+export const AgentsOperationsPage = lazyWithRetry(() => import('@/pages/inbox/AgentsOperationsPage'));
 export const AchievementsSystemLazy = lazyWithRetry(async () => {
   const m = await import('@/components/gamification/AchievementsSystem');
   return { default: m.AchievementsSystem };

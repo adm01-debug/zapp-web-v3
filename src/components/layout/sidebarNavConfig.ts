@@ -120,6 +120,7 @@ export const connectionsNav: readonly NavItemConfig[] = [
 // ── System & Admin ────────────────────────────────────────
 export const systemNav: readonly NavItemConfig[] = [
   { id: 'agents', icon: Phone, label: 'Equipe' },
+  { id: 'agents-ops', icon: UsersRound, label: 'Atendentes Online', requiredRoles: ['admin', 'supervisor'] },
   { id: 'security', icon: Shield, label: 'Segurança' },
   { id: 'privacy', icon: ShieldCheck, label: 'LGPD' },
   { id: 'admin', icon: UserCog, label: 'Admin' },
