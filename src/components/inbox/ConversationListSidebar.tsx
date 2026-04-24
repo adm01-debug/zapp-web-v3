@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface ConversationListSidebarProps {
