@@ -112,6 +112,16 @@ function eventStyle(evt: string | undefined): string {
  * Call this once at subscription setup time (right before/after `.on(...)`).
  */
 export function logMessagesSubscribe(hookName: string, bind: Bind): void {
+  // Always record into the bus so the /debug/realtime-fanout panel works in
+  // any environment. A subscription registered twice (e.g. effect re-run)
+  // simply overwrites the prior record — that's the current truth.
+  subscriptions.set(`${hookName}|${bind.event ?? '*'}|${bind.filter ?? ''}`, {
+    hookName,
+    bind: { ...bind },
+    registeredAt: Date.now(),
+  });
+  notify();
+
   if (!isDev) return;
   const evt = bind.event ?? '*';
   // eslint-disable-next-line no-console
@@ -128,37 +138,42 @@ export function logMessagesSubscribe(hookName: string, bind: Bind): void {
   );
 }
 
-/**
- * Wrap a postgres_changes handler so each received payload is logged with the
- * consumer hook name. Returns a new function with the same signature.
- *
- * Usage:
- *   .on('postgres_changes', binding,
- *     wrapMessagesHandler('useMessages', handlePayload))
- */
 export function wrapMessagesHandler<T>(
   hookName: string,
   handler: (payload: T) => void,
 ): (payload: T) => void {
-  if (!isDev) return handler;
   return (payload: T) => {
     try {
       const p = payload as unknown as AnyPayload;
-      const evt = p?.eventType ?? '?';
-      const id =
+      const evt = String(p?.eventType ?? '?');
+      const rowId =
         (p?.new && (p.new as { id?: string | number }).id) ??
         (p?.old && (p.old as { id?: string | number }).id) ??
-        '—';
-      // eslint-disable-next-line no-console
-      console.debug(
-        `%c[realtime:messages]%c event %c${hookName}%c ← %c${evt}%c id=${String(id)}`,
-        STYLE_REG,
-        STYLE_DIM,
-        STYLE_HOOK,
-        STYLE_DIM,
-        eventStyle(String(evt)),
-        STYLE_DIM,
-      );
+        null;
+
+      const record: FanoutEventRecord = {
+        hookName,
+        eventType: evt,
+        rowId: rowId == null ? null : String(rowId),
+        receivedAt: Date.now(),
+      };
+      lastEventByHook.set(hookName, record);
+      recentEvents.unshift(record);
+      if (recentEvents.length > RECENT_EVENT_CAP) recentEvents.length = RECENT_EVENT_CAP;
+      notify();
+
+      if (isDev) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          `%c[realtime:messages]%c event %c${hookName}%c ← %c${evt}%c id=${rowId ?? '—'}`,
+          STYLE_REG,
+          STYLE_DIM,
+          STYLE_HOOK,
+          STYLE_DIM,
+          eventStyle(evt),
+          STYLE_DIM,
+        );
+      }
     } catch {
       // never break realtime because of logging
     }
