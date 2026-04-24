@@ -18,7 +18,37 @@ interface UseRealtimeContactsOptions {
 type ContactChange = {
   type: 'INSERT' | 'UPDATE' | 'DELETE';
   contact: EvolutionContact;
+  /** True when fields that affect sidebar ordering/visibility changed. */
+  reorder?: boolean;
 };
+
+/**
+ * Fields whose change should force a re-sort of the conversations sidebar
+ * (relevance ranking, scoping, pinning, etc.). Keep this list narrow to
+ * avoid unnecessary refetches on noise (e.g. profile_picture_url updates).
+ */
+const REORDER_FIELDS = [
+  'lead_status',
+  'assigned_to',
+  'is_pinned',
+  'priority',
+  'last_message_at',
+  'unread_count',
+  'deleted_at',
+] as const;
+
+function hasReorderingChange(
+  oldRow: Partial<EvolutionContact> | null | undefined,
+  newRow: Partial<EvolutionContact> | null | undefined,
+): boolean {
+  if (!oldRow || !newRow) return true; // unknown → be safe and reorder
+  for (const f of REORDER_FIELDS) {
+    if ((oldRow as Record<string, unknown>)[f] !== (newRow as Record<string, unknown>)[f]) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Subscribes to evolution_contacts changes on FATOR X and updates
