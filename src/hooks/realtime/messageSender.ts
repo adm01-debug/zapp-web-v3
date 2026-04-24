@@ -187,6 +187,13 @@ export async function sendMessageToContact(
         maxRetries: MAX_RETRIES,
         onRetry: (attempt, total) => {
           emitSendStatus(data.id, { status: 'retrying', attempt, totalRetries: total });
+          // Persist counters so the "2/3" indicator survives a page reload.
+          // Fire-and-forget — never block the retry loop.
+          supabase.from('messages').update({
+            status: 'retrying',
+            retry_attempt: attempt,
+            retry_total: total,
+          }).eq('id', data.id).then(() => undefined, () => undefined);
           const last = lastInstabilityToastByContact.get(contactId) ?? 0;
           if (attempt === 1 && Date.now() - last > 60_000) {
             lastInstabilityToastByContact.set(contactId, Date.now());
