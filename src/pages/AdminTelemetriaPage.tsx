@@ -140,59 +140,72 @@ export default function AdminTelemetriaPage() {
         </div>
       </div>
 
-      <TelemetryStatsCards verySlow={verySlow} slow={slow} errors={errors} avgDuration={formatDuration(avgDuration)} />
-      <TelemetryTopOffenders topOffenders={topOffenders} />
-      <TelemetryCharts rows={rows} timeFilter={timeFilter} />
+      <Tabs defaultValue="server" className="w-full">
+        <TabsList>
+          <TabsTrigger value="server">Servidor (DB)</TabsTrigger>
+          <TabsTrigger value="client">Cliente (in-memory)</TabsTrigger>
+        </TabsList>
 
-      {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <Select value={severityFilter} onValueChange={(v) => setSeverityFilter(v as SeverityFilter)}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="Severidade" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="slow">🟡 Lentas</SelectItem>
-            <SelectItem value="very_slow">🔴 Muito Lentas</SelectItem>
-            <SelectItem value="error">❌ Erros</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="Período" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1h">Última hora</SelectItem>
-            <SelectItem value="6h">Últimas 6h</SelectItem>
-            <SelectItem value="24h">Últimas 24h</SelectItem>
-            <SelectItem value="7d">Últimos 7 dias</SelectItem>
-            <SelectItem value="custom">📅 Personalizado</SelectItem>
-          </SelectContent>
-        </Select>
-        {timeFilter === "custom" && (
-          <>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn("w-36 justify-start text-left font-normal", !customDateFrom && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />{customDateFrom ? format(customDateFrom, "dd/MM/yyyy") : "De"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={customDateFrom} onSelect={setCustomDateFrom} initialFocus className="p-3 pointer-events-auto" />
-              </PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn("w-36 justify-start text-left font-normal", !customDateTo && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />{customDateTo ? format(customDateTo, "dd/MM/yyyy") : "Até"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={customDateTo} onSelect={setCustomDateTo} initialFocus className="p-3 pointer-events-auto" />
-              </PopoverContent>
-            </Popover>
-          </>
-        )}
-        <span className="text-xs text-muted-foreground ml-auto">{rows.length} registros · auto-refresh 30s</span>
-      </div>
+        <TabsContent value="server" className="space-y-6 mt-4">
+          <TelemetryStatsCards verySlow={verySlow} slow={slow} errors={errors} avgDuration={formatDuration(avgDuration)} />
+          <TelemetryTopOffenders topOffenders={topOffenders} />
+          <TelemetryCharts rows={rows} timeFilter={timeFilter} />
 
-      <TelemetryTable rows={rows} isLoading={isLoading} />
+          {/* Filters */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <Select value={severityFilter} onValueChange={(v) => setSeverityFilter(v as SeverityFilter)}>
+              <SelectTrigger className="w-44"><SelectValue placeholder="Severidade" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="slow">🟡 Lentas</SelectItem>
+                <SelectItem value="very_slow">🔴 Muito Lentas</SelectItem>
+                <SelectItem value="error">❌ Erros</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
+              <SelectTrigger className="w-44"><SelectValue placeholder="Período" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1h">Última hora</SelectItem>
+                <SelectItem value="6h">Últimas 6h</SelectItem>
+                <SelectItem value="24h">Últimas 24h</SelectItem>
+                <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                <SelectItem value="custom">📅 Personalizado</SelectItem>
+              </SelectContent>
+            </Select>
+            {timeFilter === "custom" && (
+              <>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("w-36 justify-start text-left font-normal", !customDateFrom && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />{customDateFrom ? format(customDateFrom, "dd/MM/yyyy") : "De"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={customDateFrom} onSelect={setCustomDateFrom} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("w-36 justify-start text-left font-normal", !customDateTo && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />{customDateTo ? format(customDateTo, "dd/MM/yyyy") : "Até"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={customDateTo} onSelect={setCustomDateTo} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </>
+            )}
+            <span className="text-xs text-muted-foreground ml-auto">{rows.length} registros · auto-refresh 30s</span>
+          </div>
+
+          <TelemetryTable rows={rows} isLoading={isLoading} />
+        </TabsContent>
+
+        <TabsContent value="client" className="mt-4">
+          <ClientTelemetryPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
