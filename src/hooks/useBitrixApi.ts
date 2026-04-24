@@ -2,8 +2,22 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
+import { isSuccessful, readNumber, hasField } from '@/lib/runtimeGuards';
 
 type EntityType = 'lead' | 'contact' | 'deal' | 'activity' | 'call';
+
+/**
+ * Shape returned by the `bitrix-api` edge function. Fields are optional
+ * because the runtime payload can vary per action; callers MUST narrow
+ * via runtime guards (e.g. `isSuccessful`) before accessing them.
+ */
+export interface BitrixApiResponse {
+  success?: boolean;
+  error?: string;
+  synced?: number;
+  data?: unknown;
+  [key: string]: unknown;
+}
 
 interface BitrixEntity {
   ID?: string;
