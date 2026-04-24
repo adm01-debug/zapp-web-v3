@@ -44,7 +44,11 @@ interface ChatMessagesAreaProps {
   onCancelLoadOlder?: () => void;
   loadingOlder?: boolean;
   hasMoreOlder?: boolean;
+  /** Duração em ms do badge "Carregamento cancelado". Default: 2500ms. */
+  loadOlderCancelBadgeMs?: number;
 }
+
+export type LoadOlderCancelReason = 'reverse-scroll' | 'navigation';
 
 export interface ChatMessagesAreaRef {
   scrollToBottom: () => void;
