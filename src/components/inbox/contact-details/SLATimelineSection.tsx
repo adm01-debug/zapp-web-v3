@@ -295,6 +295,25 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
       ? getSLAStatus(timeline.resolutionDurationMs, resolutionLimit)
       : 'na';
 
+  const handleOpenConversation = useMemo(() => {
+    return () => {
+      // Notify any inbox container/router that wants to focus this conversation.
+      try {
+        window.dispatchEvent(
+          new CustomEvent('inbox:focus-conversation', {
+            detail: { contactId: contact.id, remoteJid, conversationId: conversation.id },
+          }),
+        );
+      } catch { /* SSR / older browsers — no-op */ }
+      // Best-effort focus: scroll the chat panel into view if it exists in the DOM.
+      const panel = document.querySelector<HTMLElement>('[data-chat-panel]');
+      if (panel) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        panel.focus({ preventScroll: true });
+      }
+    };
+  }, [contact.id, remoteJid, conversation.id]);
+
   useSLAAlerts({
     contactId: contact.id ?? null,
     contactName: contact.name || contact.phone || 'Contato',
@@ -304,6 +323,7 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
     ruleName: sla?.ruleName ?? null,
     awaitingMs: timeline.awaitingMs,
     resolutionDurationMs: timeline.resolutionDurationMs,
+    onOpenConversation: handleOpenConversation,
   });
 
   const firstResponseDurationLabel = timeline.isAwaitingFirstResponse
