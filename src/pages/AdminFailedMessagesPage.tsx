@@ -858,6 +858,30 @@ export default function AdminFailedMessagesPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Guided bulk reprocess dialog (admin only) */}
+      {isAdmin && (
+        <BulkReprocessGuidedDialog
+          open={guidedReprocessOpen}
+          onOpenChange={(o) => {
+            setGuidedReprocessOpen(o);
+            if (!o && !bulkRetry.isPending) {
+              // não limpa seleção em caso de cancelamento — usuário pode querer ajustar
+            }
+          }}
+          selectedRows={selectedRows}
+          isPending={bulkRetry.isPending}
+          onConfirm={async (ids, reason) => {
+            const affected = await bulkRetry.mutateAsync({ ids, reason });
+            // Após sucesso, limpamos a seleção (o passo de resultado ainda fica visível).
+            setSelectedIds(new Set());
+            return affected;
+          }}
+        />
+      )}
+
+      {/* Histórico de reprocesso e ações DLQ */}
+      <DLQAuditHistory />
     </div>
   );
 }
