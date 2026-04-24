@@ -1,6 +1,6 @@
 import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, Ban } from 'lucide-react';
+import { Loader2, Ban, RotateCw } from 'lucide-react';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('ChatMessagesArea');
