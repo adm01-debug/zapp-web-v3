@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { queryExternalProxy } from '@/lib/externalProxy';
+import { consumePendingWebhookEventsFilters } from '@/lib/webhookEventsDeepLink';
 import { cn } from '@/lib/utils';
 import type { EvolutionWebhookEvent } from '@/types/evolutionExternal';
 
