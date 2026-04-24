@@ -72,6 +72,8 @@ export function RetryConfigPanel() {
   }, []);
 
   const dirty = useMemo(() => RETRY_CONFIG_FIELDS.some((f) => draft[f] !== config[f]), [draft, config]);
+  const validationErrors = useMemo(() => validateRetryConfig(draft), [draft]);
+  const isInvalid = hasRetryConfigErrors(validationErrors);
 
   function updateField(field: keyof RetryConfig, value: number) {
     const r = RETRY_CONFIG_RANGES[field];
@@ -80,9 +82,14 @@ export function RetryConfigPanel() {
   }
 
   async function handleSave() {
+    if (isInvalid) return;
     const partial: Partial<RetryConfig> = {};
     RETRY_CONFIG_FIELDS.forEach((f) => { if (draft[f] !== config[f]) partial[f] = draft[f]; });
-    await save(partial);
+    try {
+      await save(partial);
+    } catch {
+      // Erros de validação/persistência já mostram toast no hook.
+    }
   }
 
   return (
