@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 import { invokeEvolutionWithRetry } from '@/lib/evolutionSendRetry';
-import { buildSendIdempotencyKey } from '@/lib/sendIdempotency';
+import { buildSendIdempotencyKey, buildSendIdempotencyKeyFromFingerprint } from '@/lib/sendIdempotency';
 import { toast } from '@/hooks/use-toast';
 import { emitSendStatus } from './sendStatusBus';
 
