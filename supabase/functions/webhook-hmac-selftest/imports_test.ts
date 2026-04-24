@@ -1,22 +1,41 @@
 /**
- * Import smoke test — garante que o edge function compila/resolve todos
- * os imports antes do deploy. Falha se houver path inválido ou módulo
- * não resolvível (ex.: "@supabase/supabase-js/cors" sem prefixo npm:).
+ * Import smoke test — valida estaticamente que todos os imports do
+ * edge function são resolvíveis pelo bundler do Deno (mesmo pipeline
+ * usado no deploy do Supabase). Captura erros como:
+ *   "Relative import path \"@supabase/supabase-js/cors\" not prefixed..."
+ * antes do deploy.
  *
- * Rode com:
- *   deno test --allow-net --allow-env supabase/functions/webhook-hmac-selftest/imports_test.ts
- *
- * Ou via tool: supabase--test_edge_functions { functions: ["webhook-hmac-selftest"] }
+ * Não EXECUTA o módulo (evita Deno.serve criar listener vazado).
+ * Usa `deno info --json` para resolver o grafo de dependências.
  */
-import { assert } from 'https://deno.land/std@0.208.0/assert/mod.ts';
+import { assert, assertEquals } from 'https://deno.land/std@0.208.0/assert/mod.ts';
 
-Deno.test('webhook-hmac-selftest: imports resolvem sem erro', async () => {
-  const mod = await import('./index.ts');
-  assert(mod, 'módulo carregou');
+async function checkImports(entry: string): Promise<{ ok: boolean; error?: string }> {
+  const cmd = new Deno.Command('deno', {
+    args: ['info', '--json', entry],
+    stdout: 'piped',
+    stderr: 'piped',
+  });
+  const { code, stderr } = await cmd.output();
+  if (code !== 0) {
+    return { ok: false, error: new TextDecoder().decode(stderr) };
+  }
+  return { ok: true };
+}
+
+Deno.test('webhook-hmac-selftest: grafo de imports resolve', async () => {
+  const result = await checkImports('./supabase/functions/webhook-hmac-selftest/index.ts');
+  assert(result.ok, `Falha ao resolver imports:\n${result.error}`);
 });
 
-Deno.test('hmac-validation shared: imports resolvem sem erro', async () => {
+Deno.test('_shared/hmac-validation: grafo de imports resolve', async () => {
+  const result = await checkImports('./supabase/functions/_shared/hmac-validation.ts');
+  assert(result.ok, `Falha ao resolver imports:\n${result.error}`);
+});
+
+Deno.test('hmac-validation: exporta API esperada', async () => {
   const mod = await import('../_shared/hmac-validation.ts');
-  assert(typeof mod.createWebhookValidator === 'function');
-  assert(typeof mod.verifyHmacSignature === 'function');
+  assertEquals(typeof mod.createWebhookValidator, 'function');
+  assertEquals(typeof mod.verifyHmacSignature, 'function');
+  assertEquals(typeof mod.WebhookSecurityService, 'function');
 });
