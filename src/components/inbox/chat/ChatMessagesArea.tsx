@@ -61,6 +61,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   instanceName, contactJid, contactAvatar, onSpeak, onStop, onReply, onForward, onCopy,
   onScrollToMessage, onInteractiveButtonClick, onEditStart, highlightedMessageIds, activeHighlightId, searchQuery,
   onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false,
+  loadOlderCancelBadgeMs = 2500,
 }, ref) => {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -74,13 +75,24 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   const lastScrollTopRef = useRef<number>(0);
   const lastTriggerAtRef = useRef<number>(0);
   const [loadCancelled, setLoadCancelled] = useState(false);
+  const [cancelReason, setCancelReason] = useState<LoadOlderCancelReason>('reverse-scroll');
   const cancelBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevContactJidRef = useRef<string | undefined>(contactJid);
 
-  const flagCancelled = useCallback(() => {
+  const flagCancelled = useCallback((reason: LoadOlderCancelReason = 'reverse-scroll') => {
+    setCancelReason(reason);
     setLoadCancelled(true);
     if (cancelBadgeTimerRef.current) clearTimeout(cancelBadgeTimerRef.current);
-    cancelBadgeTimerRef.current = setTimeout(() => setLoadCancelled(false), 2500);
-  }, []);
+    cancelBadgeTimerRef.current = setTimeout(() => setLoadCancelled(false), loadOlderCancelBadgeMs);
+  }, [loadOlderCancelBadgeMs]);
+
+  // Detecta troca de contato com load em andamento → cancelamento por navegação.
+  useEffect(() => {
+    if (prevContactJidRef.current !== undefined && prevContactJidRef.current !== contactJid && isFetchingOlderRef.current) {
+      flagCancelled('navigation');
+    }
+    prevContactJidRef.current = contactJid;
+  }, [contactJid, flagCancelled]);
 
   useEffect(() => () => {
     if (cancelBadgeTimerRef.current) clearTimeout(cancelBadgeTimerRef.current);
