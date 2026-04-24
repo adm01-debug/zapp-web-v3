@@ -69,6 +69,7 @@ const SLAHistory = lazyWithRetry(() => import("./pages/SLAHistory"));
 const SLAAlertPreferences = lazyWithRetry(() => import("./pages/SLAAlertPreferences"));
 const SLAAlertHistory = lazyWithRetry(() => import("./pages/SLAAlertHistory"));
 const SendStatusBusDebug = lazyWithRetry(() => import("./pages/SendStatusBusDebug"));
+const RealtimeFanoutDebug = lazyWithRetry(() => import("./pages/RealtimeFanoutDebug"));
 const RolesPage = lazyWithRetry(() => import("./pages/admin/RolesPage"));
 const RateLimitDashboard = lazyWithRetry(() => import("./pages/admin/RateLimitDashboard"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
@@ -175,6 +176,7 @@ function AppContent() {
             <Route path="/sla/preferences" element={<ProtectedRoute><SLAAlertPreferences /></ProtectedRoute>} />
             <Route path="/sla/alerts" element={<ProtectedRoute><SLAAlertHistory /></ProtectedRoute>} />
             <Route path="/debug/send-status-bus" element={<ProtectedRoute><SendStatusBusDebug /></ProtectedRoute>} />
+            <Route path="/debug/realtime-fanout" element={<ProtectedRoute><RealtimeFanoutDebug /></ProtectedRoute>} />
             <Route path="/admin/roles" element={<ProtectedRoute requiredRoles={['admin']}><RolesPage /></ProtectedRoute>} />
             <Route path="/admin/rate-limit" element={<ProtectedRoute requiredRoles={['admin']}><RateLimitDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
