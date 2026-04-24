@@ -495,6 +495,33 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
         <div className="flex items-center gap-2">
           <Filter className="w-3 h-3 text-muted-foreground" />
           <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Filtros</span>
+          {(() => {
+            const onlyAtRisk =
+              statusFilter.length === 2 &&
+              statusFilter.includes('warning') &&
+              statusFilter.includes('breached');
+            return (
+              <Button
+                type="button"
+                variant={onlyAtRisk ? 'default' : 'outline'}
+                size="sm"
+                onClick={() =>
+                  setStatusFilter(onlyAtRisk ? ALL_STATUSES : ['warning', 'breached'])
+                }
+                aria-pressed={onlyAtRisk}
+                className={cn(
+                  'h-5 px-2 text-[10px] gap-1',
+                  onlyAtRisk
+                    ? 'bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/20'
+                    : 'border-border/60',
+                )}
+                title="Mostrar apenas marcos em risco ou violados para o escopo selecionado"
+              >
+                <AlertTriangle className="w-2.5 h-2.5" aria-hidden />
+                Só em risco/violado
+              </Button>
+            );
+          })()}
           <Badge variant="outline" className="ml-auto text-[9px] h-4 px-1.5">
             {filteredMilestones.length} de {milestones.length}
           </Badge>
