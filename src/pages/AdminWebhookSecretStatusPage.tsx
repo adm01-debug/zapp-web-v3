@@ -283,6 +283,7 @@ export default function AdminWebhookSecretStatusPage() {
             onChange={setInstance}
             disabled={instancesQuery.isLoading}
           />
+          <HmacSelfTestButton instance={selectedInstance} />
           <Button
             variant="outline"
             size="sm"
