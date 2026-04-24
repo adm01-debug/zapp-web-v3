@@ -170,6 +170,27 @@ export default function AdminWebhookOverviewPage() {
           >
             {includeUnprocessed ? 'Incluir pendentes' : 'Só processados'}
           </Button>
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md border bg-muted/30"
+            title={
+              autoRefresh
+                ? 'Atualizando automaticamente a cada 60s'
+                : 'Auto-refresh desligado — use Atualizar para recarregar'
+            }
+          >
+            <Switch
+              id="webhook-overview-auto-refresh"
+              checked={autoRefresh}
+              onCheckedChange={setAutoRefresh}
+              aria-label="Alternar atualização automática"
+            />
+            <Label
+              htmlFor="webhook-overview-auto-refresh"
+              className="text-xs cursor-pointer select-none"
+            >
+              Auto-refresh 60s
+            </Label>
+          </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching}>
             <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
             Atualizar
