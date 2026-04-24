@@ -31,7 +31,7 @@ const metrics = {
 vi.mock('./loadOlderMetrics', () => metrics);
 
 const hoisted = vi.hoisted(() => ({ count: 0 }));
-vi.mock('./MessageBubble', () => ({
+vi.mock('../MessageBubble', () => ({
   MessageBubble: ({ message }: { message: { id: string } }) => {
     hoisted.count++;
     return <div data-testid={`bubble-${message.id}`} />;
