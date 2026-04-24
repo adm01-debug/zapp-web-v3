@@ -36,11 +36,11 @@ vi.mock('@/integrations/supabase/client', () => {
 vi.mock('@/lib/logger', () => ({
   getLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
-const metrics = {
+const metrics = vi.hoisted(() => ({
   recordLoadOlderStarted: vi.fn(() => Date.now()),
   recordLoadOlderCancelled: vi.fn(),
   recordLoadOlderCompleted: vi.fn(),
-};
+}));
 vi.mock('./loadOlderMetrics', () => metrics);
 vi.mock('../MessageBubble', () => ({
   MessageBubble: ({ message }: { message: { id: string } }) => (
