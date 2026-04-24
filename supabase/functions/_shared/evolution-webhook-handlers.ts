@@ -227,19 +227,22 @@ export async function handlePresenceUpdate(supabase: any, instance: string, data
       // best-effort: não quebrar o webhook se broadcast falhar
     }
 
-    // Legacy (Lovable Cloud contact.id) — mantém compat durante migração
-    const phone = normalizePhone(jid);
-    if (phone) {
-      const connection = await getConnectionByInstance(supabase, instance);
-      if (connection) {
-        const contact = await getContactByPhone(supabase, phone, connection.id);
-        if (contact) {
-          try {
-            const ch2 = supabase.channel(`typing:${contact.id}`);
-            await ch2.send({ type: 'broadcast', event: 'contact_typing', payload: { ...basePayload, contactId: contact.id } });
-            supabase.removeChannel(ch2);
-          } catch (_e) {
-            // best-effort
+    // Legacy (Lovable Cloud contact.id) — mantém compat durante migração.
+    // Não se aplica a grupos (não há contato 1:1).
+    if (!isGroup) {
+      const phone = normalizePhone(jid);
+      if (phone) {
+        const connection = await getConnectionByInstance(supabase, instance);
+        if (connection) {
+          const contact = await getContactByPhone(supabase, phone, connection.id);
+          if (contact) {
+            try {
+              const ch2 = supabase.channel(`typing:${contact.id}`);
+              await ch2.send({ type: 'broadcast', event: 'contact_typing', payload: { ...basePayload, contactId: contact.id } });
+              supabase.removeChannel(ch2);
+            } catch (_e) {
+              // best-effort
+            }
           }
         }
       }
