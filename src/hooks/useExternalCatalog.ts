@@ -80,13 +80,26 @@ export interface CatalogFilters {
 }
 
 // ─── API invoke ───────────────────────────────────────────────
+import { hasField, readArray, readVariants } from '@/lib/runtimeGuards';
+
 async function invokeAction<T = unknown>(action: string, params: Record<string, unknown> = {}): Promise<T> {
   const { data, error } = await supabase.functions.invoke('promogifts-catalog', {
     body: { action, params },
   });
   if (error) throw new Error(error.message);
-  if (data?.error) throw new Error(data.error);
+  if (hasField(data, 'error') && typeof data.error === 'string') {
+    throw new Error(data.error);
+  }
   return data as T;
+}
+
+/** Ensures a product object always exposes a typed `variants` array. */
+export function withSafeVariants(product: ExternalProduct | null | undefined): ExternalProduct | null {
+  if (!product) return null;
+  return {
+    ...product,
+    variants: readVariants<ExternalProductVariant>(product),
+  };
 }
 
 // ─── Hook ─────────────────────────────────────────────────────
