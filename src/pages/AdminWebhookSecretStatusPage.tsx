@@ -207,6 +207,16 @@ export default function AdminWebhookSecretStatusPage() {
     setFilters({ search: '' });
   }, [clearAdvancedFilters, setFilters]);
 
+  // Restores ALL view preferences to factory defaults AND wipes the URL,
+  // including the pinned instance — so reopening the page starts blank.
+  const resetAllPrefsAndUrl = useCallback(() => {
+    resetPrefs();
+    const url = new URL(window.location.href);
+    url.search = '';
+    window.history.replaceState({}, '', url.toString());
+    setFilters({ search: '' });
+  }, [resetPrefs, setFilters]);
+
   // Auto-apply pinned instance once on mount, only if URL has no instance set.
   const pinnedAppliedRef = useRef(false);
   useEffect(() => {
@@ -527,7 +537,7 @@ export default function AdminWebhookSecretStatusPage() {
         setPref={setPref}
         setVisibleColumn={setVisibleColumn}
         clearFilters={clearAllFiltersAndUrl}
-        resetPrefs={resetPrefs}
+        resetPrefs={resetAllPrefsAndUrl}
         activeFilterCount={activeFilterCount}
         availableEventTypes={availableEventTypes}
         currentInstance={selectedInstance}
