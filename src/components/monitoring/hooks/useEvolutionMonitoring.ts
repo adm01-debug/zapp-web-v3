@@ -53,7 +53,7 @@ export function useEvolutionMonitoring() {
       .channel('monitoring-connections')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_connections' }, () => fetchData())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
-        wrapMessagesHandler('useEvolutionMonitoring', () => fetchData()))
+        wrapMessagesHandler<{ new: Record<string, unknown> }>('useEvolutionMonitoring', () => fetchData()))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [fetchData]);
