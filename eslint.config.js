@@ -24,4 +24,22 @@ export default tseslint.config(
       "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
+  // Stricter checks for test files: disallow `any` and force explicit typing
+  // on mocks. Production code stays on the relaxed baseline above so this
+  // rollout is incremental and doesn't break the build.
+  {
+    files: [
+      "src/**/__tests__/**/*.{ts,tsx}",
+      "src/**/*.test.{ts,tsx}",
+      "src/test/**/*.{ts,tsx}",
+    ],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        { "ts-ignore": true, "ts-expect-error": "allow-with-description" },
+      ],
+    },
+  },
 );
