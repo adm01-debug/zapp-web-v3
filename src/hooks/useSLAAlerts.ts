@@ -68,6 +68,24 @@ export function useSLAAlerts(params: SLAAlertParams) {
           },
         })
         .then(() => undefined, () => undefined);
+
+      // External webhook forwarding (best-effort, fire-and-forget).
+      // Configure the destination URL in `global_settings.sla_alert_webhook_url`.
+      // The edge function silently no-ops when not configured, so this is safe to always call.
+      void supabase.functions
+        .invoke('sla-alert-forward', {
+          body: {
+            contact_id: params.contactId!,
+            contact_name: params.contactName,
+            kind,
+            severity,
+            scope: params.scope,
+            rule_name: params.ruleName,
+            duration_ms: durationMs,
+            occurred_at: new Date().toISOString(),
+          },
+        })
+        .then(() => undefined, () => undefined);
     };
 
     if (params.firstResponseStatus === 'warning' || params.firstResponseStatus === 'breached') {
