@@ -193,8 +193,10 @@ function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; on
       prefetchedRef.current = true;
       // Mesma queryKey usada por MediaGallery — quando o modal montar,
       // pega do cache sem refetch.
+      // Cache "preview" — não conflita com a query completa do modal
+      // (queryKey diferente). Aquece conexão + traz thumbnails da 1a pagina.
       queryClient.prefetchQuery({
-        queryKey: ['media-gallery', contactId],
+        queryKey: ['media-gallery-preview', contactId, PAGE_SIZE],
         queryFn: async () => {
           const { data, error } = await supabase
             .from('messages')
