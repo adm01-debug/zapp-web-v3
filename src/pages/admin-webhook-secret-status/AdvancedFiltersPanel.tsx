@@ -148,7 +148,7 @@ export function AdvancedFiltersPanel({
             <Button
               variant="outline"
               size="sm"
-              onClick={handleClearFilters}
+              onClick={() => setConfirmClearOpen(true)}
               disabled={activeFilterCount === 0}
               className="gap-1"
               aria-label="Limpar filtros"
