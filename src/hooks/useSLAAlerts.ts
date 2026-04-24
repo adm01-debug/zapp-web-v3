@@ -121,20 +121,38 @@ export function useSLAAlerts(params: SLAAlertParams) {
         }
 
         // Audit (best-effort, fire-and-forget). Also serves as the persistent dedupe record.
+        // If the insert fails (typically RLS/permission), forward the failure to a service-role
+        // edge function so we still capture diagnostic info in `conversation_events`.
+        const auditMetadata = {
+          kind,
+          severity,
+          scope: params.scope,
+          rule_name: params.ruleName,
+          duration_ms: durationMs,
+        };
         void supabase
           .from('conversation_events')
           .insert({
             contact_id: contactId,
             event_type: 'sla_alert',
-            metadata: {
-              kind,
-              severity,
-              scope: params.scope,
-              rule_name: params.ruleName,
-              duration_ms: durationMs,
-            },
+            metadata: auditMetadata,
           })
-          .then(() => undefined, () => undefined);
+          .then(({ error: insertError }) => {
+            if (!insertError) return;
+            // Don't disrupt the user — just record the failure for ops debugging.
+            void supabase.functions
+              .invoke('sla-alert-log-failure', {
+                body: {
+                  contact_id: contactId,
+                  attempted_event_type: 'sla_alert',
+                  error_code: insertError.code ?? null,
+                  error_message: insertError.message ?? null,
+                  error_details: insertError.details ?? null,
+                  original_metadata: auditMetadata,
+                },
+              })
+              .then(() => undefined, () => undefined);
+          }, () => undefined);
 
         // External webhook forwarding (best-effort, fire-and-forget).
         void supabase.functions
