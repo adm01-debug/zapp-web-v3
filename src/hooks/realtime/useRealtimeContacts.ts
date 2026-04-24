@@ -119,14 +119,14 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
         const { contact } = change;
         const remoteJid = contact.remote_jid;
 
-        // Patch individual contact cache if present
+        // Patch individual contact cache if present (preserves omitted fields)
         queryClient.setQueriesData<EvolutionContact | undefined>(
           { queryKey: ['contact', remoteJid] },
-          (prev) => (prev ? { ...prev, ...contact } : prev),
+          (prev) => (prev ? mergeContact(prev, contact) : prev),
         );
         queryClient.setQueriesData<EvolutionContact | undefined>(
           { queryKey: ['external-evolution', 'contact', remoteJid] },
-          (prev) => (prev ? { ...prev, ...contact } : prev),
+          (prev) => (prev ? mergeContact(prev, contact) : prev),
         );
 
         // INSERT/DELETE always invalidate the list (ordering changes)
@@ -145,12 +145,12 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
               if (idx < 0) return prev;
               patched = true;
               const next = prev.slice();
-              next[idx] = { ...(next[idx] as object), ...contact };
+              next[idx] = mergeContact(next[idx] as EvolutionContact, contact);
               return next;
             },
           );
           // Even if patched in-place, force a re-sort when ranking-relevant
-          // fields changed (lead_status, assigned_to, pinned, etc.).
+          // fields changed (lead_status, assigned_to, pinned, tags, etc.).
           if (!patched || change.reorder) invalidateConversations = true;
         }
 
