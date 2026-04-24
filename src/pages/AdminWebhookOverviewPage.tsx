@@ -60,10 +60,22 @@ function formatTime(iso: string | null): string {
   }
 }
 
+const AUTO_REFRESH_STORAGE_KEY = 'zappweb:webhook-overview:auto-refresh';
+const AUTO_REFRESH_INTERVAL_MS = 60_000;
+
 export default function AdminWebhookOverviewPage() {
   const [hours, setHours] = useState<string>('24');
   const [instance, setInstance] = useState<string>('all');
   const [includeUnprocessed, setIncludeUnprocessed] = useState<boolean>(true);
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(() => {
+    const stored = safeGetItem(AUTO_REFRESH_STORAGE_KEY);
+    // Default ON when nothing stored — preserves prior behavior.
+    return stored === null ? true : stored === 'true';
+  });
+
+  useEffect(() => {
+    safeSetItem(AUTO_REFRESH_STORAGE_KEY, String(autoRefresh));
+  }, [autoRefresh]);
 
   const sinceISO = useMemo(
     () => subHours(new Date(), Number(hours)).toISOString(),
@@ -89,7 +101,7 @@ export default function AdminWebhookOverviewPage() {
       return (res.data ?? []) as WebhookEventLite[];
     },
     staleTime: 30_000,
-    refetchInterval: 60_000,
+    refetchInterval: autoRefresh ? AUTO_REFRESH_INTERVAL_MS : false,
   });
 
   const filtered = useMemo(() => {
