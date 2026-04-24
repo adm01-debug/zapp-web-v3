@@ -117,7 +117,9 @@ export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
               return next;
             },
           );
-          if (!patched) invalidateConversations = true;
+          // Even if patched in-place, force a re-sort when ranking-relevant
+          // fields changed (lead_status, assigned_to, pinned, etc.).
+          if (!patched || change.reorder) invalidateConversations = true;
         }
 
         // Notify non-React-Query consumers
