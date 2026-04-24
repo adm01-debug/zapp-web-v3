@@ -158,6 +158,13 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     // Contact type filter
     result = filterByContactType(result, selectedContactType);
 
+    // Retry/failed filter — show only conversations with messages currently retrying
+    // or that finally failed after exhausting retries
+    if (showOnlyRetrying) {
+      result = result.filter((c) =>
+        c.messages.some((m) => m.status === 'retrying' || m.status === 'failed_retries')
+      );
+    }
     // Smart sorting
     result.sort((a, b) => {
       if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
