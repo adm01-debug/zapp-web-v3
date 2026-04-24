@@ -175,7 +175,14 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     });
 
     return result;
-  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, profileId, contactTagsMap]);
+  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, showOnlyRetrying, profileId, contactTagsMap]);
+
+  const retryingCount = useMemo(
+    () => conversations.filter((c) =>
+      c.messages?.some((m) => m.status === 'retrying' || m.status === 'failed_retries')
+    ).length,
+    [conversations]
+  );
 
   return {
     mainTab, setMainTab,
@@ -183,6 +190,8 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     showAll, setShowAll,
     selectedQueueId, setSelectedQueueId,
     selectedContactType, handleContactTypeChange,
+    showOnlyRetrying, setShowOnlyRetrying,
+    retryingCount,
     filters, setFilters,
     search, setSearch,
     filteredConversations,
