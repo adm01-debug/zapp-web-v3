@@ -191,14 +191,21 @@ flowchart LR
 %%     | sed -E 's/.*click +([A-Za-z0-9_]+) +"([^"]+)".*/\1|\2/' \
 %%     | while IFS='|' read n p; do test -f "$p" && echo "OK   $n $p" || echo "MISS $n $p"; done
 %%
-%% Ultima verificacao: 24/abr/2026 — 24/24 OK
+%% Ultima verificacao: 24/abr/2026 — 31/31 OK
 %%   [x] CIL    -> src/components/inbox/chat/useChatInputLogic.ts
 %%   [x] MS     -> src/hooks/realtime/messageSender.ts
 %%   [x] IDK    -> src/lib/sendIdempotency.ts
+%%   [x] FP     -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] NORM   -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] BUCKET -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] HASH   -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] KEYFP  -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
+%%   [x] KEYROW -> src/lib/sendIdempotency.ts        (subgraph IDEMP)
 %%   [x] ESR    -> src/lib/evolutionSendRetry.ts
 %%   [x] RETRY  -> src/lib/retry.ts
 %%   [x] RCFG   -> src/lib/retryConfig.ts
 %%   [x] DLQENQ -> src/lib/failedMessagesEnqueue.ts
+%%   [x] DLQRP  -> supabase/functions/reprocess-failed-messages/index.ts
 %%   [x] EMIT   -> src/hooks/realtime/sendStatusBus.ts
 %%   [x] SUBALL -> src/hooks/realtime/sendStatusBus.ts
 %%   [x] GETST  -> src/hooks/realtime/sendStatusBus.ts
@@ -216,9 +223,4 @@ flowchart LR
 %%   [x] MSI    -> src/components/inbox/chat/MessageStatusInline.tsx
 %%   [x] VML    -> src/components/inbox/VirtualizedMessageList.tsx
 %%   [x] MB     -> src/components/inbox/chat/MessageBubble.tsx
-%%
-%% Pendente (no citado em iteracao anterior, ainda nao presente neste arquivo):
-%%   [ ] DLQRP  -> supabase/functions/reprocess-failed-messages/index.ts
-%%       (arquivo existe no repo; reintroduzir nodo + click quando o subgraph
-%%        "Transporte e Retry" for reaberto)
 %% ============================================================================
