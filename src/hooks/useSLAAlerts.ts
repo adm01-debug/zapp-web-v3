@@ -124,6 +124,8 @@ export function useSLAAlerts(params: SLAAlertParams) {
 
   useEffect(() => {
     if (params.scope === 'none' || !params.contactId) return;
+    // Master switch: when disabled, skip toasts AND audit inserts AND webhook forward entirely.
+    if (!preferences.enabled) return;
     const contactId = params.contactId;
 
     const fire = async (kind: AlertKind, severity: AlertSeverity, durationMs: number | null) => {
