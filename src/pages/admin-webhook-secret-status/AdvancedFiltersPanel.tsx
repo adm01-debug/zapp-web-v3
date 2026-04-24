@@ -179,13 +179,7 @@ export function AdvancedFiltersPanel({
             chips.push({
               key: 'instance',
               label: `Instância: ${currentInstance}`,
-              onClear: () => {
-                const url = new URL(window.location.href);
-                url.searchParams.delete('instance');
-                window.history.replaceState({}, '', url.toString());
-                // Trigger re-render of consumers reading the URL
-                window.dispatchEvent(new PopStateEvent('popstate'));
-              },
+              onClear: onClearInstance ?? (() => {}),
             });
           }
           if (prefs.statusFilter !== 'all') {
