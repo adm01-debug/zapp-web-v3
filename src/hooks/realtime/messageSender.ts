@@ -234,7 +234,13 @@ export async function sendMessageToContact(
     }
 
     const externalId = extractEvolutionMessageId(apiResult);
-    await supabase.from('messages').update({ status: 'sent', external_id: externalId, whatsapp_connection_id: resolvedConnectionId }).eq('id', data.id);
+    await supabase.from('messages').update({
+      status: 'sent',
+      external_id: externalId,
+      whatsapp_connection_id: resolvedConnectionId,
+      retry_attempt: null,
+      retry_total: null,
+    }).eq('id', data.id);
     emitSendStatus(data.id, { status: 'sent' });
   } catch (evolutionError) {
     log.error('Error sending via Evolution API:', evolutionError);
