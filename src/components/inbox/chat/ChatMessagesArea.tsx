@@ -402,3 +402,59 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
 }));
 
 ChatMessagesArea.displayName = 'ChatMessagesArea';
+// Badge acessível de cancelamento. Anuncia via aria-live polite, move o foco
+// para o botão de retry quando o foco anterior estava dentro da área de chat
+// (evita roubar foco se o usuário está digitando ou em outro painel).
+function LoadCancelledBadge({
+  reason,
+  onRetry,
+  scrollContainerRef,
+}: {
+  reason: LoadOlderCancelReason;
+  onRetry: () => void;
+  scrollContainerRef: React.RefObject<HTMLDivElement>;
+}) {
+  const isNav = reason === 'navigation';
+  const Icon = isNav ? Navigation2 : Ban;
+  const text = isNav
+    ? 'Carregamento interrompido pela navegação'
+    : 'Carregamento cancelado pela rolagem';
+  const retryBtnRef = useRef<HTMLButtonElement>(null);
+  const labelId = useId();
+
+  useEffect(() => {
+    const active = document.activeElement as HTMLElement | null;
+    const insideChat = !!(active && scrollContainerRef.current?.contains(active));
+    // Só move o foco se o usuário estava interagindo dentro do scroll do chat.
+    // Caso contrário, o aria-live já anuncia sem interromper a tarefa atual.
+    if (insideChat) {
+      retryBtnRef.current?.focus({ preventScroll: true });
+    }
+  }, [scrollContainerRef]);
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      data-testid="load-older-cancelled"
+      data-cancel-reason={reason}
+      className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 backdrop-blur-sm pl-3 pr-1 py-1 rounded-full border border-border/30"
+    >
+      <Icon className="h-3 w-3" aria-hidden="true" />
+      <span id={labelId}>{text}</span>
+      <button
+        ref={retryBtnRef}
+        type="button"
+        data-testid="load-older-retry"
+        onClick={onRetry}
+        aria-describedby={labelId}
+        aria-label="Tentar carregar mensagens anteriores novamente"
+        className="inline-flex items-center gap-1 ml-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-foreground bg-background/80 hover:bg-background border border-border/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <RotateCw className="h-3 w-3" aria-hidden="true" />
+        Tentar carregar de novo
+      </button>
+    </div>
+  );
+}
