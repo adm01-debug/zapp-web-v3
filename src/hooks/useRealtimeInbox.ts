@@ -264,5 +264,7 @@ export function useRealtimeInbox() {
     cancelLoadOlderMessages,
     loadingOlderMessages,
     hasMoreMessages,
+    // Realtime batching diagnostics (only meaningful in local mode)
+    batcherStatus: USE_EXTERNAL_DB ? null : localRealtime.batcherStatus,
   };
 }

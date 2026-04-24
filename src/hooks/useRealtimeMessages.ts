@@ -9,7 +9,8 @@ import {
   getUniqueMessageContactIds, chunkArray,
 } from './realtime/realtimeUtils';
 import { useRealtimeNotifications } from './realtime/useRealtimeNotifications';
-import { useMessageUpdateBatcher } from './realtime/useMessageUpdateBatcher';
+import { useMessageUpdateBatcher, type MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
+export type { MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 
 const log = getLogger('RealtimeMessages');
 const SEEDED_CONTACT_LIMIT = 500;
@@ -138,7 +139,7 @@ export function useRealtimeMessages() {
     [commitConversations, fetchContactsByIds, notifyAboutIncomingMessage]
   );
 
-  const { handleMessageUpdate } = useMessageUpdateBatcher(conversationsRef, commitConversations, hydrateConversationForMessage);
+  const { handleMessageUpdate, batcherStatus } = useMessageUpdateBatcher(conversationsRef, commitConversations, hydrateConversationForMessage);
 
   const handleNewMessage = useCallback(
     (payload: RealtimePostgresChangesPayload<RealtimeMessage>) => {
@@ -246,5 +247,6 @@ export function useRealtimeMessages() {
     refetch: fetchConversations, newMessageNotification,
     dismissNotification, setSelectedContact, setSoundEnabled,
     conversationSendState,
+    batcherStatus,
   };
 }

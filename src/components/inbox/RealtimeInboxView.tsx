@@ -3,6 +3,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { MiniChatPiP } from '@/components/mobile/MiniChatPiP';
 import { NewMessageIndicator } from './NewMessageIndicator';
+import { MessageBatcherIndicator } from './MessageBatcherIndicator';
 import { InboxEmptyChat } from './InboxEmptyChat';
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary';
 import { ConversationListSidebar } from './ConversationListSidebar';
@@ -104,6 +105,8 @@ export function RealtimeInboxView() {
       )}
 
       <NewMessageIndicator show={!!inbox.newMessageNotification} contactName={inbox.newMessageNotification?.contactName || ''} contactAvatar={inbox.newMessageNotification?.contactAvatar} message={inbox.newMessageNotification?.message || ''} onView={inbox.handleNotificationView} onDismiss={inbox.dismissNotification} />
+
+      <MessageBatcherIndicator status={inbox.batcherStatus} />
 
       {inbox.showNewConversation && (
         <Suspense fallback={null}>
