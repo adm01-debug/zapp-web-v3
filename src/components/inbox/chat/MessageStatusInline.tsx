@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
 import { MessageStatusIcon } from './messageUtils';
 import { useMessageSendStatus } from '@/hooks/realtime/useMessageSendStatus';
+import { useFailureReason, formatFailureReason } from '@/hooks/inbox/useFailureReason';
 
 interface MessageStatusInlineProps {
   message: Pick<Message, 'id' | 'status'>;
@@ -22,6 +23,7 @@ interface MessageStatusInlineProps {
 }
 
 const TRANSIENT = new Set(['sending', 'retrying']);
+const TERMINAL_FAILURES = new Set(['failed', 'failed_auth', 'failed_retries']);
 
 export const MessageStatusInline = memo(function MessageStatusInline({
   message,
