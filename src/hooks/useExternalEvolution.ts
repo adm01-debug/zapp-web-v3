@@ -173,7 +173,13 @@ export function useExternalMessages(remoteJid: string | null) {
     try {
       setLoading(true);
       setError(null);
-      const evoMessages = await fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE);
+      // Dedupe cross-aba: trocar para o mesmo contato em N abas só dispara
+      // 1 fetch — as demais reaproveitam via BroadcastChannel/cache.
+      const evoMessages = await dedupedFetch(
+        `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}`,
+        () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
+        { lockTtl: 10_000, resultTtl: 15_000, waitTimeout: 8_000 },
+      );
       if (!mountedRef.current) return;
 
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
