@@ -85,3 +85,42 @@ export async function ensureAdminRouteOrSkip(page: Page, path: string): Promise<
   if (response && response.status() >= 400) return false;
   return true;
 }
+
+// ============================================================
+// Leitura de atributos por linha (para asserts de interseção)
+// ============================================================
+
+/**
+ * Lê todos os valores de um `data-*` em todas as linhas de um locator.
+ * Retorna strings vazias quando o atributo está ausente, para que o spec
+ * possa decidir explicitamente se considera (ex: pular linhas sem push_name).
+ */
+export async function readRowAttribute(rows: Locator, attr: string): Promise<string[]> {
+  const count = await rows.count();
+  const out: string[] = [];
+  for (let i = 0; i < count; i++) {
+    out.push((await rows.nth(i).getAttribute(attr)) ?? '');
+  }
+  return out;
+}
+
+/**
+ * Lê N atributos em paralelo por linha — preserva o índice de cada linha.
+ * Útil para asserts de interseção combinada (ex: jid+push_name por linha).
+ */
+export async function readRowAttributes(
+  rows: Locator,
+  attrs: readonly string[],
+): Promise<Array<Record<string, string>>> {
+  const count = await rows.count();
+  const out: Array<Record<string, string>> = [];
+  for (let i = 0; i < count; i++) {
+    const row = rows.nth(i);
+    const entry: Record<string, string> = {};
+    for (const a of attrs) {
+      entry[a] = (await row.getAttribute(a)) ?? '';
+    }
+    out.push(entry);
+  }
+  return out;
+}
