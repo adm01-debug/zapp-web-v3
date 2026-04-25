@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Shield, Users, UserPlus, Trash2, Search, Loader2, Crown, Eye, Headphones, Star } from 'lucide-react';
+import { Shield, Users, UserPlus, Trash2, Search, Loader2, Crown, Eye, Headphones, Code } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useRolesPageState, type UserWithRole } from './useRolesPageState';
 import { PermissionMatrix } from '@/components/permissions/PermissionMatrix';
