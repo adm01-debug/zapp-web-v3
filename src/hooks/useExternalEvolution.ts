@@ -122,7 +122,12 @@ export function useExternalConversations(enabled = true) {
       const messages = await dedupedFetch(
         inboxSidebarKey(SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT),
         () => fetchRecentMessagesWindow(),
-        { lockTtl: 8_000, resultTtl: POLL_INTERVAL - 500, waitTimeout: 6_000 },
+        {
+          lockTtl: 8_000,
+          resultTtl: POLL_INTERVAL - 500,
+          waitTimeout: 6_000,
+          retry: { maxRetries: 2, baseDelayMs: 300, maxDelayMs: 2_000 },
+        },
       );
       return buildExternalConversations(messages);
     },
