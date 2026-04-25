@@ -351,6 +351,8 @@ export function resetDedupeTelemetry(): void {
   state.byKeyKind = initialByKeyKind();
   state.byNamespace = {};
   state.recentEvents = [];
+  state.leader = newBucket();
+  state.follower = newBucket();
   if (typeof window !== 'undefined') {
     try {
       (window as unknown as { __dedupeTelemetry?: DedupeTelemetrySnapshot }).__dedupeTelemetry =
@@ -359,4 +361,5 @@ export function resetDedupeTelemetry(): void {
       /* noop */
     }
   }
+  notifyTelemetrySubscribers();
 }
