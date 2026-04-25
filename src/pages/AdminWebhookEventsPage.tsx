@@ -433,20 +433,23 @@ export default function AdminWebhookEventsPage() {
                       data-message-type={row.message_type ?? ''}
                       data-status={row.error_message ? 'error' : row.processed ? 'processed' : 'pending'}
                     >
-                      <TableCell className="text-xs whitespace-nowrap">
+                      <TableCell className="text-xs whitespace-nowrap" data-testid="webhook-event-created-at">
                         {formatDate(row.created_at)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-testid="webhook-event-event-type">
                         <Badge variant="outline" className="font-mono text-xs">
                           {row.event_type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{row.instance_name}</TableCell>
+                      <TableCell className="font-mono text-xs" data-testid="webhook-event-instance">{row.instance_name}</TableCell>
                       <TableCell className="text-xs">
                         <div className="flex flex-col">
                           <span className="font-mono" data-testid="webhook-event-jid">{shortJid(row.remote_jid)}</span>
                           {row.push_name && (
-                            <span className="text-muted-foreground truncate max-w-[200px]">
+                            <span
+                              className="text-muted-foreground truncate max-w-[200px]"
+                              data-testid="webhook-event-push-name"
+                            >
                               {row.push_name}
                             </span>
                           )}
@@ -469,6 +472,7 @@ export default function AdminWebhookEventsPage() {
                           variant="ghost"
                           onClick={() => setSelected(row)}
                           title="Ver payload"
+                          data-testid="webhook-event-details-button"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
