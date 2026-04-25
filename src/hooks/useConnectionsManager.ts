@@ -758,7 +758,13 @@ export function useConnectionsManager() {
     }
     const delay = decision.delayMs;
 
-    log.info('[qr-auto-refresh] scheduled', { delayMs: delay, attemptId: qrCodeDialog.attemptId });
+    log.info('[qr-auto-refresh] scheduled', {
+      delayMs: delay,
+      leadTimeMs: decision.leadTimeMs,
+      ttlSeconds: qrCodeDialog.ttlSeconds,
+      ttlSource: qrCodeDialog.ttlSource,
+      attemptId: qrCodeDialog.attemptId,
+    });
     const scheduledForAttempt = qrCodeDialog.attemptId;
     const generationAtSchedule = dialogGenRef.current;
     const timer = setTimeout(() => {
