@@ -148,6 +148,19 @@ export default function AdminFailedAuthMessagesPage() {
         </CardContent>
       </Card>
 
+      {rows.length > 0 && (
+        <Alert variant="destructive" className="border-destructive/40 bg-destructive/5">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Atenção ao reenviar</AlertTitle>
+          <AlertDescription>
+            Há falhas de autenticação registradas. Reenviar sem corrigir as
+            credenciais (e-mail, senha ou token do provedor) pode falhar
+            novamente e aumentar o bloqueio. Verifique o motivo antes de tentar
+            de novo.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
