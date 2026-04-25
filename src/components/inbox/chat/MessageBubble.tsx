@@ -191,7 +191,6 @@ export function MessageBubble({
                   <MessageBubbleUnsupported extracted={extracted} rawContent={message.content} isSent={isSent} />
                 )}
 
-                {(() => null)()}
                 {message.type === 'image' && message.mediaUrl && (
                   <div className={cn("overflow-hidden", message.content ? "mb-1.5 -mx-1 -mt-0.5 rounded-xl" : "w-full")}>
                     <MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} />
