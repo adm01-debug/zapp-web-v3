@@ -135,9 +135,50 @@ export function MediaGallery({ contactId, open, onOpenChange }: MediaGalleryProp
             )}
           </AnimatePresence>
 
+          {/* Background refetch indicator (visível só quando já há dados na tela) */}
+          {isFetching && !isLoading && !isError && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground border-b"
+            >
+              <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
+              Atualizando galeria…
+            </div>
+          )}
+
           <ScrollArea className="flex-1 min-h-[300px]">
             {isLoading ? (
-              <div className="grid grid-cols-4 gap-2 p-2">{[...Array(8)].map((_, i) => <Skeleton key={i} className="aspect-square rounded-lg" />)}</div>
+              <div
+                role="status"
+                aria-live="polite"
+                aria-label="Carregando mídias"
+                className="p-2"
+              >
+                <div className="grid grid-cols-4 gap-2">
+                  {[...Array(8)].map((_, i) => (
+                    <Skeleton key={i} className="aspect-square rounded-lg" />
+                  ))}
+                </div>
+                {isSlow && (
+                  <div className="flex flex-col items-center gap-2 mt-6 text-center">
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" aria-hidden="true" />
+                    <p className="text-xs text-muted-foreground max-w-xs">
+                      A busca está demorando mais que o normal. Aguarde ou
+                      verifique sua conexão.
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => refetch()}
+                      className="gap-2"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Tentar de novo
+                    </Button>
+                  </div>
+                )}
+              </div>
             ) : isError ? (
               <div
                 role="alert"
