@@ -432,9 +432,17 @@ export function useConnectionsManager() {
     }
   };
 
+  // Hard lock against concurrent QR refreshes — prevents a second invocation
+  // from firing while the first one is still awaiting Evolution's response,
+  // even if it comes from a non-button source (auto-refresh timer, keyboard
+  // shortcut, double-click slipping past the button's `disabled` attribute).
+  const refreshInFlightRef = useRef(false);
+
   const handleRefreshQrCode = async () => {
+    if (refreshInFlightRef.current) return;
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
+    refreshInFlightRef.current = true;
     setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
     try {
@@ -464,6 +472,10 @@ export function useConnectionsManager() {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
       setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
+    } finally {
+      // Always release the lock so the next user-initiated retry can proceed,
+      // regardless of whether the request succeeded or failed.
+      refreshInFlightRef.current = false;
     }
   };
   const handleCopyId = (id: string) => {
