@@ -222,9 +222,10 @@ serve(async (req) => {
     if (action === 'send-media') return await proxy(`/message/sendMedia/${instance}`, 'POST', { number: body.number, mediatype: body.mediaType || body.mediatype, mimetype: body.mimetype, caption: body.caption, media: body.mediaUrl || body.media, fileName: body.fileName, delay: body.delay });
 
     if (action === 'send-audio') {
-      let audioSource = typeof (body.audio || body.audioUrl || body.mediaUrl) === 'string'
-        ? (body.audio || body.audioUrl || body.mediaUrl).trim().replace(/^"+|"+$/g, '').replace(/\.supabase\.co"\//, '.supabase.co/')
-        : (body.audio || body.audioUrl || body.mediaUrl);
+      const rawAudio = body.audio ?? body.audioUrl ?? body.mediaUrl;
+      let audioSource: unknown = typeof rawAudio === 'string'
+        ? rawAudio.trim().replace(/^"+|"+$/g, '').replace(/\.supabase\.co"\//, '.supabase.co/')
+        : rawAudio;
       if (typeof audioSource === 'string') audioSource = await resolvePrivateBucketUrl(supabase, audioSource);
       const audioPayload: Record<string, unknown> = { number: body.number, audio: audioSource };
       if (body.delay) audioPayload.delay = body.delay;

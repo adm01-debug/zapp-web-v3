@@ -106,13 +106,15 @@ export function recordAuthFailureAndMaybePause(
 
   console.warn(`[auto-pause] instance=${instance} reason=${reason} count>=${THRESHOLD} window=${WINDOW_SEC}s — pausing ${PAUSE_MIN}min`);
 
-  supabase.rpc('auto_pause_instance_on_auth_spike', {
-    p_instance: instance,
-    p_reason: `auth_spike:${reason}`,
-    p_trigger_count: THRESHOLD,
-    p_minutes: PAUSE_MIN,
-  // deno-lint-ignore no-explicit-any
-  }).then((res: any) => {
+  Promise.resolve(
+    supabase.rpc('auto_pause_instance_on_auth_spike', {
+      p_instance: instance,
+      p_reason: `auth_spike:${reason}`,
+      p_trigger_count: THRESHOLD,
+      p_minutes: PAUSE_MIN,
+    // deno-lint-ignore no-explicit-any
+    }) as unknown as Promise<any>,
+  ).then((res: any) => {
     if (res?.error) console.warn('[auto-pause] rpc failed:', res.error.message);
   }).catch((e: unknown) => {
     console.warn('[auto-pause] rpc threw:', e instanceof Error ? e.message : String(e));
