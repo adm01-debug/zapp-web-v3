@@ -37,6 +37,11 @@ export function useRealtimeInbox() {
   const [isOnline, setIsOnline] = useState(true);
   const [pipContact, setPipContact] = useState<{ name: string; avatar?: string; lastMessage?: string; contactId: string } | null>(null);
   const [pendingContactId, setPendingContactId] = useState<string | null>(null);
+  // Mensagem que o ChatPanel deve scrollar e destacar assim que abrir a
+  // conversa (ex: deep-link "Ver no chat" vindo do AdminFailedMessages
+  // ou da busca global). É consumido no `RealtimeInboxView` e propagado
+  // para o `ChatPanel` como `initialHighlightMessageId`.
+  const [pendingMessageId, setPendingMessageId] = useState<string | null>(null);
   const [soundOn, setSoundOn] = useState(true);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [showNewConversation, setShowNewConversation] = useState(false);
@@ -75,16 +80,34 @@ export function useRealtimeInbox() {
 
   // Listen for open-contact-chat events
   useEffect(() => {
-    const appWindow = window as Window & { __pendingOpenContactId?: string };
+    const appWindow = window as Window & {
+      __pendingOpenContactId?: string;
+      __pendingOpenChatTarget?: { contactId?: string; messageId?: string };
+    };
     if (appWindow.__pendingOpenContactId) {
       setPendingContactId(appWindow.__pendingOpenContactId);
       appWindow.__pendingOpenContactId = undefined;
     }
+    if (appWindow.__pendingOpenChatTarget?.messageId) {
+      setPendingMessageId(appWindow.__pendingOpenChatTarget.messageId);
+    }
+    if (appWindow.__pendingOpenChatTarget?.contactId) {
+      setPendingContactId(appWindow.__pendingOpenChatTarget.contactId);
+    }
+    appWindow.__pendingOpenChatTarget = undefined;
+
     const handler = (e: Event) => {
-      const contactId = (e as CustomEvent).detail?.contactId;
+      const detail = (e as CustomEvent).detail as
+        | { contactId?: string; messageId?: string }
+        | undefined;
+      const contactId = detail?.contactId;
+      const messageId = detail?.messageId;
       if (contactId) {
         appWindow.__pendingOpenContactId = undefined;
         setPendingContactId(contactId);
+      }
+      if (messageId) {
+        setPendingMessageId(messageId);
       }
     };
     window.addEventListener('open-contact-chat', handler);
@@ -243,6 +266,7 @@ export function useRealtimeInbox() {
     isOnline,
     pipContact, setPipContact,
     pendingContactId, setPendingContactId,
+    pendingMessageId, setPendingMessageId,
     soundOn, toggleSound,
     globalSearchOpen, setGlobalSearchOpen,
     showNewConversation, setShowNewConversation,
