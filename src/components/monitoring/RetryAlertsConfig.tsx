@@ -15,10 +15,13 @@ import { Bell, RotateCcw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   DEFAULT_THRESHOLDS,
+  DEFAULT_RETRY_DEDUPE_MODE,
   resolveThresholds,
   saveThresholds,
   savePerInstanceThresholds,
+  saveRetryAlertDedupeMode,
   type PerInstanceThresholds,
+  type RetryAlertDedupeMode,
   type RetryThresholds,
 } from '@/lib/retryAlerts';
 
@@ -27,6 +30,9 @@ interface RetryAlertsConfigProps {
   onChange: (t: RetryThresholds) => void;
   perInstance?: PerInstanceThresholds;
   onPerInstanceChange?: (next: PerInstanceThresholds) => void;
+  /** Granularidade do dedupe de toasts. Default: 'instance+kind'. */
+  dedupeMode?: RetryAlertDedupeMode;
+  onDedupeModeChange?: (next: RetryAlertDedupeMode) => void;
   /** Instances detected in the current dataset — surfaced first in the picker. */
   knownInstances?: string[];
   hasBreaches?: boolean;
@@ -48,6 +54,8 @@ export function RetryAlertsConfig({
   onChange,
   perInstance = {},
   onPerInstanceChange,
+  dedupeMode = DEFAULT_RETRY_DEDUPE_MODE,
+  onDedupeModeChange,
   knownInstances = [],
   hasBreaches,
 }: RetryAlertsConfigProps) {
@@ -55,6 +63,7 @@ export function RetryAlertsConfig({
   const [tab, setTab] = useState<'global' | 'instance'>('global');
   const [draft, setDraft] = useState<RetryThresholds>(value);
   const [draftMap, setDraftMap] = useState<PerInstanceThresholds>(perInstance);
+  const [draftDedupeMode, setDraftDedupeMode] = useState<RetryAlertDedupeMode>(dedupeMode);
   const [selectedInstance, setSelectedInstance] = useState<string>(knownInstances[0] ?? '');
   const [newInstance, setNewInstance] = useState('');
 
@@ -63,6 +72,7 @@ export function RetryAlertsConfig({
     if (next) {
       setDraft(value);
       setDraftMap(perInstance);
+      setDraftDedupeMode(dedupeMode);
       setSelectedInstance(knownInstances[0] ?? Object.keys(perInstance)[0] ?? '');
     }
   };
@@ -132,6 +142,9 @@ export function RetryAlertsConfig({
     savePerInstanceThresholds(cleanedMap);
     onPerInstanceChange?.(cleanedMap);
 
+    saveRetryAlertDedupeMode(draftDedupeMode);
+    onDedupeModeChange?.(draftDedupeMode);
+
     const overrideCount = Object.keys(cleanedMap).length;
     toast.success(
       overrideCount > 0
@@ -169,6 +182,33 @@ export function RetryAlertsConfig({
           <p className="text-sm font-semibold">Limites de alerta</p>
           <p className="text-xs text-muted-foreground">
             Dispara alerta quando uma instância ultrapassa os limites na janela atual.
+          </p>
+        </div>
+
+        <div className="rounded-md border border-border/60 bg-muted/30 p-2.5 space-y-1.5">
+          <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Granularidade do toast
+          </Label>
+          <Select
+            value={draftDedupeMode}
+            onValueChange={(v) => setDraftDedupeMode(v as RetryAlertDedupeMode)}
+          >
+            <SelectTrigger className="h-8 text-xs" aria-label="Granularidade de dedupe do toast">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="instance+kind" className="text-xs">
+                Por instância × tipo de violação (p95 e % falha separados)
+              </SelectItem>
+              <SelectItem value="instance" className="text-xs">
+                Por instância apenas (1 toast agregado)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground leading-snug">
+            {draftDedupeMode === 'instance+kind'
+              ? 'Cada tipo de violação dispara um toast — útil para diagnosticar p95 vs taxa de falha.'
+              : 'Um único toast por instância na janela combinando todos os motivos — menos ruído.'}
           </p>
         </div>
 
