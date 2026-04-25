@@ -261,56 +261,28 @@ Deno.serve(async (req) => {
 
     // Mutation: insert
     if (action === 'insert' && table && data) {
-      try {
-        const { data: result, error } = await ext
-          .from(table)
-          .insert(data)
-          .select()
-          .abortSignal(queryController.signal)
-        if (error) {
-          if (timeoutFired) return timeoutResponse()
-          if (clientAbortFired) return clientAbortResponse()
-          return new Response(JSON.stringify({ error: error.message }), {
-            status: 400, headers: jsonHeaders
-          })
-        }
-        return new Response(JSON.stringify({ data: result }), {
-          headers: jsonHeaders
-        })
-      } catch (e) {
-        if (isProxyTimeout(e)) return timeoutResponse()
-        if (isClientAbort(e)) return clientAbortResponse()
-        throw e
-      } finally {
-        cleanup()
-      }
+      const result = await withTimeout(
+        'insert',
+        table,
+        ext.from(table).insert(data).select().abortSignal(queryController.signal),
+      )
+      cleanup()
+      if (result.response) return result.response
+      return new Response(JSON.stringify({ data: result.data, cid }), { headers: jsonHeaders })
     }
 
     // Mutation: update
     if (action === 'update' && table && data && match) {
-      try {
-        let q = ext.from(table).update(data)
-        for (const [k, v] of Object.entries(match)) q = q.eq(k, v as string)
-        const { data: result, error } = await q
-          .select()
-          .abortSignal(queryController.signal)
-        if (error) {
-          if (timeoutFired) return timeoutResponse()
-          if (clientAbortFired) return clientAbortResponse()
-          return new Response(JSON.stringify({ error: error.message }), {
-            status: 400, headers: jsonHeaders
-          })
-        }
-        return new Response(JSON.stringify({ data: result }), {
-          headers: jsonHeaders
-        })
-      } catch (e) {
-        if (isProxyTimeout(e)) return timeoutResponse()
-        if (isClientAbort(e)) return clientAbortResponse()
-        throw e
-      } finally {
-        cleanup()
-      }
+      let q = ext.from(table).update(data)
+      for (const [k, v] of Object.entries(match)) q = q.eq(k, v as string)
+      const result = await withTimeout(
+        'update',
+        table,
+        q.select().abortSignal(queryController.signal),
+      )
+      cleanup()
+      if (result.response) return result.response
+      return new Response(JSON.stringify({ data: result.data, cid }), { headers: jsonHeaders })
     }
 
     // SELECT query (default)
