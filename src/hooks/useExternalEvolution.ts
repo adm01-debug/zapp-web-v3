@@ -7,9 +7,8 @@
  * - Per-conversation: 100 messages by jid, with cursor-based loadOlder().
  * - Polling: cursor-forward (created_at > lastSeen) instead of full re-fetch.
  */
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useDedupeLoadingByKey } from '@/hooks/useDedupeLoadingByKey';
 import { queryExternalProxy } from '@/lib/externalProxy';
 import {
   buildExternalConversations,
@@ -19,29 +18,14 @@ import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
 import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
-import { mergeRealtimeMessages, maxCreatedAt } from '@/lib/inbox/mergeRealtimeMessages';
-import {
-  inboxInitialKey,
-  inboxPollKey,
-  inboxOlderKey,
-  inboxSidebarKey,
-  inboxJidKeyPrefixes,
-} from '@/lib/inbox/inboxDedupeKeys';
-import {
-  POLL_INTERVAL_MS,
-  SIDEBAR_DAYS_BACK,
-  SIDEBAR_LIMIT,
-  CONVERSATION_PAGE_SIZE,
-  getSidebarDedupeOptions,
-  getInitialDedupeOptions,
-  getPollDedupeOptions,
-  getOlderDedupeOptions,
-} from '@/lib/inbox/inboxDedupeConfig';
 
 const log = getLogger('useExternalEvolution');
 
-const POLL_INTERVAL = POLL_INTERVAL_MS;
+const POLL_INTERVAL = 5000; // 5s polling
 const DEFAULT_INSTANCE = 'wpp2';
+const SIDEBAR_DAYS_BACK = 7;
+const SIDEBAR_LIMIT = 200;
+const CONVERSATION_PAGE_SIZE = 100;
 
 // Slim select — drops `payload` and `raw_data` (each can be 10KB+).
 const SLIM_MESSAGE_COLUMNS = [
@@ -129,9 +113,9 @@ export function useExternalConversations(enabled = true) {
       // Dedupe cross-aba: a sidebar é igual em todas as abas, então uma única
       // chamada por janela é suficiente — abas adicionais reaproveitam.
       const messages = await dedupedFetch(
-        inboxSidebarKey(SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT),
+        `inbox:sidebar:${SIDEBAR_DAYS_BACK}:${SIDEBAR_LIMIT}`,
         () => fetchRecentMessagesWindow(),
-        getSidebarDedupeOptions(),
+        { lockTtl: 8_000, resultTtl: POLL_INTERVAL - 500, waitTimeout: 6_000 },
       );
       return buildExternalConversations(messages);
     },
@@ -159,13 +143,6 @@ export function useExternalMessages(remoteJid: string | null) {
   const previousJidRef = useRef<string | null>(null);
   const lastSeenRef = useRef<string | null>(null);
   const loadOlderAbortRef = useRef<AbortController | null>(null);
-  // Jid "ativo" — atualizado SÍNCRONAMENTE quando o prop muda (ver effect abaixo).
-  // Usado por callbacks assíncronos (fetch + broadcast) para abortar writes
-  // que pertencem a um jid que já não está mais selecionado.
-  const activeJidRef = useRef<string | null>(remoteJid);
-  // Sub atual do crossTabDedupe — guardamos para garantir desinscrição
-  // imediata e idempotente caso algo dispare re-subscribe sem esperar o cleanup.
-  const dedupeUnsubRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -175,12 +152,6 @@ export function useExternalMessages(remoteJid: string | null) {
       if (loadOlderAbortRef.current) {
         loadOlderAbortRef.current.abort();
         loadOlderAbortRef.current = null;
-      }
-      // Garantia extra: se o effect de subscribe não tiver feito cleanup
-      // (componente sumindo durante render concorrente), limpamos aqui.
-      if (dedupeUnsubRef.current) {
-        try { dedupeUnsubRef.current(); } catch { /* noop */ }
-        dedupeUnsubRef.current = null;
       }
     };
   }, []);
@@ -198,9 +169,6 @@ export function useExternalMessages(remoteJid: string | null) {
       if (mountedRef.current) { setMessages([]); setLoading(false); }
       return;
     }
-    // Snapshot do jid no início do fetch — usado para descartar writes tardios
-    // se o usuário trocar de conversa antes da resposta chegar.
-    const ownerJid = remoteJid;
 
     try {
       setLoading(true);
@@ -208,11 +176,11 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe cross-aba: trocar para o mesmo contato em N abas só dispara
       // 1 fetch — as demais reaproveitam via BroadcastChannel/cache.
       const evoMessages = await dedupedFetch(
-        inboxInitialKey({ jid: ownerJid, pageSize: CONVERSATION_PAGE_SIZE }),
-        () => fetchMessagesByJid(ownerJid, CONVERSATION_PAGE_SIZE),
-        getInitialDedupeOptions(),
+        `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}`,
+        () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
+        { lockTtl: 10_000, resultTtl: 15_000, waitTimeout: 8_000 },
       );
-      if (!mountedRef.current || activeJidRef.current !== ownerJid) return;
+      if (!mountedRef.current) return;
 
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
       setMessages(mapped);
@@ -222,11 +190,9 @@ export function useExternalMessages(remoteJid: string | null) {
         : null;
     } catch (err) {
       log.error('Error fetching external messages:', err);
-      if (mountedRef.current && activeJidRef.current === ownerJid) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch');
-      }
+      if (mountedRef.current) setError(err instanceof Error ? err.message : 'Failed to fetch');
     } finally {
-      if (mountedRef.current && activeJidRef.current === ownerJid) setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, [remoteJid]);
 
@@ -235,29 +201,25 @@ export function useExternalMessages(remoteJid: string | null) {
     if (!remoteJid || !mountedRef.current) return;
     const afterDate = lastSeenRef.current;
     if (!afterDate) return;
-    const ownerJid = remoteJid;
 
     try {
       // Dedupe: várias abas pollando o mesmo jid+cursor compartilham 1 fetch
       // (TTL curto = poll seguinte ainda dispara normalmente).
       const newOnes = await dedupedFetch(
-        inboxPollKey({ jid: ownerJid, afterDate }),
-        () => fetchMessagesAfter(ownerJid, afterDate),
-        getPollDedupeOptions(),
+        `inbox:poll:${remoteJid}:${afterDate}`,
+        () => fetchMessagesAfter(remoteJid, afterDate),
+        { lockTtl: 4_000, resultTtl: POLL_INTERVAL - 1_000, waitTimeout: 3_000 },
       );
-      if (!mountedRef.current || activeJidRef.current !== ownerJid || newOnes.length === 0) return;
+      if (!mountedRef.current || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
-      setMessages(prev => mergeRealtimeMessages(prev, mapped) as RealtimeMessage[]);
-      // Cursor: usa o MAIOR created_at recebido (não o último do array, que pode
-      // ter chegado fora de ordem se o backend devolveu por id em vez de tempo).
-      const newest = maxCreatedAt(mapped);
-      if (newest) {
-        const newestStr = typeof newest === 'string' ? newest : new Date(newest).toISOString();
-        if (!lastSeenRef.current || newestStr > lastSeenRef.current) {
-          lastSeenRef.current = newestStr;
-        }
-      }
+      setMessages(prev => {
+        const seen = new Set(prev.map(m => m.id));
+        const additions = mapped.filter(m => !seen.has(m.id));
+        if (additions.length === 0) return prev;
+        return [...prev, ...additions];
+      });
+      lastSeenRef.current = newOnes[newOnes.length - 1].created_at;
     } catch (err) {
       log.error('Error polling external messages:', err);
     }
@@ -282,23 +244,14 @@ export function useExternalMessages(remoteJid: string | null) {
       setLoadingOlder(true);
       // Dedupe cross-aba: mesma janela (jid + cursor) compartilhada via
       // localStorage lock + BroadcastChannel. Evita N abas chamando o mesmo
-      // page de mensagens antigas em paralelo. Cursor normalizado para
-      // epoch ms — evita colisão por variação no formato ISO.
-      const dedupeKey = inboxOlderKey({
-        jid: remoteJid,
-        beforeDate: oldest,
-        pageSize: CONVERSATION_PAGE_SIZE,
-      });
+      // page de mensagens antigas em paralelo.
+      const dedupeKey = `older:${remoteJid}:${oldest}:${CONVERSATION_PAGE_SIZE}`;
       const older = await dedupedFetch(
         dedupeKey,
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest, controller.signal),
-        getOlderDedupeOptions({
-          // Não retentar se o usuário cancelou (scrollou ou trocou de chat).
-          shouldRetry: () => !controller.signal.aborted,
-        }),
+        { lockTtl: 10_000, resultTtl: 30_000, waitTimeout: 8_000 },
       );
       if (!mountedRef.current || controller.signal.aborted) return;
-      if (activeJidRef.current !== remoteJid) return; // jid trocou durante o fetch
 
       const mapped = older.map(evolutionToRealtimeMessage);
       if (mapped.length === 0) {
@@ -308,9 +261,9 @@ export function useExternalMessages(remoteJid: string | null) {
 
       setMessages(prev => {
         if (controller.signal.aborted) return prev;
-        // Merge ordenado: a página `older` vem desc do servidor, mas o sort
-        // por (created_at, id) reposiciona corretamente entre o histórico atual.
-        return mergeRealtimeMessages(prev, mapped) as RealtimeMessage[];
+        const seen = new Set(prev.map(m => m.id));
+        const additions = mapped.filter(m => !seen.has(m.id));
+        return [...additions, ...prev];
       });
       setHasMore(older.length === CONVERSATION_PAGE_SIZE);
     } catch (err) {
@@ -329,20 +282,9 @@ export function useExternalMessages(remoteJid: string | null) {
   // Initial fetch on jid change
   useEffect(() => {
     if (remoteJid !== previousJidRef.current) {
-      // 1) Atualiza o jid ATIVO antes de qualquer side-effect — qualquer
-      //    callback assíncrono pendente do jid anterior cairá no guard
-      //    `activeJidRef.current !== ownerJid` e será descartado.
-      activeJidRef.current = remoteJid;
       previousJidRef.current = remoteJid;
-      // 2) Aborta loadOlder em curso do jid anterior.
-      if (loadOlderAbortRef.current) {
-        loadOlderAbortRef.current.abort();
-        loadOlderAbortRef.current = null;
-      }
-      // 3) Reseta cursor + estado da paginação para a nova conversa.
       lastSeenRef.current = null;
       setHasMore(true);
-      setMessages([]); // evita flash de mensagens do jid anterior
       initialFetch();
     }
   }, [remoteJid, initialFetch]);
@@ -357,69 +299,52 @@ export function useExternalMessages(remoteJid: string | null) {
   // Cross-tab sync: quando outra aba conclui um fetch (initial/poll/older)
   // para este mesmo jid, recebemos o resultado via BroadcastChannel e
   // atualizamos a UI sem refazer a requisição.
-  //
-  // Garantias contra handler duplicado / write na conversa errada:
-  // - O cleanup do effect chama o `unsub` retornado por subscribeDedupe ANTES
-  //   de re-subscrever (semântica padrão do React).
-  // - `dedupeUnsubRef` é uma trava idempotente: se por algum motivo o effect
-  //   re-rodar sem cleanup (StrictMode ou re-render rápido), desinscrevemos
-  //   a sub anterior antes de criar a nova.
-  // - O matcher é recriado por `remoteJid`, e o handler ainda checa
-  //   `activeJidRef.current === ownerJid` para não escrever em conversa errada
-  //   caso um broadcast chegue durante a janela de troca.
   useEffect(() => {
     if (!remoteJid) return;
-    const ownerJid = remoteJid;
-    const [initialPrefix, pollPrefix, olderPrefix] = inboxJidKeyPrefixes(ownerJid);
-    const jidPrefixes = [initialPrefix, pollPrefix, olderPrefix];
+    const jidPrefixes = [
+      `inbox:initial:${remoteJid}:`,
+      `inbox:poll:${remoteJid}:`,
+      `older:${remoteJid}:`,
+    ];
     const matcher = new RegExp(
       `^(${jidPrefixes.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
     );
 
-    // Idempotência: garante que nunca há 2 subs ativas simultâneas.
-    if (dedupeUnsubRef.current) {
-      try { dedupeUnsubRef.current(); } catch { /* noop */ }
-      dedupeUnsubRef.current = null;
-    }
-
     const unsub = subscribeDedupe<EvolutionMessage[]>(matcher, (key, data, source) => {
       if (source === 'local') return; // já tratado pelo fluxo do próprio fetcher
       if (!mountedRef.current || !Array.isArray(data) || data.length === 0) return;
-      // Defesa final: o usuário pode ter trocado de conversa entre o
-      // momento em que esta sub foi criada e o broadcast chegar.
-      if (activeJidRef.current !== ownerJid) return;
 
-      // Independente do origem (initial/poll/older), o merge ordena por
-      // (created_at, id) e dedupa por id — não há mais necessidade de
-      // ramificações por tipo de chave nem de inverter páginas `older`.
-      const mapped = data.map(evolutionToRealtimeMessage);
+      // `older` é retornado em ordem desc; demais já vêm asc.
+      const isOlder = key.startsWith(`older:${remoteJid}:`);
+      const ordered = isOlder ? data.slice().reverse() : data;
+      const mapped = ordered.map(evolutionToRealtimeMessage);
 
-      setMessages((prev) => mergeRealtimeMessages(prev, mapped) as RealtimeMessage[]);
-
-      // Cursor `lastSeen` avança somente para frente: usa o maior created_at
-      // recebido neste lote (poll/initial podem trazer mensagens novas).
-      const newest = maxCreatedAt(mapped);
-      if (newest) {
-        const newestStr = typeof newest === 'string' ? newest : new Date(newest).toISOString();
-        if (!lastSeenRef.current || newestStr > lastSeenRef.current) {
-          lastSeenRef.current = newestStr;
+      setMessages((prev) => {
+        const seen = new Set(prev.map((m) => m.id));
+        const additions = mapped.filter((m) => !seen.has(m.id));
+        if (additions.length === 0) return prev;
+        if (key.startsWith(`inbox:initial:${remoteJid}:`)) {
+          // Initial completo de outra aba: substitui se ainda não tínhamos nada,
+          // senão apenas mescla as faltantes.
+          if (prev.length === 0) {
+            lastSeenRef.current = mapped[mapped.length - 1]?.created_at ?? null;
+            return mapped;
+          }
+          return [...prev, ...additions].sort(
+            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+          );
         }
-      }
-
-      if (key.startsWith(initialPrefix) && mountedRef.current) {
+        if (isOlder) return [...additions, ...prev];
+        // poll forward
+        const next = [...prev, ...additions];
+        lastSeenRef.current = additions[additions.length - 1]?.created_at ?? lastSeenRef.current;
+        return next;
+      });
+      if (key.startsWith(`inbox:initial:${remoteJid}:`) && mountedRef.current) {
         setLoading(false);
       }
     });
-    dedupeUnsubRef.current = unsub;
-
-    return () => {
-      // Desinscreve via ref para garantir idempotência mesmo se React chamar
-      // o cleanup mais de uma vez (não chama, mas defesa em profundidade).
-      if (dedupeUnsubRef.current === unsub) {
-        dedupeUnsubRef.current = null;
-      }
-      try { unsub(); } catch { /* noop */ }
-    };
+    return unsub;
   }, [remoteJid]);
 
   const addMessage = useCallback((message: RealtimeMessage) => {
@@ -437,35 +362,10 @@ export function useExternalMessages(remoteJid: string | null) {
     setMessages(prev => prev.filter(m => m.id !== messageId));
   }, []);
 
-  // ─── Loading sync cross-tab por chave ──────────────────────────────────────
-  // Constroi um matcher único cobrindo initial/poll/older deste jid.
-  // A aba que está apenas observando recebe `phase: 'start/end'` da líder e
-  // ajusta o spinner sem disparar fetch próprio.
-  const jidPrefixMatcher = useMemo<RegExp | null>(() => {
-    if (!remoteJid) return null;
-    const [initialPrefix, pollPrefix, olderPrefix] = inboxJidKeyPrefixes(remoteJid);
-    const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`^(${[initialPrefix, pollPrefix, olderPrefix].map(escape).join('|')})`);
-  }, [remoteJid]);
-
-  const { isLoadingKey } = useDedupeLoadingByKey(
-    jidPrefixMatcher ?? /(?!)/,
-    Boolean(remoteJid),
-  );
-
-  const initialPrefix = remoteJid ? inboxJidKeyPrefixes(remoteJid)[0] : '';
-  const olderPrefix = remoteJid ? inboxJidKeyPrefixes(remoteJid)[2] : '';
-
-  // Spinner inicial: combina loading local com qualquer aba carregando o initial.
-  const remoteInitialLoading = Boolean(remoteJid) && initialPrefix !== '' && isLoadingKey(initialPrefix);
-  const remoteOlderLoading = Boolean(remoteJid) && olderPrefix !== '' && isLoadingKey(olderPrefix);
-
   return {
     messages,
-    // Sincronizado: true se a aba local OU outra aba estiver buscando o initial.
-    loading: loading || remoteInitialLoading,
-    // Mesmo critério para "carregando mais antigas".
-    loadingOlder: loadingOlder || remoteOlderLoading,
+    loading,
+    loadingOlder,
     hasMore,
     error,
     refetch: initialFetch,

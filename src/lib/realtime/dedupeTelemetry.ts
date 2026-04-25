@@ -58,18 +58,6 @@ export interface DedupeEvent {
   ts: number;
 }
 
-/** Estatísticas agregadas de latência (ms) — usadas para leader vs follower. */
-export interface LatencyStats {
-  count: number;
-  sumMs: number;
-  maxMs: number;
-  /** Média em ms (0 se count=0). */
-  avgMs: number;
-  /** Aproximação de p50/p95 sobre as últimas amostras (RECENT_LATENCY_LIMIT). */
-  p50Ms: number;
-  p95Ms: number;
-}
-
 export interface DedupeTelemetrySnapshot {
   total: number;
   hits: number;
@@ -79,22 +67,6 @@ export interface DedupeTelemetrySnapshot {
   byKeyKind: Record<DedupeKeyKind, number>;
   byNamespace: Record<string, { hits: number; misses: number }>;
   recentEvents: DedupeEvent[];
-  // ── Métricas derivadas para visibilidade cross-tab ──────────────────
-  /** Vezes em que ESTA aba executou o fetcher (lock_acquired_lead + fallback_after_wait). */
-  leaderCount: number;
-  /** Vezes em que outra aba executou e nós só consumimos o resultado (broadcast_wait + persisted_cache + late_cache). */
-  followerCount: number;
-  /** Hits servidos sem nem ir para outra aba (memory_cache + inflight_local). */
-  localCacheCount: number;
-  /**
-   * Estimativa de chamadas economizadas: cada hit é uma execução de fetcher
-   * que NÃO aconteceu graças ao dedupe.
-   */
-  callsSaved: number;
-  /** Latência das execuções em que esta aba foi líder (incluindo retries). */
-  leaderLatency: LatencyStats;
-  /** Latência da espera por broadcast quando outra aba era líder. */
-  followerLatency: LatencyStats;
 }
 
 const RECENT_LIMIT = 100;
@@ -115,17 +87,6 @@ const initialByKeyKind = (): Record<DedupeKeyKind, number> => ({
   unknown: 0,
 });
 
-/** Quantas amostras de latência manter por bucket (leader/follower) para p50/p95. */
-const RECENT_LATENCY_LIMIT = 200;
-
-interface LatencyBucket {
-  count: number;
-  sumMs: number;
-  maxMs: number;
-  /** Janela deslizante de amostras para percentis aproximados. */
-  samples: number[];
-}
-
 interface State {
   total: number;
   hits: number;
@@ -134,11 +95,7 @@ interface State {
   byKeyKind: Record<DedupeKeyKind, number>;
   byNamespace: Record<string, { hits: number; misses: number }>;
   recentEvents: DedupeEvent[];
-  leader: LatencyBucket;
-  follower: LatencyBucket;
 }
-
-const newBucket = (): LatencyBucket => ({ count: 0, sumMs: 0, maxMs: 0, samples: [] });
 
 const state: State = {
   total: 0,
@@ -148,8 +105,6 @@ const state: State = {
   byKeyKind: initialByKeyKind(),
   byNamespace: {},
   recentEvents: [],
-  leader: newBucket(),
-  follower: newBucket(),
 };
 
 const HIT_REASONS = new Set<DedupeReason>([
@@ -159,53 +114,6 @@ const HIT_REASONS = new Set<DedupeReason>([
   'broadcast_wait',
   'late_cache',
 ]);
-
-/** Hits que vieram de outras abas (cross-tab follower). */
-const FOLLOWER_REASONS = new Set<DedupeReason>([
-  'broadcast_wait',
-  'persisted_cache',
-  'late_cache',
-]);
-
-/** Hits servidos sem sair desta aba. */
-const LOCAL_CACHE_REASONS = new Set<DedupeReason>([
-  'memory_cache',
-  'inflight_local',
-]);
-
-/** Misses que executaram o fetcher (esta aba foi líder). */
-const LEADER_REASONS = new Set<DedupeReason>([
-  'lock_acquired_lead',
-  'fallback_after_wait',
-]);
-
-function recordLatency(bucket: LatencyBucket, durationMs: number) {
-  bucket.count += 1;
-  bucket.sumMs += durationMs;
-  if (durationMs > bucket.maxMs) bucket.maxMs = durationMs;
-  bucket.samples.push(durationMs);
-  if (bucket.samples.length > RECENT_LATENCY_LIMIT) {
-    bucket.samples.splice(0, bucket.samples.length - RECENT_LATENCY_LIMIT);
-  }
-}
-
-function percentile(sortedAsc: number[], p: number): number {
-  if (sortedAsc.length === 0) return 0;
-  const idx = Math.min(sortedAsc.length - 1, Math.floor((p / 100) * sortedAsc.length));
-  return sortedAsc[idx];
-}
-
-function bucketStats(b: LatencyBucket): LatencyStats {
-  const sorted = b.samples.length ? b.samples.slice().sort((a, c) => a - c) : [];
-  return {
-    count: b.count,
-    sumMs: b.sumMs,
-    maxMs: b.maxMs,
-    avgMs: b.count === 0 ? 0 : b.sumMs / b.count,
-    p50Ms: percentile(sorted, 50),
-    p95Ms: percentile(sorted, 95),
-  };
-}
 
 /** Namespaces conhecidos do projeto que usam chaves determinísticas. */
 const KNOWN_IDEMPOTENCY_NAMESPACES = new Set([
@@ -265,12 +173,6 @@ export function recordDedupeEvent(
   if (outcome === 'hit') ns.hits += 1;
   else ns.misses += 1;
 
-  // Latência: leader = miss que rodou o fetcher; follower = hit cross-tab que esperou.
-  if (typeof partial.durationMs === 'number' && partial.durationMs >= 0) {
-    if (LEADER_REASONS.has(evt.reason)) recordLatency(state.leader, partial.durationMs);
-    else if (FOLLOWER_REASONS.has(evt.reason)) recordLatency(state.follower, partial.durationMs);
-  }
-
   state.recentEvents.push(evt);
   if (state.recentEvents.length > RECENT_LIMIT) {
     state.recentEvents.splice(0, state.recentEvents.length - RECENT_LIMIT);
@@ -285,43 +187,10 @@ export function recordDedupeEvent(
     }
   }
 
-  // Notifica subscribers reativos (sem polling).
-  notifyTelemetrySubscribers();
-
   log.debug('dedupe event', { key: evt.key, outcome, reason: evt.reason, keyKind: evt.keyKind });
 }
 
-// ─── Subscribers reativos ────────────────────────────────────────────────────
-type TelemetryListener = (snap: DedupeTelemetrySnapshot) => void;
-const telemetryListeners = new Set<TelemetryListener>();
-
-function notifyTelemetrySubscribers() {
-  if (telemetryListeners.size === 0) return;
-  const snap = getDedupeTelemetrySnapshot();
-  telemetryListeners.forEach((fn) => {
-    try { fn(snap); } catch { /* ignore listener errors */ }
-  });
-}
-
-/**
- * Subscreve atualizações da telemetria. Útil para hooks React que querem
- * reagir sem polling. Retorna função de unsubscribe.
- */
-export function subscribeDedupeTelemetry(listener: TelemetryListener): () => void {
-  telemetryListeners.add(listener);
-  return () => { telemetryListeners.delete(listener); };
-}
-
 export function getDedupeTelemetrySnapshot(): DedupeTelemetrySnapshot {
-  let leaderCount = 0;
-  let followerCount = 0;
-  let localCacheCount = 0;
-  for (const r of Object.keys(state.byReason) as DedupeReason[]) {
-    const count = state.byReason[r];
-    if (LEADER_REASONS.has(r)) leaderCount += count;
-    else if (FOLLOWER_REASONS.has(r)) followerCount += count;
-    else if (LOCAL_CACHE_REASONS.has(r)) localCacheCount += count;
-  }
   return {
     total: state.total,
     hits: state.hits,
@@ -333,12 +202,6 @@ export function getDedupeTelemetrySnapshot(): DedupeTelemetrySnapshot {
       Object.entries(state.byNamespace).map(([k, v]) => [k, { ...v }]),
     ),
     recentEvents: state.recentEvents.slice(-RECENT_LIMIT),
-    leaderCount,
-    followerCount,
-    localCacheCount,
-    callsSaved: state.hits, // cada hit é uma chamada que NÃO aconteceu
-    leaderLatency: bucketStats(state.leader),
-    followerLatency: bucketStats(state.follower),
   };
 }
 
@@ -351,8 +214,6 @@ export function resetDedupeTelemetry(): void {
   state.byKeyKind = initialByKeyKind();
   state.byNamespace = {};
   state.recentEvents = [];
-  state.leader = newBucket();
-  state.follower = newBucket();
   if (typeof window !== 'undefined') {
     try {
       (window as unknown as { __dedupeTelemetry?: DedupeTelemetrySnapshot }).__dedupeTelemetry =
@@ -361,5 +222,4 @@ export function resetDedupeTelemetry(): void {
       /* noop */
     }
   }
-  notifyTelemetrySubscribers();
 }

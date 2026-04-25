@@ -24,11 +24,13 @@ const log = getLogger('crossTabDedupe');
 
 const LS_LOCK_PREFIX = 'ctd:lock:';
 const LS_RESULT_PREFIX = 'ctd:result:';
+const LS_BUS_PREFIX = 'ctd:bus:'; // fallback de "broadcast" via storage event
 const BC_NAME = 'cross-tab-dedupe';
 const DEFAULT_LOCK_TTL = 10_000; // 10s — máximo razoável para pageload de 100 msgs
 const DEFAULT_RESULT_TTL = 30_000; // resultado fica em cache 30s
 const DEFAULT_WAIT_TIMEOUT = 8_000;
 const GC_INTERVAL = 60_000; // varre chaves expiradas a cada 60s
+const BUS_MSG_TTL = 15_000; // mensagens de bus expiram rápido (storage GC)
 
 /** @internal — exposto para testes que precisam do prefixo de lock. */
 export const LS_PREFIX = LS_LOCK_PREFIX;
@@ -40,7 +42,7 @@ interface LockPayload {
 }
 
 interface BroadcastMessage<T = unknown> {
-  type: 'result' | 'error' | 'release' | 'start';
+  type: 'result' | 'error' | 'release';
   key: string;
   ownerId: string;
   data?: T;
@@ -48,8 +50,6 @@ interface BroadcastMessage<T = unknown> {
   ts: number;
   /** TTL do resultado (ms) — para que abas receptoras respeitem o mesmo prazo. */
   resultTtl?: number;
-  /** TTL esperado do lock (ms) — usado em `start` para sweep automático se a líder sumir. */
-  lockTtl?: number;
 }
 
 const TAB_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -59,17 +59,6 @@ const resultCache = new Map<string, { value: unknown; expiresAt: number }>();
 const inflight = new Map<string, Promise<unknown>>();
 const waiters = new Map<string, Array<(v: { ok: true; data: unknown } | { ok: false; error: string }) => void>>();
 
-// ─── Status (loading) por chave — sinaliza fetch em andamento, local ou remoto.
-// Mantemos por key qual aba está liderando para que abas espectadoras possam
-// exibir spinner consistente sem disparar fetch próprio.
-interface InflightStatusEntry {
-  ownerId: string;
-  startedAt: number;
-  /** Vence se a líder não fechar dentro do `lockTtl + grace` — protege contra crash. */
-  expiresAt: number;
-}
-const inflightStatus = new Map<string, InflightStatusEntry>();
-
 // Subscribers: handlers da UI interessados em receber resultados que chegam
 // via BroadcastChannel (de outras abas). Chave é uma string ou regex.
 type SubscriberFn<T = unknown> = (key: string, data: T, source: 'remote' | 'local') => void;
@@ -78,23 +67,6 @@ interface Subscription {
   handler: SubscriberFn;
 }
 const subscribers = new Set<Subscription>();
-
-// Status subscribers: notificados em transições start/end por chave.
-export type DedupeStatusPhase = 'start' | 'end';
-export interface DedupeStatusEvent {
-  key: string;
-  phase: DedupeStatusPhase;
-  source: 'remote' | 'local';
-  ownerId: string;
-  /** Em `end`: 'result' | 'error' | 'release'. Em `start`: undefined. */
-  endReason?: 'result' | 'error' | 'release';
-}
-type StatusSubscriberFn = (e: DedupeStatusEvent) => void;
-interface StatusSubscription {
-  match: (key: string) => boolean;
-  handler: StatusSubscriberFn;
-}
-const statusSubscribers = new Set<StatusSubscription>();
 
 function notifySubscribers(key: string, data: unknown, source: 'remote' | 'local') {
   subscribers.forEach((sub) => {
@@ -107,56 +79,85 @@ function notifySubscribers(key: string, data: unknown, source: 'remote' | 'local
   });
 }
 
-function notifyStatus(event: DedupeStatusEvent) {
-  statusSubscribers.forEach((sub) => {
-    if (!sub.match(event.key)) return;
-    try {
-      sub.handler(event);
-    } catch (err) {
-      log.error('Status subscriber threw', { key: event.key, err });
-    }
-  });
-}
-
-function markStart(key: string, ownerId: string, lockTtl: number, source: 'remote' | 'local') {
-  const now = Date.now();
-  const grace = 2_000;
-  const prev = inflightStatus.get(key);
-  // Se já está marcado pela mesma aba dona, só atualiza o expiresAt.
-  inflightStatus.set(key, { ownerId, startedAt: prev?.startedAt ?? now, expiresAt: now + lockTtl + grace });
-  if (!prev || prev.ownerId !== ownerId) {
-    notifyStatus({ key, phase: 'start', source, ownerId });
-  }
-}
-
-function markEnd(key: string, ownerId: string, source: 'remote' | 'local', endReason: 'result' | 'error' | 'release') {
-  const cur = inflightStatus.get(key);
-  // Só remove se for do mesmo dono — evita race de `release` antigo limpar uma nova líder.
-  if (cur && cur.ownerId !== ownerId) return;
-  if (!cur) return;
-  inflightStatus.delete(key);
-  notifyStatus({ key, phase: 'end', source, ownerId, endReason });
-}
-
+// ─── Camada de transporte cross-tab ──────────────────────────────────────────
+// Tenta BroadcastChannel; se indisponível (Safari antigo, alguns sandboxes,
+// iframes restritos) ou se construtor lançar, faz fallback transparente
+// usando o evento `storage` do localStorage.
+//
+// Compatibilidade: o consumidor chama `ensureTransport()` para garantir que o
+// listener de entrada está ativo, e `sendBus(msg)` para emitir. O resto do
+// arquivo permanece igual — `broadcast()` e `getBroadcastChannel()` viraram
+// wrappers finos sobre essa camada para preservar a API interna.
+type Transport = 'broadcast-channel' | 'storage-event' | 'none';
+let transportKind: Transport | null = null;
 let bc: BroadcastChannel | null = null;
-function getBroadcastChannel(): BroadcastChannel | null {
-  if (typeof BroadcastChannel === 'undefined') return null;
-  if (bc) return bc;
+let storageListenerInstalled = false;
+
+function installStorageListener(): boolean {
+  if (storageListenerInstalled) return true;
+  if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return false;
   try {
-    bc = new BroadcastChannel(BC_NAME);
-    bc.addEventListener('message', (e) => onBroadcast(e.data as BroadcastMessage));
-    return bc;
+    window.addEventListener('storage', (e: StorageEvent) => {
+      if (!e.key || !e.key.startsWith(LS_BUS_PREFIX)) return;
+      if (!e.newValue) return; // remoção é nossa própria limpeza
+      try {
+        const msg = JSON.parse(e.newValue) as BroadcastMessage;
+        // Filtro de TTL — evita reprocessar mensagens órfãs antigas.
+        if (typeof msg.ts === 'number' && Date.now() - msg.ts > BUS_MSG_TTL) return;
+        onBroadcast(msg);
+      } catch {
+        /* payload corrompido — ignora */
+      }
+    });
+    storageListenerInstalled = true;
+    return true;
   } catch {
-    return null;
+    return false;
   }
+}
+
+function ensureTransport(): Transport {
+  if (transportKind && transportKind !== 'none') return transportKind;
+  // Tentativa 1 — BroadcastChannel.
+  if (typeof BroadcastChannel !== 'undefined' && !bc) {
+    try {
+      bc = new BroadcastChannel(BC_NAME);
+      bc.addEventListener('message', (e) => onBroadcast(e.data as BroadcastMessage));
+      transportKind = 'broadcast-channel';
+      log.debug('Transport ativo: BroadcastChannel');
+      return transportKind;
+    } catch {
+      bc = null;
+      // cai para fallback
+    }
+  }
+  if (bc) {
+    transportKind = 'broadcast-channel';
+    return transportKind;
+  }
+  // Tentativa 2 — fallback via storage event.
+  if (installStorageListener()) {
+    transportKind = 'storage-event';
+    log.debug('Transport ativo: storage event (fallback, BroadcastChannel indisponível)');
+    return transportKind;
+  }
+  transportKind = 'none';
+  return transportKind;
+}
+
+/** @deprecated Mantido para compatibilidade interna; prefira `ensureTransport`. */
+function getBroadcastChannel(): BroadcastChannel | null {
+  ensureTransport();
+  return bc;
+}
+
+/** @internal — usado por testes para inspecionar o transporte ativo. */
+export function __getActiveTransport(): Transport {
+  return transportKind ?? 'none';
 }
 
 function onBroadcast(msg: BroadcastMessage) {
   if (!msg || msg.ownerId === TAB_ID) return; // ignora eco da própria aba
-  if (msg.type === 'start') {
-    markStart(msg.key, msg.ownerId, msg.lockTtl ?? DEFAULT_LOCK_TTL, 'remote');
-    return;
-  }
   if (msg.type === 'result') {
     const ttl = msg.resultTtl ?? DEFAULT_RESULT_TTL;
     resultCache.set(msg.key, { value: msg.data, expiresAt: Date.now() + ttl });
@@ -168,14 +169,12 @@ function onBroadcast(msg: BroadcastMessage) {
     }
     // Notifica UI subscribers para que atualizem sem refazer fetch.
     notifySubscribers(msg.key, msg.data, 'remote');
-    markEnd(msg.key, msg.ownerId, 'remote', 'result');
   } else if (msg.type === 'error') {
     const ws = waiters.get(msg.key);
     if (ws) {
       ws.forEach((w) => w({ ok: false, error: msg.error || 'remote error' }));
       waiters.delete(msg.key);
     }
-    markEnd(msg.key, msg.ownerId, 'remote', 'error');
   } else if (msg.type === 'release') {
     // Lock liberado sem resultado — quem espera pode tentar adquirir.
     const ws = waiters.get(msg.key);
@@ -183,7 +182,6 @@ function onBroadcast(msg: BroadcastMessage) {
       ws.forEach((w) => w({ ok: false, error: 'released' }));
       waiters.delete(msg.key);
     }
-    markEnd(msg.key, msg.ownerId, 'remote', 'release');
   }
 }
 
@@ -275,10 +273,24 @@ export function gcExpiredKeys(): { locksSwept: number; resultsSwept: number } {
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (!k) continue;
-        if (!k.startsWith(LS_LOCK_PREFIX) && !k.startsWith(LS_RESULT_PREFIX)) continue;
+        if (
+          !k.startsWith(LS_LOCK_PREFIX) &&
+          !k.startsWith(LS_RESULT_PREFIX) &&
+          !k.startsWith(LS_BUS_PREFIX)
+        ) continue;
         try {
           const raw = localStorage.getItem(k);
           if (!raw) continue;
+          // Para bus: limpa qualquer slot mais velho que BUS_MSG_TTL
+          if (k.startsWith(LS_BUS_PREFIX)) {
+            try {
+              const parsed = JSON.parse(raw) as { ts?: number };
+              if (typeof parsed.ts === 'number' && now - parsed.ts > BUS_MSG_TTL) {
+                toRemove.push(k);
+              }
+            } catch { toRemove.push(k); }
+            continue;
+          }
           const parsed = JSON.parse(raw) as { expiresAt?: number };
           if (typeof parsed.expiresAt === 'number' && parsed.expiresAt < now) {
             toRemove.push(k);
@@ -312,24 +324,32 @@ function startGcIfNeeded() {
 }
 
 function broadcast<T>(msg: BroadcastMessage<T>) {
-  const ch = getBroadcastChannel();
-  if (!ch) return;
-  try {
-    ch.postMessage(msg);
-  } catch {
-    /* noop */
+  const kind = ensureTransport();
+  if (kind === 'broadcast-channel' && bc) {
+    try { bc.postMessage(msg); return; } catch { /* cai no fallback */ }
   }
-}
-
-export interface DedupeRetryOptions {
-  /** Número máximo de tentativas adicionais quando o fetcher falha. Default 0 (sem retry). */
-  maxRetries?: number;
-  /** Delay base do backoff exponencial (ms). Default 250ms. */
-  baseDelayMs?: number;
-  /** Teto do delay entre tentativas (ms). Default 4000ms. */
-  maxDelayMs?: number;
-  /** Predicate que decide se um erro é retentável. Default: sempre true. */
-  shouldRetry?: (err: unknown, attempt: number) => boolean;
+  if (kind === 'storage-event' || kind === 'broadcast-channel') {
+    // Fallback: escreve em um slot rotativo do localStorage. O `storage`
+    // event é disparado em TODAS as outras abas que tenham o mesmo origin
+    // — mantemos paridade funcional (result/error/release) com o BC.
+    if (typeof localStorage === 'undefined') return;
+    try {
+      // Slot único por mensagem para garantir que `storage` event dispare
+      // mesmo quando o mesmo `key` é reescrito em sequência (o evento
+      // só dispara em mudança de valor; usar um slot único evita a colisão).
+      const slot = `${LS_BUS_PREFIX}${TAB_ID}:${msg.ts}:${Math.random().toString(36).slice(2, 8)}`;
+      const payload = JSON.stringify(msg);
+      localStorage.setItem(slot, payload);
+      // Remove logo em seguida — não precisamos persistir, só sinalizar.
+      // Pequeno delay para que abas espectadoras tenham chance de ler em
+      // navegadores que entregam o evento de forma assíncrona.
+      setTimeout(() => {
+        try { localStorage.removeItem(slot); } catch { /* noop */ }
+      }, 250);
+    } catch {
+      /* quota cheia ou serialização falhou — degrada silenciosamente */
+    }
+  }
 }
 
 export interface DedupeOptions {
@@ -339,49 +359,6 @@ export interface DedupeOptions {
   resultTtl?: number;
   /** Quanto esperar pelo broadcast antes de fazer fetch direto (ms). Default 8s. */
   waitTimeout?: number;
-  /** Configuração de retry com backoff em caso de falha do fetcher. */
-  retry?: DedupeRetryOptions;
-}
-
-/**
- * Executa `fn` com retry + backoff exponencial + jitter.
- * Entre tentativas, garante que o lock cross-tab seja liberado para que
- * outras abas possam tentar e que o GC não fique preso em estado errado.
- */
-async function execWithBackoff<T>(
-  key: string,
-  fn: () => Promise<T>,
-  retry: DedupeRetryOptions | undefined,
-  onBeforeRetry: () => void,
-): Promise<T> {
-  const maxRetries = Math.max(0, retry?.maxRetries ?? 0);
-  const baseDelay = Math.max(0, retry?.baseDelayMs ?? 250);
-  const maxDelay = Math.max(baseDelay, retry?.maxDelayMs ?? 4000);
-  const shouldRetry = retry?.shouldRetry ?? (() => true);
-
-  let lastErr: unknown;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      lastErr = err;
-      const isLast = attempt >= maxRetries;
-      if (isLast || !shouldRetry(err, attempt)) throw err;
-      const expBase = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
-      const jitter = Math.random() * expBase * 0.3;
-      const delay = Math.min(maxDelay, expBase + jitter);
-      log.warn('dedupedFetch retry após falha', {
-        key,
-        attempt: attempt + 1,
-        nextDelayMs: Math.round(delay),
-        error: err instanceof Error ? err.message : String(err),
-      });
-      // Libera lock antes da espera para não segurar outras abas durante o backoff.
-      onBeforeRetry();
-      await new Promise((r) => setTimeout(r, delay));
-    }
-  }
-  throw lastErr;
 }
 
 export async function dedupedFetch<T>(
@@ -453,36 +430,15 @@ export async function dedupedFetch<T>(
     // Líder falhou ou expirou: tenta executar localmente como fallback.
   }
 
-  // 4. Líder: executa fetcher (com retry+backoff), cacheia, broadcasta, libera lock.
+  // 4. Líder: executa fetcher, cacheia (memória + localStorage), broadcasta, libera lock.
   const isFallback = !acquired;
-  const lockTtlForRetry = lockTtl;
-  // Sinaliza início do fetch para abas espectadoras (loading sync).
-  markStart(key, TAB_ID, lockTtl, 'local');
-  broadcast({ type: 'start', key, ownerId: TAB_ID, ts: Date.now(), lockTtl });
   const exec = (async () => {
     try {
-      const data = await execWithBackoff<T>(
-        key,
-        fetcher,
-        opts.retry,
-        () => {
-          // Antes do backoff: libera lock + sinaliza release para que outras
-          // abas possam tentar (e não fiquem presas em waitForResult até timeout).
-          releaseLock(key);
-          broadcast({ type: 'release', key, ownerId: TAB_ID, ts: Date.now() });
-          // Reaquire o lock imediatamente para reafirmar liderança no próximo attempt.
-          // Se outra aba já pegou o lock nesse meio tempo, tudo bem — ela assume.
-          writeLock(key, lockTtlForRetry);
-          // Reanuncia start para ressincronizar status remoto pós-release.
-          markStart(key, TAB_ID, lockTtlForRetry, 'local');
-          broadcast({ type: 'start', key, ownerId: TAB_ID, ts: Date.now(), lockTtl: lockTtlForRetry });
-        },
-      );
+      const data = await fetcher();
       resultCache.set(key, { value: data, expiresAt: Date.now() + resultTtl });
       writePersistedResult(key, data, resultTtl);
       broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now(), resultTtl });
       notifySubscribers(key, data, 'local');
-      markEnd(key, TAB_ID, 'local', 'result');
       recordDedupeEvent({
         key,
         reason: isFallback ? 'fallback_after_wait' : 'lock_acquired_lead',
@@ -492,7 +448,6 @@ export async function dedupedFetch<T>(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       broadcast({ type: 'error', key, ownerId: TAB_ID, error: message, ts: Date.now() });
-      markEnd(key, TAB_ID, 'local', 'error');
       recordDedupeEvent({
         key,
         reason: isFallback ? 'fallback_after_wait' : 'lock_acquired_lead',
@@ -503,9 +458,6 @@ export async function dedupedFetch<T>(
     } finally {
       releaseLock(key);
       broadcast({ type: 'release', key, ownerId: TAB_ID, ts: Date.now() });
-      // markEnd já executou via result/error; release final é idempotente
-      // (markEnd checa ownerId e ignora se já foi removido).
-      markEnd(key, TAB_ID, 'local', 'release');
       inflight.delete(key);
     }
   })();
@@ -543,14 +495,12 @@ export function clearCrossTabDedupe(): void {
   inflight.clear();
   waiters.clear();
   subscribers.clear();
-  inflightStatus.clear();
-  statusSubscribers.clear();
   if (typeof localStorage !== 'undefined') {
     try {
       const keys: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && (k.startsWith(LS_LOCK_PREFIX) || k.startsWith(LS_RESULT_PREFIX))) keys.push(k);
+        if (k && (k.startsWith(LS_LOCK_PREFIX) || k.startsWith(LS_RESULT_PREFIX) || k.startsWith(LS_BUS_PREFIX))) keys.push(k);
       }
       keys.forEach((k) => localStorage.removeItem(k));
     } catch {
@@ -560,130 +510,6 @@ export function clearCrossTabDedupe(): void {
 }
 
 export const __TAB_ID = TAB_ID;
-
-// ─── Introspecção (read-only) — usada pela tela de Diagnósticos ──────────────
-export interface ActiveLockInfo {
-  key: string;
-  ownerId: string;
-  acquiredAt: number;
-  expiresAt: number;
-  ttlRemainingMs: number;
-  isOwnedByThisTab: boolean;
-}
-
-export interface ActiveResultInfo {
-  key: string;
-  expiresAt: number;
-  ttlRemainingMs: number;
-  /** Tamanho aproximado em bytes do payload serializado (informativo). */
-  sizeBytes: number;
-  /** True se também está no cache em memória desta aba. */
-  inMemory: boolean;
-}
-
-export interface InflightInfo {
-  key: string;
-}
-
-export interface DedupeIntrospectSnapshot {
-  tabId: string;
-  takenAt: number;
-  locks: ActiveLockInfo[];
-  results: ActiveResultInfo[];
-  inflight: InflightInfo[];
-  waiters: Array<{ key: string; count: number }>;
-  subscribers: number;
-  broadcastChannelActive: boolean;
-}
-
-/**
- * Coleta um snapshot read-only do estado atual: locks vivos no localStorage,
- * resultados em cache (memória + persistido), inflight e waiters da aba.
- *
- * NÃO modifica nada — pode ser chamado em loop por painéis de diagnóstico.
- */
-export function getDedupeIntrospectSnapshot(): DedupeIntrospectSnapshot {
-  const now = Date.now();
-  const locks: ActiveLockInfo[] = [];
-  const results: ActiveResultInfo[] = [];
-
-  if (typeof localStorage !== 'undefined') {
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (!k) continue;
-        if (k.startsWith(LS_LOCK_PREFIX)) {
-          const raw = localStorage.getItem(k);
-          if (!raw) continue;
-          try {
-            const parsed = JSON.parse(raw) as LockPayload;
-            if (parsed.expiresAt < now) continue; // expirado: ignora
-            const key = k.slice(LS_LOCK_PREFIX.length);
-            locks.push({
-              key,
-              ownerId: parsed.ownerId,
-              acquiredAt: parsed.acquiredAt,
-              expiresAt: parsed.expiresAt,
-              ttlRemainingMs: Math.max(0, parsed.expiresAt - now),
-              isOwnedByThisTab: parsed.ownerId === TAB_ID,
-            });
-          } catch {
-            /* corrompido — ignora */
-          }
-        } else if (k.startsWith(LS_RESULT_PREFIX)) {
-          const raw = localStorage.getItem(k);
-          if (!raw) continue;
-          try {
-            const parsed = JSON.parse(raw) as ResultPayload;
-            if (parsed.expiresAt < now) continue;
-            const key = k.slice(LS_RESULT_PREFIX.length);
-            results.push({
-              key,
-              expiresAt: parsed.expiresAt,
-              ttlRemainingMs: Math.max(0, parsed.expiresAt - now),
-              sizeBytes: raw.length,
-              inMemory: resultCache.has(key),
-            });
-          } catch {
-            /* noop */
-          }
-        }
-      }
-    } catch {
-      /* localStorage indisponível */
-    }
-  }
-
-  // Resultados que estão APENAS em memória (sem cópia persistida).
-  for (const [key, entry] of resultCache) {
-    if (entry.expiresAt < now) continue;
-    if (results.some((r) => r.key === key)) continue;
-    results.push({
-      key,
-      expiresAt: entry.expiresAt,
-      ttlRemainingMs: Math.max(0, entry.expiresAt - now),
-      sizeBytes: 0,
-      inMemory: true,
-    });
-  }
-
-  const inflight_: InflightInfo[] = [];
-  for (const key of inflight.keys()) inflight_.push({ key });
-
-  const waiters_: Array<{ key: string; count: number }> = [];
-  for (const [key, list] of waiters) waiters_.push({ key, count: list.length });
-
-  return {
-    tabId: TAB_ID,
-    takenAt: now,
-    locks: locks.sort((a, b) => a.key.localeCompare(b.key)),
-    results: results.sort((a, b) => a.key.localeCompare(b.key)),
-    inflight: inflight_.sort((a, b) => a.key.localeCompare(b.key)),
-    waiters: waiters_.sort((a, b) => a.key.localeCompare(b.key)),
-    subscribers: subscribers.size,
-    broadcastChannelActive: bc !== null,
-  };
-}
 
 /**
  * Subscreve-se a resultados de dedupedFetch concluídos em qualquer aba.
@@ -711,66 +537,6 @@ export function subscribeDedupe<T = unknown>(
   return () => {
     subscribers.delete(sub);
   };
-}
-
-/**
- * Subscreve-se ao **status** (start/end) de fetches dedupedFetch — local ou remoto.
- *
- * Útil para sincronizar spinners entre abas: quando outra aba inicia o fetch
- * de uma chave que esta aba também observa, recebemos `phase: 'start'` e
- * podemos mostrar loading sem disparar request próprio. Quando termina,
- * recebemos `phase: 'end'` (com endReason) para esconder o spinner.
- *
- * Eventos start/end também são emitidos para o fetch local desta aba — o
- * handler decide se quer ignorar via `event.source === 'local'`.
- */
-export function subscribeDedupeStatus(
-  keyMatcher: string | RegExp,
-  handler: (event: DedupeStatusEvent) => void,
-): () => void {
-  const match = typeof keyMatcher === 'string'
-    ? (k: string) => k === keyMatcher || k.startsWith(keyMatcher)
-    : (k: string) => keyMatcher.test(k);
-  const sub: StatusSubscription = { match, handler };
-  statusSubscribers.add(sub);
-  getBroadcastChannel();
-  return () => {
-    statusSubscribers.delete(sub);
-  };
-}
-
-/**
- * Snapshot read-only das chaves com fetch em andamento (local ou remoto),
- * filtradas opcionalmente por matcher. Útil para inicializar spinners ao
- * montar componentes que entraram depois do `start` ter sido emitido.
- */
-export function getInflightStatusKeys(matcher?: string | RegExp): Array<{
-  key: string;
-  ownerId: string;
-  startedAt: number;
-  isOwnedByThisTab: boolean;
-}> {
-  const now = Date.now();
-  const match = !matcher
-    ? () => true
-    : typeof matcher === 'string'
-      ? (k: string) => k === matcher || k.startsWith(matcher)
-      : (k: string) => matcher.test(k);
-  const out: Array<{ key: string; ownerId: string; startedAt: number; isOwnedByThisTab: boolean }> = [];
-  for (const [key, entry] of inflightStatus) {
-    if (entry.expiresAt < now) {
-      inflightStatus.delete(key);
-      continue;
-    }
-    if (!match(key)) continue;
-    out.push({
-      key,
-      ownerId: entry.ownerId,
-      startedAt: entry.startedAt,
-      isOwnedByThisTab: entry.ownerId === TAB_ID,
-    });
-  }
-  return out;
 }
 
 /** @internal — para testes. */
