@@ -229,16 +229,17 @@ export function useExternalMessages(remoteJid: string | null) {
     if (!remoteJid || !mountedRef.current) return;
     const afterDate = lastSeenRef.current;
     if (!afterDate) return;
+    const ownerJid = remoteJid;
 
     try {
       // Dedupe: várias abas pollando o mesmo jid+cursor compartilham 1 fetch
       // (TTL curto = poll seguinte ainda dispara normalmente).
       const newOnes = await dedupedFetch(
-        inboxPollKey({ jid: remoteJid, afterDate }),
-        () => fetchMessagesAfter(remoteJid, afterDate),
+        inboxPollKey({ jid: ownerJid, afterDate }),
+        () => fetchMessagesAfter(ownerJid, afterDate),
         getPollDedupeOptions(),
       );
-      if (!mountedRef.current || newOnes.length === 0) return;
+      if (!mountedRef.current || activeJidRef.current !== ownerJid || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
       setMessages(prev => mergeRealtimeMessages(prev, mapped) as RealtimeMessage[]);
