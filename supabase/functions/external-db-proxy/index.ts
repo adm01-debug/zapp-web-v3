@@ -105,6 +105,29 @@ export function isSchemaCacheError(err: { message?: string; code?: string } | nu
   return /schema cache/i.test(msg) && /PGRST002|could not query the database/i.test(msg)
 }
 
+/** Detect Postgres statement timeout (57014). */
+export function isStatementTimeout(err: { message?: string; code?: string } | null | undefined): boolean {
+  if (!err) return false
+  if (err.code === '57014') return true
+  return /statement timeout|canceling statement/i.test(err.message || '')
+}
+
+/** Run an upstream query with automatic retry for PGRST002 (schema cache reload). */
+export async function runWithSchemaRetry<T>(
+  fn: () => PromiseLike<{ data: T; error: { message: string; code?: string } | null }>,
+  maxAttempts = 3,
+): Promise<{ data: T; error: { message: string; code?: string } | null; schemaRetries: number }> {
+  let schemaRetries = 0
+  let last: { data: T; error: { message: string; code?: string } | null } = { data: null as unknown as T, error: null }
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    last = await fn()
+    if (!isSchemaCacheError(last.error)) break
+    schemaRetries++
+    await new Promise((r) => setTimeout(r, 250 * (attempt + 1)))
+  }
+  return { ...last, schemaRetries }
+}
+
 /** Classify an upstream error message into a status + flags. Exported for tests. */
 export function classifyUpstreamError(
   message: string | undefined,
@@ -116,7 +139,7 @@ export function classifyUpstreamError(
 } {
   if (timeoutFired) return { status: 504, pgTimeout: false }
   if (!message) return { status: 400, pgTimeout: false }
-  if (/statement timeout|canceling statement/i.test(message)) {
+  if (/statement timeout|canceling statement/i.test(message) || code === '57014') {
     return { status: 504, pgTimeout: true }
   }
   // Transient schema cache reload — surface as 503 so callers can retry.
@@ -124,6 +147,28 @@ export function classifyUpstreamError(
     return { status: 503, pgTimeout: false }
   }
   return { status: 400, pgTimeout: false }
+}
+
+/** Build a structured error response body with retry hint for the UI. */
+function errorBody(
+  cid: string,
+  rid: string,
+  err: { message: string; code?: string },
+): Record<string, unknown> {
+  const schemaCache = isSchemaCacheError(err)
+  const stmtTimeout = isStatementTimeout(err)
+  return {
+    error: err.message,
+    code: err.code,
+    cid,
+    rid,
+    retryable: schemaCache,
+    hint: stmtTimeout
+      ? 'Query exceeded statement timeout. Add a more selective filter, reduce the page size, or paginate.'
+      : schemaCache
+        ? 'Upstream PostgREST is reloading its schema cache. Retry shortly.'
+        : undefined,
+  }
 }
 
 // ---------- Metrics persistence (fire-and-forget) ----------
