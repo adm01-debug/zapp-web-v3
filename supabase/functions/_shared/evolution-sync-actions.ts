@@ -267,13 +267,23 @@ export async function fullSync(
 
 // ─── Shared utilities ───
 
+// Lista canônica de 27 eventos do webhook Evolution v2 que o roteador
+// (`evolution-webhook/index.ts`) processa hoje. Mantém alinhamento entre o
+// que registramos na Evolution API e o que efetivamente tratamos no backend.
+// Em particular: MESSAGES_UPDATE traz ACK (SERVER_ACK/DELIVERY_ACK/READ/PLAYED)
+// e CHATS_UPDATE traz a virada de unreadCount → 0 vinda do device do cliente.
 export const WEBHOOK_EVENTS = [
-  'APPLICATION_STARTUP', 'QRCODE_UPDATED', 'CONNECTION_UPDATE',
-  'MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'MESSAGES_DELETE',
-  'SEND_MESSAGE', 'CONTACTS_UPSERT', 'CONTACTS_UPDATE',
-  'PRESENCE_UPDATE', 'CHATS_UPSERT', 'CHATS_UPDATE',
+  'APPLICATION_STARTUP', 'QRCODE_UPDATED', 'CONNECTION_UPDATE', 'LOGOUT_INSTANCE',
+  'MESSAGES_SET', 'MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'MESSAGES_DELETE', 'MESSAGES_EDITED',
+  'SEND_MESSAGE',
+  'CONTACTS_SET', 'CONTACTS_UPSERT', 'CONTACTS_UPDATE',
+  'PRESENCE_UPDATE',
+  'CHATS_SET', 'CHATS_UPSERT', 'CHATS_UPDATE', 'CHATS_DELETE',
   'GROUPS_UPSERT', 'GROUP_UPDATE', 'GROUP_PARTICIPANTS_UPDATE',
-  'LABELS_EDIT', 'LABELS_ASSOCIATION', 'CALL',
+  'LABELS_EDIT', 'LABELS_ASSOCIATION',
+  'CALL',
+  'NEW_JWT_TOKEN',
+  'TYPEBOT_START', 'TYPEBOT_CHANGE_STATUS',
 ];
 
 // deno-lint-ignore no-explicit-any

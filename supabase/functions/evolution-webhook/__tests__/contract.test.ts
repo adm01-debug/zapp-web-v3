@@ -64,22 +64,30 @@ Deno.test("Auditoria: estados rejected/duplicate/processed/error presentes", () 
   }
 });
 
-Deno.test("Roteamento: eventos críticos cobertos", () => {
+Deno.test("Roteamento: eventos críticos cobertos (alinhamento 27 eventos)", () => {
   const events = [
     "connection.update",
+    "logout.instance",
+    "qrcode.updated",
+    "application.startup",
     "messages.upsert",
     "messages.update",
     "messages.delete",
+    "messages.set",
+    "messages.edited",
     "send.message",
     "contacts.upsert",
+    "contacts.set",
     "presence.update",
     "chats.upsert",
+    "chats.update",
+    "chats.set",
+    "chats.delete",
+    "groups.upsert",
+    "group.participants.update",
     "labels.edit",
     "labels.association",
     "call",
-    "qrcode.updated",
-    "logout.instance",
-    "application.startup",
   ];
   for (const ev of events) {
     assert(SOURCE.includes(`'${ev}'`), `faltou roteamento para evento ${ev}`);

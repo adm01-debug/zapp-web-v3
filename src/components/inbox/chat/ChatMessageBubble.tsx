@@ -55,8 +55,11 @@ function MessageStatusIcon({ status }: { status: Message['status'] }) {
     case 'delivered':
       return <CheckCheck className="w-3 h-3" />;
     case 'read':
+    case 'played':
       return <CheckCheck className="w-3 h-3 text-info" />;
     case 'failed':
+    case 'failed_auth':
+    case 'failed_retries':
       return <X className="w-3 h-3 text-destructive" />;
     default:
       return <Clock className="w-3 h-3 animate-pulse" />;
