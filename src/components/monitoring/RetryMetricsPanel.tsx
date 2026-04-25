@@ -72,6 +72,7 @@ export function RetryMetricsPanel() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [thresholds, setThresholds] = useState<RetryThresholds>(() => loadThresholds());
   const [perInstance, setPerInstance] = useState<PerInstanceThresholds>(() => loadPerInstanceThresholds());
+  const [dedupeMode, setDedupeMode] = useState<RetryAlertDedupeMode>(() => loadRetryAlertDedupeMode());
   const [compareMode, setCompareMode] = useState<boolean>(false);
 
   const filters: RetryMetricsFilters = {
@@ -94,9 +95,10 @@ export function RetryMetricsPanel() {
   // sem esperar TTL/refetch. O evento só dispara em outras abas, então a aba
   // que salvou continua usando o estado já setado por `onChange` do dialog.
   useEffect(() => {
-    return subscribeRetryAlertsStorage(({ thresholds: t, perInstance: p }) => {
+    return subscribeRetryAlertsStorage(({ thresholds: t, perInstance: p, dedupeMode: m }) => {
       setThresholds(t);
       setPerInstance(p);
+      setDedupeMode(m);
       toast.message('Configurações de alerta atualizadas em outra aba.', { duration: 3500 });
     });
   }, []);
