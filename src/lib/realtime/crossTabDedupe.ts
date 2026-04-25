@@ -40,7 +40,7 @@ interface LockPayload {
 }
 
 interface BroadcastMessage<T = unknown> {
-  type: 'result' | 'error' | 'release';
+  type: 'result' | 'error' | 'release' | 'start';
   key: string;
   ownerId: string;
   data?: T;
@@ -48,6 +48,8 @@ interface BroadcastMessage<T = unknown> {
   ts: number;
   /** TTL do resultado (ms) — para que abas receptoras respeitem o mesmo prazo. */
   resultTtl?: number;
+  /** TTL esperado do lock (ms) — usado em `start` para sweep automático se a líder sumir. */
+  lockTtl?: number;
 }
 
 const TAB_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -56,6 +58,17 @@ const TAB_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,
 const resultCache = new Map<string, { value: unknown; expiresAt: number }>();
 const inflight = new Map<string, Promise<unknown>>();
 const waiters = new Map<string, Array<(v: { ok: true; data: unknown } | { ok: false; error: string }) => void>>();
+
+// ─── Status (loading) por chave — sinaliza fetch em andamento, local ou remoto.
+// Mantemos por key qual aba está liderando para que abas espectadoras possam
+// exibir spinner consistente sem disparar fetch próprio.
+interface InflightStatusEntry {
+  ownerId: string;
+  startedAt: number;
+  /** Vence se a líder não fechar dentro do `lockTtl + grace` — protege contra crash. */
+  expiresAt: number;
+}
+const inflightStatus = new Map<string, InflightStatusEntry>();
 
 // Subscribers: handlers da UI interessados em receber resultados que chegam
 // via BroadcastChannel (de outras abas). Chave é uma string ou regex.
@@ -66,6 +79,23 @@ interface Subscription {
 }
 const subscribers = new Set<Subscription>();
 
+// Status subscribers: notificados em transições start/end por chave.
+export type DedupeStatusPhase = 'start' | 'end';
+export interface DedupeStatusEvent {
+  key: string;
+  phase: DedupeStatusPhase;
+  source: 'remote' | 'local';
+  ownerId: string;
+  /** Em `end`: 'result' | 'error' | 'release'. Em `start`: undefined. */
+  endReason?: 'result' | 'error' | 'release';
+}
+type StatusSubscriberFn = (e: DedupeStatusEvent) => void;
+interface StatusSubscription {
+  match: (key: string) => boolean;
+  handler: StatusSubscriberFn;
+}
+const statusSubscribers = new Set<StatusSubscription>();
+
 function notifySubscribers(key: string, data: unknown, source: 'remote' | 'local') {
   subscribers.forEach((sub) => {
     if (!sub.match(key)) return;
@@ -75,6 +105,37 @@ function notifySubscribers(key: string, data: unknown, source: 'remote' | 'local
       log.error('Subscriber handler threw', { key, err });
     }
   });
+}
+
+function notifyStatus(event: DedupeStatusEvent) {
+  statusSubscribers.forEach((sub) => {
+    if (!sub.match(event.key)) return;
+    try {
+      sub.handler(event);
+    } catch (err) {
+      log.error('Status subscriber threw', { key: event.key, err });
+    }
+  });
+}
+
+function markStart(key: string, ownerId: string, lockTtl: number, source: 'remote' | 'local') {
+  const now = Date.now();
+  const grace = 2_000;
+  const prev = inflightStatus.get(key);
+  // Se já está marcado pela mesma aba dona, só atualiza o expiresAt.
+  inflightStatus.set(key, { ownerId, startedAt: prev?.startedAt ?? now, expiresAt: now + lockTtl + grace });
+  if (!prev || prev.ownerId !== ownerId) {
+    notifyStatus({ key, phase: 'start', source, ownerId });
+  }
+}
+
+function markEnd(key: string, ownerId: string, source: 'remote' | 'local', endReason: 'result' | 'error' | 'release') {
+  const cur = inflightStatus.get(key);
+  // Só remove se for do mesmo dono — evita race de `release` antigo limpar uma nova líder.
+  if (cur && cur.ownerId !== ownerId) return;
+  if (!cur) return;
+  inflightStatus.delete(key);
+  notifyStatus({ key, phase: 'end', source, ownerId, endReason });
 }
 
 let bc: BroadcastChannel | null = null;
