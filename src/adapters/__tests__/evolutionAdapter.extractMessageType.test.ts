@@ -54,15 +54,15 @@ describe('extractMessageType — blueprint dos 18 messageTypes', () => {
 
 describe('extractMessageType — aliases curtos legados', () => {
   it.each([
-    ['text', 'text', 'conversation'],
-    ['image', 'image', 'imageMessage'],
-    ['video', 'video', 'videoMessage'],
-    ['audio', 'audio', 'audioMessage'],
-    ['document', 'document', 'documentMessage'],
-    ['sticker', 'sticker', 'stickerMessage'],
-    ['location', 'location', 'locationMessage'],
-    ['interactive', 'interactive', 'buttonsMessage'],
-  ] as const)('alias "%s" → internalType "%s" (rawType preservado)', (alias, internal) => {
+    ['text', 'text'],
+    ['image', 'image'],
+    ['video', 'video'],
+    ['audio', 'audio'],
+    ['document', 'document'],
+    ['sticker', 'sticker'],
+    ['location', 'location'],
+    ['interactive', 'interactive'],
+  ] as const)('alias "%s" → internalType "%s"', (alias, internal) => {
     const r = extractMessageType(alias);
     expect(r.internalType).toBe(internal);
     expect(r.supported).toBe(true);
