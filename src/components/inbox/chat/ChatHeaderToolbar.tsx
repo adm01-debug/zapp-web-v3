@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Search, Radar, GraduationCap, FileText, Info, Loader2 } from 'lucide-react';
+import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle } from 'lucide-react';
 import { VisionIcon } from '../ai-tools/VisionIcon';
 
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
