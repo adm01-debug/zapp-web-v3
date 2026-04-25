@@ -40,17 +40,36 @@ export interface DedupeCounters {
 }
 
 const MAX_EVENTS = 50;
-const events: DedupeEvent[] = [];
-const counters: DedupeCounters = {
-  leader: 0,
-  followerReplay: 0,
-  followerFallback: 0,
-  total: 0,
-  saved: 0,
-};
 
+// Anchor the in-memory store on `globalThis` so it survives both Vite HMR
+// (which re-evaluates this module) and test-time `vi.resetModules()` calls.
+// Without this, two parts of the app holding "different" copies of the
+// module would each see their own empty counters.
+interface DedupeStore {
+  events: DedupeEvent[];
+  counters: DedupeCounters;
+  listeners: Set<Listener>;
+}
 type Listener = () => void;
-const listeners = new Set<Listener>();
+
+const STORE_KEY = '__zw_dedupe_metrics_store__';
+const g = globalThis as unknown as Record<string, DedupeStore | undefined>;
+const store: DedupeStore = g[STORE_KEY] ?? {
+  events: [],
+  counters: {
+    leader: 0,
+    followerReplay: 0,
+    followerFallback: 0,
+    total: 0,
+    saved: 0,
+  },
+  listeners: new Set<Listener>(),
+};
+g[STORE_KEY] = store;
+
+const events = store.events;
+const counters = store.counters;
+const listeners = store.listeners;
 
 function notify() {
   for (const l of listeners) {

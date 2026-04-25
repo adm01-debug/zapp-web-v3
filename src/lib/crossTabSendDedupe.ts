@@ -87,7 +87,7 @@ function getStorage(): Storage | null {
  * is the leader. A claim from another tab within `ttlMs` keeps that tab
  * the leader.
  */
-function claimLeadership(key: string, ttlMs: number): boolean {
+function claimLeadership(key: string, ttlMs: number, tabId: string = TAB_ID): boolean {
   const storage = getStorage();
   if (!storage) return true; // no coordination possible → behave as leader
 
@@ -100,10 +100,10 @@ function claimLeadership(key: string, ttlMs: number): boolean {
       const parsed = JSON.parse(raw) as ClaimRecord;
       if (parsed && typeof parsed.at === 'number' && now - parsed.at < ttlMs) {
         // Active claim. If it's our own tab (re-entry), keep leadership.
-        return parsed.tabId === TAB_ID;
+        return parsed.tabId === tabId;
       }
     }
-    const record: ClaimRecord = { tabId: TAB_ID, at: now };
+    const record: ClaimRecord = { tabId, at: now };
     storage.setItem(storageKey, JSON.stringify(record));
 
     // Re-read to detect a near-simultaneous write from another tab.
@@ -111,14 +111,14 @@ function claimLeadership(key: string, ttlMs: number): boolean {
     const verify = storage.getItem(storageKey);
     if (!verify) return true;
     const verifyParsed = JSON.parse(verify) as ClaimRecord;
-    return verifyParsed.tabId === TAB_ID;
+    return verifyParsed.tabId === tabId;
   } catch (e) {
     log.warn('claimLeadership failed, defaulting to leader', e);
     return true;
   }
 }
 
-function releaseLeadership(key: string) {
+function releaseLeadership(key: string, tabId: string = TAB_ID) {
   const storage = getStorage();
   if (!storage) return;
   try {
@@ -126,14 +126,14 @@ function releaseLeadership(key: string) {
     const raw = storage.getItem(storageKey);
     if (!raw) return;
     const parsed = JSON.parse(raw) as ClaimRecord;
-    if (parsed.tabId === TAB_ID) storage.removeItem(storageKey);
+    if (parsed.tabId === tabId) storage.removeItem(storageKey);
   } catch {
     /* no-op */
   }
 }
 
-function broadcastDone(payload: BroadcastDone) {
-  const ch = getChannel();
+function broadcastDone(payload: BroadcastDone, channel?: BroadcastChannel | null) {
+  const ch = channel ?? getChannel();
   if (!ch) return;
   try {
     ch.postMessage(payload);
@@ -142,9 +142,13 @@ function broadcastDone(payload: BroadcastDone) {
   }
 }
 
-function awaitBroadcast<T>(key: string, ttlMs: number): Promise<{ value: T } | { error: Error }> {
+function awaitBroadcast<T>(
+  key: string,
+  ttlMs: number,
+  channel?: BroadcastChannel | null,
+): Promise<{ value: T } | { error: Error }> {
   return new Promise((resolve) => {
-    const ch = getChannel();
+    const ch = channel ?? getChannel();
     if (!ch) {
       resolve({ error: new Error('CROSS_TAB_NO_CHANNEL') });
       return;
@@ -185,6 +189,13 @@ export interface CrossTabDedupeOptions {
    * tolerate that. Default true.
    */
   replayResponse?: boolean;
+  /**
+   * Test-only: override the per-tab identity and force a fresh
+   * BroadcastChannel for this single call. Used by the multi-tab simulation
+   * suite to model N independent browser tabs without re-evaluating the
+   * module. NEVER set in production code.
+   */
+  __tabIdForTests?: string;
 }
 
 /**
@@ -202,50 +213,43 @@ export async function crossTabDedupe<T>(
   const ttlMs = options.ttlMs ?? DEFAULT_TTL_MS;
   const replay = options.replayResponse ?? true;
   const startedAt = Date.now();
+  const tabId = options.__tabIdForTests ?? TAB_ID;
+  // When tests inject a tab id, give them a dedicated BroadcastChannel
+  // bound to the same name so each "tab" really is independent.
+  const channel: BroadcastChannel | null = options.__tabIdForTests
+    ? (typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(CHANNEL_NAME) : null)
+    : getChannel();
+  const closeTestChannel = () => {
+    if (options.__tabIdForTests) {
+      try { channel?.close(); } catch { /* no-op */ }
+    }
+  };
 
-  const isLeader = claimLeadership(key, ttlMs);
+  const isLeader = claimLeadership(key, ttlMs, tabId);
 
   if (!isLeader) {
     log.info('follower → awaiting leader', { key });
     if (!replay) {
-      // No-op variant: caller handles UI via realtime.
-      recordDedupeEvent({
-        key,
-        outcome: 'follower-replay',
-        durationMs: Date.now() - startedAt,
-        ok: true,
-      });
+      recordDedupeEvent({ key, outcome: 'follower-replay', durationMs: Date.now() - startedAt, ok: true });
+      closeTestChannel();
       return undefined as T;
     }
-    const outcome = await awaitBroadcast<T>(key, ttlMs);
+    const outcome = await awaitBroadcast<T>(key, ttlMs, channel);
     if ('value' in outcome) {
-      recordDedupeEvent({
-        key,
-        outcome: 'follower-replay',
-        durationMs: Date.now() - startedAt,
-        ok: true,
-      });
+      recordDedupeEvent({ key, outcome: 'follower-replay', durationMs: Date.now() - startedAt, ok: true });
+      closeTestChannel();
       return outcome.value;
     }
-    // Timeout / channel gone → fall through and run locally (better dup than stuck).
     log.warn('follower fallback → running locally', { key, reason: outcome.error.message });
     try {
       const value = await work();
-      recordDedupeEvent({
-        key,
-        outcome: 'follower-fallback',
-        durationMs: Date.now() - startedAt,
-        ok: true,
-      });
+      recordDedupeEvent({ key, outcome: 'follower-fallback', durationMs: Date.now() - startedAt, ok: true });
       return value;
     } catch (e) {
-      recordDedupeEvent({
-        key,
-        outcome: 'follower-fallback',
-        durationMs: Date.now() - startedAt,
-        ok: false,
-      });
+      recordDedupeEvent({ key, outcome: 'follower-fallback', durationMs: Date.now() - startedAt, ok: false });
       throw e;
+    } finally {
+      closeTestChannel();
     }
   }
 
@@ -256,36 +260,24 @@ export async function crossTabDedupe<T>(
     try {
       serialized = JSON.stringify(value);
     } catch {
-      serialized = undefined; // unserializable — followers will parse undefined
+      serialized = undefined;
     }
-    broadcastDone({ type: 'done', key, ok: true, value: serialized });
-    recordDedupeEvent({
-      key,
-      outcome: 'leader',
-      durationMs: Date.now() - startedAt,
-      ok: true,
-    });
+    broadcastDone({ type: 'done', key, ok: true, value: serialized }, channel);
+    recordDedupeEvent({ key, outcome: 'leader', durationMs: Date.now() - startedAt, ok: true });
     return value;
   } catch (e) {
     const err = e instanceof Error ? e : new Error(String(e));
     const status = (e as { status?: number } | null)?.status;
-    broadcastDone({
-      type: 'done',
-      key,
-      ok: false,
-      error: err.message,
-      status: typeof status === 'number' ? status : undefined,
-    });
-    recordDedupeEvent({
-      key,
-      outcome: 'leader',
-      durationMs: Date.now() - startedAt,
-      ok: false,
-    });
+    broadcastDone(
+      { type: 'done', key, ok: false, error: err.message, status: typeof status === 'number' ? status : undefined },
+      channel,
+    );
+    recordDedupeEvent({ key, outcome: 'leader', durationMs: Date.now() - startedAt, ok: false });
     throw e;
   } finally {
-    // Keep claim for `ttlMs` so racing followers still see it; release after.
-    setTimeout(() => releaseLeadership(key), ttlMs);
+    setTimeout(() => releaseLeadership(key, tabId), ttlMs);
+    // Defer test-channel close so any in-flight broadcast can be delivered first.
+    if (options.__tabIdForTests) setTimeout(closeTestChannel, 50);
   }
 }
 
