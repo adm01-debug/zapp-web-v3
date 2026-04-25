@@ -232,7 +232,10 @@ Deno.test({
       assertEquals(res.status, 200);
       const body = await res.json();
       // Sucesso → corpo é o próprio payload (sem envelope de erro).
-      assertEquals(body, payload);
+      // Sucesso → corpo é o próprio payload (sem envelope de erro).
+      // O proxy injeta `version` no envelope versionado — comparamos o resto.
+      const { version: _v, ...rest } = body;
+      assertEquals(rest, payload);
       assertEquals(calls.length, 1);
     });
   },
