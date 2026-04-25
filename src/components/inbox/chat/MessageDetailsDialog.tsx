@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useMessageDetails } from '@/hooks/useMessageDetails';
 import { useAuth } from '@/hooks/useAuth';
+import { MessageAttemptsTimeline } from './MessageAttemptsTimeline';
 
 interface MessageDetailsDialogProps {
   messageId: string | null;
@@ -85,6 +86,7 @@ export function MessageDetailsDialog({ messageId, open, onOpenChange }: MessageD
             <Tabs defaultValue="content" className="flex-1 overflow-hidden flex flex-col">
               <TabsList className="self-start">
                 <TabsTrigger value="content">Conteúdo</TabsTrigger>
+                <TabsTrigger value="attempts">Tentativas</TabsTrigger>
                 <TabsTrigger value="payload">Payload</TabsTrigger>
                 <TabsTrigger value="raw">Raw Data</TabsTrigger>
               </TabsList>
@@ -98,6 +100,10 @@ export function MessageDetailsDialog({ messageId, open, onOpenChange }: MessageD
                     <p className="text-xs text-muted-foreground">Sem conteúdo textual.</p>
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="attempts" className="flex-1 overflow-auto mt-2">
+                <MessageAttemptsTimeline messageId={data.id} enabled={open} />
               </TabsContent>
 
               <TabsContent value="payload" className="flex-1 overflow-auto mt-2">
