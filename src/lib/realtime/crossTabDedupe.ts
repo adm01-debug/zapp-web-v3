@@ -18,6 +18,7 @@
  */
 
 import { getLogger } from '@/lib/logger';
+import { recordDedupeEvent } from '@/lib/realtime/dedupeTelemetry';
 
 const log = getLogger('crossTabDedupe');
 
