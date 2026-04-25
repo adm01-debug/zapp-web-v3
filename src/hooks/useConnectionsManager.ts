@@ -3,6 +3,7 @@ import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import { evaluateAutoRefresh } from '@/hooks/connections/qrAutoRefresh';
 
 export type WhatsAppApiType = 'evolution' | 'official';
 
@@ -723,23 +724,16 @@ export function useConnectionsManager() {
   // pendente via cleanup — assim o auto-refresh nunca dispara contra um QR já
   // aprovado ou falho no servidor.
   useEffect(() => {
-    if (!qrCodeDialog.open) {
-      log.debug('[qr-auto-refresh] not_scheduled', { reason: 'dialog_closed' });
+    const decision = evaluateAutoRefresh({
+      open: qrCodeDialog.open,
+      status: qrCodeDialog.status,
+      expiresAt: qrCodeDialog.expiresAt,
+    });
+    if (decision.schedule === false) {
+      log.debug('[qr-auto-refresh] not_scheduled', { reason: decision.reason, status: qrCodeDialog.status });
       return;
     }
-    if (qrCodeDialog.status !== 'pending') {
-      log.debug('[qr-auto-refresh] not_scheduled', { reason: 'status_not_pending', status: qrCodeDialog.status });
-      return;
-    }
-    if (!qrCodeDialog.expiresAt) {
-      log.debug('[qr-auto-refresh] not_scheduled', { reason: 'no_expires_at' });
-      return;
-    }
-    const delay = qrCodeDialog.expiresAt - 5_000 - Date.now();
-    if (delay <= 0) {
-      log.debug('[qr-auto-refresh] not_scheduled', { reason: 'already_past_window', delay });
-      return;
-    }
+    const delay = decision.delayMs;
 
     log.info('[qr-auto-refresh] scheduled', { delayMs: delay, attemptId: qrCodeDialog.attemptId });
     const scheduledForAttempt = qrCodeDialog.attemptId;
