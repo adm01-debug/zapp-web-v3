@@ -62,13 +62,13 @@ interface PersistedFire {
   tabId: string;
 }
 
-function readPersistedFire(key: string): PersistedFire | null {
+function readPersistedFire(key: string, nowMs: number = Date.now()): PersistedFire | null {
   if (typeof localStorage === 'undefined') return null;
   try {
     const raw = localStorage.getItem(LS_PREFIX + key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as PersistedFire;
-    if (typeof parsed?.expiresAt !== 'number' || parsed.expiresAt < Date.now()) {
+    if (typeof parsed?.expiresAt !== 'number' || parsed.expiresAt < nowMs) {
       try { localStorage.removeItem(LS_PREFIX + key); } catch { /* noop */ }
       return null;
     }
