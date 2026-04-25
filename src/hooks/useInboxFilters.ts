@@ -209,7 +209,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     });
 
     return result;
-  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, showOnlyRetrying, failureCategoryFilter, failureCategoryById, profileId, contactTagsMap]);
+  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, showOnlyRetrying, failureCategoryFilter, failureCategoryById, profileId, contactTagsMap, ticketStates]);
 
   const retryingCount = useMemo(
     () => conversations.filter((c) =>
