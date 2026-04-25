@@ -174,11 +174,23 @@ export function ConnectionsView() {
               </>
             )}
             {(qrCodeDialog.status === 'pending' || qrCodeDialog.status === 'error' || qrCodeDialog.status === 'loading') && (
-              <RefreshQrButton
-                onRefresh={handleRefreshQrCode}
-                loading={evolutionLoading || qrCodeDialog.status === 'loading'}
-                label={qrCodeDialog.status === 'pending' ? 'Gerar novo QR' : 'Gerar novo código'}
-              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+                <RefreshQrButton
+                  onRefresh={handleRefreshQrCode}
+                  loading={evolutionLoading || qrCodeDialog.status === 'loading'}
+                  label={qrCodeDialog.status === 'pending' ? 'Gerar novo QR' : 'Gerar novo código'}
+                />
+                {qrCodeDialog.status === 'loading' && (
+                  <Button
+                    variant="ghost"
+                    onClick={cancelRefreshQrCode}
+                    aria-label="Cancelar geração de QR em andamento"
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Cancelar
+                  </Button>
+                )}
+              </div>
             )}
             {qrCodeDialog.status === 'connected' && <Button onClick={closeQrDialog}>Fechar</Button>}
 
