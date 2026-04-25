@@ -14,10 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const ROLE_CONFIG = {
-  admin: { label: 'Administrador', icon: Crown, color: 'bg-destructive/10 text-destructive dark:bg-destructive/20/30 dark:text-destructive', description: 'Acesso total ao sistema' },
-  supervisor: { label: 'Supervisor', icon: Eye, color: 'bg-info/10 text-info dark:bg-info/20/30 dark:text-info', description: 'Gerencia equipes e relatórios' },
-  special_agent: { label: 'Agente Especial', icon: Star, color: 'bg-warning/10 text-warning dark:bg-warning/20/30 dark:text-warning', description: 'Vê seus contatos + contatos de agentes designados' },
-  agent: { label: 'Agente', icon: Headphones, color: 'bg-success/10 text-success dark:bg-success/20/30 dark:text-success', description: 'Atendimento ao cliente' },
+  dev: { label: 'Desenvolvedor', icon: Code, color: 'bg-destructive/10 text-destructive dark:bg-destructive/20/30 dark:text-destructive', description: 'Equipe técnica — acesso total inclusive áreas técnicas (telemetria, banco, infra) e informativos do sistema' },
+  admin: { label: 'Administrador', icon: Crown, color: 'bg-warning/10 text-warning dark:bg-warning/20/30 dark:text-warning', description: 'Gestão completa: pessoas, integrações, configurações. Vê áreas técnicas em modo leitura' },
+  supervisor: { label: 'Supervisor', icon: Eye, color: 'bg-info/10 text-info dark:bg-info/20/30 dark:text-info', description: 'Operação completa do atendimento (inbox, CRM, relatórios, equipe)' },
+  agent: { label: 'Atendente', icon: Headphones, color: 'bg-success/10 text-success dark:bg-success/20/30 dark:text-success', description: 'Atendimento ao cliente — apenas o próprio escopo' },
 };
 
 export default function RolesPage() {
