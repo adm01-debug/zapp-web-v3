@@ -72,7 +72,9 @@ function getBroadcastChannel(): BroadcastChannel | null {
 function onBroadcast(msg: BroadcastMessage) {
   if (!msg || msg.ownerId === TAB_ID) return; // ignora eco da própria aba
   if (msg.type === 'result') {
-    resultCache.set(msg.key, { value: msg.data, expiresAt: Date.now() + DEFAULT_RESULT_TTL });
+    const ttl = msg.resultTtl ?? DEFAULT_RESULT_TTL;
+    resultCache.set(msg.key, { value: msg.data, expiresAt: Date.now() + ttl });
+    writePersistedResult(msg.key, msg.data, ttl);
     const ws = waiters.get(msg.key);
     if (ws) {
       ws.forEach((w) => w({ ok: true, data: msg.data }));
