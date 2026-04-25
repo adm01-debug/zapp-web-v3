@@ -574,6 +574,11 @@ export function useConnectionsManager() {
   // QR the user can no longer see (which previously caused unintended refreshes
   // and orphan QR attempts in the audit log).
   useEffect(() => {
+    // Always cancel any previously scheduled refresh first — this guarantees
+    // that closing the dialog or transitioning out of 'pending' stops the
+    // timer immediately on the next render, before any new schedule is made.
+    cancelAutoRefreshTimer();
+
     if (!qrCodeDialog.open) return;
     if (qrCodeDialog.status !== 'pending') return;
     if (!qrCodeDialog.expiresAt) return;
@@ -581,7 +586,8 @@ export function useConnectionsManager() {
     if (delay <= 0) return;
 
     const scheduledForAttempt = qrCodeDialog.attemptId;
-    const timer = setTimeout(() => {
+    autoRefreshTimerRef.current = setTimeout(() => {
+      autoRefreshTimerRef.current = null;
       // Re-check the latest dialog state at fire time — the props captured in
       // closure may be stale if the user already closed the dialog or another
       // refresh raced ahead. We use the functional setter to read the freshest
@@ -597,9 +603,9 @@ export function useConnectionsManager() {
         return current;
       });
     }, delay);
-    return () => clearTimeout(timer);
+    return () => cancelAutoRefreshTimer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qrCodeDialog.open, qrCodeDialog.status, qrCodeDialog.expiresAt, qrCodeDialog.attemptId]);
+  }, [qrCodeDialog.open, qrCodeDialog.status, qrCodeDialog.expiresAt, qrCodeDialog.attemptId, cancelAutoRefreshTimer]);
 
   return {
     connections,
