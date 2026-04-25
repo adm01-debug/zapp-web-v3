@@ -15,20 +15,18 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 type DedupeMod = typeof import('@/lib/crossTabSendDedupe');
 
+// Single shared metrics module instance — must NOT be re-evaluated per "tab"
+// or each tab would write into its own counters and the assertions break.
+import * as sharedMetrics from '@/lib/dedupeMetrics';
+
 async function loadTab(): Promise<DedupeMod> {
-  // Each call gets a fresh module evaluation → new TAB_ID + new BroadcastChannel.
-  // We isolate *only* the dedupe module so other modules (logger, metrics) keep
-  // their singletons and the metrics store accumulates across "tabs".
-  let mod!: DedupeMod;
-  // `isolateModulesAsync` exists in vitest >= 1.6 but isn't in the public
-  // type surface for v4 yet — cast through unknown.
-  const isolate = (vi as unknown as {
-    isolateModulesAsync: (cb: () => Promise<void>) => Promise<void>;
-  }).isolateModulesAsync;
-  await isolate(async () => {
-    mod = await import('@/lib/crossTabSendDedupe');
-  });
-  return mod;
+  // Reset the module registry so the next import re-evaluates `crossTabSendDedupe`
+  // → fresh TAB_ID + fresh BroadcastChannel listener bound to the same name.
+  vi.resetModules();
+  // Pin every dependency that MUST stay shared across tabs to its current
+  // singleton instance, so re-evaluation only affects the dedupe module itself.
+  vi.doMock('@/lib/dedupeMetrics', () => sharedMetrics);
+  return await import('@/lib/crossTabSendDedupe');
 }
 
 /** Flush microtasks + a short macrotask so BroadcastChannel deliveries land. */
