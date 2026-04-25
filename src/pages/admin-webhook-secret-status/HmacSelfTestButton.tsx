@@ -50,6 +50,7 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SelfTestResult | null>(null);
+  const [includeNegative, setIncludeNegative] = useState(true);
 
   async function logAudit(
     instanceName: string | null,
@@ -59,7 +60,7 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
     try {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
-      if (!uid) return; // Sem usuário autenticado: não tenta gravar (RLS bloquearia).
+      if (!uid) return;
       await supabase.from('hmac_selftest_audit').insert({
         instance: instanceName,
         ok: !!payload.ok,
@@ -72,19 +73,22 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
         executed_by: uid,
       });
     } catch (err) {
-      // Auditoria é best-effort; não interrompe o fluxo do usuário.
       console.warn('[HmacSelfTest] falha ao gravar auditoria', err);
     }
   }
 
-  async function run() {
+  async function run(opts?: { includeNegative?: boolean }) {
+    const useNegative = opts?.includeNegative ?? includeNegative;
     setLoading(true);
     setResult(null);
     setOpen(true);
     const startedAt = performance.now();
     try {
       const { data, error } = await supabase.functions.invoke('webhook-hmac-selftest', {
-        body: { instance: instance ?? 'selftest' },
+        body: {
+          instance: instance ?? 'selftest',
+          include_negative: useNegative,
+        },
       });
       if (error) throw error;
       const r = data as SelfTestResult;
@@ -105,10 +109,60 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={run} disabled={loading}>
-        {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FlaskConical className="h-4 w-4 mr-2" />}
-        Testar HMAC
-      </Button>
+      <div className="inline-flex rounded-md shadow-sm" role="group">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => run()}
+          disabled={loading}
+          className="rounded-r-none border-r-0"
+          data-testid="hmac-selftest-run"
+        >
+          {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FlaskConical className="h-4 w-4 mr-2" />}
+          Testar HMAC
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading}
+              className="rounded-l-none px-2"
+              aria-label="Opções de teste HMAC"
+              data-testid="hmac-selftest-options"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuLabel>Cenários de teste</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              checked={includeNegative}
+              onCheckedChange={(v) => setIncludeNegative(!!v)}
+              data-testid="hmac-selftest-toggle-negative"
+            >
+              Incluir cenários negativos
+              <span className="block text-[10px] text-muted-foreground mt-0.5">
+                wrong-secret, payload-mutated, missing-signature
+              </span>
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => run({ includeNegative: true })}
+              data-testid="hmac-selftest-run-full"
+            >
+              Rodar com todos os negativos
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => run({ includeNegative: false })}
+              data-testid="hmac-selftest-run-base"
+            >
+              Rodar apenas cenários base
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
