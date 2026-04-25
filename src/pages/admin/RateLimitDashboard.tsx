@@ -26,11 +26,12 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function RateLimitDashboard() {
-  const { isAdmin, isSupervisor } = useUserRole();
+  const { isAdmin } = useUserRole();
   const { logs, stats, loading, refetch } = useRateLimitLogs();
   const [activeTab, setActiveTab] = useState('overview');
 
-  if (!isAdmin && !isSupervisor) {
+  // Área técnica — visualização restrita a admin+ (hierarquia inclui dev).
+  if (!isAdmin) {
     return (
       <div className="flex items-center justify-center h-full">
         <Card className="max-w-md">
