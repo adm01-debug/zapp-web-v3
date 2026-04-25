@@ -153,6 +153,10 @@ function getBroadcastChannel(): BroadcastChannel | null {
 
 function onBroadcast(msg: BroadcastMessage) {
   if (!msg || msg.ownerId === TAB_ID) return; // ignora eco da própria aba
+  if (msg.type === 'start') {
+    markStart(msg.key, msg.ownerId, msg.lockTtl ?? DEFAULT_LOCK_TTL, 'remote');
+    return;
+  }
   if (msg.type === 'result') {
     const ttl = msg.resultTtl ?? DEFAULT_RESULT_TTL;
     resultCache.set(msg.key, { value: msg.data, expiresAt: Date.now() + ttl });
@@ -164,12 +168,14 @@ function onBroadcast(msg: BroadcastMessage) {
     }
     // Notifica UI subscribers para que atualizem sem refazer fetch.
     notifySubscribers(msg.key, msg.data, 'remote');
+    markEnd(msg.key, msg.ownerId, 'remote', 'result');
   } else if (msg.type === 'error') {
     const ws = waiters.get(msg.key);
     if (ws) {
       ws.forEach((w) => w({ ok: false, error: msg.error || 'remote error' }));
       waiters.delete(msg.key);
     }
+    markEnd(msg.key, msg.ownerId, 'remote', 'error');
   } else if (msg.type === 'release') {
     // Lock liberado sem resultado — quem espera pode tentar adquirir.
     const ws = waiters.get(msg.key);
@@ -177,6 +183,7 @@ function onBroadcast(msg: BroadcastMessage) {
       ws.forEach((w) => w({ ok: false, error: 'released' }));
       waiters.delete(msg.key);
     }
+    markEnd(msg.key, msg.ownerId, 'remote', 'release');
   }
 }
 
