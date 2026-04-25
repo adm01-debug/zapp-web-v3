@@ -546,6 +546,11 @@ export function useConnectionsManager() {
   };
 
   const closeQrDialog = () => {
+    // Invalida toda operação assíncrona em vôo: handlers que capturaram a
+    // geração anterior vão detectar o mismatch e abortar antes de tocar no
+    // estado, garantindo que NENHUM polling/auto-refresh dispare após o close.
+    dialogGenRef.current += 1;
+    refreshInFlightRef.current = false;
     if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null); }
     clearPersistedQr();
     setQrCodeDialog(INITIAL_QR_STATE);
