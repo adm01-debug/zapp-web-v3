@@ -467,6 +467,8 @@ export function useConnectionsManager() {
   // even if it comes from a non-button source (auto-refresh timer, keyboard
   // shortcut, double-click slipping past the button's `disabled` attribute).
   const refreshInFlightRef = useRef(false);
+  /** Snapshot do estado do diálogo capturado antes de iniciar um refresh. Permite cancelar e voltar ao QR pending anterior se ele ainda for válido. */
+  const preRefreshSnapshotRef = useRef<QrCodeDialogState | null>(null);
 
   const handleRefreshQrCode = async () => {
     if (refreshInFlightRef.current) {
@@ -484,6 +486,9 @@ export function useConnectionsManager() {
     // dialogGenRef.current avança e nós abortamos no callback.
     const generation = dialogGenRef.current;
     const isStale = () => dialogGenRef.current !== generation;
+    // Guarda o estado atual para que o usuário possa cancelar e voltar ao QR
+    // anterior (se ainda estiver válido) sem precisar reabrir o diálogo.
+    preRefreshSnapshotRef.current = qrCodeDialog;
     setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
     if (isStale()) { refreshInFlightRef.current = false; return; }
@@ -524,8 +529,50 @@ export function useConnectionsManager() {
       // Always release the lock so the next user-initiated retry can proceed,
       // regardless of whether the request succeeded or failed.
       refreshInFlightRef.current = false;
+      preRefreshSnapshotRef.current = null;
     }
   };
+
+  /**
+   * Cancela um refresh de QR em andamento e retorna o diálogo ao estado
+   * anterior, se ainda fizer sentido:
+   *  - se havia um QR `pending` válido (não expirado) antes do refresh, restaura;
+   *  - caso contrário, deixa em estado de erro informando o cancelamento.
+   * Se não houver refresh em vôo, é no-op.
+   */
+  const cancelRefreshQrCode = () => {
+    if (!refreshInFlightRef.current) {
+      log.debug('[qr-auto-refresh] cancel_noop', { reason: 'no_refresh_in_flight' });
+      return;
+    }
+    log.info('[qr-auto-refresh] cancelled', { reason: 'user_cancelled', generation: dialogGenRef.current });
+    dialogGenRef.current += 1;
+    refreshInFlightRef.current = false;
+
+    const snapshot = preRefreshSnapshotRef.current;
+    preRefreshSnapshotRef.current = null;
+
+    const snapshotStillValid =
+      !!snapshot &&
+      snapshot.status === 'pending' &&
+      !!snapshot.qrCode &&
+      !!snapshot.expiresAt &&
+      snapshot.expiresAt > Date.now();
+
+    if (snapshotStillValid && snapshot) {
+      setQrCodeDialog(snapshot);
+    } else {
+      setQrCodeDialog((prev) => ({
+        ...prev,
+        status: 'error',
+        qrCode: null,
+        expiresAt: null,
+        attemptId: null,
+        errorMessage: 'Geração de QR cancelada. Clique em gerar para tentar novamente.',
+      }));
+    }
+  };
+
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
     toast({ title: 'ID copiado!', description: 'O ID da conexão foi copiado para a área de transferência.' });
@@ -570,6 +617,7 @@ export function useConnectionsManager() {
     log.info('[qr-auto-refresh] cancelled', { reason: 'dialog_closed', generation: dialogGenRef.current });
     dialogGenRef.current += 1;
     refreshInFlightRef.current = false;
+    preRefreshSnapshotRef.current = null;
     if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null); }
     clearPersistedQr();
     setQrCodeDialog(INITIAL_QR_STATE);
@@ -784,6 +832,7 @@ export function useConnectionsManager() {
     handleAddConnection,
     handleShowQrCode,
     handleRefreshQrCode,
+    cancelRefreshQrCode,
     handleCopyId,
     handleReconnect,
     handleDisconnect,
