@@ -76,8 +76,10 @@ function recordingStub(responses: Response[]): {
       : input instanceof URL
       ? input.toString()
       : input.url;
-    const method = (init?.method || "GET").toUpperCase();
-    const body = typeof init?.body === "string" ? init.body : null;
+    const reqInit = (init ?? {}) as RequestInit;
+    const method = (reqInit.method ?? "GET").toUpperCase();
+    const rawBody = reqInit.body;
+    const body = typeof rawBody === "string" ? rawBody : null;
     calls.push({ url, method, body });
     const res = responses[Math.min(i, responses.length - 1)];
     i++;
