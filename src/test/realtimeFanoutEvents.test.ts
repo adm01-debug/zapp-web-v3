@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { ALL_EVENTS, parseEdgeEvents, type Evt } from '@/lib/realtime/edgeEvents';
+
+export { parseEdgeEvents };
 
 /**
  * Valida que os rótulos de evento nas arestas DB -.->|...| <Hook> do diagrama
