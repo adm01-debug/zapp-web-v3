@@ -29,6 +29,7 @@ import { ConnectionCard } from './ConnectionCard';
 import { DegradedQuickActions } from './DegradedQuickActions';
 import { QrCountdown } from './QrCountdown';
 import { QrAttemptHistory } from './QrAttemptHistory';
+import { RefreshQrButton } from './RefreshQrButton';
 import { IdempotencyMissBanner } from './IdempotencyMissBanner';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 
