@@ -258,17 +258,8 @@ serve(async (req) => {
       const response = await proxy(`/chat/findChats/${instance}`, 'POST', { where: body.where || {} });
       const data = await response.json();
       if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      // Normaliza formatos possíveis: array direto, { records: [...] }, { chats: [...] }, null/undefined → []
-      const records = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.records)
-        ? data.records
-        : Array.isArray(data?.chats?.records)
-        ? data.chats.records
-        : Array.isArray(data?.chats)
-        ? data.chats
-        : [];
-      return new Response(JSON.stringify(records), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // Padroniza retorno em array (primário e fallback). Ver _shared/evolution-response-normalizers.ts
+      return new Response(JSON.stringify(normalizeChatList(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     if (action === 'find-messages') return await proxy(`/chat/findMessages/${instance}`, 'POST', { where: body.where || {}, page: body.page, offset: body.offset });
 
