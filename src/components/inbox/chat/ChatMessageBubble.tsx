@@ -221,7 +221,7 @@ export function ChatMessageBubble({
           {/* Image message */}
           {message.type === 'image' && message.mediaUrl && (
             <div className="mb-2 rounded-lg overflow-hidden">
-              <MessageImage src={message.mediaUrl} />
+              <MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} />
             </div>
           )}
 
@@ -232,6 +232,7 @@ export function ChatMessageBubble({
                 url={message.mediaUrl}
                 caption={message.content}
                 isSent={isSent}
+                refreshKey={mediaRefreshKey}
               />
             </div>
           )}
@@ -245,6 +246,7 @@ export function ChatMessageBubble({
                 isSent={isSent}
                 existingTranscription={message.transcription}
                 transcriptionStatus={message.transcriptionStatus}
+                refreshKey={mediaRefreshKey}
               />
             </div>
           )}
