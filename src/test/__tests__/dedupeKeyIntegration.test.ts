@@ -175,7 +175,7 @@ describe('Dedupe por chave — integração de duas abas', () => {
     ]);
 
     expect(httpFetcher).toHaveBeenCalledTimes(1);
-    expect(resA).toBe(resB); // mesma referência (cache em memória / broadcast)
+    expect(resA).toEqual(resB); // mesmo conteúdo (broadcast clona via structuredClone)
     expect(resA).toHaveLength(100);
   });
 
