@@ -76,23 +76,61 @@ export function detectFallbackReason(
   status: number,
   data: unknown,
 ): EvolutionFallbackReason | null {
+  // Status HTTP — sinais diretos de endpoint indisponível na v2.3.7.
   if (status === 404) return 'http_404';
+  if (status === 405) return 'http_405';
+  if (status === 501) return 'http_501';
 
-  // Evolution v2.3.7 às vezes responde 200/500 com payload tipo
-  // { error: true, message: 'Not Found' } ou { code: 'not_found' }.
+  // Evolution v2.3.7 às vezes responde 200/4xx/5xx com payload tipo
+  // { error: true, message: 'Not Found' | 'Method Not Allowed' | 'Not Implemented' }
+  // ou wrappers de proxy (Cloudflare/nginx) que devolvem o status no body.
   if (data && typeof data === 'object') {
     const d = data as Record<string, unknown>;
-    const msg = String(d.message ?? d.error ?? '').toLowerCase();
-    const code = String(d.code ?? '').toLowerCase();
+    const msg = String(d.message ?? d.error ?? d.detail ?? d.reason ?? '').toLowerCase();
+    const code = String(d.code ?? d.statusCode ?? d.status ?? '').toLowerCase();
+
+    // 405 — Method Not Allowed e variações comuns ("cannot POST/GET ...",
+    // "method ... not allowed", "verb not supported").
+    if (
+      code === '405' ||
+      code === 'method_not_allowed' ||
+      msg.includes('method not allowed') ||
+      msg.includes('method is not allowed') ||
+      /\bcannot (post|get|put|delete|patch)\b/.test(msg) ||
+      msg.includes('verb not supported') ||
+      msg.includes('http method')
+    ) {
+      return 'method_not_allowed_payload';
+    }
+
+    // 501 — Not Implemented e variações ("not implemented", "unsupported
+    // operation", "feature disabled/unavailable", "deprecated endpoint").
+    if (
+      code === '501' ||
+      code === 'not_implemented' ||
+      msg.includes('not implemented') ||
+      msg.includes('unsupported operation') ||
+      msg.includes('endpoint not available') ||
+      msg.includes('endpoint disabled') ||
+      msg.includes('endpoint deprecated') ||
+      msg.includes('feature unavailable') ||
+      msg.includes('feature not available') ||
+      msg.includes('route disabled')
+    ) {
+      return 'not_implemented_payload';
+    }
+
+    // 404 em payload.
     if (
       code === 'not_found' ||
       code === '404' ||
       msg.includes('not found') ||
-      msg.includes('endpoint not available') ||
-      msg.includes('cannot post')
+      msg.includes('no such route') ||
+      msg.includes('route not found')
     ) {
       return 'not_found_payload';
     }
+
     if (d.error === true && status >= 500) return 'upstream_error';
   }
 
