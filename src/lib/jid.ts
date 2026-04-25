@@ -2,18 +2,52 @@
  * Canonical JID helpers — Evolution API v2 / WhatsApp.
  *
  * Centraliza todas as transformações entre número de telefone e JID
- * (`<id>@s.whatsapp.net`, `<id>@g.us`, `status@broadcast`, etc.) para que
- * cada feature pare de reimplementar a mesma regex/concatenação. Use estes
- * helpers em qualquer ponto que monte payload para Evolution ou interprete
- * webhooks.
+ * (`<id>@s.whatsapp.net`, `<id>@g.us`, `status@broadcast`, `<id>@newsletter`)
+ * para que cada feature pare de reimplementar a mesma regex/concatenação.
+ * Use estes helpers em qualquer ponto que monte payload para Evolution ou
+ * interprete webhooks.
  *
- * Convenções:
- * - `toPhone` — remove sufixos e mantém apenas dígitos.
- * - `toIndividualJid` — força `@s.whatsapp.net` (1:1).
- * - `toGroupJid` — preserva `@g.us` se já vier; caso contrário acrescenta.
- * - `isGroup` / `isBroadcast` / `isStatus` — detectores baratos para filtros
- *   de inbox (cf. broadcast-defense memo).
+ * ──────────────────────────────────────────────────────────────────────────
+ * VOCABULÁRIO
+ * ──────────────────────────────────────────────────────────────────────────
+ *
+ * | Conceito          | Forma canônica                       | Helper        |
+ * |-------------------|--------------------------------------|---------------|
+ * | Telefone (E.164-) | apenas dígitos, 8–15 chars           | `toNumber`    |
+ * | JID individual    | `<digits>@s.whatsapp.net`            | `toIndividualJid` / `toJid` |
+ * | JID de grupo      | `<participant>-<ts>@g.us` ou `<id>@g.us` | `toGroupJid`  |
+ * | Status broadcast  | `status@broadcast` (literal)         | `isStatusBroadcast` |
+ * | Lista broadcast   | `<id>@broadcast`                     | `isBroadcast` |
+ * | Newsletter/canal  | `<id>@newsletter`                    | `isNewsletter` |
+ *
+ * ──────────────────────────────────────────────────────────────────────────
+ * REGRA DE ESCOLHA RÁPIDA
+ * ──────────────────────────────────────────────────────────────────────────
+ *
+ * - Tem só telefone formatado e quero o JID? → `toJid(input)`
+ * - Tenho um remoteJid vindo de webhook e só quero o número? → `toNumber(jid)`
+ * - Filtro do inbox precisa separar grupos? → `isGroup(jid)`
+ * - Defesa contra status do WhatsApp aparecendo como conversa? → `isStatusBroadcast(jid)`
+ * - Vou enviar payload para Evolution e quero falhar cedo? → `toJidStrict` / `toPhoneStrict`
+ *
+ * ──────────────────────────────────────────────────────────────────────────
+ * COMPORTAMENTO DETERMINÍSTICO
+ * ──────────────────────────────────────────────────────────────────────────
+ *
+ * Todos os helpers são puros e determinísticos:
+ * - `null` / `undefined` / `''` → string vazia (variantes estritas → `null`)
+ * - Idempotência: `toPhone(toPhone(x)) === toPhone(x)` e idem para `toJid`
+ * - Sanitizam whitespace, NBSP, zero-width, BOM e marcas RTL
+ * - Cobertura validada em `src/lib/__tests__/jid.test.ts` (129 casos)
+ *
+ * ──────────────────────────────────────────────────────────────────────────
+ * LEGADO vs CANÔNICO
+ * ──────────────────────────────────────────────────────────────────────────
+ *
+ * Os nomes `toPhone` e `isStatus` permanecem como aliases de retrocompat.
+ * Em código novo prefira `toNumber` e `isStatusBroadcast` (blueprint).
  */
+
 
 const INDIVIDUAL_SUFFIX = '@s.whatsapp.net';
 const GROUP_SUFFIX = '@g.us';
