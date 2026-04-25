@@ -309,9 +309,10 @@ describe('contagem por filtro — espelho do que o dropdown mostra', () => {
   it('soma counts e unread coerentes com as fixtures', () => {
     const get = (v: string) => filterByContactType(allConversations, v);
 
-    expect(get('individual')).toHaveLength(5);
-    expect(get('grupo')).toHaveLength(6); // 5 canônicos + 1 legado
-    expect(get('grupo_orcamentos')).toHaveLength(2); // canônico + legado
+    // 5 individuais "puros" + 2 broadcasts + 1 legado (dead-code fallback) = 8
+    expect(get('individual')).toHaveLength(8);
+    expect(get('grupo')).toHaveLength(5); // só @g.us
+    expect(get('grupo_orcamentos')).toHaveLength(1);
     expect(get('grupo_sem_categoria')).toHaveLength(1);
     expect(get('cliente')).toHaveLength(1);
 
