@@ -32,17 +32,14 @@ describe('crossTabDedupe — fallback / retry com backoff', () => {
     const p = dedupedFetch('inbox:v2:initial:test:50', fetcher, {
       retry: { maxRetries: 2, baseDelayMs: 50, maxDelayMs: 200 },
     });
-    // Drena ticks + timers do backoff até promise resolver.
-    const resultPromise = (async () => {
-      for (let i = 0; i < 10; i++) {
-        await Promise.resolve();
-        await flushTimers();
-      }
-      return p;
-    })();
-    await expect(resultPromise).resolves.toEqual({ ok: true });
+    // Anexa handler imediatamente para evitar unhandled rejection durante drenagem.
+    const tracked = p.then((v) => ({ ok: true as const, v }), (e) => ({ ok: false as const, e }));
+    for (let i = 0; i < 10; i++) {
+      await Promise.resolve();
+      await flushTimers();
+    }
+    await expect(tracked).resolves.toEqual({ ok: true, v: { ok: true } });
     expect(fetcher).toHaveBeenCalledTimes(3);
-    // Lock liberado ao final.
     expect(localStorage.getItem(LS_PREFIX + 'inbox:v2:initial:test:50')).toBeNull();
   });
 
@@ -53,14 +50,12 @@ describe('crossTabDedupe — fallback / retry com backoff', () => {
     const p = dedupedFetch(key, fetcher, {
       retry: { maxRetries: 2, baseDelayMs: 30, maxDelayMs: 100 },
     });
-    const settled = (async () => {
-      for (let i = 0; i < 10; i++) {
-        await Promise.resolve();
-        await flushTimers();
-      }
-      return p;
-    })();
-    await expect(settled).rejects.toThrow('always-fails');
+    const tracked = p.then((v) => ({ ok: true as const, v }), (e) => ({ ok: false as const, msg: (e as Error).message }));
+    for (let i = 0; i < 10; i++) {
+      await Promise.resolve();
+      await flushTimers();
+    }
+    await expect(tracked).resolves.toEqual({ ok: false, msg: 'always-fails' });
     expect(fetcher).toHaveBeenCalledTimes(3);
     // Lock NÃO permanece preso após a falha definitiva.
     expect(localStorage.getItem(LS_PREFIX + key)).toBeNull();
