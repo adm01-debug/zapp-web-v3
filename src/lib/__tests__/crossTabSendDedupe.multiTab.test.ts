@@ -1,45 +1,44 @@
 /**
  * Multi-tab simulation tests.
  *
- * Strategy: each "tab" is a fresh `vi.resetModules()` + `await import()` of
- * `crossTabSendDedupe`. That gives every tab its own `TAB_ID` and its own
- * `BroadcastChannel` instance bound to the same channel name — exactly how
- * two real tabs of the same origin behave. They share `localStorage` (jsdom
- * provides a single instance), so the leader-claim coordination works as in
- * production.
+ * Strategy: every "tab" calls the same `crossTabDedupe` instance but passes a
+ * unique `__tabIdForTests`. That option also forces a fresh `BroadcastChannel`
+ * per call — exactly mirroring how N independent browser tabs would behave at
+ * the same origin. They share `localStorage` (which jsdom provides as a single
+ * instance per test process), so the leader-claim coordination logic is
+ * exercised end-to-end.
  *
- * The `BroadcastChannel` API in jsdom delivers messages asynchronously, so
- * we use real timers + small `await` ticks instead of fake timers.
+ * `BroadcastChannel` deliveries are async in jsdom, so we use real timers and
+ * tiny `await tick()` pauses instead of fake timers.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-type DedupeMod = typeof import('@/lib/crossTabSendDedupe');
-
-async function loadTab(): Promise<DedupeMod> {
-  // Reset the module registry so the next import re-evaluates `crossTabSendDedupe`
-  // → fresh TAB_ID + fresh BroadcastChannel listener bound to the same name.
-  // The shared dependencies (`dedupeMetrics`) anchor their state on
-  // `globalThis`, so they survive the reset transparently.
-  vi.resetModules();
-  return await import('@/lib/crossTabSendDedupe');
-}
+import { crossTabDedupe } from '@/lib/crossTabSendDedupe';
+import {
+  getDedupeSnapshot,
+  __resetDedupeMetricsForTests,
+} from '@/lib/dedupeMetrics';
 
 /** Flush microtasks + a short macrotask so BroadcastChannel deliveries land. */
 function tick(ms = 5): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+let nextId = 1;
+function newTabId(): string {
+  return `tab-${nextId++}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
 describe('crossTabDedupe — multi-tab simulation', () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     localStorage.clear();
-    vi.resetModules();
-    // Reset shared metrics store so counters are deterministic per test.
-    const metrics = await import('@/lib/dedupeMetrics');
-    metrics.__resetDedupeMetricsForTests();
+    __resetDedupeMetricsForTests();
+    nextId = 1;
   });
 
   it('only ONE tab fires the work for the same key within TTL (3 tabs staggered)', async () => {
-    const [tabA, tabB, tabC] = await Promise.all([loadTab(), loadTab(), loadTab()]);
+    const tabA = newTabId();
+    const tabB = newTabId();
+    const tabC = newTabId();
 
     const workA = vi.fn().mockResolvedValue({ winner: 'A' });
     const workB = vi.fn().mockResolvedValue({ winner: 'B' });
@@ -48,16 +47,16 @@ describe('crossTabDedupe — multi-tab simulation', () => {
     const KEY = 'multi:race:1';
     const TTL = 1_000;
 
-    // Start tabs with sub-millisecond stagger — mirrors reality (two real
-    // browser tabs never write to localStorage on the exact same tick; each
-    // has its own event loop). With true simultaneity, jsdom's synchronous
-    // localStorage lets every claim succeed — that's a single-process
-    // artifact, not the production semantic we want to test.
-    const pA = tabA.crossTabDedupe(KEY, workA, { ttlMs: TTL });
-    await tick(1);
-    const pB = tabB.crossTabDedupe(KEY, workB, { ttlMs: TTL });
-    await tick(1);
-    const pC = tabC.crossTabDedupe(KEY, workC, { ttlMs: TTL });
+    // Sub-millisecond stagger mirrors reality (two real browser tabs never
+    // write to localStorage on the exact same tick — each has its own event
+    // loop). With *true* simultaneity, jsdom's synchronous localStorage lets
+    // every claim succeed; that's a single-process artifact, not the
+    // production semantic we want to test.
+    const pA = crossTabDedupe(KEY, workA, { ttlMs: TTL, __tabIdForTests: tabA });
+    await tick(2);
+    const pB = crossTabDedupe(KEY, workB, { ttlMs: TTL, __tabIdForTests: tabB });
+    await tick(2);
+    const pC = crossTabDedupe(KEY, workC, { ttlMs: TTL, __tabIdForTests: tabC });
 
     const [resA, resB, resC] = await Promise.all([pA, pB, pC]);
 
@@ -71,27 +70,28 @@ describe('crossTabDedupe — multi-tab simulation', () => {
     expect(resA).toMatchObject({ winner: expect.stringMatching(/^[ABC]$/) });
   });
 
-  it('followers replay the leader response (BroadcastChannel)', async () => {
-    const [leader, follower] = await Promise.all([loadTab(), loadTab()]);
+  it('followers replay the leader response via BroadcastChannel', async () => {
+    const tabLeader = newTabId();
+    const tabFollower = newTabId();
 
     let resolveLeader!: (v: { value: number }) => void;
     const leaderWork = vi.fn(
-      () =>
-        new Promise<{ value: number }>((res) => {
-          resolveLeader = res;
-        }),
+      () => new Promise<{ value: number }>((res) => { resolveLeader = res; }),
     );
     const followerWork = vi.fn().mockResolvedValue({ value: -1 });
 
     // Start leader first so it claims the key.
-    const leaderPromise = leader.crossTabDedupe('multi:replay', leaderWork, { ttlMs: 1_000 });
-    await tick(); // give leader time to write its claim
-
-    // Now follower attempts: should NOT run its work, must wait for broadcast.
-    const followerPromise = follower.crossTabDedupe('multi:replay', followerWork, {
+    const leaderPromise = crossTabDedupe('multi:replay', leaderWork, {
       ttlMs: 1_000,
+      __tabIdForTests: tabLeader,
     });
-    await tick();
+    await tick(5); // give leader time to write its claim
+
+    const followerPromise = crossTabDedupe('multi:replay', followerWork, {
+      ttlMs: 1_000,
+      __tabIdForTests: tabFollower,
+    });
+    await tick(5);
     expect(followerWork).not.toHaveBeenCalled();
 
     // Leader resolves → broadcasts → follower receives & replays.
@@ -105,47 +105,51 @@ describe('crossTabDedupe — multi-tab simulation', () => {
   });
 
   it('after TTL expires, a second tab CAN claim the same key and runs its own work', async () => {
-    const [tab1, tab2] = await Promise.all([loadTab(), loadTab()]);
+    const tab1 = newTabId();
+    const tab2 = newTabId();
     const TTL = 30; // very short to avoid slow tests
 
     const work1 = vi.fn().mockResolvedValue('first');
-    await tab1.crossTabDedupe('multi:ttl', work1, { ttlMs: TTL });
+    await crossTabDedupe('multi:ttl', work1, { ttlMs: TTL, __tabIdForTests: tab1 });
     expect(work1).toHaveBeenCalledTimes(1);
 
     // Wait beyond TTL + the leader's release timer (also `ttlMs`).
-    await tick(TTL * 2 + 20);
+    await tick(TTL * 2 + 30);
 
     const work2 = vi.fn().mockResolvedValue('second');
-    const out = await tab2.crossTabDedupe('multi:ttl', work2, { ttlMs: TTL });
+    const out = await crossTabDedupe('multi:ttl', work2, {
+      ttlMs: TTL,
+      __tabIdForTests: tab2,
+    });
 
     expect(work2).toHaveBeenCalledTimes(1);
     expect(out).toBe('second');
   });
 
   it('leader rejection is propagated to followers via broadcast', async () => {
-    const [leader, follower] = await Promise.all([loadTab(), loadTab()]);
+    const tabLeader = newTabId();
+    const tabFollower = newTabId();
 
     let rejectLeader!: (e: Error) => void;
     const leaderWork = vi.fn(
-      () =>
-        new Promise<unknown>((_res, rej) => {
-          rejectLeader = rej;
-        }),
+      () => new Promise<unknown>((_res, rej) => { rejectLeader = rej; }),
     );
     const followerWork = vi.fn().mockResolvedValue('shouldNotRun');
 
-    const leaderPromise = leader
-      .crossTabDedupe('multi:err', leaderWork, { ttlMs: 1_000 })
-      .catch((e: Error) => ({ err: e.message }));
+    const leaderPromise = crossTabDedupe('multi:err', leaderWork, {
+      ttlMs: 1_000,
+      __tabIdForTests: tabLeader,
+    }).catch((e: Error) => ({ err: e.message }));
 
-    await tick(10);
+    await tick(5);
 
-    const followerPromise = follower
-      .crossTabDedupe('multi:err', followerWork, { ttlMs: 1_000 })
-      .catch((e: Error) => ({ err: e.message }));
+    const followerPromise = crossTabDedupe('multi:err', followerWork, {
+      ttlMs: 1_000,
+      __tabIdForTests: tabFollower,
+    }).catch((e: Error) => ({ err: e.message }));
 
-    // Give follower time to register its BroadcastChannel listener BEFORE
-    // the leader broadcasts.
+    // Wait for the follower to register its broadcast listener BEFORE the
+    // leader emits the failure.
     await tick(10);
     rejectLeader(new Error('upstream-down'));
 
@@ -157,14 +161,15 @@ describe('crossTabDedupe — multi-tab simulation', () => {
   });
 
   it('different keys across tabs run in parallel (no cross-contamination)', async () => {
-    const [t1, t2] = await Promise.all([loadTab(), loadTab()]);
+    const tabAlpha = newTabId();
+    const tabBeta = newTabId();
 
     const w1 = vi.fn().mockResolvedValue(1);
     const w2 = vi.fn().mockResolvedValue(2);
 
     const [r1, r2] = await Promise.all([
-      t1.crossTabDedupe('k:alpha', w1, { ttlMs: 500 }),
-      t2.crossTabDedupe('k:beta', w2, { ttlMs: 500 }),
+      crossTabDedupe('k:alpha', w1, { ttlMs: 500, __tabIdForTests: tabAlpha }),
+      crossTabDedupe('k:beta', w2, { ttlMs: 500, __tabIdForTests: tabBeta }),
     ]);
 
     expect(r1).toBe(1);
@@ -174,47 +179,36 @@ describe('crossTabDedupe — multi-tab simulation', () => {
   });
 
   it('records exactly one leader event and N-1 follower events for N tabs (staggered)', async () => {
-    const tabs = await Promise.all([loadTab(), loadTab(), loadTab(), loadTab()]);
+    const N = 4;
+    const tabIds = Array.from({ length: N }, () => newTabId());
     const KEY = 'multi:metrics';
-    const works = tabs.map(() =>
+    const works = tabIds.map(() =>
       vi.fn().mockImplementation(
-        () => new Promise((res) => setTimeout(() => res({ ok: true }), 10)),
+        () => new Promise((res) => setTimeout(() => res({ ok: true }), 15)),
       ),
     );
 
-    // eslint-disable-next-line no-console
-    console.log('DEBUG tab module identity:', tabs.map((t, i) => `t${i}=${t.crossTabDedupe === tabs[0].crossTabDedupe}`));
-    // eslint-disable-next-line no-console
-    console.log('DEBUG localStorage before:', localStorage.getItem('zappweb:dedupe:' + KEY));
-
     const promises: Promise<unknown>[] = [];
-    for (let i = 0; i < tabs.length; i++) {
-      promises.push(tabs[i].crossTabDedupe(KEY, works[i], { ttlMs: 1_000 }));
-      // eslint-disable-next-line no-console
-      console.log(`DEBUG after tab ${i} start:`, localStorage.getItem('zappweb:dedupe:' + KEY));
-      await tick(5); // stagger so localStorage claim is observable
+    for (let i = 0; i < N; i++) {
+      promises.push(
+        crossTabDedupe(KEY, works[i], { ttlMs: 1_000, __tabIdForTests: tabIds[i] }),
+      );
+      await tick(3); // stagger so each tab observes the prior claim
     }
     await Promise.all(promises);
     await tick(30);
 
-    const { getDedupeSnapshot } = await import('@/lib/dedupeMetrics');
     const snap = getDedupeSnapshot();
-
-    // eslint-disable-next-line no-console
-    console.log('DEBUG snap.events:', JSON.stringify(snap.events, null, 2));
     const forKey = snap.events.filter((e) => e.key === KEY);
     const leaders = forKey.filter((e) => e.outcome === 'leader');
     const replays = forKey.filter((e) => e.outcome === 'follower-replay');
     const fallbacks = forKey.filter((e) => e.outcome === 'follower-fallback');
 
     expect(leaders).toHaveLength(1);
-    // Some races may resolve before claim is observed → followers either
-    // replayed or fell back, but NEVER ran the work themselves.
-    expect(replays.length + fallbacks.length).toBe(tabs.length - 1);
+    expect(replays.length + fallbacks.length).toBe(N - 1);
 
+    // Total work calls ≤ 1 leader + every fallback (which runs locally).
     const totalWorkCalls = works.reduce((acc, w) => acc + w.mock.calls.length, 0);
-    // Worst case: one fallback ran locally → at most 2 total work invocations.
-    // Best case: pure replays → exactly 1.
     expect(totalWorkCalls).toBeGreaterThanOrEqual(1);
     expect(totalWorkCalls).toBeLessThanOrEqual(1 + fallbacks.length);
   });
