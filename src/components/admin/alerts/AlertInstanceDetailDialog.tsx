@@ -207,7 +207,68 @@ export function AlertInstanceDetailDialog({ open, onOpenChange, instance }: Prop
               </CardContent></Card>
             </div>
 
-            {/* % Inválido */}
+            {/* SLA — tempo até resolver */}
+            <Card data-testid="instance-sla-card">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
+                    SLA de resolução (últimas 24h)
+                  </div>
+                  {sla.open > 0 ? (
+                    <Badge variant="destructive" data-testid="instance-sla-open-badge">
+                      {sla.open} aberto{sla.open > 1 ? 's' : ''}
+                    </Badge>
+                  ) : sla.resolved > 0 ? (
+                    <Badge variant="secondary" data-testid="instance-sla-resolved-badge">
+                      Tudo resolvido
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" data-testid="instance-sla-clean-badge">
+                      Sem incidentes
+                    </Badge>
+                  )}
+                </div>
+                {sla.total === 0 ? (
+                  <div className="text-sm text-muted-foreground border border-dashed rounded p-4 text-center">
+                    Nenhum incidente detectado no período.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="instance-sla-metrics">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Incidentes</div>
+                      <div className="text-xl font-bold" data-testid="instance-sla-total">{sla.total}</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        {sla.resolved} resolvido{sla.resolved !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Tempo médio</div>
+                      <div className="text-xl font-bold text-primary" data-testid="instance-sla-avg">
+                        {sla.avgMin}<span className="text-sm ml-1">min</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">P95</div>
+                      <div className="text-xl font-bold text-warning" data-testid="instance-sla-p95">
+                        {sla.p95Min}<span className="text-sm ml-1">min</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Pior caso</div>
+                      <div className="text-xl font-bold text-destructive" data-testid="instance-sla-max">
+                        {sla.maxMin}<span className="text-sm ml-1">min</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="mt-3 text-[11px] text-muted-foreground">
+                  Incidente = janela contígua de horas com eventos inválidos. Resolução = primeira hora subsequente sem inválidos.
+                </div>
+              </CardContent>
+            </Card>
+
+
             <Card>
               <CardContent className="p-4">
                 <div className="text-sm font-medium mb-3 flex items-center gap-2">
