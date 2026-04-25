@@ -77,6 +77,67 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
     }
   }
 
+  /**
+   * Vincula o resultado ao sistema de alertas (warroom_alerts):
+   *  - FALHA → cria alerta ativo (se não houver outro aberto para o mesmo source)
+   *  - OK    → resolve todos os alertas ativos do mesmo source
+   * Usa source = `hmac-selftest:<instance>` para isolar por instância.
+   * É best-effort: erros de RLS/permissão não bloqueiam o fluxo.
+   */
+  async function syncAlert(instanceName: string | null, payload: SelfTestResult) {
+    const source = `hmac-selftest:${instanceName ?? 'selftest'}`;
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) return;
+
+      // Busca alerta ativo (não resolvido) para este source
+      const { data: existing } = await supabase
+        .from('warroom_alerts')
+        .select('id')
+        .eq('source', source)
+        .is('resolved_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const activeAlertId = existing?.[0]?.id ?? null;
+
+      if (!payload.ok) {
+        // Falha: cria alerta se ainda não houver um aberto
+        if (!activeAlertId) {
+          const failedScenarios = payload.scenarios?.filter((s) => !s.passed) ?? [];
+          const summary = failedScenarios.length > 0
+            ? failedScenarios.map((s) => `${s.name}: ${s.reason ?? 'sem detalhe'}`).join(' | ')
+            : (payload.error ?? payload.message ?? 'Falha no self-test HMAC');
+          await supabase.from('warroom_alerts').insert({
+            alert_type: 'error',
+            title: `HMAC self-test falhou (${instanceName ?? 'selftest'})`,
+            message: summary.slice(0, 500),
+            source,
+          });
+          toast.warning('Alerta ativo registrado para esta falha de HMAC');
+        }
+      } else {
+        // OK: resolve alertas ativos deste source
+        if (activeAlertId) {
+          await supabase
+            .from('warroom_alerts')
+            .update({
+              resolved_at: new Date().toISOString(),
+              resolved_reason: 'Auto-resolvido: HMAC self-test voltou a OK',
+              dismissed_by: uid,
+              is_read: true,
+            })
+            .eq('source', source)
+            .is('resolved_at', null);
+          toast.success('Alertas anteriores de HMAC resolvidos automaticamente');
+        }
+      }
+    } catch (err) {
+      console.warn('[HmacSelfTest] falha ao sincronizar alerta', err);
+    }
+  }
+
   async function run(opts?: { includeNegative?: boolean }) {
     const useNegative = opts?.includeNegative ?? includeNegative;
     setLoading(true);
@@ -96,12 +157,14 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
       if (r.ok) toast.success('HMAC OK — secret válido');
       else toast.error(r.error ?? 'Falha no auto-teste HMAC');
       await logAudit(instance, r, Math.round(performance.now() - startedAt));
+      await syncAlert(instance, r);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Erro inesperado';
       const failure: SelfTestResult = { ok: false, configured: false, error: msg };
       setResult(failure);
       toast.error(msg);
       await logAudit(instance, failure, Math.round(performance.now() - startedAt));
+      await syncAlert(instance, failure);
     } finally {
       setLoading(false);
     }
