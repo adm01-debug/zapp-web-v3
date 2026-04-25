@@ -18,6 +18,8 @@ import { ChatToolPanels } from './chat/ChatToolPanels';
 import { ChatDialogs } from './chat/ChatDialogs';
 import { ChatPanelHeader } from './chat/ChatPanelHeader';
 import { ChatAssignedBar } from './chat/ChatAssignedBar';
+import { TicketActionsBar } from './chat/TicketActionsBar';
+import { TicketHistorySheet } from './TicketHistorySheet';
 import { ChatMessagesArea, ChatMessagesAreaRef } from './chat/ChatMessagesArea';
 import type { LoadOlderProps } from './chat/loadOlderTypes';
 import { ChatInputArea } from './chat/ChatInputArea';
