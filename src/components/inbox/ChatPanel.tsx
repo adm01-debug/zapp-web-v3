@@ -112,17 +112,41 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const [searchQuery, setSearchQuery] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   // Filtro: somente mensagens com falha terminal (failed/failed_auth/failed_retries).
-  // Persistido em ?failuresOnly=1 para tornar o estado compartilhável via URL
-  // e sobreviver a recarregamento/back-forward navigation.
+  // Persistido em ?failuresOnly=1 (toggle global) e, opcionalmente, em
+  // ?failureCategory=<failed|failed_auth|failed_retries> (subcategoria).
+  // Ambos sobrevivem a recarregamento e tornam o link compartilhável.
   const [searchParams, setSearchParams] = useSearchParams();
   const failuresOnly = searchParams.get('failuresOnly') === '1';
+  const FAILURE_CATEGORIES = ['failed', 'failed_auth', 'failed_retries'] as const;
+  type FailureCategory = typeof FAILURE_CATEGORIES[number];
+  const rawCategory = searchParams.get('failureCategory');
+  const failureCategory: FailureCategory | null =
+    rawCategory && (FAILURE_CATEGORIES as readonly string[]).includes(rawCategory)
+      ? (rawCategory as FailureCategory)
+      : null;
+
   const setFailuresOnly = useCallback((next: boolean | ((prev: boolean) => boolean)) => {
     setSearchParams((prev) => {
       const sp = new URLSearchParams(prev);
       const current = sp.get('failuresOnly') === '1';
       const value = typeof next === 'function' ? next(current) : next;
-      if (value) sp.set('failuresOnly', '1');
-      else sp.delete('failuresOnly');
+      if (value) {
+        sp.set('failuresOnly', '1');
+      } else {
+        sp.delete('failuresOnly');
+        // Disabling the global filter also clears the subcategory so the
+        // shared link doesn't carry orphan state.
+        sp.delete('failureCategory');
+      }
+      return sp;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setFailureCategory = useCallback((next: FailureCategory | null) => {
+    setSearchParams((prev) => {
+      const sp = new URLSearchParams(prev);
+      if (next) sp.set('failureCategory', next);
+      else sp.delete('failureCategory');
       return sp;
     }, { replace: true });
   }, [setSearchParams]);
