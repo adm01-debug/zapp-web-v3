@@ -107,6 +107,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const [dialogs, dispatch] = useReducer(dialogReducer, initialDialogState);
   const openDialog = useCallback((key: DialogKey) => dispatch({ type: 'OPEN', key }), []);
   const closeDialog = useCallback((key: DialogKey) => dispatch({ type: 'CLOSE', key }), []);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
   const handleSetActiveTool = useCallback((tool: ActiveTool) => {
@@ -367,6 +368,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           onHighlightChange={(ids, activeId) => { setHighlightedMessageIds(ids); setActiveHighlightId(activeId); }}
           onSearchQueryChange={setSearchQuery} />
 
+        <TicketActionsBar contactId={conversation.contact.id} onOpenHistory={() => setHistoryOpen(true)} />
+        <TicketHistorySheet contactId={conversation.contact.id} open={historyOpen} onOpenChange={setHistoryOpen} />
         <ChatAssignedBar conversation={conversation} onOpenTransfer={() => openDialog('transferDialog')} />
 
         {failuresOnly && (
