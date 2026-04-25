@@ -1,6 +1,6 @@
 import { forwardRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, ZoomIn, ZoomOut } from 'lucide-react';
+import { X, Download, ZoomIn, ZoomOut, ImageOff, RotateCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDownloadPermission } from '@/hooks/useDownloadPermission';
 import { useMediaRefresh } from '@/hooks/useMediaRefresh';
