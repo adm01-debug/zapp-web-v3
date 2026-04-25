@@ -154,7 +154,7 @@ describe('crossTabDedupe — multi-aba (lock + BroadcastChannel)', () => {
 
   it('aba B em waitForResult recebe o resultado via broadcast (sem cair em fallback)', async () => {
     const fetcherA = vi.fn(async () => {
-      await new Promise((r) => setTimeout(r, 40));
+      await new Promise((r) => setTimeout(r, 80));
       return 'A-broadcasted';
     });
     const fetcherB = vi.fn(async () => 'B-fallback');
@@ -162,15 +162,23 @@ describe('crossTabDedupe — multi-aba (lock + BroadcastChannel)', () => {
     const pA = tabA.dedupedFetch('multi:wait', fetcherA, { lockTtl: 5_000 });
     await new Promise((r) => setTimeout(r, 5)); // A pega o lock
 
+    const start = Date.now();
+    // waitTimeout MUITO maior que o fetcher de A (80ms). Se B receber via
+    // broadcast, deve resolver logo após A terminar (~80ms). Se cair em
+    // fallback de cache persistente, espera o waitTimeout cheio.
     const pB = tabB.dedupedFetch('multi:wait', fetcherB, {
-      waitTimeout: 1_000, // > tempo do fetcher A (40ms)
+      waitTimeout: 5_000,
     });
 
     const [resA, resB] = await Promise.all([pA, pB]);
+    const elapsed = Date.now() - start;
+
     expect(resA).toBe('A-broadcasted');
     expect(resB).toBe('A-broadcasted');
     expect(fetcherA).toHaveBeenCalledTimes(1);
     expect(fetcherB).not.toHaveBeenCalled();
+    // Garante que B recebeu via broadcast (não esperou o waitTimeout cheio).
+    expect(elapsed).toBeLessThan(1_000);
   });
 
   it('5 chamadas concorrentes em 2 abas → exatamente 1 fetcher executa', async () => {
