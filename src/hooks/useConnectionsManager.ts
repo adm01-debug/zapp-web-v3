@@ -617,6 +617,7 @@ export function useConnectionsManager() {
     log.info('[qr-auto-refresh] cancelled', { reason: 'dialog_closed', generation: dialogGenRef.current });
     dialogGenRef.current += 1;
     refreshInFlightRef.current = false;
+    preRefreshSnapshotRef.current = null;
     if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null); }
     clearPersistedQr();
     setQrCodeDialog(INITIAL_QR_STATE);
