@@ -29,6 +29,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useDedupeIntrospect } from '@/hooks/useDedupeIntrospect';
 import { extractNamespace } from '@/lib/realtime/dedupeTelemetry';
+import CrossTabEfficiencyBlock from '@/pages/admin-dedupe-diagnostics/CrossTabEfficiencyBlock';
 import { cn } from '@/lib/utils';
 
 function fmtMs(ms: number): string {
