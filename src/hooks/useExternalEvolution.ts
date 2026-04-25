@@ -288,9 +288,9 @@ export function useExternalMessages(remoteJid: string | null) {
 
       setMessages(prev => {
         if (controller.signal.aborted) return prev;
-        const seen = new Set(prev.map(m => m.id));
-        const additions = mapped.filter(m => !seen.has(m.id));
-        return [...additions, ...prev];
+        // Merge ordenado: a página `older` vem desc do servidor, mas o sort
+        // por (created_at, id) reposiciona corretamente entre o histórico atual.
+        return mergeRealtimeMessages(prev, mapped) as RealtimeMessage[];
       });
       setHasMore(older.length === CONVERSATION_PAGE_SIZE);
     } catch (err) {
