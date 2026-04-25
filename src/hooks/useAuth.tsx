@@ -41,6 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const fetchingRef = useRef(false);
+  const queryClient = useQueryClient();
+  // Tracks the previously-known user id so we only fire the post-login refresh
+  // on real auth transitions (null/different user → signed in), not on every
+  // token refresh emitted by Supabase while the session is already established.
+  const lastUserIdRef = useRef<string | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
     if (fetchingRef.current) return;
