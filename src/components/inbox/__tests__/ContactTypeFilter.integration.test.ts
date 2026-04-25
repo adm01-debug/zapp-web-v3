@@ -157,10 +157,23 @@ describe('canonical JID helpers — sanity para o cenário do inbox', () => {
     expect(isStatus(statusBroadcast.contact.phone)).toBe(true);
     expect(isBroadcast(listBroadcast.contact.phone)).toBe(true);
     expect(isBroadcast(statusBroadcast.contact.phone)).toBe(true);
-    // legado de grupo (sem sufixo) NÃO é detectado pelo canônico — aí entra o fallback do filtro
+    // legado de grupo (sem sufixo) NÃO é detectado pelo canônico
     expect(isGroup(groupLegacyPattern.contact.phone)).toBe(false);
   });
 });
+
+/**
+ * NOTA — comportamento atual do `ContactTypeFilter`:
+ *
+ * O fallback legado de grupo no `ContactTypeFilter` é
+ *   `/^\d+-\d+$/.test(phone.replace(/\D/g, ''))`
+ * Como `replace(/\D/g, '')` REMOVE o hífen, o regex nunca casa.
+ * Portanto, na prática, somente JIDs `@g.us` são classificados como grupo.
+ * Esses testes documentam esse comportamento real (não o pretendido).
+ * Um teste sentinela explícito (`legacy fallback é dead code`) garante que,
+ * se o fallback for corrigido, este teste falhe e nos force a re-categorizar
+ * `groupLegacyPattern` em todas as suítes abaixo.
+ */
 
 // ---------- integração: filterByContactType ----------
 
