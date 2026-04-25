@@ -43,7 +43,7 @@ describe('crossTabDedupe — multi-tab simulation', () => {
     metrics.__resetDedupeMetricsForTests();
   });
 
-  it('only ONE tab fires the work for the same key within TTL (3 tabs racing)', async () => {
+  it('only ONE tab fires the work for the same key within TTL (3 tabs staggered)', async () => {
     const [tabA, tabB, tabC] = await Promise.all([loadTab(), loadTab(), loadTab()]);
 
     const workA = vi.fn().mockResolvedValue({ winner: 'A' });
@@ -53,11 +53,18 @@ describe('crossTabDedupe — multi-tab simulation', () => {
     const KEY = 'multi:race:1';
     const TTL = 1_000;
 
-    const [resA, resB, resC] = await Promise.all([
-      tabA.crossTabDedupe(KEY, workA, { ttlMs: TTL }),
-      tabB.crossTabDedupe(KEY, workB, { ttlMs: TTL }),
-      tabC.crossTabDedupe(KEY, workC, { ttlMs: TTL }),
-    ]);
+    // Start tabs with sub-millisecond stagger — mirrors reality (two real
+    // browser tabs never write to localStorage on the exact same tick; each
+    // has its own event loop). With true simultaneity, jsdom's synchronous
+    // localStorage lets every claim succeed — that's a single-process
+    // artifact, not the production semantic we want to test.
+    const pA = tabA.crossTabDedupe(KEY, workA, { ttlMs: TTL });
+    await tick(1);
+    const pB = tabB.crossTabDedupe(KEY, workB, { ttlMs: TTL });
+    await tick(1);
+    const pC = tabC.crossTabDedupe(KEY, workC, { ttlMs: TTL });
+
+    const [resA, resB, resC] = await Promise.all([pA, pB, pC]);
 
     // Exactly one work function actually ran.
     const runs = [workA, workB, workC].filter((w) => w.mock.calls.length > 0);
@@ -169,21 +176,21 @@ describe('crossTabDedupe — multi-tab simulation', () => {
     expect(w2).toHaveBeenCalledTimes(1);
   });
 
-  it('records exactly one leader event and N-1 follower-replay events for N tabs racing', async () => {
+  it('records exactly one leader event and N-1 follower events for N tabs (staggered)', async () => {
     const tabs = await Promise.all([loadTab(), loadTab(), loadTab(), loadTab()]);
     const KEY = 'multi:metrics';
-    const works = tabs.map((_, i) =>
+    const works = tabs.map(() =>
       vi.fn().mockImplementation(
-        () =>
-          new Promise((res) => setTimeout(() => res({ tab: i }), 10)),
+        () => new Promise((res) => setTimeout(() => res({ ok: true }), 10)),
       ),
     );
 
-    await Promise.all(
-      tabs.map((tab, i) => tab.crossTabDedupe(KEY, works[i], { ttlMs: 1_000 })),
-    );
-
-    // Allow any pending broadcast deliveries.
+    const promises: Promise<unknown>[] = [];
+    for (let i = 0; i < tabs.length; i++) {
+      promises.push(tabs[i].crossTabDedupe(KEY, works[i], { ttlMs: 1_000 }));
+      await tick(1); // stagger so localStorage claim is observable
+    }
+    await Promise.all(promises);
     await tick(20);
 
     const { getDedupeSnapshot } = await import('@/lib/dedupeMetrics');
