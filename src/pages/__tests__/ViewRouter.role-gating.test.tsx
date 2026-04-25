@@ -117,13 +117,14 @@ describe('ViewRouter — failed-messages role gating', () => {
     expect(screen.queryByTestId('dlq-page')).not.toBeInTheDocument();
   });
 
-  it('supervisor → page renders (write actions are enforced inside the page itself)', async () => {
+  it('supervisor (sem admin/dev) → NotAuthorizedView (DLQ é área técnica, restrita a admin+)', async () => {
     userRoleMock.mockReturnValue({
       roles: ['supervisor'],
+      isDev: false,
       isAdmin: false,
       isSupervisor: true,
       isSpecialAgent: false,
-      hasRole: (r: string) => r === 'supervisor',
+      hasRole: (r: string) => r === 'supervisor' || r === 'agent',
       loading: false,
       refetch: vi.fn(),
     });
@@ -131,8 +132,8 @@ describe('ViewRouter — failed-messages role gating', () => {
     renderRoute();
     await flushLazy();
 
-    expect(await screen.findByTestId('dlq-page')).toBeInTheDocument();
-    expect(screen.queryByText('Acesso restrito')).not.toBeInTheDocument();
+    expect(screen.getByText('Acesso restrito')).toBeInTheDocument();
+    expect(screen.queryByTestId('dlq-page')).not.toBeInTheDocument();
   });
 
   it('admin → page renders', async () => {
