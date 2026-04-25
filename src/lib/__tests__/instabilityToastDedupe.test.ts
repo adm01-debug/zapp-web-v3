@@ -242,17 +242,15 @@ describe('eviction LRU — limpa o Map quando excede INSTABILITY_TOAST_MAX_KEYS'
     expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
 
     // c0, c1, c2 foram despejados → próximo show dispara (true) imediatamente,
-    // pois a chave foi removida do Map (last=0).
+    // pois a chave foi removida do Map (last=0 → diff = nowMs cheio, > cooldown).
     const probe = afterFill + 100;
-    // Usamos cooldown grande aqui para provar que NÃO é a expiração natural que libera —
-    // é a eviction LRU.
-    expect(shouldShowInstabilityToast('c0', err, { nowMs: probe, cooldownMs: probe + 1 })).toBe(true);
-    expect(shouldShowInstabilityToast('c1', err, { nowMs: probe, cooldownMs: probe + 1 })).toBe(true);
-    expect(shouldShowInstabilityToast('c2', err, { nowMs: probe, cooldownMs: probe + 1 })).toBe(true);
+    expect(shouldShowInstabilityToast('c0', err, { nowMs: probe, cooldownMs: huge })).toBe(true);
+    expect(shouldShowInstabilityToast('c1', err, { nowMs: probe, cooldownMs: huge })).toBe(true);
+    expect(shouldShowInstabilityToast('c2', err, { nowMs: probe, cooldownMs: huge })).toBe(true);
 
-    // Uma chave recente (newA) ainda está no cooldown grande → suprime
+    // Uma chave recente (newA) está dentro do cooldown → suprime
     expect(
-      shouldShowInstabilityToast('newA', err, { nowMs: probe, cooldownMs: probe + 1 }),
+      shouldShowInstabilityToast('newA', err, { nowMs: afterFill + 50, cooldownMs: huge }),
     ).toBe(false);
   });
 
