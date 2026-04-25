@@ -25,6 +25,7 @@
  */
 
 import { getLogger } from '@/lib/logger';
+import { recordDedupeEvent } from '@/lib/dedupeMetrics';
 
 const log = getLogger('CrossTabDedupe');
 
@@ -200,6 +201,7 @@ export async function crossTabDedupe<T>(
 ): Promise<T> {
   const ttlMs = options.ttlMs ?? DEFAULT_TTL_MS;
   const replay = options.replayResponse ?? true;
+  const startedAt = Date.now();
 
   const isLeader = claimLeadership(key, ttlMs);
 
@@ -207,13 +209,44 @@ export async function crossTabDedupe<T>(
     log.info('follower → awaiting leader', { key });
     if (!replay) {
       // No-op variant: caller handles UI via realtime.
+      recordDedupeEvent({
+        key,
+        outcome: 'follower-replay',
+        durationMs: Date.now() - startedAt,
+        ok: true,
+      });
       return undefined as T;
     }
     const outcome = await awaitBroadcast<T>(key, ttlMs);
-    if ('value' in outcome) return outcome.value;
+    if ('value' in outcome) {
+      recordDedupeEvent({
+        key,
+        outcome: 'follower-replay',
+        durationMs: Date.now() - startedAt,
+        ok: true,
+      });
+      return outcome.value;
+    }
     // Timeout / channel gone → fall through and run locally (better dup than stuck).
     log.warn('follower fallback → running locally', { key, reason: outcome.error.message });
-    return work();
+    try {
+      const value = await work();
+      recordDedupeEvent({
+        key,
+        outcome: 'follower-fallback',
+        durationMs: Date.now() - startedAt,
+        ok: true,
+      });
+      return value;
+    } catch (e) {
+      recordDedupeEvent({
+        key,
+        outcome: 'follower-fallback',
+        durationMs: Date.now() - startedAt,
+        ok: false,
+      });
+      throw e;
+    }
   }
 
   log.info('leader → executing', { key });
@@ -226,6 +259,12 @@ export async function crossTabDedupe<T>(
       serialized = undefined; // unserializable — followers will parse undefined
     }
     broadcastDone({ type: 'done', key, ok: true, value: serialized });
+    recordDedupeEvent({
+      key,
+      outcome: 'leader',
+      durationMs: Date.now() - startedAt,
+      ok: true,
+    });
     return value;
   } catch (e) {
     const err = e instanceof Error ? e : new Error(String(e));
@@ -236,6 +275,12 @@ export async function crossTabDedupe<T>(
       ok: false,
       error: err.message,
       status: typeof status === 'number' ? status : undefined,
+    });
+    recordDedupeEvent({
+      key,
+      outcome: 'leader',
+      durationMs: Date.now() - startedAt,
+      ok: false,
     });
     throw e;
   } finally {
