@@ -78,7 +78,7 @@ describe('useMessageUpdateBatcher — read → played fast-path', () => {
     };
 
     act(() => {
-      // @ts-expect-error — payload shape compatível para o handler
+      // payload shape compatível para o handler
       result.current.handleMessageUpdate(playedPayload);
     });
 
@@ -111,7 +111,7 @@ describe('useMessageUpdateBatcher — read → played fast-path', () => {
     };
 
     act(() => {
-      // @ts-expect-error
+      // payload shape compatível para o handler
       result.current.handleMessageUpdate(deliveredPayload);
     });
     // Antes do timer: nada commitado.
@@ -138,7 +138,7 @@ describe('useMessageUpdateBatcher — read → played fast-path', () => {
     );
 
     act(() => {
-      // @ts-expect-error
+      // payload shape compatível para o handler
       result.current.handleMessageUpdate({
         new: makeMessage({ status: 'played', updated_at: new Date().toISOString() }),
         old: initial,
