@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +31,7 @@ export function MediaGallery({ contactId, open, onOpenChange }: MediaGalleryProp
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSlow, setIsSlow] = useState(false);
 
   const { data: messages, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['media-gallery', contactId],
