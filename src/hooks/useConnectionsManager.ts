@@ -723,18 +723,34 @@ export function useConnectionsManager() {
   // pendente via cleanup — assim o auto-refresh nunca dispara contra um QR já
   // aprovado ou falho no servidor.
   useEffect(() => {
-    if (!qrCodeDialog.open) return;
-    if (qrCodeDialog.status !== 'pending') return;
-    if (!qrCodeDialog.expiresAt) return;
+    if (!qrCodeDialog.open) {
+      log.debug('[qr-auto-refresh] not_scheduled', { reason: 'dialog_closed' });
+      return;
+    }
+    if (qrCodeDialog.status !== 'pending') {
+      log.debug('[qr-auto-refresh] not_scheduled', { reason: 'status_not_pending', status: qrCodeDialog.status });
+      return;
+    }
+    if (!qrCodeDialog.expiresAt) {
+      log.debug('[qr-auto-refresh] not_scheduled', { reason: 'no_expires_at' });
+      return;
+    }
     const delay = qrCodeDialog.expiresAt - 5_000 - Date.now();
-    if (delay <= 0) return;
+    if (delay <= 0) {
+      log.debug('[qr-auto-refresh] not_scheduled', { reason: 'already_past_window', delay });
+      return;
+    }
 
+    log.info('[qr-auto-refresh] scheduled', { delayMs: delay, attemptId: qrCodeDialog.attemptId });
     const scheduledForAttempt = qrCodeDialog.attemptId;
     const generationAtSchedule = dialogGenRef.current;
     const timer = setTimeout(() => {
       // Defesa extra contra race condition: se o usuário fechou o diálogo
       // entre o agendamento e o disparo, dialogGenRef avançou — abortar.
-      if (dialogGenRef.current !== generationAtSchedule) return;
+      if (dialogGenRef.current !== generationAtSchedule) {
+        log.info('[qr-auto-refresh] fire_aborted', { reason: 'dialog_closed_before_fire', attemptId: scheduledForAttempt });
+        return;
+      }
       // Re-check the latest dialog state at fire time — the props captured in
       // closure may be stale if the user already closed the dialog or another
       // refresh raced ahead. We use the functional setter to read the freshest
@@ -745,7 +761,15 @@ export function useConnectionsManager() {
           current.status === 'pending' &&
           current.attemptId === scheduledForAttempt
         ) {
+          log.info('[qr-auto-refresh] firing', { attemptId: scheduledForAttempt });
           void handleRefreshQrCode();
+        } else {
+          log.info('[qr-auto-refresh] fire_skipped', {
+            reason: !current.open ? 'dialog_closed' : current.status !== 'pending' ? 'status_changed' : 'attempt_changed',
+            currentStatus: current.status,
+            currentAttemptId: current.attemptId,
+            scheduledForAttempt,
+          });
         }
         return current;
       });
