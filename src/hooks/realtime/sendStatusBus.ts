@@ -154,3 +154,17 @@ export function clearSendStatus(messageId: string) {
   listeners.delete(messageId);
 }
 
+/**
+ * Test-only: limpa todo o estado in-memory do bus (store, listeners e history).
+ * NÃO use em código de produção — existe apenas para isolar testes que
+ * compartilham o módulo singleton entre arquivos.
+ */
+export function __resetSendStatusForTest() {
+  store.clear();
+  listeners.clear();
+  globalListeners.clear();
+  history.clear();
+  historyOrder = [];
+  historyListeners.clear();
+}
+
