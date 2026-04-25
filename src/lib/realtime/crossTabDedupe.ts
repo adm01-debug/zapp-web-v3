@@ -95,11 +95,11 @@ function onBroadcast(msg: BroadcastMessage) {
 function readLock(key: string): LockPayload | null {
   if (typeof localStorage === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(LS_PREFIX + key);
+    const raw = localStorage.getItem(LS_LOCK_PREFIX + key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as LockPayload;
     if (parsed.expiresAt < Date.now()) {
-      localStorage.removeItem(LS_PREFIX + key);
+      localStorage.removeItem(LS_LOCK_PREFIX + key);
       return null;
     }
     return parsed;
@@ -118,8 +118,7 @@ function writeLock(key: string, ttl: number): boolean {
       acquiredAt: Date.now(),
       expiresAt: Date.now() + ttl,
     };
-    localStorage.setItem(LS_PREFIX + key, JSON.stringify(payload));
-    // Re-leitura para detectar race com outra aba.
+    localStorage.setItem(LS_LOCK_PREFIX + key, JSON.stringify(payload));
     const verify = readLock(key);
     return verify?.ownerId === TAB_ID;
   } catch {
@@ -132,9 +131,88 @@ function releaseLock(key: string) {
   const lock = readLock(key);
   if (lock && lock.ownerId !== TAB_ID) return;
   try {
-    localStorage.removeItem(LS_PREFIX + key);
+    localStorage.removeItem(LS_LOCK_PREFIX + key);
   } catch {
     /* noop */
+  }
+}
+
+// ─── Result cache persistente em localStorage (compartilhado entre abas) ──────
+interface ResultPayload<T = unknown> {
+  value: T;
+  expiresAt: number;
+}
+
+function readPersistedResult<T>(key: string): T | null {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(LS_RESULT_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ResultPayload<T>;
+    if (parsed.expiresAt < Date.now()) {
+      localStorage.removeItem(LS_RESULT_PREFIX + key);
+      return null;
+    }
+    return parsed.value;
+  } catch {
+    return null;
+  }
+}
+
+function writePersistedResult<T>(key: string, value: T, ttl: number): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const payload: ResultPayload<T> = { value, expiresAt: Date.now() + ttl };
+    localStorage.setItem(LS_RESULT_PREFIX + key, JSON.stringify(payload));
+  } catch {
+    /* quota cheia ou serialização falhou — degrada silenciosamente */
+  }
+}
+
+// ─── Garbage collector: varre chaves expiradas periodicamente ─────────────────
+export function gcExpiredKeys(): { locksSwept: number; resultsSwept: number } {
+  let locksSwept = 0;
+  let resultsSwept = 0;
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const now = Date.now();
+      const toRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+        if (!k.startsWith(LS_LOCK_PREFIX) && !k.startsWith(LS_RESULT_PREFIX)) continue;
+        try {
+          const raw = localStorage.getItem(k);
+          if (!raw) continue;
+          const parsed = JSON.parse(raw) as { expiresAt?: number };
+          if (typeof parsed.expiresAt === 'number' && parsed.expiresAt < now) {
+            toRemove.push(k);
+          }
+        } catch {
+          toRemove.push(k);
+        }
+      }
+      for (const k of toRemove) {
+        localStorage.removeItem(k);
+        if (k.startsWith(LS_LOCK_PREFIX)) locksSwept++;
+        else resultsSwept++;
+      }
+    } catch {
+      /* noop */
+    }
+  }
+  for (const [k, entry] of resultCache) {
+    if (entry.expiresAt < Date.now()) resultCache.delete(k);
+  }
+  return { locksSwept, resultsSwept };
+}
+
+let gcTimer: ReturnType<typeof setInterval> | null = null;
+function startGcIfNeeded() {
+  if (gcTimer || typeof setInterval === 'undefined') return;
+  gcTimer = setInterval(gcExpiredKeys, GC_INTERVAL);
+  if (gcTimer && typeof (gcTimer as { unref?: () => void }).unref === 'function') {
+    (gcTimer as { unref?: () => void }).unref?.();
   }
 }
 
