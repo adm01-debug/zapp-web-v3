@@ -246,41 +246,17 @@ Deno.serve(async (req) => {
 
     // RPC call
     if (action === 'rpc' && rpc) {
-      const rpcStartedAt = Date.now()
       // Strip the trace echo so it isn't forwarded to the SQL function.
       const cleanParams = { ...(params || {}) }
       delete (cleanParams as Record<string, unknown>).__cid
-      try {
-        const { data: rpcData, error } = await ext
-          .rpc(rpc, cleanParams)
-          .abortSignal(queryController.signal)
-        const ms = Date.now() - rpcStartedAt
-        console.log(JSON.stringify({
-          fn: 'external-db-proxy', cid, op: 'rpc', target: rpc, ms, ok: !error,
-          err: error?.message,
-        }))
-        if (error) {
-          // PostgREST surfaces a cancelled request as either an AbortError
-          // (fetch level) or "canceling statement due to user request"
-          // (Postgres level after the socket close propagates).
-          if (timeoutFired) return timeoutResponse()
-          if (clientAbortFired) return clientAbortResponse()
-          const isTimeout = /statement timeout|canceling statement/i.test(error.message)
-          return new Response(JSON.stringify({ error: error.message, cid }), {
-            status: isTimeout ? 504 : 400,
-            headers: jsonHeaders,
-          })
-        }
-        return new Response(JSON.stringify({ data: rpcData, cid }), {
-          headers: jsonHeaders
-        })
-      } catch (e) {
-        if (isProxyTimeout(e)) return timeoutResponse()
-        if (isClientAbort(e)) return clientAbortResponse()
-        throw e
-      } finally {
-        cleanup()
-      }
+      const result = await withTimeout(
+        'rpc',
+        rpc,
+        ext.rpc(rpc, cleanParams).abortSignal(queryController.signal),
+      )
+      cleanup()
+      if (result.response) return result.response
+      return new Response(JSON.stringify({ data: result.data, cid }), { headers: jsonHeaders })
     }
 
     // Mutation: insert
