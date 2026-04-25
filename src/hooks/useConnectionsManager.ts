@@ -507,6 +507,9 @@ export function useConnectionsManager() {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
       setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
+    } finally {
+      lastRefreshAtRef.current = Date.now();
+      refreshInFlightRef.current = false;
     }
   };
   const handleCopyId = (id: string) => {
