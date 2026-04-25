@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { log } from '@/lib/logger';
 import {
   X, Download, Play, Pause, FileText, File, FileSpreadsheet,
-  FileImage, FileArchive, ExternalLink, Maximize, Loader2
+  FileImage, FileArchive, ExternalLink, Maximize, Loader2, VideoOff, RotateCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -98,6 +98,37 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
     const [isLoaded, setIsLoaded] = useState(false);
     const refresh = useMediaRefresh(url, refreshKey);
     const effectiveUrl = refresh.url ?? url;
+
+    if (refresh.failed) {
+      return (
+        <div
+          ref={ref}
+          role="alert"
+          className="max-w-[300px] rounded-lg border border-destructive/30 bg-destructive/5 p-4 flex flex-col items-center gap-2 text-center"
+        >
+          <VideoOff className="w-8 h-8 text-destructive" aria-hidden="true" />
+          <p className="text-sm font-medium text-foreground">Vídeo indisponível</p>
+          <p className="text-xs text-muted-foreground">
+            {refresh.error?.message ?? 'Não foi possível recuperar este vídeo.'}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-1"
+            onClick={() => { void refresh.retry(); }}
+            disabled={refresh.isRefreshing}
+          >
+            {refresh.isRefreshing ? (
+              <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+            ) : (
+              <RotateCw className="w-3.5 h-3.5 mr-1" />
+            )}
+            Tentar novamente
+          </Button>
+          {caption && <p className={cn("text-xs mt-1", isSent ? "text-primary-foreground" : "text-foreground")}>{caption}</p>}
+        </div>
+      );
+    }
 
     return (
       <div ref={ref}>

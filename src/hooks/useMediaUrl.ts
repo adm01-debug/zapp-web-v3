@@ -7,15 +7,17 @@
  * pede um refresh via `getMediaBase64` (Evolution `chat/getBase64`) e
  * devolve uma data URL utilizável no lugar.
  *
- * Uso:
- *   const { url, isRefreshing, onError } = useMediaUrl({
- *     instanceName: 'wpp2',
- *     originalUrl: msg.media_url,
- *     messageKey: { remoteJid, fromMe, id: msg.external_id },
- *   });
- *   <img src={url ?? msg.media_url} onError={onError} />
+ * Garantias adicionais (lote atual):
+ *  - Não entra em loop: bloqueia novas tentativas enquanto outra está em
+ *    voo e respeita um limite de 2 tentativas por messageKey antes de
+ *    desistir e marcar `failed=true`.
+ *  - Mensagem de erro humana classificada (`expired | not_found | network |
+ *    unsupported | unknown`) consumível pela UI.
+ *  - Toast único por mídia (anti-flood) avisando o usuário.
+ *  - Permite retry manual (botão na UI) que zera o contador.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 
@@ -35,38 +37,108 @@ interface UseMediaUrlOptions {
   enabled?: boolean;
   /** Forces a refresh even before the first error (rare; mainly for retries). */
   forceRefreshNonce?: number;
+  /** Override default 2-attempt cap (use 0 to disable retries entirely). */
+  maxAttempts?: number;
+}
+
+export type MediaErrorReason =
+  | 'expired'
+  | 'not_found'
+  | 'network'
+  | 'unsupported'
+  | 'unknown';
+
+export interface MediaError {
+  reason: MediaErrorReason;
+  /** Human, pt-BR. Safe to show in fallback UI. */
+  message: string;
+  /** Underlying Error for diagnostics/logging. */
+  cause?: Error;
 }
 
 interface UseMediaUrlResult {
   url: string | null;
   isRefreshing: boolean;
-  error: Error | null;
+  /** Structured error after refresh failed (or null when healthy). */
+  error: MediaError | null;
+  /** True when we've exhausted automatic retries — UI should show fallback. */
+  failed: boolean;
+  /** Number of refresh attempts performed in this hook lifetime. */
+  attempts: number;
   /** Attach to <img onError={onError}> / <video onError={onError}>. */
   onError: () => void;
-  /** Manually trigger a refresh. */
+  /** Manually trigger a refresh — resets the attempt counter. */
+  retry: () => Promise<void>;
+  /** @deprecated alias kept for back-compat. Use `retry`. */
   refresh: () => Promise<void>;
 }
 
 const refreshCache = new Map<string, string>();
+const toastedKeys = new Set<string>();
 
 function cacheKey(instance: string, key: MessageKey): string {
   return `${instance}::${key.remoteJid}::${key.id}`;
 }
 
+function classifyError(raw: unknown): MediaError {
+  const err = raw instanceof Error ? raw : new Error(String(raw));
+  const msg = err.message.toLowerCase();
+
+  if (msg.includes('410') || msg.includes('expired') || msg.includes('gone')) {
+    return {
+      reason: 'expired',
+      message: 'Esta mídia expirou no WhatsApp e não pôde ser recuperada.',
+      cause: err,
+    };
+  }
+  if (msg.includes('404') || msg.includes('not_found') || msg.includes('not found')) {
+    return {
+      reason: 'not_found',
+      message: 'Mídia não encontrada no servidor do WhatsApp.',
+      cause: err,
+    };
+  }
+  if (msg.includes('network') || msg.includes('fetch') || msg.includes('timeout') || msg.includes('failed to fetch')) {
+    return {
+      reason: 'network',
+      message: 'Falha de conexão ao baixar a mídia. Tente novamente em instantes.',
+      cause: err,
+    };
+  }
+  if (msg.includes('empty media payload') || msg.includes('mimetype')) {
+    return {
+      reason: 'unsupported',
+      message: 'Formato de mídia não suportado para visualização.',
+      cause: err,
+    };
+  }
+  return {
+    reason: 'unknown',
+    message: 'Não foi possível carregar esta mídia.',
+    cause: err,
+  };
+}
+
+const DEFAULT_MAX_ATTEMPTS = 2;
+
 export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
-  const { instanceName, originalUrl, messageKey, enabled = true, forceRefreshNonce } = opts;
+  const { instanceName, originalUrl, messageKey, enabled = true, forceRefreshNonce, maxAttempts = DEFAULT_MAX_ATTEMPTS } = opts;
   const [url, setUrl] = useState<string | null>(originalUrl ?? null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<MediaError | null>(null);
+  const [attempts, setAttempts] = useState(0);
+  const [failed, setFailed] = useState(false);
   const inFlightRef = useRef<Promise<void> | null>(null);
 
   // Keep `url` in sync when the upstream metadata changes.
   useEffect(() => {
     setUrl(originalUrl ?? null);
     setError(null);
+    setFailed(false);
+    setAttempts(0);
   }, [originalUrl]);
 
-  const refresh = useCallback(async (): Promise<void> => {
+  const runRefresh = useCallback(async (): Promise<void> => {
     if (!enabled || !messageKey || !instanceName) return;
     if (inFlightRef.current) return inFlightRef.current;
 
@@ -74,6 +146,8 @@ export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
     const cached = refreshCache.get(key);
     if (cached) {
       setUrl(cached);
+      setError(null);
+      setFailed(false);
       return;
     }
 
@@ -92,10 +166,24 @@ export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
         const dataUrl = `data:${mime};base64,${payload.base64}`;
         refreshCache.set(key, dataUrl);
         setUrl(dataUrl);
+        setError(null);
+        setFailed(false);
       } catch (err) {
-        const e = err instanceof Error ? err : new Error(String(err));
-        log.warn(`media refresh failed for ${key}: ${e.message}`);
-        setError(e);
+        const classified = classifyError(err);
+        log.warn(`media refresh failed for ${key}: ${classified.reason} — ${classified.cause?.message}`);
+        setError(classified);
+        setAttempts((prev) => {
+          const next = prev + 1;
+          if (next >= maxAttempts) {
+            setFailed(true);
+            // Anti-flood: 1 toast por mídia por sessão.
+            if (!toastedKeys.has(key)) {
+              toastedKeys.add(key);
+              toast.error('Mídia indisponível', { description: classified.message });
+            }
+          }
+          return next;
+        });
       } finally {
         setIsRefreshing(false);
         inFlightRef.current = null;
@@ -103,18 +191,40 @@ export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
     })();
     inFlightRef.current = job;
     return job;
-  }, [enabled, instanceName, messageKey]);
+  }, [enabled, instanceName, messageKey, maxAttempts]);
 
-  // Manual refresh trigger via nonce.
+  // Automatic onError trigger: respeita o cap de tentativas.
+  const onError = useCallback(() => {
+    if (failed) return;
+    void runRefresh();
+  }, [failed, runRefresh]);
+
+  // Manual retry — zera contador e remove flag de toast (deixa avisar de novo).
+  const retry = useCallback(async (): Promise<void> => {
+    if (messageKey && instanceName) {
+      toastedKeys.delete(cacheKey(instanceName, messageKey));
+    }
+    setAttempts(0);
+    setFailed(false);
+    setError(null);
+    await runRefresh();
+  }, [instanceName, messageKey, runRefresh]);
+
+  // Manual refresh trigger via nonce (mantém compat).
   useEffect(() => {
     if (forceRefreshNonce != null && forceRefreshNonce > 0) {
-      void refresh();
+      void retry();
     }
-  }, [forceRefreshNonce, refresh]);
+  }, [forceRefreshNonce, retry]);
 
-  const onError = useCallback(() => {
-    void refresh();
-  }, [refresh]);
-
-  return { url, isRefreshing, error, onError, refresh };
+  return {
+    url,
+    isRefreshing,
+    error,
+    failed,
+    attempts,
+    onError,
+    retry,
+    refresh: retry,
+  };
 }
