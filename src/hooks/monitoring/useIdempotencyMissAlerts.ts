@@ -14,7 +14,7 @@
  * Returns the live miss counts per instance so the Connections page can show
  * an inline badge alongside the toast.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { queryExternalProxy } from '@/lib/externalProxy';
@@ -27,6 +27,64 @@ const log = getLogger('useIdempotencyMissAlerts');
 export const DEFAULT_MISS_THRESHOLD = 50;
 const POLL_INTERVAL_MS = 60_000;
 const ALERT_DEDUPE_KEY_PREFIX = 'idempotency-miss';
+/** localStorage key used to persist `(instance × hour-bucket)` dedupe entries across refresh. */
+const ALERT_DEDUPE_STORAGE_KEY = 'zapp:idempotency-miss-alerts:v1';
+const ONE_HOUR_MS = 60 * 60 * 1000;
+/** Drop persisted entries older than this to keep the payload small. */
+const PERSIST_TTL_MS = 6 * ONE_HOUR_MS;
+
+/** Hour bucket aligned to wall-clock hours, so the dedupe matches the alert window. */
+function hourBucket(ts: number): number {
+  return Math.floor(ts / ONE_HOUR_MS);
+}
+
+/** Stable storage key combining instance and hour bucket. */
+function buildPersistKey(instance: string, ts: number): string {
+  return `${ALERT_DEDUPE_KEY_PREFIX}:${instance}:${hourBucket(ts)}`;
+}
+
+function safeStorage(): Storage | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function loadPersistedAlerts(): Map<string, number> {
+  const map = new Map<string, number>();
+  const storage = safeStorage();
+  if (!storage) return map;
+  try {
+    const raw = storage.getItem(ALERT_DEDUPE_STORAGE_KEY);
+    if (!raw) return map;
+    const parsed = JSON.parse(raw) as Record<string, number> | null;
+    if (!parsed || typeof parsed !== 'object') return map;
+    const cutoff = Date.now() - PERSIST_TTL_MS;
+    for (const [k, v] of Object.entries(parsed)) {
+      if (typeof v === 'number' && v >= cutoff) map.set(k, v);
+    }
+  } catch (e) {
+    log.debug('failed to load persisted dedupe alerts:', e);
+  }
+  return map;
+}
+
+function savePersistedAlerts(map: Map<string, number>): void {
+  const storage = safeStorage();
+  if (!storage) return;
+  try {
+    const cutoff = Date.now() - PERSIST_TTL_MS;
+    const obj: Record<string, number> = {};
+    for (const [k, v] of map.entries()) {
+      if (v >= cutoff) obj[k] = v;
+    }
+    storage.setItem(ALERT_DEDUPE_STORAGE_KEY, JSON.stringify(obj));
+  } catch (e) {
+    log.debug('failed to persist dedupe alerts:', e);
+  }
+}
 
 interface AuditLogRow {
   id: string;
