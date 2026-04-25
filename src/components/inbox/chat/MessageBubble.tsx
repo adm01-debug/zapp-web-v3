@@ -89,6 +89,11 @@ export function MessageBubble({
     !(message.type === 'location' && message.location) &&
     !(message.type === 'interactive' && message.interactive);
 
+  // Build refresh key for auto-recovery of expired WhatsApp media URLs (410/403).
+  const mediaRefreshKey = (instanceName && contactJid && message.external_id)
+    ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
+    : undefined;
+
   const bubbleContent = (
       <SwipeableMessage onSwipeRight={() => onReply(message)} onSwipeLeft={() => onForward(message)}>
         <div
