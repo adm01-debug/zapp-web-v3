@@ -221,7 +221,9 @@ Deno.serve(async (req) => {
     const ms = Date.now() - startedAt
     console.log(JSON.stringify({
       fn: 'external-db-proxy',
-      table,
+      cid,
+      op: 'select',
+      target: table,
       limit: effectiveLimit,
       heavy: isHeavy,
       hasFilter: hasNarrowingFilter,
