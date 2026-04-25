@@ -228,6 +228,8 @@ export function RetryMetricsPanel() {
               onChange={setThresholds}
               perInstance={perInstance}
               onPerInstanceChange={setPerInstance}
+              dedupeMode={dedupeMode}
+              onDedupeModeChange={setDedupeMode}
               knownInstances={byInstance.map((b) => b.instance)}
               hasBreaches={breaches.length > 0}
             />
