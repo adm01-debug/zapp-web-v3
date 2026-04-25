@@ -158,6 +158,8 @@ export function useConnectionsManager() {
       errorMessage: persisted.errorMessage,
       expiresAt: persisted.expiresAt,
       attemptId: persisted.attemptId,
+      ttlSeconds: persisted.expiresAt ? Math.round((persisted.expiresAt - Date.now()) / 1000) : null,
+      ttlSource: persisted.expiresAt ? 'detected' : null,
     };
   });
   const [newConnection, setNewConnection] = useState<{ name: string; phone_number: string; api_type: WhatsAppApiType }>({ name: '', phone_number: '', api_type: 'evolution' });
