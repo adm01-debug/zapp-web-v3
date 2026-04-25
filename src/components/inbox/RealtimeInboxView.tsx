@@ -135,6 +135,8 @@ export function RealtimeInboxView() {
                       hasMoreOlder={inbox.hasMoreMessages}
                       showDetails={isMobile ? false : inbox.showDetails}
                       onToggleDetails={() => inbox.setShowDetails(!inbox.showDetails)}
+                      initialHighlightMessageId={inbox.pendingMessageId}
+                      onHighlightConsumed={() => inbox.setPendingMessageId(null)}
                       onBack={isMobile ? () => {
                         if (inbox.legacyConversation) {
                           inbox.setPipContact({ name: inbox.legacyConversation.contact.name, avatar: inbox.legacyConversation.contact.avatar, lastMessage: inbox.legacyConversation.lastMessage?.content, contactId: inbox.legacyConversation.id });
