@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useMessageDetails } from '@/hooks/useMessageDetails';
 import { useAuth } from '@/hooks/useAuth';
+import { MessageAttemptsTimeline } from './MessageAttemptsTimeline';
 
 interface MessageDetailsDialogProps {
   messageId: string | null;
