@@ -262,7 +262,7 @@ serve(async (req) => {
       const data = await response.json();
       // Hook telemetria: detecta condição de fallback (404/not_found). Ainda
       // sem fallback funcional — apenas registra `mode: 'detected'`.
-      maybeLogFallback({ action: 'find-chats', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0 });
+      maybeLogFallback({ action: 'find-chats', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0, supabase });
       if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       // Padroniza retorno em array (primário e fallback). Ver _shared/evolution-response-normalizers.ts
       return new Response(JSON.stringify(normalizeChatList(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -282,7 +282,7 @@ serve(async (req) => {
       const endpoint = `/chat/findContacts/${instance}`;
       const response = await proxy(endpoint, 'POST', { where: body.where || {} });
       const data = await response.json();
-      maybeLogFallback({ action: 'find-contacts', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0 });
+      maybeLogFallback({ action: 'find-contacts', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0, supabase });
       if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       // Padroniza retorno em array (primário e fallback). Ver _shared/evolution-response-normalizers.ts
       return new Response(JSON.stringify(normalizeContactList(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -315,7 +315,7 @@ serve(async (req) => {
       const endpoint = `/profile/fetchProfile/${instance}`;
       const response = await proxy(endpoint, 'GET');
       const data = await response.json();
-      maybeLogFallback({ action: 'fetch-profile', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0 });
+      maybeLogFallback({ action: 'fetch-profile', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0, supabase });
       if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       // Padroniza retorno: objeto válido ou null (primário e fallback). Ver _shared/evolution-response-normalizers.ts
       return new Response(JSON.stringify(normalizeProfile(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
