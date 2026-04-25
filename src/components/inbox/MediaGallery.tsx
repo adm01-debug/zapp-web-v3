@@ -49,6 +49,16 @@ export function MediaGallery({ contactId, open, onOpenChange }: MediaGalleryProp
     retry: 1,
   });
 
+  // Mark fetch as "slow" after 1.5s so we can show a friendlier hint.
+  useEffect(() => {
+    if (!isFetching) {
+      setIsSlow(false);
+      return;
+    }
+    const t = setTimeout(() => setIsSlow(true), 1500);
+    return () => clearTimeout(t);
+  }, [isFetching]);
+
   const mediaItems = useMemo((): MediaItem[] => {
     if (!messages) return [];
     return messages.filter(m => m.media_url).map(m => ({
