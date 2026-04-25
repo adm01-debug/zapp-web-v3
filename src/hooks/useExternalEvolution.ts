@@ -25,14 +25,21 @@ import {
   inboxSidebarKey,
   inboxJidKeyPrefixes,
 } from '@/lib/inbox/inboxDedupeKeys';
+import {
+  POLL_INTERVAL_MS,
+  SIDEBAR_DAYS_BACK,
+  SIDEBAR_LIMIT,
+  CONVERSATION_PAGE_SIZE,
+  getSidebarDedupeOptions,
+  getInitialDedupeOptions,
+  getPollDedupeOptions,
+  getOlderDedupeOptions,
+} from '@/lib/inbox/inboxDedupeConfig';
 
 const log = getLogger('useExternalEvolution');
 
-const POLL_INTERVAL = 5000; // 5s polling
+const POLL_INTERVAL = POLL_INTERVAL_MS;
 const DEFAULT_INSTANCE = 'wpp2';
-const SIDEBAR_DAYS_BACK = 7;
-const SIDEBAR_LIMIT = 200;
-const CONVERSATION_PAGE_SIZE = 100;
 
 // Slim select — drops `payload` and `raw_data` (each can be 10KB+).
 const SLIM_MESSAGE_COLUMNS = [
