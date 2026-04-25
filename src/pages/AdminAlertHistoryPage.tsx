@@ -181,10 +181,32 @@ export default function AdminAlertHistoryPage() {
             Eventos disparados pelo monitoramento — filtre por instância, tipo e status.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={cn('w-4 h-4 mr-2', isFetching && 'animate-spin')} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className={cn(
+              'gap-1.5 text-[11px]',
+              realtimeStatus === 'live' && 'border-success/40 bg-success/10 text-success',
+              realtimeStatus === 'offline' && 'border-destructive/40 bg-destructive/10 text-destructive',
+              realtimeStatus === 'connecting' && 'border-muted-foreground/30 text-muted-foreground',
+            )}
+            data-testid="alert-history-realtime-status"
+            title={
+              lastEventAt
+                ? `Último evento: ${format(lastEventAt, 'HH:mm:ss', { locale: ptBR })}`
+                : 'Aguardando eventos'
+            }
+          >
+            <Radio className={cn('w-3 h-3', realtimeStatus === 'live' && 'animate-pulse')} />
+            {realtimeStatus === 'live' && 'Tempo real'}
+            {realtimeStatus === 'connecting' && 'Conectando…'}
+            {realtimeStatus === 'offline' && 'Polling (15s)'}
+          </Badge>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={cn('w-4 h-4 mr-2', isFetching && 'animate-spin')} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
