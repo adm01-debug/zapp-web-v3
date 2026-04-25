@@ -43,6 +43,9 @@ interface ChatPanelHeaderProps {
   allMessages?: ChatMessage[];
   onSelectSuggestion?: (text: string) => void;
   sendState?: 'idle' | 'retrying' | 'failed';
+  failuresOnly?: boolean;
+  onToggleFailuresOnly?: () => void;
+  failuresCount?: number;
 }
 
 export function ChatPanelHeader({
