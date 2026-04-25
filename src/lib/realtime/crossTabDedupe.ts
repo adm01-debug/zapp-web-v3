@@ -272,10 +272,12 @@ export async function dedupedFetch<T>(
   const waitTimeout = opts.waitTimeout ?? DEFAULT_WAIT_TIMEOUT;
 
   startGcIfNeeded();
+  const startedAt = Date.now();
 
   // 1. Cache em memória.
   const cached = resultCache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
+    recordDedupeEvent({ key, reason: 'memory_cache' });
     return cached.value as T;
   }
   if (cached && cached.expiresAt <= Date.now()) {
@@ -286,12 +288,16 @@ export async function dedupedFetch<T>(
   const persisted = readPersistedResult<T>(key);
   if (persisted !== null) {
     resultCache.set(key, { value: persisted, expiresAt: Date.now() + resultTtl });
+    recordDedupeEvent({ key, reason: 'persisted_cache' });
     return persisted;
   }
 
   // 2. Inflight na mesma aba.
   const pending = inflight.get(key);
-  if (pending) return pending as Promise<T>;
+  if (pending) {
+    recordDedupeEvent({ key, reason: 'inflight_local' });
+    return pending as Promise<T>;
+  }
 
   // 3. Tenta adquirir lock cross-tab.
   const acquired = writeLock(key, lockTtl);
@@ -302,18 +308,31 @@ export async function dedupedFetch<T>(
     getBroadcastChannel();
     log.debug('Lock detido por outra aba, aguardando broadcast', { key });
     const waited = await waitForResult<T>(key, waitTimeout);
-    if (waited.ok) return waited.data;
+    if (waited.ok) {
+      recordDedupeEvent({
+        key,
+        reason: 'broadcast_wait',
+        durationMs: Date.now() - startedAt,
+      });
+      return waited.data;
+    }
     // Antes de cair em fallback, reconfere o cache persistente — a líder
     // pode ter terminado depois do broadcast já ter passado.
     const lateCache = readPersistedResult<T>(key);
     if (lateCache !== null) {
       resultCache.set(key, { value: lateCache, expiresAt: Date.now() + resultTtl });
+      recordDedupeEvent({
+        key,
+        reason: 'late_cache',
+        durationMs: Date.now() - startedAt,
+      });
       return lateCache;
     }
     // Líder falhou ou expirou: tenta executar localmente como fallback.
   }
 
   // 4. Líder: executa fetcher, cacheia (memória + localStorage), broadcasta, libera lock.
+  const isFallback = !acquired;
   const exec = (async () => {
     try {
       const data = await fetcher();
@@ -321,10 +340,21 @@ export async function dedupedFetch<T>(
       writePersistedResult(key, data, resultTtl);
       broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now(), resultTtl });
       notifySubscribers(key, data, 'local');
+      recordDedupeEvent({
+        key,
+        reason: isFallback ? 'fallback_after_wait' : 'lock_acquired_lead',
+        durationMs: Date.now() - startedAt,
+      });
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       broadcast({ type: 'error', key, ownerId: TAB_ID, error: message, ts: Date.now() });
+      recordDedupeEvent({
+        key,
+        reason: isFallback ? 'fallback_after_wait' : 'lock_acquired_lead',
+        durationMs: Date.now() - startedAt,
+        errorMessage: message,
+      });
       throw err;
     } finally {
       releaseLock(key);
