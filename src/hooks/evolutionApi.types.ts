@@ -23,6 +23,25 @@ export interface SendMessageParams {
   };
   mentionsEveryOne?: boolean;
   mentioned?: string[];
+  /** Generate WhatsApp rich link preview when text contains a URL. */
+  linkPreview?: boolean;
+}
+
+/**
+ * Opções avançadas suportadas pelo endpoint Evolution `/message/sendText/{instance}`.
+ * Conforme blueprint Evolution API v2: https://doc.evolution-api.com/v2/api-reference/message-controller/send-text
+ */
+export interface SendTextOptions {
+  /** Atraso em ms antes do envio (server-side). */
+  delay?: number;
+  /** Mensagem citada (reply). */
+  quoted?: SendMessageParams['quoted'];
+  /** Lista de JIDs mencionados explicitamente (`@fulano`). */
+  mentioned?: string[];
+  /** Mencionar todos do grupo (`@everyone`). Apenas em grupos. */
+  mentionsEveryOne?: boolean;
+  /** Gerar link preview rich (default: true no servidor Evolution). */
+  linkPreview?: boolean;
 }
 
 export interface GroupParams {
