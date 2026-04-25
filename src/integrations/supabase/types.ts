@@ -5909,6 +5909,90 @@ export type Database = {
         }
         Relationships: []
       }
+      proxy_alerts: {
+        Row: {
+          details: Json | null
+          id: number
+          kind: string
+          sample_size: number
+          severity: string
+          threshold: number
+          ts: string
+          value: number
+          window_minutes: number
+        }
+        Insert: {
+          details?: Json | null
+          id?: number
+          kind: string
+          sample_size: number
+          severity: string
+          threshold: number
+          ts?: string
+          value: number
+          window_minutes: number
+        }
+        Update: {
+          details?: Json | null
+          id?: number
+          kind?: string
+          sample_size?: number
+          severity?: string
+          threshold?: number
+          ts?: string
+          value?: number
+          window_minutes?: number
+        }
+        Relationships: []
+      }
+      proxy_metrics: {
+        Row: {
+          cid: string | null
+          err_code: string | null
+          err_msg: string | null
+          id: number
+          ms: number
+          ok: boolean
+          op: string
+          pg_timeout: boolean
+          rid: string | null
+          status: number
+          target: string
+          timeout_fired: boolean
+          ts: string
+        }
+        Insert: {
+          cid?: string | null
+          err_code?: string | null
+          err_msg?: string | null
+          id?: number
+          ms: number
+          ok: boolean
+          op: string
+          pg_timeout?: boolean
+          rid?: string | null
+          status: number
+          target: string
+          timeout_fired?: boolean
+          ts?: string
+        }
+        Update: {
+          cid?: string | null
+          err_code?: string | null
+          err_msg?: string | null
+          id?: number
+          ms?: number
+          ok?: boolean
+          op?: string
+          pg_timeout?: boolean
+          rid?: string | null
+          status?: number
+          target?: string
+          timeout_fired?: boolean
+          ts?: string
+        }
+        Relationships: []
+      }
       qa_evaluations: {
         Row: {
           agent_id: string | null
@@ -9367,6 +9451,7 @@ export type Database = {
       cleanup_old_instance_auth_events: { Args: never; Returns: number }
       cleanup_old_qr_attempts: { Args: never; Returns: undefined }
       cleanup_old_send_failures: { Args: never; Returns: undefined }
+      cleanup_proxy_metrics: { Args: never; Returns: undefined }
       cleanup_webhook_deliveries: { Args: never; Returns: undefined }
       clear_login_attempts: { Args: { p_email: string }; Returns: undefined }
       contacts_count_by_type: {
