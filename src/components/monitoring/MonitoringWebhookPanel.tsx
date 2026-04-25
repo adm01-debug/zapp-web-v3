@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { RetryMetricsPanel } from './RetryMetricsPanel';
+import { CrossTabDedupePanel } from './CrossTabDedupePanel';
 import { DLQPanel } from './DLQPanel';
 import { DLQAuditHistory } from './DLQAuditHistory';
 import type { ConnectionInfo, WebhookTestResult, WebhookConfig } from './hooks/useEvolutionMonitoring';
@@ -125,6 +126,9 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
 
       {/* Retry Metrics Panel */}
       <RetryMetricsPanel />
+
+      {/* Cross-tab dedupe activity (collapsed duplicate sends across tabs) */}
+      <CrossTabDedupePanel />
 
       {/* Dead-Letter Queue Panel */}
       <DLQPanel />
