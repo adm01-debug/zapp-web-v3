@@ -81,8 +81,13 @@ export function ChatMessageBubble({
   onScrollToMessage,
   onInteractiveButtonClick,
   registerRef,
+  instanceName,
+  contactJid,
 }: ChatMessageBubbleProps) {
   const isSent = message.sender === 'agent';
+  const mediaRefreshKey = (instanceName && contactJid && message.external_id)
+    ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
+    : undefined;
 
   const isMobile = useIsMobile();
   
