@@ -259,10 +259,10 @@ export default function AdminFailedMessagesPage() {
         </div>
       </header>
 
-      {readOnly && isSupervisor && (
+      {readOnly && isAdmin && (
         <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground flex items-center gap-2">
           <Lock className="h-3.5 w-3.5" />
-          <span>Modo somente leitura — ações de reprocesso e abandono são restritas a administradores.</span>
+          <span>Modo somente leitura — ações de reprocesso e abandono são restritas à equipe técnica (dev).</span>
         </div>
       )}
 
