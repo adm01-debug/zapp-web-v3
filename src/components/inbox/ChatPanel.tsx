@@ -201,14 +201,24 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
   // Pré-computa o conjunto de mensagens com falha terminal — alimenta o
   // contador no header e o filtro do MessagesArea sem reescanear a lista
-  // a cada render.
+  // a cada render. Quando `failureCategory` está setado via URL, restringe
+  // ainda mais para a categoria selecionada (failed | failed_auth | failed_retries).
   const failedMessages = useMemo(
     () => messages.filter(
       (m) => m.status === 'failed' || m.status === 'failed_auth' || m.status === 'failed_retries',
     ),
     [messages],
   );
-  const visibleMessages = failuresOnly ? failedMessages : messages;
+  const categoryCounts = useMemo(() => ({
+    failed: failedMessages.filter((m) => m.status === 'failed').length,
+    failed_auth: failedMessages.filter((m) => m.status === 'failed_auth').length,
+    failed_retries: failedMessages.filter((m) => m.status === 'failed_retries').length,
+  }), [failedMessages]);
+  const categoryFilteredMessages = useMemo(
+    () => (failureCategory ? failedMessages.filter((m) => m.status === failureCategory) : failedMessages),
+    [failedMessages, failureCategory],
+  );
+  const visibleMessages = failuresOnly ? categoryFilteredMessages : messages;
 
   // Memoize expensive derived arrays to avoid re-creation on every keystroke
   const lastContactMessages = useMemo(
