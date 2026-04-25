@@ -3,6 +3,44 @@ import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { log } from '@/lib/logger';
+import { recordQueryEvent, type Severity } from '@/lib/clientTelemetry';
+
+/**
+ * Detects whether a thrown error originated from a slow/failing external
+ * query (proxy timeout, statement timeout, abort, etc.) so we can emit a
+ * telemetry event from the boundary instead of just logging it.
+ */
+function classifyRenderFailure(error: Error): {
+  isQueryFailure: boolean;
+  severity: Severity;
+  target: string;
+} {
+  const msg = (error?.message || '').toLowerCase();
+  const isTimeout =
+    error?.name === 'TimeoutError' ||
+    /timeout|timed out|statement timeout|canceling statement|proxy_timeout/.test(msg);
+  const isProxy = /external db proxy|external-db-proxy|query timed out|external_proxy/.test(msg);
+  const isAbort = error?.name === 'AbortError' || /aborted/.test(msg);
+  const isQueryFailure = isTimeout || isProxy || isAbort || /rpc|supabase|fetch failed|network/.test(msg);
+
+  let severity: Severity = 'error';
+  if (isTimeout) severity = 'timeout';
+  else if (/very slow|>=\s*4000|4000ms/.test(msg)) severity = 'very_slow';
+  else if (/slow|>=\s*1500|1500ms/.test(msg)) severity = 'slow';
+
+  return {
+    isQueryFailure,
+    severity,
+    target: isTimeout ? 'render:timeout' : isProxy ? 'externalProxy:render' : 'render:error',
+  };
+}
+
+// Try to recover the correlationId an external call may have embedded
+// in the thrown error message (e.g. "[cid=ab12cd34] ...").
+function extractCorrelationId(error: Error): string | undefined {
+  const m = /\bcid[=:]\s*([0-9a-f]{6,})/i.exec(error?.message || '');
+  return m?.[1];
+}
 
 interface Props {
   children: ReactNode;
@@ -39,6 +77,30 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     log.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({ errorInfo });
+
+    // Always emit a telemetry event so the panel surfaces UI render
+    // failures alongside slow/timed-out external queries. This keeps the
+    // "why did the screen blank?" answer in one place.
+    try {
+      const { isQueryFailure, severity, target } = classifyRenderFailure(error);
+      recordQueryEvent({
+        operation: 'select',
+        source: isQueryFailure ? 'externalProxy' : 'lovableCloud',
+        target,
+        durationMs: 0,
+        limit: null,
+        offset: null,
+        filters: null,
+        recordCount: null,
+        errorMessage: `[ErrorBoundary] ${error.message}`,
+        severity,
+        startedAt: performance.now(),
+        correlationId: extractCorrelationId(error),
+      });
+    } catch {
+      // Telemetry must never crash the boundary itself.
+    }
+
     this.props.onError?.(error, errorInfo);
   }
 
