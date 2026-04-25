@@ -48,6 +48,16 @@ interface ChatPanelProps extends LoadOlderProps {
   onBack?: () => void;
   hideHeader?: boolean;
   /**
+   * Quando definido, ao montar (ou ao mudar para esta conversa) o painel
+   * dá scroll até a mensagem indicada e aplica destaque temporário (~3 s).
+   * Aceita o `id` interno da mensagem (`evolution_messages.id`) ou o
+   * `external_id` retornado pelo webhook — o `ChatMessagesArea` resolve
+   * ambos via `data-message-id`.
+   */
+  initialHighlightMessageId?: string | null;
+  /** Notifica o pai de que o destaque foi aplicado (limpa o pending). */
+  onHighlightConsumed?: () => void;
+  /**
    * Paginacao "carregar mensagens antigas" herdada de `LoadOlderProps`:
    *  - Modo local: omitir (ou passar `undefined`) ambos os callbacks.
    *  - Modo externo: fornecer ambos; loadingOlder/hasMoreOlder refletem o
@@ -91,7 +101,7 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
 
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
 
-export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false }: ChatPanelProps) {
+export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed }: ChatPanelProps) {
   const [dialogs, dispatch] = useReducer(dialogReducer, initialDialogState);
   const openDialog = useCallback((key: DialogKey) => dispatch({ type: 'OPEN', key }), []);
   const closeDialog = useCallback((key: DialogKey) => dispatch({ type: 'CLOSE', key }), []);
