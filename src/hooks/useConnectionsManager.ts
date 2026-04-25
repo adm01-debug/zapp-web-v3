@@ -637,15 +637,62 @@ export function useConnectionsManager() {
     announceConnected,
   ]);
 
+  // Reconcile com a fonte de verdade: assina realtime da linha em `qr_attempts`
+  // correspondente ao QR atualmente exibido e propaga o status do banco
+  // (pending → connected/error) para o estado local. Isso garante que o
+  // auto-refresh, o anúncio de "conectado" e o feedback de erro sejam
+  // disparados pela MESMA fonte usada pelo backend (qr_attempts.status), e não
+  // por uma estimativa otimista do cliente, evitando drift entre UI e servidor.
+  useEffect(() => {
+    if (!qrCodeDialog.open) return;
+    if (!qrCodeDialog.attemptId) return;
+
+    const attemptId = qrCodeDialog.attemptId;
+    const channel = supabase
+      .channel(`qr-attempts-truth-${attemptId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'qr_attempts', filter: `id=eq.${attemptId}` },
+        (payload) => {
+          const row = payload.new as { status?: string; error_message?: string | null };
+          const dbStatus = row?.status;
+          if (!dbStatus) return;
+          // Map DB truth → UI status (pending|approved|failure → pending|connected|error)
+          setQrCodeDialog((prev) => {
+            if (prev.attemptId !== attemptId) return prev;
+            if (dbStatus === 'connected' && prev.status !== 'connected') {
+              return { ...prev, status: 'connected', qrCode: null, expiresAt: null };
+            }
+            if ((dbStatus === 'error' || dbStatus === 'expired') && prev.status !== 'error') {
+              return {
+                ...prev,
+                status: 'error',
+                errorMessage: row.error_message ?? prev.errorMessage ?? 'QR Code inválido. Gere um novo.',
+                expiresAt: null,
+              };
+            }
+            // dbStatus === 'pending' → mantém estado atual (UI já está pending)
+            return prev;
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qrCodeDialog.open, qrCodeDialog.attemptId]);
+
   // Auto-refresh: regenerate the QR ~5s before it expires (at 55s of the 60s TTL)
   // so the user never has to manually click "Atualizar" mid-scan.
   //
   // Strict guard: only schedules and only fires while the dialog is OPEN and the
-  // current status is 'pending'. If the dialog closes, transitions to
-  // 'connected'/'error'/'loading', or the user manually refreshes between the
-  // schedule and the timer firing, we abort instead of silently regenerating a
-  // QR the user can no longer see (which previously caused unintended refreshes
-  // and orphan QR attempts in the audit log).
+  // current status is 'pending' (status local já reconciliado com a fonte de
+  // verdade `qr_attempts.status` pelo effect acima). Se o status no banco virar
+  // `connected`/`error`/`expired`, o effect de reconciliação atualiza
+  // `qrCodeDialog.status`, fazendo este effect re-rodar e cancelar o timer
+  // pendente via cleanup — assim o auto-refresh nunca dispara contra um QR já
+  // aprovado ou falho no servidor.
   useEffect(() => {
     if (!qrCodeDialog.open) return;
     if (qrCodeDialog.status !== 'pending') return;
