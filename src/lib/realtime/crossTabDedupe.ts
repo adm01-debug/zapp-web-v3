@@ -79,17 +79,81 @@ function notifySubscribers(key: string, data: unknown, source: 'remote' | 'local
   });
 }
 
+// ─── Camada de transporte cross-tab ──────────────────────────────────────────
+// Tenta BroadcastChannel; se indisponível (Safari antigo, alguns sandboxes,
+// iframes restritos) ou se construtor lançar, faz fallback transparente
+// usando o evento `storage` do localStorage.
+//
+// Compatibilidade: o consumidor chama `ensureTransport()` para garantir que o
+// listener de entrada está ativo, e `sendBus(msg)` para emitir. O resto do
+// arquivo permanece igual — `broadcast()` e `getBroadcastChannel()` viraram
+// wrappers finos sobre essa camada para preservar a API interna.
+type Transport = 'broadcast-channel' | 'storage-event' | 'none';
+let transportKind: Transport | null = null;
 let bc: BroadcastChannel | null = null;
-function getBroadcastChannel(): BroadcastChannel | null {
-  if (typeof BroadcastChannel === 'undefined') return null;
-  if (bc) return bc;
+let storageListenerInstalled = false;
+
+function installStorageListener(): boolean {
+  if (storageListenerInstalled) return true;
+  if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return false;
   try {
-    bc = new BroadcastChannel(BC_NAME);
-    bc.addEventListener('message', (e) => onBroadcast(e.data as BroadcastMessage));
-    return bc;
+    window.addEventListener('storage', (e: StorageEvent) => {
+      if (!e.key || !e.key.startsWith(LS_BUS_PREFIX)) return;
+      if (!e.newValue) return; // remoção é nossa própria limpeza
+      try {
+        const msg = JSON.parse(e.newValue) as BroadcastMessage;
+        // Filtro de TTL — evita reprocessar mensagens órfãs antigas.
+        if (typeof msg.ts === 'number' && Date.now() - msg.ts > BUS_MSG_TTL) return;
+        onBroadcast(msg);
+      } catch {
+        /* payload corrompido — ignora */
+      }
+    });
+    storageListenerInstalled = true;
+    return true;
   } catch {
-    return null;
+    return false;
   }
+}
+
+function ensureTransport(): Transport {
+  if (transportKind && transportKind !== 'none') return transportKind;
+  // Tentativa 1 — BroadcastChannel.
+  if (typeof BroadcastChannel !== 'undefined' && !bc) {
+    try {
+      bc = new BroadcastChannel(BC_NAME);
+      bc.addEventListener('message', (e) => onBroadcast(e.data as BroadcastMessage));
+      transportKind = 'broadcast-channel';
+      log.debug('Transport ativo: BroadcastChannel');
+      return transportKind;
+    } catch {
+      bc = null;
+      // cai para fallback
+    }
+  }
+  if (bc) {
+    transportKind = 'broadcast-channel';
+    return transportKind;
+  }
+  // Tentativa 2 — fallback via storage event.
+  if (installStorageListener()) {
+    transportKind = 'storage-event';
+    log.debug('Transport ativo: storage event (fallback, BroadcastChannel indisponível)');
+    return transportKind;
+  }
+  transportKind = 'none';
+  return transportKind;
+}
+
+/** @deprecated Mantido para compatibilidade interna; prefira `ensureTransport`. */
+function getBroadcastChannel(): BroadcastChannel | null {
+  ensureTransport();
+  return bc;
+}
+
+/** @internal — usado por testes para inspecionar o transporte ativo. */
+export function __getActiveTransport(): Transport {
+  return transportKind ?? 'none';
 }
 
 function onBroadcast(msg: BroadcastMessage) {
