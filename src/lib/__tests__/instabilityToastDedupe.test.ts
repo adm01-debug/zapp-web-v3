@@ -206,5 +206,62 @@ describe('releaseInstabilityToastDedupe — liberação manual', () => {
     expect(shouldShowInstabilityToast('c1', { status: 401 }, { nowMs: t0 + 1 })).toBe(true);
     // c2 inalterado
     expect(shouldShowInstabilityToast('c2', { status: 500 }, { nowMs: t0 + 1 })).toBe(false);
+});
+
+describe('eviction LRU — limpa o Map quando excede INSTABILITY_TOAST_MAX_KEYS', () => {
+  it('expõe o limite default de 200 chaves', () => {
+    expect(INSTABILITY_TOAST_MAX_KEYS).toBe(200);
   });
+
+  it('mantém o tamanho do Map ≤ MAX após muitos contatos distintos', () => {
+    const err = { status: 500 };
+    const total = INSTABILITY_TOAST_MAX_KEYS + 50;
+    for (let i = 0; i < total; i++) {
+      shouldShowInstabilityToast(`c${i}`, err, { nowMs: 1_000_000 + i });
+    }
+    expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
+  });
+
+  it('remove as chaves MAIS ANTIGAS primeiro (LRU por lastFired)', () => {
+    const err = { status: 500 };
+    // Preenche até o limite
+    for (let i = 0; i < INSTABILITY_TOAST_MAX_KEYS; i++) {
+      shouldShowInstabilityToast(`c${i}`, err, { nowMs: 1_000_000 + i });
+    }
+    expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
+
+    // Adiciona 3 novas → as 3 mais antigas (c0, c1, c2) devem sair
+    shouldShowInstabilityToast('newA', err, { nowMs: 9_000_000 });
+    shouldShowInstabilityToast('newB', err, { nowMs: 9_000_001 });
+    shouldShowInstabilityToast('newC', err, { nowMs: 9_000_002 });
+
+    expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
+
+    // c0, c1, c2 foram despejados → próximo show deve disparar (true) imediatamente
+    expect(shouldShowInstabilityToast('c0', err, { nowMs: 9_000_100 })).toBe(true);
+    expect(shouldShowInstabilityToast('c1', err, { nowMs: 9_000_100 })).toBe(true);
+    expect(shouldShowInstabilityToast('c2', err, { nowMs: 9_000_100 })).toBe(true);
+
+    // Uma chave recente (c199) ainda está no cooldown → suprime
+    expect(
+      shouldShowInstabilityToast(`c${INSTABILITY_TOAST_MAX_KEYS - 1}`, err, { nowMs: 9_000_100 }),
+    ).toBe(false);
+  });
+
+  it('preserva contadores de telemetria mesmo após eviction', () => {
+    const err = { status: 500 };
+    // c_old é o primeiro (mais antigo)
+    shouldShowInstabilityToast('c_old', err, { nowMs: 1 });
+    expect(getInstabilityToastFiredCount('c_old|SERVER')).toBe(1);
+
+    // Empurra além do limite para forçar eviction de c_old
+    for (let i = 0; i < INSTABILITY_TOAST_MAX_KEYS + 5; i++) {
+      shouldShowInstabilityToast(`c${i}`, err, { nowMs: 1_000_000 + i });
+    }
+
+    // Telemetria de c_old continua intacta
+    expect(getInstabilityToastFiredCount('c_old|SERVER')).toBe(1);
+    expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
+  });
+});
 });
