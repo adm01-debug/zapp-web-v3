@@ -18,6 +18,10 @@ import { ShieldCheck, ShieldAlert, FlaskConical, Loader2, ChevronDown } from 'lu
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+type Phase =
+  | 'config' | 'parse-body' | 'build-payload' | 'sign' | 'mutate'
+  | 'request' | 'validate' | 'signature-presence' | 'temporal' | 'response';
+
 interface ScenarioReport {
   name: string;
   description: string;
@@ -25,6 +29,8 @@ interface ScenarioReport {
   outcome: 'accept' | 'reject';
   passed: boolean;
   reason: string | null;
+  failed_phase?: Phase | null;
+  phases?: Array<{ phase: Phase; status: 'ok' | 'fail' | 'skip'; duration_ms: number }>;
   issuedAt: string;
   ageSeconds: number;
   nonce: string;
@@ -33,6 +39,8 @@ interface ScenarioReport {
 interface SelfTestResult {
   ok: boolean;
   configured: boolean;
+  request_id?: string;
+  failed_phase?: Phase | null;
   secret_length?: number;
   duration_ms?: number;
   tolerance_seconds?: number;
@@ -106,9 +114,14 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
         // Falha: cria alerta se ainda não houver um aberto
         if (!activeAlertId) {
           const failedScenarios = payload.scenarios?.filter((s) => !s.passed) ?? [];
-          const summary = failedScenarios.length > 0
-            ? failedScenarios.map((s) => `${s.name}: ${s.reason ?? 'sem detalhe'}`).join(' | ')
+          const phasePrefix = payload.failed_phase ? `[fase: ${payload.failed_phase}] ` : '';
+          const reqSuffix = payload.request_id ? ` (req=${payload.request_id.slice(0, 8)})` : '';
+          const detail = failedScenarios.length > 0
+            ? failedScenarios
+                .map((s) => `${s.name}${s.failed_phase ? `@${s.failed_phase}` : ''}: ${s.reason ?? 'sem detalhe'}`)
+                .join(' | ')
             : (payload.error ?? payload.message ?? 'Falha no self-test HMAC');
+          const summary = `${phasePrefix}${detail}${reqSuffix}`;
           await supabase.from('warroom_alerts').insert({
             alert_type: 'error',
             title: `HMAC self-test falhou (${instanceName ?? 'selftest'})`,
@@ -306,6 +319,28 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                 </div>
               )}
 
+              {(result.failed_phase || result.request_id) && (
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  {result.failed_phase && (
+                    <Badge
+                      variant="destructive"
+                      className="text-[10px]"
+                      data-testid="hmac-selftest-failed-phase"
+                    >
+                      Falha em fase: {result.failed_phase}
+                    </Badge>
+                  )}
+                  {result.request_id && (
+                    <span
+                      className="text-muted-foreground font-mono text-[10px]"
+                      data-testid="hmac-selftest-request-id"
+                    >
+                      req: {result.request_id.slice(0, 8)}…
+                    </span>
+                  )}
+                </div>
+              )}
+
               {result.scenarios && result.scenarios.length > 0 && (
                 <div className="rounded-lg border overflow-hidden" data-testid="hmac-selftest-scenarios">
                   <table className="w-full text-xs">
@@ -314,6 +349,7 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                         <th className="text-left px-2 py-1.5 font-medium">Cenário</th>
                         <th className="text-left px-2 py-1.5 font-medium">Esperado</th>
                         <th className="text-left px-2 py-1.5 font-medium">Resultado</th>
+                        <th className="text-left px-2 py-1.5 font-medium">Fase</th>
                         <th className="text-left px-2 py-1.5 font-medium">Idade</th>
                         <th className="text-left px-2 py-1.5 font-medium">Detalhe</th>
                       </tr>
@@ -325,6 +361,7 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                           className="border-t"
                           data-testid={`hmac-selftest-scenario-${s.name}`}
                           data-passed={s.passed ? 'true' : 'false'}
+                          data-failed-phase={s.failed_phase ?? ''}
                         >
                           <td className="px-2 py-1.5">
                             <div className="font-medium">{s.name}</div>
@@ -342,6 +379,15 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                             >
                               {s.outcome === 'accept' ? 'aceito' : 'rejeitado'}
                             </Badge>
+                          </td>
+                          <td className="px-2 py-1.5">
+                            {s.failed_phase ? (
+                              <Badge variant="destructive" className="text-[10px]" title={s.reason ?? ''}>
+                                {s.failed_phase}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-[10px]">—</span>
+                            )}
                           </td>
                           <td className="px-2 py-1.5 text-muted-foreground">
                             {s.ageSeconds >= 0 ? `+${s.ageSeconds}s` : `${s.ageSeconds}s`}
