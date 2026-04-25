@@ -385,11 +385,25 @@ export async function dedupedFetch<T>(
     // Líder falhou ou expirou: tenta executar localmente como fallback.
   }
 
-  // 4. Líder: executa fetcher, cacheia (memória + localStorage), broadcasta, libera lock.
+  // 4. Líder: executa fetcher (com retry+backoff), cacheia, broadcasta, libera lock.
   const isFallback = !acquired;
+  const lockTtlForRetry = lockTtl;
   const exec = (async () => {
     try {
-      const data = await fetcher();
+      const data = await execWithBackoff<T>(
+        key,
+        fetcher,
+        opts.retry,
+        () => {
+          // Antes do backoff: libera lock + sinaliza release para que outras
+          // abas possam tentar (e não fiquem presas em waitForResult até timeout).
+          releaseLock(key);
+          broadcast({ type: 'release', key, ownerId: TAB_ID, ts: Date.now() });
+          // Reaquire o lock imediatamente para reafirmar liderança no próximo attempt.
+          // Se outra aba já pegou o lock nesse meio tempo, tudo bem — ela assume.
+          writeLock(key, lockTtlForRetry);
+        },
+      );
       resultCache.set(key, { value: data, expiresAt: Date.now() + resultTtl });
       writePersistedResult(key, data, resultTtl);
       broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now(), resultTtl });
