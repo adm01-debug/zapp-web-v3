@@ -110,7 +110,18 @@ export function useIdempotencyMissAlerts(opts: UseIdempotencyMissAlertsOptions =
   const { threshold = DEFAULT_MISS_THRESHOLD } = opts;
   const { isAdmin, loading: roleLoading } = useUserRole();
   const enabled = (opts.enabled ?? true) && isAdmin && !roleLoading;
-  const [lastAlertedAt, setLastAlertedAt] = useState<Map<string, number>>(new Map());
+  // Hydrate dedupe map from localStorage so refreshes don't re-fire alerts within the same hour bucket.
+  const [lastAlertedAt, setLastAlertedAt] = useState<Map<string, number>>(() => loadPersistedAlerts());
+  const hydratedRef = useRef(true);
+
+  // Persist whenever the dedupe map changes (skip the initial hydration write).
+  useEffect(() => {
+    if (hydratedRef.current) {
+      hydratedRef.current = false;
+      return;
+    }
+    savePersistedAlerts(lastAlertedAt);
+  }, [lastAlertedAt]);
 
   const { data, isFetching, error } = useQuery({
     queryKey: ['idempotency-miss', 'last-hour'],
@@ -118,7 +129,7 @@ export function useIdempotencyMissAlerts(opts: UseIdempotencyMissAlertsOptions =
     refetchInterval: enabled ? POLL_INTERVAL_MS : false,
     staleTime: POLL_INTERVAL_MS / 2,
     queryFn: async (): Promise<AuditLogRow[]> => {
-      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const since = new Date(Date.now() - ONE_HOUR_MS).toISOString();
       const result = await queryExternalProxy<AuditLogRow>({
         table: 'evolution_audit_log',
         select: 'id, action, metadata, created_at',
@@ -149,20 +160,19 @@ export function useIdempotencyMissAlerts(opts: UseIdempotencyMissAlertsOptions =
       .sort((a, b) => b.count - a.count);
   }, [data, threshold]);
 
-  // Raise a warroom alert per breaching instance, deduped to once per hour.
+  // Raise a warroom alert per breaching instance, deduped to once per (instance × hour bucket).
   useEffect(() => {
     if (!enabled || counts.length === 0) return;
     const breaching = counts.filter((c) => c.overThreshold);
     if (breaching.length === 0) return;
 
     const now = Date.now();
-    const ONE_HOUR_MS = 60 * 60 * 1000;
     const next = new Map(lastAlertedAt);
     let changed = false;
 
     void (async () => {
       for (const item of breaching) {
-        const dedupeKey = `${ALERT_DEDUPE_KEY_PREFIX}:${item.instance}`;
+        const dedupeKey = buildPersistKey(item.instance, now);
         const lastTs = next.get(dedupeKey) ?? 0;
         if (now - lastTs < ONE_HOUR_MS) continue;
 
@@ -199,3 +209,14 @@ export function useIdempotencyMissAlerts(opts: UseIdempotencyMissAlertsOptions =
     enabled,
   };
 }
+
+// Test-only helpers (tree-shaken in prod builds because they're unused).
+export const __test__ = {
+  ALERT_DEDUPE_STORAGE_KEY,
+  ONE_HOUR_MS,
+  PERSIST_TTL_MS,
+  hourBucket,
+  buildPersistKey,
+  loadPersistedAlerts,
+  savePersistedAlerts,
+};
