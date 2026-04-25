@@ -171,6 +171,9 @@ export function ConnectionsView() {
                 </div>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" />Aguardando conexão...</div>
                 {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
+                {qrCodeDialog.ttlSeconds != null && qrCodeDialog.ttlSource && (
+                  <QrTtlBadge ttlSeconds={qrCodeDialog.ttlSeconds} source={qrCodeDialog.ttlSource} />
+                )}
               </>
             )}
             {(qrCodeDialog.status === 'pending' || qrCodeDialog.status === 'error' || qrCodeDialog.status === 'loading') && (
