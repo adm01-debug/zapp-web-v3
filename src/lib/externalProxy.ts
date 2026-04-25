@@ -1,11 +1,17 @@
 /**
  * Client helper for calling the external-db-proxy edge function.
  *
- * Every call is timed and recorded via `clientTelemetry` so DevTools can
- * inspect duration, limit, filters, recordCount and severity in one place.
+ * Every call is timed, tagged with a correlationId and recorded via
+ * `clientTelemetry` so DevTools and the telemetry panel can inspect
+ * duration, limit, filters, recordCount, severity and trace id in one
+ * place. The same correlationId is propagated to the edge function via
+ * the `x-correlation-id` header AND echoed in the JSON body as `__cid`
+ * (Supabase Functions client does not always forward custom headers
+ * to the underlying request, so the body field is the reliable channel).
  */
 import { supabase } from '@/integrations/supabase/client';
 import { recordQueryEvent, classifySeverity, type QueryOperation } from '@/lib/clientTelemetry';
+import { generateCorrelationId, CORRELATION_HEADER } from '@/lib/correlationId';
 
 interface ProxySelectParams {
   table: string;
