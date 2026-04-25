@@ -185,6 +185,33 @@ export function RetryAlertsConfig({
           </p>
         </div>
 
+        <div className="rounded-md border border-border/60 bg-muted/30 p-2.5 space-y-1.5">
+          <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Granularidade do toast
+          </Label>
+          <Select
+            value={draftDedupeMode}
+            onValueChange={(v) => setDraftDedupeMode(v as RetryAlertDedupeMode)}
+          >
+            <SelectTrigger className="h-8 text-xs" aria-label="Granularidade de dedupe do toast">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="instance+kind" className="text-xs">
+                Por instância × tipo de violação (p95 e % falha separados)
+              </SelectItem>
+              <SelectItem value="instance" className="text-xs">
+                Por instância apenas (1 toast agregado)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground leading-snug">
+            {draftDedupeMode === 'instance+kind'
+              ? 'Cada tipo de violação dispara um toast — útil para diagnosticar p95 vs taxa de falha.'
+              : 'Um único toast por instância na janela combinando todos os motivos — menos ruído.'}
+          </p>
+        </div>
+
         <Tabs value={tab} onValueChange={(v) => setTab(v as 'global' | 'instance')}>
           <TabsList className="grid w-full grid-cols-2 h-8">
             <TabsTrigger value="global" className="text-xs">Global</TabsTrigger>
