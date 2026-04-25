@@ -310,6 +310,15 @@ export default function AdminWebhookSecretStatusPage() {
             disabled={instancesQuery.isLoading}
           />
           <HmacSelfTestButton instance={selectedInstance} />
+          <Button variant="ghost" size="sm" asChild data-testid="hmac-selftest-open-page">
+            <Link
+              to={`/admin/hmac-selftest?instance=${encodeURIComponent(selectedInstance ?? 'wpp2')}`}
+              aria-label="Abrir página do HMAC self-test"
+            >
+              <ExternalLink className="h-4 w-4 mr-1" />
+              Abrir página
+            </Link>
+          </Button>
           <Button
             variant="outline"
             size="sm"
