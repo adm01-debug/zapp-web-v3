@@ -75,12 +75,12 @@ export default function AdminChannelsPage() {
     }
     const payload = {
       name: editing.name,
-      channel_type: editing.channel_type as Channel["channel_type"],
+      channel_type: editing.channel_type as never,
       is_active: editing.is_active ?? true,
       status: editing.status ?? "disconnected",
     };
     const { error } = editing.id
-      ? await supabase.from("channel_connections").update(payload).eq("id", editing.id)
+      ? await supabase.from("channel_connections").update(payload as never).eq("id", editing.id)
       : await supabase.from("channel_connections").insert(payload as never);
     if (error) {
       toast({ title: "Erro ao salvar canal", description: error.message, variant: "destructive" });
