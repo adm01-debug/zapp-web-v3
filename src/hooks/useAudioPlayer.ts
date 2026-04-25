@@ -2,13 +2,16 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import type { MediaRefreshKey } from '@/types/mediaRefresh';
 
 interface UseAudioPlayerOptions {
   audioUrl: string;
   messageId: string;
+  /** Optional Evolution refresh key — enables `getMediaBase64` fallback when the URL expires (410/403). */
+  refreshKey?: MediaRefreshKey;
 }
 
-export function useAudioPlayer({ audioUrl, messageId }: UseAudioPlayerOptions) {
+export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlayerOptions) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
