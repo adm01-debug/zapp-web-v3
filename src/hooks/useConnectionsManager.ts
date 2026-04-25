@@ -503,11 +503,25 @@ export function useConnectionsManager() {
     }
   };
 
+  // Ref-tracked timer for the QR auto-refresh. Held in a ref (in addition to
+  // the effect's local closure) so `closeQrDialog` and other imperative paths
+  // can cancel it synchronously the moment the dialog closes or the status
+  // leaves 'pending', without waiting for React to schedule the effect cleanup.
+  const autoRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelAutoRefreshTimer = useCallback(() => {
+    if (autoRefreshTimerRef.current) {
+      clearTimeout(autoRefreshTimerRef.current);
+      autoRefreshTimerRef.current = null;
+    }
+  }, []);
+
   const closeQrDialog = () => {
     if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null); }
+    cancelAutoRefreshTimer();
     clearPersistedQr();
     setQrCodeDialog(INITIAL_QR_STATE);
   };
+
 
   // After connections load (e.g. after a page refresh), if we have a restored
   // pending QR, resume status polling and re-arm the expiration timer for the
