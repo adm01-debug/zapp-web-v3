@@ -13,9 +13,9 @@ import { ForceLogoutButton } from './ForceLogoutButton';
 import { accessLevelConfig, type UserWithRole } from './useAdminData';
 import type { AppRole } from '@/hooks/useUserRole';
 
-const roleIconMap = { admin: Crown, supervisor: UserCog, agent: User, special_agent: Eye } as const;
-const roleLabelMap = { admin: 'Administrador', supervisor: 'Supervisor', agent: 'Atendente', special_agent: 'Agente Especial' } as const;
-const roleColorMap = { admin: 'text-warning', supervisor: 'text-info', agent: 'text-muted-foreground', special_agent: 'text-accent-foreground' } as const;
+const roleIconMap = { dev: Code, admin: Crown, supervisor: UserCog, agent: User } as const;
+const roleLabelMap = { dev: 'Desenvolvedor', admin: 'Administrador', supervisor: 'Supervisor', agent: 'Atendente' } as const;
+const roleColorMap = { dev: 'text-destructive', admin: 'text-warning', supervisor: 'text-info', agent: 'text-muted-foreground' } as const;
 
 interface AdminUsersTableProps {
   users: UserWithRole[];
