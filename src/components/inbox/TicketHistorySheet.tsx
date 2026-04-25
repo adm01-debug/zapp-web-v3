@@ -62,7 +62,7 @@ function describeLocal(e: TicketEvent, nameMap: Record<string, string>): Unified
   const fromName = e.fromAgentId ? (nameMap[e.fromAgentId] ?? 'agente') : null;
   const toName = e.toAgentId ? (nameMap[e.toAgentId] ?? 'agente') : null;
   const performer = e.performedBy ? (nameMap[e.performedBy] ?? 'sistema') : 'sistema';
-  let label = e.type;
+  let label: string = e.type;
   let detail: string | undefined;
   if (e.type === 'status_change') {
     label = `Status: ${e.fromStatus ?? '—'} → ${e.toStatus ?? '—'}`;
@@ -70,7 +70,7 @@ function describeLocal(e: TicketEvent, nameMap: Record<string, string>): Unified
   } else if (e.type === 'assign') {
     label = `Atendimento assumido por ${toName ?? '—'}`;
   } else if (e.type === 'unassign') {
-    label = `Devolvido à fila`;
+    label = 'Devolvido à fila';
     detail = `por ${performer}`;
   } else if (e.type === 'transfer') {
     label = `Transferido: ${fromName ?? '—'} → ${toName ?? '—'}`;
