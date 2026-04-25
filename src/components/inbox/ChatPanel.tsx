@@ -25,6 +25,7 @@ import { ChatDragOverlay } from './chat/ChatDragOverlay';
 import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import { useChatPanelHandlers } from './chat/useChatPanelHandlers';
+import { useSearchParams } from 'react-router-dom';
 
 const WhisperMode = lazy(() => import('./WhisperMode').then(m => ({ default: m.WhisperMode })));
 const NextBestActionEngine = lazy(() => import('./NextBestActionEngine').then(m => ({ default: m.NextBestActionEngine })));
