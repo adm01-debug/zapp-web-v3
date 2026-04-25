@@ -50,7 +50,8 @@ function wrapper() {
 
 describe('useIdempotencyMissAlerts — toast dedupe by (instance × hour window)', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    // Apenas Date é mockado — setTimeout/queueMicrotask continuam reais para waitFor funcionar.
+    vi.useFakeTimers({ toFake: ['Date'] });
     window.localStorage.clear();
     insertMock.mockClear();
     proxyMock.mockReset();
