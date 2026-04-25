@@ -86,6 +86,7 @@ export function MessageDetailsDialog({ messageId, open, onOpenChange }: MessageD
             <Tabs defaultValue="content" className="flex-1 overflow-hidden flex flex-col">
               <TabsList className="self-start">
                 <TabsTrigger value="content">Conteúdo</TabsTrigger>
+                <TabsTrigger value="attempts">Tentativas</TabsTrigger>
                 <TabsTrigger value="payload">Payload</TabsTrigger>
                 <TabsTrigger value="raw">Raw Data</TabsTrigger>
               </TabsList>
