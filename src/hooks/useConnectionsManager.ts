@@ -69,10 +69,11 @@ const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
 /**
  * Detects the QR rotation TTL from the Evolution API response. Evolution returns
  * the lifetime in seconds in either `count` or `qrcode.count` (varies by version);
- * we check both and clamp to sane bounds. Returns the TTL in **milliseconds**.
+ * we check both and clamp to sane bounds. Returns the TTL in **milliseconds** plus
+ * the source so the UI/telemetry can distinguish detected vs. fallback values.
  */
-function detectQrTtlMs(result: unknown): number {
-  if (!result || typeof result !== 'object') return QR_TTL_DEFAULT_MS;
+function detectQrTtlMs(result: unknown): { ttlMs: number; source: QrTtlSource } {
+  if (!result || typeof result !== 'object') return { ttlMs: QR_TTL_DEFAULT_MS, source: 'default' };
   const r = result as Record<string, unknown> & { qrcode?: Record<string, unknown> };
   const candidates: unknown[] = [
     r.count,
@@ -85,10 +86,11 @@ function detectQrTtlMs(result: unknown): number {
     const seconds = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
     if (Number.isFinite(seconds) && seconds > 0) {
       const ms = seconds * 1000;
-      return Math.min(QR_TTL_MAX_MS, Math.max(QR_TTL_MIN_MS, ms));
+      const clamped = Math.min(QR_TTL_MAX_MS, Math.max(QR_TTL_MIN_MS, ms));
+      return { ttlMs: clamped, source: clamped !== ms ? 'clamped' : 'detected' };
     }
   }
-  return QR_TTL_DEFAULT_MS;
+  return { ttlMs: QR_TTL_DEFAULT_MS, source: 'default' };
 }
 
 interface PersistedQrState {
