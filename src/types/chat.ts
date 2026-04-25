@@ -138,7 +138,7 @@ export interface Agent {
   name: string;
   email: string;
   avatar?: string;
-  role: 'admin' | 'supervisor' | 'agent' | 'special_agent';
+  role: 'dev' | 'admin' | 'supervisor' | 'agent';
   status: 'online' | 'away' | 'offline';
   activeChats: number;
   maxChats: number;

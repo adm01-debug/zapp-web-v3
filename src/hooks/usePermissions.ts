@@ -10,7 +10,7 @@ interface Permission {
 }
 
 interface RolePermission {
-  role: 'admin' | 'supervisor' | 'agent' | 'special_agent';
+  role: 'dev' | 'admin' | 'supervisor' | 'agent';
   permission_id: string;
   permission?: Permission;
 }
@@ -50,7 +50,7 @@ export function usePermissions() {
 
     if (!error && data) {
       const mapped = data.map(rp => ({
-        role: rp.role as 'admin' | 'supervisor' | 'agent' | 'special_agent',
+        role: rp.role as 'dev' | 'admin' | 'supervisor' | 'agent',
         permission_id: rp.permission_id,
         permission: rp.permissions as unknown as Permission
       }));
@@ -116,7 +116,7 @@ export function usePermissions() {
     return permissionNames.every(p => userPermissions.includes(p));
   }, [userPermissions]);
 
-  const addPermissionToRole = useCallback(async (role: 'admin' | 'supervisor' | 'agent' | 'special_agent', permissionId: string) => {
+  const addPermissionToRole = useCallback(async (role: 'dev' | 'admin' | 'supervisor' | 'agent', permissionId: string) => {
     const { error } = await supabase
       .from('role_permissions')
       .insert({ role, permission_id: permissionId });
@@ -127,7 +127,7 @@ export function usePermissions() {
     return !error;
   }, [fetchRolePermissions]);
 
-  const removePermissionFromRole = useCallback(async (role: 'admin' | 'supervisor' | 'agent' | 'special_agent', permissionId: string) => {
+  const removePermissionFromRole = useCallback(async (role: 'dev' | 'admin' | 'supervisor' | 'agent', permissionId: string) => {
     const { error } = await supabase
       .from('role_permissions')
       .delete()

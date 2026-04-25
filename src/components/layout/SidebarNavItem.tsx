@@ -4,7 +4,7 @@ import { Star } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover';
 
-export type NavRequiredRole = 'admin' | 'supervisor' | 'agent' | 'special_agent';
+export type NavRequiredRole = 'dev' | 'admin' | 'supervisor' | 'agent';
 
 export interface NavItemConfig {
   id: string;
