@@ -119,9 +119,12 @@ export function recordAuthFailureAndMaybePause(
       p_minutes: PAUSE_MIN,
     // deno-lint-ignore no-explicit-any
     }) as unknown as Promise<any>,
-  ).then((res: any) => {
-    if (res?.error) console.warn('[auto-pause] rpc failed:', res.error.message);
-  }).catch((e: unknown) => {
-    console.warn('[auto-pause] rpc threw:', e instanceof Error ? e.message : String(e));
-  });
+  ).then(
+    (res: any) => {
+      if (res?.error) console.warn('[auto-pause] rpc failed:', res.error.message);
+    },
+    (e: unknown) => {
+      console.warn('[auto-pause] rpc threw:', e instanceof Error ? e.message : String(e));
+    },
+  );
 }
