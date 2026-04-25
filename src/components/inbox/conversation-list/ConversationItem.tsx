@@ -193,6 +193,11 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             <div className="mt-1">
               <SLAIndicatorForContact conversation={conversation} compact />
             </div>
+            {conversation.lastMessage && (
+              <div className="mt-1 flex items-center">
+                <RetryFailureBadge message={conversation.lastMessage} />
+              </div>
+            )}
             {conversation.tags.length > 0 && (
               <div className="flex items-center gap-1 mt-2 flex-wrap">
                 {conversation.tags.slice(0, 2).map((tag) => <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0 bg-muted/50 border-border/20">{tag}</Badge>)}
