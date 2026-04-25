@@ -203,7 +203,13 @@ export function useExternalMessages(remoteJid: string | null) {
     if (!afterDate) return;
 
     try {
-      const newOnes = await fetchMessagesAfter(remoteJid, afterDate);
+      // Dedupe: várias abas pollando o mesmo jid+cursor compartilham 1 fetch
+      // (TTL curto = poll seguinte ainda dispara normalmente).
+      const newOnes = await dedupedFetch(
+        `inbox:poll:${remoteJid}:${afterDate}`,
+        () => fetchMessagesAfter(remoteJid, afterDate),
+        { lockTtl: 4_000, resultTtl: POLL_INTERVAL - 1_000, waitTimeout: 3_000 },
+      );
       if (!mountedRef.current || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
