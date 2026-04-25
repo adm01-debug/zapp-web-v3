@@ -192,6 +192,9 @@ export function useExternalMessages(remoteJid: string | null) {
       if (mountedRef.current) { setMessages([]); setLoading(false); }
       return;
     }
+    // Snapshot do jid no início do fetch — usado para descartar writes tardios
+    // se o usuário trocar de conversa antes da resposta chegar.
+    const ownerJid = remoteJid;
 
     try {
       setLoading(true);
@@ -199,11 +202,11 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe cross-aba: trocar para o mesmo contato em N abas só dispara
       // 1 fetch — as demais reaproveitam via BroadcastChannel/cache.
       const evoMessages = await dedupedFetch(
-        inboxInitialKey({ jid: remoteJid, pageSize: CONVERSATION_PAGE_SIZE }),
-        () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
+        inboxInitialKey({ jid: ownerJid, pageSize: CONVERSATION_PAGE_SIZE }),
+        () => fetchMessagesByJid(ownerJid, CONVERSATION_PAGE_SIZE),
         getInitialDedupeOptions(),
       );
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || activeJidRef.current !== ownerJid) return;
 
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
       setMessages(mapped);
@@ -213,9 +216,11 @@ export function useExternalMessages(remoteJid: string | null) {
         : null;
     } catch (err) {
       log.error('Error fetching external messages:', err);
-      if (mountedRef.current) setError(err instanceof Error ? err.message : 'Failed to fetch');
+      if (mountedRef.current && activeJidRef.current === ownerJid) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch');
+      }
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current && activeJidRef.current === ownerJid) setLoading(false);
     }
   }, [remoteJid]);
 
