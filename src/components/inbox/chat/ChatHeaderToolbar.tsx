@@ -17,6 +17,11 @@ interface ChatHeaderToolbarProps {
   onToggleAIAssistant: () => void;
   onToggleDetails?: () => void;
   onGenerateSummary?: () => void;
+  /** Filtro: exibir apenas mensagens com falha terminal (failed/failed_auth/failed_retries). */
+  failuresOnly?: boolean;
+  onToggleFailuresOnly?: () => void;
+  /** Quantidade de mensagens em falha — exibida no aria-label e como contador. */
+  failuresCount?: number;
 }
 
 interface ToolButtonProps {
