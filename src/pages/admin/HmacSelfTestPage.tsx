@@ -1,0 +1,441 @@
+/**
+ * HmacSelfTestPage
+ * Rota dedicada (/admin/hmac-selftest) que executa o self-test HMAC ao carregar
+ * e mostra o resultado em um layout amigável: KPIs, fase com falha, tabela de
+ * cenários e histórico de auditoria. Reaproveita HmacAuditHistoryPanel e a
+ * mesma edge function `webhook-hmac-selftest` consumida pelo botão da tela de
+ * status.
+ */
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {
+  ShieldCheck, ShieldAlert, FlaskConical, Loader2, RotateCcw,
+  ArrowLeft, Clock, AlertTriangle, CheckCircle2,
+} from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { HmacAuditHistoryPanel } from '@/pages/admin-webhook-secret-status/HmacAuditHistoryPanel';
+
+type Phase =
+  | 'config' | 'parse-body' | 'build-payload' | 'sign' | 'mutate'
+  | 'request' | 'validate' | 'signature-presence' | 'temporal' | 'response';
+
+interface ScenarioReport {
+  name: string;
+  description: string;
+  expected: 'accept' | 'reject';
+  outcome: 'accept' | 'reject';
+  passed: boolean;
+  reason: string | null;
+  failed_phase?: Phase | null;
+  issuedAt: string;
+  ageSeconds: number;
+  nonce: string;
+}
+
+interface SelfTestResult {
+  ok: boolean;
+  configured: boolean;
+  request_id?: string;
+  failed_phase?: Phase | null;
+  secret_length?: number;
+  duration_ms?: number;
+  tolerance_seconds?: number;
+  scenarios?: ScenarioReport[];
+  message?: string;
+  error?: string;
+}
+
+const PHASE_LABEL: Record<Phase, string> = {
+  'config': 'Configuração do secret',
+  'parse-body': 'Parsing do body',
+  'build-payload': 'Montagem do payload',
+  'sign': 'Assinatura HMAC',
+  'mutate': 'Mutação pós-assinatura',
+  'request': 'Construção do request',
+  'validate': 'Validação HMAC',
+  'signature-presence': 'Presença do header',
+  'temporal': 'Janela temporal/replay',
+  'response': 'Resposta',
+};
+
+export default function HmacSelfTestPage() {
+  const [params, setParams] = useSearchParams();
+  const initialInstance = params.get('instance') ?? 'wpp2';
+  const initialNeg = params.get('include_negative') !== 'false';
+
+  const [instance, setInstance] = useState(initialInstance);
+  const [includeNegative, setIncludeNegative] = useState(initialNeg);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<SelfTestResult | null>(null);
+  const [lastRunAt, setLastRunAt] = useState<Date | null>(null);
+
+  async function logAudit(payload: SelfTestResult, fallbackMs: number) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) return;
+      await supabase.from('hmac_selftest_audit').insert({
+        instance,
+        ok: !!payload.ok,
+        duration_ms: payload.duration_ms ?? fallbackMs,
+        error: payload.error ?? null,
+        message: payload.message ?? null,
+        executed_by: uid,
+      });
+    } catch (e) {
+      console.warn('[HmacSelfTestPage] audit insert failed', e);
+    }
+  }
+
+  async function syncAlert(payload: SelfTestResult) {
+    const source = `hmac-selftest:${instance}`;
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) return;
+      const { data: existing } = await supabase
+        .from('warroom_alerts')
+        .select('id')
+        .eq('source', source)
+        .is('resolved_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const activeId = existing?.[0]?.id ?? null;
+      if (!payload.ok && !activeId) {
+        const failed = payload.scenarios?.filter((s) => !s.passed) ?? [];
+        const phasePrefix = payload.failed_phase ? `[fase: ${payload.failed_phase}] ` : '';
+        const reqSuffix = payload.request_id ? ` (req=${payload.request_id.slice(0, 8)})` : '';
+        const detail = failed.length > 0
+          ? failed.map((s) => `${s.name}${s.failed_phase ? `@${s.failed_phase}` : ''}: ${s.reason ?? '—'}`).join(' | ')
+          : (payload.error ?? payload.message ?? 'Falha no self-test HMAC');
+        await supabase.from('warroom_alerts').insert({
+          alert_type: 'error',
+          title: `HMAC self-test falhou (${instance})`,
+          message: `${phasePrefix}${detail}${reqSuffix}`.slice(0, 500),
+          source,
+        });
+      } else if (payload.ok && activeId) {
+        await supabase.from('warroom_alerts')
+          .update({
+            resolved_at: new Date().toISOString(),
+            resolved_reason: 'Auto-resolvido: HMAC self-test voltou a OK',
+            dismissed_by: uid,
+            is_read: true,
+          })
+          .eq('source', source)
+          .is('resolved_at', null);
+      }
+    } catch (e) {
+      console.warn('[HmacSelfTestPage] alert sync failed', e);
+    }
+  }
+
+  async function run() {
+    setLoading(true);
+    setResult(null);
+    const t0 = performance.now();
+    try {
+      const { data, error } = await supabase.functions.invoke('webhook-hmac-selftest', {
+        body: { instance, include_negative: includeNegative },
+      });
+      if (error) throw error;
+      const r = data as SelfTestResult;
+      setResult(r);
+      setLastRunAt(new Date());
+      if (r.ok) toast.success('HMAC OK — secret válido');
+      else toast.error(r.error ?? 'Falha no auto-teste HMAC');
+      await logAudit(r, Math.round(performance.now() - t0));
+      await syncAlert(r);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erro inesperado';
+      const failure: SelfTestResult = { ok: false, configured: false, error: msg };
+      setResult(failure);
+      toast.error(msg);
+      await logAudit(failure, Math.round(performance.now() - t0));
+      await syncAlert(failure);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Roda automaticamente ao carregar e quando params mudam (via URL)
+  useEffect(() => {
+    document.title = 'HMAC Self-test — Status';
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sincroniza filtros com a URL (deep-link compartilhável)
+  useEffect(() => {
+    const next = new URLSearchParams(params);
+    next.set('instance', instance);
+    next.set('include_negative', includeNegative ? 'true' : 'false');
+    setParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instance, includeNegative]);
+
+  const passedCount = useMemo(
+    () => result?.scenarios?.filter((s) => s.passed).length ?? 0,
+    [result],
+  );
+  const totalCount = result?.scenarios?.length ?? 0;
+  const failedCount = totalCount - passedCount;
+
+  return (
+    <div className="container mx-auto p-6 space-y-6 max-w-6xl" data-testid="hmac-selftest-page">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/" aria-label="Voltar">
+              <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-semibold flex items-center gap-2">
+              <FlaskConical className="h-5 w-5 text-primary" />
+              HMAC Self-test
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Valida a assinatura, a janela temporal e a proteção contra replay do webhook.
+            </p>
+          </div>
+        </div>
+        <Button onClick={run} disabled={loading} data-testid="hmac-selftest-rerun">
+          {loading
+            ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            : <RotateCcw className="h-4 w-4 mr-2" />}
+          Rodar novamente
+        </Button>
+      </div>
+
+      {/* Filtros */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Configuração do teste</CardTitle>
+          <CardDescription>
+            Os parâmetros ficam na URL — compartilhe o link para reproduzir o cenário.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="instance">Instância</Label>
+            <Input
+              id="instance"
+              value={instance}
+              onChange={(e) => setInstance(e.target.value)}
+              placeholder="wpp2"
+              data-testid="hmac-selftest-instance-input"
+            />
+          </div>
+          <div className="flex items-end gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="negative">Cenários negativos extras</Label>
+              <p className="text-xs text-muted-foreground">
+                wrong-secret, payload-mutated, missing-signature
+              </p>
+            </div>
+            <Switch
+              id="negative"
+              checked={includeNegative}
+              onCheckedChange={setIncludeNegative}
+              data-testid="hmac-selftest-toggle-negative"
+            />
+          </div>
+          <div className="flex items-end">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={run}
+              disabled={loading}
+              data-testid="hmac-selftest-apply"
+            >
+              Aplicar e rodar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resultado principal */}
+      {loading && !result && (
+        <Card>
+          <CardContent className="py-16 flex flex-col items-center justify-center text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin mb-3" />
+            Executando self-test…
+          </CardContent>
+        </Card>
+      )}
+
+      {result && (
+        <Card data-testid="hmac-selftest-result-card">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  {result.ok ? (
+                    <ShieldCheck className="h-6 w-6 text-success" />
+                  ) : (
+                    <ShieldAlert className="h-6 w-6 text-destructive" />
+                  )}
+                  {result.ok ? 'Self-test OK' : 'Self-test falhou'}
+                </CardTitle>
+                <CardDescription>
+                  {result.message ?? (result.ok
+                    ? 'Todos os cenários passaram.'
+                    : 'Veja a fase e os cenários abaixo para diagnóstico.')}
+                </CardDescription>
+              </div>
+              <Badge
+                variant={result.ok ? 'default' : 'destructive'}
+                className="text-sm"
+                data-testid="hmac-selftest-overall-badge"
+              >
+                {result.ok ? 'OK' : 'FALHOU'}
+              </Badge>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-5">
+            {/* KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <KPI
+                icon={<CheckCircle2 className="h-4 w-4 text-success" />}
+                label="Cenários OK"
+                value={`${passedCount}/${totalCount}`}
+                testid="hmac-selftest-kpi-passed"
+              />
+              <KPI
+                icon={<AlertTriangle className="h-4 w-4 text-destructive" />}
+                label="Falharam"
+                value={String(failedCount)}
+                testid="hmac-selftest-kpi-failed"
+              />
+              <KPI
+                icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+                label="Duração total"
+                value={typeof result.duration_ms === 'number' ? `${result.duration_ms} ms` : '—'}
+                testid="hmac-selftest-kpi-duration"
+              />
+              <KPI
+                icon={<FlaskConical className="h-4 w-4 text-muted-foreground" />}
+                label="Janela tolerância"
+                value={typeof result.tolerance_seconds === 'number' ? `${result.tolerance_seconds}s` : '—'}
+                testid="hmac-selftest-kpi-tolerance"
+              />
+            </div>
+
+            {/* Faixa de fase com falha */}
+            {result.failed_phase && (
+              <div
+                className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 flex items-start gap-3"
+                data-testid="hmac-selftest-failed-phase-banner"
+                data-failed-phase={result.failed_phase}
+              >
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">
+                    Falha detectada na fase: <code>{result.failed_phase}</code>
+                  </div>
+                  <div className="text-muted-foreground">
+                    {PHASE_LABEL[result.failed_phase]}.
+                    {result.request_id && (
+                      <> Use <code className="font-mono">req={result.request_id.slice(0, 8)}…</code> para correlacionar nos logs.</>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tabela de cenários */}
+            {result.scenarios && result.scenarios.length > 0 && (
+              <div>
+                <Separator className="mb-3" />
+                <div className="text-sm font-medium mb-2">Cenários executados</div>
+                <div className="rounded-lg border overflow-hidden" data-testid="hmac-selftest-scenarios">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/40 text-muted-foreground text-xs">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-medium">Cenário</th>
+                        <th className="text-left px-3 py-2 font-medium">Esperado</th>
+                        <th className="text-left px-3 py-2 font-medium">Resultado</th>
+                        <th className="text-left px-3 py-2 font-medium">Fase</th>
+                        <th className="text-left px-3 py-2 font-medium">Detalhe</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.scenarios.map((s) => (
+                        <tr
+                          key={s.name}
+                          className="border-t"
+                          data-testid={`hmac-selftest-scenario-${s.name}`}
+                          data-passed={s.passed ? 'true' : 'false'}
+                          data-failed-phase={s.failed_phase ?? ''}
+                        >
+                          <td className="px-3 py-2">
+                            <div className="font-medium">{s.name}</div>
+                            <div className="text-xs text-muted-foreground">{s.description}</div>
+                          </td>
+                          <td className="px-3 py-2">
+                            <Badge variant="outline" className="text-[10px]">
+                              {s.expected === 'accept' ? 'aceitar' : 'rejeitar'}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2">
+                            <Badge variant={s.passed ? 'default' : 'destructive'} className="text-[10px]">
+                              {s.outcome === 'accept' ? 'aceito' : 'rejeitado'}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2">
+                            {s.failed_phase
+                              ? <Badge variant="destructive" className="text-[10px]">{s.failed_phase}</Badge>
+                              : <span className="text-muted-foreground text-xs">—</span>}
+                          </td>
+                          <td className="px-3 py-2 text-xs text-muted-foreground">
+                            {s.reason ?? '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {lastRunAt && (
+              <div className="text-xs text-muted-foreground" data-testid="hmac-selftest-last-run">
+                Última execução: {lastRunAt.toLocaleString('pt-BR')}
+                {result.request_id && <> · req <code className="font-mono">{result.request_id.slice(0, 8)}</code></>}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Histórico de auditoria reaproveitado */}
+      <div data-testid="hmac-selftest-history-section">
+        <HmacAuditHistoryPanel instance={instance} />
+      </div>
+    </div>
+  );
+}
+
+function KPI({
+  icon, label, value, testid,
+}: { icon: React.ReactNode; label: string; value: string; testid?: string }) {
+  return (
+    <div className="rounded-lg border bg-card px-3 py-2.5" data-testid={testid}>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        {icon} {label}
+      </div>
+      <div className="text-lg font-semibold mt-0.5">{value}</div>
+    </div>
+  );
+}
