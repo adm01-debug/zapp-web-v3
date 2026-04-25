@@ -306,29 +306,22 @@ export function useConnectionsManager() {
     });
   };
 
-  const startStatusPolling = useCallback((instanceName: string, connectionId: string) => {
-    if (pollingInterval) clearInterval(pollingInterval);
-    const interval = setInterval(async () => {
-      try {
-        const result = await getInstanceStatus(instanceName);
-        if (result?.state === 'open' || result?.status === 'connected') {
-          clearInterval(interval);
-          setPollingInterval(null);
-          setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
-          // Use the deduplicated announcer so we don't double-toast when realtime
-          // also delivers the UPDATE event with status='connected'.
-          setConnections((prev) => {
-            const conn = prev.find((c) => c.id === connectionId);
-            if (conn) announceConnected({ id: conn.id, name: conn.name });
-            return prev;
-          });
-        }
-      } catch (error) {
-        log.error('Status polling error:', error);
-      }
-    }, 3000);
-    setPollingInterval(interval);
-  }, [getInstanceStatus, pollingInterval, announceConnected]);
+  /**
+   * Status polling do pareamento WhatsApp.
+   *
+   * No-op: o polling agora é gerenciado por um `useEffect` declarativo abaixo
+   * que só dispara quando `qrCodeDialog.open === true` E
+   * `qrCodeDialog.status === 'pending'`. Isso garante que:
+   *   - fechamos o intervalo automaticamente quando o usuário fecha a modal;
+   *   - retomamos quando a modal reabre com QR ainda válido;
+   *   - paramos imediatamente quando o status sai de `pending` (loading/error/connected).
+   *
+   * Mantemos a função como stub (compatibilidade com chamadas existentes) para
+   * não exigir refactor sincronizado em todos os call-sites.
+   */
+  const startStatusPolling = useCallback((_instanceName: string, _connectionId: string) => {
+    // intencionalmente vazio — ver useEffect "QR status polling" abaixo.
+  }, []);
 
   /**
    * Logs a QR generation attempt to qr_attempts. Returns the inserted attempt id (if successful)
@@ -592,6 +585,57 @@ export function useConnectionsManager() {
     // We intentionally only run this when connections finish loading the first time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
+
+  // QR status polling — checa a cada 3s se a instância foi pareada.
+  // Estritamente gated: SÓ roda enquanto a modal está aberta E o status é
+  // 'pending'. Qualquer outra transição (modal fechada, status virou
+  // loading/error/connected, troca de connectionId) limpa o intervalo
+  // automaticamente via cleanup do effect.
+  useEffect(() => {
+    if (!qrCodeDialog.open) return;
+    if (qrCodeDialog.status !== 'pending') return;
+    const conn = connections.find((c) => c.id === qrCodeDialog.connectionId);
+    if (!conn?.instance_id) return;
+
+    const instanceName = conn.instance_id;
+    const connectionId = conn.id;
+    let cancelled = false;
+
+    const interval = setInterval(async () => {
+      if (cancelled) return;
+      try {
+        const result = await getInstanceStatus(instanceName);
+        if (cancelled) return;
+        if (result?.state === 'open' || result?.status === 'connected') {
+          setQrCodeDialog((prev) =>
+            prev.connectionId === connectionId && prev.status === 'pending'
+              ? { ...prev, status: 'connected', qrCode: null, expiresAt: null }
+              : prev,
+          );
+          // Anúncio dedup pra não duplicar com o UPDATE realtime.
+          setConnections((prev) => {
+            const c = prev.find((x) => x.id === connectionId);
+            if (c) announceConnected({ id: c.id, name: c.name });
+            return prev;
+          });
+        }
+      } catch (error) {
+        log.error('Status polling error:', error);
+      }
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [
+    qrCodeDialog.open,
+    qrCodeDialog.status,
+    qrCodeDialog.connectionId,
+    connections,
+    getInstanceStatus,
+    announceConnected,
+  ]);
 
   // Auto-refresh: regenerate the QR ~5s before it expires (at 55s of the 60s TTL)
   // so the user never has to manually click "Atualizar" mid-scan.
