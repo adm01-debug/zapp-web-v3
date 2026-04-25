@@ -11,11 +11,14 @@ import { NotAuthorizedView } from '@/components/auth/NotAuthorizedView';
 import * as Views from './lazyViews';
 
 // Route-level role gates. Backend RPC/RLS remain the source of truth — this is a UX layer.
+// `hasRole` é hierárquico: requerer 'admin' já libera para dev; requerer 'supervisor' libera para admin/dev.
 const VIEW_REQUIRED_ROLES: Record<string, AppRole[]> = {
-  'failed-messages': ['admin', 'supervisor'],
+  // Áreas técnicas — visualização: admin+ (admin já inclui dev).
+  'failed-messages': ['admin'],
   'failed-auth-messages': ['admin'],
   'search-insights': ['admin'],
-  'agents-ops': ['admin', 'supervisor'],
+  // Operação — supervisor+
+  'agents-ops': ['supervisor'],
 };
 
 interface ViewRouterProps {
