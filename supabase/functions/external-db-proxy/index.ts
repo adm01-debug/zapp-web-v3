@@ -602,11 +602,17 @@ Deno.serve(async (req) => {
 
     const queryStart = Date.now()
     let queryData: unknown, queryError: { message: string; code?: string } | null = null, count: number | null = null
+    let schemaRetries = 0
     try {
-      const res = await withTimeout(query)
-      queryData = (res as { data: unknown }).data
-      queryError = (res as { error: { message: string; code?: string } | null }).error
-      count = (res as { count: number | null }).count
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const res = await withTimeout(query)
+        queryData = (res as { data: unknown }).data
+        queryError = (res as { error: { message: string; code?: string } | null }).error
+        count = (res as { count: number | null }).count
+        if (!isSchemaCacheError(queryError)) break
+        schemaRetries++
+        await new Promise((r) => setTimeout(r, 250 * (attempt + 1)))
+      }
     } catch (e) {
       if ((e as Error).message === 'proxy_timeout') {
         return finish(timeoutResponse('select', table as string, queryStart), 'select', {
@@ -619,7 +625,7 @@ Deno.serve(async (req) => {
     }
 
     const ms = Date.now() - queryStart
-    const cls = classifyUpstreamError(queryError?.message, timeoutFired)
+    const cls = classifyUpstreamError(queryError?.message, timeoutFired, queryError?.code)
     logEvent(buildQueryLog(
       { cid, rid, op: 'select', target: table as string, startedAt: queryStart },
       {
@@ -631,12 +637,13 @@ Deno.serve(async (req) => {
         errCode: queryError?.code,
         errMsg: queryError?.message,
         rowCount: Array.isArray(queryData) ? queryData.length : 0,
+        schemaRetries,
       },
     ))
 
     if (queryError) {
       return finish(
-        new Response(JSON.stringify({ error: queryError.message, cid, rid }), {
+        new Response(JSON.stringify(errorBody(cid, rid, queryError)), {
           status: cls.status, headers: jsonHeaders,
         }),
         'select',
