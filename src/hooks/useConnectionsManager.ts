@@ -213,7 +213,7 @@ export function useConnectionsManager() {
                   ...prev,
                   qrCode: newConn.qr_code,
                   status: 'pending',
-                  expiresAt: prev.expiresAt ?? Date.now() + QR_TTL_MS,
+                  expiresAt: prev.expiresAt ?? Date.now() + QR_TTL_DEFAULT_MS,
                 }));
               }
             }
@@ -430,7 +430,8 @@ export function useConnectionsManager() {
       const attemptId = await logQrAttempt(connection);
       try {
         const result = await requestConnectionQr(connection.instance_id);
-        const expiresAt = Date.now() + QR_TTL_MS;
+        const ttlMs = detectQrTtlMs(result);
+        const expiresAt = Date.now() + ttlMs;
         if (result?.qrcode?.base64) {
           setQrCodeDialog((prev) => ({
             ...prev,
@@ -443,7 +444,7 @@ export function useConnectionsManager() {
           setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
         }
         startStatusPolling(connection.instance_id, connection.id);
-        // QR codes typically expire after ~60s — auto-mark expired if dialog still pending.
+        // Auto-mark expired using the upstream TTL (falls back to default when missing).
         setTimeout(() => {
           setQrCodeDialog((prev) => {
             if (prev.connectionId === connection.id && prev.status === 'pending') {
@@ -452,7 +453,7 @@ export function useConnectionsManager() {
             }
             return prev;
           });
-        }, QR_TTL_MS);
+        }, ttlMs);
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar QR Code';
         await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
@@ -476,7 +477,8 @@ export function useConnectionsManager() {
     const attemptId = await logQrAttempt(connection);
     try {
       const result = await requestConnectionQr(connection.instance_id);
-      const expiresAt = Date.now() + QR_TTL_MS;
+      const ttlMs = detectQrTtlMs(result);
+      const expiresAt = Date.now() + ttlMs;
       if (result?.qrcode?.base64) {
         setQrCodeDialog((prev) => ({
           ...prev,
@@ -496,7 +498,7 @@ export function useConnectionsManager() {
           }
           return prev;
         });
-      }, QR_TTL_MS);
+      }, ttlMs);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
@@ -576,7 +578,7 @@ export function useConnectionsManager() {
     startStatusPolling(conn.instance_id, conn.id);
     const remaining = qrCodeDialog.expiresAt
       ? Math.max(0, qrCodeDialog.expiresAt - Date.now())
-      : QR_TTL_MS;
+      : QR_TTL_DEFAULT_MS;
     const timer = setTimeout(() => {
       setQrCodeDialog((prev) => {
         if (prev.connectionId === conn.id && prev.status === 'pending') {
