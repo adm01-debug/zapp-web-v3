@@ -275,17 +275,8 @@ serve(async (req) => {
       const response = await proxy(`/chat/findContacts/${instance}`, 'POST', { where: body.where || {} });
       const data = await response.json();
       if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      // Normaliza formatos: array direto, { records }, { contacts: [...]/{ records } }, null → []
-      const records = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.records)
-        ? data.records
-        : Array.isArray(data?.contacts?.records)
-        ? data.contacts.records
-        : Array.isArray(data?.contacts)
-        ? data.contacts
-        : [];
-      return new Response(JSON.stringify(records), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // Padroniza retorno em array (primário e fallback). Ver _shared/evolution-response-normalizers.ts
+      return new Response(JSON.stringify(normalizeContactList(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     if (action === 'check-numbers') return await proxy(`/chat/whatsappNumbers/${instance}`, 'POST', { numbers: body.numbers });
     if (action === 'get-media-base64') return await proxy(`/chat/getBase64FromMediaMessage/${instance}`, 'POST', { message: body.message, convertToMp4: body.convertToMp4 ?? false });
