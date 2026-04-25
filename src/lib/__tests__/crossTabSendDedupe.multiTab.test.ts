@@ -193,6 +193,8 @@ describe('crossTabDedupe — multi-tab simulation', () => {
     const { getDedupeSnapshot } = await import('@/lib/dedupeMetrics');
     const snap = getDedupeSnapshot();
 
+    // eslint-disable-next-line no-console
+    console.log('DEBUG snap.events:', JSON.stringify(snap.events, null, 2));
     const forKey = snap.events.filter((e) => e.key === KEY);
     const leaders = forKey.filter((e) => e.outcome === 'leader');
     const replays = forKey.filter((e) => e.outcome === 'follower-replay');
