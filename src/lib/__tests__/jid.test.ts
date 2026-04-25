@@ -13,6 +13,15 @@ import {
   isNewsletter,
   ensureBrazilDDI,
   JID_SUFFIXES,
+  isValidPhone,
+  isValidJid,
+  isValidIndividualJid,
+  isValidGroupJid,
+  isValidBroadcastJid,
+  isValidNewsletterJid,
+  assertValidJid,
+  toPhoneStrict,
+  toJidStrict,
 } from '@/lib/jid';
 
 describe('jid helpers', () => {
@@ -137,6 +146,80 @@ describe('jid helpers', () => {
       expect(JID_SUFFIXES.broadcast).toBe('@broadcast');
       expect(JID_SUFFIXES.newsletter).toBe('@newsletter');
       expect(JID_SUFFIXES.status).toBe('status@broadcast');
+    });
+  });
+
+  describe('type guards estritos', () => {
+    it('isValidPhone aceita só dígitos 8-15', () => {
+      expect(isValidPhone('5511999999999')).toBe(true);
+      expect(isValidPhone('12345678')).toBe(true);
+      expect(isValidPhone('1234567')).toBe(false); // curto
+      expect(isValidPhone('1234567890123456')).toBe(false); // longo
+      expect(isValidPhone('+5511999999999')).toBe(false); // não normalizado
+      expect(isValidPhone('')).toBe(false);
+      expect(isValidPhone(null)).toBe(false);
+      expect(isValidPhone(undefined)).toBe(false);
+      expect(isValidPhone(5511999999999)).toBe(false);
+    });
+
+    it('isValidIndividualJid', () => {
+      expect(isValidIndividualJid('5511999999999@s.whatsapp.net')).toBe(true);
+      expect(isValidIndividualJid('5511999999999')).toBe(false);
+      expect(isValidIndividualJid('abc@s.whatsapp.net')).toBe(false);
+      expect(isValidIndividualJid('120363@g.us')).toBe(false);
+    });
+
+    it('isValidGroupJid', () => {
+      expect(isValidGroupJid('120363999999999999@g.us')).toBe(true);
+      expect(isValidGroupJid('5511999999999-1700000000@g.us')).toBe(true);
+      expect(isValidGroupJid('@g.us')).toBe(false);
+      expect(isValidGroupJid('5511999999999@s.whatsapp.net')).toBe(false);
+      expect(isValidGroupJid('abc@g.us')).toBe(false);
+    });
+
+    it('isValidBroadcastJid e isValidNewsletterJid', () => {
+      expect(isValidBroadcastJid('status@broadcast')).toBe(true);
+      expect(isValidBroadcastJid('1234@broadcast')).toBe(true);
+      expect(isValidBroadcastJid('@broadcast')).toBe(false);
+      expect(isValidNewsletterJid('xyz@newsletter')).toBe(true);
+      expect(isValidNewsletterJid('@newsletter')).toBe(false);
+    });
+
+    it('isValidJid agrega todos os tipos reconhecidos', () => {
+      expect(isValidJid('5511999999999@s.whatsapp.net')).toBe(true);
+      expect(isValidJid('120363@g.us')).toBe(true);
+      expect(isValidJid('status@broadcast')).toBe(true);
+      expect(isValidJid('xyz@newsletter')).toBe(true);
+      expect(isValidJid('5511999999999')).toBe(false);
+      expect(isValidJid('lixo')).toBe(false);
+      expect(isValidJid(null)).toBe(false);
+    });
+
+    it('assertValidJid lança em entrada inválida', () => {
+      expect(() => assertValidJid('5511999999999@s.whatsapp.net')).not.toThrow();
+      expect(() => assertValidJid('lixo', 'remoteJid')).toThrow(/Invalid JID for remoteJid/);
+      expect(() => assertValidJid(null)).toThrow();
+    });
+
+    it('toPhoneStrict retorna null para entrada inválida', () => {
+      expect(toPhoneStrict('5511999999999')).toBe('5511999999999');
+      expect(toPhoneStrict('+55 (11) 99999-9999')).toBe('5511999999999');
+      expect(toPhoneStrict('abc')).toBeNull();
+      expect(toPhoneStrict('')).toBeNull();
+      expect(toPhoneStrict(null)).toBeNull();
+      expect(toPhoneStrict('123')).toBeNull(); // curto
+    });
+
+    it('toJidStrict preserva JIDs válidos e converte números válidos', () => {
+      expect(toJidStrict('5511999999999@s.whatsapp.net')).toBe('5511999999999@s.whatsapp.net');
+      expect(toJidStrict('120363@g.us')).toBe('120363@g.us');
+      expect(toJidStrict('status@broadcast')).toBe('status@broadcast');
+      expect(toJidStrict('5511999999999')).toBe('5511999999999@s.whatsapp.net');
+      expect(toJidStrict('+55 (11) 99999-9999')).toBe('5511999999999@s.whatsapp.net');
+      expect(toJidStrict('lixo')).toBeNull();
+      expect(toJidStrict('123')).toBeNull();
+      expect(toJidStrict(null)).toBeNull();
+      expect(toJidStrict('')).toBeNull();
     });
   });
 });
