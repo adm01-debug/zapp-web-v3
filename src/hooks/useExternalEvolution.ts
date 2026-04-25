@@ -339,32 +339,23 @@ export function useExternalMessages(remoteJid: string | null) {
       if (source === 'local') return; // já tratado pelo fluxo do próprio fetcher
       if (!mountedRef.current || !Array.isArray(data) || data.length === 0) return;
 
-      // `older` é retornado em ordem desc; demais já vêm asc.
-      const isOlder = key.startsWith(olderPrefix);
-      const ordered = isOlder ? data.slice().reverse() : data;
-      const mapped = ordered.map(evolutionToRealtimeMessage);
+      // Independente do origem (initial/poll/older), o merge ordena por
+      // (created_at, id) e dedupa por id — não há mais necessidade de
+      // ramificações por tipo de chave nem de inverter páginas `older`.
+      const mapped = data.map(evolutionToRealtimeMessage);
 
-      setMessages((prev) => {
-        const seen = new Set(prev.map((m) => m.id));
-        const additions = mapped.filter((m) => !seen.has(m.id));
-        if (additions.length === 0) return prev;
-        if (key.startsWith(initialPrefix)) {
-          // Initial completo de outra aba: substitui se ainda não tínhamos nada,
-          // senão apenas mescla as faltantes.
-          if (prev.length === 0) {
-            lastSeenRef.current = mapped[mapped.length - 1]?.created_at ?? null;
-            return mapped;
-          }
-          return [...prev, ...additions].sort(
-            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-          );
+      setMessages((prev) => mergeRealtimeMessages(prev, mapped) as RealtimeMessage[]);
+
+      // Cursor `lastSeen` avança somente para frente: usa o maior created_at
+      // recebido neste lote (poll/initial podem trazer mensagens novas).
+      const newest = maxCreatedAt(mapped);
+      if (newest) {
+        const newestStr = typeof newest === 'string' ? newest : new Date(newest).toISOString();
+        if (!lastSeenRef.current || newestStr > lastSeenRef.current) {
+          lastSeenRef.current = newestStr;
         }
-        if (isOlder) return [...additions, ...prev];
-        // poll forward
-        const next = [...prev, ...additions];
-        lastSeenRef.current = additions[additions.length - 1]?.created_at ?? lastSeenRef.current;
-        return next;
-      });
+      }
+
       if (key.startsWith(initialPrefix) && mountedRef.current) {
         setLoading(false);
       }
