@@ -27,6 +27,8 @@ export interface QueryEvent {
   severity: Severity;
   errorMessage?: string;
   startedAt: number;
+  /** Short trace id linking the client log, panel row and edge log. */
+  correlationId?: string;
 }
 
 export interface TelemetrySnapshot {
