@@ -15,14 +15,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 type DedupeMod = typeof import('@/lib/crossTabSendDedupe');
 
-// Single shared metrics module instance — must NOT be re-evaluated per "tab"
-// or each tab would write into its own counters and the assertions break.
-import * as sharedMetrics from '@/lib/dedupeMetrics';
-
 // Pin `dedupeMetrics` to a single shared instance even when the dedupe
-// module is re-evaluated. The factory closes over `sharedMetrics`, so every
-// re-import returns the same object identity.
-vi.mock('@/lib/dedupeMetrics', () => sharedMetrics);
+// module is re-evaluated. Using a dynamic import inside the factory avoids
+// the "top-level variable" hoisting trap of `vi.mock`.
+vi.mock('@/lib/dedupeMetrics', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/dedupeMetrics')>(
+    '@/lib/dedupeMetrics',
+  );
+  return actual;
+});
 
 async function loadTab(): Promise<DedupeMod> {
   // Reset the module registry so the next import re-evaluates `crossTabSendDedupe`
