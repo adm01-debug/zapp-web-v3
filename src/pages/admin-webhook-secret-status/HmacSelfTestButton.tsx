@@ -13,11 +13,25 @@ import { ShieldCheck, ShieldAlert, FlaskConical, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface ScenarioReport {
+  name: string;
+  description: string;
+  expected: 'accept' | 'reject';
+  outcome: 'accept' | 'reject';
+  passed: boolean;
+  reason: string | null;
+  issuedAt: string;
+  ageSeconds: number;
+  nonce: string;
+}
+
 interface SelfTestResult {
   ok: boolean;
   configured: boolean;
   secret_length?: number;
   duration_ms?: number;
+  tolerance_seconds?: number;
+  scenarios?: ScenarioReport[];
   payload_preview?: Record<string, unknown>;
   payload_bytes?: number;
   computed_signature_prefix?: string;
