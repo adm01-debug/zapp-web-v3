@@ -104,6 +104,7 @@ export function ChatPanelHeader({
           onOpenSearch={onOpenSearch} onSetActiveTool={onSetActiveTool}
           onToggleAIAssistant={onToggleAIAssistant} onToggleDetails={onToggleDetails}
           onGenerateSummary={onGenerateSummary}
+          failuresOnly={failuresOnly} onToggleFailuresOnly={onToggleFailuresOnly} failuresCount={failuresCount}
         />
 
         <DropdownMenu>
