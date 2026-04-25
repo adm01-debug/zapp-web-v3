@@ -159,6 +159,13 @@ export function useExternalMessages(remoteJid: string | null) {
   const previousJidRef = useRef<string | null>(null);
   const lastSeenRef = useRef<string | null>(null);
   const loadOlderAbortRef = useRef<AbortController | null>(null);
+  // Jid "ativo" — atualizado SÍNCRONAMENTE quando o prop muda (ver effect abaixo).
+  // Usado por callbacks assíncronos (fetch + broadcast) para abortar writes
+  // que pertencem a um jid que já não está mais selecionado.
+  const activeJidRef = useRef<string | null>(remoteJid);
+  // Sub atual do crossTabDedupe — guardamos para garantir desinscrição
+  // imediata e idempotente caso algo dispare re-subscribe sem esperar o cleanup.
+  const dedupeUnsubRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -168,6 +175,12 @@ export function useExternalMessages(remoteJid: string | null) {
       if (loadOlderAbortRef.current) {
         loadOlderAbortRef.current.abort();
         loadOlderAbortRef.current = null;
+      }
+      // Garantia extra: se o effect de subscribe não tiver feito cleanup
+      // (componente sumindo durante render concorrente), limpamos aqui.
+      if (dedupeUnsubRef.current) {
+        try { dedupeUnsubRef.current(); } catch { /* noop */ }
+        dedupeUnsubRef.current = null;
       }
     };
   }, []);
@@ -185,6 +198,9 @@ export function useExternalMessages(remoteJid: string | null) {
       if (mountedRef.current) { setMessages([]); setLoading(false); }
       return;
     }
+    // Snapshot do jid no início do fetch — usado para descartar writes tardios
+    // se o usuário trocar de conversa antes da resposta chegar.
+    const ownerJid = remoteJid;
 
     try {
       setLoading(true);
@@ -192,11 +208,11 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe cross-aba: trocar para o mesmo contato em N abas só dispara
       // 1 fetch — as demais reaproveitam via BroadcastChannel/cache.
       const evoMessages = await dedupedFetch(
-        inboxInitialKey({ jid: remoteJid, pageSize: CONVERSATION_PAGE_SIZE }),
-        () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
+        inboxInitialKey({ jid: ownerJid, pageSize: CONVERSATION_PAGE_SIZE }),
+        () => fetchMessagesByJid(ownerJid, CONVERSATION_PAGE_SIZE),
         getInitialDedupeOptions(),
       );
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || activeJidRef.current !== ownerJid) return;
 
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
       setMessages(mapped);
@@ -206,9 +222,11 @@ export function useExternalMessages(remoteJid: string | null) {
         : null;
     } catch (err) {
       log.error('Error fetching external messages:', err);
-      if (mountedRef.current) setError(err instanceof Error ? err.message : 'Failed to fetch');
+      if (mountedRef.current && activeJidRef.current === ownerJid) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch');
+      }
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current && activeJidRef.current === ownerJid) setLoading(false);
     }
   }, [remoteJid]);
 
@@ -217,16 +235,17 @@ export function useExternalMessages(remoteJid: string | null) {
     if (!remoteJid || !mountedRef.current) return;
     const afterDate = lastSeenRef.current;
     if (!afterDate) return;
+    const ownerJid = remoteJid;
 
     try {
       // Dedupe: várias abas pollando o mesmo jid+cursor compartilham 1 fetch
       // (TTL curto = poll seguinte ainda dispara normalmente).
       const newOnes = await dedupedFetch(
-        inboxPollKey({ jid: remoteJid, afterDate }),
-        () => fetchMessagesAfter(remoteJid, afterDate),
+        inboxPollKey({ jid: ownerJid, afterDate }),
+        () => fetchMessagesAfter(ownerJid, afterDate),
         getPollDedupeOptions(),
       );
-      if (!mountedRef.current || newOnes.length === 0) return;
+      if (!mountedRef.current || activeJidRef.current !== ownerJid || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
       setMessages(prev => mergeRealtimeMessages(prev, mapped) as RealtimeMessage[]);
@@ -279,6 +298,7 @@ export function useExternalMessages(remoteJid: string | null) {
         }),
       );
       if (!mountedRef.current || controller.signal.aborted) return;
+      if (activeJidRef.current !== remoteJid) return; // jid trocou durante o fetch
 
       const mapped = older.map(evolutionToRealtimeMessage);
       if (mapped.length === 0) {
@@ -309,9 +329,20 @@ export function useExternalMessages(remoteJid: string | null) {
   // Initial fetch on jid change
   useEffect(() => {
     if (remoteJid !== previousJidRef.current) {
+      // 1) Atualiza o jid ATIVO antes de qualquer side-effect — qualquer
+      //    callback assíncrono pendente do jid anterior cairá no guard
+      //    `activeJidRef.current !== ownerJid` e será descartado.
+      activeJidRef.current = remoteJid;
       previousJidRef.current = remoteJid;
+      // 2) Aborta loadOlder em curso do jid anterior.
+      if (loadOlderAbortRef.current) {
+        loadOlderAbortRef.current.abort();
+        loadOlderAbortRef.current = null;
+      }
+      // 3) Reseta cursor + estado da paginação para a nova conversa.
       lastSeenRef.current = null;
       setHasMore(true);
+      setMessages([]); // evita flash de mensagens do jid anterior
       initialFetch();
     }
   }, [remoteJid, initialFetch]);
@@ -326,17 +357,37 @@ export function useExternalMessages(remoteJid: string | null) {
   // Cross-tab sync: quando outra aba conclui um fetch (initial/poll/older)
   // para este mesmo jid, recebemos o resultado via BroadcastChannel e
   // atualizamos a UI sem refazer a requisição.
+  //
+  // Garantias contra handler duplicado / write na conversa errada:
+  // - O cleanup do effect chama o `unsub` retornado por subscribeDedupe ANTES
+  //   de re-subscrever (semântica padrão do React).
+  // - `dedupeUnsubRef` é uma trava idempotente: se por algum motivo o effect
+  //   re-rodar sem cleanup (StrictMode ou re-render rápido), desinscrevemos
+  //   a sub anterior antes de criar a nova.
+  // - O matcher é recriado por `remoteJid`, e o handler ainda checa
+  //   `activeJidRef.current === ownerJid` para não escrever em conversa errada
+  //   caso um broadcast chegue durante a janela de troca.
   useEffect(() => {
     if (!remoteJid) return;
-    const [initialPrefix, pollPrefix, olderPrefix] = inboxJidKeyPrefixes(remoteJid);
+    const ownerJid = remoteJid;
+    const [initialPrefix, pollPrefix, olderPrefix] = inboxJidKeyPrefixes(ownerJid);
     const jidPrefixes = [initialPrefix, pollPrefix, olderPrefix];
     const matcher = new RegExp(
       `^(${jidPrefixes.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
     );
 
+    // Idempotência: garante que nunca há 2 subs ativas simultâneas.
+    if (dedupeUnsubRef.current) {
+      try { dedupeUnsubRef.current(); } catch { /* noop */ }
+      dedupeUnsubRef.current = null;
+    }
+
     const unsub = subscribeDedupe<EvolutionMessage[]>(matcher, (key, data, source) => {
       if (source === 'local') return; // já tratado pelo fluxo do próprio fetcher
       if (!mountedRef.current || !Array.isArray(data) || data.length === 0) return;
+      // Defesa final: o usuário pode ter trocado de conversa entre o
+      // momento em que esta sub foi criada e o broadcast chegar.
+      if (activeJidRef.current !== ownerJid) return;
 
       // Independente do origem (initial/poll/older), o merge ordena por
       // (created_at, id) e dedupa por id — não há mais necessidade de
@@ -359,7 +410,16 @@ export function useExternalMessages(remoteJid: string | null) {
         setLoading(false);
       }
     });
-    return unsub;
+    dedupeUnsubRef.current = unsub;
+
+    return () => {
+      // Desinscreve via ref para garantir idempotência mesmo se React chamar
+      // o cleanup mais de uma vez (não chama, mas defesa em profundidade).
+      if (dedupeUnsubRef.current === unsub) {
+        dedupeUnsubRef.current = null;
+      }
+      try { unsub(); } catch { /* noop */ }
+    };
   }, [remoteJid]);
 
   const addMessage = useCallback((message: RealtimeMessage) => {
