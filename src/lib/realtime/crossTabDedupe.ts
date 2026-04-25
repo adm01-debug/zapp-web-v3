@@ -315,6 +315,7 @@ export async function dedupedFetch<T>(
       resultCache.set(key, { value: data, expiresAt: Date.now() + resultTtl });
       writePersistedResult(key, data, resultTtl);
       broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now(), resultTtl });
+      notifySubscribers(key, data, 'local');
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
