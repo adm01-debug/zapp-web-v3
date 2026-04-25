@@ -13,6 +13,7 @@ import {
   ClipboardList, Handshake, UserCheck, Truck, Wrench,
 } from 'lucide-react';
 import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
+import { isGroup as isGroupJid } from '@/lib/jid';
 
 // ---------- types & config ----------
 
@@ -26,8 +27,16 @@ export interface FilterOption {
   match: (c: ConversationWithMessages) => boolean;
 }
 
-const isGroup = (phone: string | null | undefined) =>
-  /^\d+-\d+$/.test((phone || '').replace(/\D/g, ''));
+/**
+ * Detecta grupo a partir do campo `phone` do contato.
+ * Usa o helper canônico `isGroup` (sufixo @g.us) e, como fallback,
+ * o padrão legado de phone sem sufixo `<participant>-<timestamp>`.
+ */
+const isGroup = (phone: string | null | undefined): boolean => {
+  if (!phone) return false;
+  if (isGroupJid(phone)) return true;
+  return /^\d+-\d+$/.test(phone.replace(/\D/g, ''));
+};
 
 export const FILTER_OPTIONS: FilterOption[] = [
   {
