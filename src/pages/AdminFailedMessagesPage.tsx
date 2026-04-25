@@ -683,6 +683,17 @@ export default function AdminFailedMessagesPage() {
                     <TableCell className="text-xs" data-testid="failed-message-created-at">{formatDate(row.created_at)}</TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-1">
+                        {row.remote_jid && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleViewInChat(row)}
+                            title="Ver no chat"
+                            data-testid="failed-message-view-in-chat-button"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           size="icon"
                           variant="ghost"
