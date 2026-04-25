@@ -23,10 +23,24 @@ vi.mock('@/lib/logger', () => ({
 import { useMessageStatus } from '@/hooks/useMessageStatus';
 
 const mockStatuses = [
-  { id: 'm1', status: 'sent', status_updated_at: '2024-01-01T10:00:00Z' },
-  { id: 'm2', status: 'delivered', status_updated_at: '2024-01-01T10:01:00Z' },
-  { id: 'm3', status: 'read', status_updated_at: '2024-01-01T10:02:00Z' },
-  { id: 'm4', status: 'failed', status_updated_at: '2024-01-01T10:03:00Z' },
+  { id: 'm1', status: 'sent', status_updated_at: '2024-01-01T10:00:00Z', error_code: null, error_reason: null },
+  { id: 'm2', status: 'delivered', status_updated_at: '2024-01-01T10:01:00Z', error_code: null, error_reason: null },
+  { id: 'm3', status: 'read', status_updated_at: '2024-01-01T10:02:00Z', error_code: null, error_reason: null },
+  { id: 'm4', status: 'failed', status_updated_at: '2024-01-01T10:03:00Z', error_code: 'GENERIC', error_reason: 'send error' },
+  {
+    id: 'm5',
+    status: 'failed_auth',
+    status_updated_at: '2024-01-01T10:04:00Z',
+    error_code: 'AUTH_401',
+    error_reason: 'Invalid Evolution API key',
+  },
+  {
+    id: 'm6',
+    status: 'failed_retries',
+    status_updated_at: '2024-01-01T10:05:00Z',
+    error_code: 'RETRIES_EXHAUSTED',
+    error_reason: 'Max 5 attempts reached',
+  },
 ];
 
 describe('useMessageStatus', () => {
@@ -86,5 +100,61 @@ describe('useMessageStatus', () => {
     
     rerender({ id: undefined });
     expect(result.current.statusUpdates.size).toBe(0);
+  });
+
+  describe('getMessageStatusDetail — payload do DB após reload', () => {
+    it('retorna error_code/error_reason para failed_auth (sem bus, só DB)', async () => {
+      const { result } = renderHook(() => useMessageStatus('c1'));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      const detail = result.current.getMessageStatusDetail('m5');
+      expect(detail).toBeDefined();
+      expect(detail?.status).toBe('failed_auth');
+      expect(detail?.errorCode).toBe('AUTH_401');
+      expect(detail?.errorReason).toBe('Invalid Evolution API key');
+      // Bus está vazio após reload — não deve haver attempt/totalRetries
+      expect(detail?.attempt).toBeUndefined();
+      expect(detail?.totalRetries).toBeUndefined();
+    });
+
+    it('retorna error_code/error_reason para failed_retries (sem bus, só DB)', async () => {
+      const { result } = renderHook(() => useMessageStatus('c1'));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      const detail = result.current.getMessageStatusDetail('m6');
+      expect(detail).toBeDefined();
+      expect(detail?.status).toBe('failed_retries');
+      expect(detail?.errorCode).toBe('RETRIES_EXHAUSTED');
+      expect(detail?.errorReason).toBe('Max 5 attempts reached');
+      expect(detail?.attempt).toBeUndefined();
+      expect(detail?.totalRetries).toBeUndefined();
+    });
+
+    it('mantém error_code/error_reason no statusUpdates Map carregado do DB', async () => {
+      const { result } = renderHook(() => useMessageStatus('c1'));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      const m5 = result.current.statusUpdates.get('m5');
+      const m6 = result.current.statusUpdates.get('m6');
+      expect(m5?.error_code).toBe('AUTH_401');
+      expect(m5?.error_reason).toBe('Invalid Evolution API key');
+      expect(m6?.error_code).toBe('RETRIES_EXHAUSTED');
+      expect(m6?.error_reason).toBe('Max 5 attempts reached');
+    });
+
+    it('não retorna errorCode/errorReason para mensagens terminais sem erro (sent/delivered/read)', async () => {
+      const { result } = renderHook(() => useMessageStatus('c1'));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      const sent = result.current.getMessageStatusDetail('m1');
+      const delivered = result.current.getMessageStatusDetail('m2');
+      const read = result.current.getMessageStatusDetail('m3');
+      expect(sent?.errorCode).toBeUndefined();
+      expect(sent?.errorReason).toBeUndefined();
+      expect(delivered?.errorCode).toBeUndefined();
+      expect(delivered?.errorReason).toBeUndefined();
+      expect(read?.errorCode).toBeUndefined();
+      expect(read?.errorReason).toBeUndefined();
+    });
   });
 });
