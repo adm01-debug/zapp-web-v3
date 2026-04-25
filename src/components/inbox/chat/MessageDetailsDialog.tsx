@@ -102,6 +102,10 @@ export function MessageDetailsDialog({ messageId, open, onOpenChange }: MessageD
                 </div>
               </TabsContent>
 
+              <TabsContent value="attempts" className="flex-1 overflow-auto mt-2">
+                <MessageAttemptsTimeline messageId={data.id} enabled={open} />
+              </TabsContent>
+
               <TabsContent value="payload" className="flex-1 overflow-auto mt-2">
                 <div className="flex justify-end mb-2">
                   {canCopyJson && (
