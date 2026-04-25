@@ -17,7 +17,12 @@
  *
  * Retorna diagnóstico — sem expor o secret.
  */
-import { createWebhookValidator } from '../_shared/hmac-validation.ts';
+// Import "estrela" + dinâmico para tolerar mudanças no contrato exportado por
+// `_shared/hmac-validation.ts`. Resolvemos o validador em runtime via
+// `resolveValidator()` — assim, se a API mudar (renomear, virar default export,
+// virar classe, etc.) o deploy continua compilando e o self-test cai em
+// fallbacks bem definidos em vez de quebrar.
+import * as hmacModule from '../_shared/hmac-validation.ts';
 
 /**
  * CORS headers — definidos inline (sem dependência de pacote externo) para
