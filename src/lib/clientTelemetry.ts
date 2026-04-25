@@ -109,6 +109,7 @@ function publishToWindow() {
 
 function logEvent(ev: QueryEvent) {
   const meta = {
+    cid: ev.correlationId,
     source: ev.source,
     op: ev.operation,
     target: ev.target,
