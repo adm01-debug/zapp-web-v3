@@ -13,14 +13,28 @@ import { expect } from '@playwright/test';
 // ============================================================
 
 export const webhookFilters = {
+  // Filtros (controles)
+  eventType: (page: Page) => page.getByTestId('filter-webhook-event-type'),
+  instance: (page: Page) => page.getByTestId('filter-webhook-instance'),
   remoteJid: (page: Page) => page.getByTestId('filter-webhook-remote-jid'),
   pushName: (page: Page) => page.getByTestId('filter-webhook-push-name'),
   messageType: (page: Page) => page.getByTestId('filter-webhook-message-type'),
   status: (page: Page) => page.getByTestId('filter-webhook-status'),
   search: (page: Page) => page.getByTestId('filter-webhook-search'),
   clear: (page: Page) => page.getByTestId('filter-webhook-clear'),
+  // Resultados
   resultsCount: (page: Page) => page.getByTestId('webhook-events-results-count'),
   rows: (page: Page) => page.getByTestId('webhook-event-row'),
+  // Células de cada linha (escopadas a uma linha via .locator)
+  cell: {
+    createdAt: 'webhook-event-created-at',
+    eventType: 'webhook-event-event-type',
+    instance: 'webhook-event-instance',
+    jid: 'webhook-event-jid',
+    pushName: 'webhook-event-push-name',
+    status: 'webhook-event-status',
+    detailsButton: 'webhook-event-details-button',
+  } as const,
 };
 
 // ============================================================
@@ -28,11 +42,44 @@ export const webhookFilters = {
 // ============================================================
 
 export const failedFilters = {
-  remoteJid: (page: Page) => page.getByTestId('filter-failed-remote-jid'),
-  status: (page: Page) => page.getByTestId('filter-failed-status'),
+  // Filtros (controles)
   search: (page: Page) => page.getByTestId('filter-failed-search'),
+  /**
+   * Não existe um campo dedicado para `remote_jid` nesta página: o input
+   * de busca aceita JID, código de erro e mensagem. Mantemos o alias para
+   * compatibilidade com o pattern dos specs de interseção, mas filtrar por
+   * JID aqui = preencher o `search`.
+   */
+  remoteJid: (page: Page) => page.getByTestId('filter-failed-search'),
+  status: (page: Page) => page.getByTestId('filter-failed-status'),
+  hours: (page: Page) => page.getByTestId('filter-failed-hours'),
+  from: (page: Page) => page.getByTestId('filter-failed-from'),
+  to: (page: Page) => page.getByTestId('filter-failed-to'),
+  clearDates: (page: Page) => page.getByTestId('filter-failed-clear-dates'),
+  instance: (page: Page) => page.getByTestId('filter-failed-instance'),
+  rootCause: (page: Page) => page.getByTestId('filter-failed-root-cause'),
+  errorCode: (page: Page) => page.getByTestId('filter-failed-error-code'),
+  // Resultados
   resultsCount: (page: Page) => page.getByTestId('failed-messages-results-count'),
   rows: (page: Page) => page.getByTestId('failed-message-row'),
+  // Células de cada linha
+  cell: {
+    selectCheckbox: 'failed-message-select-checkbox',
+    status: 'failed-message-status',
+    instance: 'failed-message-instance',
+    jid: 'failed-message-jid',
+    error: 'failed-message-error',
+    rootCause: 'failed-message-root-cause',
+    errorCode: 'failed-message-error-code',
+    errorMessage: 'failed-message-error-message',
+    retryCount: 'failed-message-retry-count',
+    lastAttempt: 'failed-message-last-attempt',
+    nextAttempt: 'failed-message-next-attempt',
+    createdAt: 'failed-message-created-at',
+    detailsButton: 'failed-message-details-button',
+    retryButton: 'failed-message-retry-button',
+    abandonButton: 'failed-message-abandon-button',
+  } as const,
 };
 
 // ============================================================
