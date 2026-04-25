@@ -4399,6 +4399,45 @@ export type Database = {
           },
         ]
       }
+      hmac_selftest_audit: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          executed_by: string | null
+          good_accepted: boolean | null
+          id: string
+          instance: string | null
+          message: string | null
+          ok: boolean
+          tampered_rejected: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          executed_by?: string | null
+          good_accepted?: boolean | null
+          id?: string
+          instance?: string | null
+          message?: string | null
+          ok: boolean
+          tampered_rejected?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          executed_by?: string | null
+          good_accepted?: boolean | null
+          id?: string
+          instance?: string | null
+          message?: string | null
+          ok?: boolean
+          tampered_rejected?: boolean | null
+        }
+        Relationships: []
+      }
       instance_auth_events: {
         Row: {
           created_at: string
