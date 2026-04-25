@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  Bell, RefreshCw, CheckCircle2, AlertTriangle, AlertCircle, Filter, CheckCheck,
+  Bell, RefreshCw, CheckCircle2, AlertTriangle, AlertCircle, Filter, CheckCheck, Radio,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
