@@ -145,6 +145,97 @@ Deno.serve(async (req) => {
         { status: 499, headers: jsonHeaders }
       )
 
+    /**
+     * Generic safety wrapper for any PostgREST builder (`select`, `insert`,
+     * `update`, `rpc`). Guarantees a consistent JSON response in three
+     * situations:
+     *   - Hard timeout fired → 504 `proxy_timeout`
+     *   - Client disconnected → 499 `client_disconnect`
+     *   - PostgREST returned `error` → 504 if statement_timeout, else 400
+     *   - Anything else thrown → 502 `upstream_error` (NEVER bubbles up to
+     *     the worker-killing outer catch as a 500 with no `cid`)
+     *
+     * The caller still gets `data` on success and may build the success
+     * response itself. This keeps each handler tiny while making the failure
+     * path uniform across RPC/SELECT/INSERT/UPDATE.
+     */
+    interface OpResult<T> {
+      data: T | null
+      response: Response | null
+    }
+    async function withTimeout<T>(
+      op: 'rpc' | 'select' | 'insert' | 'update',
+      target: string,
+      builder: PromiseLike<{ data: T | null; error: { message: string; code?: string } | null; count?: number | null }>,
+    ): Promise<OpResult<T> & { count?: number | null; ms: number; ok: boolean }> {
+      const opStartedAt = Date.now()
+      try {
+        const res = await builder
+        const ms = Date.now() - opStartedAt
+        const error = res.error
+        if (error) {
+          // Cancellation surfaces here when supabase-js converts AbortError
+          // into a regular error on some code paths.
+          if (timeoutFired) {
+            console.log(JSON.stringify({ fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'proxy_timeout' }))
+            return { data: null, response: timeoutResponse(), ms, ok: false }
+          }
+          if (clientAbortFired) {
+            console.log(JSON.stringify({ fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'client_disconnect' }))
+            return { data: null, response: clientAbortResponse(), ms, ok: false }
+          }
+          const isStmtTimeout = /statement timeout|canceling statement/i.test(error.message)
+          console.log(JSON.stringify({
+            fn: 'external-db-proxy', cid, op, target, ms, ok: false,
+            kind: isStmtTimeout ? 'statement_timeout' : 'pg_error',
+            err: error.message, code: error.code,
+          }))
+          return {
+            data: null,
+            response: new Response(
+              JSON.stringify({ error: error.message, code: error.code, cid }),
+              { status: isStmtTimeout ? 504 : 400, headers: jsonHeaders },
+            ),
+            ms,
+            ok: false,
+          }
+        }
+        return {
+          data: res.data,
+          response: null,
+          count: res.count ?? null,
+          ms,
+          ok: true,
+        }
+      } catch (e) {
+        const ms = Date.now() - opStartedAt
+        if (isProxyTimeout(e)) {
+          console.log(JSON.stringify({ fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'proxy_timeout' }))
+          return { data: null, response: timeoutResponse(), ms, ok: false }
+        }
+        if (isClientAbort(e)) {
+          console.log(JSON.stringify({ fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'client_disconnect' }))
+          return { data: null, response: clientAbortResponse(), ms, ok: false }
+        }
+        // Network / serialization / unknown upstream failure — translate to
+        // a CONSISTENT 502 so the caller can retry with backoff. Worker
+        // stays alive; no unhandled exception bubbles up.
+        const msg = (e as Error)?.message ?? String(e)
+        console.error(JSON.stringify({
+          fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'upstream_error', err: msg,
+        }))
+        return {
+          data: null,
+          response: new Response(
+            JSON.stringify({ error: 'Upstream database call failed', detail: msg, cid }),
+            { status: 502, headers: jsonHeaders },
+          ),
+          ms,
+          ok: false,
+        }
+      }
+    }
+
     const body = await req.json()
     const { action, table, select, filters, order, limit, offset, countMode, rpc, params, data, match } = body
     // Upgrade cid from body if header was missing/auto-generated.
@@ -155,95 +246,43 @@ Deno.serve(async (req) => {
 
     // RPC call
     if (action === 'rpc' && rpc) {
-      const rpcStartedAt = Date.now()
       // Strip the trace echo so it isn't forwarded to the SQL function.
       const cleanParams = { ...(params || {}) }
       delete (cleanParams as Record<string, unknown>).__cid
-      try {
-        const { data: rpcData, error } = await ext
-          .rpc(rpc, cleanParams)
-          .abortSignal(queryController.signal)
-        const ms = Date.now() - rpcStartedAt
-        console.log(JSON.stringify({
-          fn: 'external-db-proxy', cid, op: 'rpc', target: rpc, ms, ok: !error,
-          err: error?.message,
-        }))
-        if (error) {
-          // PostgREST surfaces a cancelled request as either an AbortError
-          // (fetch level) or "canceling statement due to user request"
-          // (Postgres level after the socket close propagates).
-          if (timeoutFired) return timeoutResponse()
-          if (clientAbortFired) return clientAbortResponse()
-          const isTimeout = /statement timeout|canceling statement/i.test(error.message)
-          return new Response(JSON.stringify({ error: error.message, cid }), {
-            status: isTimeout ? 504 : 400,
-            headers: jsonHeaders,
-          })
-        }
-        return new Response(JSON.stringify({ data: rpcData, cid }), {
-          headers: jsonHeaders
-        })
-      } catch (e) {
-        if (isProxyTimeout(e)) return timeoutResponse()
-        if (isClientAbort(e)) return clientAbortResponse()
-        throw e
-      } finally {
-        cleanup()
-      }
+      const result = await withTimeout(
+        'rpc',
+        rpc,
+        ext.rpc(rpc, cleanParams).abortSignal(queryController.signal),
+      )
+      cleanup()
+      if (result.response) return result.response
+      return new Response(JSON.stringify({ data: result.data, cid }), { headers: jsonHeaders })
     }
 
     // Mutation: insert
     if (action === 'insert' && table && data) {
-      try {
-        const { data: result, error } = await ext
-          .from(table)
-          .insert(data)
-          .select()
-          .abortSignal(queryController.signal)
-        if (error) {
-          if (timeoutFired) return timeoutResponse()
-          if (clientAbortFired) return clientAbortResponse()
-          return new Response(JSON.stringify({ error: error.message }), {
-            status: 400, headers: jsonHeaders
-          })
-        }
-        return new Response(JSON.stringify({ data: result }), {
-          headers: jsonHeaders
-        })
-      } catch (e) {
-        if (isProxyTimeout(e)) return timeoutResponse()
-        if (isClientAbort(e)) return clientAbortResponse()
-        throw e
-      } finally {
-        cleanup()
-      }
+      const result = await withTimeout(
+        'insert',
+        table,
+        ext.from(table).insert(data).select().abortSignal(queryController.signal),
+      )
+      cleanup()
+      if (result.response) return result.response
+      return new Response(JSON.stringify({ data: result.data, cid }), { headers: jsonHeaders })
     }
 
     // Mutation: update
     if (action === 'update' && table && data && match) {
-      try {
-        let q = ext.from(table).update(data)
-        for (const [k, v] of Object.entries(match)) q = q.eq(k, v as string)
-        const { data: result, error } = await q
-          .select()
-          .abortSignal(queryController.signal)
-        if (error) {
-          if (timeoutFired) return timeoutResponse()
-          if (clientAbortFired) return clientAbortResponse()
-          return new Response(JSON.stringify({ error: error.message }), {
-            status: 400, headers: jsonHeaders
-          })
-        }
-        return new Response(JSON.stringify({ data: result }), {
-          headers: jsonHeaders
-        })
-      } catch (e) {
-        if (isProxyTimeout(e)) return timeoutResponse()
-        if (isClientAbort(e)) return clientAbortResponse()
-        throw e
-      } finally {
-        cleanup()
-      }
+      let q = ext.from(table).update(data)
+      for (const [k, v] of Object.entries(match)) q = q.eq(k, v as string)
+      const result = await withTimeout(
+        'update',
+        table,
+        q.select().abortSignal(queryController.signal),
+      )
+      cleanup()
+      if (result.response) return result.response
+      return new Response(JSON.stringify({ data: result.data, cid }), { headers: jsonHeaders })
     }
 
     // SELECT query (default)
@@ -297,56 +336,44 @@ Deno.serve(async (req) => {
     query = query.range(effectiveOffset, effectiveOffset + effectiveLimit - 1)
       .abortSignal(queryController.signal)
 
-    let queryData: unknown, queryError: { message: string } | null = null, count: number | null = null
-    try {
-      const res = await query
-      queryData = (res as { data: unknown }).data
-      queryError = (res as { error: { message: string } | null }).error
-      count = (res as { count: number | null }).count
-    } catch (e) {
-      if (isProxyTimeout(e)) { cleanup(); return timeoutResponse() }
-      if (isClientAbort(e)) { cleanup(); return clientAbortResponse() }
-      cleanup()
-      throw e
-    }
+    const selectResult = await withTimeout<unknown>('select', table, query as unknown as PromiseLike<{ data: unknown; error: { message: string; code?: string } | null; count?: number | null }>)
     cleanup()
 
-    const ms = Date.now() - startedAt
+    // Adds extra metadata that the generic helper doesn't know about.
     console.log(JSON.stringify({
       fn: 'external-db-proxy',
       cid,
-      op: 'select',
+      op: 'select_meta',
       target: table,
       limit: effectiveLimit,
       heavy: isHeavy,
       hasFilter: hasNarrowingFilter,
       filterCount: filtersArr?.length ?? 0,
-      ms,
-      ok: !queryError,
+      ms: selectResult.ms,
+      ok: selectResult.ok,
       aborted: timeoutFired || clientAbortFired,
     }))
 
-    if (queryError) {
-      // After abort/cancel propagates, PostgREST may still return an error
-      // body — translate to 504/499 so callers don't retry blindly.
-      if (timeoutFired) return timeoutResponse()
-      if (clientAbortFired) return clientAbortResponse()
-      const isTimeout = /statement timeout|canceling statement/i.test(queryError.message)
-      return new Response(JSON.stringify({ error: queryError.message, cid }), {
-        status: isTimeout ? 504 : 400,
-        headers: jsonHeaders
-      })
-    }
+    if (selectResult.response) return selectResult.response
 
+    const queryData = selectResult.data
     return new Response(JSON.stringify({
       data: queryData || [],
-      count: count ?? (Array.isArray(queryData) ? queryData.length : 0),
+      count: selectResult.count ?? (Array.isArray(queryData) ? (queryData as unknown[]).length : 0),
+      cid,
     }), {
       headers: jsonHeaders
     })
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    // Last-resort safety net — never let an unhandled error reach the worker
+    // boundary (which would otherwise be reported as a 502 with no `cid`,
+    // killing observability and causing inconsistent client behaviour).
+    const msg = (error as Error)?.message ?? String(error)
+    console.error(JSON.stringify({
+      fn: 'external-db-proxy', cid, op: 'fatal', err: msg,
+    }))
+    return new Response(JSON.stringify({ error: 'Internal proxy error', detail: msg, cid }), {
       status: 500, headers: jsonHeaders
     })
   }
