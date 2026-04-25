@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, ShieldAlert, RefreshCw } from "lucide-react";
+import { CalendarIcon, ShieldAlert, RefreshCw, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -146,6 +147,19 @@ export default function AdminFailedAuthMessagesPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {rows.length > 0 && (
+        <Alert variant="destructive" className="border-destructive/40 bg-destructive/5">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Atenção ao reenviar</AlertTitle>
+          <AlertDescription>
+            Há falhas de autenticação registradas. Reenviar sem corrigir as
+            credenciais (e-mail, senha ou token do provedor) pode falhar
+            novamente e aumentar o bloqueio. Verifique o motivo antes de tentar
+            de novo.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
