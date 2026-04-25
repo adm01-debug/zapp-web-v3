@@ -27,6 +27,9 @@ export interface WhatsAppConnection {
   last_health_check?: string | null;
 }
 
+/** Origem do TTL do QR atual — útil para diagnóstico (telemetria/UI). */
+export type QrTtlSource = 'detected' | 'default' | 'clamped';
+
 export interface QrCodeDialogState {
   open: boolean;
   connectionId: string;
@@ -38,6 +41,10 @@ export interface QrCodeDialogState {
   expiresAt: number | null;
   /** id of the qr_attempts row tied to current QR (for expiration update). */
   attemptId: string | null;
+  /** TTL em segundos detectado (ou padrão) na última geração. null quando não pending. */
+  ttlSeconds: number | null;
+  /** Como o TTL foi obtido (detectado da API, padrão de fallback, ou clamped por estar fora dos limites). */
+  ttlSource: QrTtlSource | null;
 }
 
 const INITIAL_QR_STATE: QrCodeDialogState = {
@@ -48,6 +55,8 @@ const INITIAL_QR_STATE: QrCodeDialogState = {
   status: 'loading',
   expiresAt: null,
   attemptId: null,
+  ttlSeconds: null,
+  ttlSource: null,
 };
 
 /** Default fallback TTL when the upstream API doesn't report one. Evolution typically rotates the QR ~60s. */
@@ -60,10 +69,11 @@ const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
 /**
  * Detects the QR rotation TTL from the Evolution API response. Evolution returns
  * the lifetime in seconds in either `count` or `qrcode.count` (varies by version);
- * we check both and clamp to sane bounds. Returns the TTL in **milliseconds**.
+ * we check both and clamp to sane bounds. Returns the TTL in **milliseconds** plus
+ * the source so the UI/telemetry can distinguish detected vs. fallback values.
  */
-function detectQrTtlMs(result: unknown): number {
-  if (!result || typeof result !== 'object') return QR_TTL_DEFAULT_MS;
+function detectQrTtlMs(result: unknown): { ttlMs: number; source: QrTtlSource } {
+  if (!result || typeof result !== 'object') return { ttlMs: QR_TTL_DEFAULT_MS, source: 'default' };
   const r = result as Record<string, unknown> & { qrcode?: Record<string, unknown> };
   const candidates: unknown[] = [
     r.count,
@@ -76,10 +86,11 @@ function detectQrTtlMs(result: unknown): number {
     const seconds = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
     if (Number.isFinite(seconds) && seconds > 0) {
       const ms = seconds * 1000;
-      return Math.min(QR_TTL_MAX_MS, Math.max(QR_TTL_MIN_MS, ms));
+      const clamped = Math.min(QR_TTL_MAX_MS, Math.max(QR_TTL_MIN_MS, ms));
+      return { ttlMs: clamped, source: clamped !== ms ? 'clamped' : 'detected' };
     }
   }
-  return QR_TTL_DEFAULT_MS;
+  return { ttlMs: QR_TTL_DEFAULT_MS, source: 'default' };
 }
 
 interface PersistedQrState {
@@ -149,6 +160,8 @@ export function useConnectionsManager() {
       errorMessage: persisted.errorMessage,
       expiresAt: persisted.expiresAt,
       attemptId: persisted.attemptId,
+      ttlSeconds: persisted.expiresAt ? Math.round((persisted.expiresAt - Date.now()) / 1000) : null,
+      ttlSource: persisted.expiresAt ? 'detected' : null,
     };
   });
   const [newConnection, setNewConnection] = useState<{ name: string; phone_number: string; api_type: WhatsAppApiType }>({ name: '', phone_number: '', api_type: 'evolution' });
@@ -425,13 +438,17 @@ export function useConnectionsManager() {
       status: connection.status === 'connected' ? 'connected' : 'loading',
       expiresAt: null,
       attemptId: null,
+      ttlSeconds: null,
+      ttlSource: null,
     });
     if (connection.status !== 'connected') {
       const attemptId = await logQrAttempt(connection);
       try {
         const result = await requestConnectionQr(connection.instance_id);
-        const ttlMs = detectQrTtlMs(result);
+        const { ttlMs, source: ttlSource } = detectQrTtlMs(result);
+        const ttlSeconds = Math.round(ttlMs / 1000);
         const expiresAt = Date.now() + ttlMs;
+        log.info('[qr-ttl] detected', { ttlSeconds, source: ttlSource, connectionId: connection.id });
         if (result?.qrcode?.base64) {
           setQrCodeDialog((prev) => ({
             ...prev,
@@ -439,9 +456,11 @@ export function useConnectionsManager() {
             status: 'pending',
             expiresAt,
             attemptId,
+            ttlSeconds,
+            ttlSource,
           }));
         } else {
-          setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
+          setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId, ttlSeconds, ttlSource }));
         }
         startStatusPolling(connection.instance_id, connection.id);
         // Auto-mark expired using the upstream TTL (falls back to default when missing).
@@ -490,8 +509,10 @@ export function useConnectionsManager() {
     try {
       const result = await requestConnectionQr(connection.instance_id);
       if (isStale()) return;
-      const ttlMs = detectQrTtlMs(result);
+      const { ttlMs, source: ttlSource } = detectQrTtlMs(result);
+      const ttlSeconds = Math.round(ttlMs / 1000);
       const expiresAt = Date.now() + ttlMs;
+      log.info('[qr-ttl] detected', { ttlSeconds, source: ttlSource, connectionId: connection.id });
       if (result?.qrcode?.base64) {
         setQrCodeDialog((prev) => ({
           ...prev,
@@ -499,9 +520,11 @@ export function useConnectionsManager() {
           status: 'pending',
           expiresAt,
           attemptId,
+          ttlSeconds,
+          ttlSource,
         }));
       } else {
-        setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
+        setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId, ttlSeconds, ttlSource }));
       }
       setTimeout(() => {
         if (isStale()) return;
