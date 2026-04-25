@@ -425,7 +425,14 @@ export default function AdminWebhookEventsPage() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((row) => (
-                    <TableRow key={row.id} data-testid="webhook-event-row">
+                    <TableRow
+                      key={row.id}
+                      data-testid="webhook-event-row"
+                      data-remote-jid={row.remote_jid ?? ''}
+                      data-push-name={row.push_name ?? ''}
+                      data-message-type={row.message_type ?? ''}
+                      data-status={row.error_message ? 'error' : row.processed ? 'processed' : 'pending'}
+                    >
                       <TableCell className="text-xs whitespace-nowrap">
                         {formatDate(row.created_at)}
                       </TableCell>
