@@ -265,7 +265,7 @@ export default function AdminWebhookEventsPage() {
 
           <FilterField label="Tipo de evento">
             <Select value={eventType} onValueChange={(v) => setEventType(v as EventTypeFilter)}>
-              <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[220px]" data-testid="filter-webhook-event-type"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {EVENT_TYPES.map((t) => (
                   <SelectItem key={t} value={t}>{t === 'all' ? 'Todos' : t}</SelectItem>
@@ -276,7 +276,7 @@ export default function AdminWebhookEventsPage() {
 
           <FilterField label="Instância">
             <Select value={instance} onValueChange={setInstance}>
-              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[160px]" data-testid="filter-webhook-instance"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 {aggregates.instances.map((i) => (
