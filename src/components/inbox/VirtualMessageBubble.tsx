@@ -78,9 +78,9 @@ export function MessageBubble({
             {message.replyTo && <QuotedMessage replyTo={message.replyTo} isSent={isSent} onClick={() => scrollToMessage(message.replyTo!.messageId)} />}
             {message.buttonResponse && <ButtonResponseBadge buttonTitle={message.buttonResponse.buttonTitle} isSent={isSent} />}
             {message.type === 'interactive' && message.interactive && <InteractiveMessageDisplay interactive={message.interactive} isSent={isSent} onButtonClick={onInteractiveButtonClick} />}
-            {message.type === 'image' && message.mediaUrl && <div className="mb-2 rounded-lg overflow-hidden"><MessageImage src={message.mediaUrl} /></div>}
-            {message.type === 'video' && message.mediaUrl && <div className="mb-2"><VideoPreview url={message.mediaUrl} caption={message.content} isSent={isSent} /></div>}
-            {message.type === 'audio' && message.mediaUrl && <div className="mb-2"><AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} /></div>}
+            {message.type === 'image' && message.mediaUrl && <div className="mb-2 rounded-lg overflow-hidden"><MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} /></div>}
+            {message.type === 'video' && message.mediaUrl && <div className="mb-2"><VideoPreview url={message.mediaUrl} caption={message.content} isSent={isSent} refreshKey={mediaRefreshKey} /></div>}
+            {message.type === 'audio' && message.mediaUrl && <div className="mb-2"><AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} refreshKey={mediaRefreshKey} /></div>}
             {message.type === 'document' && message.mediaUrl && <div className="mb-2"><DocumentPreview url={message.mediaUrl} fileName="document" isSent={isSent} /></div>}
             {message.type === 'location' && message.location && <LocationMessageDisplay location={message.location} isSent={isSent} />}
             {message.content && message.type === 'text' && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>}
