@@ -1,33 +1,20 @@
 /**
  * crossTabDedupe — Testes de simulação multi-aba.
  *
- * Estes testes carregam o módulo `crossTabDedupe` duas vezes em isolamento
- * (`vi.isolateModulesAsync`), cada carga representa uma aba diferente com seu
- * próprio TAB_ID e suas próprias estruturas em memória. As duas abas
- * compartilham o mesmo `localStorage` e o mesmo `BroadcastChannel` global do
- * jsdom — exatamente como duas abas reais do mesmo origin.
- *
- * Garantias validadas:
- *   1. Quando a aba A está executando um fetch, a aba B vê o lock no
- *      localStorage e NÃO dispara o seu próprio fetcher.
- *   2. Quando a aba A termina, ela broadcasta o resultado e a aba B recebe
- *      via BroadcastChannel — sem fetch.
- *   3. Corrida: se A e B começam ao mesmo tempo, apenas uma vence o lock e
- *      executa o fetcher; a outra reaproveita o resultado.
- *   4. Subscribers (UI) na aba B são notificados quando A termina.
- */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-/**
- * crossTabDedupe — Testes de simulação multi-aba.
- *
  * Carregamos o módulo `crossTabDedupe` duas vezes, resetando o cache de
  * módulos do Vitest entre imports — assim cada carga representa uma "aba"
  * diferente com seu próprio TAB_ID e suas próprias estruturas em memória.
  * As duas abas compartilham o mesmo `localStorage` e o mesmo
  * `BroadcastChannel` global do jsdom — exatamente como duas abas reais do
  * mesmo origin.
+ *
+ * Garantias validadas:
+ *   1. Aba A em execução → aba B vê o lock no localStorage e NÃO dispara o
+ *      seu próprio fetcher.
+ *   2. Aba A termina → broadcasta o resultado e a aba B recebe via
+ *      BroadcastChannel sem fetch.
+ *   3. Corrida: se A e B começam ao mesmo tempo, apenas uma vence o lock.
+ *   4. Subscribers (UI) da aba B são notificados quando A termina.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
