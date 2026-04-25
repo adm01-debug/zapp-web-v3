@@ -13,9 +13,31 @@
 
 export const INSTABILITY_TOAST_COOLDOWN_MS = 60_000;
 
+/**
+ * Limite máximo de chaves no Map de cooldown. Acima disso, fazemos uma
+ * limpeza LRU-like (remove as chaves mais antigas) para evitar crescimento
+ * descontrolado em sessões longas com muitos contatos/tipos de erro.
+ */
+export const INSTABILITY_TOAST_MAX_KEYS = 200;
+
 const lastFiredByKey = new Map<string, number>();
 const suppressedCountByKey = new Map<string, number>();
 const firedCountByKey = new Map<string, number>();
+
+/**
+ * Quando `lastFiredByKey` excede `INSTABILITY_TOAST_MAX_KEYS`, remove as
+ * entradas mais antigas (menor `lastFired`) até voltar ao limite. Mantém
+ * a telemetria intacta — só o cooldown é afetado.
+ */
+function evictOldestIfNeeded(maxKeys: number = INSTABILITY_TOAST_MAX_KEYS): number {
+  if (lastFiredByKey.size <= maxKeys) return 0;
+  const entries = Array.from(lastFiredByKey.entries()).sort((a, b) => a[1] - b[1]);
+  const toRemove = lastFiredByKey.size - maxKeys;
+  for (let i = 0; i < toRemove; i++) {
+    lastFiredByKey.delete(entries[i][0]);
+  }
+  return toRemove;
+}
 
 /**
  * Normaliza um erro arbitrário em um `error_code` estável usado no dedupe.
