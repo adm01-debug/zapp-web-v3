@@ -586,6 +586,7 @@ export default function AdminFailedMessagesPage() {
                           checked={selectedIds.has(row.id)}
                           onCheckedChange={() => toggleOne(row.id)}
                           aria-label="Selecionar item"
+                          data-testid="failed-message-select-checkbox"
                         />
                       </TableCell>
                     )}
@@ -594,9 +595,9 @@ export default function AdminFailedMessagesPage() {
                         {STATUS_LABEL[row.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{row.instance_name}</TableCell>
-                    <TableCell className="font-mono text-xs">{shortJid(row.remote_jid)}</TableCell>
-                    <TableCell className="max-w-[280px]">
+                    <TableCell className="font-mono text-xs" data-testid="failed-message-instance">{row.instance_name}</TableCell>
+                    <TableCell className="font-mono text-xs" data-testid="failed-message-jid">{shortJid(row.remote_jid)}</TableCell>
+                    <TableCell className="max-w-[280px]" data-testid="failed-message-error">
                       <div className="flex flex-col gap-1">
                         {(() => {
                           const cause = classifyRootCause(row);
@@ -606,35 +607,48 @@ export default function AdminFailedMessagesPage() {
                               variant="outline"
                               className={cn('w-fit text-[10px] px-1.5 py-0', ROOT_CAUSE_TONE_CLASS[meta.tone])}
                               title={meta.hint}
+                              data-testid="failed-message-root-cause"
                             >
                               {meta.label}
                             </Badge>
                           );
                         })()}
-                        <span className="text-xs font-medium">
+                        <span className="text-xs font-medium" data-testid="failed-message-error-code">
                           {row.error_code ?? (row.http_status ? `HTTP ${row.http_status}` : '—')}
                         </span>
                         {row.error_message && (
-                          <span className="text-xs text-muted-foreground truncate" title={row.error_message}>
+                          <span
+                            className="text-xs text-muted-foreground truncate"
+                            title={row.error_message}
+                            data-testid="failed-message-error-message"
+                          >
                             {row.error_message}
                           </span>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center text-xs">
+                    <TableCell className="text-center text-xs" data-testid="failed-message-retry-count">
                       {row.retry_count}/{row.max_retries}
                     </TableCell>
-                    <TableCell className="text-xs" title={row.last_attempt_at ?? undefined}>
+                    <TableCell
+                      className="text-xs"
+                      title={row.last_attempt_at ?? undefined}
+                      data-testid="failed-message-last-attempt"
+                    >
                       {row.last_attempt_at
                         ? formatDistanceToNow(new Date(row.last_attempt_at), { addSuffix: true, locale: ptBR })
                         : '—'}
                     </TableCell>
-                    <TableCell className="text-xs" title={row.next_attempt_at ?? undefined}>
+                    <TableCell
+                      className="text-xs"
+                      title={row.next_attempt_at ?? undefined}
+                      data-testid="failed-message-next-attempt"
+                    >
                       {row.next_attempt_at
                         ? formatDistanceToNow(new Date(row.next_attempt_at), { addSuffix: true, locale: ptBR })
                         : '—'}
                     </TableCell>
-                    <TableCell className="text-xs">{formatDate(row.created_at)}</TableCell>
+                    <TableCell className="text-xs" data-testid="failed-message-created-at">{formatDate(row.created_at)}</TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-1">
                         <Button
@@ -642,6 +656,7 @@ export default function AdminFailedMessagesPage() {
                           variant="ghost"
                           onClick={() => setSelected(row)}
                           title="Ver detalhes"
+                          data-testid="failed-message-details-button"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -652,6 +667,7 @@ export default function AdminFailedMessagesPage() {
                             onClick={() => retryNow.mutate(row.id)}
                             disabled={retryNow.isPending}
                             title="Reprocessar agora"
+                            data-testid="failed-message-retry-button"
                           >
                             <RotateCw className="h-4 w-4" />
                           </Button>
@@ -663,6 +679,7 @@ export default function AdminFailedMessagesPage() {
                             onClick={() => abandon.mutate(row.id)}
                             disabled={abandon.isPending}
                             title="Abandonar"
+                            data-testid="failed-message-abandon-button"
                           >
                             <Ban className="h-4 w-4" />
                           </Button>
