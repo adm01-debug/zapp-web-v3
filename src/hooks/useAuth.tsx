@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  }, [fetchProfile, queryClient]);
 
   const refreshProfile = useCallback(async () => {
     if (user) {
