@@ -23,10 +23,24 @@ vi.mock('@/lib/logger', () => ({
 import { useMessageStatus } from '@/hooks/useMessageStatus';
 
 const mockStatuses = [
-  { id: 'm1', status: 'sent', status_updated_at: '2024-01-01T10:00:00Z' },
-  { id: 'm2', status: 'delivered', status_updated_at: '2024-01-01T10:01:00Z' },
-  { id: 'm3', status: 'read', status_updated_at: '2024-01-01T10:02:00Z' },
-  { id: 'm4', status: 'failed', status_updated_at: '2024-01-01T10:03:00Z' },
+  { id: 'm1', status: 'sent', status_updated_at: '2024-01-01T10:00:00Z', error_code: null, error_reason: null },
+  { id: 'm2', status: 'delivered', status_updated_at: '2024-01-01T10:01:00Z', error_code: null, error_reason: null },
+  { id: 'm3', status: 'read', status_updated_at: '2024-01-01T10:02:00Z', error_code: null, error_reason: null },
+  { id: 'm4', status: 'failed', status_updated_at: '2024-01-01T10:03:00Z', error_code: 'GENERIC', error_reason: 'send error' },
+  {
+    id: 'm5',
+    status: 'failed_auth',
+    status_updated_at: '2024-01-01T10:04:00Z',
+    error_code: 'AUTH_401',
+    error_reason: 'Invalid Evolution API key',
+  },
+  {
+    id: 'm6',
+    status: 'failed_retries',
+    status_updated_at: '2024-01-01T10:05:00Z',
+    error_code: 'RETRIES_EXHAUSTED',
+    error_reason: 'Max 5 attempts reached',
+  },
 ];
 
 describe('useMessageStatus', () => {
