@@ -1,7 +1,16 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
+
+/**
+ * Custom DOM event dispatched on the window after a successful login
+ * (Supabase `SIGNED_IN` event). Non-react-query hooks (e.g. the
+ * `useConnectionsManager` polling loop) listen to it to re-fetch their
+ * data without requiring a page reload.
+ */
+export const AUTH_POST_LOGIN_REFRESH_EVENT = 'zappweb:auth:post-login-refresh';
 
 interface Profile {
   id: string;
