@@ -273,10 +273,24 @@ export function gcExpiredKeys(): { locksSwept: number; resultsSwept: number } {
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (!k) continue;
-        if (!k.startsWith(LS_LOCK_PREFIX) && !k.startsWith(LS_RESULT_PREFIX)) continue;
+        if (
+          !k.startsWith(LS_LOCK_PREFIX) &&
+          !k.startsWith(LS_RESULT_PREFIX) &&
+          !k.startsWith(LS_BUS_PREFIX)
+        ) continue;
         try {
           const raw = localStorage.getItem(k);
           if (!raw) continue;
+          // Para bus: limpa qualquer slot mais velho que BUS_MSG_TTL
+          if (k.startsWith(LS_BUS_PREFIX)) {
+            try {
+              const parsed = JSON.parse(raw) as { ts?: number };
+              if (typeof parsed.ts === 'number' && now - parsed.ts > BUS_MSG_TTL) {
+                toRemove.push(k);
+              }
+            } catch { toRemove.push(k); }
+            continue;
+          }
           const parsed = JSON.parse(raw) as { expiresAt?: number };
           if (typeof parsed.expiresAt === 'number' && parsed.expiresAt < now) {
             toRemove.push(k);
