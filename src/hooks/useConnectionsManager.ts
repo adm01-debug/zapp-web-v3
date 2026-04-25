@@ -454,10 +454,40 @@ export function useConnectionsManager() {
       }
     }
   };
+  // Debounce window (ms) for the manual "Refresh QR" button. While the dialog
+  // is in `pending`, repeated clicks within this window — or while a refresh
+  // is already in flight — are dropped to prevent storming Evolution with
+  // back-to-back `connect` requests (which can rate-limit the instance and
+  // produce orphan QR attempts in the audit log).
+  const REFRESH_DEBOUNCE_MS = 1500;
+  const lastRefreshAtRef = useRef<number>(0);
+  const refreshInFlightRef = useRef<boolean>(false);
+  // Bumped after each refresh so the derived `isRefreshDebounced` flag below
+  // re-evaluates and the button re-enables once the cooldown elapses.
+  const [refreshTick, setRefreshTick] = useState(0);
+  const isRefreshDebounced =
+    refreshInFlightRef.current ||
+    (qrCodeDialog.status === 'pending' &&
+      Date.now() - lastRefreshAtRef.current < REFRESH_DEBOUNCE_MS);
+  // `refreshTick` is intentionally referenced so the linter knows we depend on
+  // it for re-renders even though the value itself isn't read.
+  void refreshTick;
 
   const handleRefreshQrCode = async () => {
+    // Drop the click if a refresh is already running OR the previous one
+    // finished less than the debounce window ago AND we're still in the
+    // pending state (the QR shown is still valid — no need to regenerate).
+    const now = Date.now();
+    if (refreshInFlightRef.current) return;
+    if (
+      qrCodeDialog.status === 'pending' &&
+      now - lastRefreshAtRef.current < REFRESH_DEBOUNCE_MS
+    ) {
+      return;
+    }
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
+    refreshInFlightRef.current = true;
     setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
     try {
@@ -487,6 +517,13 @@ export function useConnectionsManager() {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
       setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
+    } finally {
+      lastRefreshAtRef.current = Date.now();
+      refreshInFlightRef.current = false;
+      setRefreshTick((t) => t + 1);
+      // Schedule a re-render right after the cooldown expires so the button
+      // re-enables visually (no user click required to recover).
+      setTimeout(() => setRefreshTick((t) => t + 1), REFRESH_DEBOUNCE_MS + 50);
     }
   };
   const handleCopyId = (id: string) => {
@@ -642,6 +679,7 @@ export function useConnectionsManager() {
     handleAddConnection,
     handleShowQrCode,
     handleRefreshQrCode,
+    isRefreshDebounced,
     handleCopyId,
     handleReconnect,
     handleDisconnect,
