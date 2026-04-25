@@ -143,13 +143,15 @@ describe('crossTabDedupe — multi-tab simulation', () => {
       .crossTabDedupe('multi:err', leaderWork, { ttlMs: 1_000 })
       .catch((e: Error) => ({ err: e.message }));
 
-    await tick();
+    await tick(10);
 
     const followerPromise = follower
       .crossTabDedupe('multi:err', followerWork, { ttlMs: 1_000 })
       .catch((e: Error) => ({ err: e.message }));
 
-    await tick();
+    // Give follower time to register its BroadcastChannel listener BEFORE
+    // the leader broadcasts.
+    await tick(10);
     rejectLeader(new Error('upstream-down'));
 
     const [leaderOut, followerOut] = await Promise.all([leaderPromise, followerPromise]);
