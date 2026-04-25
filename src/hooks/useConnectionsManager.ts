@@ -306,29 +306,22 @@ export function useConnectionsManager() {
     });
   };
 
-  const startStatusPolling = useCallback((instanceName: string, connectionId: string) => {
-    if (pollingInterval) clearInterval(pollingInterval);
-    const interval = setInterval(async () => {
-      try {
-        const result = await getInstanceStatus(instanceName);
-        if (result?.state === 'open' || result?.status === 'connected') {
-          clearInterval(interval);
-          setPollingInterval(null);
-          setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
-          // Use the deduplicated announcer so we don't double-toast when realtime
-          // also delivers the UPDATE event with status='connected'.
-          setConnections((prev) => {
-            const conn = prev.find((c) => c.id === connectionId);
-            if (conn) announceConnected({ id: conn.id, name: conn.name });
-            return prev;
-          });
-        }
-      } catch (error) {
-        log.error('Status polling error:', error);
-      }
-    }, 3000);
-    setPollingInterval(interval);
-  }, [getInstanceStatus, pollingInterval, announceConnected]);
+  /**
+   * Status polling do pareamento WhatsApp.
+   *
+   * No-op: o polling agora é gerenciado por um `useEffect` declarativo abaixo
+   * que só dispara quando `qrCodeDialog.open === true` E
+   * `qrCodeDialog.status === 'pending'`. Isso garante que:
+   *   - fechamos o intervalo automaticamente quando o usuário fecha a modal;
+   *   - retomamos quando a modal reabre com QR ainda válido;
+   *   - paramos imediatamente quando o status sai de `pending` (loading/error/connected).
+   *
+   * Mantemos a função como stub (compatibilidade com chamadas existentes) para
+   * não exigir refactor sincronizado em todos os call-sites.
+   */
+  const startStatusPolling = useCallback((_instanceName: string, _connectionId: string) => {
+    // intencionalmente vazio — ver useEffect "QR status polling" abaixo.
+  }, []);
 
   /**
    * Logs a QR generation attempt to qr_attempts. Returns the inserted attempt id (if successful)
