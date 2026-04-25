@@ -267,4 +267,4 @@ describe('eviction LRU — limpa o Map quando excede INSTABILITY_TOAST_MAX_KEYS'
     expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
   });
 });
-});
+
