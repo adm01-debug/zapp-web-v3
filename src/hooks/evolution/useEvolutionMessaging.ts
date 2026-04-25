@@ -66,14 +66,9 @@ export function useEvolutionMessaging(
     instanceName: string,
     number: string,
     text: string,
-    options?: {
+    options?: SendTextOptions & {
       pauseMs?: number;
       minLengthForPause?: number;
-      delay?: number;
-      quoted?: SendMessageParams['quoted'];
-      mentioned?: string[];
-      linkPreview?: boolean;
-      mentionsEveryOne?: boolean;
     },
   ) => {
     const pauseMs = options?.pauseMs ?? 1200;
