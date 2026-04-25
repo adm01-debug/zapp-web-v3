@@ -314,6 +314,28 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                 </div>
               )}
 
+              {(result.failed_phase || result.request_id) && (
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  {result.failed_phase && (
+                    <Badge
+                      variant="destructive"
+                      className="text-[10px]"
+                      data-testid="hmac-selftest-failed-phase"
+                    >
+                      Falha em fase: {result.failed_phase}
+                    </Badge>
+                  )}
+                  {result.request_id && (
+                    <span
+                      className="text-muted-foreground font-mono text-[10px]"
+                      data-testid="hmac-selftest-request-id"
+                    >
+                      req: {result.request_id.slice(0, 8)}…
+                    </span>
+                  )}
+                </div>
+              )}
+
               {result.scenarios && result.scenarios.length > 0 && (
                 <div className="rounded-lg border overflow-hidden" data-testid="hmac-selftest-scenarios">
                   <table className="w-full text-xs">
@@ -322,6 +344,7 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                         <th className="text-left px-2 py-1.5 font-medium">Cenário</th>
                         <th className="text-left px-2 py-1.5 font-medium">Esperado</th>
                         <th className="text-left px-2 py-1.5 font-medium">Resultado</th>
+                        <th className="text-left px-2 py-1.5 font-medium">Fase</th>
                         <th className="text-left px-2 py-1.5 font-medium">Idade</th>
                         <th className="text-left px-2 py-1.5 font-medium">Detalhe</th>
                       </tr>
@@ -333,6 +356,7 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                           className="border-t"
                           data-testid={`hmac-selftest-scenario-${s.name}`}
                           data-passed={s.passed ? 'true' : 'false'}
+                          data-failed-phase={s.failed_phase ?? ''}
                         >
                           <td className="px-2 py-1.5">
                             <div className="font-medium">{s.name}</div>
@@ -350,6 +374,15 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                             >
                               {s.outcome === 'accept' ? 'aceito' : 'rejeitado'}
                             </Badge>
+                          </td>
+                          <td className="px-2 py-1.5">
+                            {s.failed_phase ? (
+                              <Badge variant="destructive" className="text-[10px]" title={s.reason ?? ''}>
+                                {s.failed_phase}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-[10px]">—</span>
+                            )}
                           </td>
                           <td className="px-2 py-1.5 text-muted-foreground">
                             {s.ageSeconds >= 0 ? `+${s.ageSeconds}s` : `${s.ageSeconds}s`}
