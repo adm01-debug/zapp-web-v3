@@ -120,16 +120,17 @@ Deno.serve(async (req) => {
 
     /** True when we aborted the upstream because OUR hard timer fired. */
     const isProxyTimeout = (e: unknown): boolean => {
-      if (timeoutFired) return true
+      if (!timeoutFired) return false
       const name = (e as { name?: string } | null)?.name
       const msg = (e as { message?: string } | null)?.message ?? ''
-      return name === 'AbortError' && timeoutFired || /aborted|AbortError/i.test(msg) && timeoutFired
+      return name === 'AbortError' || /aborted|abort/i.test(msg)
     }
 
     const isClientAbort = (e: unknown): boolean => {
-      if (clientAbortFired) return true
+      if (!clientAbortFired) return false
       const name = (e as { name?: string } | null)?.name
-      return name === 'AbortError' && clientAbortFired
+      const msg = (e as { message?: string } | null)?.message ?? ''
+      return name === 'AbortError' || /aborted|abort/i.test(msg)
     }
 
     const timeoutResponse = () =>
