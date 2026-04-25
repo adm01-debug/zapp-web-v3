@@ -314,7 +314,9 @@ describe('contagem por filtro — espelho do que o dropdown mostra', () => {
     expect(get('grupo')).toHaveLength(5); // só @g.us
     expect(get('grupo_orcamentos')).toHaveLength(1);
     expect(get('grupo_sem_categoria')).toHaveLength(1);
-    expect(get('cliente')).toHaveLength(1);
+    // 'cliente' inclui contact_type === 'cliente' OU null/undefined (fallback)
+    // → individualClient + 2 broadcasts (contact_type=null) + groupLegacyPattern (dead-code) = 4
+    expect(get('cliente')).toHaveLength(4);
 
     // unread agregado em 'grupo' inclui groupOrcamentos (3) + groupNoCategory (1)
     const unreadInGroups = get('grupo').reduce(
