@@ -346,18 +346,20 @@ export function useConnectionsManager() {
     }
   };
 
-  /** Mark a previously inserted QR attempt as expired/error. */
+  /** Mark a previously inserted QR attempt as expired/error/connected. */
   const updateQrAttempt = async (
     attemptId: string | null,
-    patch: { status: 'expired' | 'error'; error_message?: string | null },
+    patch: { status: 'expired' | 'error' | 'connected'; error_message?: string | null },
   ) => {
     if (!attemptId) return;
     try {
+      const nowIso = new Date().toISOString();
       await supabase
         .from('qr_attempts')
         .update({
           status: patch.status,
-          expired_at: patch.status === 'expired' ? new Date().toISOString() : null,
+          expired_at: patch.status === 'expired' ? nowIso : null,
+          connected_at: patch.status === 'connected' ? nowIso : null,
           error_message: patch.error_message ?? null,
         })
         .eq('id', attemptId);
