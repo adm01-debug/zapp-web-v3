@@ -15,19 +15,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 type DedupeMod = typeof import('@/lib/crossTabSendDedupe');
 
-// Pin `dedupeMetrics` to a single shared instance even when the dedupe
-// module is re-evaluated. Using a dynamic import inside the factory avoids
-// the "top-level variable" hoisting trap of `vi.mock`.
-vi.mock('@/lib/dedupeMetrics', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/dedupeMetrics')>(
-    '@/lib/dedupeMetrics',
-  );
-  return actual;
-});
-
 async function loadTab(): Promise<DedupeMod> {
   // Reset the module registry so the next import re-evaluates `crossTabSendDedupe`
   // → fresh TAB_ID + fresh BroadcastChannel listener bound to the same name.
+  // The shared dependencies (`dedupeMetrics`) anchor their state on
+  // `globalThis`, so they survive the reset transparently.
   vi.resetModules();
   return await import('@/lib/crossTabSendDedupe');
 }
