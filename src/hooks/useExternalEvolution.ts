@@ -329,7 +329,6 @@ export function useExternalMessages(remoteJid: string | null) {
   useEffect(() => {
     if (!remoteJid) return;
     const [initialPrefix, pollPrefix, olderPrefix] = inboxJidKeyPrefixes(remoteJid);
-    void pollPrefix; // documentado: usado apenas para escopo de matcher
     const jidPrefixes = [initialPrefix, pollPrefix, olderPrefix];
     const matcher = new RegExp(
       `^(${jidPrefixes.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
