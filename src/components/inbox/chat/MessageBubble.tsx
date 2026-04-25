@@ -245,7 +245,7 @@ export function MessageBubble({
                   </div>
                 )}
 
-                {message.content && message.type !== 'audio' && message.type !== 'location' && message.type !== 'video' && message.type !== 'document' && message.type !== 'sticker' && (
+                {!showUnsupportedFallback && message.content && message.type !== 'audio' && message.type !== 'location' && message.type !== 'video' && message.type !== 'document' && message.type !== 'sticker' && (
                   <p className="text-[13.5px] whitespace-pre-wrap leading-[1.45]">
                     {searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}
                   </p>
