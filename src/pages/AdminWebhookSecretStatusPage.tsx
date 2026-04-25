@@ -453,6 +453,9 @@ export default function AdminWebhookSecretStatusPage() {
         </Card>
       </div>
 
+      {/* Histórico de execuções do botão "Testar HMAC" */}
+      <HmacAuditHistoryPanel instance={selectedInstance} />
+
       {/* Per-instance breakdown — only when filter = "all" */}
       {!selectedInstance && (
         <InstanceBreakdownTable stats={breakdown} onSelectInstance={setInstance} />
