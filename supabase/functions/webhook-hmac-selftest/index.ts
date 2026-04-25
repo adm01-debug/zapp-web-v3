@@ -19,9 +19,29 @@
  */
 import { createWebhookValidator } from '../_shared/hmac-validation.ts';
 
-const corsHeaders = {
+/**
+ * CORS headers — definidos inline (sem dependência de pacote externo) para
+ * compatibilidade com qualquer versão do runtime do Supabase Edge Functions.
+ *
+ * Inclui todos os headers que o `@supabase/supabase-js` envia por padrão
+ * (incluindo metadados de plataforma/runtime), além de Methods e Max-Age para
+ * evitar preflights repetidos.
+ */
+const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': [
+    'authorization',
+    'x-client-info',
+    'apikey',
+    'content-type',
+    'x-supabase-client-platform',
+    'x-supabase-client-platform-version',
+    'x-supabase-client-runtime',
+    'x-supabase-client-runtime-version',
+  ].join(', '),
+  'Access-Control-Max-Age': '86400',
+  'Vary': 'Origin',
 };
 
 const DEFAULT_TOLERANCE_SECONDS = 300; // 5 minutos
