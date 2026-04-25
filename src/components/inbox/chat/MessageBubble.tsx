@@ -29,6 +29,8 @@ import {
   ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { MessageSendHistorySheet } from './MessageSendHistorySheet';
+import { extractMessageType } from '@/adapters/evolutionAdapter';
+import { MessageBubbleUnsupported } from './MessageBubbleUnsupported';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('MessageBubble');
