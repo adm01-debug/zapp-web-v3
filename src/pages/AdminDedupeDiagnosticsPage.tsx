@@ -187,6 +187,9 @@ export default function AdminDedupeDiagnosticsPage() {
         </Card>
       </div>
 
+      {/* Eficiência cross-tab — leader vs follower, latência, calls saved */}
+      <CrossTabEfficiencyBlock />
+
       {/* Filtro */}
       <div className="flex items-center gap-2">
         <Filter className="h-4 w-4 text-muted-foreground" />
