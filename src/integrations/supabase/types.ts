@@ -7531,6 +7531,82 @@ export type Database = {
           },
         ]
       }
+      sticky_assignments: {
+        Row: {
+          agent_profile_id: string
+          channel_connection_id: string | null
+          contact_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_assigned_at: string
+          queue_id: string | null
+        }
+        Insert: {
+          agent_profile_id: string
+          channel_connection_id?: string | null
+          contact_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_assigned_at?: string
+          queue_id?: string | null
+        }
+        Update: {
+          agent_profile_id?: string
+          channel_connection_id?: string | null
+          contact_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_assigned_at?: string
+          queue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sticky_assignments_agent_profile_id_fkey"
+            columns: ["agent_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sticky_assignments_agent_profile_id_fkey"
+            columns: ["agent_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sticky_assignments_channel_connection_id_fkey"
+            columns: ["channel_connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sticky_assignments_channel_connection_id_fkey"
+            columns: ["channel_connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sticky_assignments_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sticky_assignments_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "queues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_event_keys: {
         Row: {
           created_at: string
@@ -9463,6 +9539,23 @@ export type Database = {
       }
       decrypt_gmail_token: { Args: { p_encrypted: string }; Returns: string }
       encrypt_gmail_token: { Args: { p_token: string }; Returns: string }
+      fn_register_sticky_assignment: {
+        Args: {
+          p_agent_profile_id: string
+          p_channel_connection_id?: string
+          p_contact_id: string
+          p_queue_id?: string
+        }
+        Returns: string
+      }
+      fn_resolve_agent_for_routing: {
+        Args: {
+          p_channel_connection_id?: string
+          p_contact_id: string
+          p_queue_id?: string
+        }
+        Returns: Json
+      }
       get_channel_credentials: {
         Args: { _connection_id: string }
         Returns: Json
