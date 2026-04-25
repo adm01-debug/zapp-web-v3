@@ -76,6 +76,19 @@ export function MessageBubble({
     message.status === 'failed' || message.status === 'failed_auth' || message.status === 'failed_retries'
   );
 
+  // Universal extractor: classifica o tipo bruto do WhatsApp/Evolution.
+  // Quando o blueprint marca o tipo como `unsupported`, renderiza o
+  // fallback diagnóstico inline em vez de tentar interpretar o conteúdo.
+  // Usa `message_type` (raw da DB) quando disponível; cai para `type` interno.
+  const extracted = extractMessageType(message.message_type ?? message.type);
+  const showUnsupportedFallback =
+    !message.is_deleted && !extracted.supported &&
+    // Não dispara para mensagens que o adapter já casou com um renderer
+    // dedicado (ex.: 'image' interno mesmo se o raw for desconhecido).
+    !(message.mediaUrl && (message.type === 'image' || message.type === 'video' || message.type === 'audio' || message.type === 'document' || message.type === 'sticker')) &&
+    !(message.type === 'location' && message.location) &&
+    !(message.type === 'interactive' && message.interactive);
+
   const bubbleContent = (
       <SwipeableMessage onSwipeRight={() => onReply(message)} onSwipeLeft={() => onForward(message)}>
         <div
