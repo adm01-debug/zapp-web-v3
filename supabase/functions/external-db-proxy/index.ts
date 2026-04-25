@@ -203,7 +203,25 @@ Deno.serve(async (req) => {
       total_ms: total,
       ...extra,
     })
-    // Attach Server-Timing so the browser dev tools surface upstream cost too.
+    // Persist a metric sample for /proxy-health to compute error rate + p95.
+    // Skip CORS pre-flights, config errors and bad-request validations that
+    // never reached upstream — they would skew the rate.
+    const skipMetrics = action === 'config_error' || action === 'bad_request' ||
+      (extra && (extra.reason === 'missing_table' || extra.reason === 'heavy_no_filter'))
+    if (!skipMetrics) {
+      const target = (extra?.table as string) || (extra?.rpc as string) || action
+      recordMetric({
+        cid,
+        rid,
+        op: action,
+        target,
+        status: resp.status,
+        ms: total,
+        ok: resp.status >= 200 && resp.status < 400,
+        timeout_fired: !!extra?.timeout_fired,
+        pg_timeout: !!extra?.pg_timeout,
+      })
+    }
     try {
       resp.headers.set('Server-Timing', `proxy;dur=${total}`)
     } catch { /* immutable headers in some runtimes */ }
