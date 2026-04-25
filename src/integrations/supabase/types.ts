@@ -3630,6 +3630,68 @@ export type Database = {
           },
         ]
       }
+      dispatch_error_logs: {
+        Row: {
+          agent_email: string | null
+          agent_user_id: string | null
+          channel_type: string | null
+          context: Json | null
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          failed_message_id: string | null
+          http_status: number | null
+          id: string
+          instance_name: string
+          occurred_at: string
+          payload: Json | null
+          remote_jid: string | null
+          retry_count: number
+        }
+        Insert: {
+          agent_email?: string | null
+          agent_user_id?: string | null
+          channel_type?: string | null
+          context?: Json | null
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          failed_message_id?: string | null
+          http_status?: number | null
+          id?: string
+          instance_name: string
+          occurred_at?: string
+          payload?: Json | null
+          remote_jid?: string | null
+          retry_count?: number
+        }
+        Update: {
+          agent_email?: string | null
+          agent_user_id?: string | null
+          channel_type?: string | null
+          context?: Json | null
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          failed_message_id?: string | null
+          http_status?: number | null
+          id?: string
+          instance_name?: string
+          occurred_at?: string
+          payload?: Json | null
+          remote_jid?: string | null
+          retry_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_error_logs_failed_message_id_fkey"
+            columns: ["failed_message_id"]
+            isOneToOne: false
+            referencedRelation: "failed_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_labels: {
         Row: {
           color: string | null
@@ -9860,6 +9922,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_connection_status_audit: { Args: never; Returns: number }
+      cleanup_dispatch_error_logs: { Args: never; Returns: number }
       cleanup_evolution_fallback_events: { Args: never; Returns: number }
       cleanup_evolution_send_idempotency: { Args: never; Returns: number }
       cleanup_expired_challenges: { Args: never; Returns: undefined }
@@ -10140,6 +10203,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_dispatch_error_stats: { Args: { p_hours?: number }; Returns: Json }
       rpc_dlq_abandon: {
         Args: { p_id: string; p_reason: string }
         Returns: boolean
@@ -10199,6 +10263,35 @@ export type Database = {
           instance_name: string
           invalid_signature: number
           total: number
+        }[]
+      }
+      rpc_list_dispatch_error_logs: {
+        Args: {
+          p_agent?: string
+          p_error_code?: string
+          p_from?: string
+          p_instance?: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_to?: string
+        }
+        Returns: {
+          agent_email: string
+          agent_user_id: string
+          channel_type: string
+          context: Json
+          error_code: string
+          error_message: string
+          failed_message_id: string
+          http_status: number
+          id: string
+          instance_name: string
+          occurred_at: string
+          payload: Json
+          remote_jid: string
+          retry_count: number
+          total_count: number
         }[]
       }
       rpc_list_failed_messages:
