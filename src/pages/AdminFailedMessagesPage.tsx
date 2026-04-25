@@ -895,6 +895,16 @@ export default function AdminFailedMessagesPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t">
+                {selected.remote_jid && (
+                  <Button
+                    variant="outline"
+                    onClick={() => { handleViewInChat(selected); setSelected(null); }}
+                    data-testid="failed-message-details-view-in-chat"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Ver no chat
+                  </Button>
+                )}
                 {isAdmin && (selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
                   <Button
                     variant="outline"
