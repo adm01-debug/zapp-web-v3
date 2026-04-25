@@ -201,12 +201,42 @@ export function useIdempotencyMissAlerts(opts: UseIdempotencyMissAlertsOptions =
     })();
   }, [counts, enabled, lastAlertedAt, threshold]);
 
+  // Derived: how many toasts we've fired per instance in the CURRENT hour bucket,
+  // and when that bucket flips (i.e. when the dedupe resets).
+  const { toastsByInstance, currentBucketStartedAt, nextResetAt } = useMemo(() => {
+    const now = Date.now();
+    const currentBucket = hourBucket(now);
+    const start = currentBucket * ONE_HOUR_MS;
+    const next = start + ONE_HOUR_MS;
+    const byInstance: Record<string, number> = {};
+    for (const key of lastAlertedAt.keys()) {
+      // key shape: `idempotency-miss:<instance>:<bucket>`
+      const parts = key.split(':');
+      if (parts.length < 3) continue;
+      const bucket = Number(parts[parts.length - 1]);
+      if (bucket !== currentBucket) continue;
+      const instance = parts.slice(1, -1).join(':');
+      byInstance[instance] = (byInstance[instance] ?? 0) + 1;
+    }
+    return {
+      toastsByInstance: byInstance,
+      currentBucketStartedAt: start,
+      nextResetAt: next,
+    };
+  }, [lastAlertedAt]);
+
   return {
     counts,
     threshold,
     isLoading: isFetching && !data,
     error: error instanceof Error ? error.message : null,
     enabled,
+    /** Toasts disparados na janela de hora atual, agrupados por instância. */
+    toastsByInstance,
+    /** Timestamp (ms) do início da janela atual. */
+    currentBucketStartedAt,
+    /** Timestamp (ms) em que o dedupe reseta (início da próxima janela). */
+    nextResetAt,
   };
 }
 
