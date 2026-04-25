@@ -154,6 +154,12 @@ export function useConnectionsManager() {
   const [isCreating, setIsCreating] = useState(false);
   const [syncingHistory, setSyncingHistory] = useState<string | null>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  // Sentinela monotônica: incrementa a cada `closeQrDialog`. Operações
+  // assíncronas (network requests, setTimeouts) capturam o valor no início e
+  // comparam ao concluir — se mudou, o usuário fechou o diálogo no meio do
+  // caminho e qualquer setState/refresh deve ser silenciosamente descartado
+  // para evitar polling/auto-refresh não intencional após o close.
+  const dialogGenRef = useRef(0);
 
   const {
     isLoading: evolutionLoading,
@@ -466,10 +472,16 @@ export function useConnectionsManager() {
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
     refreshInFlightRef.current = true;
+    // Snapshot da geração: se o usuário fechar o diálogo durante o request,
+    // dialogGenRef.current avança e nós abortamos no callback.
+    const generation = dialogGenRef.current;
+    const isStale = () => dialogGenRef.current !== generation;
     setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
+    if (isStale()) { refreshInFlightRef.current = false; return; }
     try {
       const result = await requestConnectionQr(connection.instance_id);
+      if (isStale()) return;
       const ttlMs = detectQrTtlMs(result);
       const expiresAt = Date.now() + ttlMs;
       if (result?.qrcode?.base64) {
@@ -484,6 +496,7 @@ export function useConnectionsManager() {
         setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
       }
       setTimeout(() => {
+        if (isStale()) return;
         setQrCodeDialog((prev) => {
           if (prev.connectionId === connection.id && prev.status === 'pending') {
             updateQrAttempt(prev.attemptId, { status: 'expired' });
@@ -493,8 +506,10 @@ export function useConnectionsManager() {
         });
       }, ttlMs);
     } catch (error: unknown) {
+      if (isStale()) return;
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
+      if (isStale()) return;
       setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
     } finally {
       // Always release the lock so the next user-initiated retry can proceed,
@@ -540,6 +555,11 @@ export function useConnectionsManager() {
   };
 
   const closeQrDialog = () => {
+    // Invalida toda operação assíncrona em vôo: handlers que capturaram a
+    // geração anterior vão detectar o mismatch e abortar antes de tocar no
+    // estado, garantindo que NENHUM polling/auto-refresh dispare após o close.
+    dialogGenRef.current += 1;
+    refreshInFlightRef.current = false;
     if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null); }
     clearPersistedQr();
     setQrCodeDialog(INITIAL_QR_STATE);
@@ -701,7 +721,11 @@ export function useConnectionsManager() {
     if (delay <= 0) return;
 
     const scheduledForAttempt = qrCodeDialog.attemptId;
+    const generationAtSchedule = dialogGenRef.current;
     const timer = setTimeout(() => {
+      // Defesa extra contra race condition: se o usuário fechou o diálogo
+      // entre o agendamento e o disparo, dialogGenRef avançou — abortar.
+      if (dialogGenRef.current !== generationAtSchedule) return;
       // Re-check the latest dialog state at fire time — the props captured in
       // closure may be stale if the user already closed the dialog or another
       // refresh raced ahead. We use the functional setter to read the freshest
