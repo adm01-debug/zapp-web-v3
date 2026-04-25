@@ -18,6 +18,7 @@ import { openChatPopup } from '@/lib/popupManager';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { RetryFailureBadge } from './RetryFailureBadge';
 
 export function ChannelBadge({ type }: { type?: string | null }) {
   const iconClass = 'w-2.5 h-2.5 text-primary-foreground';
@@ -104,6 +105,11 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             ) : (
               <p className="text-[11px] text-muted-foreground truncate">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
             )}
+            {conversation.lastMessage && (
+              <div className="mt-0.5">
+                <RetryFailureBadge message={conversation.lastMessage} compact />
+              </div>
+            )}
           </div>
           {conversation.priority === 'high' && <div className="w-0.5 h-5 rounded-full bg-destructive flex-shrink-0" />}
         </div>
@@ -187,6 +193,11 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             <div className="mt-1">
               <SLAIndicatorForContact conversation={conversation} compact />
             </div>
+            {conversation.lastMessage && (
+              <div className="mt-1 flex items-center">
+                <RetryFailureBadge message={conversation.lastMessage} />
+              </div>
+            )}
             {conversation.tags.length > 0 && (
               <div className="flex items-center gap-1 mt-2 flex-wrap">
                 {conversation.tags.slice(0, 2).map((tag) => <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0 bg-muted/50 border-border/20">{tag}</Badge>)}
