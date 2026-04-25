@@ -412,6 +412,130 @@ export function clearCrossTabDedupe(): void {
 
 export const __TAB_ID = TAB_ID;
 
+// ─── Introspecção (read-only) — usada pela tela de Diagnósticos ──────────────
+export interface ActiveLockInfo {
+  key: string;
+  ownerId: string;
+  acquiredAt: number;
+  expiresAt: number;
+  ttlRemainingMs: number;
+  isOwnedByThisTab: boolean;
+}
+
+export interface ActiveResultInfo {
+  key: string;
+  expiresAt: number;
+  ttlRemainingMs: number;
+  /** Tamanho aproximado em bytes do payload serializado (informativo). */
+  sizeBytes: number;
+  /** True se também está no cache em memória desta aba. */
+  inMemory: boolean;
+}
+
+export interface InflightInfo {
+  key: string;
+}
+
+export interface DedupeIntrospectSnapshot {
+  tabId: string;
+  takenAt: number;
+  locks: ActiveLockInfo[];
+  results: ActiveResultInfo[];
+  inflight: InflightInfo[];
+  waiters: Array<{ key: string; count: number }>;
+  subscribers: number;
+  broadcastChannelActive: boolean;
+}
+
+/**
+ * Coleta um snapshot read-only do estado atual: locks vivos no localStorage,
+ * resultados em cache (memória + persistido), inflight e waiters da aba.
+ *
+ * NÃO modifica nada — pode ser chamado em loop por painéis de diagnóstico.
+ */
+export function getDedupeIntrospectSnapshot(): DedupeIntrospectSnapshot {
+  const now = Date.now();
+  const locks: ActiveLockInfo[] = [];
+  const results: ActiveResultInfo[] = [];
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+        if (k.startsWith(LS_LOCK_PREFIX)) {
+          const raw = localStorage.getItem(k);
+          if (!raw) continue;
+          try {
+            const parsed = JSON.parse(raw) as LockPayload;
+            if (parsed.expiresAt < now) continue; // expirado: ignora
+            const key = k.slice(LS_LOCK_PREFIX.length);
+            locks.push({
+              key,
+              ownerId: parsed.ownerId,
+              acquiredAt: parsed.acquiredAt,
+              expiresAt: parsed.expiresAt,
+              ttlRemainingMs: Math.max(0, parsed.expiresAt - now),
+              isOwnedByThisTab: parsed.ownerId === TAB_ID,
+            });
+          } catch {
+            /* corrompido — ignora */
+          }
+        } else if (k.startsWith(LS_RESULT_PREFIX)) {
+          const raw = localStorage.getItem(k);
+          if (!raw) continue;
+          try {
+            const parsed = JSON.parse(raw) as ResultPayload;
+            if (parsed.expiresAt < now) continue;
+            const key = k.slice(LS_RESULT_PREFIX.length);
+            results.push({
+              key,
+              expiresAt: parsed.expiresAt,
+              ttlRemainingMs: Math.max(0, parsed.expiresAt - now),
+              sizeBytes: raw.length,
+              inMemory: resultCache.has(key),
+            });
+          } catch {
+            /* noop */
+          }
+        }
+      }
+    } catch {
+      /* localStorage indisponível */
+    }
+  }
+
+  // Resultados que estão APENAS em memória (sem cópia persistida).
+  for (const [key, entry] of resultCache) {
+    if (entry.expiresAt < now) continue;
+    if (results.some((r) => r.key === key)) continue;
+    results.push({
+      key,
+      expiresAt: entry.expiresAt,
+      ttlRemainingMs: Math.max(0, entry.expiresAt - now),
+      sizeBytes: 0,
+      inMemory: true,
+    });
+  }
+
+  const inflight_: InflightInfo[] = [];
+  for (const key of inflight.keys()) inflight_.push({ key });
+
+  const waiters_: Array<{ key: string; count: number }> = [];
+  for (const [key, list] of waiters) waiters_.push({ key, count: list.length });
+
+  return {
+    tabId: TAB_ID,
+    takenAt: now,
+    locks: locks.sort((a, b) => a.key.localeCompare(b.key)),
+    results: results.sort((a, b) => a.key.localeCompare(b.key)),
+    inflight: inflight_.sort((a, b) => a.key.localeCompare(b.key)),
+    waiters: waiters_.sort((a, b) => a.key.localeCompare(b.key)),
+    subscribers: subscribers.size,
+    broadcastChannelActive: bc !== null,
+  };
+}
+
 /**
  * Subscreve-se a resultados de dedupedFetch concluídos em qualquer aba.
  *
