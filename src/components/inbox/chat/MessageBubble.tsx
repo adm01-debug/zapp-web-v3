@@ -22,12 +22,15 @@ import { formatMessageTime } from './messageUtils';
 import { MessageStatusInline } from './MessageStatusInline';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { sendMessageToContact } from '@/hooks/realtime/messageSender';
+import { sendMessageToContact, redispatchMessage } from '@/hooks/realtime/messageSender';
 import { Link } from 'react-router-dom';
-import { RefreshCw, ShieldAlert, History } from 'lucide-react';
+import { RefreshCw, ShieldAlert, History, ChevronDown, Repeat, Zap } from 'lucide-react';
 import {
   ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 import { MessageSendHistorySheet } from './MessageSendHistorySheet';
 
 import { getLogger } from '@/lib/logger';
