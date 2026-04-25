@@ -319,7 +319,9 @@ Deno.test({
         "GET",
       );
       const body = await res.json();
-      assertEquals(body, payload);
+      // O proxy injeta `version` no envelope versionado — comparamos o resto.
+      const { version: _v, ...rest } = body;
+      assertEquals(rest, payload);
       assertEquals(
         body._source,
         undefined,
