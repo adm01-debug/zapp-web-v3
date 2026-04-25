@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { RefreshCw, Loader2 } from 'lucide-react';
+import { log } from '@/lib/logger';
 
 export type RefreshQrButtonStatus = 'loading' | 'pending' | 'connected' | 'error';
 
@@ -23,19 +25,23 @@ interface RefreshQrButtonProps {
   stabilizationMs?: number;
 }
 
-/**
- * Botão "Gerar novo QR" com cooldown visual e bloqueio reativo a status.
- *
- * Regras de habilitação (do mais restritivo ao menos):
- * 1. `loading` externo → desabilitado, mostra "Gerando…".
- * 2. Status NÃO é `pending` (loading/error/connected) → desabilitado, sem cooldown
- *    visível. Cooldown stale é zerado para não confundir o usuário no próximo
- *    `pending`.
- * 3. Cooldown local após clique manual → desabilitado, mostra contador.
- * 4. Status acabou de virar `pending` mas ainda não estabilizou (`stabilizationMs`)
- *    → desabilitado silenciosamente para evitar reabilitação prematura.
- * 5. Caso contrário → habilitado.
- */
+type BlockReason =
+  | 'in_flight'
+  | 'cooldown'
+  | 'status_not_interactive'
+  | 'awaiting_stabilization';
+
+/** Mensagens humanizadas exibidas no tooltip — pensadas para o time comercial. */
+const REASON_COPY: Record<BlockReason, (extra: { secondsLeft: number; status: string }) => string> = {
+  in_flight: () => 'Já existe uma geração de QR em andamento. Aguarde a conclusão ou clique em "Cancelar".',
+  cooldown: ({ secondsLeft }) => `Aguarde ${secondsLeft}s antes de gerar outro QR (proteção contra cliques repetidos).`,
+  status_not_interactive: ({ status }) =>
+    status === 'connected'
+      ? 'Conexão já está ativa — não é necessário gerar novo QR.'
+      : 'O QR ainda está sendo carregado. O botão será reabilitado quando o status estabilizar.',
+  awaiting_stabilization: () => 'Aguardando o novo status do QR estabilizar… O botão reabilitará em instantes.',
+};
+
 export function RefreshQrButton({
   onRefresh,
   loading,
@@ -48,11 +54,6 @@ export function RefreshQrButton({
   const [stabilized, setStabilized] = useState(false);
   const previousStatusRef = useRef<RefreshQrButtonStatus>(status);
 
-  // Reage a mudanças de status: bloqueia imediatamente quando vai para
-  // `loading` (refresh em vôo), e re-arma o timer de estabilização ao voltar
-  // a um estado interativo (`pending` ou `error`, este último permite retry
-  // manual). `connected` desabilita silenciosamente — o componente é
-  // desmontado nesse caso pelo container, mas defendemos aqui também.
   useEffect(() => {
     const prev = previousStatusRef.current;
     previousStatusRef.current = status;
@@ -63,14 +64,12 @@ export function RefreshQrButton({
       return;
     }
 
-    // status === 'pending' | 'error': aguardar estabilização antes de reabilitar.
     setStabilized(false);
     const timer = setTimeout(() => setStabilized(true), stabilizationMs);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, stabilizationMs]);
 
-  // Decremento do cooldown.
   useEffect(() => {
     if (secondsLeft <= 0) return;
     const timer = setInterval(() => {
@@ -80,24 +79,48 @@ export function RefreshQrButton({
   }, [secondsLeft]);
 
   const isInteractiveStatus = status === 'pending' || status === 'error';
-  const blockedByStatus = !isInteractiveStatus || !stabilized;
+
+  // Determina o motivo do bloqueio em ordem de prioridade. Centralizado para
+  // que a UI (tooltip) e o log compartilhem a mesma decisão.
+  const blockReason: BlockReason | null = loading
+    ? 'in_flight'
+    : !isInteractiveStatus
+      ? 'status_not_interactive'
+      : !stabilized
+        ? 'awaiting_stabilization'
+        : secondsLeft > 0
+          ? 'cooldown'
+          : null;
 
   const handleClick = useCallback(() => {
-    if (loading || secondsLeft > 0 || blockedByStatus) return;
+    if (blockReason) {
+      // Telemetria: clique ignorado. O time comercial pode pedir esses logs
+      // ao desenvolvimento para entender por que "o botão não funciona".
+      log.info('[refresh-qr-button] click_ignored', {
+        reason: blockReason,
+        status,
+        secondsLeft,
+        loading,
+      });
+      return;
+    }
     setSecondsLeft(cooldownSeconds);
     void onRefresh();
-  }, [loading, secondsLeft, blockedByStatus, cooldownSeconds, onRefresh]);
+  }, [blockReason, status, secondsLeft, loading, cooldownSeconds, onRefresh]);
 
-  const onCooldown = secondsLeft > 0 && isInteractiveStatus;
-  const disabled = loading || onCooldown || blockedByStatus;
+  const onCooldown = blockReason === 'cooldown';
+  const disabled = blockReason !== null;
+  const tooltipMessage = blockReason ? REASON_COPY[blockReason]({ secondsLeft, status }) : null;
 
-  return (
+  const buttonNode = (
     <Button
       variant="outline"
       onClick={handleClick}
       disabled={disabled}
       aria-busy={loading}
       aria-live="polite"
+      aria-describedby={tooltipMessage ? 'refresh-qr-block-reason' : undefined}
+      data-block-reason={blockReason ?? undefined}
     >
       {loading ? (
         <>
@@ -116,5 +139,24 @@ export function RefreshQrButton({
         </>
       )}
     </Button>
+  );
+
+  if (!tooltipMessage) return buttonNode;
+
+  // Botão `disabled` não dispara mouse events; o `<span>` wrapper recebe o
+  // hover e propaga para o Tooltip. `tabIndex={0}` mantém acessível via teclado.
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span tabIndex={0} className="inline-flex">
+            {buttonNode}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent id="refresh-qr-block-reason" side="top" className="max-w-xs text-xs">
+          {tooltipMessage}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
