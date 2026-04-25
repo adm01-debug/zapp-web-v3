@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseEdgeEvents } from '../realtimeFanoutEvents.test';
+import { parseEdgeEvents } from '@/lib/realtime/edgeEvents';
 
 /**
  * Garante que o parser de rótulos das arestas DB -.->|...| <Hook> do diagrama
