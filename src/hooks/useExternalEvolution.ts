@@ -7,8 +7,9 @@
  * - Per-conversation: 100 messages by jid, with cursor-based loadOlder().
  * - Polling: cursor-forward (created_at > lastSeen) instead of full re-fetch.
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useDedupeLoadingByKey } from '@/hooks/useDedupeLoadingByKey';
 import { queryExternalProxy } from '@/lib/externalProxy';
 import {
   buildExternalConversations,
