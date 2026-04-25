@@ -336,56 +336,44 @@ Deno.serve(async (req) => {
     query = query.range(effectiveOffset, effectiveOffset + effectiveLimit - 1)
       .abortSignal(queryController.signal)
 
-    let queryData: unknown, queryError: { message: string } | null = null, count: number | null = null
-    try {
-      const res = await query
-      queryData = (res as { data: unknown }).data
-      queryError = (res as { error: { message: string } | null }).error
-      count = (res as { count: number | null }).count
-    } catch (e) {
-      if (isProxyTimeout(e)) { cleanup(); return timeoutResponse() }
-      if (isClientAbort(e)) { cleanup(); return clientAbortResponse() }
-      cleanup()
-      throw e
-    }
+    const selectResult = await withTimeout<unknown>('select', table, query as unknown as PromiseLike<{ data: unknown; error: { message: string; code?: string } | null; count?: number | null }>)
     cleanup()
 
-    const ms = Date.now() - startedAt
+    // Adds extra metadata that the generic helper doesn't know about.
     console.log(JSON.stringify({
       fn: 'external-db-proxy',
       cid,
-      op: 'select',
+      op: 'select_meta',
       target: table,
       limit: effectiveLimit,
       heavy: isHeavy,
       hasFilter: hasNarrowingFilter,
       filterCount: filtersArr?.length ?? 0,
-      ms,
-      ok: !queryError,
+      ms: selectResult.ms,
+      ok: selectResult.ok,
       aborted: timeoutFired || clientAbortFired,
     }))
 
-    if (queryError) {
-      // After abort/cancel propagates, PostgREST may still return an error
-      // body — translate to 504/499 so callers don't retry blindly.
-      if (timeoutFired) return timeoutResponse()
-      if (clientAbortFired) return clientAbortResponse()
-      const isTimeout = /statement timeout|canceling statement/i.test(queryError.message)
-      return new Response(JSON.stringify({ error: queryError.message, cid }), {
-        status: isTimeout ? 504 : 400,
-        headers: jsonHeaders
-      })
-    }
+    if (selectResult.response) return selectResult.response
 
+    const queryData = selectResult.data
     return new Response(JSON.stringify({
       data: queryData || [],
-      count: count ?? (Array.isArray(queryData) ? queryData.length : 0),
+      count: selectResult.count ?? (Array.isArray(queryData) ? (queryData as unknown[]).length : 0),
+      cid,
     }), {
       headers: jsonHeaders
     })
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    // Last-resort safety net — never let an unhandled error reach the worker
+    // boundary (which would otherwise be reported as a 502 with no `cid`,
+    // killing observability and causing inconsistent client behaviour).
+    const msg = (error as Error)?.message ?? String(error)
+    console.error(JSON.stringify({
+      fn: 'external-db-proxy', cid, op: 'fatal', err: msg,
+    }))
+    return new Response(JSON.stringify({ error: 'Internal proxy error', detail: msg, cid }), {
       status: 500, headers: jsonHeaders
     })
   }
