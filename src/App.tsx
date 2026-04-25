@@ -75,6 +75,7 @@ const RateLimitDashboard = lazyWithRetry(() => import("./pages/admin/RateLimitDa
 const HmacSelfTestPage = lazyWithRetry(() => import("./pages/admin/HmacSelfTestPage"));
 const AdminChannelsPage = lazyWithRetry(() => import("./pages/admin/AdminChannelsPage"));
 const AdminQueuesPage = lazyWithRetry(() => import("./pages/admin/AdminQueuesPage"));
+const AdminProvidersPage = lazyWithRetry(() => import("./pages/admin/AdminProvidersPage"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("./pages/ChatPopup"));
 
@@ -185,6 +186,7 @@ function AppContent() {
             <Route path="/admin/hmac-selftest" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><HmacSelfTestPage /></ProtectedRoute>} />
             <Route path="/admin/channels" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminChannelsPage /></ProtectedRoute>} />
             <Route path="/admin/queues" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminQueuesPage /></ProtectedRoute>} />
+            <Route path="/admin/providers" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminProvidersPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
