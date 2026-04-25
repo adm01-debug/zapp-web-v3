@@ -110,7 +110,13 @@ export function useExternalConversations(enabled = true) {
   const query = useQuery({
     queryKey: ['external-evolution', 'conversations', SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT],
     queryFn: async () => {
-      const messages = await fetchRecentMessagesWindow();
+      // Dedupe cross-aba: a sidebar é igual em todas as abas, então uma única
+      // chamada por janela é suficiente — abas adicionais reaproveitam.
+      const messages = await dedupedFetch(
+        `inbox:sidebar:${SIDEBAR_DAYS_BACK}:${SIDEBAR_LIMIT}`,
+        () => fetchRecentMessagesWindow(),
+        { lockTtl: 8_000, resultTtl: POLL_INTERVAL - 500, waitTimeout: 6_000 },
+      );
       return buildExternalConversations(messages);
     },
     enabled,
@@ -167,7 +173,13 @@ export function useExternalMessages(remoteJid: string | null) {
     try {
       setLoading(true);
       setError(null);
-      const evoMessages = await fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE);
+      // Dedupe cross-aba: trocar para o mesmo contato em N abas só dispara
+      // 1 fetch — as demais reaproveitam via BroadcastChannel/cache.
+      const evoMessages = await dedupedFetch(
+        `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}`,
+        () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
+        { lockTtl: 10_000, resultTtl: 15_000, waitTimeout: 8_000 },
+      );
       if (!mountedRef.current) return;
 
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
@@ -191,7 +203,13 @@ export function useExternalMessages(remoteJid: string | null) {
     if (!afterDate) return;
 
     try {
-      const newOnes = await fetchMessagesAfter(remoteJid, afterDate);
+      // Dedupe: várias abas pollando o mesmo jid+cursor compartilham 1 fetch
+      // (TTL curto = poll seguinte ainda dispara normalmente).
+      const newOnes = await dedupedFetch(
+        `inbox:poll:${remoteJid}:${afterDate}`,
+        () => fetchMessagesAfter(remoteJid, afterDate),
+        { lockTtl: 4_000, resultTtl: POLL_INTERVAL - 1_000, waitTimeout: 3_000 },
+      );
       if (!mountedRef.current || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
