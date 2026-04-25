@@ -185,6 +185,13 @@ export interface CrossTabDedupeOptions {
    * tolerate that. Default true.
    */
   replayResponse?: boolean;
+  /**
+   * Test-only: override the per-tab identity and force a fresh
+   * BroadcastChannel for this single call. Used by the multi-tab simulation
+   * suite to model N independent browser tabs without re-evaluating the
+   * module. NEVER set in production code.
+   */
+  __tabIdForTests?: string;
 }
 
 /**
