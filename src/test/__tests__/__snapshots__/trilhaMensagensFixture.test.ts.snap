@@ -1,0 +1,38 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TRILHA_MENSAGENS_NAVEGAVEL.mmd — snapshot dos rótulos de aresta > snapshot: parseEdgeEvents(label) -> [eventos] congelado 1`] = `
+{
+  "INSERT health": [
+    "INSERT",
+  ],
+  "INSERT/UPDATE": [
+    "INSERT",
+    "UPDATE",
+  ],
+  "INSERT/UPDATE KPIs": [
+    "INSERT",
+    "UPDATE",
+  ],
+  "INSERT/UPDATE/DELETE": [
+    "DELETE",
+    "INSERT",
+    "UPDATE",
+  ],
+  "Idempotency-Key header": [],
+  "UPDATE media_url": [
+    "UPDATE",
+  ],
+  "UPDATE status": [
+    "UPDATE",
+  ],
+  "UPDATE transcription": [
+    "UPDATE",
+  ],
+  "atualiza status / retry_attempt": [],
+  "cron / manual trigger": [],
+  "fallback se nao ha fingerprint": [],
+  "mesma chave em todas<br/>tentativas do withRetry<br/>=> servidor dedupa retry": [],
+  "registra outcome": [],
+  "reusa chave estavel<br/>=> servidor dedupa reenvio": [],
+}
+`;
