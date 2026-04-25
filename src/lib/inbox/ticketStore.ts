@@ -161,19 +161,12 @@ export const ticketStore = {
     if (opts?.queueId !== undefined) t.queueId = opts.queueId;
     // Atribuir reabre se estava resolvido
     if (agentId && t.status === 'resolved') {
-      t.events = [
-        { id: cryptoId(), type: 'status_change', at: now, performedBy, fromStatus: 'resolved', toStatus: 'in_progress' },
-        ev,
-        ...t.events,
-      ].slice(0, 50);
+      const statusEv: TicketEvent = { id: cryptoId(), type: 'status_change', at: now, performedBy, fromStatus: 'resolved', toStatus: 'in_progress' };
+      t.events = [statusEv, ev, ...t.events].slice(0, 50);
       t.status = 'in_progress';
     } else if (agentId && t.status === 'open') {
-      // Quem assume entra em "em andamento" automaticamente
-      t.events = [
-        { id: cryptoId(), type: 'status_change', at: now, performedBy, fromStatus: 'open', toStatus: 'in_progress' },
-        ev,
-        ...t.events,
-      ].slice(0, 50);
+      const statusEv: TicketEvent = { id: cryptoId(), type: 'status_change', at: now, performedBy, fromStatus: 'open', toStatus: 'in_progress' };
+      t.events = [statusEv, ev, ...t.events].slice(0, 50);
       t.status = 'in_progress';
     } else {
       t.events = [ev, ...t.events].slice(0, 50);
