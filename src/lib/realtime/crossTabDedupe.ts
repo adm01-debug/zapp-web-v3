@@ -100,6 +100,8 @@ function onBroadcast(msg: BroadcastMessage) {
       ws.forEach((w) => w({ ok: true, data: msg.data }));
       waiters.delete(msg.key);
     }
+    // Notifica UI subscribers para que atualizem sem refazer fetch.
+    notifySubscribers(msg.key, msg.data, 'remote');
   } else if (msg.type === 'error') {
     const ws = waiters.get(msg.key);
     if (ws) {
