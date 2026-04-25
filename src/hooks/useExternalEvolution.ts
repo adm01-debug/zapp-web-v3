@@ -313,11 +313,9 @@ export function useExternalMessages(remoteJid: string | null) {
   // atualizamos a UI sem refazer a requisição.
   useEffect(() => {
     if (!remoteJid) return;
-    const jidPrefixes = [
-      `inbox:initial:${remoteJid}:`,
-      `inbox:poll:${remoteJid}:`,
-      `older:${remoteJid}:`,
-    ];
+    const [initialPrefix, pollPrefix, olderPrefix] = inboxJidKeyPrefixes(remoteJid);
+    void pollPrefix; // documentado: usado apenas para escopo de matcher
+    const jidPrefixes = [initialPrefix, pollPrefix, olderPrefix];
     const matcher = new RegExp(
       `^(${jidPrefixes.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
     );
@@ -327,7 +325,7 @@ export function useExternalMessages(remoteJid: string | null) {
       if (!mountedRef.current || !Array.isArray(data) || data.length === 0) return;
 
       // `older` é retornado em ordem desc; demais já vêm asc.
-      const isOlder = key.startsWith(`older:${remoteJid}:`);
+      const isOlder = key.startsWith(olderPrefix);
       const ordered = isOlder ? data.slice().reverse() : data;
       const mapped = ordered.map(evolutionToRealtimeMessage);
 
@@ -335,7 +333,7 @@ export function useExternalMessages(remoteJid: string | null) {
         const seen = new Set(prev.map((m) => m.id));
         const additions = mapped.filter((m) => !seen.has(m.id));
         if (additions.length === 0) return prev;
-        if (key.startsWith(`inbox:initial:${remoteJid}:`)) {
+        if (key.startsWith(initialPrefix)) {
           // Initial completo de outra aba: substitui se ainda não tínhamos nada,
           // senão apenas mescla as faltantes.
           if (prev.length === 0) {
@@ -352,7 +350,7 @@ export function useExternalMessages(remoteJid: string | null) {
         lastSeenRef.current = additions[additions.length - 1]?.created_at ?? lastSeenRef.current;
         return next;
       });
-      if (key.startsWith(`inbox:initial:${remoteJid}:`) && mountedRef.current) {
+      if (key.startsWith(initialPrefix) && mountedRef.current) {
         setLoading(false);
       }
     });
