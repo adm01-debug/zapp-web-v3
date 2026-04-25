@@ -231,10 +231,9 @@ Deno.test({
       );
       assertEquals(res.status, 200);
       const body = await res.json();
-      // Sucesso → corpo é o próprio payload (sem envelope de erro).
-      // O proxy injeta `version` no envelope versionado — comparamos o resto.
-      const { version: _v, ...rest } = body;
-      assertEquals(rest, payload);
+      // Para respostas array, o proxy NÃO injeta `version` (passthrough raw).
+      assert(Array.isArray(body), "esperado array passthrough");
+      assertEquals(body, payload);
       assertEquals(calls.length, 1);
     });
   },
