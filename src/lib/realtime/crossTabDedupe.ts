@@ -713,6 +713,66 @@ export function subscribeDedupe<T = unknown>(
   };
 }
 
+/**
+ * Subscreve-se ao **status** (start/end) de fetches dedupedFetch — local ou remoto.
+ *
+ * Útil para sincronizar spinners entre abas: quando outra aba inicia o fetch
+ * de uma chave que esta aba também observa, recebemos `phase: 'start'` e
+ * podemos mostrar loading sem disparar request próprio. Quando termina,
+ * recebemos `phase: 'end'` (com endReason) para esconder o spinner.
+ *
+ * Eventos start/end também são emitidos para o fetch local desta aba — o
+ * handler decide se quer ignorar via `event.source === 'local'`.
+ */
+export function subscribeDedupeStatus(
+  keyMatcher: string | RegExp,
+  handler: (event: DedupeStatusEvent) => void,
+): () => void {
+  const match = typeof keyMatcher === 'string'
+    ? (k: string) => k === keyMatcher || k.startsWith(keyMatcher)
+    : (k: string) => keyMatcher.test(k);
+  const sub: StatusSubscription = { match, handler };
+  statusSubscribers.add(sub);
+  getBroadcastChannel();
+  return () => {
+    statusSubscribers.delete(sub);
+  };
+}
+
+/**
+ * Snapshot read-only das chaves com fetch em andamento (local ou remoto),
+ * filtradas opcionalmente por matcher. Útil para inicializar spinners ao
+ * montar componentes que entraram depois do `start` ter sido emitido.
+ */
+export function getInflightStatusKeys(matcher?: string | RegExp): Array<{
+  key: string;
+  ownerId: string;
+  startedAt: number;
+  isOwnedByThisTab: boolean;
+}> {
+  const now = Date.now();
+  const match = !matcher
+    ? () => true
+    : typeof matcher === 'string'
+      ? (k: string) => k === matcher || k.startsWith(matcher)
+      : (k: string) => matcher.test(k);
+  const out: Array<{ key: string; ownerId: string; startedAt: number; isOwnedByThisTab: boolean }> = [];
+  for (const [key, entry] of inflightStatus) {
+    if (entry.expiresAt < now) {
+      inflightStatus.delete(key);
+      continue;
+    }
+    if (!match(key)) continue;
+    out.push({
+      key,
+      ownerId: entry.ownerId,
+      startedAt: entry.startedAt,
+      isOwnedByThisTab: entry.ownerId === TAB_ID,
+    });
+  }
+  return out;
+}
+
 /** @internal — para testes. */
 export function __notifyLocal(key: string, data: unknown) {
   notifySubscribers(key, data, 'local');
