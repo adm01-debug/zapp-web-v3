@@ -14,11 +14,20 @@ import { useCallback } from 'react';
 import { useMediaUrl } from './useMediaUrl';
 import type { MediaRefreshKey } from '@/types/mediaRefresh';
 
+import type { MediaError } from './useMediaUrl';
+
 interface UseMediaRefreshResult {
   /** data: URL hidratada após refresh; null se ainda não houve refresh. */
   url: string | null;
   isRefreshing: boolean;
+  /** Erro classificado da última tentativa (ou null). */
+  error: MediaError | null;
+  /** True quando esgotamos as tentativas automáticas — UI deve mostrar fallback. */
+  failed: boolean;
   onError: () => void;
+  /** Retry manual (zera o contador de tentativas). */
+  retry: () => Promise<void>;
+  /** @deprecated Alias para `retry`. */
   refresh: () => Promise<void>;
 }
 
@@ -36,12 +45,28 @@ export function useMediaRefresh(originalUrl: string | null | undefined, refreshK
   const noopOnError = useCallback(() => {}, []);
 
   if (!enabled) {
-    return { url: null, isRefreshing: false, onError: noopOnError, refresh: noopRefresh };
+    return {
+      url: null,
+      isRefreshing: false,
+      error: null,
+      failed: false,
+      onError: noopOnError,
+      retry: noopRefresh,
+      refresh: noopRefresh,
+    };
   }
 
   // When enabled, we want to surface a refreshed URL only when it actually
   // differs from the original — otherwise prefer keeping `null` so callers
   // fall back to `src ?? originalUrl`.
   const url = result.url && result.url !== originalUrl ? result.url : null;
-  return { url, isRefreshing: result.isRefreshing, onError: result.onError, refresh: result.refresh };
+  return {
+    url,
+    isRefreshing: result.isRefreshing,
+    error: result.error,
+    failed: result.failed,
+    onError: result.onError,
+    retry: result.retry,
+    refresh: result.retry,
+  };
 }
