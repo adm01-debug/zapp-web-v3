@@ -2,15 +2,34 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-export type AppRole = 'admin' | 'supervisor' | 'agent' | 'special_agent';
+/**
+ * Hierarquia de papéis (do mais alto ao mais baixo):
+ *
+ *   dev        → Equipe técnica. Acesso TOTAL inclusive edição de áreas técnicas
+ *                (telemetria, webhook, banco, infra) e informativos do sistema.
+ *   admin      → Gestão completa do negócio (pessoas, integrações, configurações).
+ *                Vê áreas técnicas em modo leitura. Não edita áreas técnicas.
+ *   supervisor → Operação completa do atendimento (inbox, CRM, relatórios, equipe).
+ *   agent      → Atendente final. Apenas o próprio escopo.
+ *
+ * Cada nível superior herda os acessos dos níveis abaixo.
+ */
+export type AppRole = 'dev' | 'admin' | 'supervisor' | 'agent';
+
+const ROLE_RANK: Record<AppRole, number> = {
+  dev: 4,
+  admin: 3,
+  supervisor: 2,
+  agent: 1,
+};
 
 export function useUserRole() {
   const { user } = useAuth();
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDev, setIsDev] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSupervisor, setIsSupervisor] = useState(false);
-  const [isSpecialAgent, setIsSpecialAgent] = useState(false);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -20,7 +39,7 @@ export function useUserRole() {
 
   const fetchRoles = useCallback(async () => {
     if (!user) return;
-    
+
     const { data, error } = await supabase
       .from('user_roles')
       .select('*')
@@ -29,11 +48,21 @@ export function useUserRole() {
     if (!mountedRef.current) return;
 
     if (!error && data) {
-      const userRoles = data.map(r => r.role as AppRole);
+      // Normaliza papéis legados (special_agent foi descontinuado → vira agent).
+      const userRoles = data.map((r) => {
+        const raw = r.role as string;
+        return (raw === 'special_agent' ? 'agent' : raw) as AppRole;
+      });
       setRoles(userRoles);
-      setIsAdmin(userRoles.includes('admin'));
-      setIsSupervisor(userRoles.includes('supervisor') || userRoles.includes('admin'));
-      setIsSpecialAgent(userRoles.includes('special_agent'));
+
+      const maxRank = userRoles.reduce(
+        (acc, r) => Math.max(acc, ROLE_RANK[r] ?? 0),
+        0
+      );
+      // Hierárquico: cada nível concede os abaixo.
+      setIsDev(maxRank >= ROLE_RANK.dev);
+      setIsAdmin(maxRank >= ROLE_RANK.admin);
+      setIsSupervisor(maxRank >= ROLE_RANK.supervisor);
     }
     setLoading(false);
   }, [user]);
@@ -43,14 +72,30 @@ export function useUserRole() {
       fetchRoles();
     } else {
       setRoles([]);
+      setIsDev(false);
       setIsAdmin(false);
       setIsSupervisor(false);
-      setIsSpecialAgent(false);
       setLoading(false);
     }
   }, [user, fetchRoles]);
 
-  const hasRole = useCallback((role: AppRole) => roles.includes(role), [roles]);
+  const hasRole = useCallback(
+    (role: AppRole) => {
+      const required = ROLE_RANK[role] ?? 0;
+      return roles.some((r) => (ROLE_RANK[r] ?? 0) >= required);
+    },
+    [roles]
+  );
 
-  return { roles, isAdmin, isSupervisor, isSpecialAgent, hasRole, loading, refetch: fetchRoles };
+  return {
+    roles,
+    isDev,
+    isAdmin,
+    isSupervisor,
+    /** @deprecated O papel `special_agent` foi descontinuado. Sempre retorna `false`. */
+    isSpecialAgent: false,
+    hasRole,
+    loading,
+    refetch: fetchRoles,
+  };
 }
