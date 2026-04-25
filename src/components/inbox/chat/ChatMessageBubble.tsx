@@ -24,6 +24,8 @@ import {
   Reply,
   Forward,
   Copy,
+  ShieldAlert,
+  RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -47,23 +49,58 @@ interface ChatMessageBubbleProps {
   contactJid?: string;
 }
 
-// Message status icon
+// Message status icon — wrapped in tooltip for failure states so the user
+// gets actionable guidance (re-authenticate / retry).
 function MessageStatusIcon({ status }: { status: Message['status'] }) {
+  let icon: JSX.Element;
+  let tooltip: string | null = null;
+
   switch (status) {
     case 'sent':
-      return <Check className="w-3 h-3" />;
+      icon = <Check className="w-3 h-3" />;
+      break;
     case 'delivered':
-      return <CheckCheck className="w-3 h-3" />;
+      icon = <CheckCheck className="w-3 h-3" />;
+      break;
     case 'read':
     case 'played':
-      return <CheckCheck className="w-3 h-3 text-info" />;
-    case 'failed':
+      icon = <CheckCheck className="w-3 h-3 text-info" />;
+      break;
     case 'failed_auth':
+      icon = <ShieldAlert className="w-3 h-3 text-destructive" />;
+      tooltip = 'Falha de autenticação na conexão do WhatsApp. Reconecte a instância em Canais para reenviar.';
+      break;
     case 'failed_retries':
-      return <X className="w-3 h-3 text-destructive" />;
+      icon = <RefreshCw className="w-3 h-3 text-destructive" />;
+      tooltip = 'A mensagem falhou após várias tentativas automáticas. Toque para tentar reenviar manualmente.';
+      break;
+    case 'failed':
+      icon = <X className="w-3 h-3 text-destructive" />;
+      tooltip = 'Falha ao enviar a mensagem. Verifique a conexão e tente novamente.';
+      break;
     default:
-      return <Clock className="w-3 h-3 animate-pulse" />;
+      icon = <Clock className="w-3 h-3 animate-pulse" />;
   }
+
+  if (!tooltip) return icon;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label={tooltip}
+          className="inline-flex cursor-help"
+        >
+          {icon}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs text-xs">
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 function formatMessageTime(date: Date): string {
