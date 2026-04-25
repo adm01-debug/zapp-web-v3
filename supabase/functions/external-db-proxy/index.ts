@@ -62,13 +62,18 @@ Deno.serve(async (req) => {
 
     // Hard cap to fail fast (well below Edge Function 150s + Postgres default).
     const HARD_TIMEOUT_MS = 9000
-    const withTimeout = <T>(p: PromiseLike<T>): Promise<T> =>
-      Promise.race([
-        Promise.resolve(p),
-        new Promise<T>((_, reject) =>
-          setTimeout(() => reject(new Error('proxy_timeout')), HARD_TIMEOUT_MS)
-        ),
+    const withTimeout = <T>(p: PromiseLike<T>): Promise<T> => {
+      let timer: number | undefined
+      return Promise.race([
+        Promise.resolve(p).then((v) => {
+          if (timer !== undefined) clearTimeout(timer)
+          return v
+        }),
+        new Promise<T>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('proxy_timeout')), HARD_TIMEOUT_MS) as unknown as number
+        }),
       ])
+    }
 
     const timeoutResponse = () =>
       new Response(
