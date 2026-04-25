@@ -445,8 +445,10 @@ export function useConnectionsManager() {
       const attemptId = await logQrAttempt(connection);
       try {
         const result = await requestConnectionQr(connection.instance_id);
-        const ttlMs = detectQrTtlMs(result);
+        const { ttlMs, source: ttlSource } = detectQrTtlMs(result);
+        const ttlSeconds = Math.round(ttlMs / 1000);
         const expiresAt = Date.now() + ttlMs;
+        log.info('[qr-ttl] detected', { ttlSeconds, source: ttlSource, connectionId: connection.id });
         if (result?.qrcode?.base64) {
           setQrCodeDialog((prev) => ({
             ...prev,
@@ -454,9 +456,11 @@ export function useConnectionsManager() {
             status: 'pending',
             expiresAt,
             attemptId,
+            ttlSeconds,
+            ttlSource,
           }));
         } else {
-          setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
+          setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId, ttlSeconds, ttlSource }));
         }
         startStatusPolling(connection.instance_id, connection.id);
         // Auto-mark expired using the upstream TTL (falls back to default when missing).
