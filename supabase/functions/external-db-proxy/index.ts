@@ -95,8 +95,20 @@ export function buildQueryLog(ctx: QueryLogContext, outcome: QueryOutcome): LogP
   }
 }
 
+/** Detect transient PostgREST schema-cache errors (PGRST002) that should be retried. */
+export function isSchemaCacheError(err: { message?: string; code?: string } | null | undefined): boolean {
+  if (!err) return false
+  if (err.code === 'PGRST002') return true
+  const msg = err.message || ''
+  return /schema cache/i.test(msg) && /PGRST002|could not query the database/i.test(msg)
+}
+
 /** Classify an upstream error message into a status + flags. Exported for tests. */
-export function classifyUpstreamError(message: string | undefined, timeoutFired: boolean): {
+export function classifyUpstreamError(
+  message: string | undefined,
+  timeoutFired: boolean,
+  code?: string,
+): {
   status: number
   pgTimeout: boolean
 } {
@@ -104,6 +116,10 @@ export function classifyUpstreamError(message: string | undefined, timeoutFired:
   if (!message) return { status: 400, pgTimeout: false }
   if (/statement timeout|canceling statement/i.test(message)) {
     return { status: 504, pgTimeout: true }
+  }
+  // Transient schema cache reload — surface as 503 so callers can retry.
+  if (isSchemaCacheError({ message, code })) {
+    return { status: 503, pgTimeout: false }
   }
   return { status: 400, pgTimeout: false }
 }
