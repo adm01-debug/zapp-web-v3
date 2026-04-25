@@ -3,6 +3,7 @@ import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import { evaluateAutoRefresh } from '@/hooks/connections/qrAutoRefresh';
 
 export type WhatsAppApiType = 'evolution' | 'official';
 
