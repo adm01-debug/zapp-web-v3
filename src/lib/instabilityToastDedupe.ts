@@ -228,7 +228,7 @@ export function shouldShowInstabilityToast(
 
   // 2. Checa persistência cross-tab — pode ter sido disparado em outra aba
   //    enquanto esta estava em background ou antes de carregar.
-  const persisted = readPersistedFire(key);
+  const persisted = readPersistedFire(key, now);
   if (persisted && persisted.firedAt > last) {
     last = persisted.firedAt;
     lastFiredByKey.set(key, persisted.firedAt);
