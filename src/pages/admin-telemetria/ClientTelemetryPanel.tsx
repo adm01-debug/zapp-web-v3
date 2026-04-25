@@ -87,6 +87,7 @@ export function ClientTelemetryPanel() {
                 <thead>
                   <tr className="border-b bg-muted/30">
                     <th className="text-left p-3 font-medium text-muted-foreground">Quando</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground">Trace ID</th>
                     <th className="text-left p-3 font-medium text-muted-foreground">Source</th>
                     <th className="text-left p-3 font-medium text-muted-foreground">Op</th>
                     <th className="text-left p-3 font-medium text-muted-foreground">Target</th>
