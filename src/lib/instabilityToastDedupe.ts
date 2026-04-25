@@ -99,7 +99,13 @@ export function shouldShowInstabilityToast(
   }
   lastFiredByKey.set(key, now);
   firedCountByKey.set(key, (firedCountByKey.get(key) ?? 0) + 1);
+  evictOldestIfNeeded();
   return true;
+}
+
+/** Tamanho atual do Map de cooldown — exposto para inspeção/telemetria. */
+export function getInstabilityToastCooldownSize(): number {
+  return lastFiredByKey.size;
 }
 
 /**
