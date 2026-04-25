@@ -472,10 +472,16 @@ export function useConnectionsManager() {
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
     refreshInFlightRef.current = true;
+    // Snapshot da geração: se o usuário fechar o diálogo durante o request,
+    // dialogGenRef.current avança e nós abortamos no callback.
+    const generation = dialogGenRef.current;
+    const isStale = () => dialogGenRef.current !== generation;
     setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
+    if (isStale()) { refreshInFlightRef.current = false; return; }
     try {
       const result = await requestConnectionQr(connection.instance_id);
+      if (isStale()) return;
       const ttlMs = detectQrTtlMs(result);
       const expiresAt = Date.now() + ttlMs;
       if (result?.qrcode?.base64) {
@@ -490,6 +496,7 @@ export function useConnectionsManager() {
         setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
       }
       setTimeout(() => {
+        if (isStale()) return;
         setQrCodeDialog((prev) => {
           if (prev.connectionId === connection.id && prev.status === 'pending') {
             updateQrAttempt(prev.attemptId, { status: 'expired' });
@@ -499,8 +506,10 @@ export function useConnectionsManager() {
         });
       }, ttlMs);
     } catch (error: unknown) {
+      if (isStale()) return;
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
+      if (isStale()) return;
       setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
     } finally {
       // Always release the lock so the next user-initiated retry can proceed,
