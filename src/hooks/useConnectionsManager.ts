@@ -27,6 +27,9 @@ export interface WhatsAppConnection {
   last_health_check?: string | null;
 }
 
+/** Origem do TTL do QR atual — útil para diagnóstico (telemetria/UI). */
+export type QrTtlSource = 'detected' | 'default' | 'clamped';
+
 export interface QrCodeDialogState {
   open: boolean;
   connectionId: string;
@@ -38,6 +41,10 @@ export interface QrCodeDialogState {
   expiresAt: number | null;
   /** id of the qr_attempts row tied to current QR (for expiration update). */
   attemptId: string | null;
+  /** TTL em segundos detectado (ou padrão) na última geração. null quando não pending. */
+  ttlSeconds: number | null;
+  /** Como o TTL foi obtido (detectado da API, padrão de fallback, ou clamped por estar fora dos limites). */
+  ttlSource: QrTtlSource | null;
 }
 
 const INITIAL_QR_STATE: QrCodeDialogState = {
@@ -48,6 +55,8 @@ const INITIAL_QR_STATE: QrCodeDialogState = {
   status: 'loading',
   expiresAt: null,
   attemptId: null,
+  ttlSeconds: null,
+  ttlSource: null,
 };
 
 /** Default fallback TTL when the upstream API doesn't report one. Evolution typically rotates the QR ~60s. */
