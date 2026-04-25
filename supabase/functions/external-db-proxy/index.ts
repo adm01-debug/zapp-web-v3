@@ -292,17 +292,21 @@ Deno.serve(async (req) => {
     }
 
     query = query.range(effectiveOffset, effectiveOffset + effectiveLimit - 1)
+      .abortSignal(queryController.signal)
 
     let queryData: unknown, queryError: { message: string } | null = null, count: number | null = null
     try {
-      const res = await withTimeout(query)
+      const res = await query
       queryData = (res as { data: unknown }).data
       queryError = (res as { error: { message: string } | null }).error
       count = (res as { count: number | null }).count
     } catch (e) {
-      if ((e as Error).message === 'proxy_timeout') return timeoutResponse()
+      if (isProxyTimeout(e)) { cleanup(); return timeoutResponse() }
+      if (isClientAbort(e)) { cleanup(); return clientAbortResponse() }
+      cleanup()
       throw e
     }
+    cleanup()
 
     const ms = Date.now() - startedAt
     console.log(JSON.stringify({
@@ -316,11 +320,16 @@ Deno.serve(async (req) => {
       filterCount: filtersArr?.length ?? 0,
       ms,
       ok: !queryError,
+      aborted: timeoutFired || clientAbortFired,
     }))
 
     if (queryError) {
+      // After abort/cancel propagates, PostgREST may still return an error
+      // body — translate to 504/499 so callers don't retry blindly.
+      if (timeoutFired) return timeoutResponse()
+      if (clientAbortFired) return clientAbortResponse()
       const isTimeout = /statement timeout|canceling statement/i.test(queryError.message)
-      return new Response(JSON.stringify({ error: queryError.message }), {
+      return new Response(JSON.stringify({ error: queryError.message, cid }), {
         status: isTimeout ? 504 : 400,
         headers: jsonHeaders
       })
