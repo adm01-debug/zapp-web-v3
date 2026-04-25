@@ -37,6 +37,131 @@ describe('normalizeEndpoint', () => {
   });
   it('handles empty / whitespace', () => {
     expect(normalizeEndpoint('  ')).toBe('');
+    expect(normalizeEndpoint('')).toBe('');
+    expect(normalizeEndpoint(undefined as unknown as string)).toBe('');
+  });
+
+  describe('relative endpoints', () => {
+    it('preserves leading-slash absolute vs bare-relative distinction', () => {
+      expect(normalizeEndpoint('/api/x')).toBe('/api/x');
+      expect(normalizeEndpoint('api/x')).toBe('api/x');
+      expect(normalizeEndpoint('/api/x')).not.toBe(normalizeEndpoint('api/x'));
+    });
+
+    it('collapses redundant `./` and `//` segments', () => {
+      expect(normalizeEndpoint('/api/./x')).toBe('/api/x');
+      expect(normalizeEndpoint('/api//x')).toBe('/api/x');
+      expect(normalizeEndpoint('/api///x///y')).toBe('/api/x/y');
+      expect(normalizeEndpoint('./api/x')).toBe('api/x');
+    });
+
+    it('resolves `..` segments up to the root', () => {
+      expect(normalizeEndpoint('/api/v1/../v2/x')).toBe('/api/v2/x');
+      expect(normalizeEndpoint('/a/b/c/../../d')).toBe('/a/d');
+      expect(normalizeEndpoint('/../../api/x')).toBe('/api/x');
+      expect(normalizeEndpoint('../api/x')).toBe('../api/x');
+    });
+
+    it('treats `?` with no query (or only separators) as no query at all', () => {
+      expect(normalizeEndpoint('/api/x?')).toBe('/api/x');
+      expect(normalizeEndpoint('/api/x?&')).toBe('/api/x');
+      expect(normalizeEndpoint('/api/x?&&')).toBe('/api/x');
+      expect(normalizeEndpoint('/api/x?=value')).toBe('/api/x');
+      expect(normalizeEndpoint('/api/x?=')).toBe('/api/x');
+    });
+
+    it('strips trailing slashes consistently (single or multiple)', () => {
+      expect(normalizeEndpoint('/api/x/')).toBe('/api/x');
+      expect(normalizeEndpoint('/api/x///')).toBe('/api/x');
+      expect(normalizeEndpoint('/')).toBe('/');
+      expect(normalizeEndpoint('/api/x/?b=2&a=1')).toBe('/api/x?a=1&b=2');
+    });
+
+    it('preserves explicit empty value `?a=` distinct from missing `=` `?a`', () => {
+      expect(normalizeEndpoint('/api/x?a=')).toBe('/api/x?a=');
+      expect(normalizeEndpoint('/api/x?a')).toBe('/api/x?a');
+      expect(normalizeEndpoint('/api/x?a=')).not.toBe(normalizeEndpoint('/api/x?a'));
+    });
+  });
+
+  describe('absolute endpoints', () => {
+    it('treats trailing slash as equivalent to no slash on absolute URLs', () => {
+      expect(normalizeEndpoint('https://x.com/a/')).toBe('https://x.com/a');
+      expect(normalizeEndpoint('https://x.com/a///')).toBe('https://x.com/a');
+      expect(normalizeEndpoint('https://x.com/')).toBe('https://x.com/');
+      expect(normalizeEndpoint('https://x.com')).toBe('https://x.com/');
+    });
+
+    it('treats `?` with no query as no query', () => {
+      expect(normalizeEndpoint('https://x.com/a?')).toBe('https://x.com/a');
+      expect(normalizeEndpoint('https://x.com/a?&')).toBe('https://x.com/a');
+    });
+
+    it('resolves `..` segments inside absolute paths', () => {
+      expect(normalizeEndpoint('https://x.com/api/v1/../v2/x')).toBe('https://x.com/api/v2/x');
+      expect(normalizeEndpoint('https://x.com/a//b')).toBe('https://x.com/a/b');
+    });
+  });
+
+  describe('cross-form equivalence', () => {
+    it('all variants of the same logical relative endpoint produce the same key', () => {
+      const expected = '/api/x?a=1&b=2';
+      expect(normalizeEndpoint('/api/x?a=1&b=2')).toBe(expected);
+      expect(normalizeEndpoint('/api/x?b=2&a=1')).toBe(expected);
+      expect(normalizeEndpoint('/api/x/?a=1&b=2')).toBe(expected);
+      expect(normalizeEndpoint('/api/./x?a=1&b=2')).toBe(expected);
+      expect(normalizeEndpoint('/api//x?a=1&b=2#frag')).toBe(expected);
+      expect(normalizeEndpoint('  /api/x?a=1&b=2  ')).toBe(expected);
+    });
+
+    it('all variants of the same logical absolute endpoint produce the same key', () => {
+      const expected = normalizeEndpoint('https://api.x.com/v1/send');
+      expect(normalizeEndpoint('HTTPS://API.X.com/v1/send')).toBe(expected);
+      expect(normalizeEndpoint('https://api.x.com/v1/send/')).toBe(expected);
+      expect(normalizeEndpoint('https://api.x.com/v1/send#x')).toBe(expected);
+      expect(normalizeEndpoint('https://api.x.com/v1/send?')).toBe(expected);
+      expect(normalizeEndpoint('https://api.x.com/v1/extra/../send')).toBe(expected);
+    });
+  });
+});
+
+describe('buildRequestDedupeKey — endpoint normalization parity', () => {
+  it('relative endpoint variants collapse to the same dedupe key', async () => {
+    const variants = [
+      '/api/x?a=1&b=2',
+      '/api/x?b=2&a=1',
+      '/api/x/?a=1&b=2',
+      '/api/./x?a=1&b=2',
+      '/api//x?a=1&b=2#frag',
+      '/api/x?a=1&b=2&',
+    ];
+    const keys = await Promise.all(
+      variants.map((endpoint) => buildRequestDedupeKey({ endpoint, method: 'POST' })),
+    );
+    for (const k of keys) expect(k).toBe(keys[0]);
+  });
+
+  it('absolute endpoint variants collapse to the same dedupe key', async () => {
+    const variants = [
+      'https://API.X.com/v1/send',
+      'https://api.x.com/v1/send/',
+      'https://api.x.com/v1/send#frag',
+      'https://api.x.com/v1/send?',
+      'https://api.x.com/v1/extra/../send',
+    ];
+    const keys = await Promise.all(
+      variants.map((endpoint) => buildRequestDedupeKey({ endpoint, method: 'POST' })),
+    );
+    for (const k of keys) expect(k).toBe(keys[0]);
+  });
+
+  it('empty-effective queries do not perturb the dedupe key', async () => {
+    const base = await buildRequestDedupeKey({ endpoint: '/api/x', method: 'GET' });
+    const variants = ['/api/x?', '/api/x?&', '/api/x?&&', '/api/x?='];
+    for (const endpoint of variants) {
+      const k = await buildRequestDedupeKey({ endpoint, method: 'GET' });
+      expect(k).toBe(base);
+    }
   });
 });
 
