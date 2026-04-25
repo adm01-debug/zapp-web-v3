@@ -360,6 +360,7 @@ export function clearCrossTabDedupe(): void {
   resultCache.clear();
   inflight.clear();
   waiters.clear();
+  subscribers.clear();
   if (typeof localStorage !== 'undefined') {
     try {
       const keys: string[] = [];
