@@ -18,9 +18,8 @@ interface RefreshQrButtonProps {
   /** Cooldown em segundos após cada clique manual. Default: 5. */
   cooldownSeconds?: number;
   /**
-   * Tempo (ms) que o status precisa permanecer estável em `pending` antes de
-   * reabilitar o botão. Evita flicker em rápidas transições pending→loading→pending.
-   * Default: 400ms.
+   * Tempo (ms) que o status precisa permanecer estável em status interativo
+   * antes de reabilitar o botão. Default: 400ms.
    */
   stabilizationMs?: number;
 }
@@ -31,7 +30,6 @@ type BlockReason =
   | 'status_not_interactive'
   | 'awaiting_stabilization';
 
-/** Mensagens humanizadas exibidas no tooltip — pensadas para o time comercial. */
 const REASON_COPY: Record<BlockReason, (extra: { secondsLeft: number; status: string }) => string> = {
   in_flight: () => 'Já existe uma geração de QR em andamento. Aguarde a conclusão ou clique em "Cancelar".',
   cooldown: ({ secondsLeft }) => `Aguarde ${secondsLeft}s antes de gerar outro QR (proteção contra cliques repetidos).`,
@@ -80,8 +78,6 @@ export function RefreshQrButton({
 
   const isInteractiveStatus = status === 'pending' || status === 'error';
 
-  // Determina o motivo do bloqueio em ordem de prioridade. Centralizado para
-  // que a UI (tooltip) e o log compartilhem a mesma decisão.
   const blockReason: BlockReason | null = loading
     ? 'in_flight'
     : !isInteractiveStatus
@@ -94,8 +90,6 @@ export function RefreshQrButton({
 
   const handleClick = useCallback(() => {
     if (blockReason) {
-      // Telemetria: clique ignorado. O time comercial pode pedir esses logs
-      // ao desenvolvimento para entender por que "o botão não funciona".
       log.info('[refresh-qr-button] click_ignored', {
         reason: blockReason,
         status,
@@ -143,8 +137,6 @@ export function RefreshQrButton({
 
   if (!tooltipMessage) return buttonNode;
 
-  // Botão `disabled` não dispara mouse events; o `<span>` wrapper recebe o
-  // hover e propaga para o Tooltip. `tabIndex={0}` mantém acessível via teclado.
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
