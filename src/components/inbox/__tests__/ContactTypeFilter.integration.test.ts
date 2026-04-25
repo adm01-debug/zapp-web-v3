@@ -249,7 +249,7 @@ describe('filterByContactType — agrupamentos do inbox', () => {
     expect(ids).not.toContain(groupLegacyPattern.contact.id);
   });
 
-  it('subfiltros de categoria isolam corretamente cada grupo', () => {
+  it('subfiltros de categoria isolam corretamente cada grupo canônico', () => {
     const cases: Array<[string, ConversationWithMessages]> = [
       ['grupo_orcamentos', groupOrcamentos],
       ['grupo_aprovacao', groupAprovacao],
@@ -259,18 +259,12 @@ describe('filterByContactType — agrupamentos do inbox', () => {
 
     for (const [filterValue, expected] of cases) {
       const result = filterByContactType(allConversations, filterValue);
-      // O legado também tem group_category 'orcamentos', então grupo_orcamentos retorna 2.
-      expect(result.length).toBeGreaterThanOrEqual(1);
-      expect(result.map((c) => c.contact.id)).toContain(expected.contact.id);
-      // todos os retornados devem ser realmente grupos
-      expect(result.every((c) => {
-        const p = c.contact.phone || '';
-        return p.endsWith('@g.us') || /^\d+-\d+$/.test(p.replace(/\D/g, ''));
-      })).toBe(true);
+      expect(result.map((c) => c.contact.id)).toEqual([expected.contact.id]);
+      expect(result.every((c) => isGroup(c.contact.phone))).toBe(true);
     }
   });
 
-  it('"grupo_sem_categoria" pega apenas grupos sem group_category', () => {
+  it('"grupo_sem_categoria" pega apenas grupos canônicos sem group_category', () => {
     const ids = filterByContactType(allConversations, 'grupo_sem_categoria').map(
       (c) => c.contact.id,
     );
