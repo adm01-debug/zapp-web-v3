@@ -522,7 +522,7 @@ Deno.serve(async (req) => {
         ))
         if (error) {
           return finish(
-            new Response(JSON.stringify({ error: error.message, cid, rid }), {
+            new Response(JSON.stringify(errorBody(cid, rid, error)), {
               status: cls.status, headers: jsonHeaders,
             }),
             'update',
