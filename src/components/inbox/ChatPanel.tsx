@@ -207,6 +207,50 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     setFailuresOnly(false);
   }, [conversation.id]);
 
+  // Deep-link "Ver no chat": quando o caller abre o Inbox apontando para
+  // uma mensagem específica, scrollamos até ela e aplicamos um destaque
+  // temporário (~3 s) reaproveitando os mesmos states usados pela busca
+  // dentro do chat. Tentamos durante alguns frames porque a mensagem
+  // pode não estar no DOM no primeiro paint (lista virtualizada / fetch
+  // assíncrono). Após sumir o ring, removemos o pending no caller.
+  useEffect(() => {
+    if (!initialHighlightMessageId) return;
+    if (messages.length === 0) return;
+
+    const targetId = initialHighlightMessageId;
+    const exists = messages.some(
+      (m) => m.id === targetId || m.external_id === targetId,
+    );
+    if (!exists) return;
+
+    // Resolve para o id interno (o que o data-message-id usa).
+    const internalId =
+      messages.find((m) => m.id === targetId)?.id ??
+      messages.find((m) => m.external_id === targetId)?.id ??
+      targetId;
+
+    setHighlightedMessageIds(new Set([internalId]));
+    setActiveHighlightId(internalId);
+
+    // Tentativas em sequência cobrem o caso de a virtualização ainda
+    // não ter renderizado o item visível.
+    let attempts = 0;
+    const tryScroll = () => {
+      attempts++;
+      messagesAreaRef.current?.scrollToMessage(internalId);
+      if (attempts < 6) setTimeout(tryScroll, 120);
+    };
+    tryScroll();
+
+    const clear = setTimeout(() => {
+      setActiveHighlightId(null);
+      setHighlightedMessageIds(new Set());
+      onHighlightConsumed?.();
+    }, 3200);
+
+    return () => clearTimeout(clear);
+  }, [initialHighlightMessageId, messages, onHighlightConsumed]);
+
   const canGenerateSummary = messages.length >= 10;
 
   // Pré-computa o conjunto de mensagens com falha terminal — alimenta o
