@@ -132,8 +132,8 @@ function releaseLeadership(key: string, tabId: string = TAB_ID) {
   }
 }
 
-function broadcastDone(payload: BroadcastDone) {
-  const ch = getChannel();
+function broadcastDone(payload: BroadcastDone, channel?: BroadcastChannel | null) {
+  const ch = channel ?? getChannel();
   if (!ch) return;
   try {
     ch.postMessage(payload);
@@ -142,9 +142,13 @@ function broadcastDone(payload: BroadcastDone) {
   }
 }
 
-function awaitBroadcast<T>(key: string, ttlMs: number): Promise<{ value: T } | { error: Error }> {
+function awaitBroadcast<T>(
+  key: string,
+  ttlMs: number,
+  channel?: BroadcastChannel | null,
+): Promise<{ value: T } | { error: Error }> {
   return new Promise((resolve) => {
-    const ch = getChannel();
+    const ch = channel ?? getChannel();
     if (!ch) {
       resolve({ error: new Error('CROSS_TAB_NO_CHANNEL') });
       return;
