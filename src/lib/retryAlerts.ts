@@ -125,13 +125,25 @@ const PER_INSTANCE_STORAGE_KEY = RETRY_PER_INSTANCE_STORAGE_KEY;
  * SSR-safe: se `window` não existe (test/server), retorna no-op.
  */
 export function subscribeRetryAlertsStorage(
-  cb: (next: { thresholds: RetryThresholds; perInstance: PerInstanceThresholds }) => void,
+  cb: (next: {
+    thresholds: RetryThresholds;
+    perInstance: PerInstanceThresholds;
+    dedupeMode: RetryAlertDedupeMode;
+  }) => void,
 ): () => void {
   if (typeof window === 'undefined') return () => { /* no-op */ };
   const handler = (e: StorageEvent) => {
-    // `key === null` acontece em `localStorage.clear()` — relemos tudo.
-    if (e.key !== null && e.key !== STORAGE_KEY && e.key !== PER_INSTANCE_STORAGE_KEY) return;
-    cb({ thresholds: loadThresholds(), perInstance: loadPerInstanceThresholds() });
+    if (
+      e.key !== null &&
+      e.key !== STORAGE_KEY &&
+      e.key !== PER_INSTANCE_STORAGE_KEY &&
+      e.key !== RETRY_DEDUPE_MODE_STORAGE_KEY
+    ) return;
+    cb({
+      thresholds: loadThresholds(),
+      perInstance: loadPerInstanceThresholds(),
+      dedupeMode: loadRetryAlertDedupeMode(),
+    });
   };
   window.addEventListener('storage', handler);
   return () => window.removeEventListener('storage', handler);
