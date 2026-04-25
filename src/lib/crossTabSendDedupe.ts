@@ -87,7 +87,7 @@ function getStorage(): Storage | null {
  * is the leader. A claim from another tab within `ttlMs` keeps that tab
  * the leader.
  */
-function claimLeadership(key: string, ttlMs: number): boolean {
+function claimLeadership(key: string, ttlMs: number, tabId: string = TAB_ID): boolean {
   const storage = getStorage();
   if (!storage) return true; // no coordination possible → behave as leader
 
@@ -100,10 +100,10 @@ function claimLeadership(key: string, ttlMs: number): boolean {
       const parsed = JSON.parse(raw) as ClaimRecord;
       if (parsed && typeof parsed.at === 'number' && now - parsed.at < ttlMs) {
         // Active claim. If it's our own tab (re-entry), keep leadership.
-        return parsed.tabId === TAB_ID;
+        return parsed.tabId === tabId;
       }
     }
-    const record: ClaimRecord = { tabId: TAB_ID, at: now };
+    const record: ClaimRecord = { tabId, at: now };
     storage.setItem(storageKey, JSON.stringify(record));
 
     // Re-read to detect a near-simultaneous write from another tab.
@@ -111,14 +111,14 @@ function claimLeadership(key: string, ttlMs: number): boolean {
     const verify = storage.getItem(storageKey);
     if (!verify) return true;
     const verifyParsed = JSON.parse(verify) as ClaimRecord;
-    return verifyParsed.tabId === TAB_ID;
+    return verifyParsed.tabId === tabId;
   } catch (e) {
     log.warn('claimLeadership failed, defaulting to leader', e);
     return true;
   }
 }
 
-function releaseLeadership(key: string) {
+function releaseLeadership(key: string, tabId: string = TAB_ID) {
   const storage = getStorage();
   if (!storage) return;
   try {
@@ -126,7 +126,7 @@ function releaseLeadership(key: string) {
     const raw = storage.getItem(storageKey);
     if (!raw) return;
     const parsed = JSON.parse(raw) as ClaimRecord;
-    if (parsed.tabId === TAB_ID) storage.removeItem(storageKey);
+    if (parsed.tabId === tabId) storage.removeItem(storageKey);
   } catch {
     /* no-op */
   }
