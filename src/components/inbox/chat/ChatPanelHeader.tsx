@@ -52,7 +52,7 @@ export function ChatPanelHeader({
   conversation, isContactTyping, showAIAssistant, showDetails, showSummaryPanel,
   onToggleAIAssistant, onToggleDetails, onOpenSearch, onOpenTransfer, onOpenSchedule,
   onBack, onGenerateSummary, isSummaryLoading, onCloseConversation, activeTool, onSetActiveTool,
-  sendState = 'idle',
+  sendState = 'idle', failuresOnly, onToggleFailuresOnly, failuresCount,
 }: ChatPanelHeaderProps) {
   const isMobile = useIsMobile();
 
