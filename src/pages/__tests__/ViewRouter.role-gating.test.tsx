@@ -139,10 +139,11 @@ describe('ViewRouter — failed-messages role gating', () => {
   it('admin → page renders', async () => {
     userRoleMock.mockReturnValue({
       roles: ['admin'],
+      isDev: false,
       isAdmin: true,
       isSupervisor: true,
       isSpecialAgent: false,
-      hasRole: (r: string) => r === 'admin' || r === 'supervisor',
+      hasRole: (r: string) => r === 'admin' || r === 'supervisor' || r === 'agent',
       loading: false,
       refetch: vi.fn(),
     });
