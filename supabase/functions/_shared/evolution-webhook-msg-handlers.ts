@@ -68,8 +68,19 @@ export async function handleSendMessage(supabase: any, instance: string, data: u
 
 // deno-lint-ignore no-explicit-any
 export async function handleMessagesUpdate(supabase: any, instance: string, data: unknown, baseData: Record<string, unknown>) {
+  // Mapeamento canônico ACK do WhatsApp/Baileys (Evolution v2):
+  //   PENDING(0) → sending; SERVER_ACK(1) → sent; DELIVERY_ACK(2) → delivered;
+  //   READ(3) → read; PLAYED(4) → played (áudio reproduzido).
+  // Mantemos `played` como status distinto para acionar o ícone de fones na bolha.
   const statusMap: Record<string, string> = {
-    'DELIVERY_ACK': 'delivered', 'READ': 'read', 'PLAYED': 'read', 'SERVER_ACK': 'sent', 'ERROR': 'failed',
+    'PENDING': 'sending',
+    'SERVER_ACK': 'sent',
+    'DELIVERY_ACK': 'delivered',
+    'READ': 'read',
+    'READ_ACK': 'read',
+    'PLAYED': 'played',
+    'PLAYED_ACK': 'played',
+    'ERROR': 'failed',
   };
   const connection = await getConnectionByInstance(supabase, instance);
 
