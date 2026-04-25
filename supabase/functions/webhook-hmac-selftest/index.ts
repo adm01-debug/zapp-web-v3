@@ -109,6 +109,28 @@ function checkTemporal(
   return { ok: true, ageSeconds, reason: null };
 }
 
+/**
+ * Logger estruturado em JSON (uma linha por evento).
+ * Sai via console.log para aparecer nos logs da edge function.
+ * NUNCA loga o secret — apenas seu comprimento e prefixo de hash.
+ */
+function structuredLog(event: {
+  level: 'info' | 'warn' | 'error';
+  fn: 'webhook-hmac-selftest';
+  request_id: string;
+  phase: Phase;
+  scenario?: string;
+  status: 'ok' | 'fail' | 'skip';
+  duration_ms?: number;
+  reason?: string | null;
+  meta?: Record<string, unknown>;
+}) {
+  const line = JSON.stringify({ ts: new Date().toISOString(), ...event });
+  if (event.level === 'error') console.error(line);
+  else if (event.level === 'warn') console.warn(line);
+  else console.log(line);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
