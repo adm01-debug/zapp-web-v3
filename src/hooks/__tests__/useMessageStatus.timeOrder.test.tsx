@@ -77,7 +77,7 @@ describe('useMessageStatus — desempate temporal bus vs DB (terminais)', () => 
     const { result } = renderHook(() => useMessageStatus('c1'));
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      /* no-op: shouldAdvanceTime cuida disso */
     });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -103,7 +103,7 @@ describe('useMessageStatus — desempate temporal bus vs DB (terminais)', () => 
     const { result } = renderHook(() => useMessageStatus('c1'));
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      /* no-op: shouldAdvanceTime cuida disso */
     });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -140,7 +140,7 @@ describe('useMessageStatus — desempate temporal bus vs DB (terminais)', () => 
     const { result } = renderHook(() => useMessageStatus('c1'));
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      /* no-op: shouldAdvanceTime cuida disso */
     });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -181,7 +181,7 @@ describe('useMessageStatus — desempate temporal bus vs DB (terminais)', () => 
     const { result } = renderHook(() => useMessageStatus('c1'));
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      /* no-op: shouldAdvanceTime cuida disso */
     });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -217,7 +217,7 @@ describe('useMessageStatus — desempate temporal bus vs DB (terminais)', () => 
     const { result } = renderHook(() => useMessageStatus('c1'));
 
     await act(async () => {
-      await vi.runAllTimersAsync();
+      /* no-op: shouldAdvanceTime cuida disso */
     });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
