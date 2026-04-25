@@ -43,13 +43,16 @@ interface ChatPanelHeaderProps {
   allMessages?: ChatMessage[];
   onSelectSuggestion?: (text: string) => void;
   sendState?: 'idle' | 'retrying' | 'failed';
+  failuresOnly?: boolean;
+  onToggleFailuresOnly?: () => void;
+  failuresCount?: number;
 }
 
 export function ChatPanelHeader({
   conversation, isContactTyping, showAIAssistant, showDetails, showSummaryPanel,
   onToggleAIAssistant, onToggleDetails, onOpenSearch, onOpenTransfer, onOpenSchedule,
   onBack, onGenerateSummary, isSummaryLoading, onCloseConversation, activeTool, onSetActiveTool,
-  sendState = 'idle',
+  sendState = 'idle', failuresOnly, onToggleFailuresOnly, failuresCount,
 }: ChatPanelHeaderProps) {
   const isMobile = useIsMobile();
 
@@ -101,6 +104,7 @@ export function ChatPanelHeader({
           onOpenSearch={onOpenSearch} onSetActiveTool={onSetActiveTool}
           onToggleAIAssistant={onToggleAIAssistant} onToggleDetails={onToggleDetails}
           onGenerateSummary={onGenerateSummary}
+          failuresOnly={failuresOnly} onToggleFailuresOnly={onToggleFailuresOnly} failuresCount={failuresCount}
         />
 
         <DropdownMenu>

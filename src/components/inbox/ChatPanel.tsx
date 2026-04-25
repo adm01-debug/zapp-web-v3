@@ -110,6 +110,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  // Filtro: somente mensagens com falha terminal (failed/failed_auth/failed_retries).
+  const [failuresOnly, setFailuresOnly] = useState(false);
 
   const fileUploaderRef = useRef<FileUploaderRef>(null);
   const messagesAreaRef = useRef<ChatMessagesAreaRef>(null);
@@ -154,9 +156,21 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   }, [messages, isContactTyping]);
   useEffect(() => {
     setActiveTool(null); setHighlightedMessageIds(new Set()); setActiveHighlightId(null); setSearchQuery('');
+    setFailuresOnly(false);
   }, [conversation.id]);
 
   const canGenerateSummary = messages.length >= 10;
+
+  // Pré-computa o conjunto de mensagens com falha terminal — alimenta o
+  // contador no header e o filtro do MessagesArea sem reescanear a lista
+  // a cada render.
+  const failedMessages = useMemo(
+    () => messages.filter(
+      (m) => m.status === 'failed' || m.status === 'failed_auth' || m.status === 'failed_retries',
+    ),
+    [messages],
+  );
+  const visibleMessages = failuresOnly ? failedMessages : messages;
 
   // Memoize expensive derived arrays to avoid re-creation on every keystroke
   const lastContactMessages = useMemo(
@@ -237,7 +251,10 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onCloseConversation={() => openDialog('closeDialog')}
             lastMessages={lastContactMessages}
             allMessages={allMessagesForHeader}
-            onSelectSuggestion={(text) => handlers.setInputValue(text)} />
+            onSelectSuggestion={(text) => handlers.setInputValue(text)}
+            failuresOnly={failuresOnly}
+            failuresCount={failedMessages.length}
+            onToggleFailuresOnly={() => setFailuresOnly((v) => !v)} />
         )}
 
         <ChatSearchBar messages={messages} isOpen={activeTool === 'chatSearch'}
@@ -248,17 +265,41 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
         <ChatAssignedBar conversation={conversation} onOpenTransfer={() => openDialog('transferDialog')} />
 
+        {failuresOnly && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center justify-between gap-3 px-4 py-2 text-xs bg-destructive/10 text-destructive border-b border-destructive/20"
+          >
+            <span>
+              {failedMessages.length === 0
+                ? 'Nenhuma mensagem com falha terminal nesta conversa.'
+                : `Mostrando apenas mensagens com falha terminal (${failedMessages.length}). Passe o mouse sobre o status para ver o motivo.`}
+            </span>
+            <button
+              type="button"
+              className="font-medium underline hover:no-underline"
+              onClick={() => setFailuresOnly(false)}
+            >
+              Limpar filtro
+            </button>
+          </div>
+        )}
+
         <Suspense fallback={null}>
           <NextBestActionEngine contactId={conversation.contact.id} contactName={conversation.contact.name} />
         </Suspense>
 
-        <ChatMessagesArea ref={messagesAreaRef} messages={messages} isContactTyping={isContactTyping} typingUserName={typingUsers[0]?.name || conversation.contact.name}
+        <ChatMessagesArea ref={messagesAreaRef} messages={visibleMessages} isContactTyping={isContactTyping} typingUserName={typingUsers[0]?.name || conversation.contact.name}
           ttsLoading={ttsLoading} ttsPlaying={ttsPlaying} ttsMessageId={ttsMessageId} instanceName={instanceName}
           contactJid={contactJid} contactAvatar={contactAvatar}
           onSpeak={speak} onStop={stop} onReply={handlers.handleReplyToMessage} onForward={handlers.handleForwardMessage} onCopy={handlers.handleCopyMessage}
           onScrollToMessage={handleScrollToMessage} onInteractiveButtonClick={handlers.handleInteractiveButtonClick} onEditStart={handlers.handleEditStart}
           highlightedMessageIds={highlightedMessageIds} activeHighlightId={activeHighlightId} searchQuery={searchQuery}
-          onLoadOlder={onLoadOlder} onCancelLoadOlder={onCancelLoadOlder} loadingOlder={loadingOlder} hasMoreOlder={hasMoreOlder} />
+          onLoadOlder={failuresOnly ? undefined : onLoadOlder}
+          onCancelLoadOlder={failuresOnly ? undefined : onCancelLoadOlder}
+          loadingOlder={failuresOnly ? false : loadingOlder}
+          hasMoreOlder={failuresOnly ? false : hasMoreOlder} />
 
         <ChatQuickRepliesPopover show={dialogs.quickReplies} replies={filteredQuickReplies} onSelect={handleQuickReply} onClose={() => closeDialog('quickReplies')} />
 

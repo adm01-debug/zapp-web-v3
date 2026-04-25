@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Search, Radar, GraduationCap, FileText, Info, Loader2 } from 'lucide-react';
+import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle } from 'lucide-react';
 import { VisionIcon } from '../ai-tools/VisionIcon';
 
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
@@ -17,6 +17,11 @@ interface ChatHeaderToolbarProps {
   onToggleAIAssistant: () => void;
   onToggleDetails?: () => void;
   onGenerateSummary?: () => void;
+  /** Filtro: exibir apenas mensagens com falha terminal (failed/failed_auth/failed_retries). */
+  failuresOnly?: boolean;
+  onToggleFailuresOnly?: () => void;
+  /** Quantidade de mensagens em falha — exibida no aria-label e como contador. */
+  failuresCount?: number;
 }
 
 interface ToolButtonProps {
@@ -58,10 +63,37 @@ function ToolButton({ icon, label, active, onClick, disabled, badge, highlight }
 export function ChatHeaderToolbar({
   activeTool, showAIAssistant, showDetails, showSummaryPanel, isSummaryLoading,
   onOpenSearch, onSetActiveTool, onToggleAIAssistant, onToggleDetails, onGenerateSummary,
+  failuresOnly, onToggleFailuresOnly, failuresCount = 0,
 }: ChatHeaderToolbarProps) {
   return (
     <>
       <ToolButton icon={<Search className="w-[18px] h-[18px]" />} label="Buscar na conversa (Ctrl+F)" onClick={onOpenSearch} highlight />
+      {onToggleFailuresOnly && (
+        <ToolButton
+          icon={
+            <span className="relative inline-flex">
+              <AlertTriangle className="w-[18px] h-[18px]" />
+              {failuresCount > 0 && (
+                <span
+                  className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold leading-[14px] text-center"
+                  aria-hidden="true"
+                >
+                  {failuresCount > 99 ? '99+' : failuresCount}
+                </span>
+              )}
+            </span>
+          }
+          label={
+            failuresOnly
+              ? `Mostrando ${failuresCount} mensagem(s) com falha — clique para limpar`
+              : failuresCount > 0
+                ? `Filtrar somente falhas (${failuresCount})`
+                : 'Filtrar somente falhas terminais'
+          }
+          active={failuresOnly}
+          onClick={onToggleFailuresOnly}
+        />
+      )}
       <ToolButton icon={<Radar className="w-[18px] h-[18px]" />} label="Monitoramento de Objeções" active={activeTool === 'objections'} onClick={() => onSetActiveTool?.('objections')} />
       <ToolButton icon={<GraduationCap className="w-[18px] h-[18px]" />} label="Ajuda dos Universitários" active={activeTool === 'university'} onClick={() => onSetActiveTool?.('university')} />
       <ToolButton icon={<VisionIcon className="w-[18px] h-[18px]" />} label="Visão" active={showAIAssistant} onClick={onToggleAIAssistant} />
