@@ -48,25 +48,25 @@ export function RefreshQrButton({
   const [stabilized, setStabilized] = useState(status === 'pending');
   const previousStatusRef = useRef<RefreshQrButtonStatus>(status);
 
-  // Reage a mudanças de status: bloqueia imediatamente quando sai de pending,
-  // e re-arma o timer de estabilização ao voltar para pending.
+  // Reage a mudanças de status: bloqueia imediatamente quando vai para
+  // `loading` (refresh em vôo), e re-arma o timer de estabilização ao voltar
+  // a um estado interativo (`pending` ou `error`, este último permite retry
+  // manual). `connected` desabilita silenciosamente — o componente é
+  // desmontado nesse caso pelo container, mas defendemos aqui também.
   useEffect(() => {
     const prev = previousStatusRef.current;
     previousStatusRef.current = status;
 
-    if (status !== 'pending') {
-      // Saiu de pending → bloquear sem cooldown stale visível.
+    if (status === 'loading' || status === 'connected') {
       setStabilized(false);
-      if (prev === 'pending' && secondsLeft > 0) setSecondsLeft(0);
+      if (prev !== status && secondsLeft > 0) setSecondsLeft(0);
       return;
     }
 
-    // status === 'pending': aguardar estabilização antes de reabilitar.
+    // status === 'pending' | 'error': aguardar estabilização antes de reabilitar.
     setStabilized(false);
     const timer = setTimeout(() => setStabilized(true), stabilizationMs);
     return () => clearTimeout(timer);
-    // secondsLeft propositalmente fora das deps: só nos importa no instante
-    // da transição de saída do pending.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, stabilizationMs]);
 
@@ -79,7 +79,8 @@ export function RefreshQrButton({
     return () => clearInterval(timer);
   }, [secondsLeft]);
 
-  const blockedByStatus = status !== 'pending' || !stabilized;
+  const isInteractiveStatus = status === 'pending' || status === 'error';
+  const blockedByStatus = !isInteractiveStatus || !stabilized;
 
   const handleClick = useCallback(() => {
     if (loading || secondsLeft > 0 || blockedByStatus) return;
