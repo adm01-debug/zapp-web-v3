@@ -146,24 +146,26 @@ function recordMetric(sample: MetricSample) {
   const errMsg = sample.err_msg ? sample.err_msg.slice(0, 500) : null
   // Fire and forget — explicitly NOT awaited. Catch the rejection so the
   // worker doesn't log an unhandled promise warning.
-  client.from('proxy_metrics').insert({
-    cid: sample.cid,
-    rid: sample.rid,
-    op: sample.op,
-    target: sample.target,
-    status: sample.status,
-    ms: sample.ms,
-    ok: sample.ok,
-    timeout_fired: sample.timeout_fired ?? false,
-    pg_timeout: sample.pg_timeout ?? false,
-    err_code: sample.err_code ?? null,
-    err_msg: errMsg,
-  }).then((res) => {
-    if (res.error) {
+  Promise.resolve(
+    client.from('proxy_metrics').insert({
+      cid: sample.cid,
+      rid: sample.rid,
+      op: sample.op,
+      target: sample.target,
+      status: sample.status,
+      ms: sample.ms,
+      ok: sample.ok,
+      timeout_fired: sample.timeout_fired ?? false,
+      pg_timeout: sample.pg_timeout ?? false,
+      err_code: sample.err_code ?? null,
+      err_msg: errMsg,
+    })
+  ).then((res) => {
+    if (res?.error) {
       logEvent({ phase: 'metric_error', err: res.error.message })
     }
-  }).catch((e) => {
-    logEvent({ phase: 'metric_error', err: (e as Error).message })
+  }).catch((e: unknown) => {
+    logEvent({ phase: 'metric_error', err: (e as Error)?.message })
   })
 }
 
