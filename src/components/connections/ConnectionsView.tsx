@@ -171,9 +171,14 @@ export function ConnectionsView() {
                 {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
               </>
             )}
-            {(qrCodeDialog.status === 'pending' || qrCodeDialog.status === 'error') && (
-              <Button variant="outline" onClick={handleRefreshQrCode} disabled={evolutionLoading}>
-                {evolutionLoading ? (
+            {(qrCodeDialog.status === 'pending' || qrCodeDialog.status === 'error' || qrCodeDialog.status === 'loading') && (
+              <Button
+                variant="outline"
+                onClick={handleRefreshQrCode}
+                disabled={evolutionLoading || qrCodeDialog.status === 'loading'}
+                aria-busy={evolutionLoading || qrCodeDialog.status === 'loading'}
+              >
+                {(evolutionLoading || qrCodeDialog.status === 'loading') ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Gerando…</>
                 ) : (
                   <><RefreshCw className="w-4 h-4 mr-2" />{qrCodeDialog.status === 'pending' ? 'Gerar novo QR' : 'Gerar novo código'}</>
