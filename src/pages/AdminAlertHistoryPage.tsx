@@ -4,8 +4,8 @@
  * monitoring pipeline (response delays, SLA breaches, connection drops, etc.).
  * Admin/supervisor only via existing RLS.
  */
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
