@@ -520,6 +520,10 @@ export function useConnectionsManager() {
     } finally {
       lastRefreshAtRef.current = Date.now();
       refreshInFlightRef.current = false;
+      setRefreshTick((t) => t + 1);
+      // Schedule a re-render right after the cooldown expires so the button
+      // re-enables visually (no user click required to recover).
+      setTimeout(() => setRefreshTick((t) => t + 1), REFRESH_DEBOUNCE_MS + 50);
     }
   };
   const handleCopyId = (id: string) => {
