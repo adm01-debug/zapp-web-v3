@@ -115,6 +115,17 @@ const initialByKeyKind = (): Record<DedupeKeyKind, number> => ({
   unknown: 0,
 });
 
+/** Quantas amostras de latência manter por bucket (leader/follower) para p50/p95. */
+const RECENT_LATENCY_LIMIT = 200;
+
+interface LatencyBucket {
+  count: number;
+  sumMs: number;
+  maxMs: number;
+  /** Janela deslizante de amostras para percentis aproximados. */
+  samples: number[];
+}
+
 interface State {
   total: number;
   hits: number;
@@ -123,7 +134,11 @@ interface State {
   byKeyKind: Record<DedupeKeyKind, number>;
   byNamespace: Record<string, { hits: number; misses: number }>;
   recentEvents: DedupeEvent[];
+  leader: LatencyBucket;
+  follower: LatencyBucket;
 }
+
+const newBucket = (): LatencyBucket => ({ count: 0, sumMs: 0, maxMs: 0, samples: [] });
 
 const state: State = {
   total: 0,
@@ -133,6 +148,8 @@ const state: State = {
   byKeyKind: initialByKeyKind(),
   byNamespace: {},
   recentEvents: [],
+  leader: newBucket(),
+  follower: newBucket(),
 };
 
 const HIT_REASONS = new Set<DedupeReason>([
@@ -142,6 +159,53 @@ const HIT_REASONS = new Set<DedupeReason>([
   'broadcast_wait',
   'late_cache',
 ]);
+
+/** Hits que vieram de outras abas (cross-tab follower). */
+const FOLLOWER_REASONS = new Set<DedupeReason>([
+  'broadcast_wait',
+  'persisted_cache',
+  'late_cache',
+]);
+
+/** Hits servidos sem sair desta aba. */
+const LOCAL_CACHE_REASONS = new Set<DedupeReason>([
+  'memory_cache',
+  'inflight_local',
+]);
+
+/** Misses que executaram o fetcher (esta aba foi líder). */
+const LEADER_REASONS = new Set<DedupeReason>([
+  'lock_acquired_lead',
+  'fallback_after_wait',
+]);
+
+function recordLatency(bucket: LatencyBucket, durationMs: number) {
+  bucket.count += 1;
+  bucket.sumMs += durationMs;
+  if (durationMs > bucket.maxMs) bucket.maxMs = durationMs;
+  bucket.samples.push(durationMs);
+  if (bucket.samples.length > RECENT_LATENCY_LIMIT) {
+    bucket.samples.splice(0, bucket.samples.length - RECENT_LATENCY_LIMIT);
+  }
+}
+
+function percentile(sortedAsc: number[], p: number): number {
+  if (sortedAsc.length === 0) return 0;
+  const idx = Math.min(sortedAsc.length - 1, Math.floor((p / 100) * sortedAsc.length));
+  return sortedAsc[idx];
+}
+
+function bucketStats(b: LatencyBucket): LatencyStats {
+  const sorted = b.samples.length ? b.samples.slice().sort((a, c) => a - c) : [];
+  return {
+    count: b.count,
+    sumMs: b.sumMs,
+    maxMs: b.maxMs,
+    avgMs: b.count === 0 ? 0 : b.sumMs / b.count,
+    p50Ms: percentile(sorted, 50),
+    p95Ms: percentile(sorted, 95),
+  };
+}
 
 /** Namespaces conhecidos do projeto que usam chaves determinísticas. */
 const KNOWN_IDEMPOTENCY_NAMESPACES = new Set([
