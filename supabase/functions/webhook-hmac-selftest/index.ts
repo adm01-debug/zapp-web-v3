@@ -46,6 +46,22 @@ async function computeHmac(payload: string, secret: string): Promise<string> {
   return toHex(sig);
 }
 
+/**
+ * Fases discretas de validação — usadas no logger e no relatório.
+ * Permite identificar onde a falha ocorreu sem expor segredos.
+ */
+type Phase =
+  | 'config'        // leitura/validação do secret no env
+  | 'parse-body'    // parse do body recebido pelo cliente
+  | 'build-payload' // montagem do payload sintético
+  | 'sign'          // computeHmac (importKey + sign)
+  | 'mutate'        // mutação opcional pós-assinatura
+  | 'request'       // construção do Request com headers
+  | 'validate'      // createWebhookValidator (HMAC pipeline)
+  | 'signature-presence' // checagem de header presente
+  | 'temporal'      // janela issuedAt + cache de nonce
+  | 'response';     // serialização final
+
 interface ScenarioReport {
   name: string;
   description: string;
@@ -53,6 +69,10 @@ interface ScenarioReport {
   outcome: 'accept' | 'reject';
   passed: boolean;
   reason: string | null;
+  /** Fase em que a validação falhou (null quando passou). */
+  failed_phase: Phase | null;
+  /** Trilha de fases percorridas até concluir o cenário (com latências). */
+  phases: Array<{ phase: Phase; status: 'ok' | 'fail' | 'skip'; duration_ms: number }>;
   issuedAt: string;
   ageSeconds: number;
   nonce: string;
