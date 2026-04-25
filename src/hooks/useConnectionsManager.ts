@@ -454,9 +454,30 @@ export function useConnectionsManager() {
       }
     }
   };
+  // Debounce window (ms) for the manual "Refresh QR" button. While the dialog
+  // is in `pending`, repeated clicks within this window — or while a refresh
+  // is already in flight — are dropped to prevent storming Evolution with
+  // back-to-back `connect` requests (which can rate-limit the instance and
+  // produce orphan QR attempts in the audit log).
+  const REFRESH_DEBOUNCE_MS = 1500;
+  const lastRefreshAtRef = useRef<number>(0);
+  const refreshInFlightRef = useRef<boolean>(false);
+
   const handleRefreshQrCode = async () => {
+    // Drop the click if a refresh is already running OR the previous one
+    // finished less than the debounce window ago AND we're still in the
+    // pending state (the QR shown is still valid — no need to regenerate).
+    const now = Date.now();
+    if (refreshInFlightRef.current) return;
+    if (
+      qrCodeDialog.status === 'pending' &&
+      now - lastRefreshAtRef.current < REFRESH_DEBOUNCE_MS
+    ) {
+      return;
+    }
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
+    refreshInFlightRef.current = true;
     setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
     try {
