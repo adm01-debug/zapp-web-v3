@@ -86,8 +86,15 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
   // Extract signal so it isn't sent in the JSON body.
   const { signal, ...body } = params as ProxyParams & { signal?: AbortSignal };
 
-  // supabase.functions.invoke supports an optional signal via second arg.
-  const invokeOptions: { body: unknown; signal?: AbortSignal } = { body };
+  const correlationId = generateCorrelationId();
+  // Echo the trace id in the body so the edge function can log it even when
+  // headers are stripped by intermediate layers.
+  const bodyWithCid = { ...body, __cid: correlationId } as Record<string, unknown>;
+
+  const invokeOptions: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> } = {
+    body: bodyWithCid,
+    headers: { [CORRELATION_HEADER]: correlationId },
+  };
   if (signal) invokeOptions.signal = signal;
 
   const startedAt = performance.now();
@@ -111,6 +118,7 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
         errorMessage: message || 'External DB proxy error',
         severity: isTimeout ? 'timeout' : 'error',
         startedAt,
+        correlationId,
       });
 
       if (isAbort) {
@@ -131,6 +139,7 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
         errorMessage: data.error,
         severity: classifySeverity(durationMs, true, false),
         startedAt,
+        correlationId,
       });
       throw new Error(data.error);
     }
@@ -143,13 +152,11 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
       durationMs,
       recordCount,
       startedAt,
+      correlationId,
     });
 
     return data as ProxyResponse<T>;
   } catch (err) {
-    // If we already recorded above (error branch), avoid double-recording by
-    // checking if the error is already a known shape — but most paths above
-    // already returned/threw. Network exceptions fall here:
     const name = (err as Error)?.name;
     const message = (err as Error)?.message ?? '';
     if (name === 'AbortError') throw err;
@@ -166,6 +173,7 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
         errorMessage: message || 'unknown',
         severity: isTimeout ? 'timeout' : 'error',
         startedAt,
+        correlationId,
       });
     }
     throw err;
