@@ -21,9 +21,12 @@ import {
   loadPerInstanceThresholds,
   shouldFireRetryAlert,
   subscribeRetryAlertsStorage,
+  loadRetryAlertDedupeMode,
+  buildRetryAlertDedupeKey,
   RETRY_ALERT_COOLDOWN_MS,
   type RetryThresholds,
   type PerInstanceThresholds,
+  type RetryAlertDedupeMode,
 } from '@/lib/retryAlerts';
 
 const HOURS_OPTIONS: Array<{ value: number; label: string }> = [
