@@ -253,6 +253,17 @@ function broadcast<T>(msg: BroadcastMessage<T>) {
   }
 }
 
+export interface DedupeRetryOptions {
+  /** Número máximo de tentativas adicionais quando o fetcher falha. Default 0 (sem retry). */
+  maxRetries?: number;
+  /** Delay base do backoff exponencial (ms). Default 250ms. */
+  baseDelayMs?: number;
+  /** Teto do delay entre tentativas (ms). Default 4000ms. */
+  maxDelayMs?: number;
+  /** Predicate que decide se um erro é retentável. Default: sempre true. */
+  shouldRetry?: (err: unknown, attempt: number) => boolean;
+}
+
 export interface DedupeOptions {
   /** TTL do lock no localStorage (ms). Default 10s. */
   lockTtl?: number;
@@ -260,6 +271,49 @@ export interface DedupeOptions {
   resultTtl?: number;
   /** Quanto esperar pelo broadcast antes de fazer fetch direto (ms). Default 8s. */
   waitTimeout?: number;
+  /** Configuração de retry com backoff em caso de falha do fetcher. */
+  retry?: DedupeRetryOptions;
+}
+
+/**
+ * Executa `fn` com retry + backoff exponencial + jitter.
+ * Entre tentativas, garante que o lock cross-tab seja liberado para que
+ * outras abas possam tentar e que o GC não fique preso em estado errado.
+ */
+async function execWithBackoff<T>(
+  key: string,
+  fn: () => Promise<T>,
+  retry: DedupeRetryOptions | undefined,
+  onBeforeRetry: () => void,
+): Promise<T> {
+  const maxRetries = Math.max(0, retry?.maxRetries ?? 0);
+  const baseDelay = Math.max(0, retry?.baseDelayMs ?? 250);
+  const maxDelay = Math.max(baseDelay, retry?.maxDelayMs ?? 4000);
+  const shouldRetry = retry?.shouldRetry ?? (() => true);
+
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const isLast = attempt >= maxRetries;
+      if (isLast || !shouldRetry(err, attempt)) throw err;
+      const expBase = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
+      const jitter = Math.random() * expBase * 0.3;
+      const delay = Math.min(maxDelay, expBase + jitter);
+      log.warn('dedupedFetch retry após falha', {
+        key,
+        attempt: attempt + 1,
+        nextDelayMs: Math.round(delay),
+        error: err instanceof Error ? err.message : String(err),
+      });
+      // Libera lock antes da espera para não segurar outras abas durante o backoff.
+      onBeforeRetry();
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw lastErr;
 }
 
 export async function dedupedFetch<T>(
