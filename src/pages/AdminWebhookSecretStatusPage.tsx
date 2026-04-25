@@ -20,7 +20,9 @@ import {
   RefreshCw,
   KeyRound,
   Activity,
+  ExternalLink,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
