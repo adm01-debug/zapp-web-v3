@@ -110,7 +110,13 @@ export function useExternalConversations(enabled = true) {
   const query = useQuery({
     queryKey: ['external-evolution', 'conversations', SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT],
     queryFn: async () => {
-      const messages = await fetchRecentMessagesWindow();
+      // Dedupe cross-aba: a sidebar é igual em todas as abas, então uma única
+      // chamada por janela é suficiente — abas adicionais reaproveitam.
+      const messages = await dedupedFetch(
+        `inbox:sidebar:${SIDEBAR_DAYS_BACK}:${SIDEBAR_LIMIT}`,
+        () => fetchRecentMessagesWindow(),
+        { lockTtl: 8_000, resultTtl: POLL_INTERVAL - 500, waitTimeout: 6_000 },
+      );
       return buildExternalConversations(messages);
     },
     enabled,
