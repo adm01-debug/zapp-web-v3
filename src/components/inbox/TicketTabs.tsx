@@ -45,11 +45,12 @@ export function TicketTabs({
   onQueueChange,
 }: TicketTabsProps) {
   const { user } = useAuth();
-  const { isAdmin, isSupervisor } = useUserRole();
+  const { isSupervisor } = useUserRole();
   const { queues } = useQueues();
   const ticketStates = useAllTicketStates();
   const isMobile = useIsMobile();
-  const canShowAll = isAdmin || isSupervisor;
+  // Operação ampla — supervisor+ vê todos os tickets (admin e dev incluídos por hierarquia).
+  const canShowAll = isSupervisor;
 
   // Conta tickets pelo overlay real (open/in_progress/resolved). Quando
   // um contato ainda não tem registro, assumimos `open` (bootstrap).
