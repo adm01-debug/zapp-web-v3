@@ -215,6 +215,16 @@ export function useConnectionsManager() {
     setLoading(false);
   };
 
+  // Re-fetch connection status whenever the user has just logged in. This
+  // ensures the freshly-mounted UI shows the up-to-date connected/disconnected
+  // status without forcing a manual page reload after login.
+  useEffect(() => {
+    const handler = () => { void fetchConnections(); };
+    window.addEventListener(AUTH_POST_LOGIN_REFRESH_EVENT, handler);
+    return () => window.removeEventListener(AUTH_POST_LOGIN_REFRESH_EVENT, handler);
+  }, []);
+
+
   const generateInstanceName = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').slice(0, 30) +
     '_' + Date.now().toString().slice(-6);
