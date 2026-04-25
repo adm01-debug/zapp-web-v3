@@ -31,13 +31,21 @@ interface MessageBubbleProps {
   onSpeak: (messageId: string, text: string) => void;
   onStopSpeak: () => void;
   scrollToMessage: (messageId: string) => void;
+  /** Optional — enables auto-refresh of expired media URLs (410/403). */
+  instanceName?: string;
+  /** Optional — enables auto-refresh of expired media URLs (410/403). */
+  contactJid?: string;
 }
 
 export function MessageBubble({
   message, onReply, onForward, onCopy, onInteractiveButtonClick,
   ttsLoading, ttsPlaying, ttsMessageId, onSpeak, onStopSpeak, scrollToMessage,
+  instanceName, contactJid,
 }: MessageBubbleProps) {
   const isSent = message.sender === 'agent';
+  const mediaRefreshKey = (instanceName && contactJid && message.external_id)
+    ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
+    : undefined;
 
   return (
     <div className={cn('flex group px-4 py-1', isSent ? 'justify-end' : 'justify-start')}>
