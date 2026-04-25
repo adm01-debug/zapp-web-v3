@@ -436,6 +436,8 @@ export function useConnectionsManager() {
       status: connection.status === 'connected' ? 'connected' : 'loading',
       expiresAt: null,
       attemptId: null,
+      ttlSeconds: null,
+      ttlSource: null,
     });
     if (connection.status !== 'connected') {
       const attemptId = await logQrAttempt(connection);
