@@ -374,3 +374,37 @@ export function clearCrossTabDedupe(): void {
 }
 
 export const __TAB_ID = TAB_ID;
+
+/**
+ * Subscreve-se a resultados de dedupedFetch concluídos em qualquer aba.
+ *
+ * Útil para que abas espectadoras atualizem a UI quando outra aba completa
+ * um fetch — sem precisar refazer a requisição. O handler é chamado tanto
+ * quando o broadcast chega de outra aba (`source: 'remote'`) quanto quando
+ * a própria aba conclui o fetch (`source: 'local'`).
+ *
+ * @param keyMatcher  string exata, prefixo (ex.: "inbox:initial:") ou RegExp.
+ * @param handler     callback (key, data, source) => void
+ * @returns           função de unsubscribe
+ */
+export function subscribeDedupe<T = unknown>(
+  keyMatcher: string | RegExp,
+  handler: SubscriberFn<T>,
+): () => void {
+  const match = typeof keyMatcher === 'string'
+    ? (k: string) => k === keyMatcher || k.startsWith(keyMatcher)
+    : (k: string) => keyMatcher.test(k);
+  const sub: Subscription = { match, handler: handler as SubscriberFn };
+  subscribers.add(sub);
+  // Garante que o BroadcastChannel está ativo para entregar mensagens.
+  getBroadcastChannel();
+  return () => {
+    subscribers.delete(sub);
+  };
+}
+
+/** @internal — para testes. */
+export function __notifyLocal(key: string, data: unknown) {
+  notifySubscribers(key, data, 'local');
+}
+
