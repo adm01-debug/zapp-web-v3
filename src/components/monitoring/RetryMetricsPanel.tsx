@@ -103,32 +103,51 @@ export function RetryMetricsPanel() {
     });
   }, []);
 
-  // Toast quando há violação. Dedupe por (instância × tipo de breach) com cooldown
-  // de 5 min — espelha o padrão de webhookHealthAlerts. Garante que um problema
-  // que regrede e volta dispare novamente após o cooldown, em vez de silenciar
-  // pra sempre na janela atual.
+  // Toast quando há violação. Granularidade do dedupe é configurável:
+  // `instance` agrega p95+failure_rate em um único toast por instância;
+  // `instance+kind` (default) emite um toast separado para cada tipo de violação.
+  // Cooldown de 5 min — espelha o padrão de webhookHealthAlerts.
   const cooldownRef = useRef<Map<string, number>>(new Map());
   useEffect(() => {
-    // Reset apenas quando a janela muda — edições de thresholds não re-disparam.
+    // Reset apenas quando a janela OU o modo de dedupe muda — edições de
+    // thresholds não re-disparam, mas trocar a granularidade requer um estado
+    // limpo para evitar colisões espúrias entre as duas chaves.
     cooldownRef.current = new Map();
-  }, [hours]);
+  }, [hours, dedupeMode]);
 
   useEffect(() => {
     for (const b of breaches) {
-      // Uma notificação por kind: instância pode ter p95 e failure_rate ao mesmo tempo
-      // e queremos visibilidade dos dois.
+      // Quando `instance+kind`: um toast por kind. Quando `instance`: a primeira
+      // chamada vence o cooldown e as demais kinds são absorvidas no mesmo toast
+      // (descrição combinada).
+      const seenForInstance = new Set<string>();
       for (const d of b.details) {
-        const key = `${b.instance}|${d.kind}|${hours}h`;
+        const key = buildRetryAlertDedupeKey(b.instance, d.kind, hours, dedupeMode);
+        if (seenForInstance.has(key)) continue;
+        seenForInstance.add(key);
         if (!shouldFireRetryAlert(key, RETRY_ALERT_COOLDOWN_MS, cooldownRef.current)) continue;
-        const kindLabel = d.kind === 'p95' ? 'p95 alto' : '% falha alta';
+
         const overrideTag = b.hasOverride ? ' (override próprio)' : '';
-        toast.error(`Retry degradado em ${b.instance} — ${kindLabel}${overrideTag}`, {
-          description: `${d.label} · janela ${hours}h · ${b.metrics.total} runs`,
-          duration: 8000,
-        });
+        if (dedupeMode === 'instance+kind') {
+          const kindLabel = d.kind === 'p95' ? 'p95 alto' : '% falha alta';
+          toast.error(`Retry degradado em ${b.instance} — ${kindLabel}${overrideTag}`, {
+            description: `${d.label} · janela ${hours}h · ${b.metrics.total} runs`,
+            duration: 8000,
+          });
+        } else {
+          // Modo `instance`: combina TODOS os motivos da instância no toast único.
+          const allLabels = b.details.map((x) => x.label).join(' · ');
+          const kindsTag = b.details.map((x) => (x.kind === 'p95' ? 'p95' : 'falha%')).join('+');
+          toast.error(`Retry degradado em ${b.instance}${overrideTag}`, {
+            description: `${kindsTag}: ${allLabels} · janela ${hours}h · ${b.metrics.total} runs`,
+            duration: 8000,
+          });
+          // Em modo agregado, paramos após o primeiro detail — o toast já cobre todos.
+          break;
+        }
       }
     }
-  }, [breaches, hours]);
+  }, [breaches, hours, dedupeMode]);
 
   const actionOptions = useMemo(() => {
     const set = new Set<string>();
