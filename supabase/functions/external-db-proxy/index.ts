@@ -45,6 +45,13 @@ Deno.serve(async (req) => {
   }
 
   const startedAt = Date.now()
+  // Initial cid from header — may be upgraded from body.__cid below.
+  let cid: string = req.headers.get(CORRELATION_HEADER) || shortRid()
+  let jsonHeaders: Record<string, string> = {
+    ...corsHeaders,
+    'Content-Type': 'application/json',
+    [CORRELATION_HEADER]: cid,
+  }
 
   try {
     const url = Deno.env.get('EXTERNAL_SUPABASE_URL')
@@ -93,11 +100,11 @@ Deno.serve(async (req) => {
 
     const body = await req.json()
     const { action, table, select, filters, order, limit, offset, countMode, rpc, params, data, match } = body
-    const cid: string =
-      req.headers.get(CORRELATION_HEADER) ||
-      (typeof body.__cid === 'string' && body.__cid) ||
-      shortRid()
-    const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json', [CORRELATION_HEADER]: cid }
+    // Upgrade cid from body if header was missing/auto-generated.
+    if (!req.headers.get(CORRELATION_HEADER) && typeof body.__cid === 'string' && body.__cid) {
+      cid = body.__cid
+      jsonHeaders = { ...jsonHeaders, [CORRELATION_HEADER]: cid }
+    }
 
     // RPC call
     if (action === 'rpc' && rpc) {
