@@ -229,13 +229,16 @@ export function useExternalMessages(remoteJid: string | null) {
       if (!mountedRef.current || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
-      setMessages(prev => {
-        const seen = new Set(prev.map(m => m.id));
-        const additions = mapped.filter(m => !seen.has(m.id));
-        if (additions.length === 0) return prev;
-        return [...prev, ...additions];
-      });
-      lastSeenRef.current = newOnes[newOnes.length - 1].created_at;
+      setMessages(prev => mergeRealtimeMessages(prev, mapped) as RealtimeMessage[]);
+      // Cursor: usa o MAIOR created_at recebido (não o último do array, que pode
+      // ter chegado fora de ordem se o backend devolveu por id em vez de tempo).
+      const newest = maxCreatedAt(mapped);
+      if (newest) {
+        const newestStr = typeof newest === 'string' ? newest : new Date(newest).toISOString();
+        if (!lastSeenRef.current || newestStr > lastSeenRef.current) {
+          lastSeenRef.current = newestStr;
+        }
+      }
     } catch (err) {
       log.error('Error polling external messages:', err);
     }
