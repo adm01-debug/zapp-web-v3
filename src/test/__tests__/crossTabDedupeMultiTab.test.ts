@@ -19,15 +19,24 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+/**
+ * crossTabDedupe — Testes de simulação multi-aba.
+ *
+ * Carregamos o módulo `crossTabDedupe` duas vezes, resetando o cache de
+ * módulos do Vitest entre imports — assim cada carga representa uma "aba"
+ * diferente com seu próprio TAB_ID e suas próprias estruturas em memória.
+ * As duas abas compartilham o mesmo `localStorage` e o mesmo
+ * `BroadcastChannel` global do jsdom — exatamente como duas abas reais do
+ * mesmo origin.
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 type DedupeModule = typeof import('@/lib/realtime/crossTabDedupe');
 
 async function loadTab(): Promise<DedupeModule> {
-  let mod: DedupeModule | undefined;
-  await vi.isolateModulesAsync(async () => {
-    mod = await import('@/lib/realtime/crossTabDedupe');
-  });
-  if (!mod) throw new Error('Failed to load crossTabDedupe in isolated module');
-  return mod;
+  vi.resetModules();
+  // Import dinâmico após reset → nova instância do módulo (novo TAB_ID).
+  return (await import('@/lib/realtime/crossTabDedupe')) as DedupeModule;
 }
 
 function clearLocalStorageDedupeKeys() {
