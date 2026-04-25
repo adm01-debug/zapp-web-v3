@@ -832,6 +832,7 @@ export function useConnectionsManager() {
     handleAddConnection,
     handleShowQrCode,
     handleRefreshQrCode,
+    cancelRefreshQrCode,
     handleCopyId,
     handleReconnect,
     handleDisconnect,
