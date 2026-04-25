@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { dedupedFetch, clearCrossTabDedupe } from '@/lib/realtime/crossTabDedupe';
+import {
+  dedupedFetch,
+  clearCrossTabDedupe,
+  gcExpiredKeys,
+} from '@/lib/realtime/crossTabDedupe';
 
 /**
  * Testes do dedupe cross-tab. Como BroadcastChannel + localStorage não são
