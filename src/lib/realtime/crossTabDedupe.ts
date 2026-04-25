@@ -21,11 +21,16 @@ import { getLogger } from '@/lib/logger';
 
 const log = getLogger('crossTabDedupe');
 
-const LS_PREFIX = 'ctd:lock:';
+const LS_LOCK_PREFIX = 'ctd:lock:';
+const LS_RESULT_PREFIX = 'ctd:result:';
 const BC_NAME = 'cross-tab-dedupe';
 const DEFAULT_LOCK_TTL = 10_000; // 10s — máximo razoável para pageload de 100 msgs
 const DEFAULT_RESULT_TTL = 30_000; // resultado fica em cache 30s
 const DEFAULT_WAIT_TIMEOUT = 8_000;
+const GC_INTERVAL = 60_000; // varre chaves expiradas a cada 60s
+
+/** @internal — exposto para testes que precisam do prefixo de lock. */
+export const LS_PREFIX = LS_LOCK_PREFIX;
 
 interface LockPayload {
   ownerId: string;
@@ -40,6 +45,8 @@ interface BroadcastMessage<T = unknown> {
   data?: T;
   error?: string;
   ts: number;
+  /** TTL do resultado (ms) — para que abas receptoras respeitem o mesmo prazo. */
+  resultTtl?: number;
 }
 
 const TAB_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -65,7 +72,9 @@ function getBroadcastChannel(): BroadcastChannel | null {
 function onBroadcast(msg: BroadcastMessage) {
   if (!msg || msg.ownerId === TAB_ID) return; // ignora eco da própria aba
   if (msg.type === 'result') {
-    resultCache.set(msg.key, { value: msg.data, expiresAt: Date.now() + DEFAULT_RESULT_TTL });
+    const ttl = msg.resultTtl ?? DEFAULT_RESULT_TTL;
+    resultCache.set(msg.key, { value: msg.data, expiresAt: Date.now() + ttl });
+    writePersistedResult(msg.key, msg.data, ttl);
     const ws = waiters.get(msg.key);
     if (ws) {
       ws.forEach((w) => w({ ok: true, data: msg.data }));
@@ -90,11 +99,11 @@ function onBroadcast(msg: BroadcastMessage) {
 function readLock(key: string): LockPayload | null {
   if (typeof localStorage === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(LS_PREFIX + key);
+    const raw = localStorage.getItem(LS_LOCK_PREFIX + key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as LockPayload;
     if (parsed.expiresAt < Date.now()) {
-      localStorage.removeItem(LS_PREFIX + key);
+      localStorage.removeItem(LS_LOCK_PREFIX + key);
       return null;
     }
     return parsed;
@@ -113,8 +122,7 @@ function writeLock(key: string, ttl: number): boolean {
       acquiredAt: Date.now(),
       expiresAt: Date.now() + ttl,
     };
-    localStorage.setItem(LS_PREFIX + key, JSON.stringify(payload));
-    // Re-leitura para detectar race com outra aba.
+    localStorage.setItem(LS_LOCK_PREFIX + key, JSON.stringify(payload));
     const verify = readLock(key);
     return verify?.ownerId === TAB_ID;
   } catch {
@@ -127,9 +135,88 @@ function releaseLock(key: string) {
   const lock = readLock(key);
   if (lock && lock.ownerId !== TAB_ID) return;
   try {
-    localStorage.removeItem(LS_PREFIX + key);
+    localStorage.removeItem(LS_LOCK_PREFIX + key);
   } catch {
     /* noop */
+  }
+}
+
+// ─── Result cache persistente em localStorage (compartilhado entre abas) ──────
+interface ResultPayload<T = unknown> {
+  value: T;
+  expiresAt: number;
+}
+
+function readPersistedResult<T>(key: string): T | null {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(LS_RESULT_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ResultPayload<T>;
+    if (parsed.expiresAt < Date.now()) {
+      localStorage.removeItem(LS_RESULT_PREFIX + key);
+      return null;
+    }
+    return parsed.value;
+  } catch {
+    return null;
+  }
+}
+
+function writePersistedResult<T>(key: string, value: T, ttl: number): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const payload: ResultPayload<T> = { value, expiresAt: Date.now() + ttl };
+    localStorage.setItem(LS_RESULT_PREFIX + key, JSON.stringify(payload));
+  } catch {
+    /* quota cheia ou serialização falhou — degrada silenciosamente */
+  }
+}
+
+// ─── Garbage collector: varre chaves expiradas periodicamente ─────────────────
+export function gcExpiredKeys(): { locksSwept: number; resultsSwept: number } {
+  let locksSwept = 0;
+  let resultsSwept = 0;
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const now = Date.now();
+      const toRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+        if (!k.startsWith(LS_LOCK_PREFIX) && !k.startsWith(LS_RESULT_PREFIX)) continue;
+        try {
+          const raw = localStorage.getItem(k);
+          if (!raw) continue;
+          const parsed = JSON.parse(raw) as { expiresAt?: number };
+          if (typeof parsed.expiresAt === 'number' && parsed.expiresAt < now) {
+            toRemove.push(k);
+          }
+        } catch {
+          toRemove.push(k);
+        }
+      }
+      for (const k of toRemove) {
+        localStorage.removeItem(k);
+        if (k.startsWith(LS_LOCK_PREFIX)) locksSwept++;
+        else resultsSwept++;
+      }
+    } catch {
+      /* noop */
+    }
+  }
+  for (const [k, entry] of resultCache) {
+    if (entry.expiresAt < Date.now()) resultCache.delete(k);
+  }
+  return { locksSwept, resultsSwept };
+}
+
+let gcTimer: ReturnType<typeof setInterval> | null = null;
+function startGcIfNeeded() {
+  if (gcTimer || typeof setInterval === 'undefined') return;
+  gcTimer = setInterval(gcExpiredKeys, GC_INTERVAL);
+  if (gcTimer && typeof (gcTimer as { unref?: () => void }).unref === 'function') {
+    (gcTimer as { unref?: () => void }).unref?.();
   }
 }
 
@@ -161,10 +248,22 @@ export async function dedupedFetch<T>(
   const resultTtl = opts.resultTtl ?? DEFAULT_RESULT_TTL;
   const waitTimeout = opts.waitTimeout ?? DEFAULT_WAIT_TIMEOUT;
 
+  startGcIfNeeded();
+
   // 1. Cache em memória.
   const cached = resultCache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value as T;
+  }
+  if (cached && cached.expiresAt <= Date.now()) {
+    resultCache.delete(key); // expirado: força reprocessamento
+  }
+
+  // 1b. Cache persistente em localStorage (compartilhado entre abas).
+  const persisted = readPersistedResult<T>(key);
+  if (persisted !== null) {
+    resultCache.set(key, { value: persisted, expiresAt: Date.now() + resultTtl });
+    return persisted;
   }
 
   // 2. Inflight na mesma aba.
@@ -174,19 +273,26 @@ export async function dedupedFetch<T>(
   // 3. Tenta adquirir lock cross-tab.
   const acquired = writeLock(key, lockTtl);
   if (!acquired) {
-    // Outra aba está executando — espera broadcast ou timeout.
     log.debug('Lock detido por outra aba, aguardando broadcast', { key });
     const waited = await waitForResult<T>(key, waitTimeout);
     if (waited.ok) return waited.data;
+    // Antes de cair em fallback, reconfere o cache persistente — a líder
+    // pode ter terminado depois do broadcast já ter passado.
+    const lateCache = readPersistedResult<T>(key);
+    if (lateCache !== null) {
+      resultCache.set(key, { value: lateCache, expiresAt: Date.now() + resultTtl });
+      return lateCache;
+    }
     // Líder falhou ou expirou: tenta executar localmente como fallback.
   }
 
-  // 4. Líder: executa fetcher, cacheia, broadcasta resultado, libera lock.
+  // 4. Líder: executa fetcher, cacheia (memória + localStorage), broadcasta, libera lock.
   const exec = (async () => {
     try {
       const data = await fetcher();
       resultCache.set(key, { value: data, expiresAt: Date.now() + resultTtl });
-      broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now() });
+      writePersistedResult(key, data, resultTtl);
+      broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now(), resultTtl });
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -236,7 +342,7 @@ export function clearCrossTabDedupe(): void {
       const keys: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && k.startsWith(LS_PREFIX)) keys.push(k);
+        if (k && (k.startsWith(LS_LOCK_PREFIX) || k.startsWith(LS_RESULT_PREFIX))) keys.push(k);
       }
       keys.forEach((k) => localStorage.removeItem(k));
     } catch {
