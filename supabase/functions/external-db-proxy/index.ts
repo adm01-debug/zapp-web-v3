@@ -74,6 +74,7 @@ export interface QueryOutcome {
   errCode?: string
   errMsg?: string
   rowCount?: number
+  schemaRetries?: number
 }
 
 /** Build the structured log entry for an upstream query result. Exported for tests. */
@@ -92,6 +93,7 @@ export function buildQueryLog(ctx: QueryLogContext, outcome: QueryOutcome): LogP
     err_code: outcome.errCode,
     err_msg: outcome.errMsg,
     row_count: outcome.rowCount,
+    schema_retries: outcome.schemaRetries ?? 0,
   }
 }
 
