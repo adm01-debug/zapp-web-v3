@@ -112,17 +112,41 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const [searchQuery, setSearchQuery] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   // Filtro: somente mensagens com falha terminal (failed/failed_auth/failed_retries).
-  // Persistido em ?failuresOnly=1 para tornar o estado compartilhável via URL
-  // e sobreviver a recarregamento/back-forward navigation.
+  // Persistido em ?failuresOnly=1 (toggle global) e, opcionalmente, em
+  // ?failureCategory=<failed|failed_auth|failed_retries> (subcategoria).
+  // Ambos sobrevivem a recarregamento e tornam o link compartilhável.
   const [searchParams, setSearchParams] = useSearchParams();
   const failuresOnly = searchParams.get('failuresOnly') === '1';
+  const FAILURE_CATEGORIES = ['failed', 'failed_auth', 'failed_retries'] as const;
+  type FailureCategory = typeof FAILURE_CATEGORIES[number];
+  const rawCategory = searchParams.get('failureCategory');
+  const failureCategory: FailureCategory | null =
+    rawCategory && (FAILURE_CATEGORIES as readonly string[]).includes(rawCategory)
+      ? (rawCategory as FailureCategory)
+      : null;
+
   const setFailuresOnly = useCallback((next: boolean | ((prev: boolean) => boolean)) => {
     setSearchParams((prev) => {
       const sp = new URLSearchParams(prev);
       const current = sp.get('failuresOnly') === '1';
       const value = typeof next === 'function' ? next(current) : next;
-      if (value) sp.set('failuresOnly', '1');
-      else sp.delete('failuresOnly');
+      if (value) {
+        sp.set('failuresOnly', '1');
+      } else {
+        sp.delete('failuresOnly');
+        // Disabling the global filter also clears the subcategory so the
+        // shared link doesn't carry orphan state.
+        sp.delete('failureCategory');
+      }
+      return sp;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setFailureCategory = useCallback((next: FailureCategory | null) => {
+    setSearchParams((prev) => {
+      const sp = new URLSearchParams(prev);
+      if (next) sp.set('failureCategory', next);
+      else sp.delete('failureCategory');
       return sp;
     }, { replace: true });
   }, [setSearchParams]);
@@ -177,14 +201,24 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
   // Pré-computa o conjunto de mensagens com falha terminal — alimenta o
   // contador no header e o filtro do MessagesArea sem reescanear a lista
-  // a cada render.
+  // a cada render. Quando `failureCategory` está setado via URL, restringe
+  // ainda mais para a categoria selecionada (failed | failed_auth | failed_retries).
   const failedMessages = useMemo(
     () => messages.filter(
       (m) => m.status === 'failed' || m.status === 'failed_auth' || m.status === 'failed_retries',
     ),
     [messages],
   );
-  const visibleMessages = failuresOnly ? failedMessages : messages;
+  const categoryCounts = useMemo(() => ({
+    failed: failedMessages.filter((m) => m.status === 'failed').length,
+    failed_auth: failedMessages.filter((m) => m.status === 'failed_auth').length,
+    failed_retries: failedMessages.filter((m) => m.status === 'failed_retries').length,
+  }), [failedMessages]);
+  const categoryFilteredMessages = useMemo(
+    () => (failureCategory ? failedMessages.filter((m) => m.status === failureCategory) : failedMessages),
+    [failedMessages, failureCategory],
+  );
+  const visibleMessages = failuresOnly ? categoryFilteredMessages : messages;
 
   // Memoize expensive derived arrays to avoid re-creation on every keystroke
   const lastContactMessages = useMemo(
@@ -283,13 +317,43 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           <div
             role="status"
             aria-live="polite"
-            className="flex items-center justify-between gap-3 px-4 py-2 text-xs bg-destructive/10 text-destructive border-b border-destructive/20"
+            className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 text-xs bg-destructive/10 text-destructive border-b border-destructive/20"
           >
-            <span>
-              {failedMessages.length === 0
-                ? 'Nenhuma mensagem com falha terminal nesta conversa.'
-                : `Mostrando apenas mensagens com falha terminal (${failedMessages.length}). Passe o mouse sobre o status para ver o motivo.`}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-medium">
+                {categoryFilteredMessages.length === 0
+                  ? 'Nenhuma mensagem nesta categoria.'
+                  : `${categoryFilteredMessages.length} ${categoryFilteredMessages.length === 1 ? 'mensagem' : 'mensagens'}`}
+              </span>
+              <div className="flex items-center gap-1" role="tablist" aria-label="Categoria de falha">
+                {([
+                  { key: null, label: 'Todas', count: failedMessages.length },
+                  { key: 'failed' as const, label: 'Sem conexão', count: categoryCounts.failed },
+                  { key: 'failed_auth' as const, label: 'Auth', count: categoryCounts.failed_auth },
+                  { key: 'failed_retries' as const, label: 'Esgotadas', count: categoryCounts.failed_retries },
+                ]).map(({ key, label, count }) => {
+                  const isActive = (failureCategory ?? null) === key;
+                  return (
+                    <button
+                      key={key ?? 'all'}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => setFailureCategory(key)}
+                      className={
+                        'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium transition-colors ' +
+                        (isActive
+                          ? 'bg-destructive text-destructive-foreground border-destructive'
+                          : 'bg-background/40 border-destructive/30 hover:bg-destructive/20')
+                      }
+                    >
+                      {label}
+                      <span className="opacity-70">({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <button
               type="button"
               className="font-medium underline hover:no-underline"
