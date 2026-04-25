@@ -310,12 +310,31 @@ function startGcIfNeeded() {
 }
 
 function broadcast<T>(msg: BroadcastMessage<T>) {
-  const ch = getBroadcastChannel();
-  if (!ch) return;
-  try {
-    ch.postMessage(msg);
-  } catch {
-    /* noop */
+  const kind = ensureTransport();
+  if (kind === 'broadcast-channel' && bc) {
+    try { bc.postMessage(msg); return; } catch { /* cai no fallback */ }
+  }
+  if (kind === 'storage-event' || kind === 'broadcast-channel') {
+    // Fallback: escreve em um slot rotativo do localStorage. O `storage`
+    // event é disparado em TODAS as outras abas que tenham o mesmo origin
+    // — mantemos paridade funcional (result/error/release) com o BC.
+    if (typeof localStorage === 'undefined') return;
+    try {
+      // Slot único por mensagem para garantir que `storage` event dispare
+      // mesmo quando o mesmo `key` é reescrito em sequência (o evento
+      // só dispara em mudança de valor; usar um slot único evita a colisão).
+      const slot = `${LS_BUS_PREFIX}${TAB_ID}:${msg.ts}:${Math.random().toString(36).slice(2, 8)}`;
+      const payload = JSON.stringify(msg);
+      localStorage.setItem(slot, payload);
+      // Remove logo em seguida — não precisamos persistir, só sinalizar.
+      // Pequeno delay para que abas espectadoras tenham chance de ler em
+      // navegadores que entregam o evento de forma assíncrona.
+      setTimeout(() => {
+        try { localStorage.removeItem(slot); } catch { /* noop */ }
+      }, 250);
+    } catch {
+      /* quota cheia ou serialização falhou — degrada silenciosamente */
+    }
   }
 }
 
