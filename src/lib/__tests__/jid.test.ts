@@ -222,4 +222,184 @@ describe('jid helpers', () => {
       expect(toJidStrict('')).toBeNull();
     });
   });
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Cobertura ampliada: DDIs internacionais + caracteres incomuns
+  // ──────────────────────────────────────────────────────────────────────
+
+  describe('DDIs internacionais (fora do BR)', () => {
+    // Pares (input formatado, dígitos esperados) — cobre os principais DDIs
+    // que aparecem em integrações reais com Evolution API.
+    const cases: Array<[string, string, string]> = [
+      // [label, input, expectedDigits]
+      ['US (+1)', '+1 (415) 555-0132', '14155550132'],
+      ['UK (+44)', '+44 20 7946 0958', '442079460958'],
+      ['Portugal (+351)', '+351 912 345 678', '351912345678'],
+      ['Spain (+34)', '+34 612 34 56 78', '34612345678'],
+      ['Germany (+49)', '+49 30 1234567', '49301234567'],
+      ['France (+33)', '+33 6 12 34 56 78', '33612345678'],
+      ['Argentina (+54 9)', '+54 9 11 1234-5678', '5491112345678'],
+      ['Mexico (+52)', '+52 55 1234 5678', '525512345678'],
+      ['Japan (+81)', '+81 3-1234-5678', '81312345678'],
+      ['India (+91)', '+91 98765 43210', '919876543210'],
+      ['China (+86)', '+86 138 0013 8000', '8613800138000'],
+      ['Israel (+972)', '+972 50-123-4567', '972501234567'],
+    ];
+
+    it.each(cases)('toPhone(%s) extrai apenas dígitos', (_label, input, expected) => {
+      expect(toPhone(input)).toBe(expected);
+    });
+
+    it.each(cases)('toJid(%s) → <digits>@s.whatsapp.net', (_label, input, expected) => {
+      expect(toJid(input)).toBe(`${expected}@s.whatsapp.net`);
+    });
+
+    it.each(cases)('toJidStrict(%s) valida e devolve JID canônico', (_label, input, expected) => {
+      // Todos os casos têm 8-15 dígitos → devem passar no guard estrito.
+      expect(toJidStrict(input)).toBe(`${expected}@s.whatsapp.net`);
+      expect(isValidIndividualJid(`${expected}@s.whatsapp.net`)).toBe(true);
+    });
+
+    it('ensureBrazilDDI NÃO re-prefixa números que já começam com 55 e têm tamanho válido', () => {
+      // Defensivo: para DDIs estrangeiros sem 55, a função adiciona 55 (comportamento documentado).
+      // Aqui só fixamos o caso "começa com 55 e ≥12 dígitos" → preserva.
+      expect(ensureBrazilDDI('5511999999999')).toBe('5511999999999');
+    });
+
+    it('ensureBrazilDDI prepende 55 a DDIs estrangeiros (limitação documentada)', () => {
+      // A função é BR-first: se o número não começa com 55, ela prefixa 55.
+      // Este teste fixa o contrato para evitar regressão silenciosa.
+      expect(ensureBrazilDDI('+1 (415) 555-0132')).toBe('5514155550132');
+      expect(ensureBrazilDDI('+44 20 7946 0958')).toBe('55442079460958');
+    });
+
+    it('toPhoneStrict aceita DDIs internacionais dentro de 8-15 dígitos', () => {
+      expect(toPhoneStrict('+1 (415) 555-0132')).toBe('14155550132');
+      expect(toPhoneStrict('+44 20 7946 0958')).toBe('442079460958');
+      expect(toPhoneStrict('+86 138 0013 8000')).toBe('8613800138000');
+    });
+
+    it('toPhoneStrict rejeita números que extrapolam 15 dígitos após normalizar', () => {
+      // E.164 limita a 15 dígitos; entradas maiores devem virar null.
+      expect(toPhoneStrict('+1234567890123456')).toBeNull(); // 16
+      expect(toJidStrict('+1234567890123456')).toBeNull();
+    });
+  });
+
+  describe('caracteres incomuns / whitespace', () => {
+    // Tabela determinística: cada input deve produzir EXATAMENTE o output.
+    // Cobre tab, newline, CR, espaços múltiplos, NBSP, zero-width, RTL,
+    // BOM, e separadores Unicode comuns em copy-paste de planilhas/PDFs.
+    const NBSP = '\u00A0';
+    const ZWSP = '\u200B';
+    const ZWNJ = '\u200C';
+    const ZWJ = '\u200D';
+    const LRM = '\u200E';
+    const RLM = '\u200F';
+    const BOM = '\uFEFF';
+    const NARROW_NBSP = '\u202F';
+    const FIGURE_SPACE = '\u2007';
+
+    const phoneCases: Array<[string, string, string]> = [
+      ['tab', '\t5511999999999\t', '5511999999999'],
+      ['newline', '\n5511999999999\n', '5511999999999'],
+      ['CRLF', '\r\n5511999999999\r\n', '5511999999999'],
+      ['espaços múltiplos', '   55   11   99999   9999   ', '5511999999999'],
+      ['mistura tab+espaço', ' \t55\t 11\t99999\t9999 \t', '5511999999999'],
+      ['NBSP', `55${NBSP}11${NBSP}99999${NBSP}9999`, '5511999999999'],
+      ['narrow NBSP', `55${NARROW_NBSP}11${NARROW_NBSP}99999${NARROW_NBSP}9999`, '5511999999999'],
+      ['figure space', `55${FIGURE_SPACE}11${FIGURE_SPACE}99999${FIGURE_SPACE}9999`, '5511999999999'],
+      ['zero-width space', `5511${ZWSP}999999999`, '5511999999999'],
+      ['ZWNJ/ZWJ', `5511${ZWNJ}9999${ZWJ}99999`, '5511999999999'],
+      ['LRM/RLM', `${LRM}+55 11 99999-9999${RLM}`, '5511999999999'],
+      ['BOM no início', `${BOM}5511999999999`, '5511999999999'],
+      ['parênteses + traços', '(55) 11-99999-9999', '5511999999999'],
+      ['formato DDD com hífen', '+55-11-99999-9999', '5511999999999'],
+      ['letras intercaladas (lixo)', '55a11b99999c9999', '5511999999999'],
+    ];
+
+    it.each(phoneCases)('toPhone(%s) é determinístico', (_label, input, expected) => {
+      expect(toPhone(input)).toBe(expected);
+    });
+
+    it.each(phoneCases)('toJid(%s) gera JID individual canônico', (_label, input, expected) => {
+      expect(toJid(input)).toBe(`${expected}@s.whatsapp.net`);
+    });
+
+    it.each(phoneCases)('toPhoneStrict(%s) aceita após sanitizar', (_label, input, expected) => {
+      expect(toPhoneStrict(input)).toBe(expected);
+    });
+
+    it('idempotência: aplicar toPhone duas vezes produz o mesmo resultado', () => {
+      for (const [, input] of phoneCases) {
+        const once = toPhone(input);
+        expect(toPhone(once)).toBe(once);
+      }
+    });
+
+    it('idempotência: aplicar toJid duas vezes produz o mesmo resultado', () => {
+      for (const [, input] of phoneCases) {
+        const once = toJid(input);
+        expect(toJid(once)).toBe(once);
+      }
+    });
+
+    it('determinismo: chamadas repetidas com a mesma entrada retornam saídas idênticas', () => {
+      // Sanity contra qualquer dependência implícita de estado/locale/Date.
+      const sample = ` \t+55 (11)\u00A099999-9999\n`;
+      const a = toJid(sample);
+      const b = toJid(sample);
+      const c = toJid(sample);
+      expect(a).toBe(b);
+      expect(b).toBe(c);
+      expect(a).toBe('5511999999999@s.whatsapp.net');
+    });
+
+    it('strings só com whitespace/zero-width retornam vazio (e null em variantes estritas)', () => {
+      const blanks = [
+        '   ',
+        '\t\t\t',
+        '\n\r\n',
+        `${NBSP}${NARROW_NBSP}${FIGURE_SPACE}`,
+        `${ZWSP}${ZWNJ}${ZWJ}`,
+        `${BOM}${LRM}${RLM}`,
+      ];
+      for (const b of blanks) {
+        expect(toPhone(b)).toBe('');
+        expect(toJid(b)).toBe('');
+        expect(toPhoneStrict(b)).toBeNull();
+        expect(toJidStrict(b)).toBeNull();
+      }
+    });
+
+    it('JIDs com whitespace ao redor: toPhone limpa, mas toJidStrict é estrito', () => {
+      // `toJidStrict` checa `isValidJid(raw)` ANTES de normalizar — strings com
+      // whitespace ao redor não casam com a regex e caem no fallback de telefone.
+      const jidComEspaco = '  5511999999999@s.whatsapp.net  ';
+      expect(toPhone(jidComEspaco)).toBe('5511999999999');
+      // Fallback: extrai dígitos da parte antes do '@' → '5511999999999' válido.
+      expect(toJidStrict(jidComEspaco)).toBe('5511999999999@s.whatsapp.net');
+      // Já o guard direto rejeita por causa dos espaços:
+      expect(isValidIndividualJid(jidComEspaco)).toBe(false);
+    });
+
+    it('entradas extremas não lançam exceção', () => {
+      const evil = [
+        '\u0000\u0000\u0000',
+        '🤖🚀✨',
+        'a'.repeat(10_000),
+        '5'.repeat(10_000),
+        `${BOM}${ZWSP}${NBSP}\t\n\r `,
+      ];
+      for (const e of evil) {
+        expect(() => toPhone(e)).not.toThrow();
+        expect(() => toJid(e)).not.toThrow();
+        expect(() => toPhoneStrict(e)).not.toThrow();
+        expect(() => toJidStrict(e)).not.toThrow();
+      }
+      // 10k dígitos extrapola 8-15 → strict deve devolver null.
+      expect(toPhoneStrict('5'.repeat(10_000))).toBeNull();
+      expect(toJidStrict('5'.repeat(10_000))).toBeNull();
+    });
+  });
 });
