@@ -2,7 +2,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-correlation-id',
+}
+
+const CORRELATION_HEADER = 'x-correlation-id'
+
+function shortRid(): string {
+  try {
+    return crypto.randomUUID().slice(0, 8)
+  } catch {
+    return Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0')
+  }
 }
 
 // Tables that are large enough that an unfiltered scan reliably hits statement timeout.
@@ -35,13 +45,20 @@ Deno.serve(async (req) => {
   }
 
   const startedAt = Date.now()
+  // Initial cid from header — may be upgraded from body.__cid below.
+  let cid: string = req.headers.get(CORRELATION_HEADER) || shortRid()
+  let jsonHeaders: Record<string, string> = {
+    ...corsHeaders,
+    'Content-Type': 'application/json',
+    [CORRELATION_HEADER]: cid,
+  }
 
   try {
     const url = Deno.env.get('EXTERNAL_SUPABASE_URL')
     const key = Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY')
     if (!url || !key) {
       return new Response(JSON.stringify({ error: 'External DB not configured' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 500, headers: jsonHeaders
       })
     }
 
@@ -78,25 +95,39 @@ Deno.serve(async (req) => {
     const timeoutResponse = () =>
       new Response(
         JSON.stringify({ error: 'Query timed out. Try narrower filters or a smaller limit.' }),
-        { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 504, headers: jsonHeaders }
       )
 
     const body = await req.json()
     const { action, table, select, filters, order, limit, offset, countMode, rpc, params, data, match } = body
+    // Upgrade cid from body if header was missing/auto-generated.
+    if (!req.headers.get(CORRELATION_HEADER) && typeof body.__cid === 'string' && body.__cid) {
+      cid = body.__cid
+      jsonHeaders = { ...jsonHeaders, [CORRELATION_HEADER]: cid }
+    }
 
     // RPC call
     if (action === 'rpc' && rpc) {
+      const rpcStartedAt = Date.now()
+      // Strip the trace echo so it isn't forwarded to the SQL function.
+      const cleanParams = { ...(params || {}) }
+      delete (cleanParams as Record<string, unknown>).__cid
       try {
-        const { data: rpcData, error } = await withTimeout(ext.rpc(rpc, params || {}))
+        const { data: rpcData, error } = await withTimeout(ext.rpc(rpc, cleanParams))
+        const ms = Date.now() - rpcStartedAt
+        console.log(JSON.stringify({
+          fn: 'external-db-proxy', cid, op: 'rpc', target: rpc, ms, ok: !error,
+          err: error?.message,
+        }))
         if (error) {
           const isTimeout = /statement timeout|canceling statement/i.test(error.message)
-          return new Response(JSON.stringify({ error: error.message }), {
+          return new Response(JSON.stringify({ error: error.message, cid }), {
             status: isTimeout ? 504 : 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: jsonHeaders,
           })
         }
-        return new Response(JSON.stringify({ data: rpcData }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        return new Response(JSON.stringify({ data: rpcData, cid }), {
+          headers: jsonHeaders
         })
       } catch (e) {
         if ((e as Error).message === 'proxy_timeout') return timeoutResponse()
@@ -108,10 +139,10 @@ Deno.serve(async (req) => {
     if (action === 'insert' && table && data) {
       const { data: result, error } = await ext.from(table).insert(data).select()
       if (error) return new Response(JSON.stringify({ error: error.message }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 400, headers: jsonHeaders
       })
       return new Response(JSON.stringify({ data: result }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: jsonHeaders
       })
     }
 
@@ -121,17 +152,17 @@ Deno.serve(async (req) => {
       for (const [k, v] of Object.entries(match)) q = q.eq(k, v as string)
       const { data: result, error } = await q.select()
       if (error) return new Response(JSON.stringify({ error: error.message }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 400, headers: jsonHeaders
       })
       return new Response(JSON.stringify({ data: result }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: jsonHeaders
       })
     }
 
     // SELECT query (default)
     if (!table) {
       return new Response(JSON.stringify({ error: 'Missing table parameter' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 400, headers: jsonHeaders
       })
     }
 
@@ -145,7 +176,7 @@ Deno.serve(async (req) => {
         JSON.stringify({
           error: `Heavy table "${table}" requires a filter on remote_jid, conversation_id, instance_name, or a created_at window (gte/gt). Got limit=${limit} with no narrowing filter.`,
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: jsonHeaders }
       )
     }
 
@@ -190,7 +221,9 @@ Deno.serve(async (req) => {
     const ms = Date.now() - startedAt
     console.log(JSON.stringify({
       fn: 'external-db-proxy',
-      table,
+      cid,
+      op: 'select',
+      target: table,
       limit: effectiveLimit,
       heavy: isHeavy,
       hasFilter: hasNarrowingFilter,
@@ -203,7 +236,7 @@ Deno.serve(async (req) => {
       const isTimeout = /statement timeout|canceling statement/i.test(queryError.message)
       return new Response(JSON.stringify({ error: queryError.message }), {
         status: isTimeout ? 504 : 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: jsonHeaders
       })
     }
 
@@ -211,12 +244,12 @@ Deno.serve(async (req) => {
       data: queryData || [],
       count: count ?? (Array.isArray(queryData) ? queryData.length : 0),
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: jsonHeaders
     })
 
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status: 500, headers: jsonHeaders
     })
   }
 })

@@ -87,6 +87,7 @@ export function ClientTelemetryPanel() {
                 <thead>
                   <tr className="border-b bg-muted/30">
                     <th className="text-left p-3 font-medium text-muted-foreground">Quando</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground">Trace ID</th>
                     <th className="text-left p-3 font-medium text-muted-foreground">Source</th>
                     <th className="text-left p-3 font-medium text-muted-foreground">Op</th>
                     <th className="text-left p-3 font-medium text-muted-foreground">Target</th>
@@ -103,6 +104,12 @@ export function ClientTelemetryPanel() {
                     <tr key={`${ev.startedAt}-${idx}`} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
                       <td className="p-3 text-xs text-muted-foreground whitespace-nowrap font-mono">
                         {formatTime(new Date(Date.now() - (performance.now() - ev.startedAt)).toISOString())}
+                      </td>
+                      <td
+                        className="p-3 text-xs font-mono text-primary"
+                        title={ev.correlationId ? `Correlation ID: ${ev.correlationId}` : 'sem trace id'}
+                      >
+                        {ev.correlationId ?? '-'}
                       </td>
                       <td className="p-3 text-xs font-mono text-muted-foreground">{ev.source}</td>
                       <td className="p-3">

@@ -27,6 +27,8 @@ export interface QueryEvent {
   severity: Severity;
   errorMessage?: string;
   startedAt: number;
+  /** Short trace id linking the client log, panel row and edge log. */
+  correlationId?: string;
 }
 
 export interface TelemetrySnapshot {
@@ -107,6 +109,7 @@ function publishToWindow() {
 
 function logEvent(ev: QueryEvent) {
   const meta = {
+    cid: ev.correlationId,
     source: ev.source,
     op: ev.operation,
     target: ev.target,

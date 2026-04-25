@@ -73,4 +73,47 @@ describe('externalProxy telemetry', () => {
     expect(ev.target).toBe('rpc_list_contacts');
     expect(ev.operation).toBe('rpc');
   });
+
+  it('attaches a correlationId and forwards it via header + body __cid', async () => {
+    invokeMock.mockResolvedValue({ data: { data: [] }, error: null });
+    await queryExternalProxy({ table: 'evolution_contacts', limit: 10 });
+
+    expect(invokeMock).toHaveBeenCalledTimes(1);
+    const [fnName, options] = invokeMock.mock.calls[0] as [string, {
+      body: Record<string, unknown>;
+      headers?: Record<string, string>;
+    }];
+    expect(fnName).toBe('external-db-proxy');
+    const cid = options.headers?.['x-correlation-id'];
+    expect(cid).toMatch(/^[0-9a-f]{8}$/);
+    expect(options.body.__cid).toBe(cid);
+
+    const ev = getTelemetrySnapshot().recentEvents[0];
+    expect(ev.correlationId).toBe(cid);
+  });
+
+  it('keeps the same correlationId on the recorded error event', async () => {
+    invokeMock.mockResolvedValue({ data: null, error: { message: 'boom' } });
+    await expect(queryExternalProxy({ table: 't' })).rejects.toThrow(/boom/);
+
+    const [, options] = invokeMock.mock.calls[0] as [string, {
+      headers?: Record<string, string>;
+    }];
+    const cid = options.headers?.['x-correlation-id'];
+    const ev = getTelemetrySnapshot().recentEvents[0];
+    expect(ev.severity).toBe('error');
+    expect(ev.correlationId).toBe(cid);
+  });
+
+  it('generates a different correlationId per call', async () => {
+    invokeMock.mockResolvedValue({ data: { data: [] }, error: null });
+    await queryExternalProxy({ table: 't', limit: 1 });
+    await queryExternalProxy({ table: 't', limit: 1 });
+    const [c1, c2] = invokeMock.mock.calls.map(([, opts]) =>
+      (opts as { headers?: Record<string, string> }).headers?.['x-correlation-id'],
+    );
+    expect(c1).toBeTruthy();
+    expect(c2).toBeTruthy();
+    expect(c1).not.toBe(c2);
+  });
 });
