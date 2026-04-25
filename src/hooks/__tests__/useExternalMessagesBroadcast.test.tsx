@@ -19,14 +19,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 
-// Mocka `queryExternalProxy` ANTES de importar o hook para que o hook use o stub.
-const queryExternalProxyMock = vi.fn(async () => ({ data: [], count: 0 }));
+// Mocka `queryExternalProxy` ANTES de importar o hook. A fábrica do vi.mock
+// é hoisted para o topo do arquivo — não pode capturar variáveis externas.
+// Por isso definimos o mock inline e expomos via importação dinâmica do mesmo
+// módulo no setup.
 vi.mock('@/lib/externalProxy', () => ({
-  queryExternalProxy: queryExternalProxyMock,
+  queryExternalProxy: vi.fn(async () => ({ data: [], count: 0 })),
 }));
 
 import { useExternalMessages } from '@/hooks/useExternalEvolution';
 import { clearCrossTabDedupe } from '@/lib/realtime/crossTabDedupe';
+import { queryExternalProxy } from '@/lib/externalProxy';
+
+const queryExternalProxyMock = queryExternalProxy as unknown as ReturnType<typeof vi.fn>;
 
 const BC_NAME = 'cross-tab-dedupe';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
