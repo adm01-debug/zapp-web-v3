@@ -248,10 +248,22 @@ export async function dedupedFetch<T>(
   const resultTtl = opts.resultTtl ?? DEFAULT_RESULT_TTL;
   const waitTimeout = opts.waitTimeout ?? DEFAULT_WAIT_TIMEOUT;
 
+  startGcIfNeeded();
+
   // 1. Cache em memória.
   const cached = resultCache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value as T;
+  }
+  if (cached && cached.expiresAt <= Date.now()) {
+    resultCache.delete(key); // expirado: força reprocessamento
+  }
+
+  // 1b. Cache persistente em localStorage (compartilhado entre abas).
+  const persisted = readPersistedResult<T>(key);
+  if (persisted !== null) {
+    resultCache.set(key, { value: persisted, expiresAt: Date.now() + resultTtl });
+    return persisted;
   }
 
   // 2. Inflight na mesma aba.
@@ -261,19 +273,26 @@ export async function dedupedFetch<T>(
   // 3. Tenta adquirir lock cross-tab.
   const acquired = writeLock(key, lockTtl);
   if (!acquired) {
-    // Outra aba está executando — espera broadcast ou timeout.
     log.debug('Lock detido por outra aba, aguardando broadcast', { key });
     const waited = await waitForResult<T>(key, waitTimeout);
     if (waited.ok) return waited.data;
+    // Antes de cair em fallback, reconfere o cache persistente — a líder
+    // pode ter terminado depois do broadcast já ter passado.
+    const lateCache = readPersistedResult<T>(key);
+    if (lateCache !== null) {
+      resultCache.set(key, { value: lateCache, expiresAt: Date.now() + resultTtl });
+      return lateCache;
+    }
     // Líder falhou ou expirou: tenta executar localmente como fallback.
   }
 
-  // 4. Líder: executa fetcher, cacheia, broadcasta resultado, libera lock.
+  // 4. Líder: executa fetcher, cacheia (memória + localStorage), broadcasta, libera lock.
   const exec = (async () => {
     try {
       const data = await fetcher();
       resultCache.set(key, { value: data, expiresAt: Date.now() + resultTtl });
-      broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now() });
+      writePersistedResult(key, data, resultTtl);
+      broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now(), resultTtl });
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
