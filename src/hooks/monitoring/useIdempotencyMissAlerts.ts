@@ -108,8 +108,8 @@ interface UseIdempotencyMissAlertsOptions {
 
 export function useIdempotencyMissAlerts(opts: UseIdempotencyMissAlertsOptions = {}) {
   const { threshold = DEFAULT_MISS_THRESHOLD } = opts;
-  const { isAdmin, loading: roleLoading } = useUserRole();
-  const enabled = (opts.enabled ?? true) && isAdmin && !roleLoading;
+  const { isDev, loading: roleLoading } = useUserRole();
+  const enabled = (opts.enabled ?? true) && isDev && !roleLoading;
   // Hydrate dedupe map from localStorage so refreshes don't re-fire alerts within the same hour bucket.
   const [lastAlertedAt, setLastAlertedAt] = useState<Map<string, number>>(() => loadPersistedAlerts());
   const hydratedRef = useRef(true);

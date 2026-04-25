@@ -37,11 +37,11 @@ export interface UseDlqAuditLogOptions {
 
 export function useDlqAuditLog(opts: UseDlqAuditLogOptions = {}) {
   const { limit = 30, action = null, enabled = true } = opts;
-  const { isAdmin } = useUserRole();
+  const { isDev } = useUserRole();
 
   return useQuery<DlqAuditEntry[]>({
     queryKey: ['dlq-audit-log', { limit, action }],
-    enabled: enabled && isAdmin,
+    enabled: enabled && isDev,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('rpc_dlq_list_audit', {
         p_limit: limit,
