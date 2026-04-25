@@ -271,7 +271,18 @@ export function useExternalMessages(remoteJid: string | null) {
       const older = await dedupedFetch(
         dedupeKey,
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest, controller.signal),
-        { lockTtl: 10_000, resultTtl: 30_000, waitTimeout: 8_000 },
+        {
+          lockTtl: 10_000,
+          resultTtl: 30_000,
+          waitTimeout: 8_000,
+          retry: {
+            maxRetries: 2,
+            baseDelayMs: 400,
+            maxDelayMs: 3_000,
+            // Não retentar se o usuário cancelou (scrollou ou trocou de chat).
+            shouldRetry: () => !controller.signal.aborted,
+          },
+        },
       );
       if (!mountedRef.current || controller.signal.aborted) return;
 
