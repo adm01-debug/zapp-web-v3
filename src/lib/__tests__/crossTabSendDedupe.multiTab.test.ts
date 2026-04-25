@@ -20,7 +20,12 @@ async function loadTab(): Promise<DedupeMod> {
   // We isolate *only* the dedupe module so other modules (logger, metrics) keep
   // their singletons and the metrics store accumulates across "tabs".
   let mod!: DedupeMod;
-  await vi.isolateModulesAsync(async () => {
+  // `isolateModulesAsync` exists in vitest >= 1.6 but isn't in the public
+  // type surface for v4 yet — cast through unknown.
+  const isolate = (vi as unknown as {
+    isolateModulesAsync: (cb: () => Promise<void>) => Promise<void>;
+  }).isolateModulesAsync;
+  await isolate(async () => {
     mod = await import('@/lib/crossTabSendDedupe');
   });
   return mod;
