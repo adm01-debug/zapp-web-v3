@@ -35,7 +35,11 @@ export type EvolutionFallbackAction =
 
 export type EvolutionFallbackReason =
   | 'http_404'
+  | 'http_405'
+  | 'http_501'
   | 'not_found_payload'
+  | 'method_not_allowed_payload'
+  | 'not_implemented_payload'
   | 'empty_payload'
   | 'upstream_error';
 
