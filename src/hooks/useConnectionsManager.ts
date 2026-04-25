@@ -179,7 +179,12 @@ export function useConnectionsManager() {
             }
             if (qrCodeDialog.open && qrCodeDialog.connectionId === newConn.id) {
               if (newConn.status === 'connected') {
-                setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
+                setQrCodeDialog((prev) => {
+                  if (prev.status !== 'connected') {
+                    void updateQrAttempt(prev.attemptId, { status: 'connected' });
+                  }
+                  return { ...prev, status: 'connected', qrCode: null, expiresAt: null };
+                });
               } else if (newConn.qr_code) {
                 setQrCodeDialog((prev) => ({
                   ...prev,
