@@ -182,6 +182,12 @@ export function ConnectionsView() {
               </Button>
             )}
             {qrCodeDialog.status === 'connected' && <Button onClick={closeQrDialog}>Fechar</Button>}
+            {qrCodeDialog.connectionId && (
+              <LastQrAttemptInfo
+                connectionId={qrCodeDialog.connectionId}
+                refreshKey={`${qrCodeDialog.status}:${qrCodeDialog.attemptId ?? ''}:${qrCodeDialog.expiresAt ?? ''}`}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
