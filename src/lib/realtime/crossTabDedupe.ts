@@ -295,6 +295,10 @@ export async function dedupedFetch<T>(
   // 3. Tenta adquirir lock cross-tab.
   const acquired = writeLock(key, lockTtl);
   if (!acquired) {
+    // Garante que o BroadcastChannel está ativo ANTES de aguardar — caso
+    // contrário a aba espectadora nunca registra o listener e perde o
+    // broadcast do líder, caindo desnecessariamente no fallback de cache.
+    getBroadcastChannel();
     log.debug('Lock detido por outra aba, aguardando broadcast', { key });
     const waited = await waitForResult<T>(key, waitTimeout);
     if (waited.ok) return waited.data;
