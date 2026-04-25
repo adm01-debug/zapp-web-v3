@@ -342,7 +342,7 @@ export function clearCrossTabDedupe(): void {
       const keys: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && k.startsWith(LS_PREFIX)) keys.push(k);
+        if (k && (k.startsWith(LS_LOCK_PREFIX) || k.startsWith(LS_RESULT_PREFIX))) keys.push(k);
       }
       keys.forEach((k) => localStorage.removeItem(k));
     } catch {
