@@ -122,7 +122,12 @@ export function useExternalConversations(enabled = true) {
       const messages = await dedupedFetch(
         inboxSidebarKey(SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT),
         () => fetchRecentMessagesWindow(),
-        { lockTtl: 8_000, resultTtl: POLL_INTERVAL - 500, waitTimeout: 6_000 },
+        {
+          lockTtl: 8_000,
+          resultTtl: POLL_INTERVAL - 500,
+          waitTimeout: 6_000,
+          retry: { maxRetries: 2, baseDelayMs: 300, maxDelayMs: 2_000 },
+        },
       );
       return buildExternalConversations(messages);
     },
@@ -185,7 +190,12 @@ export function useExternalMessages(remoteJid: string | null) {
       const evoMessages = await dedupedFetch(
         inboxInitialKey({ jid: remoteJid, pageSize: CONVERSATION_PAGE_SIZE }),
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
-        { lockTtl: 10_000, resultTtl: 15_000, waitTimeout: 8_000 },
+        {
+          lockTtl: 10_000,
+          resultTtl: 15_000,
+          waitTimeout: 8_000,
+          retry: { maxRetries: 2, baseDelayMs: 400, maxDelayMs: 3_000 },
+        },
       );
       if (!mountedRef.current) return;
 
@@ -261,7 +271,18 @@ export function useExternalMessages(remoteJid: string | null) {
       const older = await dedupedFetch(
         dedupeKey,
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest, controller.signal),
-        { lockTtl: 10_000, resultTtl: 30_000, waitTimeout: 8_000 },
+        {
+          lockTtl: 10_000,
+          resultTtl: 30_000,
+          waitTimeout: 8_000,
+          retry: {
+            maxRetries: 2,
+            baseDelayMs: 400,
+            maxDelayMs: 3_000,
+            // Não retentar se o usuário cancelou (scrollou ou trocou de chat).
+            shouldRetry: () => !controller.signal.aborted,
+          },
+        },
       );
       if (!mountedRef.current || controller.signal.aborted) return;
 
