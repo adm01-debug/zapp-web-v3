@@ -383,10 +383,35 @@ export function useExternalMessages(remoteJid: string | null) {
     setMessages(prev => prev.filter(m => m.id !== messageId));
   }, []);
 
+  // ─── Loading sync cross-tab por chave ──────────────────────────────────────
+  // Constroi um matcher único cobrindo initial/poll/older deste jid.
+  // A aba que está apenas observando recebe `phase: 'start/end'` da líder e
+  // ajusta o spinner sem disparar fetch próprio.
+  const jidPrefixMatcher = useMemo<RegExp | null>(() => {
+    if (!remoteJid) return null;
+    const [initialPrefix, pollPrefix, olderPrefix] = inboxJidKeyPrefixes(remoteJid);
+    const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`^(${[initialPrefix, pollPrefix, olderPrefix].map(escape).join('|')})`);
+  }, [remoteJid]);
+
+  const { isLoadingKey } = useDedupeLoadingByKey(
+    jidPrefixMatcher ?? /(?!)/,
+    Boolean(remoteJid),
+  );
+
+  const initialPrefix = remoteJid ? inboxJidKeyPrefixes(remoteJid)[0] : '';
+  const olderPrefix = remoteJid ? inboxJidKeyPrefixes(remoteJid)[2] : '';
+
+  // Spinner inicial: combina loading local com qualquer aba carregando o initial.
+  const remoteInitialLoading = Boolean(remoteJid) && initialPrefix !== '' && isLoadingKey(initialPrefix);
+  const remoteOlderLoading = Boolean(remoteJid) && olderPrefix !== '' && isLoadingKey(olderPrefix);
+
   return {
     messages,
-    loading,
-    loadingOlder,
+    // Sincronizado: true se a aba local OU outra aba estiver buscando o initial.
+    loading: loading || remoteInitialLoading,
+    // Mesmo critério para "carregando mais antigas".
+    loadingOlder: loadingOlder || remoteOlderLoading,
     hasMore,
     error,
     refetch: initialFetch,
