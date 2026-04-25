@@ -28,6 +28,7 @@ import { NumberReputationMonitor } from './NumberReputationMonitor';
 import { ConnectionCard } from './ConnectionCard';
 import { DegradedQuickActions } from './DegradedQuickActions';
 import { QrCountdown } from './QrCountdown';
+import { LastQrAttemptInfo } from './LastQrAttemptInfo';
 import { IdempotencyMissBanner } from './IdempotencyMissBanner';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 
