@@ -15,6 +15,7 @@ export type MessageStatusValue =
   | 'sent'
   | 'delivered'
   | 'read'
+  | 'played'
   | 'failed'
   | 'failed_auth'
   | 'failed_retries';
@@ -38,6 +39,7 @@ const statusConfig: Record<MessageStatusValue, { icon: typeof Check; label: stri
   sent: { icon: Check, label: 'Enviado', color: 'text-muted-foreground' },
   delivered: { icon: CheckCheck, label: 'Entregue', color: 'text-muted-foreground' },
   read: { icon: CheckCheck, label: 'Lido', color: 'text-info' },
+  played: { icon: CheckCheck, label: 'Reproduzido', color: 'text-info' },
   failed: { icon: AlertCircle, label: 'Falha no envio', color: 'text-destructive' },
   failed_auth: { icon: ShieldAlert, label: 'Falha de autenticação', color: 'text-destructive' },
   failed_retries: { icon: AlertCircle, label: 'Falhou após várias tentativas', color: 'text-destructive' },
