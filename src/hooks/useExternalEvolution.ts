@@ -17,6 +17,7 @@ import {
 import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
+import { dedupedFetch } from '@/lib/realtime/crossTabDedupe';
 
 const log = getLogger('useExternalEvolution');
 
@@ -223,7 +224,15 @@ export function useExternalMessages(remoteJid: string | null) {
 
     try {
       setLoadingOlder(true);
-      const older = await fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest, controller.signal);
+      // Dedupe cross-aba: mesma janela (jid + cursor) compartilhada via
+      // localStorage lock + BroadcastChannel. Evita N abas chamando o mesmo
+      // page de mensagens antigas em paralelo.
+      const dedupeKey = `older:${remoteJid}:${oldest}:${CONVERSATION_PAGE_SIZE}`;
+      const older = await dedupedFetch(
+        dedupeKey,
+        () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest, controller.signal),
+        { lockTtl: 10_000, resultTtl: 30_000, waitTimeout: 8_000 },
+      );
       if (!mountedRef.current || controller.signal.aborted) return;
 
       const mapped = older.map(evolutionToRealtimeMessage);
