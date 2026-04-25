@@ -21,8 +21,10 @@ import {
   releaseInstabilityToastDedupe,
   getInstabilityToastFiredCount,
   getInstabilityToastSuppressedCount,
+  getInstabilityToastCooldownSize,
   __resetInstabilityToastDedupeForTest,
   INSTABILITY_TOAST_COOLDOWN_MS,
+  INSTABILITY_TOAST_MAX_KEYS,
 } from '@/lib/instabilityToastDedupe';
 
 beforeEach(() => {
@@ -206,3 +208,68 @@ describe('releaseInstabilityToastDedupe — liberação manual', () => {
     expect(shouldShowInstabilityToast('c2', { status: 500 }, { nowMs: t0 + 1 })).toBe(false);
   });
 });
+
+describe('eviction LRU — limpa o Map quando excede INSTABILITY_TOAST_MAX_KEYS', () => {
+  it('expõe o limite default de 200 chaves', () => {
+    expect(INSTABILITY_TOAST_MAX_KEYS).toBe(200);
+  });
+
+  it('mantém o tamanho do Map ≤ MAX após muitos contatos distintos', () => {
+    const err = { status: 500 };
+    const total = INSTABILITY_TOAST_MAX_KEYS + 50;
+    for (let i = 0; i < total; i++) {
+      shouldShowInstabilityToast(`c${i}`, err, { nowMs: 1_000_000 + i });
+    }
+    expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
+  });
+
+  it('remove as chaves MAIS ANTIGAS primeiro (LRU por lastFired)', () => {
+    const err = { status: 500 };
+    const huge = 1_000; // cooldown curto para garantir disparos
+    const base = 100_000_000;
+    // Preenche até o limite (cada chave nova com nowMs crescente, fora do cooldown anterior)
+    for (let i = 0; i < INSTABILITY_TOAST_MAX_KEYS; i++) {
+      shouldShowInstabilityToast(`c${i}`, err, { nowMs: base + i * 10_000, cooldownMs: huge });
+    }
+    expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
+
+    const afterFill = base + INSTABILITY_TOAST_MAX_KEYS * 10_000;
+    // Adiciona 3 novas → as 3 mais antigas (c0, c1, c2) devem sair
+    shouldShowInstabilityToast('newA', err, { nowMs: afterFill + 1, cooldownMs: huge });
+    shouldShowInstabilityToast('newB', err, { nowMs: afterFill + 2, cooldownMs: huge });
+    shouldShowInstabilityToast('newC', err, { nowMs: afterFill + 3, cooldownMs: huge });
+
+    expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
+
+    // c0, c1, c2 foram despejados → próximo show dispara (true) imediatamente,
+    // pois a chave foi removida do Map (last=0 → diff = nowMs cheio, > cooldown).
+    const probe = afterFill + 100;
+    expect(shouldShowInstabilityToast('c0', err, { nowMs: probe, cooldownMs: huge })).toBe(true);
+    expect(shouldShowInstabilityToast('c1', err, { nowMs: probe, cooldownMs: huge })).toBe(true);
+    expect(shouldShowInstabilityToast('c2', err, { nowMs: probe, cooldownMs: huge })).toBe(true);
+
+    // Uma chave recente (newA) está dentro do cooldown → suprime
+    expect(
+      shouldShowInstabilityToast('newA', err, { nowMs: afterFill + 50, cooldownMs: huge }),
+    ).toBe(false);
+  });
+
+  it('preserva contadores de telemetria mesmo após eviction', () => {
+    const err = { status: 500 };
+    const huge = 1_000;
+    const base = 100_000_000;
+    // c_old é o primeiro (mais antigo)
+    shouldShowInstabilityToast('c_old', err, { nowMs: base, cooldownMs: huge });
+    expect(getInstabilityToastFiredCount('c_old|SERVER')).toBe(1);
+
+    // Empurra além do limite para forçar eviction de c_old
+    for (let i = 0; i < INSTABILITY_TOAST_MAX_KEYS + 5; i++) {
+      shouldShowInstabilityToast(`c${i}`, err, { nowMs: base + (i + 1) * 10_000, cooldownMs: huge });
+    }
+
+    // Telemetria de c_old continua intacta
+    expect(getInstabilityToastFiredCount('c_old|SERVER')).toBe(1);
+    expect(getInstabilityToastCooldownSize()).toBe(INSTABILITY_TOAST_MAX_KEYS);
+  });
+});
+
