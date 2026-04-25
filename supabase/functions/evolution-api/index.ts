@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { Logger, checkRateLimit, getClientIP, getCorsHeaders, handleCors } from "../_shared/validation.ts";
 import { EVOLUTION_ENVELOPE_VERSION, proxyToEvolution, resolvePrivateBucketUrl } from "../_shared/evolution-api-proxy.ts";
+import { normalizeChatList, normalizeContactList, normalizeProfile } from "../_shared/evolution-response-normalizers.ts";
 import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
 
 serve(async (req) => {
@@ -253,7 +254,13 @@ serve(async (req) => {
     if (action === 'update-message') return await proxy(`/message/update/${instance}`, 'PUT', { number: body.number, key: body.key, text: body.text });
 
     // ─── 5. Chat ───
-    if (action === 'find-chats') return await proxy(`/chat/findChats/${instance}`, 'POST', { where: body.where || {} });
+    if (action === 'find-chats') {
+      const response = await proxy(`/chat/findChats/${instance}`, 'POST', { where: body.where || {} });
+      const data = await response.json();
+      if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // Padroniza retorno em array (primário e fallback). Ver _shared/evolution-response-normalizers.ts
+      return new Response(JSON.stringify(normalizeChatList(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     if (action === 'find-messages') return await proxy(`/chat/findMessages/${instance}`, 'POST', { where: body.where || {}, page: body.page, offset: body.offset });
 
     if (action === 'find-status-messages') {
@@ -264,7 +271,13 @@ serve(async (req) => {
       return new Response(JSON.stringify(records), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (action === 'find-contacts') return await proxy(`/chat/findContacts/${instance}`, 'POST', { where: body.where || {} });
+    if (action === 'find-contacts') {
+      const response = await proxy(`/chat/findContacts/${instance}`, 'POST', { where: body.where || {} });
+      const data = await response.json();
+      if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // Padroniza retorno em array (primário e fallback). Ver _shared/evolution-response-normalizers.ts
+      return new Response(JSON.stringify(normalizeContactList(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     if (action === 'check-numbers') return await proxy(`/chat/whatsappNumbers/${instance}`, 'POST', { numbers: body.numbers });
     if (action === 'get-media-base64') return await proxy(`/chat/getBase64FromMediaMessage/${instance}`, 'POST', { message: body.message, convertToMp4: body.convertToMp4 ?? false });
     if (action === 'delete-for-everyone') return await proxy(`/chat/deleteMessageForEveryone/${instance}`, 'DELETE', body);
@@ -288,7 +301,13 @@ serve(async (req) => {
     if (action === 'toggle-ephemeral') return await proxy(`/group/toggleEphemeral/${instance}`, 'POST', { groupJid: body.groupJid, expiration: body.expiration });
 
     // ─── 7. Profile ───
-    if (action === 'fetch-profile') return await proxy(`/profile/fetchProfile/${instance}`, 'GET');
+    if (action === 'fetch-profile') {
+      const response = await proxy(`/profile/fetchProfile/${instance}`, 'GET');
+      const data = await response.json();
+      if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // Padroniza retorno: objeto válido ou null (primário e fallback). Ver _shared/evolution-response-normalizers.ts
+      return new Response(JSON.stringify(normalizeProfile(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     if (action === 'update-profile-name') return await proxy(`/profile/updateProfileName/${instance}`, 'PUT', { name: body.name });
     if (action === 'update-profile-status') return await proxy(`/profile/updateProfileStatus/${instance}`, 'PUT', { status: body.status });
     if (action === 'update-profile-picture') return await proxy(`/profile/updateProfilePicture/${instance}`, 'PUT', { picture: body.picture });
