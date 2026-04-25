@@ -9942,7 +9942,7 @@ export type Database = {
       rpc_queue_sla_panel: {
         Args: {
           p_channel_type?: string
-          p_skill_id?: string
+          p_skill_name?: string
           p_sla_status?: string
         }
         Returns: {
