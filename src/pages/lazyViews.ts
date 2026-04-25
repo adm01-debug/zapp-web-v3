@@ -67,6 +67,7 @@ export const EvolutionMonitoringDashboard = lazyWithRetry(() => import('@/compon
 export const AdminWebhookSecretStatusPage = lazyWithRetry(() => import('@/pages/AdminWebhookSecretStatusPage'));
 export const AdminInstancePausesPage = lazyWithRetry(() => import('@/pages/AdminInstancePausesPage'));
 export const AgentsOperationsPage = lazyWithRetry(() => import('@/pages/inbox/AgentsOperationsPage'));
+export const AdminRealtimeMonitorPage = lazyWithRetry(() => import('@/pages/AdminRealtimeMonitorPage'));
 export const AchievementsSystemLazy = lazyWithRetry(async () => {
   const m = await import('@/components/gamification/AchievementsSystem');
   return { default: m.AchievementsSystem };
