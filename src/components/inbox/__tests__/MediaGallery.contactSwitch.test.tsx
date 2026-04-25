@@ -89,36 +89,24 @@ const DATA: Record<string, Row[]> = {
 const queryCalls: string[] = [];
 
 vi.mock('@/integrations/supabase/client', () => {
-  const buildBuilder = (contactId: string) => {
-    const rows = DATA[contactId] ?? [];
+  const makeBuilder = () => {
+    let currentId = '';
     const builder: Record<string, unknown> = {
       select: () => builder,
       eq: (_col: string, val: string) => {
+        currentId = val;
         queryCalls.push(val);
         return builder;
       },
       not: () => builder,
-      order: () => Promise.resolve({ data: rows, error: null }),
+      order: () =>
+        Promise.resolve({ data: DATA[currentId] ?? [], error: null }),
     };
     return builder;
   };
-
-  let nextContactId = 'contact-a';
   return {
     supabase: {
-      from: () => {
-        // Wrap so .eq captures the contactId we filter by.
-        const b: Record<string, unknown> = {
-          select: () => b,
-          eq: (_col: string, val: string) => {
-            nextContactId = val;
-            return buildBuilder(val);
-          },
-          not: () => b,
-          order: () => Promise.resolve({ data: DATA[nextContactId] ?? [], error: null }),
-        };
-        return b;
-      },
+      from: () => makeBuilder(),
     },
   };
 });
