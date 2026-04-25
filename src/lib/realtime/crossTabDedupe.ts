@@ -456,6 +456,9 @@ export async function dedupedFetch<T>(
   // 4. Líder: executa fetcher (com retry+backoff), cacheia, broadcasta, libera lock.
   const isFallback = !acquired;
   const lockTtlForRetry = lockTtl;
+  // Sinaliza início do fetch para abas espectadoras (loading sync).
+  markStart(key, TAB_ID, lockTtl, 'local');
+  broadcast({ type: 'start', key, ownerId: TAB_ID, ts: Date.now(), lockTtl });
   const exec = (async () => {
     try {
       const data = await execWithBackoff<T>(
@@ -470,12 +473,16 @@ export async function dedupedFetch<T>(
           // Reaquire o lock imediatamente para reafirmar liderança no próximo attempt.
           // Se outra aba já pegou o lock nesse meio tempo, tudo bem — ela assume.
           writeLock(key, lockTtlForRetry);
+          // Reanuncia start para ressincronizar status remoto pós-release.
+          markStart(key, TAB_ID, lockTtlForRetry, 'local');
+          broadcast({ type: 'start', key, ownerId: TAB_ID, ts: Date.now(), lockTtl: lockTtlForRetry });
         },
       );
       resultCache.set(key, { value: data, expiresAt: Date.now() + resultTtl });
       writePersistedResult(key, data, resultTtl);
       broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now(), resultTtl });
       notifySubscribers(key, data, 'local');
+      markEnd(key, TAB_ID, 'local', 'result');
       recordDedupeEvent({
         key,
         reason: isFallback ? 'fallback_after_wait' : 'lock_acquired_lead',
@@ -485,6 +492,7 @@ export async function dedupedFetch<T>(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       broadcast({ type: 'error', key, ownerId: TAB_ID, error: message, ts: Date.now() });
+      markEnd(key, TAB_ID, 'local', 'error');
       recordDedupeEvent({
         key,
         reason: isFallback ? 'fallback_after_wait' : 'lock_acquired_lead',
@@ -495,6 +503,9 @@ export async function dedupedFetch<T>(
     } finally {
       releaseLock(key);
       broadcast({ type: 'release', key, ownerId: TAB_ID, ts: Date.now() });
+      // markEnd já executou via result/error; release final é idempotente
+      // (markEnd checa ownerId e ignora se já foi removido).
+      markEnd(key, TAB_ID, 'local', 'release');
       inflight.delete(key);
     }
   })();
