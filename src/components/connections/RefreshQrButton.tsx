@@ -1,6 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { RefreshCw, Loader2 } from 'lucide-react';
+import { log } from '@/lib/logger';
+
+export type RefreshQrButtonStatus = 'loading' | 'pending' | 'connected' | 'error';
 
 interface RefreshQrButtonProps {
   /** Callback que efetivamente dispara a regeneração do QR. */
@@ -9,25 +13,60 @@ interface RefreshQrButtonProps {
   loading: boolean;
   /** Texto a exibir quando habilitado. */
   label: string;
+  /** Status atual do diálogo. Bloqueia o refresh em transições para loading/error. */
+  status: RefreshQrButtonStatus;
   /** Cooldown em segundos após cada clique manual. Default: 5. */
   cooldownSeconds?: number;
+  /**
+   * Tempo (ms) que o status precisa permanecer estável em status interativo
+   * antes de reabilitar o botão. Default: 400ms.
+   */
+  stabilizationMs?: number;
 }
 
-/**
- * Botão "Gerar novo QR" com cooldown visual decrescente.
- *
- * Evita que o usuário pressione repetidamente em sequência (spam de requests
- * para a Evolution API) e dá feedback claro de quanto tempo falta para
- * habilitar de novo. O contador é puramente visual — a defesa real contra
- * concorrência continua sendo o `refreshInFlightRef` no hook.
- */
+type BlockReason =
+  | 'in_flight'
+  | 'cooldown'
+  | 'status_not_interactive'
+  | 'awaiting_stabilization';
+
+const REASON_COPY: Record<BlockReason, (extra: { secondsLeft: number; status: string }) => string> = {
+  in_flight: () => 'Já existe uma geração de QR em andamento. Aguarde a conclusão ou clique em "Cancelar".',
+  cooldown: ({ secondsLeft }) => `Aguarde ${secondsLeft}s antes de gerar outro QR (proteção contra cliques repetidos).`,
+  status_not_interactive: ({ status }) =>
+    status === 'connected'
+      ? 'Conexão já está ativa — não é necessário gerar novo QR.'
+      : 'O QR ainda está sendo carregado. O botão será reabilitado quando o status estabilizar.',
+  awaiting_stabilization: () => 'Aguardando o novo status do QR estabilizar… O botão reabilitará em instantes.',
+};
+
 export function RefreshQrButton({
   onRefresh,
   loading,
   label,
+  status,
   cooldownSeconds = 5,
+  stabilizationMs = 400,
 }: RefreshQrButtonProps) {
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [stabilized, setStabilized] = useState(false);
+  const previousStatusRef = useRef<RefreshQrButtonStatus>(status);
+
+  useEffect(() => {
+    const prev = previousStatusRef.current;
+    previousStatusRef.current = status;
+
+    if (status === 'loading' || status === 'connected') {
+      setStabilized(false);
+      if (prev !== status && secondsLeft > 0) setSecondsLeft(0);
+      return;
+    }
+
+    setStabilized(false);
+    const timer = setTimeout(() => setStabilized(true), stabilizationMs);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, stabilizationMs]);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -37,22 +76,45 @@ export function RefreshQrButton({
     return () => clearInterval(timer);
   }, [secondsLeft]);
 
+  const isInteractiveStatus = status === 'pending' || status === 'error';
+
+  const blockReason: BlockReason | null = loading
+    ? 'in_flight'
+    : !isInteractiveStatus
+      ? 'status_not_interactive'
+      : !stabilized
+        ? 'awaiting_stabilization'
+        : secondsLeft > 0
+          ? 'cooldown'
+          : null;
+
   const handleClick = useCallback(() => {
-    if (loading || secondsLeft > 0) return;
+    if (blockReason) {
+      log.info('[refresh-qr-button] click_ignored', {
+        reason: blockReason,
+        status,
+        secondsLeft,
+        loading,
+      });
+      return;
+    }
     setSecondsLeft(cooldownSeconds);
     void onRefresh();
-  }, [loading, secondsLeft, cooldownSeconds, onRefresh]);
+  }, [blockReason, status, secondsLeft, loading, cooldownSeconds, onRefresh]);
 
-  const onCooldown = secondsLeft > 0;
-  const disabled = loading || onCooldown;
+  const onCooldown = blockReason === 'cooldown';
+  const disabled = blockReason !== null;
+  const tooltipMessage = blockReason ? REASON_COPY[blockReason]({ secondsLeft, status }) : null;
 
-  return (
+  const buttonNode = (
     <Button
       variant="outline"
       onClick={handleClick}
       disabled={disabled}
       aria-busy={loading}
       aria-live="polite"
+      aria-describedby={tooltipMessage ? 'refresh-qr-block-reason' : undefined}
+      data-block-reason={blockReason ?? undefined}
     >
       {loading ? (
         <>
@@ -71,5 +133,22 @@ export function RefreshQrButton({
         </>
       )}
     </Button>
+  );
+
+  if (!tooltipMessage) return buttonNode;
+
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span tabIndex={0} className="inline-flex">
+            {buttonNode}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent id="refresh-qr-block-reason" side="top" className="max-w-xs text-xs">
+          {tooltipMessage}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
