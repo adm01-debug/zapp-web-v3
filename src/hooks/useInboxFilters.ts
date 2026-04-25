@@ -8,6 +8,7 @@ import { filterByContactType } from '@/components/inbox/ContactTypeFilter';
 import { isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { MainTab, SubTab } from '@/components/inbox/TicketTabs';
 import { useFailureMetricsBatch, type FailureCategory } from '@/hooks/inbox/useFailureMetricsBatch';
+import { useAllTicketStates } from '@/hooks/useTicketStatus';
 
 interface UseInboxFiltersProps {
   conversations: ConversationWithMessages[];
@@ -94,24 +95,36 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     });
   }, [setUrlFilters]);
 
+  const ticketStates = useAllTicketStates();
+
   const filteredConversations = useMemo(() => {
     let result = conversations.filter(c => c && c.contact && c.contact.id);
 
+    // Resolve status do ticket (overlay) com fallback para "open" quando ainda
+    // não existe registro local — alinhado com o comportamento de bootstrap.
+    const statusOf = (id: string) => ticketStates[id]?.status ?? 'open';
+    const assignedOf = (id: string, fallback: string | null | undefined) =>
+      ticketStates[id]?.assignedTo ?? fallback ?? null;
+
     // Tab-based filtering
     if (mainTab === 'open') {
-      result = result.filter(c => c.messages.length > 0);
+      // "Abertos" engloba tickets em status `open` ou `in_progress`.
+      result = result.filter(c => {
+        const s = statusOf(c.contact.id);
+        return s === 'open' || s === 'in_progress';
+      });
       if (subTab === 'attending') {
         if (!showAll) {
-          result = result.filter(c => c.contact.assigned_to === profileId);
+          result = result.filter(c => assignedOf(c.contact.id, c.contact.assigned_to) === profileId);
         }
       } else if (subTab === 'waiting') {
-        result = result.filter(c => !c.contact.assigned_to);
+        result = result.filter(c => !assignedOf(c.contact.id, c.contact.assigned_to));
       }
       if (selectedQueueId) {
         result = result.filter(c => c.contact.queue_id === selectedQueueId);
       }
     } else if (mainTab === 'resolved') {
-      result = result.filter(c => c.messages.length === 0);
+      result = result.filter(c => statusOf(c.contact.id) === 'resolved');
     }
 
     // Search
