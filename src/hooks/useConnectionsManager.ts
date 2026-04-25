@@ -462,6 +462,16 @@ export function useConnectionsManager() {
   const REFRESH_DEBOUNCE_MS = 1500;
   const lastRefreshAtRef = useRef<number>(0);
   const refreshInFlightRef = useRef<boolean>(false);
+  // Bumped after each refresh so the derived `isRefreshDebounced` flag below
+  // re-evaluates and the button re-enables once the cooldown elapses.
+  const [refreshTick, setRefreshTick] = useState(0);
+  const isRefreshDebounced =
+    refreshInFlightRef.current ||
+    (qrCodeDialog.status === 'pending' &&
+      Date.now() - lastRefreshAtRef.current < REFRESH_DEBOUNCE_MS);
+  // `refreshTick` is intentionally referenced so the linter knows we depend on
+  // it for re-renders even though the value itself isn't read.
+  void refreshTick;
 
   const handleRefreshQrCode = async () => {
     // Drop the click if a refresh is already running OR the previous one
