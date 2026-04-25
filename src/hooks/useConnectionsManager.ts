@@ -454,7 +454,6 @@ export function useConnectionsManager() {
       }
     }
   };
-
   const handleRefreshQrCode = async () => {
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
