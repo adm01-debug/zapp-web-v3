@@ -19,6 +19,7 @@ import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
 import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
+import { mergeRealtimeMessages, maxCreatedAt } from '@/lib/inbox/mergeRealtimeMessages';
 import {
   inboxInitialKey,
   inboxPollKey,
