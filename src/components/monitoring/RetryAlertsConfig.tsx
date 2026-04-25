@@ -54,6 +54,8 @@ export function RetryAlertsConfig({
   onChange,
   perInstance = {},
   onPerInstanceChange,
+  dedupeMode = DEFAULT_RETRY_DEDUPE_MODE,
+  onDedupeModeChange,
   knownInstances = [],
   hasBreaches,
 }: RetryAlertsConfigProps) {
@@ -61,6 +63,7 @@ export function RetryAlertsConfig({
   const [tab, setTab] = useState<'global' | 'instance'>('global');
   const [draft, setDraft] = useState<RetryThresholds>(value);
   const [draftMap, setDraftMap] = useState<PerInstanceThresholds>(perInstance);
+  const [draftDedupeMode, setDraftDedupeMode] = useState<RetryAlertDedupeMode>(dedupeMode);
   const [selectedInstance, setSelectedInstance] = useState<string>(knownInstances[0] ?? '');
   const [newInstance, setNewInstance] = useState('');
 
@@ -69,6 +72,7 @@ export function RetryAlertsConfig({
     if (next) {
       setDraft(value);
       setDraftMap(perInstance);
+      setDraftDedupeMode(dedupeMode);
       setSelectedInstance(knownInstances[0] ?? Object.keys(perInstance)[0] ?? '');
     }
   };
