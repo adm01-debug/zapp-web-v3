@@ -21,8 +21,10 @@ import {
   releaseInstabilityToastDedupe,
   getInstabilityToastFiredCount,
   getInstabilityToastSuppressedCount,
+  getInstabilityToastCooldownSize,
   __resetInstabilityToastDedupeForTest,
   INSTABILITY_TOAST_COOLDOWN_MS,
+  INSTABILITY_TOAST_MAX_KEYS,
 } from '@/lib/instabilityToastDedupe';
 
 beforeEach(() => {
