@@ -192,12 +192,7 @@ export function useExternalMessages(remoteJid: string | null) {
       const evoMessages = await dedupedFetch(
         inboxInitialKey({ jid: remoteJid, pageSize: CONVERSATION_PAGE_SIZE }),
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
-        {
-          lockTtl: 10_000,
-          resultTtl: 15_000,
-          waitTimeout: 8_000,
-          retry: { maxRetries: 2, baseDelayMs: 400, maxDelayMs: 3_000 },
-        },
+        getInitialDedupeOptions(),
       );
       if (!mountedRef.current) return;
 
