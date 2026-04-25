@@ -6438,6 +6438,7 @@ export type Database = {
       }
       queues: {
         Row: {
+          auto_rebalance_enabled: boolean
           color: string
           created_at: string
           description: string | null
@@ -6446,9 +6447,12 @@ export type Database = {
           max_wait_time_minutes: number | null
           name: string
           priority: number | null
+          routing_weight: number
+          sla_priority: string
           updated_at: string
         }
         Insert: {
+          auto_rebalance_enabled?: boolean
           color?: string
           created_at?: string
           description?: string | null
@@ -6457,9 +6461,12 @@ export type Database = {
           max_wait_time_minutes?: number | null
           name: string
           priority?: number | null
+          routing_weight?: number
+          sla_priority?: string
           updated_at?: string
         }
         Update: {
+          auto_rebalance_enabled?: boolean
           color?: string
           created_at?: string
           description?: string | null
@@ -6468,6 +6475,8 @@ export type Database = {
           max_wait_time_minutes?: number | null
           name?: string
           priority?: number | null
+          routing_weight?: number
+          sla_priority?: string
           updated_at?: string
         }
         Relationships: []
@@ -9919,6 +9928,39 @@ export type Database = {
           p_used_vector: boolean
         }
         Returns: string
+      }
+      rpc_queue_rebalance_candidates: {
+        Args: { p_limit?: number }
+        Returns: {
+          contact_id: string
+          queue_id: string
+          reason: string
+          sla_priority: string
+          waiting_minutes: number
+        }[]
+      }
+      rpc_queue_sla_panel: {
+        Args: {
+          p_channel_type?: string
+          p_skill_id?: string
+          p_sla_status?: string
+        }
+        Returns: {
+          active_agents: number
+          at_risk_count: number
+          auto_rebalance_enabled: boolean
+          breached_count: number
+          color: string
+          in_progress_count: number
+          last_routed_at: string
+          max_wait_time_minutes: number
+          oldest_wait_minutes: number
+          queue_id: string
+          queue_name: string
+          routing_weight: number
+          sla_priority: string
+          waiting_count: number
+        }[]
       }
       rpc_record_event_key_usage: {
         Args: { p_key_id: string }
