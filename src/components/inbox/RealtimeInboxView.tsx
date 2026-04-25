@@ -82,7 +82,12 @@ export function RealtimeInboxView() {
   }, [bulkActions]);
 
   const handleGlobalSearchResult = (result: SearchResult) => {
-    if (result.contactId) inbox.handleSelectConversation(result.contactId);
+    if (!result.contactId) return;
+    inbox.handleSelectConversation(result.contactId);
+    // Para resultados de mensagem, dispara o destaque "Ver no chat".
+    if (result.type === 'message' || result.type === 'transcription') {
+      inbox.setPendingMessageId(result.id);
+    }
   };
 
   if (inbox.error) {
@@ -135,6 +140,8 @@ export function RealtimeInboxView() {
                       hasMoreOlder={inbox.hasMoreMessages}
                       showDetails={isMobile ? false : inbox.showDetails}
                       onToggleDetails={() => inbox.setShowDetails(!inbox.showDetails)}
+                      initialHighlightMessageId={inbox.pendingMessageId}
+                      onHighlightConsumed={() => inbox.setPendingMessageId(null)}
                       onBack={isMobile ? () => {
                         if (inbox.legacyConversation) {
                           inbox.setPipContact({ name: inbox.legacyConversation.contact.name, avatar: inbox.legacyConversation.contact.avatar, lastMessage: inbox.legacyConversation.lastMessage?.content, contactId: inbox.legacyConversation.id });

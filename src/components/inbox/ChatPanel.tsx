@@ -48,6 +48,16 @@ interface ChatPanelProps extends LoadOlderProps {
   onBack?: () => void;
   hideHeader?: boolean;
   /**
+   * Quando definido, ao montar (ou ao mudar para esta conversa) o painel
+   * dá scroll até a mensagem indicada e aplica destaque temporário (~3 s).
+   * Aceita o `id` interno da mensagem (`evolution_messages.id`) ou o
+   * `external_id` retornado pelo webhook — o `ChatMessagesArea` resolve
+   * ambos via `data-message-id`.
+   */
+  initialHighlightMessageId?: string | null;
+  /** Notifica o pai de que o destaque foi aplicado (limpa o pending). */
+  onHighlightConsumed?: () => void;
+  /**
    * Paginacao "carregar mensagens antigas" herdada de `LoadOlderProps`:
    *  - Modo local: omitir (ou passar `undefined`) ambos os callbacks.
    *  - Modo externo: fornecer ambos; loadingOlder/hasMoreOlder refletem o
@@ -91,7 +101,7 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
 
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
 
-export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false }: ChatPanelProps) {
+export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed }: ChatPanelProps) {
   const [dialogs, dispatch] = useReducer(dialogReducer, initialDialogState);
   const openDialog = useCallback((key: DialogKey) => dispatch({ type: 'OPEN', key }), []);
   const closeDialog = useCallback((key: DialogKey) => dispatch({ type: 'CLOSE', key }), []);
@@ -196,6 +206,50 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     setActiveTool(null); setHighlightedMessageIds(new Set()); setActiveHighlightId(null); setSearchQuery('');
     setFailuresOnly(false);
   }, [conversation.id]);
+
+  // Deep-link "Ver no chat": quando o caller abre o Inbox apontando para
+  // uma mensagem específica, scrollamos até ela e aplicamos um destaque
+  // temporário (~3 s) reaproveitando os mesmos states usados pela busca
+  // dentro do chat. Tentamos durante alguns frames porque a mensagem
+  // pode não estar no DOM no primeiro paint (lista virtualizada / fetch
+  // assíncrono). Após sumir o ring, removemos o pending no caller.
+  useEffect(() => {
+    if (!initialHighlightMessageId) return;
+    if (messages.length === 0) return;
+
+    const targetId = initialHighlightMessageId;
+    const exists = messages.some(
+      (m) => m.id === targetId || m.external_id === targetId,
+    );
+    if (!exists) return;
+
+    // Resolve para o id interno (o que o data-message-id usa).
+    const internalId =
+      messages.find((m) => m.id === targetId)?.id ??
+      messages.find((m) => m.external_id === targetId)?.id ??
+      targetId;
+
+    setHighlightedMessageIds(new Set([internalId]));
+    setActiveHighlightId(internalId);
+
+    // Tentativas em sequência cobrem o caso de a virtualização ainda
+    // não ter renderizado o item visível.
+    let attempts = 0;
+    const tryScroll = () => {
+      attempts++;
+      messagesAreaRef.current?.scrollToMessage(internalId);
+      if (attempts < 6) setTimeout(tryScroll, 120);
+    };
+    tryScroll();
+
+    const clear = setTimeout(() => {
+      setActiveHighlightId(null);
+      setHighlightedMessageIds(new Set());
+      onHighlightConsumed?.();
+    }, 3200);
+
+    return () => clearTimeout(clear);
+  }, [initialHighlightMessageId, messages, onHighlightConsumed]);
 
   const canGenerateSummary = messages.length >= 10;
 
