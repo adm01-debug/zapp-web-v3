@@ -105,6 +105,12 @@ export function ClientTelemetryPanel() {
                       <td className="p-3 text-xs text-muted-foreground whitespace-nowrap font-mono">
                         {formatTime(new Date(Date.now() - (performance.now() - ev.startedAt)).toISOString())}
                       </td>
+                      <td
+                        className="p-3 text-xs font-mono text-primary"
+                        title={ev.correlationId ? `Correlation ID: ${ev.correlationId}` : 'sem trace id'}
+                      >
+                        {ev.correlationId ?? '-'}
+                      </td>
                       <td className="p-3 text-xs font-mono text-muted-foreground">{ev.source}</td>
                       <td className="p-3">
                         <Badge variant="outline" className="text-[10px] font-mono">{ev.operation}</Badge>
