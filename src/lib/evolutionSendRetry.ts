@@ -17,6 +17,7 @@ import { getLogger } from '@/lib/logger';
 import { enqueueClientFailedMessage } from '@/lib/failedMessagesEnqueue';
 import { loadRetryConfig } from '@/lib/retryConfig';
 import { crossTabDedupe } from '@/lib/crossTabSendDedupe';
+import { buildRequestDedupeKey } from '@/lib/requestDedupeKey';
 
 const log = getLogger('EvolutionSendRetry');
 
@@ -133,12 +134,19 @@ export async function invokeEvolutionWithRetry<T = unknown>(
   );
 
   try {
-    // When we have a stable idempotency key, collapse duplicate sends across
-    // browser tabs: only the leader tab actually invokes the Edge Function;
-    // followers replay its response from BroadcastChannel.
-    return await (idempotencyKey
-      ? crossTabDedupe<EvolutionInvokeResult<T>>(`send:${idempotencyKey}`, runRetryLoop)
-      : runRetryLoop());
+    // Collapse duplicate sends across browser tabs: only the leader tab
+    // actually invokes the Edge Function; followers replay its response from
+    // BroadcastChannel. The dedupe key is derived from endpoint + method +
+    // body, with the Idempotency-Key (when present) winning outright — so
+    // the same logical send always maps to the same key, regardless of
+    // whether the caller passed an idem key or not.
+    const dedupeKey = await buildRequestDedupeKey({
+      endpoint: `evolution-api/${action}`,
+      method: opts.method || 'POST',
+      body: opts.body,
+      idempotencyKey,
+    });
+    return await crossTabDedupe<EvolutionInvokeResult<T>>(dedupeKey, runRetryLoop);
   } catch (err) {
     // Falha definitiva (esgotou retries OU erro permanente). Tenta enqueue na DLQ.
     if (instanceName && isTransient(err)) {
