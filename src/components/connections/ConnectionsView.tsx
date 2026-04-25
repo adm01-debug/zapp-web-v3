@@ -177,6 +177,7 @@ export function ConnectionsView() {
               <RefreshQrButton
                 onRefresh={handleRefreshQrCode}
                 loading={evolutionLoading || qrCodeDialog.status === 'loading'}
+                status={qrCodeDialog.status}
                 label={qrCodeDialog.status === 'pending' ? 'Gerar novo QR' : 'Gerar novo código'}
               />
             )}
