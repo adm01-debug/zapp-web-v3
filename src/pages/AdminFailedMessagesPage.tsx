@@ -432,7 +432,7 @@ export default function AdminFailedMessagesPage() {
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">Instância</label>
             <Select value={instanceFilter} onValueChange={setInstanceFilter}>
-              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[180px]" data-testid="filter-failed-instance"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 {(stats?.by_instance ?? []).map((i) => (
@@ -446,7 +446,7 @@ export default function AdminFailedMessagesPage() {
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">Causa raiz</label>
             <Select value={rootCauseFilter} onValueChange={(v) => setRootCauseFilter(v as RootCause | 'all')}>
-              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[180px]" data-testid="filter-failed-root-cause"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 {ALL_ROOT_CAUSES.map((c) => {
@@ -464,7 +464,7 @@ export default function AdminFailedMessagesPage() {
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">Motivo (error_code)</label>
             <Select value={errorCodeFilter} onValueChange={setErrorCodeFilter}>
-              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[200px]" data-testid="filter-failed-error-code"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {aggregates.byErrorCode.map((r) => (
