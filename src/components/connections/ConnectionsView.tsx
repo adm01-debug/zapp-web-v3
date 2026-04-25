@@ -39,7 +39,7 @@ export function ConnectionsView() {
     isAddDialogOpen, setIsAddDialogOpen,
     qrCodeDialog, newConnection, setNewConnection, isCreating,
     syncingHistory, setSyncingHistory, evolutionLoading,
-    handleAddConnection, handleShowQrCode, handleRefreshQrCode,
+    handleAddConnection, handleShowQrCode, handleRefreshQrCode, cancelRefreshQrCode,
     handleCopyId, handleDisconnect, handleSetDefault, handleSetApiType, handleDelete, closeQrDialog,
   } = useConnectionsManager();
 
