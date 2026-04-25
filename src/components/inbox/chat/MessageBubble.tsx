@@ -182,6 +182,10 @@ export function MessageBubble({
                 {message.buttonResponse && <ButtonResponseBadge buttonTitle={message.buttonResponse.buttonTitle} isSent={isSent} />}
                 {message.type === 'interactive' && message.interactive && <InteractiveMessageDisplay interactive={message.interactive} isSent={isSent} onButtonClick={onInteractiveButtonClick} />}
 
+                {showUnsupportedFallback && (
+                  <MessageBubbleUnsupported extracted={extracted} rawContent={message.content} isSent={isSent} />
+                )}
+
                 {message.type === 'image' && message.mediaUrl && (
                   <div className={cn("overflow-hidden", message.content ? "mb-1.5 -mx-1 -mt-0.5 rounded-xl" : "w-full")}>
                     <MessageImage src={message.mediaUrl} />
