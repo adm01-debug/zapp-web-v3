@@ -142,6 +142,9 @@ export function RetryAlertsConfig({
     savePerInstanceThresholds(cleanedMap);
     onPerInstanceChange?.(cleanedMap);
 
+    saveRetryAlertDedupeMode(draftDedupeMode);
+    onDedupeModeChange?.(draftDedupeMode);
+
     const overrideCount = Object.keys(cleanedMap).length;
     toast.success(
       overrideCount > 0
