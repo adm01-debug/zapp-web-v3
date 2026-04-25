@@ -467,6 +467,8 @@ export function useConnectionsManager() {
   // even if it comes from a non-button source (auto-refresh timer, keyboard
   // shortcut, double-click slipping past the button's `disabled` attribute).
   const refreshInFlightRef = useRef(false);
+  /** Snapshot do estado do diálogo capturado antes de iniciar um refresh. Permite cancelar e voltar ao QR pending anterior se ele ainda for válido. */
+  const preRefreshSnapshotRef = useRef<QrCodeDialogState | null>(null);
 
   const handleRefreshQrCode = async () => {
     if (refreshInFlightRef.current) {
@@ -484,6 +486,9 @@ export function useConnectionsManager() {
     // dialogGenRef.current avança e nós abortamos no callback.
     const generation = dialogGenRef.current;
     const isStale = () => dialogGenRef.current !== generation;
+    // Guarda o estado atual para que o usuário possa cancelar e voltar ao QR
+    // anterior (se ainda estiver válido) sem precisar reabrir o diálogo.
+    preRefreshSnapshotRef.current = qrCodeDialog;
     setQrCodeDialog((prev) => ({ ...prev, status: 'loading', qrCode: null, expiresAt: null, attemptId: null }));
     const attemptId = await logQrAttempt(connection);
     if (isStale()) { refreshInFlightRef.current = false; return; }
