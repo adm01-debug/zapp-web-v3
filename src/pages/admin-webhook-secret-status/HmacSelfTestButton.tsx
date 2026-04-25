@@ -114,9 +114,14 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
         // Falha: cria alerta se ainda não houver um aberto
         if (!activeAlertId) {
           const failedScenarios = payload.scenarios?.filter((s) => !s.passed) ?? [];
-          const summary = failedScenarios.length > 0
-            ? failedScenarios.map((s) => `${s.name}: ${s.reason ?? 'sem detalhe'}`).join(' | ')
+          const phasePrefix = payload.failed_phase ? `[fase: ${payload.failed_phase}] ` : '';
+          const reqSuffix = payload.request_id ? ` (req=${payload.request_id.slice(0, 8)})` : '';
+          const detail = failedScenarios.length > 0
+            ? failedScenarios
+                .map((s) => `${s.name}${s.failed_phase ? `@${s.failed_phase}` : ''}: ${s.reason ?? 'sem detalhe'}`)
+                .join(' | ')
             : (payload.error ?? payload.message ?? 'Falha no self-test HMAC');
+          const summary = `${phasePrefix}${detail}${reqSuffix}`;
           await supabase.from('warroom_alerts').insert({
             alert_type: 'error',
             title: `HMAC self-test falhou (${instanceName ?? 'selftest'})`,
