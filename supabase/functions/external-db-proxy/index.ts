@@ -145,6 +145,97 @@ Deno.serve(async (req) => {
         { status: 499, headers: jsonHeaders }
       )
 
+    /**
+     * Generic safety wrapper for any PostgREST builder (`select`, `insert`,
+     * `update`, `rpc`). Guarantees a consistent JSON response in three
+     * situations:
+     *   - Hard timeout fired → 504 `proxy_timeout`
+     *   - Client disconnected → 499 `client_disconnect`
+     *   - PostgREST returned `error` → 504 if statement_timeout, else 400
+     *   - Anything else thrown → 502 `upstream_error` (NEVER bubbles up to
+     *     the worker-killing outer catch as a 500 with no `cid`)
+     *
+     * The caller still gets `data` on success and may build the success
+     * response itself. This keeps each handler tiny while making the failure
+     * path uniform across RPC/SELECT/INSERT/UPDATE.
+     */
+    interface OpResult<T> {
+      data: T | null
+      response: Response | null
+    }
+    async function withTimeout<T>(
+      op: 'rpc' | 'select' | 'insert' | 'update',
+      target: string,
+      builder: PromiseLike<{ data: T | null; error: { message: string; code?: string } | null; count?: number | null }>,
+    ): Promise<OpResult<T> & { count?: number | null; ms: number; ok: boolean }> {
+      const opStartedAt = Date.now()
+      try {
+        const res = await builder
+        const ms = Date.now() - opStartedAt
+        const error = res.error
+        if (error) {
+          // Cancellation surfaces here when supabase-js converts AbortError
+          // into a regular error on some code paths.
+          if (timeoutFired) {
+            console.log(JSON.stringify({ fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'proxy_timeout' }))
+            return { data: null, response: timeoutResponse(), ms, ok: false }
+          }
+          if (clientAbortFired) {
+            console.log(JSON.stringify({ fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'client_disconnect' }))
+            return { data: null, response: clientAbortResponse(), ms, ok: false }
+          }
+          const isStmtTimeout = /statement timeout|canceling statement/i.test(error.message)
+          console.log(JSON.stringify({
+            fn: 'external-db-proxy', cid, op, target, ms, ok: false,
+            kind: isStmtTimeout ? 'statement_timeout' : 'pg_error',
+            err: error.message, code: error.code,
+          }))
+          return {
+            data: null,
+            response: new Response(
+              JSON.stringify({ error: error.message, code: error.code, cid }),
+              { status: isStmtTimeout ? 504 : 400, headers: jsonHeaders },
+            ),
+            ms,
+            ok: false,
+          }
+        }
+        return {
+          data: res.data,
+          response: null,
+          count: res.count ?? null,
+          ms,
+          ok: true,
+        }
+      } catch (e) {
+        const ms = Date.now() - opStartedAt
+        if (isProxyTimeout(e)) {
+          console.log(JSON.stringify({ fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'proxy_timeout' }))
+          return { data: null, response: timeoutResponse(), ms, ok: false }
+        }
+        if (isClientAbort(e)) {
+          console.log(JSON.stringify({ fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'client_disconnect' }))
+          return { data: null, response: clientAbortResponse(), ms, ok: false }
+        }
+        // Network / serialization / unknown upstream failure — translate to
+        // a CONSISTENT 502 so the caller can retry with backoff. Worker
+        // stays alive; no unhandled exception bubbles up.
+        const msg = (e as Error)?.message ?? String(e)
+        console.error(JSON.stringify({
+          fn: 'external-db-proxy', cid, op, target, ms, ok: false, kind: 'upstream_error', err: msg,
+        }))
+        return {
+          data: null,
+          response: new Response(
+            JSON.stringify({ error: 'Upstream database call failed', detail: msg, cid }),
+            { status: 502, headers: jsonHeaders },
+          ),
+          ms,
+          ok: false,
+        }
+      }
+    }
+
     const body = await req.json()
     const { action, table, select, filters, order, limit, offset, countMode, rpc, params, data, match } = body
     // Upgrade cid from body if header was missing/auto-generated.
