@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import {
   AlertTriangle, RefreshCw, Inbox, CheckCircle2, XCircle,
   Clock, RotateCw, Ban, Eye, PlayCircle, Server, BarChart3,
-  Search, ChevronLeft, ChevronRight, Copy, Lock,
+  Search, ChevronLeft, ChevronRight, Copy, Lock, MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +43,38 @@ import {
   getRootCauseMeta,
   type RootCause,
 } from '@/lib/failureRootCause';
+import { openContactInChat } from '@/lib/openContactInChat';
+
+/**
+ * Extrai um identificador da mensagem original a partir do payload do
+ * envio (vários formatos possíveis vindos da Evolution API). Usado pelo
+ * botão "Ver no chat" para destacar a bolha correta no Inbox.
+ */
+function extractMessageIdFromPayload(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const p = payload as Record<string, unknown>;
+  const candidates = [
+    p.message_id,
+    p.messageId,
+    p.id,
+    (p.key as Record<string, unknown> | undefined)?.id,
+    (p.options as Record<string, unknown> | undefined)?.message_id,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.length > 0) return c;
+  }
+  return null;
+}
+
+async function handleViewInChat(row: Pick<FailedMessageRow, 'remote_jid' | 'payload'>) {
+  if (!row.remote_jid) {
+    toast.error('Mensagem sem destinatário identificado');
+    return;
+  }
+  const messageId = extractMessageIdFromPayload(row.payload) ?? undefined;
+  const ok = await openContactInChat({ remoteJid: row.remote_jid, messageId });
+  if (!ok) toast.error('Contato não encontrado no inbox');
+}
 
 const ROOT_CAUSE_TONE_CLASS: Record<'warning' | 'destructive' | 'info' | 'muted', string> = {
   warning: 'bg-warning/15 text-warning-foreground border-warning/40',
