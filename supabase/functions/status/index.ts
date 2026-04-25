@@ -8,7 +8,7 @@
 // Resposta intencionalmente leve (sem dependências externas, sem auth)
 // para que o handler suba em milissegundos e nunca falhe.
 
-import { corsHeaders } from '../_shared/cors.ts';
+import { corsHeaders } from '../_shared/validation.ts';
 
 Deno.serve((req) => {
   if (req.method === 'OPTIONS') {
