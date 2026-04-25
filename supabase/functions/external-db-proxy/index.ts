@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     const key = Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY')
     if (!url || !key) {
       return new Response(JSON.stringify({ error: 'External DB not configured' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 500, headers: jsonHeaders
       })
     }
 
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     const timeoutResponse = () =>
       new Response(
         JSON.stringify({ error: 'Query timed out. Try narrower filters or a smaller limit.' }),
-        { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 504, headers: jsonHeaders }
       )
 
     const body = await req.json()
@@ -107,11 +107,11 @@ Deno.serve(async (req) => {
           const isTimeout = /statement timeout|canceling statement/i.test(error.message)
           return new Response(JSON.stringify({ error: error.message }), {
             status: isTimeout ? 504 : 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: jsonHeaders,
           })
         }
         return new Response(JSON.stringify({ data: rpcData }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: jsonHeaders
         })
       } catch (e) {
         if ((e as Error).message === 'proxy_timeout') return timeoutResponse()
@@ -123,10 +123,10 @@ Deno.serve(async (req) => {
     if (action === 'insert' && table && data) {
       const { data: result, error } = await ext.from(table).insert(data).select()
       if (error) return new Response(JSON.stringify({ error: error.message }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 400, headers: jsonHeaders
       })
       return new Response(JSON.stringify({ data: result }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: jsonHeaders
       })
     }
 
@@ -136,17 +136,17 @@ Deno.serve(async (req) => {
       for (const [k, v] of Object.entries(match)) q = q.eq(k, v as string)
       const { data: result, error } = await q.select()
       if (error) return new Response(JSON.stringify({ error: error.message }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 400, headers: jsonHeaders
       })
       return new Response(JSON.stringify({ data: result }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: jsonHeaders
       })
     }
 
     // SELECT query (default)
     if (!table) {
       return new Response(JSON.stringify({ error: 'Missing table parameter' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 400, headers: jsonHeaders
       })
     }
 
@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
         JSON.stringify({
           error: `Heavy table "${table}" requires a filter on remote_jid, conversation_id, instance_name, or a created_at window (gte/gt). Got limit=${limit} with no narrowing filter.`,
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: jsonHeaders }
       )
     }
 
@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
       const isTimeout = /statement timeout|canceling statement/i.test(queryError.message)
       return new Response(JSON.stringify({ error: queryError.message }), {
         status: isTimeout ? 504 : 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: jsonHeaders
       })
     }
 
@@ -226,12 +226,12 @@ Deno.serve(async (req) => {
       data: queryData || [],
       count: count ?? (Array.isArray(queryData) ? queryData.length : 0),
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: jsonHeaders
     })
 
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status: 500, headers: jsonHeaders
     })
   }
 })
