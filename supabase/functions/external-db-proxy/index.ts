@@ -93,6 +93,11 @@ Deno.serve(async (req) => {
 
     const body = await req.json()
     const { action, table, select, filters, order, limit, offset, countMode, rpc, params, data, match } = body
+    const cid: string =
+      req.headers.get(CORRELATION_HEADER) ||
+      (typeof body.__cid === 'string' && body.__cid) ||
+      shortRid()
+    const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json', [CORRELATION_HEADER]: cid }
 
     // RPC call
     if (action === 'rpc' && rpc) {
