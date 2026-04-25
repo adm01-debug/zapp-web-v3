@@ -442,16 +442,38 @@ Deno.serve(async (req) => {
   const allPassed = scenarios.every((s) => s.passed);
   const fresh = scenarios[0];
   const tampered = scenarios[1];
+  const failedScenarios = scenarios.filter((s) => !s.passed);
+  // Fase agregada onde a 1ª falha ocorreu (útil para alertas)
+  const firstFailedPhase: Phase | null = failedScenarios[0]?.failed_phase ?? null;
+  const totalDuration = Date.now() - startedAt;
+
+  // Log final agregado
+  structuredLog({
+    level: allPassed ? 'info' : 'warn',
+    fn: 'webhook-hmac-selftest', request_id: requestId,
+    phase: firstFailedPhase ?? 'response',
+    status: allPassed ? 'ok' : 'fail',
+    duration_ms: totalDuration,
+    reason: allPassed ? null : `${failedScenarios.length}/${scenarios.length} cenários falharam`,
+    meta: {
+      tolerance_seconds: toleranceSec,
+      include_negative: includeNegative,
+      parse_body_failed: parseFailed,
+      failed_scenarios: failedScenarios.map((s) => ({ name: s.name, phase: s.failed_phase })),
+    },
+  });
 
   return new Response(
     JSON.stringify({
       ok: allPassed,
       configured: true,
+      request_id: requestId,
       secret_length: secret.length,
-      duration_ms: Date.now() - startedAt,
+      duration_ms: totalDuration,
       tolerance_seconds: toleranceSec,
+      /** Fase agregada da 1ª falha (config|parse-body|sign|validate|signature-presence|temporal|...) */
+      failed_phase: firstFailedPhase,
       scenarios,
-      // Compatibilidade com o consumidor anterior (good/tampered)
       good: {
         accepted: fresh.outcome === 'accept',
         signatureFound: true,
@@ -470,7 +492,7 @@ Deno.serve(async (req) => {
       },
       message: allPassed
         ? `HMAC + replay protection OK: ${scenarios.length} cenários passaram (janela ${toleranceSec}s).`
-        : `Falha em ${scenarios.filter((s) => !s.passed).length}/${scenarios.length} cenários — verifique detalhes.`,
+        : `Falha em ${failedScenarios.length}/${scenarios.length} cenários (1ª fase com erro: ${firstFailedPhase ?? 'desconhecida'}).`,
     }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   );
