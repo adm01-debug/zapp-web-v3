@@ -100,11 +100,15 @@ export const ImagePreview = forwardRef<HTMLDivElement, ImagePreviewProps>(functi
 interface MessageImageProps {
   src: string;
   alt?: string;
+  /** When provided, allows auto-refreshing the image if WhatsApp URL expires (410/403). */
+  refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
 }
 
-export function MessageImage({ src, alt = 'Image' }: MessageImageProps) {
+export function MessageImage({ src, alt = 'Image', refreshKey }: MessageImageProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const refresh = useMediaRefresh(src, refreshKey);
+  const effectiveSrc = refresh.url ?? src;
 
   return (
     <>
@@ -114,13 +118,15 @@ export function MessageImage({ src, alt = 'Image' }: MessageImageProps) {
         className="relative cursor-pointer overflow-hidden rounded-lg"
         onClick={() => setShowPreview(true)}
       >
-        {!isLoaded && (
-          <div className="absolute inset-0 bg-muted animate-pulse rounded-lg" />
+        {(!isLoaded || refresh.isRefreshing) && (
+          <div className="absolute inset-0 bg-muted animate-pulse rounded-lg" aria-busy={refresh.isRefreshing || undefined} />
         )}
         <motion.img
-          src={src}
+          key={effectiveSrc}
+          src={effectiveSrc}
           alt={alt}
           onLoad={() => setIsLoaded(true)}
+          onError={refresh.onError}
           initial={{ opacity: 0 }}
           animate={{ opacity: isLoaded ? 1 : 0 }}
           className="max-w-[280px] max-h-[200px] object-cover rounded-lg"
@@ -132,7 +138,7 @@ export function MessageImage({ src, alt = 'Image' }: MessageImageProps) {
 
       <AnimatePresence>
         {showPreview && (
-          <ImagePreview src={src} alt={alt} onClose={() => setShowPreview(false)} />
+          <ImagePreview src={effectiveSrc} alt={alt} onClose={() => setShowPreview(false)} />
         )}
       </AnimatePresence>
     </>
