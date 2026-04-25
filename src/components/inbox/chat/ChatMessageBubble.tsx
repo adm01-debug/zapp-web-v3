@@ -41,6 +41,10 @@ interface ChatMessageBubbleProps {
   onScrollToMessage: (messageId: string) => void;
   onInteractiveButtonClick: (button: InteractiveButton) => void;
   registerRef: (messageId: string, el: HTMLDivElement | null) => void;
+  /** Optional — when provided, enables auto-refresh of expired media URLs. */
+  instanceName?: string;
+  /** Optional — when provided, enables auto-refresh of expired media URLs. */
+  contactJid?: string;
 }
 
 // Message status icon
@@ -77,8 +81,13 @@ export function ChatMessageBubble({
   onScrollToMessage,
   onInteractiveButtonClick,
   registerRef,
+  instanceName,
+  contactJid,
 }: ChatMessageBubbleProps) {
   const isSent = message.sender === 'agent';
+  const mediaRefreshKey = (instanceName && contactJid && message.external_id)
+    ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
+    : undefined;
 
   const isMobile = useIsMobile();
   
@@ -212,7 +221,7 @@ export function ChatMessageBubble({
           {/* Image message */}
           {message.type === 'image' && message.mediaUrl && (
             <div className="mb-2 rounded-lg overflow-hidden">
-              <MessageImage src={message.mediaUrl} />
+              <MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} />
             </div>
           )}
 
@@ -223,6 +232,7 @@ export function ChatMessageBubble({
                 url={message.mediaUrl}
                 caption={message.content}
                 isSent={isSent}
+                refreshKey={mediaRefreshKey}
               />
             </div>
           )}
@@ -236,6 +246,7 @@ export function ChatMessageBubble({
                 isSent={isSent}
                 existingTranscription={message.transcription}
                 transcriptionStatus={message.transcriptionStatus}
+                refreshKey={mediaRefreshKey}
               />
             </div>
           )}

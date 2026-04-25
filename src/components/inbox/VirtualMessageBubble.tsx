@@ -31,13 +31,21 @@ interface MessageBubbleProps {
   onSpeak: (messageId: string, text: string) => void;
   onStopSpeak: () => void;
   scrollToMessage: (messageId: string) => void;
+  /** Optional — enables auto-refresh of expired media URLs (410/403). */
+  instanceName?: string;
+  /** Optional — enables auto-refresh of expired media URLs (410/403). */
+  contactJid?: string;
 }
 
 export function MessageBubble({
   message, onReply, onForward, onCopy, onInteractiveButtonClick,
   ttsLoading, ttsPlaying, ttsMessageId, onSpeak, onStopSpeak, scrollToMessage,
+  instanceName, contactJid,
 }: MessageBubbleProps) {
   const isSent = message.sender === 'agent';
+  const mediaRefreshKey = (instanceName && contactJid && message.external_id)
+    ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
+    : undefined;
 
   return (
     <div className={cn('flex group px-4 py-1', isSent ? 'justify-end' : 'justify-start')}>
@@ -70,9 +78,9 @@ export function MessageBubble({
             {message.replyTo && <QuotedMessage replyTo={message.replyTo} isSent={isSent} onClick={() => scrollToMessage(message.replyTo!.messageId)} />}
             {message.buttonResponse && <ButtonResponseBadge buttonTitle={message.buttonResponse.buttonTitle} isSent={isSent} />}
             {message.type === 'interactive' && message.interactive && <InteractiveMessageDisplay interactive={message.interactive} isSent={isSent} onButtonClick={onInteractiveButtonClick} />}
-            {message.type === 'image' && message.mediaUrl && <div className="mb-2 rounded-lg overflow-hidden"><MessageImage src={message.mediaUrl} /></div>}
-            {message.type === 'video' && message.mediaUrl && <div className="mb-2"><VideoPreview url={message.mediaUrl} caption={message.content} isSent={isSent} /></div>}
-            {message.type === 'audio' && message.mediaUrl && <div className="mb-2"><AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} /></div>}
+            {message.type === 'image' && message.mediaUrl && <div className="mb-2 rounded-lg overflow-hidden"><MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} /></div>}
+            {message.type === 'video' && message.mediaUrl && <div className="mb-2"><VideoPreview url={message.mediaUrl} caption={message.content} isSent={isSent} refreshKey={mediaRefreshKey} /></div>}
+            {message.type === 'audio' && message.mediaUrl && <div className="mb-2"><AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} refreshKey={mediaRefreshKey} /></div>}
             {message.type === 'document' && message.mediaUrl && <div className="mb-2"><DocumentPreview url={message.mediaUrl} fileName="document" isSent={isSent} /></div>}
             {message.type === 'location' && message.location && <LocationMessageDisplay location={message.location} isSent={isSent} />}
             {message.content && message.type === 'text' && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>}

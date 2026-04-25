@@ -2,13 +2,16 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import type { MediaRefreshKey } from '@/types/mediaRefresh';
 
 interface UseAudioPlayerOptions {
   audioUrl: string;
   messageId: string;
+  /** Optional Evolution refresh key — enables `getMediaBase64` fallback when the URL expires (410/403). */
+  refreshKey?: MediaRefreshKey;
 }
 
-export function useAudioPlayer({ audioUrl, messageId }: UseAudioPlayerOptions) {
+export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlayerOptions) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -44,12 +47,15 @@ export function useAudioPlayer({ audioUrl, messageId }: UseAudioPlayerOptions) {
     }
 
     // Try a HEAD check to see if the URL is reachable
+    let urlExpired = false;
     try {
       const resp = await fetch(url, { method: 'HEAD', mode: 'cors' });
       if (resp.ok) return url;
+      // 410 Gone / 403 Forbidden are typical WhatsApp URL expirations.
+      if (resp.status === 410 || resp.status === 403 || resp.status === 404) urlExpired = true;
     } catch (err) { log.error('Unexpected error in useAudioPlayer:', err); }
 
-    // Last resort: try to find the file in known buckets by messageId
+    // Try to find the file in known buckets by messageId (storage fallback)
     try {
       const buckets = ['whatsapp-media', 'audio-messages'];
       for (const bucket of buckets) {
@@ -61,8 +67,31 @@ export function useAudioPlayer({ audioUrl, messageId }: UseAudioPlayerOptions) {
       }
     } catch (err) { log.error('Unexpected error in useAudioPlayer:', err); }
 
+    // Last resort: ask Evolution for a fresh base64 payload (works for any
+    // expired WhatsApp media as long as we have the original message key).
+    if (refreshKey && urlExpired) {
+      try {
+        const { data, error } = await supabase.functions.invoke('evolution-api/get-media-base64', {
+          method: 'POST',
+          body: {
+            instanceName: refreshKey.instanceName,
+            message: { key: { remoteJid: refreshKey.remoteJid, fromMe: refreshKey.fromMe, id: refreshKey.id } },
+          },
+        });
+        if (!error) {
+          const payload = (data as { base64?: string; mimetype?: string } | null) ?? null;
+          if (payload?.base64) {
+            const mime = payload.mimetype || 'audio/ogg';
+            return `data:${mime};base64,${payload.base64}`;
+          }
+        }
+      } catch (err) {
+        log.error('Evolution audio refresh failed:', err);
+      }
+    }
+
     return url;
-  }, [messageId]);
+  }, [messageId, refreshKey]);
 
   useEffect(() => {
     const audio = audioRef.current;

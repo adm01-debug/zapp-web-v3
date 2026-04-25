@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getFileCategory, formatFileSize, getFileExtension, WHATSAPP_FILE_TYPES } from '@/utils/whatsappFileTypes';
 import { VideoFullscreen } from './VideoFullscreen';
+import { useMediaRefresh } from '@/hooks/useMediaRefresh';
 
 function getFileIcon(fileName: string, mimeType?: string) {
   const extension = getFileExtension(fileName).toLowerCase();
@@ -81,27 +82,37 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
 }
 
 // Video Preview Component
-interface VideoPreviewProps { url: string; caption?: string; isSent: boolean; }
+interface VideoPreviewProps {
+  url: string;
+  caption?: string;
+  isSent: boolean;
+  /** When provided, allows auto-refreshing the video src on 410/403 errors. */
+  refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
+}
 
 export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
-  function VideoPreview({ url, caption, isSent }, ref) {
+  function VideoPreview({ url, caption, isSent, refreshKey }, ref) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
     const [showFullscreen, setShowFullscreen] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+    const refresh = useMediaRefresh(url, refreshKey);
+    const effectiveUrl = refresh.url ?? url;
 
     return (
       <div ref={ref}>
         <div className="space-y-2">
           <motion.div whileHover={{ scale: 1.02 }} className="relative rounded-lg overflow-hidden max-w-[300px] cursor-pointer" onClick={() => setShowFullscreen(true)}>
-            {!isLoaded && (
-              <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
+            {(!isLoaded || refresh.isRefreshing) && (
+              <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center" aria-busy={refresh.isRefreshing || undefined}>
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
             )}
             <video
-              src={url} className="w-full max-h-[200px] object-cover rounded-lg" muted={isMuted} loop playsInline
+              key={effectiveUrl}
+              src={effectiveUrl} className="w-full max-h-[200px] object-cover rounded-lg" muted={isMuted} loop playsInline
               onLoadedData={() => setIsLoaded(true)}
+              onError={refresh.onError}
               onMouseEnter={(e) => { e.currentTarget.play(); setIsPlaying(true); }}
               onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; setIsPlaying(false); }}
             />
@@ -121,7 +132,7 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
           {caption && <p className={cn("text-sm", isSent ? "text-primary-foreground" : "text-foreground")}>{caption}</p>}
         </div>
         <AnimatePresence>
-          {showFullscreen && <VideoFullscreen url={url} onClose={() => setShowFullscreen(false)} />}
+          {showFullscreen && <VideoFullscreen url={effectiveUrl} onClose={() => setShowFullscreen(false)} />}
         </AnimatePresence>
       </div>
     );

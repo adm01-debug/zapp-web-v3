@@ -15,9 +15,11 @@ interface AudioMessagePlayerProps {
   isSent: boolean;
   existingTranscription?: string | null;
   transcriptionStatus?: string | null;
+  /** When provided, enables Evolution `getMediaBase64` fallback for expired URLs (410/403). */
+  refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
 }
 
-export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus }: AudioMessagePlayerProps) {
+export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey }: AudioMessagePlayerProps) {
   const [transcription, setTranscription] = useState<string | null>(existingTranscription || null);
   const [transcriptionStatus, setTranscriptionStatus] = useState<string>(initialStatus || 'pending');
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -28,7 +30,7 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
     playbackRate, progress, waveformHeights,
     currentTime, duration,
     togglePlay, handleSeek, cycleSpeed, formatTime, resolveAudioUrl,
-  } = useAudioPlayer({ audioUrl, messageId });
+  } = useAudioPlayer({ audioUrl, messageId, refreshKey });
 
   // Realtime subscription for transcription updates
   useEffect(() => {
