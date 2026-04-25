@@ -95,6 +95,28 @@ export function useMessageUpdateBatcher(
       }
 
       pendingUpdatesRef.current.set(updatedMessage.id, updatedMessage);
+
+      // Fast-path: transições para 'played' (áudio reproduzido) precisam refletir
+      // imediatamente na conversa aberta — o usuário acaba de ouvir o áudio e
+      // espera ver o duplo-check azul (CheckCheck text-info) sem o delay do
+      // debounce padrão de 100ms. Detectamos a mudança comparando o status
+      // antigo (snapshot em memória) com o novo recebido.
+      const previousMessage = existingConversation.messages.find(
+        (m) => m.id === updatedMessage.id,
+      );
+      const isPlayedTransition =
+        updatedMessage.status === 'played' &&
+        previousMessage?.status !== 'played';
+
+      if (isPlayedTransition) {
+        if (updateTimerRef.current) {
+          clearTimeout(updateTimerRef.current);
+          updateTimerRef.current = null;
+        }
+        flushPendingUpdates();
+        return;
+      }
+
       if (updateTimerRef.current) clearTimeout(updateTimerRef.current);
       updateTimerRef.current = setTimeout(flushPendingUpdates, 100);
       publishStatus(true);
