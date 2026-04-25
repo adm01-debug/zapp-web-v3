@@ -110,6 +110,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  // Filtro: somente mensagens com falha terminal (failed/failed_auth/failed_retries).
+  const [failuresOnly, setFailuresOnly] = useState(false);
 
   const fileUploaderRef = useRef<FileUploaderRef>(null);
   const messagesAreaRef = useRef<ChatMessagesAreaRef>(null);
