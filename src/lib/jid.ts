@@ -228,8 +228,18 @@ export function isStatus(jid: string | null | undefined): boolean {
 
 /**
  * Aliases canônicos públicos (nomenclatura recomendada pelo blueprint).
- * Mantemos os nomes legados (`toPhone`, `isStatus`) para retrocompatibilidade,
- * mas todo código novo deve preferir `toNumber` / `isStatusBroadcast`.
+ *
+ * Mantemos `toPhone` e `isStatus` como nomes legados para retrocompat,
+ * mas TODO código novo deve preferir `toNumber` e `isStatusBroadcast` —
+ * eles deixam o intent explícito no call site.
+ *
+ * @example Equivalência total (mesmo identidade de função)
+ *   toNumber === toPhone                  // → true
+ *   isStatusBroadcast === isStatus        // → true
+ *
+ * @example Uso preferido em código novo
+ *   const phone = toNumber(remoteJid);                  // '5511999999999'
+ *   if (isStatusBroadcast(remoteJid)) return;           // descarta status
  */
 export const toNumber = toPhone;
 export const isStatusBroadcast = isStatus;
