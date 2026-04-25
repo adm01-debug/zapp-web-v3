@@ -75,8 +75,10 @@ export function evaluateAutoRefresh(input: AutoRefreshInput): AutoRefreshDecisio
   if (status !== 'pending') return { schedule: false, reason: 'status_not_pending' };
   if (!expiresAt) return { schedule: false, reason: 'no_expires_at' };
 
+  const ttlRemaining = expiresAt - now;
+  const leadTimeMs = input.leadTimeMs ?? computeLeadTimeMs(ttlRemaining);
   const delayMs = expiresAt - leadTimeMs - now;
   if (delayMs <= 0) return { schedule: false, reason: 'already_past_window' };
 
-  return { schedule: true, delayMs };
+  return { schedule: true, delayMs, leadTimeMs };
 }
