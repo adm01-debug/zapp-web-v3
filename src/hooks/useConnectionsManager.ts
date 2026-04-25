@@ -3,7 +3,6 @@ import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
-import { AUTH_POST_LOGIN_REFRESH_EVENT } from '@/hooks/useAuth';
 
 export type WhatsAppApiType = 'evolution' | 'official';
 
@@ -179,12 +178,7 @@ export function useConnectionsManager() {
             }
             if (qrCodeDialog.open && qrCodeDialog.connectionId === newConn.id) {
               if (newConn.status === 'connected') {
-                setQrCodeDialog((prev) => {
-                  if (prev.status !== 'connected') {
-                    void updateQrAttempt(prev.attemptId, { status: 'connected' });
-                  }
-                  return { ...prev, status: 'connected', qrCode: null, expiresAt: null };
-                });
+                setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
               } else if (newConn.qr_code) {
                 setQrCodeDialog((prev) => ({
                   ...prev,
@@ -219,16 +213,6 @@ export function useConnectionsManager() {
     if (!error && data) setConnections(data);
     setLoading(false);
   };
-
-  // Re-fetch connection status whenever the user has just logged in. This
-  // ensures the freshly-mounted UI shows the up-to-date connected/disconnected
-  // status without forcing a manual page reload after login.
-  useEffect(() => {
-    const handler = () => { void fetchConnections(); };
-    window.addEventListener(AUTH_POST_LOGIN_REFRESH_EVENT, handler);
-    return () => window.removeEventListener(AUTH_POST_LOGIN_REFRESH_EVENT, handler);
-  }, []);
-
 
   const generateInstanceName = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').slice(0, 30) +
@@ -301,12 +285,7 @@ export function useConnectionsManager() {
         if (result?.state === 'open' || result?.status === 'connected') {
           clearInterval(interval);
           setPollingInterval(null);
-          setQrCodeDialog((prev) => {
-            if (prev.status !== 'connected') {
-              void updateQrAttempt(prev.attemptId, { status: 'connected' });
-            }
-            return { ...prev, status: 'connected', qrCode: null, expiresAt: null };
-          });
+          setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
           // Use the deduplicated announcer so we don't double-toast when realtime
           // also delivers the UPDATE event with status='connected'.
           setConnections((prev) => {
@@ -356,20 +335,18 @@ export function useConnectionsManager() {
     }
   };
 
-  /** Mark a previously inserted QR attempt as expired/error/connected. */
+  /** Mark a previously inserted QR attempt as expired/error. */
   const updateQrAttempt = async (
     attemptId: string | null,
-    patch: { status: 'expired' | 'error' | 'connected'; error_message?: string | null },
+    patch: { status: 'expired' | 'error'; error_message?: string | null },
   ) => {
     if (!attemptId) return;
     try {
-      const nowIso = new Date().toISOString();
       await supabase
         .from('qr_attempts')
         .update({
           status: patch.status,
-          expired_at: patch.status === 'expired' ? nowIso : null,
-          connected_at: patch.status === 'connected' ? nowIso : null,
+          expired_at: patch.status === 'expired' ? new Date().toISOString() : null,
           error_message: patch.error_message ?? null,
         })
         .eq('id', attemptId);
@@ -454,37 +431,15 @@ export function useConnectionsManager() {
       }
     }
   };
-  // Debounce window (ms) for the manual "Refresh QR" button. While the dialog
-  // is in `pending`, repeated clicks within this window — or while a refresh
-  // is already in flight — are dropped to prevent storming Evolution with
-  // back-to-back `connect` requests (which can rate-limit the instance and
-  // produce orphan QR attempts in the audit log).
-  const REFRESH_DEBOUNCE_MS = 1500;
-  const lastRefreshAtRef = useRef<number>(0);
-  const refreshInFlightRef = useRef<boolean>(false);
-  // Bumped after each refresh so the derived `isRefreshDebounced` flag below
-  // re-evaluates and the button re-enables once the cooldown elapses.
-  const [refreshTick, setRefreshTick] = useState(0);
-  const isRefreshDebounced =
-    refreshInFlightRef.current ||
-    (qrCodeDialog.status === 'pending' &&
-      Date.now() - lastRefreshAtRef.current < REFRESH_DEBOUNCE_MS);
-  // `refreshTick` is intentionally referenced so the linter knows we depend on
-  // it for re-renders even though the value itself isn't read.
-  void refreshTick;
+
+  // Hard lock against concurrent QR refreshes — prevents a second invocation
+  // from firing while the first one is still awaiting Evolution's response,
+  // even if it comes from a non-button source (auto-refresh timer, keyboard
+  // shortcut, double-click slipping past the button's `disabled` attribute).
+  const refreshInFlightRef = useRef(false);
 
   const handleRefreshQrCode = async () => {
-    // Drop the click if a refresh is already running OR the previous one
-    // finished less than the debounce window ago AND we're still in the
-    // pending state (the QR shown is still valid — no need to regenerate).
-    const now = Date.now();
     if (refreshInFlightRef.current) return;
-    if (
-      qrCodeDialog.status === 'pending' &&
-      now - lastRefreshAtRef.current < REFRESH_DEBOUNCE_MS
-    ) {
-      return;
-    }
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
     if (!connection?.instance_id) return;
     refreshInFlightRef.current = true;
@@ -518,12 +473,9 @@ export function useConnectionsManager() {
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
       setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage, expiresAt: null }));
     } finally {
-      lastRefreshAtRef.current = Date.now();
+      // Always release the lock so the next user-initiated retry can proceed,
+      // regardless of whether the request succeeded or failed.
       refreshInFlightRef.current = false;
-      setRefreshTick((t) => t + 1);
-      // Schedule a re-render right after the cooldown expires so the button
-      // re-enables visually (no user click required to recover).
-      setTimeout(() => setRefreshTick((t) => t + 1), REFRESH_DEBOUNCE_MS + 50);
     }
   };
   const handleCopyId = (id: string) => {
@@ -563,25 +515,11 @@ export function useConnectionsManager() {
     }
   };
 
-  // Ref-tracked timer for the QR auto-refresh. Held in a ref (in addition to
-  // the effect's local closure) so `closeQrDialog` and other imperative paths
-  // can cancel it synchronously the moment the dialog closes or the status
-  // leaves 'pending', without waiting for React to schedule the effect cleanup.
-  const autoRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancelAutoRefreshTimer = useCallback(() => {
-    if (autoRefreshTimerRef.current) {
-      clearTimeout(autoRefreshTimerRef.current);
-      autoRefreshTimerRef.current = null;
-    }
-  }, []);
-
   const closeQrDialog = () => {
     if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null); }
-    cancelAutoRefreshTimer();
     clearPersistedQr();
     setQrCodeDialog(INITIAL_QR_STATE);
   };
-
 
   // After connections load (e.g. after a page refresh), if we have a restored
   // pending QR, resume status polling and re-arm the expiration timer for the
@@ -634,11 +572,6 @@ export function useConnectionsManager() {
   // QR the user can no longer see (which previously caused unintended refreshes
   // and orphan QR attempts in the audit log).
   useEffect(() => {
-    // Always cancel any previously scheduled refresh first — this guarantees
-    // that closing the dialog or transitioning out of 'pending' stops the
-    // timer immediately on the next render, before any new schedule is made.
-    cancelAutoRefreshTimer();
-
     if (!qrCodeDialog.open) return;
     if (qrCodeDialog.status !== 'pending') return;
     if (!qrCodeDialog.expiresAt) return;
@@ -646,8 +579,7 @@ export function useConnectionsManager() {
     if (delay <= 0) return;
 
     const scheduledForAttempt = qrCodeDialog.attemptId;
-    autoRefreshTimerRef.current = setTimeout(() => {
-      autoRefreshTimerRef.current = null;
+    const timer = setTimeout(() => {
       // Re-check the latest dialog state at fire time — the props captured in
       // closure may be stale if the user already closed the dialog or another
       // refresh raced ahead. We use the functional setter to read the freshest
@@ -663,9 +595,9 @@ export function useConnectionsManager() {
         return current;
       });
     }, delay);
-    return () => cancelAutoRefreshTimer();
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qrCodeDialog.open, qrCodeDialog.status, qrCodeDialog.expiresAt, qrCodeDialog.attemptId, cancelAutoRefreshTimer]);
+  }, [qrCodeDialog.open, qrCodeDialog.status, qrCodeDialog.expiresAt, qrCodeDialog.attemptId]);
 
   return {
     connections,
@@ -679,7 +611,6 @@ export function useConnectionsManager() {
     handleAddConnection,
     handleShowQrCode,
     handleRefreshQrCode,
-    isRefreshDebounced,
     handleCopyId,
     handleReconnect,
     handleDisconnect,

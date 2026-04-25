@@ -28,7 +28,6 @@ import { NumberReputationMonitor } from './NumberReputationMonitor';
 import { ConnectionCard } from './ConnectionCard';
 import { DegradedQuickActions } from './DegradedQuickActions';
 import { QrCountdown } from './QrCountdown';
-import { LastQrAttemptInfo } from './LastQrAttemptInfo';
 import { IdempotencyMissBanner } from './IdempotencyMissBanner';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 
@@ -38,7 +37,7 @@ export function ConnectionsView() {
     isAddDialogOpen, setIsAddDialogOpen,
     qrCodeDialog, newConnection, setNewConnection, isCreating,
     syncingHistory, setSyncingHistory, evolutionLoading,
-    handleAddConnection, handleShowQrCode, handleRefreshQrCode, isRefreshDebounced,
+    handleAddConnection, handleShowQrCode, handleRefreshQrCode,
     handleCopyId, handleDisconnect, handleSetDefault, handleSetApiType, handleDelete, closeQrDialog,
   } = useConnectionsManager();
 
@@ -172,24 +171,21 @@ export function ConnectionsView() {
                 {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
               </>
             )}
-            {(qrCodeDialog.status === 'pending' || qrCodeDialog.status === 'error') && (
-              <Button variant="outline" onClick={handleRefreshQrCode} disabled={evolutionLoading || isRefreshDebounced}>
-                {evolutionLoading ? (
+            {(qrCodeDialog.status === 'pending' || qrCodeDialog.status === 'error' || qrCodeDialog.status === 'loading') && (
+              <Button
+                variant="outline"
+                onClick={handleRefreshQrCode}
+                disabled={evolutionLoading || qrCodeDialog.status === 'loading'}
+                aria-busy={evolutionLoading || qrCodeDialog.status === 'loading'}
+              >
+                {(evolutionLoading || qrCodeDialog.status === 'loading') ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Gerando…</>
-                ) : isRefreshDebounced ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Aguarde…</>
                 ) : (
                   <><RefreshCw className="w-4 h-4 mr-2" />{qrCodeDialog.status === 'pending' ? 'Gerar novo QR' : 'Gerar novo código'}</>
                 )}
               </Button>
             )}
             {qrCodeDialog.status === 'connected' && <Button onClick={closeQrDialog}>Fechar</Button>}
-            {qrCodeDialog.connectionId && (
-              <LastQrAttemptInfo
-                connectionId={qrCodeDialog.connectionId}
-                refreshKey={`${qrCodeDialog.status}:${qrCodeDialog.attemptId ?? ''}:${qrCodeDialog.expiresAt ?? ''}`}
-              />
-            )}
           </div>
         </DialogContent>
       </Dialog>
