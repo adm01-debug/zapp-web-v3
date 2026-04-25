@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Crown, UserCog, User, Eye, Briefcase, Building, Lock,
-  UserCheck, UserX, Edit,
+  UserCheck, UserX, Edit, Code,
 } from 'lucide-react';
 import { ForceLogoutButton } from './ForceLogoutButton';
 import { accessLevelConfig, type UserWithRole } from './useAdminData';
