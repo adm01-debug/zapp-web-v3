@@ -46,7 +46,9 @@ function mockDbStatuses(rows: Array<Record<string, unknown>>) {
 
 describe('useMessageStatus — desempate temporal bus vs DB (terminais)', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    // shouldAdvanceTime: true → permite que waitFor (que usa timers) progrida
+    // enquanto ainda controlamos Date.now() via setSystemTime.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.setSystemTime(new Date('2024-01-01T10:00:00Z'));
     vi.clearAllMocks();
     __resetSendStatusForTest?.();
