@@ -108,16 +108,25 @@ Deno.serve(async (req) => {
 
     // RPC call
     if (action === 'rpc' && rpc) {
+      const rpcStartedAt = Date.now()
+      // Strip the trace echo so it isn't forwarded to the SQL function.
+      const cleanParams = { ...(params || {}) }
+      delete (cleanParams as Record<string, unknown>).__cid
       try {
-        const { data: rpcData, error } = await withTimeout(ext.rpc(rpc, params || {}))
+        const { data: rpcData, error } = await withTimeout(ext.rpc(rpc, cleanParams))
+        const ms = Date.now() - rpcStartedAt
+        console.log(JSON.stringify({
+          fn: 'external-db-proxy', cid, op: 'rpc', target: rpc, ms, ok: !error,
+          err: error?.message,
+        }))
         if (error) {
           const isTimeout = /statement timeout|canceling statement/i.test(error.message)
-          return new Response(JSON.stringify({ error: error.message }), {
+          return new Response(JSON.stringify({ error: error.message, cid }), {
             status: isTimeout ? 504 : 400,
             headers: jsonHeaders,
           })
         }
-        return new Response(JSON.stringify({ data: rpcData }), {
+        return new Response(JSON.stringify({ data: rpcData, cid }), {
           headers: jsonHeaders
         })
       } catch (e) {
