@@ -351,9 +351,20 @@ Deno.serve(async (req) => {
       const cleanParams = { ...((params as Record<string, unknown>) || {}) }
       delete cleanParams.__cid
       try {
-        const { data: rpcData, error } = await withTimeout(ext.rpc(rpc as string, cleanParams))
+        // Retry transient PGRST002 (schema cache) — up to 3 attempts with backoff.
+        let rpcData: unknown = null
+        let error: { message: string; code?: string } | null = null
+        let schemaRetries = 0
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const res = await withTimeout(ext.rpc(rpc as string, cleanParams))
+          rpcData = (res as { data: unknown }).data
+          error = (res as { error: { message: string; code?: string } | null }).error
+          if (!isSchemaCacheError(error)) break
+          schemaRetries++
+          await new Promise((r) => setTimeout(r, 250 * (attempt + 1)))
+        }
         const ms = Date.now() - queryStart
-        const cls = classifyUpstreamError(error?.message, false)
+        const cls = classifyUpstreamError(error?.message, false, (error as { code?: string } | null)?.code)
         logEvent(buildQueryLog(
           { cid, rid, op: 'rpc', target: rpc as string, startedAt: queryStart },
           {
@@ -364,6 +375,7 @@ Deno.serve(async (req) => {
             errCode: (error as { code?: string } | null)?.code,
             errMsg: error?.message,
             rowCount: Array.isArray(rpcData) ? rpcData.length : (rpcData == null ? 0 : 1),
+            schemaRetries,
           },
         ))
         if (error) {
