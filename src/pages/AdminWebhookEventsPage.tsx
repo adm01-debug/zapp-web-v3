@@ -265,7 +265,7 @@ export default function AdminWebhookEventsPage() {
 
           <FilterField label="Tipo de evento">
             <Select value={eventType} onValueChange={(v) => setEventType(v as EventTypeFilter)}>
-              <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[220px]" data-testid="filter-webhook-event-type"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {EVENT_TYPES.map((t) => (
                   <SelectItem key={t} value={t}>{t === 'all' ? 'Todos' : t}</SelectItem>
@@ -276,7 +276,7 @@ export default function AdminWebhookEventsPage() {
 
           <FilterField label="Instância">
             <Select value={instance} onValueChange={setInstance}>
-              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[160px]" data-testid="filter-webhook-instance"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 {aggregates.instances.map((i) => (
@@ -433,20 +433,23 @@ export default function AdminWebhookEventsPage() {
                       data-message-type={row.message_type ?? ''}
                       data-status={row.error_message ? 'error' : row.processed ? 'processed' : 'pending'}
                     >
-                      <TableCell className="text-xs whitespace-nowrap">
+                      <TableCell className="text-xs whitespace-nowrap" data-testid="webhook-event-created-at">
                         {formatDate(row.created_at)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-testid="webhook-event-event-type">
                         <Badge variant="outline" className="font-mono text-xs">
                           {row.event_type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{row.instance_name}</TableCell>
+                      <TableCell className="font-mono text-xs" data-testid="webhook-event-instance">{row.instance_name}</TableCell>
                       <TableCell className="text-xs">
                         <div className="flex flex-col">
                           <span className="font-mono" data-testid="webhook-event-jid">{shortJid(row.remote_jid)}</span>
                           {row.push_name && (
-                            <span className="text-muted-foreground truncate max-w-[200px]">
+                            <span
+                              className="text-muted-foreground truncate max-w-[200px]"
+                              data-testid="webhook-event-push-name"
+                            >
                               {row.push_name}
                             </span>
                           )}
@@ -469,6 +472,7 @@ export default function AdminWebhookEventsPage() {
                           variant="ghost"
                           onClick={() => setSelected(row)}
                           title="Ver payload"
+                          data-testid="webhook-event-details-button"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
