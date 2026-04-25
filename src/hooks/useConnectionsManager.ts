@@ -49,8 +49,37 @@ const INITIAL_QR_STATE: QrCodeDialogState = {
   attemptId: null,
 };
 
-const QR_TTL_MS = 60_000;
+/** Default fallback TTL when the upstream API doesn't report one. Evolution typically rotates the QR ~60s. */
+const QR_TTL_DEFAULT_MS = 60_000;
+/** Sane bounds to clamp suspicious upstream values (e.g. 0, negative, or absurdly long). */
+const QR_TTL_MIN_MS = 15_000;
+const QR_TTL_MAX_MS = 5 * 60_000;
 const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
+
+/**
+ * Detects the QR rotation TTL from the Evolution API response. Evolution returns
+ * the lifetime in seconds in either `count` or `qrcode.count` (varies by version);
+ * we check both and clamp to sane bounds. Returns the TTL in **milliseconds**.
+ */
+function detectQrTtlMs(result: unknown): number {
+  if (!result || typeof result !== 'object') return QR_TTL_DEFAULT_MS;
+  const r = result as Record<string, unknown> & { qrcode?: Record<string, unknown> };
+  const candidates: unknown[] = [
+    r.count,
+    r.qrcode?.count,
+    (r as { ttl?: unknown }).ttl,
+    r.qrcode?.ttl,
+    (r as { expires_in?: unknown }).expires_in,
+  ];
+  for (const raw of candidates) {
+    const seconds = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
+    if (Number.isFinite(seconds) && seconds > 0) {
+      const ms = seconds * 1000;
+      return Math.min(QR_TTL_MAX_MS, Math.max(QR_TTL_MIN_MS, ms));
+    }
+  }
+  return QR_TTL_DEFAULT_MS;
+}
 
 interface PersistedQrState {
   connectionId: string;
@@ -184,7 +213,7 @@ export function useConnectionsManager() {
                   ...prev,
                   qrCode: newConn.qr_code,
                   status: 'pending',
-                  expiresAt: prev.expiresAt ?? Date.now() + QR_TTL_MS,
+                  expiresAt: prev.expiresAt ?? Date.now() + QR_TTL_DEFAULT_MS,
                 }));
               }
             }
@@ -401,7 +430,8 @@ export function useConnectionsManager() {
       const attemptId = await logQrAttempt(connection);
       try {
         const result = await requestConnectionQr(connection.instance_id);
-        const expiresAt = Date.now() + QR_TTL_MS;
+        const ttlMs = detectQrTtlMs(result);
+        const expiresAt = Date.now() + ttlMs;
         if (result?.qrcode?.base64) {
           setQrCodeDialog((prev) => ({
             ...prev,
@@ -414,7 +444,7 @@ export function useConnectionsManager() {
           setQrCodeDialog((prev) => ({ ...prev, expiresAt, attemptId }));
         }
         startStatusPolling(connection.instance_id, connection.id);
-        // QR codes typically expire after ~60s — auto-mark expired if dialog still pending.
+        // Auto-mark expired using the upstream TTL (falls back to default when missing).
         setTimeout(() => {
           setQrCodeDialog((prev) => {
             if (prev.connectionId === connection.id && prev.status === 'pending') {
@@ -423,7 +453,7 @@ export function useConnectionsManager() {
             }
             return prev;
           });
-        }, QR_TTL_MS);
+        }, ttlMs);
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar QR Code';
         await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
@@ -447,7 +477,8 @@ export function useConnectionsManager() {
     const attemptId = await logQrAttempt(connection);
     try {
       const result = await requestConnectionQr(connection.instance_id);
-      const expiresAt = Date.now() + QR_TTL_MS;
+      const ttlMs = detectQrTtlMs(result);
+      const expiresAt = Date.now() + ttlMs;
       if (result?.qrcode?.base64) {
         setQrCodeDialog((prev) => ({
           ...prev,
@@ -467,7 +498,7 @@ export function useConnectionsManager() {
           }
           return prev;
         });
-      }, QR_TTL_MS);
+      }, ttlMs);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar QR Code';
       await updateQrAttempt(attemptId, { status: 'error', error_message: errorMessage });
@@ -547,7 +578,7 @@ export function useConnectionsManager() {
     startStatusPolling(conn.instance_id, conn.id);
     const remaining = qrCodeDialog.expiresAt
       ? Math.max(0, qrCodeDialog.expiresAt - Date.now())
-      : QR_TTL_MS;
+      : QR_TTL_DEFAULT_MS;
     const timer = setTimeout(() => {
       setQrCodeDialog((prev) => {
         if (prev.connectionId === conn.id && prev.status === 'pending') {
