@@ -49,8 +49,37 @@ const INITIAL_QR_STATE: QrCodeDialogState = {
   attemptId: null,
 };
 
-const QR_TTL_MS = 60_000;
+/** Default fallback TTL when the upstream API doesn't report one. Evolution typically rotates the QR ~60s. */
+const QR_TTL_DEFAULT_MS = 60_000;
+/** Sane bounds to clamp suspicious upstream values (e.g. 0, negative, or absurdly long). */
+const QR_TTL_MIN_MS = 15_000;
+const QR_TTL_MAX_MS = 5 * 60_000;
 const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
+
+/**
+ * Detects the QR rotation TTL from the Evolution API response. Evolution returns
+ * the lifetime in seconds in either `count` or `qrcode.count` (varies by version);
+ * we check both and clamp to sane bounds. Returns the TTL in **milliseconds**.
+ */
+function detectQrTtlMs(result: unknown): number {
+  if (!result || typeof result !== 'object') return QR_TTL_DEFAULT_MS;
+  const r = result as Record<string, unknown> & { qrcode?: Record<string, unknown> };
+  const candidates: unknown[] = [
+    r.count,
+    r.qrcode?.count,
+    (r as { ttl?: unknown }).ttl,
+    r.qrcode?.ttl,
+    (r as { expires_in?: unknown }).expires_in,
+  ];
+  for (const raw of candidates) {
+    const seconds = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
+    if (Number.isFinite(seconds) && seconds > 0) {
+      const ms = seconds * 1000;
+      return Math.min(QR_TTL_MAX_MS, Math.max(QR_TTL_MIN_MS, ms));
+    }
+  }
+  return QR_TTL_DEFAULT_MS;
+}
 
 interface PersistedQrState {
   connectionId: string;
