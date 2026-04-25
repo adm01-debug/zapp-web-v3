@@ -301,7 +301,12 @@ export function useConnectionsManager() {
         if (result?.state === 'open' || result?.status === 'connected') {
           clearInterval(interval);
           setPollingInterval(null);
-          setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
+          setQrCodeDialog((prev) => {
+            if (prev.status !== 'connected') {
+              void updateQrAttempt(prev.attemptId, { status: 'connected' });
+            }
+            return { ...prev, status: 'connected', qrCode: null, expiresAt: null };
+          });
           // Use the deduplicated announcer so we don't double-toast when realtime
           // also delivers the UPDATE event with status='connected'.
           setConnections((prev) => {
