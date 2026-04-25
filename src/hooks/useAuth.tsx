@@ -72,13 +72,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
+
+          // Trigger a full data refresh whenever this is a *new* signed-in
+          // session (initial login or user switch). We deliberately skip
+          // TOKEN_REFRESHED / USER_UPDATED events that share the same user id,
+          // since those don't represent a fresh login and should not invalidate
+          // every cached query in the app.
+          const isFreshLogin =
+            event === 'SIGNED_IN' && lastUserIdRef.current !== session.user.id;
+          lastUserIdRef.current = session.user.id;
+
+          if (isFreshLogin) {
+            // Defer so subscribers (connections, inbox, contacts) mount and
+            // register their listeners before we fire the refresh signal.
+            setTimeout(() => {
+              try {
+                // Invalidate every react-query cache entry — covers chats,
+                // contacts, conversations, channel-connections, etc.
+                queryClient.invalidateQueries();
+              } catch (err) {
+                log.warn('[Auth] Failed to invalidate query cache after login', err);
+              }
+              window.dispatchEvent(new CustomEvent(AUTH_POST_LOGIN_REFRESH_EVENT));
+            }, 0);
+          }
         } else {
           setProfile(null);
+          lastUserIdRef.current = null;
         }
       }
     );
@@ -87,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        lastUserIdRef.current = session.user.id;
         fetchProfile(session.user.id);
       }
       setLoading(false);
