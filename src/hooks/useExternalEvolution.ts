@@ -17,7 +17,7 @@ import {
 import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
-import { dedupedFetch } from '@/lib/realtime/crossTabDedupe';
+import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
 
 const log = getLogger('useExternalEvolution');
 
@@ -295,6 +295,57 @@ export function useExternalMessages(remoteJid: string | null) {
     const interval = setInterval(pollNewMessages, POLL_INTERVAL);
     return () => clearInterval(interval);
   }, [remoteJid, pollNewMessages]);
+
+  // Cross-tab sync: quando outra aba conclui um fetch (initial/poll/older)
+  // para este mesmo jid, recebemos o resultado via BroadcastChannel e
+  // atualizamos a UI sem refazer a requisição.
+  useEffect(() => {
+    if (!remoteJid) return;
+    const jidPrefixes = [
+      `inbox:initial:${remoteJid}:`,
+      `inbox:poll:${remoteJid}:`,
+      `older:${remoteJid}:`,
+    ];
+    const matcher = new RegExp(
+      `^(${jidPrefixes.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
+    );
+
+    const unsub = subscribeDedupe<EvolutionMessage[]>(matcher, (key, data, source) => {
+      if (source === 'local') return; // já tratado pelo fluxo do próprio fetcher
+      if (!mountedRef.current || !Array.isArray(data) || data.length === 0) return;
+
+      // `older` é retornado em ordem desc; demais já vêm asc.
+      const isOlder = key.startsWith(`older:${remoteJid}:`);
+      const ordered = isOlder ? data.slice().reverse() : data;
+      const mapped = ordered.map(evolutionToRealtimeMessage);
+
+      setMessages((prev) => {
+        const seen = new Set(prev.map((m) => m.id));
+        const additions = mapped.filter((m) => !seen.has(m.id));
+        if (additions.length === 0) return prev;
+        if (key.startsWith(`inbox:initial:${remoteJid}:`)) {
+          // Initial completo de outra aba: substitui se ainda não tínhamos nada,
+          // senão apenas mescla as faltantes.
+          if (prev.length === 0) {
+            lastSeenRef.current = mapped[mapped.length - 1]?.created_at ?? null;
+            return mapped;
+          }
+          return [...prev, ...additions].sort(
+            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+          );
+        }
+        if (isOlder) return [...additions, ...prev];
+        // poll forward
+        const next = [...prev, ...additions];
+        lastSeenRef.current = additions[additions.length - 1]?.created_at ?? lastSeenRef.current;
+        return next;
+      });
+      if (key.startsWith(`inbox:initial:${remoteJid}:`) && mountedRef.current) {
+        setLoading(false);
+      }
+    });
+    return unsub;
+  }, [remoteJid]);
 
   const addMessage = useCallback((message: RealtimeMessage) => {
     setMessages(prev => {

@@ -56,6 +56,26 @@ const resultCache = new Map<string, { value: unknown; expiresAt: number }>();
 const inflight = new Map<string, Promise<unknown>>();
 const waiters = new Map<string, Array<(v: { ok: true; data: unknown } | { ok: false; error: string }) => void>>();
 
+// Subscribers: handlers da UI interessados em receber resultados que chegam
+// via BroadcastChannel (de outras abas). Chave é uma string ou regex.
+type SubscriberFn<T = unknown> = (key: string, data: T, source: 'remote' | 'local') => void;
+interface Subscription {
+  match: (key: string) => boolean;
+  handler: SubscriberFn;
+}
+const subscribers = new Set<Subscription>();
+
+function notifySubscribers(key: string, data: unknown, source: 'remote' | 'local') {
+  subscribers.forEach((sub) => {
+    if (!sub.match(key)) return;
+    try {
+      sub.handler(key, data, source);
+    } catch (err) {
+      log.error('Subscriber handler threw', { key, err });
+    }
+  });
+}
+
 let bc: BroadcastChannel | null = null;
 function getBroadcastChannel(): BroadcastChannel | null {
   if (typeof BroadcastChannel === 'undefined') return null;
@@ -80,6 +100,8 @@ function onBroadcast(msg: BroadcastMessage) {
       ws.forEach((w) => w({ ok: true, data: msg.data }));
       waiters.delete(msg.key);
     }
+    // Notifica UI subscribers para que atualizem sem refazer fetch.
+    notifySubscribers(msg.key, msg.data, 'remote');
   } else if (msg.type === 'error') {
     const ws = waiters.get(msg.key);
     if (ws) {
@@ -293,6 +315,7 @@ export async function dedupedFetch<T>(
       resultCache.set(key, { value: data, expiresAt: Date.now() + resultTtl });
       writePersistedResult(key, data, resultTtl);
       broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now(), resultTtl });
+      notifySubscribers(key, data, 'local');
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -337,6 +360,7 @@ export function clearCrossTabDedupe(): void {
   resultCache.clear();
   inflight.clear();
   waiters.clear();
+  subscribers.clear();
   if (typeof localStorage !== 'undefined') {
     try {
       const keys: string[] = [];
@@ -352,3 +376,37 @@ export function clearCrossTabDedupe(): void {
 }
 
 export const __TAB_ID = TAB_ID;
+
+/**
+ * Subscreve-se a resultados de dedupedFetch concluídos em qualquer aba.
+ *
+ * Útil para que abas espectadoras atualizem a UI quando outra aba completa
+ * um fetch — sem precisar refazer a requisição. O handler é chamado tanto
+ * quando o broadcast chega de outra aba (`source: 'remote'`) quanto quando
+ * a própria aba conclui o fetch (`source: 'local'`).
+ *
+ * @param keyMatcher  string exata, prefixo (ex.: "inbox:initial:") ou RegExp.
+ * @param handler     callback (key, data, source) => void
+ * @returns           função de unsubscribe
+ */
+export function subscribeDedupe<T = unknown>(
+  keyMatcher: string | RegExp,
+  handler: SubscriberFn<T>,
+): () => void {
+  const match = typeof keyMatcher === 'string'
+    ? (k: string) => k === keyMatcher || k.startsWith(keyMatcher)
+    : (k: string) => keyMatcher.test(k);
+  const sub: Subscription = { match, handler: handler as SubscriberFn };
+  subscribers.add(sub);
+  // Garante que o BroadcastChannel está ativo para entregar mensagens.
+  getBroadcastChannel();
+  return () => {
+    subscribers.delete(sub);
+  };
+}
+
+/** @internal — para testes. */
+export function __notifyLocal(key: string, data: unknown) {
+  notifySubscribers(key, data, 'local');
+}
+

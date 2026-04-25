@@ -3,6 +3,8 @@ import {
   dedupedFetch,
   clearCrossTabDedupe,
   gcExpiredKeys,
+  subscribeDedupe,
+  __notifyLocal,
 } from '@/lib/realtime/crossTabDedupe';
 
 /**
@@ -228,6 +230,81 @@ describe('crossTabDedupe', () => {
       const swept = gcExpiredKeys();
       expect(swept.resultsSwept).toBe(1);
       expect(localStorage.getItem('ctd:result:corrupt')).toBeNull();
+    });
+  });
+
+  describe('subscribeDedupe — sincronização cross-tab para a UI', () => {
+    it('handler local é chamado quando o líder finaliza um fetch', async () => {
+      const handler = vi.fn();
+      const unsub = subscribeDedupe('sub:k1', handler);
+      await dedupedFetch('sub:k1', async () => ({ items: [1, 2, 3] }));
+      expect(handler).toHaveBeenCalledTimes(1);
+      const [key, data, source] = handler.mock.calls[0];
+      expect(key).toBe('sub:k1');
+      expect(data).toEqual({ items: [1, 2, 3] });
+      expect(source).toBe('local');
+      unsub();
+    });
+
+    it('matcher por prefixo: handler recebe múltiplas keys que casam', async () => {
+      const handler = vi.fn();
+      const unsub = subscribeDedupe('inbox:initial:', handler);
+      await dedupedFetch('inbox:initial:5511@s.wa:100', async () => ['m1']);
+      await dedupedFetch('inbox:initial:5599@s.wa:100', async () => ['m2']);
+      await dedupedFetch('inbox:poll:5511@s.wa:t', async () => ['m3']); // não casa
+      expect(handler).toHaveBeenCalledTimes(2);
+      const keys = handler.mock.calls.map((c) => c[0]);
+      expect(keys).toEqual(
+        expect.arrayContaining([
+          'inbox:initial:5511@s.wa:100',
+          'inbox:initial:5599@s.wa:100',
+        ]),
+      );
+      unsub();
+    });
+
+    it('matcher por RegExp funciona', async () => {
+      const handler = vi.fn();
+      const unsub = subscribeDedupe(/^older:5511@/, handler);
+      await dedupedFetch('older:5511@s.wa:2025-01-01:100', async () => ['old']);
+      await dedupedFetch('older:5599@s.wa:2025-01-01:100', async () => ['no']);
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0][0]).toBe('older:5511@s.wa:2025-01-01:100');
+      unsub();
+    });
+
+    it('unsubscribe remove o handler — não recebe mais notificações', async () => {
+      const handler = vi.fn();
+      const unsub = subscribeDedupe('sub:once', handler);
+      await dedupedFetch('sub:once', async () => 'first');
+      expect(handler).toHaveBeenCalledTimes(1);
+      unsub();
+      // Próxima execução não deve notificar (cache limpo para forçar fetch).
+      clearCrossTabDedupe();
+      await dedupedFetch('sub:once', async () => 'second');
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it('handler é resiliente a exceções: erro de um subscriber não bloqueia outros', async () => {
+      const bad = vi.fn(() => {
+        throw new Error('handler crashed');
+      });
+      const good = vi.fn();
+      const u1 = subscribeDedupe('sub:resil', bad);
+      const u2 = subscribeDedupe('sub:resil', good);
+      await dedupedFetch('sub:resil', async () => 'ok');
+      expect(bad).toHaveBeenCalledTimes(1);
+      expect(good).toHaveBeenCalledTimes(1);
+      u1();
+      u2();
+    });
+
+    it('source remoto: __notifyLocal simula entrega de outra aba', () => {
+      const handler = vi.fn();
+      const unsub = subscribeDedupe('remote:k', handler);
+      __notifyLocal('remote:k', { from: 'tab-B' });
+      expect(handler).toHaveBeenCalledWith('remote:k', { from: 'tab-B' }, 'local');
+      unsub();
     });
   });
 });
