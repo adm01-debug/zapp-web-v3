@@ -60,7 +60,7 @@ export default function RolesPage() {
         <TabsList>
           <TabsTrigger value="users"><Users className="w-4 h-4 mr-2" />Usuários</TabsTrigger>
           <TabsTrigger value="permissions"><Shield className="w-4 h-4 mr-2" />Permissões</TabsTrigger>
-          <TabsTrigger value="visibility"><Star className="w-4 h-4 mr-2" />Visibilidade</TabsTrigger>
+          <TabsTrigger value="visibility"><Eye className="w-4 h-4 mr-2" />Visibilidade</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4 mt-4">
