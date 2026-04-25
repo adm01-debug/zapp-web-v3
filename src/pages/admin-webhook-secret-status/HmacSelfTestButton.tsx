@@ -18,6 +18,10 @@ import { ShieldCheck, ShieldAlert, FlaskConical, Loader2, ChevronDown } from 'lu
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+type Phase =
+  | 'config' | 'parse-body' | 'build-payload' | 'sign' | 'mutate'
+  | 'request' | 'validate' | 'signature-presence' | 'temporal' | 'response';
+
 interface ScenarioReport {
   name: string;
   description: string;
@@ -25,6 +29,8 @@ interface ScenarioReport {
   outcome: 'accept' | 'reject';
   passed: boolean;
   reason: string | null;
+  failed_phase?: Phase | null;
+  phases?: Array<{ phase: Phase; status: 'ok' | 'fail' | 'skip'; duration_ms: number }>;
   issuedAt: string;
   ageSeconds: number;
   nonce: string;
@@ -33,6 +39,8 @@ interface ScenarioReport {
 interface SelfTestResult {
   ok: boolean;
   configured: boolean;
+  request_id?: string;
+  failed_phase?: Phase | null;
   secret_length?: number;
   duration_ms?: number;
   tolerance_seconds?: number;
