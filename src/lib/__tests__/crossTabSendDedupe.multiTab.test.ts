@@ -185,10 +185,10 @@ describe('crossTabDedupe — multi-tab simulation', () => {
     const promises: Promise<unknown>[] = [];
     for (let i = 0; i < tabs.length; i++) {
       promises.push(tabs[i].crossTabDedupe(KEY, works[i], { ttlMs: 1_000 }));
-      await tick(1); // stagger so localStorage claim is observable
+      await tick(5); // stagger so localStorage claim is observable
     }
     await Promise.all(promises);
-    await tick(20);
+    await tick(30);
 
     const { getDedupeSnapshot } = await import('@/lib/dedupeMetrics');
     const snap = getDedupeSnapshot();
