@@ -153,6 +153,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'instance-pauses', icon: Pause, label: 'Pausas de Instância' },
   { id: 'search-insights', icon: Search, label: 'Search Insights', requiredRoles: ['admin'] },
   { id: 'realtime-monitor', icon: Activity, label: 'Monitor em Tempo Real', requiredRoles: ['supervisor'] },
+  { id: 'dispatch-errors-history', icon: ScrollText, label: 'Histórico Erros Dispatch', requiredRoles: ['supervisor'] },
 ] as const;
 
 // ── Backward-compat re-exports ────────────────────────────

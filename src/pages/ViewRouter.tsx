@@ -20,6 +20,7 @@ const VIEW_REQUIRED_ROLES: Record<string, AppRole[]> = {
   // Operação — supervisor+
   'agents-ops': ['supervisor'],
   'realtime-monitor': ['supervisor'],
+  'dispatch-errors-history': ['supervisor'],
 };
 
 interface ViewRouterProps {
@@ -117,6 +118,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'search-insights': Views.AdminSearchInsightsPage,
   'agents-ops': Views.AgentsOperationsPage,
   'realtime-monitor': Views.AdminRealtimeMonitorPage,
+  'dispatch-errors-history': Views.AdminDispatchErrorsHistoryPage,
 };
 
 // Views that need custom props
