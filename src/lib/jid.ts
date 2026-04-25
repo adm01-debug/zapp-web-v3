@@ -55,7 +55,41 @@ const BROADCAST_SUFFIX = '@broadcast';
 const STATUS_JID = 'status@broadcast';
 const NEWSLETTER_SUFFIX = '@newsletter';
 
-/** Normaliza para apenas dígitos. Aceita JID, telefone, ou string com formatação. */
+/**
+ * Normaliza qualquer input "telefônico" para apenas dígitos.
+ *
+ * Estratégia:
+ *   1. Descarta qualquer sufixo após `@` (`...@s.whatsapp.net`, `...@g.us`,
+ *      `status@broadcast`, etc.)
+ *   2. Remove TUDO que não for dígito (`/\D/g`) — incluindo whitespace,
+ *      NBSP, zero-width, BOM, parênteses, hífens, `+` e letras.
+ *
+ * Garantias:
+ *   - Determinístico e idempotente: `toPhone(toPhone(x)) === toPhone(x)`
+ *   - `null` / `undefined` / `''` / strings só com lixo → `''`
+ *
+ * @example Entrada formatada (BR)
+ *   toPhone('+55 (11) 99999-9999')         // → '5511999999999'
+ *
+ * @example JID individual
+ *   toPhone('5511999999999@s.whatsapp.net') // → '5511999999999'
+ *
+ * @example JID de grupo (mantém o local-part inteiro, com hífens removidos)
+ *   toPhone('120363021111111111-1700000001@g.us')
+ *     // → '1203630211111111111700000001'
+ *
+ * @example DDI internacional
+ *   toPhone('+1 (415) 555-0132')           // → '14155550132'
+ *
+ * @example Status / broadcast (não há número)
+ *   toPhone('status@broadcast')            // → ''
+ *
+ * @example Caracteres incomuns (tab, NBSP, zero-width)
+ *   toPhone('\t55\u00A011\u200B99999 9999') // → '5511999999999'
+ *
+ * @see toNumber — alias canônico recomendado em código novo
+ * @see toPhoneStrict — versão que retorna `null` se < 8 ou > 15 dígitos
+ */
 export function toPhone(input: string | null | undefined): string {
   if (!input) return '';
   const stripped = String(input).split('@')[0] ?? '';
@@ -79,9 +113,36 @@ export function toGroupJid(input: string | null | undefined): string {
 }
 
 /**
- * Resolução genérica: se o input já trouxer um sufixo conhecido, mantém;
- * caso contrário assume conversa individual. Útil para chamadas onde o
- * caller pode passar tanto telefone quanto JID.
+ * Resolução genérica de JID: preserva sufixos conhecidos, ou assume conversa
+ * individual quando o input é só um número.
+ *
+ * Regra de decisão:
+ *   - Termina em `@s.whatsapp.net` | `@g.us` | `@broadcast` | `@newsletter`
+ *     → retorna como veio (passthrough).
+ *   - Caso contrário → trata como telefone e gera `<digits>@s.whatsapp.net`
+ *     via `toIndividualJid`.
+ *
+ * Use sempre que o caller pode passar tanto telefone quanto JID
+ * (ex.: `openContactInChat(remoteJidOrNumber)`).
+ *
+ * @example Passthrough de JIDs já canônicos
+ *   toJid('5511999999999@s.whatsapp.net') // → '5511999999999@s.whatsapp.net'
+ *   toJid('120363@g.us')                  // → '120363@g.us'
+ *   toJid('status@broadcast')             // → 'status@broadcast'
+ *   toJid('news123@newsletter')           // → 'news123@newsletter'
+ *
+ * @example Conversão de telefone → JID individual
+ *   toJid('5511999999999')                // → '5511999999999@s.whatsapp.net'
+ *   toJid('+55 (11) 99999-9999')          // → '5511999999999@s.whatsapp.net'
+ *   toJid('+1 415-555-0132')              // → '14155550132@s.whatsapp.net'
+ *
+ * @example Inputs inválidos / vazios
+ *   toJid(null)                           // → ''
+ *   toJid('')                             // → ''
+ *   toJid('   ')                          // → ''
+ *   toJid('abc')                          // → ''
+ *
+ * @see toJidStrict — retorna `null` se não der pra montar um JID válido
  */
 export function toJid(input: string | null | undefined): string {
   if (!input) return '';
@@ -97,6 +158,32 @@ export function toJid(input: string | null | undefined): string {
   return toIndividualJid(raw);
 }
 
+/**
+ * Detecta se um JID representa um grupo do WhatsApp (sufixo `@g.us`).
+ *
+ * Regra única e barata: termina em `@g.us`. Não tenta inferir grupo a partir
+ * do padrão legado `<participant>-<timestamp>` sem sufixo — para esses casos,
+ * normalize antes com `toGroupJid` ou trate explicitamente no caller
+ * (ver `ContactTypeFilter` para exemplo de fallback).
+ *
+ * Usado em todo lugar que precise separar conversas 1:1 de grupos:
+ * filtros do inbox, badges de contagem, roteamento de mensagens, etc.
+ *
+ * @example Detecção positiva
+ *   isGroup('120363021111111111-1700000001@g.us') // → true
+ *   isGroup('120363999999999999@g.us')            // → true
+ *
+ * @example Não-grupos
+ *   isGroup('5511999999999@s.whatsapp.net')       // → false
+ *   isGroup('status@broadcast')                   // → false
+ *   isGroup('5511999999999')                      // → false (sem sufixo)
+ *   isGroup('120363-1700@example.com')            // → false (sufixo errado)
+ *
+ * @example Falsy
+ *   isGroup(null)       // → false
+ *   isGroup(undefined)  // → false
+ *   isGroup('')         // → false
+ */
 export function isGroup(jid: string | null | undefined): boolean {
   return !!jid && jid.endsWith(GROUP_SUFFIX);
 }
@@ -105,6 +192,36 @@ export function isBroadcast(jid: string | null | undefined): boolean {
   return !!jid && jid.endsWith(BROADCAST_SUFFIX);
 }
 
+/**
+ * Detecta se um JID é EXATAMENTE o canal de Status do WhatsApp
+ * (`status@broadcast`).
+ *
+ * Diferença crucial vs `isBroadcast`:
+ *   - `isStatusBroadcast(jid)` → só `'status@broadcast'`
+ *   - `isBroadcast(jid)`       → qualquer `<id>@broadcast` (inclui Status
+ *      e listas de transmissão criadas pelo usuário)
+ *
+ * Pilar da defesa em três camadas contra Status do WhatsApp poluir a inbox
+ * (ver `mem://features/inbox/broadcast-defense.md`). Aplicar em:
+ *   1. Adapter de webhook (descartar evento)
+ *   2. Hook de realtime (filtrar contato)
+ *   3. Selector da lista (esconder card residual)
+ *
+ * @example Status oficial
+ *   isStatusBroadcast('status@broadcast') // → true
+ *
+ * @example Não é status (mesmo sendo broadcast)
+ *   isStatusBroadcast('5511900000000@broadcast') // → false (lista de transmissão)
+ *   isStatusBroadcast('120363@g.us')             // → false
+ *   isStatusBroadcast('5511@s.whatsapp.net')     // → false
+ *
+ * @example Falsy
+ *   isStatusBroadcast(null)      // → false
+ *   isStatusBroadcast(undefined) // → false
+ *   isStatusBroadcast('')        // → false
+ *
+ * @see isStatus — alias legado (mesmo comportamento)
+ */
 export function isStatus(jid: string | null | undefined): boolean {
   return jid === STATUS_JID;
 }
