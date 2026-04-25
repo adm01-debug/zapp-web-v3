@@ -182,9 +182,16 @@ describe('crossTabDedupe — multi-tab simulation', () => {
       ),
     );
 
+    // eslint-disable-next-line no-console
+    console.log('DEBUG tab module identity:', tabs.map((t, i) => `t${i}=${t.crossTabDedupe === tabs[0].crossTabDedupe}`));
+    // eslint-disable-next-line no-console
+    console.log('DEBUG localStorage before:', localStorage.getItem('zappweb:dedupe:' + KEY));
+
     const promises: Promise<unknown>[] = [];
     for (let i = 0; i < tabs.length; i++) {
       promises.push(tabs[i].crossTabDedupe(KEY, works[i], { ttlMs: 1_000 }));
+      // eslint-disable-next-line no-console
+      console.log(`DEBUG after tab ${i} start:`, localStorage.getItem('zappweb:dedupe:' + KEY));
       await tick(5); // stagger so localStorage claim is observable
     }
     await Promise.all(promises);
