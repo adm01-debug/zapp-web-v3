@@ -333,6 +333,8 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
         body: { instanceName: 'wpp2', number: '5511999', text: 'sem preview https://x.dev', linkPreview: false },
       });
     });
+
+    it('sendMediaMessage sends all media params', async () => {
       const { result } = renderHook(() => useEvolutionApi());
       const params = { instanceName: 'wpp2', number: '5511999', mediaUrl: 'https://img.jpg', mediaType: 'image' as const, caption: 'foto' };
       await act(async () => {
