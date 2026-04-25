@@ -318,7 +318,20 @@ serve(async (req) => {
     if (action === 'toggle-ephemeral') return await proxy(`/group/toggleEphemeral/${instance}`, 'POST', { groupJid: body.groupJid, expiration: body.expiration });
 
     // ─── 7. Profile ───
-    if (action === 'fetch-profile') return await proxy(`/profile/fetchProfile/${instance}`, 'GET');
+    if (action === 'fetch-profile') {
+      const response = await proxy(`/profile/fetchProfile/${instance}`, 'GET');
+      const data = await response.json();
+      if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // Normaliza: payload válido (objeto não-vazio) → objeto; ausente/vazio → null
+      // Aceita raiz como o próprio profile, ou dentro de { profile: {...} } / { data: {...} }.
+      const profile = (data && typeof data === 'object' && !Array.isArray(data))
+        ? (data.profile && typeof data.profile === 'object' ? data.profile
+          : data.data && typeof data.data === 'object' ? data.data
+          : Object.keys(data).filter(k => k !== 'version').length > 0 ? data
+          : null)
+        : null;
+      return new Response(JSON.stringify(profile), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     if (action === 'update-profile-name') return await proxy(`/profile/updateProfileName/${instance}`, 'PUT', { name: body.name });
     if (action === 'update-profile-status') return await proxy(`/profile/updateProfileStatus/${instance}`, 'PUT', { status: body.status });
     if (action === 'update-profile-picture') return await proxy(`/profile/updateProfilePicture/${instance}`, 'PUT', { picture: body.picture });
