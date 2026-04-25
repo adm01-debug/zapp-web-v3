@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { Logger, checkRateLimit, getClientIP, getCorsHeaders, handleCors } from "../_shared/validation.ts";
 import { EVOLUTION_ENVELOPE_VERSION, proxyToEvolution, resolvePrivateBucketUrl } from "../_shared/evolution-api-proxy.ts";
 import { normalizeChatList, normalizeContactList, normalizeProfile } from "../_shared/evolution-response-normalizers.ts";
+import { maybeLogFallback } from "../_shared/evolution-fallback-telemetry.ts";
 import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
 
 serve(async (req) => {
@@ -255,8 +256,13 @@ serve(async (req) => {
 
     // ─── 5. Chat ───
     if (action === 'find-chats') {
-      const response = await proxy(`/chat/findChats/${instance}`, 'POST', { where: body.where || {} });
+      const t0 = Date.now();
+      const endpoint = `/chat/findChats/${instance}`;
+      const response = await proxy(endpoint, 'POST', { where: body.where || {} });
       const data = await response.json();
+      // Hook telemetria: detecta condição de fallback (404/not_found). Ainda
+      // sem fallback funcional — apenas registra `mode: 'detected'`.
+      maybeLogFallback({ action: 'find-chats', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0 });
       if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       // Padroniza retorno em array (primário e fallback). Ver _shared/evolution-response-normalizers.ts
       return new Response(JSON.stringify(normalizeChatList(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -272,8 +278,11 @@ serve(async (req) => {
     }
 
     if (action === 'find-contacts') {
-      const response = await proxy(`/chat/findContacts/${instance}`, 'POST', { where: body.where || {} });
+      const t0 = Date.now();
+      const endpoint = `/chat/findContacts/${instance}`;
+      const response = await proxy(endpoint, 'POST', { where: body.where || {} });
       const data = await response.json();
+      maybeLogFallback({ action: 'find-contacts', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0 });
       if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       // Padroniza retorno em array (primário e fallback). Ver _shared/evolution-response-normalizers.ts
       return new Response(JSON.stringify(normalizeContactList(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -302,8 +311,11 @@ serve(async (req) => {
 
     // ─── 7. Profile ───
     if (action === 'fetch-profile') {
-      const response = await proxy(`/profile/fetchProfile/${instance}`, 'GET');
+      const t0 = Date.now();
+      const endpoint = `/profile/fetchProfile/${instance}`;
+      const response = await proxy(endpoint, 'GET');
       const data = await response.json();
+      maybeLogFallback({ action: 'fetch-profile', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0 });
       if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       // Padroniza retorno: objeto válido ou null (primário e fallback). Ver _shared/evolution-response-normalizers.ts
       return new Response(JSON.stringify(normalizeProfile(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
