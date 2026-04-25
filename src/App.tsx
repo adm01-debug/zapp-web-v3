@@ -72,6 +72,7 @@ const SendStatusBusDebug = lazyWithRetry(() => import("./pages/SendStatusBusDebu
 const RealtimeFanoutDebug = lazyWithRetry(() => import("./pages/RealtimeFanoutDebug"));
 const RolesPage = lazyWithRetry(() => import("./pages/admin/RolesPage"));
 const RateLimitDashboard = lazyWithRetry(() => import("./pages/admin/RateLimitDashboard"));
+const HmacSelfTestPage = lazyWithRetry(() => import("./pages/admin/HmacSelfTestPage"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("./pages/ChatPopup"));
 
@@ -179,6 +180,7 @@ function AppContent() {
             <Route path="/debug/realtime-fanout" element={<ProtectedRoute><RealtimeFanoutDebug /></ProtectedRoute>} />
             <Route path="/admin/roles" element={<ProtectedRoute requiredRoles={['admin']}><RolesPage /></ProtectedRoute>} />
             <Route path="/admin/rate-limit" element={<ProtectedRoute requiredRoles={['admin']}><RateLimitDashboard /></ProtectedRoute>} />
+            <Route path="/admin/hmac-selftest" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><HmacSelfTestPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
