@@ -77,6 +77,30 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     log.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({ errorInfo });
+
+    // Always emit a telemetry event so the panel surfaces UI render
+    // failures alongside slow/timed-out external queries. This keeps the
+    // "why did the screen blank?" answer in one place.
+    try {
+      const { isQueryFailure, severity, target } = classifyRenderFailure(error);
+      recordQueryEvent({
+        operation: 'select',
+        source: isQueryFailure ? 'externalProxy' : 'lovableCloud',
+        target,
+        durationMs: 0,
+        limit: null,
+        offset: null,
+        filters: null,
+        recordCount: null,
+        errorMessage: `[ErrorBoundary] ${error.message}`,
+        severity,
+        startedAt: performance.now(),
+        correlationId: extractCorrelationId(error),
+      });
+    } catch {
+      // Telemetry must never crash the boundary itself.
+    }
+
     this.props.onError?.(error, errorInfo);
   }
 
