@@ -222,7 +222,7 @@ export function useExternalMessages(remoteJid: string | null) {
       const newOnes = await dedupedFetch(
         inboxPollKey({ jid: remoteJid, afterDate }),
         () => fetchMessagesAfter(remoteJid, afterDate),
-        { lockTtl: 4_000, resultTtl: POLL_INTERVAL - 1_000, waitTimeout: 3_000 },
+        getPollDedupeOptions(),
       );
       if (!mountedRef.current || newOnes.length === 0) return;
 
