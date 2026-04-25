@@ -15,10 +15,13 @@ import { Bell, RotateCcw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   DEFAULT_THRESHOLDS,
+  DEFAULT_RETRY_DEDUPE_MODE,
   resolveThresholds,
   saveThresholds,
   savePerInstanceThresholds,
+  saveRetryAlertDedupeMode,
   type PerInstanceThresholds,
+  type RetryAlertDedupeMode,
   type RetryThresholds,
 } from '@/lib/retryAlerts';
 
@@ -27,6 +30,9 @@ interface RetryAlertsConfigProps {
   onChange: (t: RetryThresholds) => void;
   perInstance?: PerInstanceThresholds;
   onPerInstanceChange?: (next: PerInstanceThresholds) => void;
+  /** Granularidade do dedupe de toasts. Default: 'instance+kind'. */
+  dedupeMode?: RetryAlertDedupeMode;
+  onDedupeModeChange?: (next: RetryAlertDedupeMode) => void;
   /** Instances detected in the current dataset — surfaced first in the picker. */
   knownInstances?: string[];
   hasBreaches?: boolean;
