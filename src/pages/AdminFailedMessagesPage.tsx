@@ -375,7 +375,7 @@ export default function AdminFailedMessagesPage() {
               onValueChange={(v) => setHours(Number(v))}
               disabled={useCustomRange}
             >
-              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[140px]" data-testid="filter-failed-hours"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">Última hora</SelectItem>
                 <SelectItem value="6">Últimas 6h</SelectItem>
@@ -391,6 +391,7 @@ export default function AdminFailedMessagesPage() {
               value={customFrom}
               onChange={(e) => setCustomFrom(e.target.value)}
               className="w-[200px]"
+              data-testid="filter-failed-from"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -400,6 +401,7 @@ export default function AdminFailedMessagesPage() {
               value={customTo}
               onChange={(e) => setCustomTo(e.target.value)}
               className="w-[200px]"
+              data-testid="filter-failed-to"
             />
           </div>
           {(customFrom || customTo) && (
@@ -408,6 +410,7 @@ export default function AdminFailedMessagesPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => { setCustomFrom(''); setCustomTo(''); }}
+                data-testid="filter-failed-clear-dates"
               >
                 Limpar datas
               </Button>
