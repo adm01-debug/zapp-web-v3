@@ -301,7 +301,38 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
       });
     });
 
-    it('sendMediaMessage sends all media params', async () => {
+    it('sendTextMessage propaga linkPreview, mentionsEveryOne e mentioned', async () => {
+      const { result } = renderHook(() => useEvolutionApi());
+      await act(async () => {
+        await result.current.sendTextMessage('wpp2', '120363@g.us', 'Atenção @everyone https://lovable.dev', {
+          linkPreview: true,
+          mentionsEveryOne: true,
+          mentioned: ['5511999@s.whatsapp.net'],
+        });
+      });
+      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/send-text', {
+        method: 'POST',
+        body: {
+          instanceName: 'wpp2',
+          number: '120363@g.us',
+          text: 'Atenção @everyone https://lovable.dev',
+          linkPreview: true,
+          mentionsEveryOne: true,
+          mentioned: ['5511999@s.whatsapp.net'],
+        },
+      });
+    });
+
+    it('sendTextMessage permite desativar linkPreview explicitamente', async () => {
+      const { result } = renderHook(() => useEvolutionApi());
+      await act(async () => {
+        await result.current.sendTextMessage('wpp2', '5511999', 'sem preview https://x.dev', { linkPreview: false });
+      });
+      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/send-text', {
+        method: 'POST',
+        body: { instanceName: 'wpp2', number: '5511999', text: 'sem preview https://x.dev', linkPreview: false },
+      });
+    });
       const { result } = renderHook(() => useEvolutionApi());
       const params = { instanceName: 'wpp2', number: '5511999', mediaUrl: 'https://img.jpg', mediaType: 'image' as const, caption: 'foto' };
       await act(async () => {
