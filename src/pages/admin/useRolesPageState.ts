@@ -80,9 +80,9 @@ export function useRolesPageState() {
     ), [users, search]);
 
   const groupedUsers = useMemo(() => ({
+    dev: filteredUsers.filter(u => u.role === 'dev'),
     admin: filteredUsers.filter(u => u.role === 'admin'),
     supervisor: filteredUsers.filter(u => u.role === 'supervisor'),
-    special_agent: filteredUsers.filter(u => u.role === 'special_agent'),
     agent: filteredUsers.filter(u => u.role === 'agent'),
   }), [filteredUsers]);
 
