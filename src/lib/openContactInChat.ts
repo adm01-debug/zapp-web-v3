@@ -2,25 +2,28 @@
  * openContactInChat — utilitário centralizado para abrir o Inbox em um
  * contato específico e (opcionalmente) destacar uma mensagem.
  *
- * Usa o mesmo handshake já existente em `useContactsCRUD.openContactChat`:
+ * O Inbox identifica contatos pelo `id` interno (UUID em `contacts.id`).
+ * Quando o caller só tem `remoteJid` (ex: AdminFailedMessages, busca
+ * global) ou apenas o telefone, este helper faz o lookup contra a
+ * tabela `contacts` antes de disparar o handshake.
+ *
+ * Handshake (compatível com `useContactsCRUD.openContactChat`):
  *  - `window.__pendingOpenContactId` cobre o "primeiro paint" do Inbox
- *    (caso o usuário ainda não tenha o módulo carregado).
- *  - Eventos `open-contact-chat` cobrem o caso "Inbox já montado".
- *
- * Adiciona dois campos opcionais:
- *  - `messageId` — id interno (`evolution_messages.id`) ou
- *    `external_id`/`message_id` que o `ChatPanel` deverá scrollar e
- *    destacar (ring temporário) assim que carregar a conversa.
- *  - `phone`     — quando o chamador só conhece o número, o handler
- *    do Inbox usará como fallback para resolver o contactId.
- *
- * Disparos repetidos por ~3 s garantem que a mensagem chegue mesmo se a
- * `RealtimeInboxView` ainda estiver carregando lazy.
+ *    (módulo lazy ainda não carregado).
+ *  - `window.__pendingOpenChatTarget` carrega `messageId` opcional.
+ *  - Eventos `open-contact-chat` repetidos por ~3 s cobrem o caso
+ *    "Inbox já montado / hash trocado".
  */
+import { supabase } from '@/integrations/supabase/client';
+
 export interface OpenContactInChatOptions {
+  /** UUID interno (`contacts.id`). Quando presente, evita o lookup. */
   contactId?: string;
+  /** JID Whatsapp completo (ex: `5511999999999@s.whatsapp.net`). */
   remoteJid?: string;
+  /** Telefone normalizado (somente dígitos). */
   phone?: string;
+  /** ID interno (`messages.id`) ou `external_id` para destacar. */
   messageId?: string;
 }
 
@@ -38,18 +41,41 @@ declare global {
   }
 }
 
-export function openContactInChat(opts: OpenContactInChatOptions): void {
-  if (typeof window === 'undefined') return;
+/** Extrai dígitos de um JID `<number>@s.whatsapp.net` (ou variantes). */
+export function jidToPhone(jid: string | null | undefined): string | null {
+  if (!jid) return null;
+  const at = jid.indexOf('@');
+  const raw = at === -1 ? jid : jid.slice(0, at);
+  const digits = raw.replace(/\D/g, '');
+  return digits || null;
+}
+
+async function resolveContactId(opts: OpenContactInChatOptions): Promise<string | null> {
+  if (opts.contactId) return opts.contactId;
+  const phone = opts.phone ?? jidToPhone(opts.remoteJid);
+  if (!phone) return null;
+  const { data } = await supabase
+    .from('contacts')
+    .select('id')
+    .eq('phone', phone)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
+export async function openContactInChat(opts: OpenContactInChatOptions): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+
+  const contactId = await resolveContactId(opts);
+  if (!contactId) return false;
 
   const target: PendingChatTarget = {
-    contactId: opts.contactId,
+    contactId,
     remoteJid: opts.remoteJid,
-    phone: opts.phone,
+    phone: opts.phone ?? jidToPhone(opts.remoteJid) ?? undefined,
     messageId: opts.messageId,
   };
 
-  // Backwards-compat: o handshake antigo só conhece contactId.
-  if (opts.contactId) window.__pendingOpenContactId = opts.contactId;
+  window.__pendingOpenContactId = contactId;
   window.__pendingOpenChatTarget = target;
 
   if (window.location.hash !== '#inbox') {
@@ -63,10 +89,12 @@ export function openContactInChat(opts: OpenContactInChatOptions): void {
     attempts++;
     window.dispatchEvent(
       new CustomEvent('open-contact-chat', {
-        detail: { ...target, contactId: target.contactId },
+        detail: { contactId, messageId: target.messageId },
       }),
     );
     if (attempts < 15) setTimeout(tryDispatch, 200);
   };
   setTimeout(tryDispatch, 150);
+
+  return true;
 }
