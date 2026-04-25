@@ -176,6 +176,12 @@ export function useExternalMessages(remoteJid: string | null) {
         loadOlderAbortRef.current.abort();
         loadOlderAbortRef.current = null;
       }
+      // Garantia extra: se o effect de subscribe não tiver feito cleanup
+      // (componente sumindo durante render concorrente), limpamos aqui.
+      if (dedupeUnsubRef.current) {
+        try { dedupeUnsubRef.current(); } catch { /* noop */ }
+        dedupeUnsubRef.current = null;
+      }
     };
   }, []);
 
