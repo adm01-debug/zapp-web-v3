@@ -112,7 +112,20 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const [searchQuery, setSearchQuery] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   // Filtro: somente mensagens com falha terminal (failed/failed_auth/failed_retries).
-  const [failuresOnly, setFailuresOnly] = useState(false);
+  // Persistido em ?failuresOnly=1 para tornar o estado compartilhável via URL
+  // e sobreviver a recarregamento/back-forward navigation.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const failuresOnly = searchParams.get('failuresOnly') === '1';
+  const setFailuresOnly = useCallback((next: boolean | ((prev: boolean) => boolean)) => {
+    setSearchParams((prev) => {
+      const sp = new URLSearchParams(prev);
+      const current = sp.get('failuresOnly') === '1';
+      const value = typeof next === 'function' ? next(current) : next;
+      if (value) sp.set('failuresOnly', '1');
+      else sp.delete('failuresOnly');
+      return sp;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const fileUploaderRef = useRef<FileUploaderRef>(null);
   const messagesAreaRef = useRef<ChatMessagesAreaRef>(null);
