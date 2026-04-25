@@ -45,6 +45,8 @@ interface BroadcastMessage<T = unknown> {
   data?: T;
   error?: string;
   ts: number;
+  /** TTL do resultado (ms) — para que abas receptoras respeitem o mesmo prazo. */
+  resultTtl?: number;
 }
 
 const TAB_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
