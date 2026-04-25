@@ -173,9 +173,11 @@ export function ConnectionsView() {
               </>
             )}
             {(qrCodeDialog.status === 'pending' || qrCodeDialog.status === 'error') && (
-              <Button variant="outline" onClick={handleRefreshQrCode} disabled={evolutionLoading}>
+              <Button variant="outline" onClick={handleRefreshQrCode} disabled={evolutionLoading || isRefreshDebounced}>
                 {evolutionLoading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Gerando…</>
+                ) : isRefreshDebounced ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Aguarde…</>
                 ) : (
                   <><RefreshCw className="w-4 h-4 mr-2" />{qrCodeDialog.status === 'pending' ? 'Gerar novo QR' : 'Gerar novo código'}</>
                 )}
