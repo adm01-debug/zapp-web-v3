@@ -40,7 +40,7 @@ interface LockPayload {
 }
 
 interface BroadcastMessage<T = unknown> {
-  type: 'result' | 'error' | 'release';
+  type: 'result' | 'error' | 'release' | 'start';
   key: string;
   ownerId: string;
   data?: T;
@@ -48,6 +48,8 @@ interface BroadcastMessage<T = unknown> {
   ts: number;
   /** TTL do resultado (ms) — para que abas receptoras respeitem o mesmo prazo. */
   resultTtl?: number;
+  /** TTL esperado do lock (ms) — usado em `start` para sweep automático se a líder sumir. */
+  lockTtl?: number;
 }
 
 const TAB_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -56,6 +58,17 @@ const TAB_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,
 const resultCache = new Map<string, { value: unknown; expiresAt: number }>();
 const inflight = new Map<string, Promise<unknown>>();
 const waiters = new Map<string, Array<(v: { ok: true; data: unknown } | { ok: false; error: string }) => void>>();
+
+// ─── Status (loading) por chave — sinaliza fetch em andamento, local ou remoto.
+// Mantemos por key qual aba está liderando para que abas espectadoras possam
+// exibir spinner consistente sem disparar fetch próprio.
+interface InflightStatusEntry {
+  ownerId: string;
+  startedAt: number;
+  /** Vence se a líder não fechar dentro do `lockTtl + grace` — protege contra crash. */
+  expiresAt: number;
+}
+const inflightStatus = new Map<string, InflightStatusEntry>();
 
 // Subscribers: handlers da UI interessados em receber resultados que chegam
 // via BroadcastChannel (de outras abas). Chave é uma string ou regex.
@@ -66,6 +79,23 @@ interface Subscription {
 }
 const subscribers = new Set<Subscription>();
 
+// Status subscribers: notificados em transições start/end por chave.
+export type DedupeStatusPhase = 'start' | 'end';
+export interface DedupeStatusEvent {
+  key: string;
+  phase: DedupeStatusPhase;
+  source: 'remote' | 'local';
+  ownerId: string;
+  /** Em `end`: 'result' | 'error' | 'release'. Em `start`: undefined. */
+  endReason?: 'result' | 'error' | 'release';
+}
+type StatusSubscriberFn = (e: DedupeStatusEvent) => void;
+interface StatusSubscription {
+  match: (key: string) => boolean;
+  handler: StatusSubscriberFn;
+}
+const statusSubscribers = new Set<StatusSubscription>();
+
 function notifySubscribers(key: string, data: unknown, source: 'remote' | 'local') {
   subscribers.forEach((sub) => {
     if (!sub.match(key)) return;
@@ -75,6 +105,37 @@ function notifySubscribers(key: string, data: unknown, source: 'remote' | 'local
       log.error('Subscriber handler threw', { key, err });
     }
   });
+}
+
+function notifyStatus(event: DedupeStatusEvent) {
+  statusSubscribers.forEach((sub) => {
+    if (!sub.match(event.key)) return;
+    try {
+      sub.handler(event);
+    } catch (err) {
+      log.error('Status subscriber threw', { key: event.key, err });
+    }
+  });
+}
+
+function markStart(key: string, ownerId: string, lockTtl: number, source: 'remote' | 'local') {
+  const now = Date.now();
+  const grace = 2_000;
+  const prev = inflightStatus.get(key);
+  // Se já está marcado pela mesma aba dona, só atualiza o expiresAt.
+  inflightStatus.set(key, { ownerId, startedAt: prev?.startedAt ?? now, expiresAt: now + lockTtl + grace });
+  if (!prev || prev.ownerId !== ownerId) {
+    notifyStatus({ key, phase: 'start', source, ownerId });
+  }
+}
+
+function markEnd(key: string, ownerId: string, source: 'remote' | 'local', endReason: 'result' | 'error' | 'release') {
+  const cur = inflightStatus.get(key);
+  // Só remove se for do mesmo dono — evita race de `release` antigo limpar uma nova líder.
+  if (cur && cur.ownerId !== ownerId) return;
+  if (!cur) return;
+  inflightStatus.delete(key);
+  notifyStatus({ key, phase: 'end', source, ownerId, endReason });
 }
 
 let bc: BroadcastChannel | null = null;
@@ -92,6 +153,10 @@ function getBroadcastChannel(): BroadcastChannel | null {
 
 function onBroadcast(msg: BroadcastMessage) {
   if (!msg || msg.ownerId === TAB_ID) return; // ignora eco da própria aba
+  if (msg.type === 'start') {
+    markStart(msg.key, msg.ownerId, msg.lockTtl ?? DEFAULT_LOCK_TTL, 'remote');
+    return;
+  }
   if (msg.type === 'result') {
     const ttl = msg.resultTtl ?? DEFAULT_RESULT_TTL;
     resultCache.set(msg.key, { value: msg.data, expiresAt: Date.now() + ttl });
@@ -103,12 +168,14 @@ function onBroadcast(msg: BroadcastMessage) {
     }
     // Notifica UI subscribers para que atualizem sem refazer fetch.
     notifySubscribers(msg.key, msg.data, 'remote');
+    markEnd(msg.key, msg.ownerId, 'remote', 'result');
   } else if (msg.type === 'error') {
     const ws = waiters.get(msg.key);
     if (ws) {
       ws.forEach((w) => w({ ok: false, error: msg.error || 'remote error' }));
       waiters.delete(msg.key);
     }
+    markEnd(msg.key, msg.ownerId, 'remote', 'error');
   } else if (msg.type === 'release') {
     // Lock liberado sem resultado — quem espera pode tentar adquirir.
     const ws = waiters.get(msg.key);
@@ -116,6 +183,7 @@ function onBroadcast(msg: BroadcastMessage) {
       ws.forEach((w) => w({ ok: false, error: 'released' }));
       waiters.delete(msg.key);
     }
+    markEnd(msg.key, msg.ownerId, 'remote', 'release');
   }
 }
 
@@ -388,6 +456,9 @@ export async function dedupedFetch<T>(
   // 4. Líder: executa fetcher (com retry+backoff), cacheia, broadcasta, libera lock.
   const isFallback = !acquired;
   const lockTtlForRetry = lockTtl;
+  // Sinaliza início do fetch para abas espectadoras (loading sync).
+  markStart(key, TAB_ID, lockTtl, 'local');
+  broadcast({ type: 'start', key, ownerId: TAB_ID, ts: Date.now(), lockTtl });
   const exec = (async () => {
     try {
       const data = await execWithBackoff<T>(
@@ -402,12 +473,16 @@ export async function dedupedFetch<T>(
           // Reaquire o lock imediatamente para reafirmar liderança no próximo attempt.
           // Se outra aba já pegou o lock nesse meio tempo, tudo bem — ela assume.
           writeLock(key, lockTtlForRetry);
+          // Reanuncia start para ressincronizar status remoto pós-release.
+          markStart(key, TAB_ID, lockTtlForRetry, 'local');
+          broadcast({ type: 'start', key, ownerId: TAB_ID, ts: Date.now(), lockTtl: lockTtlForRetry });
         },
       );
       resultCache.set(key, { value: data, expiresAt: Date.now() + resultTtl });
       writePersistedResult(key, data, resultTtl);
       broadcast<T>({ type: 'result', key, ownerId: TAB_ID, data, ts: Date.now(), resultTtl });
       notifySubscribers(key, data, 'local');
+      markEnd(key, TAB_ID, 'local', 'result');
       recordDedupeEvent({
         key,
         reason: isFallback ? 'fallback_after_wait' : 'lock_acquired_lead',
@@ -417,6 +492,7 @@ export async function dedupedFetch<T>(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       broadcast({ type: 'error', key, ownerId: TAB_ID, error: message, ts: Date.now() });
+      markEnd(key, TAB_ID, 'local', 'error');
       recordDedupeEvent({
         key,
         reason: isFallback ? 'fallback_after_wait' : 'lock_acquired_lead',
@@ -427,6 +503,9 @@ export async function dedupedFetch<T>(
     } finally {
       releaseLock(key);
       broadcast({ type: 'release', key, ownerId: TAB_ID, ts: Date.now() });
+      // markEnd já executou via result/error; release final é idempotente
+      // (markEnd checa ownerId e ignora se já foi removido).
+      markEnd(key, TAB_ID, 'local', 'release');
       inflight.delete(key);
     }
   })();
@@ -464,6 +543,8 @@ export function clearCrossTabDedupe(): void {
   inflight.clear();
   waiters.clear();
   subscribers.clear();
+  inflightStatus.clear();
+  statusSubscribers.clear();
   if (typeof localStorage !== 'undefined') {
     try {
       const keys: string[] = [];
@@ -630,6 +711,66 @@ export function subscribeDedupe<T = unknown>(
   return () => {
     subscribers.delete(sub);
   };
+}
+
+/**
+ * Subscreve-se ao **status** (start/end) de fetches dedupedFetch — local ou remoto.
+ *
+ * Útil para sincronizar spinners entre abas: quando outra aba inicia o fetch
+ * de uma chave que esta aba também observa, recebemos `phase: 'start'` e
+ * podemos mostrar loading sem disparar request próprio. Quando termina,
+ * recebemos `phase: 'end'` (com endReason) para esconder o spinner.
+ *
+ * Eventos start/end também são emitidos para o fetch local desta aba — o
+ * handler decide se quer ignorar via `event.source === 'local'`.
+ */
+export function subscribeDedupeStatus(
+  keyMatcher: string | RegExp,
+  handler: (event: DedupeStatusEvent) => void,
+): () => void {
+  const match = typeof keyMatcher === 'string'
+    ? (k: string) => k === keyMatcher || k.startsWith(keyMatcher)
+    : (k: string) => keyMatcher.test(k);
+  const sub: StatusSubscription = { match, handler };
+  statusSubscribers.add(sub);
+  getBroadcastChannel();
+  return () => {
+    statusSubscribers.delete(sub);
+  };
+}
+
+/**
+ * Snapshot read-only das chaves com fetch em andamento (local ou remoto),
+ * filtradas opcionalmente por matcher. Útil para inicializar spinners ao
+ * montar componentes que entraram depois do `start` ter sido emitido.
+ */
+export function getInflightStatusKeys(matcher?: string | RegExp): Array<{
+  key: string;
+  ownerId: string;
+  startedAt: number;
+  isOwnedByThisTab: boolean;
+}> {
+  const now = Date.now();
+  const match = !matcher
+    ? () => true
+    : typeof matcher === 'string'
+      ? (k: string) => k === matcher || k.startsWith(matcher)
+      : (k: string) => matcher.test(k);
+  const out: Array<{ key: string; ownerId: string; startedAt: number; isOwnedByThisTab: boolean }> = [];
+  for (const [key, entry] of inflightStatus) {
+    if (entry.expiresAt < now) {
+      inflightStatus.delete(key);
+      continue;
+    }
+    if (!match(key)) continue;
+    out.push({
+      key,
+      ownerId: entry.ownerId,
+      startedAt: entry.startedAt,
+      isOwnedByThisTab: entry.ownerId === TAB_ID,
+    });
+  }
+  return out;
 }
 
 /** @internal — para testes. */
