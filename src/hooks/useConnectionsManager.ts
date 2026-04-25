@@ -468,9 +468,16 @@ export function useConnectionsManager() {
   const refreshInFlightRef = useRef(false);
 
   const handleRefreshQrCode = async () => {
-    if (refreshInFlightRef.current) return;
+    if (refreshInFlightRef.current) {
+      log.info('[qr-auto-refresh] blocked', { reason: 'in_flight' });
+      return;
+    }
     const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
-    if (!connection?.instance_id) return;
+    if (!connection?.instance_id) {
+      log.info('[qr-auto-refresh] blocked', { reason: 'no_instance', connectionId: qrCodeDialog.connectionId });
+      return;
+    }
+    log.info('[qr-auto-refresh] started', { connectionId: connection.id, instance: connection.instance_id });
     refreshInFlightRef.current = true;
     // Snapshot da geração: se o usuário fechar o diálogo durante o request,
     // dialogGenRef.current avança e nós abortamos no callback.
