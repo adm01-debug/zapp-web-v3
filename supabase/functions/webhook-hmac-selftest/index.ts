@@ -357,7 +357,8 @@ Deno.serve(async (req) => {
     : DEFAULT_TOLERANCE_SECONDS;
   const includeNegative = body?.include_negative !== false;
 
-  const validate = createWebhookValidator(secret, false);
+  // Resolve em runtime — sobrevive a renomes/refactors no shared module.
+  const validate = resolveValidator(secret, false);
   const seenNonces = new Set<string>();
   const now = Date.now();
 
