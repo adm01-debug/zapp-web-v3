@@ -208,7 +208,17 @@ serve(async (req) => {
     if (action === 'get-webhook') return await proxy(`/webhook/find/${instance}`, 'GET');
 
     // ─── 4. Messaging ───
-    if (action === 'send-text') return await proxy(`/message/sendText/${instance}`, 'POST', { number: body.number, text: body.text, delay: body.delay, quoted: body.quoted, mentionsEveryOne: body.mentionsEveryOne, mentioned: body.mentioned });
+    if (action === 'send-text') {
+      // Blueprint Evolution v2 `/message/sendText/{instance}` — propaga opções avançadas.
+      // `linkPreview` controla geração do rich preview (default true no servidor).
+      const sendTextPayload: Record<string, unknown> = { number: body.number, text: body.text };
+      if (body.delay !== undefined) sendTextPayload.delay = body.delay;
+      if (body.quoted !== undefined) sendTextPayload.quoted = body.quoted;
+      if (body.mentionsEveryOne !== undefined) sendTextPayload.mentionsEveryOne = body.mentionsEveryOne;
+      if (body.mentioned !== undefined) sendTextPayload.mentioned = body.mentioned;
+      if (body.linkPreview !== undefined) sendTextPayload.linkPreview = body.linkPreview;
+      return await proxy(`/message/sendText/${instance}`, 'POST', sendTextPayload);
+    }
     if (action === 'send-media') return await proxy(`/message/sendMedia/${instance}`, 'POST', { number: body.number, mediatype: body.mediaType || body.mediatype, mimetype: body.mimetype, caption: body.caption, media: body.mediaUrl || body.media, fileName: body.fileName, delay: body.delay });
 
     if (action === 'send-audio') {
