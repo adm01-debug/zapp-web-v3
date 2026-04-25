@@ -2,7 +2,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-correlation-id',
+}
+
+const CORRELATION_HEADER = 'x-correlation-id'
+
+function shortRid(): string {
+  try {
+    return crypto.randomUUID().slice(0, 8)
+  } catch {
+    return Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0')
+  }
 }
 
 // Tables that are large enough that an unfiltered scan reliably hits statement timeout.
