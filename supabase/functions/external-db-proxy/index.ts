@@ -108,6 +108,67 @@ export function classifyUpstreamError(message: string | undefined, timeoutFired:
   return { status: 400, pgTimeout: false }
 }
 
+// ---------- Metrics persistence (fire-and-forget) ----------
+// Writes to the Lovable Cloud `proxy_metrics` table so the proxy-health
+// endpoint can compute error rates, p95 latency and trigger alerts.
+// We use the SERVICE_ROLE key (which bypasses RLS) and never await the
+// write — failures here must NEVER affect the user's response.
+let metricsClient: ReturnType<typeof createClient> | null = null
+function getMetricsClient() {
+  if (metricsClient) return metricsClient
+  const url = Deno.env.get('SUPABASE_URL')
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (!url || !key) return null
+  metricsClient = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+  return metricsClient
+}
+
+interface MetricSample {
+  cid: string
+  rid: string
+  op: string
+  target: string
+  status: number
+  ms: number
+  ok: boolean
+  timeout_fired?: boolean
+  pg_timeout?: boolean
+  err_code?: string | null
+  err_msg?: string | null
+}
+
+function recordMetric(sample: MetricSample) {
+  const client = getMetricsClient()
+  if (!client) return
+  // Truncate long error messages to keep the table small
+  const errMsg = sample.err_msg ? sample.err_msg.slice(0, 500) : null
+  // Fire and forget — explicitly NOT awaited. Catch the rejection so the
+  // worker doesn't log an unhandled promise warning.
+  Promise.resolve(
+    client.from('proxy_metrics').insert({
+      cid: sample.cid,
+      rid: sample.rid,
+      op: sample.op,
+      target: sample.target,
+      status: sample.status,
+      ms: sample.ms,
+      ok: sample.ok,
+      timeout_fired: sample.timeout_fired ?? false,
+      pg_timeout: sample.pg_timeout ?? false,
+      err_code: sample.err_code ?? null,
+      err_msg: errMsg,
+    })
+  ).then((res) => {
+    if (res?.error) {
+      logEvent({ phase: 'metric_error', err: res.error.message })
+    }
+  }).catch((e: unknown) => {
+    logEvent({ phase: 'metric_error', err: (e as Error)?.message })
+  })
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -144,7 +205,25 @@ Deno.serve(async (req) => {
       total_ms: total,
       ...extra,
     })
-    // Attach Server-Timing so the browser dev tools surface upstream cost too.
+    // Persist a metric sample for /proxy-health to compute error rate + p95.
+    // Skip CORS pre-flights, config errors and bad-request validations that
+    // never reached upstream — they would skew the rate.
+    const skipMetrics = action === 'config_error' || action === 'bad_request' ||
+      (extra && (extra.reason === 'missing_table' || extra.reason === 'heavy_no_filter'))
+    if (!skipMetrics) {
+      const target = (extra?.table as string) || (extra?.rpc as string) || action
+      recordMetric({
+        cid,
+        rid,
+        op: action,
+        target,
+        status: resp.status,
+        ms: total,
+        ok: resp.status >= 200 && resp.status < 400,
+        timeout_fired: !!extra?.timeout_fired,
+        pg_timeout: !!extra?.pg_timeout,
+      })
+    }
     try {
       resp.headers.set('Server-Timing', `proxy;dur=${total}`)
     } catch { /* immutable headers in some runtimes */ }
