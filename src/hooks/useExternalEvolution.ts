@@ -159,6 +159,13 @@ export function useExternalMessages(remoteJid: string | null) {
   const previousJidRef = useRef<string | null>(null);
   const lastSeenRef = useRef<string | null>(null);
   const loadOlderAbortRef = useRef<AbortController | null>(null);
+  // Jid "ativo" — atualizado SÍNCRONAMENTE quando o prop muda (ver effect abaixo).
+  // Usado por callbacks assíncronos (fetch + broadcast) para abortar writes
+  // que pertencem a um jid que já não está mais selecionado.
+  const activeJidRef = useRef<string | null>(remoteJid);
+  // Sub atual do crossTabDedupe — guardamos para garantir desinscrição
+  // imediata e idempotente caso algo dispare re-subscribe sem esperar o cleanup.
+  const dedupeUnsubRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
