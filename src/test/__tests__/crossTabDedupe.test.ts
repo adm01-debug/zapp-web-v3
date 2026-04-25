@@ -3,6 +3,8 @@ import {
   dedupedFetch,
   clearCrossTabDedupe,
   gcExpiredKeys,
+  subscribeDedupe,
+  __notifyLocal,
 } from '@/lib/realtime/crossTabDedupe';
 
 /**
