@@ -261,26 +261,88 @@ export function MessageBubble({
                     Verifique a conexão WhatsApp
                   </Link>
                 ) : (
-                  <button
-                    onClick={async () => {
-                      if (!message.conversationId || !message.content) return;
-                      try {
-                        await sendMessageToContact(
-                          message.conversationId,
-                          message.content,
-                          message.type === 'text' ? 'text' : message.type,
-                          message.mediaUrl,
-                        );
-                        toast({ title: 'Reenviando mensagem…' });
-                      } catch (err) {
-                        toast({ title: 'Falha ao reenviar', variant: 'destructive' });
-                      }
-                    }}
-                    className="inline-flex items-center gap-1 text-[11px] font-medium text-destructive hover:underline"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    Reenviar
-                  </button>
+                  <div className="inline-flex items-stretch rounded-md border border-destructive/40 overflow-hidden">
+                    <button
+                      onClick={async () => {
+                        if (!message.conversationId || !message.content) return;
+                        try {
+                          await sendMessageToContact(
+                            message.conversationId,
+                            message.content,
+                            message.type === 'text' ? 'text' : message.type,
+                            message.mediaUrl,
+                          );
+                          toast({ title: 'Reenviando mensagem…', description: 'Mesmas configurações + retries automáticos.' });
+                        } catch (err) {
+                          toast({ title: 'Falha ao reenviar', variant: 'destructive' });
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-medium text-destructive hover:bg-destructive/10 px-2 py-0.5"
+                      title="Reenviar com as mesmas configurações (cria nova tentativa com retries)"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Reenviar
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="inline-flex items-center text-destructive hover:bg-destructive/10 px-1 border-l border-destructive/40"
+                          aria-label="Mais opções de reenvio"
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-72">
+                        <DropdownMenuLabel className="text-xs">Como reenviar?</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            if (!message.conversationId || !message.content) return;
+                            try {
+                              await sendMessageToContact(
+                                message.conversationId,
+                                message.content,
+                                message.type === 'text' ? 'text' : message.type,
+                                message.mediaUrl,
+                              );
+                              toast({ title: 'Reenviando mensagem…', description: 'Nova tentativa com retries automáticos (até 3).' });
+                            } catch {
+                              toast({ title: 'Falha ao reenviar', variant: 'destructive' });
+                            }
+                          }}
+                          className="flex flex-col items-start gap-0.5"
+                        >
+                          <span className="flex items-center gap-1.5 text-xs font-medium">
+                            <Repeat className="w-3 h-3" />
+                            Reenviar com mesmas configurações
+                          </span>
+                          <span className="text-[10px] text-muted-foreground pl-5">
+                            Roda o pipeline completo + retries automáticos.
+                          </span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            try {
+                              await redispatchMessage(message.id);
+                              toast({ title: 'Re-disparo enviado', description: 'Tentativa única — contador preservado.' });
+                            } catch (err) {
+                              const reason = err instanceof Error ? err.message : 'Falha no re-disparo';
+                              toast({ title: 'Falha no re-disparo', description: reason, variant: 'destructive' });
+                            }
+                          }}
+                          className="flex flex-col items-start gap-0.5"
+                        >
+                          <span className="flex items-center gap-1.5 text-xs font-medium">
+                            <Zap className="w-3 h-3" />
+                            Re-disparar última tentativa
+                          </span>
+                          <span className="text-[10px] text-muted-foreground pl-5">
+                            Disparo único (sem retry loop). Preserva o contador {message.retry_attempt ?? '–'}/{message.retry_total ?? '–'}.
+                          </span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 )}
               </div>
             )}
