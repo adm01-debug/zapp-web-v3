@@ -246,7 +246,7 @@ export default function AdminFailedMessagesPage() {
             <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
             Atualizar
           </Button>
-          {isAdmin && (
+          {canEdit && (
             <Button
               size="sm"
               onClick={() => triggerReprocess.mutate()}
@@ -519,7 +519,7 @@ export default function AdminFailedMessagesPage() {
       </Card>
 
       {/* Bulk action bar (admin only) */}
-      {isAdmin && selectedIds.size > 0 && (
+      {canEdit && selectedIds.size > 0 && (
         <Card className="border-primary/40 bg-primary/5">
           <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
             <span className="text-sm">
@@ -584,7 +584,7 @@ export default function AdminFailedMessagesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {isAdmin && (
+                  {canEdit && (
                     <TableHead className="w-10">
                       <Checkbox
                         checked={allVisibleSelected}
@@ -620,7 +620,7 @@ export default function AdminFailedMessagesPage() {
                     className="cursor-pointer"
                     onClick={() => setSelected(row)}
                   >
-                    {isAdmin && (
+                    {canEdit && (
                       <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={selectedIds.has(row.id)}
@@ -711,7 +711,7 @@ export default function AdminFailedMessagesPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {isAdmin && (row.status === 'pending' || row.status === 'retrying' || row.status === 'abandoned') && (
+                        {canEdit && (row.status === 'pending' || row.status === 'retrying' || row.status === 'abandoned') && (
                           <Button
                             size="icon"
                             variant="ghost"
@@ -723,7 +723,7 @@ export default function AdminFailedMessagesPage() {
                             <RotateCw className="h-4 w-4" />
                           </Button>
                         )}
-                        {isAdmin && (row.status === 'pending' || row.status === 'retrying') && (
+                        {canEdit && (row.status === 'pending' || row.status === 'retrying') && (
                           <Button
                             size="icon"
                             variant="ghost"
@@ -913,7 +913,7 @@ export default function AdminFailedMessagesPage() {
                     Ver no chat
                   </Button>
                 )}
-                {isAdmin && (selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
+                {canEdit && (selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
                   <Button
                     variant="outline"
                     onClick={() => { retryNow.mutate(selected.id); setSelected(null); }}
@@ -923,7 +923,7 @@ export default function AdminFailedMessagesPage() {
                     Reprocessar agora
                   </Button>
                 )}
-                {isAdmin && (selected.status === 'pending' || selected.status === 'retrying') && (
+                {canEdit && (selected.status === 'pending' || selected.status === 'retrying') && (
                   <Button
                     variant="destructive"
                     onClick={() => {
@@ -949,7 +949,7 @@ export default function AdminFailedMessagesPage() {
       </Sheet>
 
       {/* Guided bulk reprocess dialog (admin only) */}
-      {isAdmin && (
+      {canEdit && (
         <BulkReprocessGuidedDialog
           open={guidedReprocessOpen}
           onOpenChange={(o) => {
