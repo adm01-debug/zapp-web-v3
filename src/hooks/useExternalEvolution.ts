@@ -17,7 +17,7 @@ import {
 import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
-import { dedupedFetch } from '@/lib/realtime/crossTabDedupe';
+import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
 
 const log = getLogger('useExternalEvolution');
 
