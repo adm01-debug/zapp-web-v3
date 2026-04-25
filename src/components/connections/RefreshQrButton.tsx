@@ -88,7 +88,7 @@ export function RefreshQrButton({
     void onRefresh();
   }, [loading, secondsLeft, blockedByStatus, cooldownSeconds, onRefresh]);
 
-  const onCooldown = secondsLeft > 0 && status === 'pending';
+  const onCooldown = secondsLeft > 0 && isInteractiveStatus;
   const disabled = loading || onCooldown || blockedByStatus;
 
   return (
