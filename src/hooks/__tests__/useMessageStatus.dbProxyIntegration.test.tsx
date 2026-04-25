@@ -44,7 +44,7 @@ import { useMessageStatus } from '@/hooks/useMessageStatus';
 import { __resetSendStatusForTest } from '@/hooks/realtime/sendStatusBus';
 
 /** Helper: monta a chain `.select().eq().eq().not()` exatamente como o hook usa. */
-function mockSelectChain(rows: Array<Record<string, unknown>>) {
+function mockSelectChain(rows: ReadonlyArray<Record<string, unknown> | MessageRow>) {
   fromMock.mockReturnValue({
     select: vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
