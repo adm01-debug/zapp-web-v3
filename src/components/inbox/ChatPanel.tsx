@@ -156,9 +156,21 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   }, [messages, isContactTyping]);
   useEffect(() => {
     setActiveTool(null); setHighlightedMessageIds(new Set()); setActiveHighlightId(null); setSearchQuery('');
+    setFailuresOnly(false);
   }, [conversation.id]);
 
   const canGenerateSummary = messages.length >= 10;
+
+  // Pré-computa o conjunto de mensagens com falha terminal — alimenta o
+  // contador no header e o filtro do MessagesArea sem reescanear a lista
+  // a cada render.
+  const failedMessages = useMemo(
+    () => messages.filter(
+      (m) => m.status === 'failed' || m.status === 'failed_auth' || m.status === 'failed_retries',
+    ),
+    [messages],
+  );
+  const visibleMessages = failuresOnly ? failedMessages : messages;
 
   // Memoize expensive derived arrays to avoid re-creation on every keystroke
   const lastContactMessages = useMemo(
