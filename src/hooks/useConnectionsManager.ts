@@ -721,7 +721,11 @@ export function useConnectionsManager() {
     if (delay <= 0) return;
 
     const scheduledForAttempt = qrCodeDialog.attemptId;
+    const generationAtSchedule = dialogGenRef.current;
     const timer = setTimeout(() => {
+      // Defesa extra contra race condition: se o usuário fechou o diálogo
+      // entre o agendamento e o disparo, dialogGenRef avançou — abortar.
+      if (dialogGenRef.current !== generationAtSchedule) return;
       // Re-check the latest dialog state at fire time — the props captured in
       // closure may be stale if the user already closed the dialog or another
       // refresh raced ahead. We use the functional setter to read the freshest
