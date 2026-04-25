@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { log } from '@/lib/logger';
 import {
   X, Download, Play, Pause, FileText, File, FileSpreadsheet,
-  FileImage, FileArchive, ExternalLink, Maximize, Loader2
+  FileImage, FileArchive, ExternalLink, Maximize, Loader2, VideoOff, RotateCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
