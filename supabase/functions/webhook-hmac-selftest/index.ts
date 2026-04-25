@@ -121,31 +121,47 @@ Deno.serve(async (req) => {
   const toleranceSec = Number.isFinite(requested) && requested > 0
     ? Math.min(Math.floor(requested), MAX_TOLERANCE_SECONDS)
     : DEFAULT_TOLERANCE_SECONDS;
+  const includeNegative = body?.include_negative !== false; // default true
 
   const validate = createWebhookValidator(secret, false);
   const seenNonces = new Set<string>();
   const now = Date.now();
 
-  // Helper: monta payload + assinatura + Request
+  // Helper: monta payload, assinatura e Request com várias opções de adulteração
   async function makeReq(opts: {
     issuedAt: Date;
     nonce: string;
-    tamper?: boolean;
-  }): Promise<{ payload: string; req: Request; sig: string; parsed: any }> {
-    const synthetic = {
+    /** se true, assina com secret incorreto */
+    wrongSecret?: boolean;
+    /** muta o payload APÓS computar a assinatura (assinatura fica válida só para o original) */
+    mutatePayload?: (parsed: Record<string, unknown>) => Record<string, unknown>;
+    /** se true, omite o header de assinatura */
+    omitSignature?: boolean;
+  }): Promise<{ payload: string; req: Request; sig: string; parsed: Record<string, unknown> }> {
+    const synthetic: Record<string, unknown> = {
       event: 'self.test',
       instance,
       nonce: opts.nonce,
       issuedAt: opts.issuedAt.toISOString(),
     };
-    const payload = JSON.stringify(synthetic);
-    const sig = await computeHmac(payload, opts.tamper ? secret + 'X' : secret);
+    const originalPayload = JSON.stringify(synthetic);
+    const signingSecret = opts.wrongSecret ? secret + 'X' : secret;
+    const sig = await computeHmac(originalPayload, signingSecret);
+
+    // Mutação após a assinatura — simula payload alterado em trânsito
+    const finalParsed = opts.mutatePayload ? opts.mutatePayload({ ...synthetic }) : synthetic;
+    const finalPayload = opts.mutatePayload ? JSON.stringify(finalParsed) : originalPayload;
+
+    const headers: Record<string, string> = { 'content-type': 'application/json' };
+    if (!opts.omitSignature) {
+      headers['x-hub-signature-256'] = `sha256=${sig}`;
+    }
     const r = new Request('https://selftest.local/', {
       method: 'POST',
-      headers: { 'x-hub-signature-256': `sha256=${sig}`, 'content-type': 'application/json' },
-      body: payload,
+      headers,
+      body: finalPayload,
     });
-    return { payload, req: r, sig, parsed: synthetic };
+    return { payload: finalPayload, req: r, sig, parsed: finalParsed };
   }
 
   // Helper: roda um cenário (HMAC + temporal) e produz relatório
@@ -155,8 +171,10 @@ Deno.serve(async (req) => {
     expected: 'accept' | 'reject';
     issuedAt: Date;
     nonce: string;
-    tamper?: boolean;
-    /** se true, força re-uso de nonce — útil para o cenário 'replay' */
+    wrongSecret?: boolean;
+    mutatePayload?: (parsed: Record<string, unknown>) => Record<string, unknown>;
+    omitSignature?: boolean;
+    /** força re-uso de nonce (cenário replay) */
     preSeed?: string;
   }): Promise<ScenarioReport> {
     if (args.preSeed) seenNonces.add(args.preSeed);
@@ -165,9 +183,15 @@ Deno.serve(async (req) => {
     let outcome: 'accept' | 'reject' = hmacResult.valid ? 'accept' : 'reject';
     let reason: string | null = hmacResult.error ?? null;
 
-    // Se o HMAC passou, verifica janela temporal + replay
+    // Validador roda em modo não-estrito: pode aceitar request sem assinatura.
+    // No self-test tratamos ausência como rejeição lógica explícita.
+    if (outcome === 'accept' && !hmacResult.signatureFound) {
+      outcome = 'reject';
+      reason = 'Missing signature header';
+    }
+
     if (outcome === 'accept') {
-      const temporal = checkTemporal(parsed, toleranceSec, seenNonces, now);
+      const temporal = checkTemporal(parsed as { issuedAt?: string; nonce?: string }, toleranceSec, seenNonces, now);
       if (!temporal.ok) {
         outcome = 'reject';
         reason = temporal.reason;
@@ -188,11 +212,10 @@ Deno.serve(async (req) => {
     };
   }
 
-  const sharedNonce = crypto.randomUUID(); // usado para o teste de replay
-
+  const sharedNonce = crypto.randomUUID();
   const scenarios: ScenarioReport[] = [];
 
-  // 1) fresh
+  // Cenários base
   scenarios.push(await runScenario({
     name: 'fresh',
     description: 'Assinatura válida + issuedAt agora',
@@ -201,17 +224,15 @@ Deno.serve(async (req) => {
     nonce: crypto.randomUUID(),
   }));
 
-  // 2) tampered
   scenarios.push(await runScenario({
     name: 'tampered',
     description: 'Assinatura adulterada (secret errado)',
     expected: 'reject',
     issuedAt: new Date(now),
     nonce: crypto.randomUUID(),
-    tamper: true,
+    wrongSecret: true,
   }));
 
-  // 3) expired (issuedAt no passado, fora da janela)
   scenarios.push(await runScenario({
     name: 'expired',
     description: `issuedAt antigo (${toleranceSec + 60}s no passado)`,
@@ -220,7 +241,6 @@ Deno.serve(async (req) => {
     nonce: crypto.randomUUID(),
   }));
 
-  // 4) future (issuedAt no futuro, fora da janela)
   scenarios.push(await runScenario({
     name: 'future',
     description: `issuedAt no futuro (${toleranceSec + 60}s à frente)`,
@@ -229,15 +249,44 @@ Deno.serve(async (req) => {
     nonce: crypto.randomUUID(),
   }));
 
-  // 5) replay (nonce reutilizado)
   scenarios.push(await runScenario({
     name: 'replay',
     description: 'Mesmo nonce reutilizado dentro da janela',
     expected: 'reject',
     issuedAt: new Date(now),
     nonce: sharedNonce,
-    preSeed: sharedNonce, // marca como já visto antes da checagem
+    preSeed: sharedNonce,
   }));
+
+  // Cenários negativos adicionais (opt-in, default ON)
+  if (includeNegative) {
+    scenarios.push(await runScenario({
+      name: 'wrong-secret',
+      description: 'Assinatura computada com secret diferente do servidor',
+      expected: 'reject',
+      issuedAt: new Date(now),
+      nonce: crypto.randomUUID(),
+      wrongSecret: true,
+    }));
+
+    scenarios.push(await runScenario({
+      name: 'payload-mutated',
+      description: 'Payload alterado após a assinatura (sem recomputar)',
+      expected: 'reject',
+      issuedAt: new Date(now),
+      nonce: crypto.randomUUID(),
+      mutatePayload: (p) => ({ ...p, event: 'self.test.tampered', extra: 'injected' }),
+    }));
+
+    scenarios.push(await runScenario({
+      name: 'missing-signature',
+      description: 'Request enviado sem o header x-hub-signature-256',
+      expected: 'reject',
+      issuedAt: new Date(now),
+      nonce: crypto.randomUUID(),
+      omitSignature: true,
+    }));
+  }
 
   const allPassed = scenarios.every((s) => s.passed);
   const fresh = scenarios[0];
