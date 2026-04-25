@@ -24,6 +24,140 @@
 // fallbacks bem definidos em vez de quebrar.
 import * as hmacModule from '../_shared/hmac-validation.ts';
 
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Adapter de validador HMAC
+ *
+ * Ao longo do tempo, `_shared/hmac-validation.ts` pode mudar de assinatura
+ * (renomes, default export, virar classe-only, mudar arity, retornar
+ * `{ ok }` em vez de `{ valid }`, etc.). Para evitar **deploy failures**
+ * causados por incompatibilidade de import, resolvemos o validador em
+ * runtime e normalizamos a saída para um shape canônico:
+ *
+ *     ValidatorResult = { valid; signatureFound; error?; payload? }
+ *
+ * Ordem de tentativas (1ª que existir vence):
+ *   1) `createWebhookValidator(secret, strict)` — assinatura atual
+ *   2) `createWebhookValidator(secret)`         — sem strict
+ *   3) `createValidator(secret)`                — possível rename futuro
+ *   4) `default(secret)`                        — possível default export
+ *   5) `new WebhookSecurityService(secret).validateRequest`
+ *   6) Fallback inline usando `verifyHmacSignature` + `extractSignatureFromHeaders`
+ *      (cobre o caso em que sobra apenas a primitiva).
+ *
+ * Se nenhuma alternativa for utilizável, lançamos um erro claro no boot —
+ * melhor falhar cedo no self-test do que em produção.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+type ValidatorResult = {
+  valid: boolean;
+  signatureFound: boolean;
+  error?: string;
+  payload?: string | null;
+};
+
+type ValidatorFn = (req: Request) => Promise<ValidatorResult>;
+
+// deno-lint-ignore no-explicit-any
+function normalizeResult(raw: any): ValidatorResult {
+  if (raw == null || typeof raw !== 'object') {
+    return { valid: false, signatureFound: false, error: 'validator returned non-object' };
+  }
+  // Aceita aliases: valid|ok|isValid e signatureFound|hasSignature|signature_present
+  const valid = Boolean(raw.valid ?? raw.ok ?? raw.isValid ?? false);
+  const signatureFound = Boolean(
+    raw.signatureFound ?? raw.hasSignature ?? raw.signature_present ?? false,
+  );
+  const error = typeof raw.error === 'string'
+    ? raw.error
+    : (typeof raw.reason === 'string' ? raw.reason : undefined);
+  const payload = typeof raw.payload === 'string' ? raw.payload : null;
+  return { valid, signatureFound, error, payload };
+}
+
+function resolveValidator(secret: string, strict = false): ValidatorFn {
+  // deno-lint-ignore no-explicit-any
+  const mod = hmacModule as any;
+
+  // 1 + 2) createWebhookValidator(secret, strict?) → (req) => Promise<result>
+  if (typeof mod.createWebhookValidator === 'function') {
+    let factory: (req: Request) => Promise<unknown>;
+    try {
+      factory = mod.createWebhookValidator(secret, strict);
+    } catch {
+      factory = mod.createWebhookValidator(secret);
+    }
+    if (typeof factory === 'function') {
+      return async (req) => normalizeResult(await factory(req));
+    }
+  }
+
+  // 3) createValidator(secret) — possível rename
+  if (typeof mod.createValidator === 'function') {
+    const factory = mod.createValidator(secret, strict) ?? mod.createValidator(secret);
+    if (typeof factory === 'function') {
+      return async (req) => normalizeResult(await factory(req));
+    }
+  }
+
+  // 4) default export como factory
+  if (typeof mod.default === 'function') {
+    try {
+      const factory = mod.default(secret, strict);
+      if (typeof factory === 'function') {
+        return async (req) => normalizeResult(await factory(req));
+      }
+    } catch {
+      // segue para próximos fallbacks
+    }
+  }
+
+  // 5) Classe WebhookSecurityService com .validateRequest
+  if (typeof mod.WebhookSecurityService === 'function') {
+    try {
+      const svc = new mod.WebhookSecurityService(secret, strict);
+      if (typeof svc?.validateRequest === 'function') {
+        return async (req) => normalizeResult(await svc.validateRequest(req));
+      }
+    } catch {
+      // segue para fallback final
+    }
+  }
+
+  // 6) Fallback bare-bones: monta a validação a partir das primitivas
+  if (
+    typeof mod.verifyHmacSignature === 'function' &&
+    typeof mod.extractSignatureFromHeaders === 'function'
+  ) {
+    return async (req) => {
+      try {
+        const sig: string | null = mod.extractSignatureFromHeaders(req.headers);
+        const body = await req.text();
+        if (!sig) {
+          return { valid: !strict, signatureFound: false, payload: body, error: strict ? 'Missing webhook signature' : undefined };
+        }
+        const ok: boolean = await mod.verifyHmacSignature(body, sig, secret);
+        return {
+          valid: ok,
+          signatureFound: true,
+          payload: body,
+          error: ok ? undefined : 'Invalid webhook signature',
+        };
+      } catch (e) {
+        return {
+          valid: false,
+          signatureFound: false,
+          error: e instanceof Error ? e.message : 'validator threw',
+        };
+      }
+    };
+  }
+
+  throw new Error(
+    'hmac-validation module incompatible: nenhuma das assinaturas conhecidas ' +
+    '(createWebhookValidator | createValidator | default | WebhookSecurityService | verifyHmacSignature) foi encontrada.',
+  );
+}
+
 /**
  * CORS headers — definidos inline (sem dependência de pacote externo) para
  * compatibilidade com qualquer versão do runtime do Supabase Edge Functions.
