@@ -32,10 +32,37 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SelfTestResult | null>(null);
 
+  async function logAudit(
+    instanceName: string | null,
+    payload: SelfTestResult,
+    fallbackDurationMs: number,
+  ) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) return; // Sem usuário autenticado: não tenta gravar (RLS bloquearia).
+      await supabase.from('hmac_selftest_audit').insert({
+        instance: instanceName,
+        ok: !!payload.ok,
+        duration_ms: payload.duration_ms ?? fallbackDurationMs,
+        error: payload.error ?? null,
+        message: payload.message ?? null,
+        good_accepted: payload.good?.accepted ?? null,
+        tampered_rejected:
+          payload.tampered ? !payload.tampered.accepted : null,
+        executed_by: uid,
+      });
+    } catch (err) {
+      // Auditoria é best-effort; não interrompe o fluxo do usuário.
+      console.warn('[HmacSelfTest] falha ao gravar auditoria', err);
+    }
+  }
+
   async function run() {
     setLoading(true);
     setResult(null);
     setOpen(true);
+    const startedAt = performance.now();
     try {
       const { data, error } = await supabase.functions.invoke('webhook-hmac-selftest', {
         body: { instance: instance ?? 'selftest' },
@@ -45,10 +72,13 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
       setResult(r);
       if (r.ok) toast.success('HMAC OK — secret válido');
       else toast.error(r.error ?? 'Falha no auto-teste HMAC');
+      await logAudit(instance, r, Math.round(performance.now() - startedAt));
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Erro inesperado';
-      setResult({ ok: false, configured: false, error: msg });
+      const failure: SelfTestResult = { ok: false, configured: false, error: msg };
+      setResult(failure);
       toast.error(msg);
+      await logAudit(instance, failure, Math.round(performance.now() - startedAt));
     } finally {
       setLoading(false);
     }
