@@ -15,6 +15,7 @@ import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock } from 'l
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useQueues } from '@/hooks/useQueues';
+import { useAllTicketStates } from '@/hooks/useTicketStatus';
 import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
 
 export type MainTab = 'open' | 'resolved' | 'search';
@@ -46,41 +47,32 @@ export function TicketTabs({
   const { user } = useAuth();
   const { isAdmin, isSupervisor } = useUserRole();
   const { queues } = useQueues();
+  const ticketStates = useAllTicketStates();
   const isMobile = useIsMobile();
   const canShowAll = isAdmin || isSupervisor;
 
-  // Count conversations by category
+  // Conta tickets pelo overlay real (open/in_progress/resolved). Quando
+  // um contato ainda não tem registro, assumimos `open` (bootstrap).
   const counts = useMemo(() => {
     const userId = user?.id;
-    
-    // Open = has unread messages or has recent activity (not resolved)
-    const openConversations = conversations.filter(c => {
-      const hasMessages = c.messages.length > 0;
-      return hasMessages; // All with messages are "open" for now
-    });
-
-    // Attending = assigned to current user
-    const attending = openConversations.filter(c => 
-      c.contact.assigned_to === userId
-    );
-
-    // Waiting = not assigned to anyone (in queue)
-    const waiting = openConversations.filter(c => 
-      !c.contact.assigned_to
-    );
-
-    // Resolved = no unread, no recent messages (contacts with no messages)
-    const resolved = conversations.filter(c => 
-      c.messages.length === 0
-    );
-
-    return {
-      open: openConversations.length,
-      attending: attending.length,
-      waiting: waiting.length,
-      resolved: resolved.length,
-    };
-  }, [conversations, user?.id]);
+    let openCount = 0;
+    let attending = 0;
+    let waiting = 0;
+    let resolved = 0;
+    for (const c of conversations) {
+      const t = ticketStates[c.contact.id];
+      const status = t?.status ?? 'open';
+      const assigned = t?.assignedTo ?? c.contact.assigned_to ?? null;
+      if (status === 'resolved') {
+        resolved += 1;
+      } else {
+        openCount += 1;
+        if (assigned && assigned === userId) attending += 1;
+        if (!assigned) waiting += 1;
+      }
+    }
+    return { open: openCount, attending, waiting, resolved };
+  }, [conversations, ticketStates, user?.id]);
 
   const mainTabs = [
     { 
