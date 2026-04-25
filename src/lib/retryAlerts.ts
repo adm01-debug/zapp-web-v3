@@ -76,6 +76,40 @@ export function shouldFireRetryAlert(
 
 export const RETRY_THRESHOLDS_STORAGE_KEY = 'zappweb:retry-alert-thresholds';
 export const RETRY_PER_INSTANCE_STORAGE_KEY = 'zappweb:retry-alert-thresholds:per-instance';
+export const RETRY_DEDUPE_MODE_STORAGE_KEY = 'zappweb:retry-alert-dedupe-mode';
+
+/**
+ * Granularidade do dedupe de toasts de retry.
+ * - `instance`: 1 toast por instância na janela, mesmo que `p95` e `failure_rate`
+ *   estourem ao mesmo tempo (menos ruído, perde detalhe do tipo).
+ * - `instance+kind`: 1 toast por (instância × tipo de violação) — padrão.
+ */
+export type RetryAlertDedupeMode = 'instance' | 'instance+kind';
+export const DEFAULT_RETRY_DEDUPE_MODE: RetryAlertDedupeMode = 'instance+kind';
+
+export function loadRetryAlertDedupeMode(): RetryAlertDedupeMode {
+  const raw = safeGetJSON<unknown>(RETRY_DEDUPE_MODE_STORAGE_KEY, null);
+  return raw === 'instance' || raw === 'instance+kind' ? raw : DEFAULT_RETRY_DEDUPE_MODE;
+}
+
+export function saveRetryAlertDedupeMode(mode: RetryAlertDedupeMode): boolean {
+  return safeSetJSON(RETRY_DEDUPE_MODE_STORAGE_KEY, mode);
+}
+
+/**
+ * Constrói a chave de dedupe usada pelo cooldown do toast. A chave SEMPRE
+ * inclui a janela (`hours`) para que mudar de janela limpe o estado de dedupe
+ * naturalmente. O `kind` só entra quando `mode === 'instance+kind'`.
+ */
+export function buildRetryAlertDedupeKey(
+  instance: string,
+  kind: BreachReasonKind,
+  hours: number,
+  mode: RetryAlertDedupeMode = DEFAULT_RETRY_DEDUPE_MODE,
+): string {
+  const base = `${instance}|${hours}h`;
+  return mode === 'instance+kind' ? `${instance}|${kind}|${hours}h` : base;
+}
 
 // Aliases internos curtos (compat com o resto deste arquivo).
 const STORAGE_KEY = RETRY_THRESHOLDS_STORAGE_KEY;
