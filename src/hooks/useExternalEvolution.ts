@@ -25,14 +25,21 @@ import {
   inboxSidebarKey,
   inboxJidKeyPrefixes,
 } from '@/lib/inbox/inboxDedupeKeys';
+import {
+  POLL_INTERVAL_MS,
+  SIDEBAR_DAYS_BACK,
+  SIDEBAR_LIMIT,
+  CONVERSATION_PAGE_SIZE,
+  getSidebarDedupeOptions,
+  getInitialDedupeOptions,
+  getPollDedupeOptions,
+  getOlderDedupeOptions,
+} from '@/lib/inbox/inboxDedupeConfig';
 
 const log = getLogger('useExternalEvolution');
 
-const POLL_INTERVAL = 5000; // 5s polling
+const POLL_INTERVAL = POLL_INTERVAL_MS;
 const DEFAULT_INSTANCE = 'wpp2';
-const SIDEBAR_DAYS_BACK = 7;
-const SIDEBAR_LIMIT = 200;
-const CONVERSATION_PAGE_SIZE = 100;
 
 // Slim select — drops `payload` and `raw_data` (each can be 10KB+).
 const SLIM_MESSAGE_COLUMNS = [
@@ -122,12 +129,7 @@ export function useExternalConversations(enabled = true) {
       const messages = await dedupedFetch(
         inboxSidebarKey(SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT),
         () => fetchRecentMessagesWindow(),
-        {
-          lockTtl: 8_000,
-          resultTtl: POLL_INTERVAL - 500,
-          waitTimeout: 6_000,
-          retry: { maxRetries: 2, baseDelayMs: 300, maxDelayMs: 2_000 },
-        },
+        getSidebarDedupeOptions(),
       );
       return buildExternalConversations(messages);
     },
@@ -190,12 +192,7 @@ export function useExternalMessages(remoteJid: string | null) {
       const evoMessages = await dedupedFetch(
         inboxInitialKey({ jid: remoteJid, pageSize: CONVERSATION_PAGE_SIZE }),
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
-        {
-          lockTtl: 10_000,
-          resultTtl: 15_000,
-          waitTimeout: 8_000,
-          retry: { maxRetries: 2, baseDelayMs: 400, maxDelayMs: 3_000 },
-        },
+        getInitialDedupeOptions(),
       );
       if (!mountedRef.current) return;
 
@@ -225,7 +222,7 @@ export function useExternalMessages(remoteJid: string | null) {
       const newOnes = await dedupedFetch(
         inboxPollKey({ jid: remoteJid, afterDate }),
         () => fetchMessagesAfter(remoteJid, afterDate),
-        { lockTtl: 4_000, resultTtl: POLL_INTERVAL - 1_000, waitTimeout: 3_000 },
+        getPollDedupeOptions(),
       );
       if (!mountedRef.current || newOnes.length === 0) return;
 
@@ -271,18 +268,10 @@ export function useExternalMessages(remoteJid: string | null) {
       const older = await dedupedFetch(
         dedupeKey,
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest, controller.signal),
-        {
-          lockTtl: 10_000,
-          resultTtl: 30_000,
-          waitTimeout: 8_000,
-          retry: {
-            maxRetries: 2,
-            baseDelayMs: 400,
-            maxDelayMs: 3_000,
-            // Não retentar se o usuário cancelou (scrollou ou trocou de chat).
-            shouldRetry: () => !controller.signal.aborted,
-          },
-        },
+        getOlderDedupeOptions({
+          // Não retentar se o usuário cancelou (scrollou ou trocou de chat).
+          shouldRetry: () => !controller.signal.aborted,
+        }),
       );
       if (!mountedRef.current || controller.signal.aborted) return;
 
