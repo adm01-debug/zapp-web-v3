@@ -179,7 +179,12 @@ export function useConnectionsManager() {
             }
             if (qrCodeDialog.open && qrCodeDialog.connectionId === newConn.id) {
               if (newConn.status === 'connected') {
-                setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
+                setQrCodeDialog((prev) => {
+                  if (prev.status !== 'connected') {
+                    void updateQrAttempt(prev.attemptId, { status: 'connected' });
+                  }
+                  return { ...prev, status: 'connected', qrCode: null, expiresAt: null };
+                });
               } else if (newConn.qr_code) {
                 setQrCodeDialog((prev) => ({
                   ...prev,
@@ -296,7 +301,12 @@ export function useConnectionsManager() {
         if (result?.state === 'open' || result?.status === 'connected') {
           clearInterval(interval);
           setPollingInterval(null);
-          setQrCodeDialog((prev) => ({ ...prev, status: 'connected', qrCode: null, expiresAt: null }));
+          setQrCodeDialog((prev) => {
+            if (prev.status !== 'connected') {
+              void updateQrAttempt(prev.attemptId, { status: 'connected' });
+            }
+            return { ...prev, status: 'connected', qrCode: null, expiresAt: null };
+          });
           // Use the deduplicated announcer so we don't double-toast when realtime
           // also delivers the UPDATE event with status='connected'.
           setConnections((prev) => {
@@ -346,18 +356,20 @@ export function useConnectionsManager() {
     }
   };
 
-  /** Mark a previously inserted QR attempt as expired/error. */
+  /** Mark a previously inserted QR attempt as expired/error/connected. */
   const updateQrAttempt = async (
     attemptId: string | null,
-    patch: { status: 'expired' | 'error'; error_message?: string | null },
+    patch: { status: 'expired' | 'error' | 'connected'; error_message?: string | null },
   ) => {
     if (!attemptId) return;
     try {
+      const nowIso = new Date().toISOString();
       await supabase
         .from('qr_attempts')
         .update({
           status: patch.status,
-          expired_at: patch.status === 'expired' ? new Date().toISOString() : null,
+          expired_at: patch.status === 'expired' ? nowIso : null,
+          connected_at: patch.status === 'connected' ? nowIso : null,
           error_message: patch.error_message ?? null,
         })
         .eq('id', attemptId);

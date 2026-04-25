@@ -28,6 +28,7 @@ import { NumberReputationMonitor } from './NumberReputationMonitor';
 import { ConnectionCard } from './ConnectionCard';
 import { DegradedQuickActions } from './DegradedQuickActions';
 import { QrCountdown } from './QrCountdown';
+import { LastQrAttemptInfo } from './LastQrAttemptInfo';
 import { IdempotencyMissBanner } from './IdempotencyMissBanner';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 
@@ -181,6 +182,12 @@ export function ConnectionsView() {
               </Button>
             )}
             {qrCodeDialog.status === 'connected' && <Button onClick={closeQrDialog}>Fechar</Button>}
+            {qrCodeDialog.connectionId && (
+              <LastQrAttemptInfo
+                connectionId={qrCodeDialog.connectionId}
+                refreshKey={`${qrCodeDialog.status}:${qrCodeDialog.attemptId ?? ''}:${qrCodeDialog.expiresAt ?? ''}`}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
