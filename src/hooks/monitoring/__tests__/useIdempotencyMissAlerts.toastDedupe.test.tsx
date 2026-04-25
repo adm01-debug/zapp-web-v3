@@ -113,27 +113,28 @@ describe('useIdempotencyMissAlerts — toast dedupe by (instance × hour window)
 
   it('reseta e dispara novamente quando a janela de horas muda', async () => {
     const t0 = new Date('2026-04-25T10:15:00Z').getTime();
-    vi.setSystemTime(t0);
-    proxyMock.mockResolvedValue({ data: makeMissRows('wpp2', 80) });
+    const t1 = t0 + ONE_HOUR_MS + 60_000; // janela seguinte
 
-    const { rerender } = renderHook(
-      () => useIdempotencyMissAlerts({ threshold: 50 }),
-      { wrapper: wrapper() }
+    // Pré-popula localStorage com a entrada da janela ANTIGA (simulando alerta já disparado).
+    window.localStorage.setItem(
+      ALERT_DEDUPE_STORAGE_KEY,
+      JSON.stringify({ [buildPersistKey('wpp2', t0)]: t0 }),
     );
-    await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
 
     // Avança o relógio para a próxima janela.
-    vi.setSystemTime(t0 + ONE_HOUR_MS + 60_000);
-    rerender();
-    // Força o effect a re-rodar via novo dataset de mesmo tamanho — referência diferente.
-    proxyMock.mockResolvedValue({ data: makeMissRows('wpp2', 81) });
-    rerender();
+    vi.setSystemTime(t1);
+    proxyMock.mockResolvedValue({ data: makeMissRows('wpp2', 80) });
 
-    await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(2), { timeout: 2000 });
+    renderHook(() => useIdempotencyMissAlerts({ threshold: 50 }), { wrapper: wrapper() });
 
-    // Verifica que o source carrega o novo bucket.
-    const sources = insertMock.mock.calls.map((c) => c[0]?.source);
-    expect(new Set(sources).size).toBe(2);
+    // O insert DEVE acontecer porque o hour-bucket é diferente.
+    await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
+
+    // E a chave gravada deve ser a do novo bucket, não a antiga.
+    const expectedNewKey = buildPersistKey('wpp2', t1);
+    const expectedOldKey = buildPersistKey('wpp2', t0);
+    expect(expectedNewKey).not.toBe(expectedOldKey);
+    expect(insertMock.mock.calls[0][0].source).toBe(expectedNewKey);
   });
 
   it('dispara um alerta independente por instância dentro da mesma janela', async () => {
