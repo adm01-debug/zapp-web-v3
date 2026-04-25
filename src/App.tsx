@@ -76,6 +76,7 @@ const HmacSelfTestPage = lazyWithRetry(() => import("./pages/admin/HmacSelfTestP
 const AdminChannelsPage = lazyWithRetry(() => import("./pages/admin/AdminChannelsPage"));
 const AdminQueuesPage = lazyWithRetry(() => import("./pages/admin/AdminQueuesPage"));
 const AdminProvidersPage = lazyWithRetry(() => import("./pages/admin/AdminProvidersPage"));
+const AdminFailedAuthMessagesPage = lazyWithRetry(() => import("./pages/admin/AdminFailedAuthMessagesPage"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("./pages/ChatPopup"));
 
@@ -187,6 +188,7 @@ function AppContent() {
             <Route path="/admin/channels" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminChannelsPage /></ProtectedRoute>} />
             <Route path="/admin/queues" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminQueuesPage /></ProtectedRoute>} />
             <Route path="/admin/providers" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminProvidersPage /></ProtectedRoute>} />
+            <Route path="/admin/failed-auth-messages" element={<ProtectedRoute requiredRoles={['admin']}><AdminFailedAuthMessagesPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
