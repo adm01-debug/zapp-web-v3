@@ -45,7 +45,7 @@ export function RefreshQrButton({
   stabilizationMs = 400,
 }: RefreshQrButtonProps) {
   const [secondsLeft, setSecondsLeft] = useState(0);
-  const [stabilized, setStabilized] = useState(status === 'pending');
+  const [stabilized, setStabilized] = useState(false);
   const previousStatusRef = useRef<RefreshQrButtonStatus>(status);
 
   // Reage a mudanças de status: bloqueia imediatamente quando vai para
