@@ -19,13 +19,15 @@ type DedupeMod = typeof import('@/lib/crossTabSendDedupe');
 // or each tab would write into its own counters and the assertions break.
 import * as sharedMetrics from '@/lib/dedupeMetrics';
 
+// Pin `dedupeMetrics` to a single shared instance even when the dedupe
+// module is re-evaluated. The factory closes over `sharedMetrics`, so every
+// re-import returns the same object identity.
+vi.mock('@/lib/dedupeMetrics', () => sharedMetrics);
+
 async function loadTab(): Promise<DedupeMod> {
   // Reset the module registry so the next import re-evaluates `crossTabSendDedupe`
   // → fresh TAB_ID + fresh BroadcastChannel listener bound to the same name.
   vi.resetModules();
-  // Pin every dependency that MUST stay shared across tabs to its current
-  // singleton instance, so re-evaluation only affects the dedupe module itself.
-  vi.doMock('@/lib/dedupeMetrics', () => sharedMetrics);
   return await import('@/lib/crossTabSendDedupe');
 }
 
