@@ -248,13 +248,19 @@ Deno.serve(async (req) => {
       db: { schema: 'public' },
       global: {
         headers: {
-          'x-statement-timeout': '8000',
+          // Postgres cancela a query depois desse tempo. Subimos de 8s → 12s
+          // para absorver picos de cache frio em tabelas grandes
+          // (evolution_webhook_events / evolution_messages) sem cair no
+          // proxy_timeout. Continua bem abaixo do limite de 150s do edge runtime.
+          'x-statement-timeout': '12000',
         },
       },
     })
 
     // Hard cap to fail fast (well below Edge Function 150s + Postgres default).
-    const HARD_TIMEOUT_MS = 9000
+    // Mantemos uma folga de ~2s sobre o statement_timeout para que o Postgres
+    // tenha chance de cancelar e devolver erro estruturado antes do timer.
+    const HARD_TIMEOUT_MS = 14000
     let timeoutFired = false
     const withTimeout = <T>(p: PromiseLike<T>): Promise<T> => {
       let timer: number | undefined
