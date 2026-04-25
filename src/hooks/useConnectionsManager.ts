@@ -551,16 +551,37 @@ export function useConnectionsManager() {
   }, [loading]);
 
   // Auto-refresh: regenerate the QR ~5s before it expires (at 55s of the 60s TTL)
-  // so the user never has to manually click "Atualizar" mid-scan. Only runs while
-  // the dialog is open and the QR is in `pending`. Each new QR resets the timer.
+  // so the user never has to manually click "Atualizar" mid-scan.
+  //
+  // Strict guard: only schedules and only fires while the dialog is OPEN and the
+  // current status is 'pending'. If the dialog closes, transitions to
+  // 'connected'/'error'/'loading', or the user manually refreshes between the
+  // schedule and the timer firing, we abort instead of silently regenerating a
+  // QR the user can no longer see (which previously caused unintended refreshes
+  // and orphan QR attempts in the audit log).
   useEffect(() => {
     if (!qrCodeDialog.open) return;
     if (qrCodeDialog.status !== 'pending') return;
     if (!qrCodeDialog.expiresAt) return;
     const delay = qrCodeDialog.expiresAt - 5_000 - Date.now();
     if (delay <= 0) return;
+
+    const scheduledForAttempt = qrCodeDialog.attemptId;
     const timer = setTimeout(() => {
-      void handleRefreshQrCode();
+      // Re-check the latest dialog state at fire time — the props captured in
+      // closure may be stale if the user already closed the dialog or another
+      // refresh raced ahead. We use the functional setter to read the freshest
+      // state without adding it to the dependency array.
+      setQrCodeDialog((current) => {
+        if (
+          current.open &&
+          current.status === 'pending' &&
+          current.attemptId === scheduledForAttempt
+        ) {
+          void handleRefreshQrCode();
+        }
+        return current;
+      });
     }, delay);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
