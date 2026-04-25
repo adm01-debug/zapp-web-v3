@@ -111,6 +111,37 @@ export function MessageImage({ src, alt = 'Image', refreshKey }: MessageImagePro
   const refresh = useMediaRefresh(src, refreshKey);
   const effectiveSrc = refresh.url ?? src;
 
+  // Fallback: esgotamos retries automáticos. Substitui o <img> por um card
+  // de erro com mensagem clara e botão de retry manual (zera o contador).
+  if (refresh.failed) {
+    return (
+      <div
+        role="alert"
+        className="max-w-[280px] rounded-lg border border-destructive/30 bg-destructive/5 p-4 flex flex-col items-center gap-2 text-center"
+      >
+        <ImageOff className="w-8 h-8 text-destructive" aria-hidden="true" />
+        <p className="text-sm font-medium text-foreground">Imagem indisponível</p>
+        <p className="text-xs text-muted-foreground">
+          {refresh.error?.message ?? 'Não foi possível recuperar esta imagem.'}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-1"
+          onClick={() => { void refresh.retry(); }}
+          disabled={refresh.isRefreshing}
+        >
+          {refresh.isRefreshing ? (
+            <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+          ) : (
+            <RotateCw className="w-3.5 h-3.5 mr-1" />
+          )}
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <>
       <motion.div
