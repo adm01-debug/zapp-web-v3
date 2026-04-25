@@ -79,23 +79,69 @@ Deno.serve(async (req) => {
 
     // Hard cap to fail fast (well below Edge Function 150s + Postgres default).
     const HARD_TIMEOUT_MS = 9000
-    const withTimeout = <T>(p: PromiseLike<T>): Promise<T> => {
-      let timer: number | undefined
-      return Promise.race([
-        Promise.resolve(p).then((v) => {
-          if (timer !== undefined) clearTimeout(timer)
-          return v
-        }),
-        new Promise<T>((_, reject) => {
-          timer = setTimeout(() => reject(new Error('proxy_timeout')), HARD_TIMEOUT_MS) as unknown as number
-        }),
-      ])
+
+    /**
+     * Real cancellation: an AbortController whose signal we forward to the
+     * underlying PostgREST request via `.abortSignal(signal)`. When we abort
+     * (timeout OR client disconnected), supabase-js calls `fetch` with a
+     * cancelled signal, the HTTP socket to PostgREST closes, PostgREST in
+     * turn closes the Postgres backend connection, and Postgres cancels the
+     * in-flight statement. Without this, the query keeps running for up to
+     * `statement_timeout` even after this function has returned 504 — that's
+     * the "zombie query" we're killing here.
+     */
+    const queryController = new AbortController()
+    let timeoutFired = false
+    let clientAbortFired = false
+
+    const hardTimer = setTimeout(() => {
+      timeoutFired = true
+      queryController.abort()
+    }, HARD_TIMEOUT_MS) as unknown as number
+
+    // If the HTTP client gave up first (browser navigated away, useEffect
+    // cleanup, etc.), we MUST also cancel the upstream — otherwise the
+    // backend stays busy serving a response no one will read.
+    const onClientAbort = () => {
+      clientAbortFired = true
+      queryController.abort()
+    }
+    if (req.signal && !req.signal.aborted) {
+      req.signal.addEventListener('abort', onClientAbort, { once: true })
+    } else if (req.signal?.aborted) {
+      clientAbortFired = true
+      queryController.abort()
+    }
+
+    const cleanup = () => {
+      clearTimeout(hardTimer)
+      req.signal?.removeEventListener('abort', onClientAbort)
+    }
+
+    /** True when we aborted the upstream because OUR hard timer fired. */
+    const isProxyTimeout = (e: unknown): boolean => {
+      if (timeoutFired) return true
+      const name = (e as { name?: string } | null)?.name
+      const msg = (e as { message?: string } | null)?.message ?? ''
+      return name === 'AbortError' && timeoutFired || /aborted|AbortError/i.test(msg) && timeoutFired
+    }
+
+    const isClientAbort = (e: unknown): boolean => {
+      if (clientAbortFired) return true
+      const name = (e as { name?: string } | null)?.name
+      return name === 'AbortError' && clientAbortFired
     }
 
     const timeoutResponse = () =>
       new Response(
-        JSON.stringify({ error: 'Query timed out. Try narrower filters or a smaller limit.' }),
+        JSON.stringify({ error: 'Query timed out. Try narrower filters or a smaller limit.', cid }),
         { status: 504, headers: jsonHeaders }
+      )
+
+    const clientAbortResponse = () =>
+      new Response(
+        JSON.stringify({ error: 'Client disconnected before query completed.', cid }),
+        { status: 499, headers: jsonHeaders }
       )
 
     const body = await req.json()
