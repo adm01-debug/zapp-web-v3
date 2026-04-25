@@ -323,9 +323,20 @@ export function useExternalMessages(remoteJid: string | null) {
   // Initial fetch on jid change
   useEffect(() => {
     if (remoteJid !== previousJidRef.current) {
+      // 1) Atualiza o jid ATIVO antes de qualquer side-effect — qualquer
+      //    callback assíncrono pendente do jid anterior cairá no guard
+      //    `activeJidRef.current !== ownerJid` e será descartado.
+      activeJidRef.current = remoteJid;
       previousJidRef.current = remoteJid;
+      // 2) Aborta loadOlder em curso do jid anterior.
+      if (loadOlderAbortRef.current) {
+        loadOlderAbortRef.current.abort();
+        loadOlderAbortRef.current = null;
+      }
+      // 3) Reseta cursor + estado da paginação para a nova conversa.
       lastSeenRef.current = null;
       setHasMore(true);
+      setMessages([]); // evita flash de mensagens do jid anterior
       initialFetch();
     }
   }, [remoteJid, initialFetch]);
@@ -340,17 +351,37 @@ export function useExternalMessages(remoteJid: string | null) {
   // Cross-tab sync: quando outra aba conclui um fetch (initial/poll/older)
   // para este mesmo jid, recebemos o resultado via BroadcastChannel e
   // atualizamos a UI sem refazer a requisição.
+  //
+  // Garantias contra handler duplicado / write na conversa errada:
+  // - O cleanup do effect chama o `unsub` retornado por subscribeDedupe ANTES
+  //   de re-subscrever (semântica padrão do React).
+  // - `dedupeUnsubRef` é uma trava idempotente: se por algum motivo o effect
+  //   re-rodar sem cleanup (StrictMode ou re-render rápido), desinscrevemos
+  //   a sub anterior antes de criar a nova.
+  // - O matcher é recriado por `remoteJid`, e o handler ainda checa
+  //   `activeJidRef.current === ownerJid` para não escrever em conversa errada
+  //   caso um broadcast chegue durante a janela de troca.
   useEffect(() => {
     if (!remoteJid) return;
-    const [initialPrefix, pollPrefix, olderPrefix] = inboxJidKeyPrefixes(remoteJid);
+    const ownerJid = remoteJid;
+    const [initialPrefix, pollPrefix, olderPrefix] = inboxJidKeyPrefixes(ownerJid);
     const jidPrefixes = [initialPrefix, pollPrefix, olderPrefix];
     const matcher = new RegExp(
       `^(${jidPrefixes.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
     );
 
+    // Idempotência: garante que nunca há 2 subs ativas simultâneas.
+    if (dedupeUnsubRef.current) {
+      try { dedupeUnsubRef.current(); } catch { /* noop */ }
+      dedupeUnsubRef.current = null;
+    }
+
     const unsub = subscribeDedupe<EvolutionMessage[]>(matcher, (key, data, source) => {
       if (source === 'local') return; // já tratado pelo fluxo do próprio fetcher
       if (!mountedRef.current || !Array.isArray(data) || data.length === 0) return;
+      // Defesa final: o usuário pode ter trocado de conversa entre o
+      // momento em que esta sub foi criada e o broadcast chegar.
+      if (activeJidRef.current !== ownerJid) return;
 
       // Independente do origem (initial/poll/older), o merge ordena por
       // (created_at, id) e dedupa por id — não há mais necessidade de
@@ -373,7 +404,16 @@ export function useExternalMessages(remoteJid: string | null) {
         setLoading(false);
       }
     });
-    return unsub;
+    dedupeUnsubRef.current = unsub;
+
+    return () => {
+      // Desinscreve via ref para garantir idempotência mesmo se React chamar
+      // o cleanup mais de uma vez (não chama, mas defesa em profundidade).
+      if (dedupeUnsubRef.current === unsub) {
+        dedupeUnsubRef.current = null;
+      }
+      try { unsub(); } catch { /* noop */ }
+    };
   }, [remoteJid]);
 
   const addMessage = useCallback((message: RealtimeMessage) => {
