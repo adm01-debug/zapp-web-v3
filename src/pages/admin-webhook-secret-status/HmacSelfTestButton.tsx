@@ -178,20 +178,70 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                 </div>
               )}
 
+              {typeof result.tolerance_seconds === 'number' && (
+                <div className="text-xs text-muted-foreground" data-testid="hmac-selftest-tolerance">
+                  Janela de tolerância: <code>{result.tolerance_seconds}s</code> (issuedAt ± janela; nonce único)
+                </div>
+              )}
+
+              {result.scenarios && result.scenarios.length > 0 && (
+                <div className="rounded-lg border overflow-hidden" data-testid="hmac-selftest-scenarios">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/40 text-muted-foreground">
+                      <tr>
+                        <th className="text-left px-2 py-1.5 font-medium">Cenário</th>
+                        <th className="text-left px-2 py-1.5 font-medium">Esperado</th>
+                        <th className="text-left px-2 py-1.5 font-medium">Resultado</th>
+                        <th className="text-left px-2 py-1.5 font-medium">Idade</th>
+                        <th className="text-left px-2 py-1.5 font-medium">Detalhe</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.scenarios.map((s) => (
+                        <tr
+                          key={s.name}
+                          className="border-t"
+                          data-testid={`hmac-selftest-scenario-${s.name}`}
+                          data-passed={s.passed ? 'true' : 'false'}
+                        >
+                          <td className="px-2 py-1.5">
+                            <div className="font-medium">{s.name}</div>
+                            <div className="text-[10px] text-muted-foreground">{s.description}</div>
+                          </td>
+                          <td className="px-2 py-1.5">
+                            <Badge variant="outline" className="text-[10px]">
+                              {s.expected === 'accept' ? 'aceitar' : 'rejeitar'}
+                            </Badge>
+                          </td>
+                          <td className="px-2 py-1.5">
+                            <Badge
+                              variant={s.passed ? 'default' : 'destructive'}
+                              className="text-[10px]"
+                            >
+                              {s.outcome === 'accept' ? 'aceito' : 'rejeitado'}
+                            </Badge>
+                          </td>
+                          <td className="px-2 py-1.5 text-muted-foreground">
+                            {s.ageSeconds >= 0 ? `+${s.ageSeconds}s` : `${s.ageSeconds}s`}
+                          </td>
+                          <td className="px-2 py-1.5 text-muted-foreground">
+                            {s.reason ?? '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
               {result.payload_preview && (
                 <div>
                   <div className="text-xs uppercase text-muted-foreground mb-1">
-                    Payload de teste ({result.payload_bytes} bytes)
+                    Payload de teste (modelo)
                   </div>
                   <pre className="text-[11px] bg-muted/40 rounded p-2 overflow-x-auto">
 {JSON.stringify(result.payload_preview, null, 2)}
                   </pre>
-                </div>
-              )}
-
-              {result.computed_signature_prefix && (
-                <div className="text-xs text-muted-foreground">
-                  Assinatura computada (prefixo): <code>{result.computed_signature_prefix}…</code>
                 </div>
               )}
             </div>
