@@ -154,6 +154,12 @@ export function useConnectionsManager() {
   const [isCreating, setIsCreating] = useState(false);
   const [syncingHistory, setSyncingHistory] = useState<string | null>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  // Sentinela monotônica: incrementa a cada `closeQrDialog`. Operações
+  // assíncronas (network requests, setTimeouts) capturam o valor no início e
+  // comparam ao concluir — se mudou, o usuário fechou o diálogo no meio do
+  // caminho e qualquer setState/refresh deve ser silenciosamente descartado
+  // para evitar polling/auto-refresh não intencional após o close.
+  const dialogGenRef = useRef(0);
 
   const {
     isLoading: evolutionLoading,
