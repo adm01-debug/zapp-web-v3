@@ -586,6 +586,57 @@ export function useConnectionsManager() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
+  // QR status polling — checa a cada 3s se a instância foi pareada.
+  // Estritamente gated: SÓ roda enquanto a modal está aberta E o status é
+  // 'pending'. Qualquer outra transição (modal fechada, status virou
+  // loading/error/connected, troca de connectionId) limpa o intervalo
+  // automaticamente via cleanup do effect.
+  useEffect(() => {
+    if (!qrCodeDialog.open) return;
+    if (qrCodeDialog.status !== 'pending') return;
+    const conn = connections.find((c) => c.id === qrCodeDialog.connectionId);
+    if (!conn?.instance_id) return;
+
+    const instanceName = conn.instance_id;
+    const connectionId = conn.id;
+    let cancelled = false;
+
+    const interval = setInterval(async () => {
+      if (cancelled) return;
+      try {
+        const result = await getInstanceStatus(instanceName);
+        if (cancelled) return;
+        if (result?.state === 'open' || result?.status === 'connected') {
+          setQrCodeDialog((prev) =>
+            prev.connectionId === connectionId && prev.status === 'pending'
+              ? { ...prev, status: 'connected', qrCode: null, expiresAt: null }
+              : prev,
+          );
+          // Anúncio dedup pra não duplicar com o UPDATE realtime.
+          setConnections((prev) => {
+            const c = prev.find((x) => x.id === connectionId);
+            if (c) announceConnected({ id: c.id, name: c.name });
+            return prev;
+          });
+        }
+      } catch (error) {
+        log.error('Status polling error:', error);
+      }
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [
+    qrCodeDialog.open,
+    qrCodeDialog.status,
+    qrCodeDialog.connectionId,
+    connections,
+    getInstanceStatus,
+    announceConnected,
+  ]);
+
   // Auto-refresh: regenerate the QR ~5s before it expires (at 55s of the 60s TTL)
   // so the user never has to manually click "Atualizar" mid-scan.
   //
