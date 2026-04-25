@@ -100,6 +100,60 @@ export function AlertInstanceDetailDialog({ open, onOpenChange, instance }: Prop
     return out;
   }, [rows]);
 
+  // SLA por instância — incidentes (run de buckets com inválidos) e tempo até resolução.
+  // Definição:
+  //  - Incidente inicia em um bucket com >=1 evento inválido após um bucket "limpo" (ou início da janela).
+  //  - Incidente é resolvido quando aparece um bucket "limpo" subsequente.
+  //  - Tempo até resolver = (bucket_resolução - bucket_início) em minutos.
+  //  - Incidentes ainda abertos (sem resolução até o fim da janela) são sinalizados separadamente.
+  const slaIncidents = useMemo(() => {
+    const ordered = rows ?? [];
+    type Incident = { startIso: string; endIso: string | null; minutesToResolve: number | null };
+    const incidents: Incident[] = [];
+    let openStart: string | null = null;
+    for (const r of ordered) {
+      const isBad = (r.invalid_signature + r.auth_401 + r.auth_403) > 0;
+      if (isBad && !openStart) {
+        openStart = r.bucket;
+      } else if (!isBad && openStart) {
+        const minutes = Math.round(
+          (new Date(r.bucket).getTime() - new Date(openStart).getTime()) / 60_000,
+        );
+        incidents.push({ startIso: openStart, endIso: r.bucket, minutesToResolve: minutes });
+        openStart = null;
+      }
+    }
+    if (openStart) {
+      incidents.push({ startIso: openStart, endIso: null, minutesToResolve: null });
+    }
+    return incidents;
+  }, [rows]);
+
+  const sla = useMemo(() => {
+    const resolved = slaIncidents.filter(i => i.minutesToResolve !== null) as Array<{
+      minutesToResolve: number;
+    }>;
+    const open = slaIncidents.length - resolved.length;
+    if (resolved.length === 0) {
+      return {
+        total: slaIncidents.length, resolved: 0, open,
+        avgMin: 0, maxMin: 0, p95Min: 0,
+      };
+    }
+    const values = resolved.map(i => i.minutesToResolve).sort((a, b) => a - b);
+    const avg = Math.round(values.reduce((s, v) => s + v, 0) / values.length);
+    const max = values[values.length - 1];
+    const p95Idx = Math.min(values.length - 1, Math.floor(values.length * 0.95));
+    return {
+      total: slaIncidents.length,
+      resolved: resolved.length,
+      open,
+      avgMin: avg,
+      maxMin: max,
+      p95Min: values[p95Idx],
+    };
+  }, [slaIncidents]);
+
   const totals = useMemo(() => {
     const r = rows ?? [];
     const invalid = r.reduce((s, x) => s + x.invalid_signature + x.auth_401 + x.auth_403, 0);
