@@ -17,25 +17,22 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // ── Mocks ──────────────────────────────────────────────────────────────────
 
 // Mock framer-motion (jsdom-friendly)
-vi.mock('framer-motion', () => ({
-  motion: new Proxy(
-    {},
-    {
-      get: () =>
-        React.forwardRef<HTMLElement, React.PropsWithChildren<Record<string, unknown>>>(
-          ({ children, ...props }, ref) => {
-            const {
-              whileHover, whileTap, initial, animate, exit, transition, layout,
-              layoutId, variants, drag, dragConstraints, ...rest
-            } = props as Record<string, unknown>;
-            return React.createElement('div', { ...rest, ref }, children);
-          },
-        ),
+vi.mock('framer-motion', () => {
+  const passthrough = React.forwardRef<HTMLElement, React.PropsWithChildren<Record<string, unknown>>>(
+    ({ children, ...props }, ref) => {
+      const {
+        whileHover, whileTap, initial, animate, exit, transition, layout,
+        layoutId, variants, drag, dragConstraints, ...rest
+      } = props as Record<string, unknown>;
+      return React.createElement('div', { ...rest, ref }, children as React.ReactNode);
     },
-  ),
-  AnimatePresence: ({ children }: React.PropsWithChildren) =>
-    React.createElement(React.Fragment, null, children),
-}));
+  );
+  return {
+    motion: new Proxy({}, { get: () => passthrough }),
+    AnimatePresence: ({ children }: React.PropsWithChildren) =>
+      React.createElement(React.Fragment, null, children),
+  };
+});
 
 // Subcomponents — keep DOM minimal & predictable
 vi.mock('@/components/inbox/media-gallery/MediaCard', () => ({
