@@ -265,6 +265,12 @@ export function recordDedupeEvent(
   if (outcome === 'hit') ns.hits += 1;
   else ns.misses += 1;
 
+  // Latência: leader = miss que rodou o fetcher; follower = hit cross-tab que esperou.
+  if (typeof partial.durationMs === 'number' && partial.durationMs >= 0) {
+    if (LEADER_REASONS.has(evt.reason)) recordLatency(state.leader, partial.durationMs);
+    else if (FOLLOWER_REASONS.has(evt.reason)) recordLatency(state.follower, partial.durationMs);
+  }
+
   state.recentEvents.push(evt);
   if (state.recentEvents.length > RECENT_LIMIT) {
     state.recentEvents.splice(0, state.recentEvents.length - RECENT_LIMIT);
@@ -279,10 +285,43 @@ export function recordDedupeEvent(
     }
   }
 
+  // Notifica subscribers reativos (sem polling).
+  notifyTelemetrySubscribers();
+
   log.debug('dedupe event', { key: evt.key, outcome, reason: evt.reason, keyKind: evt.keyKind });
 }
 
+// ─── Subscribers reativos ────────────────────────────────────────────────────
+type TelemetryListener = (snap: DedupeTelemetrySnapshot) => void;
+const telemetryListeners = new Set<TelemetryListener>();
+
+function notifyTelemetrySubscribers() {
+  if (telemetryListeners.size === 0) return;
+  const snap = getDedupeTelemetrySnapshot();
+  telemetryListeners.forEach((fn) => {
+    try { fn(snap); } catch { /* ignore listener errors */ }
+  });
+}
+
+/**
+ * Subscreve atualizações da telemetria. Útil para hooks React que querem
+ * reagir sem polling. Retorna função de unsubscribe.
+ */
+export function subscribeDedupeTelemetry(listener: TelemetryListener): () => void {
+  telemetryListeners.add(listener);
+  return () => { telemetryListeners.delete(listener); };
+}
+
 export function getDedupeTelemetrySnapshot(): DedupeTelemetrySnapshot {
+  let leaderCount = 0;
+  let followerCount = 0;
+  let localCacheCount = 0;
+  for (const r of Object.keys(state.byReason) as DedupeReason[]) {
+    const count = state.byReason[r];
+    if (LEADER_REASONS.has(r)) leaderCount += count;
+    else if (FOLLOWER_REASONS.has(r)) followerCount += count;
+    else if (LOCAL_CACHE_REASONS.has(r)) localCacheCount += count;
+  }
   return {
     total: state.total,
     hits: state.hits,
@@ -294,6 +333,12 @@ export function getDedupeTelemetrySnapshot(): DedupeTelemetrySnapshot {
       Object.entries(state.byNamespace).map(([k, v]) => [k, { ...v }]),
     ),
     recentEvents: state.recentEvents.slice(-RECENT_LIMIT),
+    leaderCount,
+    followerCount,
+    localCacheCount,
+    callsSaved: state.hits, // cada hit é uma chamada que NÃO aconteceu
+    leaderLatency: bucketStats(state.leader),
+    followerLatency: bucketStats(state.follower),
   };
 }
 
