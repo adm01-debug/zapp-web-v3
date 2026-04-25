@@ -159,13 +159,20 @@ Deno.serve(async (req) => {
       const cleanParams = { ...(params || {}) }
       delete (cleanParams as Record<string, unknown>).__cid
       try {
-        const { data: rpcData, error } = await withTimeout(ext.rpc(rpc, cleanParams))
+        const { data: rpcData, error } = await ext
+          .rpc(rpc, cleanParams)
+          .abortSignal(queryController.signal)
         const ms = Date.now() - rpcStartedAt
         console.log(JSON.stringify({
           fn: 'external-db-proxy', cid, op: 'rpc', target: rpc, ms, ok: !error,
           err: error?.message,
         }))
         if (error) {
+          // PostgREST surfaces a cancelled request as either an AbortError
+          // (fetch level) or "canceling statement due to user request"
+          // (Postgres level after the socket close propagates).
+          if (timeoutFired) return timeoutResponse()
+          if (clientAbortFired) return clientAbortResponse()
           const isTimeout = /statement timeout|canceling statement/i.test(error.message)
           return new Response(JSON.stringify({ error: error.message, cid }), {
             status: isTimeout ? 504 : 400,
@@ -176,33 +183,66 @@ Deno.serve(async (req) => {
           headers: jsonHeaders
         })
       } catch (e) {
-        if ((e as Error).message === 'proxy_timeout') return timeoutResponse()
+        if (isProxyTimeout(e)) return timeoutResponse()
+        if (isClientAbort(e)) return clientAbortResponse()
         throw e
+      } finally {
+        cleanup()
       }
     }
 
     // Mutation: insert
     if (action === 'insert' && table && data) {
-      const { data: result, error } = await ext.from(table).insert(data).select()
-      if (error) return new Response(JSON.stringify({ error: error.message }), {
-        status: 400, headers: jsonHeaders
-      })
-      return new Response(JSON.stringify({ data: result }), {
-        headers: jsonHeaders
-      })
+      try {
+        const { data: result, error } = await ext
+          .from(table)
+          .insert(data)
+          .select()
+          .abortSignal(queryController.signal)
+        if (error) {
+          if (timeoutFired) return timeoutResponse()
+          if (clientAbortFired) return clientAbortResponse()
+          return new Response(JSON.stringify({ error: error.message }), {
+            status: 400, headers: jsonHeaders
+          })
+        }
+        return new Response(JSON.stringify({ data: result }), {
+          headers: jsonHeaders
+        })
+      } catch (e) {
+        if (isProxyTimeout(e)) return timeoutResponse()
+        if (isClientAbort(e)) return clientAbortResponse()
+        throw e
+      } finally {
+        cleanup()
+      }
     }
 
     // Mutation: update
     if (action === 'update' && table && data && match) {
-      let q = ext.from(table).update(data)
-      for (const [k, v] of Object.entries(match)) q = q.eq(k, v as string)
-      const { data: result, error } = await q.select()
-      if (error) return new Response(JSON.stringify({ error: error.message }), {
-        status: 400, headers: jsonHeaders
-      })
-      return new Response(JSON.stringify({ data: result }), {
-        headers: jsonHeaders
-      })
+      try {
+        let q = ext.from(table).update(data)
+        for (const [k, v] of Object.entries(match)) q = q.eq(k, v as string)
+        const { data: result, error } = await q
+          .select()
+          .abortSignal(queryController.signal)
+        if (error) {
+          if (timeoutFired) return timeoutResponse()
+          if (clientAbortFired) return clientAbortResponse()
+          return new Response(JSON.stringify({ error: error.message }), {
+            status: 400, headers: jsonHeaders
+          })
+        }
+        return new Response(JSON.stringify({ data: result }), {
+          headers: jsonHeaders
+        })
+      } catch (e) {
+        if (isProxyTimeout(e)) return timeoutResponse()
+        if (isClientAbort(e)) return clientAbortResponse()
+        throw e
+      } finally {
+        cleanup()
+      }
     }
 
     // SELECT query (default)
