@@ -75,6 +75,14 @@ export function isStatus(jid: string | null | undefined): boolean {
   return jid === STATUS_JID;
 }
 
+/**
+ * Aliases canônicos públicos (nomenclatura recomendada pelo blueprint).
+ * Mantemos os nomes legados (`toPhone`, `isStatus`) para retrocompatibilidade,
+ * mas todo código novo deve preferir `toNumber` / `isStatusBroadcast`.
+ */
+export const toNumber = toPhone;
+export const isStatusBroadcast = isStatus;
+
 export function isIndividual(jid: string | null | undefined): boolean {
   return !!jid && jid.endsWith(INDIVIDUAL_SUFFIX);
 }
