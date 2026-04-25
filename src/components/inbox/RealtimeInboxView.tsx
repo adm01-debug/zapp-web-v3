@@ -158,7 +158,7 @@ export function RealtimeInboxView() {
                   <ContactDetailsResponsive key={`details-${inbox.legacyConversation.id}`} conversation={inbox.legacyConversation} onClose={() => inbox.setShowDetails(false)} />
                 </SectionErrorBoundary>
               )}
-            </div>
+            </>
           </Suspense>
         ) : <InboxEmptyChat />}
       </div>
