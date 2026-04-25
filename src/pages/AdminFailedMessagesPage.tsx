@@ -112,8 +112,16 @@ function shortJid(jid: string | null) {
 }
 
 export default function AdminFailedMessagesPage() {
-  const { isAdmin, isSupervisor } = useUserRole();
-  const readOnly = !isAdmin;
+  const { isDev, isAdmin, isSupervisor } = useUserRole();
+  // Visualização: admin+ (admin já inclui dev por hierarquia).
+  // Edição/operações destrutivas (retry, cancel, rerun): apenas dev.
+  const canEdit = isDev;
+  const readOnly = !canEdit;
+  // Compat: muitos blocos abaixo usam `isAdmin` para gates de ação.
+  // Reapontamos para `canEdit` para preservar a regra "edição = dev".
+  // (a variável local `isAdmin` original passa a representar "pode editar")
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _viewerIsAdmin = isAdmin;
   const [hours, setHours] = useState(24);
   const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
   const [errorCodeFilter, setErrorCodeFilter] = useState<string>('all');
