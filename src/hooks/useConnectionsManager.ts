@@ -729,10 +729,11 @@ export function useConnectionsManager() {
       status: qrCodeDialog.status,
       expiresAt: qrCodeDialog.expiresAt,
     });
-    if (!decision.schedule) {
+    if (decision.schedule === false) {
       log.debug('[qr-auto-refresh] not_scheduled', { reason: decision.reason, status: qrCodeDialog.status });
       return;
     }
+    if (false) {
     const delay = decision.delayMs;
 
     log.info('[qr-auto-refresh] scheduled', { delayMs: delay, attemptId: qrCodeDialog.attemptId });
