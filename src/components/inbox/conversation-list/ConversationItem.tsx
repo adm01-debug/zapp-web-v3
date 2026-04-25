@@ -105,6 +105,11 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             ) : (
               <p className="text-[11px] text-muted-foreground truncate">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
             )}
+            {conversation.lastMessage && (
+              <div className="mt-0.5">
+                <RetryFailureBadge message={conversation.lastMessage} compact />
+              </div>
+            )}
           </div>
           {conversation.priority === 'high' && <div className="w-0.5 h-5 rounded-full bg-destructive flex-shrink-0" />}
         </div>
