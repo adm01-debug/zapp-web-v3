@@ -80,24 +80,15 @@ export function normalizeEndpoint(endpoint: string): string {
     const sorted = queryPart
       .split('&')
       .filter(Boolean)
-      .map((kv) => {
+      .map<[string, string, boolean]>((kv) => {
         const eq = kv.indexOf('=');
-        return eq === -1 ? [kv, ''] : [kv.slice(0, eq), kv.slice(eq + 1)];
+        return eq === -1 ? [kv, '', false] : [kv.slice(0, eq), kv.slice(eq + 1), true];
       })
       .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
-      .map(([k, v]) => (v === '' && !kv_hasEq(kv_for(queryPart, k)) ? k : `${k}=${v}`))
+      .map(([k, v, hasEq]) => (hasEq ? `${k}=${v}` : k))
       .join('&');
     return sorted ? `${path}?${sorted}` : path;
   }
-}
-
-// Tiny helpers used only inside the relative-path branch above. Kept private.
-function kv_for(query: string, key: string): string {
-  const found = query.split('&').find((kv) => kv === key || kv.startsWith(key + '='));
-  return found ?? key;
-}
-function kv_hasEq(kv: string): boolean {
-  return kv.includes('=');
 }
 
 /**
