@@ -35,13 +35,9 @@ export function VisibilityGrantsManager() {
   const fetchData = useCallback(async () => {
     setLoading(true);
 
-    // Fetch special agents (users with special_agent role)
-    const { data: specialAgentRoles } = await supabase
-      .from('user_roles')
-      .select('user_id')
-      .eq('role', 'special_agent');
-
-    const specialAgentUserIds = specialAgentRoles?.map(r => r.user_id) || [];
+    // O papel `special_agent` foi descontinuado em favor do papel `agent`.
+    // Esta tela permanece apenas para visualizar grants legados (lista vazia por padrão).
+    const specialAgentUserIds: string[] = [];
 
     // Fetch all profiles
     const { data: profiles } = await supabase

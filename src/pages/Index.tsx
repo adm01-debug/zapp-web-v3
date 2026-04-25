@@ -121,9 +121,9 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
   }, []);
   useTranscriptionNotifications({ enabled: !!user && notifReady });
   useConnectionAlertsPush();
-  // Webhook health alerts — só roda para admin/supervisor (gated abaixo)
-  const { isAdmin, isSupervisor } = useUserRole();
-  useWebhookHealthAlerts({ enabled: !!user && notifReady && (isAdmin || isSupervisor) });
+  // Webhook health alerts — área técnica, só para admin+ (admin já inclui dev por hierarquia)
+  const { isAdmin } = useUserRole();
+  useWebhookHealthAlerts({ enabled: !!user && notifReady && isAdmin });
 
   const showChecklist = !checklistComplete && !checklistDismissed && currentView === 'dashboard';
 

@@ -32,8 +32,8 @@ function fmt(ts: string | null | undefined): string {
 }
 
 export function MessageAttemptsTimeline({ messageId, enabled }: MessageAttemptsTimelineProps) {
-  const { isAdmin, isSupervisor } = useUserRole();
-  const canRead = isAdmin || isSupervisor;
+  const { isSupervisor } = useUserRole();
+  const canRead = isSupervisor;
 
   const { data: row, isLoading, error } = useMessageAttempts(messageId, {
     enabled: enabled && canRead,

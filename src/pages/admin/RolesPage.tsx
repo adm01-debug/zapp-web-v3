@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Shield, Users, UserPlus, Trash2, Search, Loader2, Crown, Eye, Headphones, Star } from 'lucide-react';
+import { Shield, Users, UserPlus, Trash2, Search, Loader2, Crown, Eye, Headphones, Code } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useRolesPageState, type UserWithRole } from './useRolesPageState';
 import { PermissionMatrix } from '@/components/permissions/PermissionMatrix';
@@ -14,10 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const ROLE_CONFIG = {
-  admin: { label: 'Administrador', icon: Crown, color: 'bg-destructive/10 text-destructive dark:bg-destructive/20/30 dark:text-destructive', description: 'Acesso total ao sistema' },
-  supervisor: { label: 'Supervisor', icon: Eye, color: 'bg-info/10 text-info dark:bg-info/20/30 dark:text-info', description: 'Gerencia equipes e relatórios' },
-  special_agent: { label: 'Agente Especial', icon: Star, color: 'bg-warning/10 text-warning dark:bg-warning/20/30 dark:text-warning', description: 'Vê seus contatos + contatos de agentes designados' },
-  agent: { label: 'Agente', icon: Headphones, color: 'bg-success/10 text-success dark:bg-success/20/30 dark:text-success', description: 'Atendimento ao cliente' },
+  dev: { label: 'Desenvolvedor', icon: Code, color: 'bg-destructive/10 text-destructive dark:bg-destructive/20/30 dark:text-destructive', description: 'Equipe técnica — acesso total inclusive áreas técnicas (telemetria, banco, infra) e informativos do sistema' },
+  admin: { label: 'Administrador', icon: Crown, color: 'bg-warning/10 text-warning dark:bg-warning/20/30 dark:text-warning', description: 'Gestão completa: pessoas, integrações, configurações. Vê áreas técnicas em modo leitura' },
+  supervisor: { label: 'Supervisor', icon: Eye, color: 'bg-info/10 text-info dark:bg-info/20/30 dark:text-info', description: 'Operação completa do atendimento (inbox, CRM, relatórios, equipe)' },
+  agent: { label: 'Atendente', icon: Headphones, color: 'bg-success/10 text-success dark:bg-success/20/30 dark:text-success', description: 'Atendimento ao cliente — apenas o próprio escopo' },
 };
 
 export default function RolesPage() {
@@ -60,7 +60,7 @@ export default function RolesPage() {
         <TabsList>
           <TabsTrigger value="users"><Users className="w-4 h-4 mr-2" />Usuários</TabsTrigger>
           <TabsTrigger value="permissions"><Shield className="w-4 h-4 mr-2" />Permissões</TabsTrigger>
-          <TabsTrigger value="visibility"><Star className="w-4 h-4 mr-2" />Visibilidade</TabsTrigger>
+          <TabsTrigger value="visibility"><Eye className="w-4 h-4 mr-2" />Visibilidade</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4 mt-4">
@@ -142,7 +142,7 @@ export default function RolesPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Role</label>
-              <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as 'admin' | 'supervisor' | 'agent' | 'special_agent')}>
+              <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as 'dev' | 'admin' | 'supervisor' | 'agent')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(ROLE_CONFIG).map(([role, config]) => (
