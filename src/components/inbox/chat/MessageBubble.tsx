@@ -29,6 +29,8 @@ import {
   ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { MessageSendHistorySheet } from './MessageSendHistorySheet';
+import { extractMessageType } from '@/adapters/evolutionAdapter';
+import { MessageBubbleUnsupported } from './MessageBubbleUnsupported';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('MessageBubble');
@@ -73,6 +75,19 @@ export function MessageBubble({
   const isFailedTerminal = isSent && !message.is_deleted && (
     message.status === 'failed' || message.status === 'failed_auth' || message.status === 'failed_retries'
   );
+
+  // Universal extractor: classifica o tipo bruto do WhatsApp/Evolution.
+  // Quando o blueprint marca o tipo como `unsupported`, renderiza o
+  // fallback diagnóstico inline em vez de tentar interpretar o conteúdo.
+  // Usa `message_type` (raw da DB) quando disponível; cai para `type` interno.
+  const extracted = extractMessageType(message.message_type ?? message.type);
+  const showUnsupportedFallback =
+    !message.is_deleted && !extracted.supported &&
+    // Não dispara para mensagens que o adapter já casou com um renderer
+    // dedicado (ex.: 'image' interno mesmo se o raw for desconhecido).
+    !(message.mediaUrl && (message.type === 'image' || message.type === 'video' || message.type === 'audio' || message.type === 'document' || message.type === 'sticker')) &&
+    !(message.type === 'location' && message.location) &&
+    !(message.type === 'interactive' && message.interactive);
 
   const bubbleContent = (
       <SwipeableMessage onSwipeRight={() => onReply(message)} onSwipeLeft={() => onForward(message)}>
@@ -167,6 +182,10 @@ export function MessageBubble({
                 {message.buttonResponse && <ButtonResponseBadge buttonTitle={message.buttonResponse.buttonTitle} isSent={isSent} />}
                 {message.type === 'interactive' && message.interactive && <InteractiveMessageDisplay interactive={message.interactive} isSent={isSent} onButtonClick={onInteractiveButtonClick} />}
 
+                {showUnsupportedFallback && (
+                  <MessageBubbleUnsupported extracted={extracted} rawContent={message.content} isSent={isSent} />
+                )}
+
                 {message.type === 'image' && message.mediaUrl && (
                   <div className={cn("overflow-hidden", message.content ? "mb-1.5 -mx-1 -mt-0.5 rounded-xl" : "w-full")}>
                     <MessageImage src={message.mediaUrl} />
@@ -226,7 +245,7 @@ export function MessageBubble({
                   </div>
                 )}
 
-                {message.content && message.type !== 'audio' && message.type !== 'location' && message.type !== 'video' && message.type !== 'document' && message.type !== 'sticker' && (
+                {!showUnsupportedFallback && message.content && message.type !== 'audio' && message.type !== 'location' && message.type !== 'video' && message.type !== 'document' && message.type !== 'sticker' && (
                   <p className="text-[13.5px] whitespace-pre-wrap leading-[1.45]">
                     {searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}
                   </p>

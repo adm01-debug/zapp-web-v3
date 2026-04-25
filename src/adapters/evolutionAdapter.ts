@@ -37,24 +37,109 @@ export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessa
   };
 }
 
-function mapMessageType(evoType: string): string {
-  const mapping: Record<string, string> = {
-    conversation: 'text',
-    extendedTextMessage: 'text',
-    imageMessage: 'image',
-    videoMessage: 'video',
-    audioMessage: 'audio',
-    documentMessage: 'document',
-    stickerMessage: 'sticker',
-    locationMessage: 'location',
-    contactMessage: 'text',
-    text: 'text',
-    image: 'image',
-    video: 'video',
-    audio: 'audio',
-    document: 'document',
+/**
+ * Universal extractor — Blueprint dos 18 messageTypes do Baileys/Evolution.
+ *
+ * Cobre os tipos canônicos enviados pelo WhatsApp/Evolution e classifica
+ * cada um em três dimensões úteis para a UI:
+ *  - `internalType`: vocabulário interno renderizável pelo MessageBubble
+ *    (text|image|audio|video|document|sticker|location|interactive).
+ *  - `category`: agrupamento semântico (text|media|interactive|location|
+ *    contact|poll|reaction|system|unknown).
+ *  - `supported`: true se o MessageBubble sabe renderizar nativamente; false
+ *    aciona o fallback diagnóstico inline (ver `MessageBubbleUnsupported`).
+ *  - `label`: nome legível para humanos (pt-BR) usado em diagnóstico/log.
+ *
+ * Por que existe: o `mapMessageType` antigo colapsava silenciosamente para
+ * 'text' qualquer tipo desconhecido, escondendo lacunas (poll, reaction,
+ * viewOnce). Este normalizador preserva a informação original e marca o
+ * tipo como `unknown` para o operador ver claramente o que falta.
+ */
+export type InternalMessageType =
+  | 'text' | 'image' | 'audio' | 'video' | 'document'
+  | 'sticker' | 'location' | 'interactive' | 'unsupported';
+
+export type MessageCategory =
+  | 'text' | 'media' | 'interactive' | 'location'
+  | 'contact' | 'poll' | 'reaction' | 'system' | 'unknown';
+
+export interface ExtractedMessageType {
+  /** Raw type as received from the wire (preserved for telemetry/debug). */
+  rawType: string;
+  /** Internal vocabulary the MessageBubble switches on. */
+  internalType: InternalMessageType;
+  /** Semantic grouping for analytics and fallback UI. */
+  category: MessageCategory;
+  /** True if the bubble has a dedicated renderer; false → diagnostic fallback. */
+  supported: boolean;
+  /** Human-readable label (pt-BR). */
+  label: string;
+}
+
+/**
+ * Blueprint dos 18 messageTypes (Baileys/Evolution canon).
+ * Mantido como const para tipos exatos. Aliases minúsculos (ex.: 'image',
+ * 'text') também são aceitos por `extractMessageType` para compatibilidade
+ * retroativa com adapters antigos.
+ */
+const MESSAGE_TYPE_BLUEPRINT: Record<string, Omit<ExtractedMessageType, 'rawType'>> = {
+  conversation:           { internalType: 'text',         category: 'text',        supported: true,  label: 'Texto' },
+  extendedTextMessage:    { internalType: 'text',         category: 'text',        supported: true,  label: 'Texto formatado' },
+  imageMessage:           { internalType: 'image',        category: 'media',       supported: true,  label: 'Imagem' },
+  videoMessage:           { internalType: 'video',        category: 'media',       supported: true,  label: 'Vídeo' },
+  audioMessage:           { internalType: 'audio',        category: 'media',       supported: true,  label: 'Áudio' },
+  documentMessage:        { internalType: 'document',     category: 'media',       supported: true,  label: 'Documento' },
+  stickerMessage:         { internalType: 'sticker',      category: 'media',       supported: true,  label: 'Figurinha' },
+  locationMessage:        { internalType: 'location',     category: 'location',    supported: true,  label: 'Localização' },
+  liveLocationMessage:    { internalType: 'location',     category: 'location',    supported: true,  label: 'Localização ao vivo' },
+  contactMessage:         { internalType: 'unsupported',  category: 'contact',     supported: false, label: 'Cartão de contato' },
+  contactsArrayMessage:   { internalType: 'unsupported',  category: 'contact',     supported: false, label: 'Lista de contatos' },
+  pollCreationMessage:    { internalType: 'unsupported',  category: 'poll',        supported: false, label: 'Enquete' },
+  pollUpdateMessage:      { internalType: 'unsupported',  category: 'poll',        supported: false, label: 'Voto em enquete' },
+  reactionMessage:        { internalType: 'unsupported',  category: 'reaction',    supported: false, label: 'Reação' },
+  buttonsMessage:         { internalType: 'interactive',  category: 'interactive', supported: true,  label: 'Mensagem com botões' },
+  listMessage:            { internalType: 'interactive',  category: 'interactive', supported: true,  label: 'Mensagem de lista' },
+  templateMessage:        { internalType: 'interactive',  category: 'interactive', supported: true,  label: 'Modelo (template)' },
+  viewOnceMessage:        { internalType: 'unsupported',  category: 'media',       supported: false, label: 'Ver uma vez' },
+};
+
+/** Aliases internos curtos (legacy + envio outbound). */
+const SHORT_ALIASES: Record<string, keyof typeof MESSAGE_TYPE_BLUEPRINT> = {
+  text: 'conversation',
+  image: 'imageMessage',
+  video: 'videoMessage',
+  audio: 'audioMessage',
+  document: 'documentMessage',
+  sticker: 'stickerMessage',
+  location: 'locationMessage',
+  interactive: 'buttonsMessage',
+};
+
+/**
+ * Universal extractor — sempre retorna um descritor estruturado.
+ * Para tipos completamente desconhecidos, marca como `unsupported` +
+ * `category: 'unknown'`, preservando o `rawType` para diagnóstico.
+ */
+export function extractMessageType(rawType: string | null | undefined): ExtractedMessageType {
+  const raw = (rawType ?? '').trim();
+  if (!raw) {
+    return { rawType: '', internalType: 'text', category: 'text', supported: true, label: 'Texto' };
+  }
+  const canonicalKey = (SHORT_ALIASES[raw] ?? raw) as keyof typeof MESSAGE_TYPE_BLUEPRINT;
+  const blueprint = MESSAGE_TYPE_BLUEPRINT[canonicalKey];
+  if (blueprint) return { rawType: raw, ...blueprint };
+  return {
+    rawType: raw,
+    internalType: 'unsupported',
+    category: 'unknown',
+    supported: false,
+    label: raw, // unknown → expose raw key so the operator sees what's missing
   };
-  return mapping[evoType] || 'text';
+}
+
+/** @deprecated Use `extractMessageType(...).internalType`. Kept for callers that expect a string. */
+function mapMessageType(evoType: string): string {
+  return extractMessageType(evoType).internalType;
 }
 
 function mapStatus(evoStatus: string): 'sent' | 'delivered' | 'read' | 'failed' | null {
