@@ -292,8 +292,7 @@ export function useExternalMessages(remoteJid: string | null) {
         }),
       );
       if (!mountedRef.current || controller.signal.aborted) return;
-
-      const mapped = older.map(evolutionToRealtimeMessage);
+      if (activeJidRef.current !== remoteJid) return; // jid trocou durante o fetch
       if (mapped.length === 0) {
         setHasMore(false);
         return;
