@@ -285,3 +285,121 @@ export async function sendMessageToContact(
 
   return data as SendMessageResult;
 }
+
+/**
+ * Re-dispatches an EXISTING failed message in single-shot mode.
+ *
+ * Differences vs. `sendMessageToContact`:
+ *  - Does NOT insert a new row — updates the existing message in-place.
+ *  - Does NOT run the full retry loop (single attempt, `maxRetries: 0`).
+ *  - Preserves the stored `retry_attempt` / `retry_total` counters from the
+ *    previous failed cycle (does not reset them on success/failure).
+ *  - Same idempotency-key fingerprint, so the recipient never gets duplicates.
+ *
+ * Used by the "Re-disparar última tentativa" action — useful when the operator
+ * just wants to retry once without bumping the counter or starting a new cycle.
+ */
+export async function redispatchMessage(messageId: string): Promise<void> {
+  const { data: msg, error: fetchErr } = await supabase
+    .from('messages')
+    .select('id, contact_id, content, message_type, media_url, retry_attempt, retry_total')
+    .eq('id', messageId)
+    .single();
+
+  if (fetchErr || !msg) {
+    throw new Error('Mensagem não encontrada para re-disparo');
+  }
+
+  const contactId = msg.contact_id as string;
+  const content = (msg.content as string) ?? '';
+  const messageType = (msg.message_type as string) ?? 'text';
+  const mediaUrl = (msg.media_url as string | null) ?? undefined;
+
+  await supabase.from('messages').update({ status: 'sending' }).eq('id', messageId);
+  emitSendStatus(messageId, { status: 'sending' }, { contactId, source: 'messageSender:redispatch' });
+
+  try {
+    const { data: contact } = await supabase
+      .from('contacts')
+      .select('phone, whatsapp_connection_id')
+      .eq('id', contactId)
+      .single();
+
+    const { resolvedConnectionId, connection } = await resolveConnection(contact?.whatsapp_connection_id ?? null);
+
+    if (!connection?.instance_id || connection.status !== 'connected') {
+      await supabase.from('messages').update({
+        status: 'failed',
+        error_reason: 'Nenhuma conexão WhatsApp ativa disponível',
+      }).eq('id', messageId);
+      emitSendStatus(messageId, { status: 'failed', errorReason: 'Nenhuma conexão WhatsApp ativa disponível' }, { contactId, source: 'messageSender:redispatch' });
+      throw new Error('Nenhuma conexão WhatsApp ativa disponível');
+    }
+
+    const phone = contact?.phone?.replace(/\D/g, '');
+    if (!phone) {
+      throw new Error('Contato sem número de telefone válido');
+    }
+
+    const { action, body } = buildEvolutionPayload(connection.instance_id, phone, content, messageType, mediaUrl);
+
+    let idemKey: string;
+    try {
+      idemKey = await buildSendIdempotencyKeyFromFingerprint({
+        contactId,
+        messageType,
+        content,
+        mediaUrl: mediaUrl ?? null,
+      });
+    } catch {
+      idemKey = buildSendIdempotencyKey(messageId);
+    }
+
+    // Single-shot: maxRetries: 0 → exactly 1 attempt, no retry loop.
+    const { data: apiResult, error: apiError } = await invokeEvolutionWithRetry(
+      action,
+      { body, headers: { 'Idempotency-Key': idemKey } },
+      { idempotencyKey: idemKey, maxRetries: 0 }
+    );
+
+    if (apiError || (apiResult as { error?: unknown })?.error) {
+      const errPayload = apiError || (apiResult as { error?: unknown; message?: string });
+      const auth = classifyAuthError(errPayload);
+      const reason = (apiResult as { message?: string })?.message
+        || (apiError as { message?: string } | null)?.message
+        || 'Falha ao reenviar mensagem';
+
+      // IMPORTANT: preserve retry_attempt/retry_total — do NOT reset.
+      if (auth.isAuth) {
+        await supabase.from('messages').update({
+          status: 'failed_auth',
+          whatsapp_connection_id: resolvedConnectionId,
+          error_code: auth.code ? String(auth.code) : null,
+          error_reason: auth.reason || reason,
+        }).eq('id', messageId);
+        emitSendStatus(messageId, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender:redispatch' });
+      } else {
+        await supabase.from('messages').update({
+          status: 'failed',
+          whatsapp_connection_id: resolvedConnectionId,
+          error_reason: reason,
+        }).eq('id', messageId);
+        emitSendStatus(messageId, { status: 'failed', errorReason: reason }, { contactId, source: 'messageSender:redispatch' });
+      }
+      throw new Error(reason);
+    }
+
+    const externalId = extractEvolutionMessageId(apiResult);
+    // On success, also preserve counters so the operator sees the
+    // historical attempt count from the previous failed cycle.
+    await supabase.from('messages').update({
+      status: 'sent',
+      external_id: externalId,
+      whatsapp_connection_id: resolvedConnectionId,
+    }).eq('id', messageId);
+    emitSendStatus(messageId, { status: 'sent' }, { contactId, source: 'messageSender:redispatch' });
+  } catch (err) {
+    log.error('Redispatch error:', err);
+    throw err;
+  }
+}
