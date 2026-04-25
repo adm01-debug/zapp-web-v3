@@ -247,6 +247,7 @@ Deno.serve(async (req) => {
 
     // SELECT query (default)
     if (!table) {
+      cleanup()
       return new Response(JSON.stringify({ error: 'Missing table parameter' }), {
         status: 400, headers: jsonHeaders
       })
@@ -258,6 +259,7 @@ Deno.serve(async (req) => {
 
     // Reject heavy queries with no selective filter AND a non-tiny limit
     if (isHeavy && !hasNarrowingFilter && (limit ?? 50) > 100) {
+      cleanup()
       return new Response(
         JSON.stringify({
           error: `Heavy table "${table}" requires a filter on remote_jid, conversation_id, instance_name, or a created_at window (gte/gt). Got limit=${limit} with no narrowing filter.`,
