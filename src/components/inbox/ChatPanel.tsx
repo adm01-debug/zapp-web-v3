@@ -251,7 +251,10 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onCloseConversation={() => openDialog('closeDialog')}
             lastMessages={lastContactMessages}
             allMessages={allMessagesForHeader}
-            onSelectSuggestion={(text) => handlers.setInputValue(text)} />
+            onSelectSuggestion={(text) => handlers.setInputValue(text)}
+            failuresOnly={failuresOnly}
+            failuresCount={failedMessages.length}
+            onToggleFailuresOnly={() => setFailuresOnly((v) => !v)} />
         )}
 
         <ChatSearchBar messages={messages} isOpen={activeTool === 'chatSearch'}
@@ -262,17 +265,41 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
         <ChatAssignedBar conversation={conversation} onOpenTransfer={() => openDialog('transferDialog')} />
 
+        {failuresOnly && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center justify-between gap-3 px-4 py-2 text-xs bg-destructive/10 text-destructive border-b border-destructive/20"
+          >
+            <span>
+              {failedMessages.length === 0
+                ? 'Nenhuma mensagem com falha terminal nesta conversa.'
+                : `Mostrando apenas mensagens com falha terminal (${failedMessages.length}). Passe o mouse sobre o status para ver o motivo.`}
+            </span>
+            <button
+              type="button"
+              className="font-medium underline hover:no-underline"
+              onClick={() => setFailuresOnly(false)}
+            >
+              Limpar filtro
+            </button>
+          </div>
+        )}
+
         <Suspense fallback={null}>
           <NextBestActionEngine contactId={conversation.contact.id} contactName={conversation.contact.name} />
         </Suspense>
 
-        <ChatMessagesArea ref={messagesAreaRef} messages={messages} isContactTyping={isContactTyping} typingUserName={typingUsers[0]?.name || conversation.contact.name}
+        <ChatMessagesArea ref={messagesAreaRef} messages={visibleMessages} isContactTyping={isContactTyping} typingUserName={typingUsers[0]?.name || conversation.contact.name}
           ttsLoading={ttsLoading} ttsPlaying={ttsPlaying} ttsMessageId={ttsMessageId} instanceName={instanceName}
           contactJid={contactJid} contactAvatar={contactAvatar}
           onSpeak={speak} onStop={stop} onReply={handlers.handleReplyToMessage} onForward={handlers.handleForwardMessage} onCopy={handlers.handleCopyMessage}
           onScrollToMessage={handleScrollToMessage} onInteractiveButtonClick={handlers.handleInteractiveButtonClick} onEditStart={handlers.handleEditStart}
           highlightedMessageIds={highlightedMessageIds} activeHighlightId={activeHighlightId} searchQuery={searchQuery}
-          onLoadOlder={onLoadOlder} onCancelLoadOlder={onCancelLoadOlder} loadingOlder={loadingOlder} hasMoreOlder={hasMoreOlder} />
+          onLoadOlder={failuresOnly ? undefined : onLoadOlder}
+          onCancelLoadOlder={failuresOnly ? undefined : onCancelLoadOlder}
+          loadingOlder={failuresOnly ? false : loadingOlder}
+          hasMoreOlder={failuresOnly ? false : hasMoreOlder} />
 
         <ChatQuickRepliesPopover show={dialogs.quickReplies} replies={filteredQuickReplies} onSelect={handleQuickReply} onClose={() => closeDialog('quickReplies')} />
 
