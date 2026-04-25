@@ -1,82 +1,55 @@
-## Objetivo
-Adicionar um **checklist de cobertura ponta-a-ponta** (send → batching → delivery → render de status inline) ao final de `TRILHA_MENSAGENS_NAVEGAVEL.mmd`, e fazer com que o regenerador (`scripts/regen-trilha-mensagens.ts`) emita esse mesmo checklist — assim ele sobrevive a futuros `bun run regen:trilha` sem ser apagado.
+## Reestruturação dos níveis de acesso
 
-O checklist será embutido como bloco de comentários Mermaid (`%% ...`) — não quebra o parse e mantém o `.mmd` como única fonte navegável.
+Hoje o sistema tem 4 papéis (`admin`, `supervisor`, `agent`, `special_agent`). Vamos consolidar a hierarquia em **três níveis claros**, conforme você descreveu:
 
-## Onde encaixar
-`src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd`, logo após o bloco existente "Legenda das arestas" / "Fan-out realtime" e antes do `%% Gerado automaticamente …`.
+| Nível | Quem é | O que enxerga |
+|---|---|---|
+| **dev** (antigo `admin`) | Equipe técnica | Tudo: telemetria, logs, webhooks, banco, segurança, monitoramento, informativos do sistema, painéis admin |
+| **supervisor** | Líder de equipe | Operação completa do atendimento (inbox, contatos, CRM, relatórios, equipe), sem áreas técnicas |
+| **agent** (vendedor) | Atendente final | Apenas seu próprio escopo de atendimento |
 
-## Conteúdo do checklist (organizado pelas 6 etapas do diagrama)
+O papel `special_agent` (pouco usado, sem semântica clara hoje) será **descontinuado** — quem tiver esse papel será migrado para `agent`.
 
-```text
-%% =====================================================================
-%% CHECKLIST DE COBERTURA — send -> batching -> delivery -> render
-%% Marque [x] ao validar cada item (manual ou via teste automatizado).
-%% =====================================================================
-%%
-%% 1. Composicao e envio (UI)
-%%   [ ] CIL (useChatInputLogic) -> dispara MS.sendMessage com payload normalizado
-%%   [ ] MS (messageSender) -> persiste linha 'sending' em DB (==> messages)
-%%   [ ] MS -> chama buildSendIdempotencyKey ANTES de ESR
-%%   [ ] MS -> emitSendStatus('sending', rowId) no bus
-%%
-%% 1b. Idempotencia (buildSendIdempotencyKey)
-%%   [ ] Gera 'mfp:s256:<hex>' quando ha SendFingerprint completo
-%%   [ ] Cai para 'msg:<rowId>' quando fingerprint ausente (call sites legacy)
-%%   [ ] timeBucket de 5min => mesma chave em retries dentro da janela
-%%   [ ] Mesma chave reutilizada por DLQRP (reprocess-failed-messages)
-%%
-%% 2. Transporte e retry
-%%   [ ] ESR envia Idempotency-Key em todas tentativas do withRetry
-%%   [ ] loadRetryConfig respeitado (max attempts / backoff)
-%%   [ ] Falha terminal -> enqueueClientFailedMessage (==> failed_messages)
-%%   [ ] reprocess-failed-messages reprocessa e atualiza status no DB
-%%
-%% 3. Status bus (in-memory)
-%%   [ ] emitSendStatus chamado nos pontos: optimistic, success, error, retry
-%%   [ ] subscribeAllSendStatus alimenta UMSS e UMS
-%%   [ ] getSendStatus retorna ultimo estado conhecido por rowId (sync read)
-%%
-%% 4. Persistencia / leitura
-%%   [ ] useMessages carrega historico inicial + aplica realtime
-%%   [ ] useMessageStatus mapeia status detalhado por message id
-%%   [ ] useMessageSendStatus combina bus in-memory + persistido
-%%
-%% 5. Realtime e batching
-%%   [ ] postgres_changes('messages') registrado pelos 7 hooks + AMP
-%%   [ ] useRealtimeMessages -> useMessageUpdateBatcher (coalescing)
-%%   [ ] BATCH -.-> useMessages (flush em janela curta, sem perder eventos)
-%%   [ ] realtimeUtils dedup por message id (sem update duplicado)
-%%   [ ] useTranscriptionNotifications dispara so em UPDATE de transcription
-%%   [ ] useRealtimeDashboard / useEvolutionMonitoring nao bloqueiam UI
-%%   [ ] AudioMessagePlayer reage a UPDATE de media_url (signed URL refresh)
-%%
-%% 6. Render de status inline
-%%   [ ] MessageBubble consome MessageStatusInline (icone + tooltip)
-%%   [ ] MSI reflete: pending -> sent -> delivered -> read -> failed
-%%   [ ] MSI atualiza sem remount do bubble (memo estavel por message id)
-%%   [ ] VirtualizedMessageList nao re-renderiza lista inteira em UPDATE de 1 msg
-%%   [ ] Falha terminal mostra acao 'Reenviar' (consome chave idempotente)
-%%
-%% Cobertura ponta-a-ponta (smoke):
-%%   [ ] Enviar texto -> bubble aparece 'sending' -> 'sent' -> 'delivered' -> 'read'
-%%   [ ] Enviar audio -> AMP toca apos UPDATE media_url (sem F5)
-%%   [ ] Forcar erro de rede -> retry transparente -> sucesso (mesma chave)
-%%   [ ] Forcar erro permanente -> entra DLQ -> cron reprocessa -> status final
-%%   [ ] Receber mensagem inbound -> aparece em <=1s sem refresh
-```
+### O que muda na prática
 
-## Mudanças
+**1. Banco de dados (migração):**
+- Adicionar valor `dev` ao enum `app_role`.
+- Migrar todas as linhas `user_roles.role = 'admin'` para `'dev'`.
+- Migrar `'special_agent'` para `'agent'`.
+- Atualizar a função `has_role` e demais funções `SECURITY DEFINER` que hoje verificam `'admin'` para também aceitarem `'dev'` (ou apenas `'dev'` após migração).
+- Atualizar políticas RLS que referenciam `'admin'` → `'dev'`.
+- Manter `'admin'` no enum por compatibilidade temporária (só removemos depois que zero código referenciar).
 
-1. **`src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd`** — inserir o bloco acima entre a legenda e a linha `%% Gerado automaticamente …` (regenerado pelo script).
+**2. Frontend — hook central de papéis (`useUserRole.ts`):**
+- Tipo `AppRole` passa a ser `'dev' | 'supervisor' | 'agent'`.
+- Expor `isDev` (substitui `isAdmin`).
+- Manter `isAdmin` como **alias deprecado** apontando para `isDev` para não quebrar nada de cara — removemos em uma segunda passada.
+- Remover `isSpecialAgent`.
 
-2. **`scripts/regen-trilha-mensagens.ts`** — em `renderMmd()`, depois de emitir a legenda e a lista de fan-out, emitir o mesmo bloco de checklist (constante exportada `CHECKLIST_BLOCK: string[]`). Assim:
-   - `bun run regen:trilha` mantém o checklist
-   - `bun run check:trilha` continua passando (o `stripStamp` já normaliza só o timestamp; o resto do conteúdo é determinístico)
+**3. Áreas que passam a ser exclusivas de `dev`:**
+   - Telemetria (`AdminTelemetriaPage`, `ClientTelemetryPanel`)
+   - Webhook overview, failed messages, rate limit, DLQ, idempotency
+   - Crisis Room, Security View / Audit Log
+   - Roles Page, permissões, matriz
+   - Informativos / changelog do sistema
+   - Painéis de monitoramento Evolution
+   - Qualquer item da sidebar marcado hoje como "admin only"
 
-3. Sem mudanças em código de runtime, hooks, testes ou rotas.
+   Tudo isso passa a checar `isDev` em vez de `isAdmin`. Itens de sidebar (`sidebarNavConfig.ts`) e rotas em `ViewRouter.tsx` / `App.tsx` ganham gate `requiresDev`.
 
-## Validação após implementação
-- `bun run regen:trilha` → arquivo regenerado idêntico ao esperado, com o checklist presente.
-- `bun run check:trilha` → exit 0.
-- Abrir `.mmd` em qualquer renderer Mermaid → diagrama renderiza igual (comentários `%%` são ignorados pelo parser).
+**4. Áreas que continuam visíveis para `supervisor`:**
+   - Inbox completo, contatos, CRM, kanban, relatórios operacionais, equipe, agentes (visualizar/atribuir), CSAT, SLA — sem mudança.
+
+**5. UI auxiliar:**
+   - Tela de gestão de usuários (`AdminUsersTable`, `RolesPage`, `InviteAgentDialog`) passa a oferecer os 3 papéis (`dev`, `supervisor`, `agent`) no seletor.
+   - Labels em PT-BR: "Desenvolvedor", "Supervisor", "Atendente".
+
+### Detalhes técnicos
+
+- **Migração SQL**: `ALTER TYPE app_role ADD VALUE 'dev'` + `UPDATE user_roles SET role='dev' WHERE role='admin'` + idem para `special_agent → agent`. As funções `has_role` e helpers ficam aceitando ambos durante o período de transição (ou já apenas `dev` se zerarmos no mesmo deploy — preferência abaixo).
+- **Testes**: `useUserRole.test.tsx`, `usePermissions.test.tsx`, `ViewRouter.role-gating.test.tsx`, `rlsGroupAccess.test.ts` precisam ser atualizados para refletir `dev`.
+- **Refactor amplo mas mecânico**: ~18 arquivos referenciam `isAdmin` / `'admin'` no front. Substituição direcionada por `isDev` mantendo o alias deprecado evita big-bang.
+
+### Pergunta antes de executar
+
+Quer fazer a transição **de uma vez** (renomear admin → dev no mesmo deploy, sem alias) ou em **duas fases** (primeiro adicionar `dev` como sinônimo de `admin` mantendo compatibilidade, depois remover `admin` num deploy seguinte)? A opção de uma vez é mais limpa, a de duas fases é mais segura se houver integrações externas dependendo do nome `admin`.
