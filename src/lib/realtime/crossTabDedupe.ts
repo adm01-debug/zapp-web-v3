@@ -56,6 +56,26 @@ const resultCache = new Map<string, { value: unknown; expiresAt: number }>();
 const inflight = new Map<string, Promise<unknown>>();
 const waiters = new Map<string, Array<(v: { ok: true; data: unknown } | { ok: false; error: string }) => void>>();
 
+// Subscribers: handlers da UI interessados em receber resultados que chegam
+// via BroadcastChannel (de outras abas). Chave é uma string ou regex.
+type SubscriberFn<T = unknown> = (key: string, data: T, source: 'remote' | 'local') => void;
+interface Subscription {
+  match: (key: string) => boolean;
+  handler: SubscriberFn;
+}
+const subscribers = new Set<Subscription>();
+
+function notifySubscribers(key: string, data: unknown, source: 'remote' | 'local') {
+  subscribers.forEach((sub) => {
+    if (!sub.match(key)) return;
+    try {
+      sub.handler(key, data, source);
+    } catch (err) {
+      log.error('Subscriber handler threw', { key, err });
+    }
+  });
+}
+
 let bc: BroadcastChannel | null = null;
 function getBroadcastChannel(): BroadcastChannel | null {
   if (typeof BroadcastChannel === 'undefined') return null;
