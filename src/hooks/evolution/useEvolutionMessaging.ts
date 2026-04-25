@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import type { HttpMethod } from './useEvolutionApiCore';
-import type { SendMessageParams, ContactCard, PollParams, ListSection, ButtonItem } from '../evolutionApi.types';
+import type { SendMessageParams, SendTextOptions, ContactCard, PollParams, ListSection, ButtonItem } from '../evolutionApi.types';
 
 export function useEvolutionMessaging(
   callApi: (action: string, body?: object, method?: HttpMethod) => Promise<any>,
@@ -9,20 +9,12 @@ export function useEvolutionMessaging(
   // ============================================================
   // SEND MESSAGES
   // ============================================================
-  
+
   const sendTextMessage = useCallback((
     instanceName: string,
     number: string,
     text: string,
-    options?: {
-      delay?: number;
-      quoted?: SendMessageParams['quoted'];
-      mentioned?: string[];
-      /** Generate WhatsApp rich link preview when the text contains a URL. */
-      linkPreview?: boolean;
-      /** Mention every group participant (`@everyone`). Only effective on group JIDs. */
-      mentionsEveryOne?: boolean;
-    },
+    options?: SendTextOptions,
   ) => callApi('send-text', { instanceName, number, text, ...options }), [callApi]);
 
   const sendMediaMessage = useCallback((params: SendMessageParams) =>
