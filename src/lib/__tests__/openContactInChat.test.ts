@@ -16,7 +16,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const maybeSingleMock = vi.fn();
 const eqMock = vi.fn(() => ({ maybeSingle: maybeSingleMock }));
 const selectMock = vi.fn(() => ({ eq: eqMock }));
-const fromMock = vi.fn(() => ({ select: selectMock }));
+const fromMock = vi.fn((_table: string) => ({ select: selectMock }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: (table: string) => fromMock(table) },
