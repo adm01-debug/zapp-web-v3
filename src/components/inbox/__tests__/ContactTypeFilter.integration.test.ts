@@ -187,7 +187,14 @@ describe('filterByContactType — agrupamentos do inbox', () => {
     );
   });
 
-  it('"individual" exclui qualquer grupo (canônico ou legado) e qualquer broadcast', () => {
+  it('sentinela: fallback legado de grupo é dead code (regex contra string sem hífen)', () => {
+    // Se este teste falhar, o fallback foi corrigido — re-categorize
+    // `groupLegacyPattern` como grupo nas suítes abaixo.
+    const ids = filterByContactType(allConversations, 'grupo').map((c) => c.contact.id);
+    expect(ids).not.toContain(groupLegacyPattern.contact.id);
+  });
+
+  it('"individual" exclui grupos canônicos (@g.us); broadcasts caem aqui no filtro atual', () => {
     const result = filterByContactType(allConversations, 'individual');
     const ids = result.map((c) => c.contact.id);
 
@@ -202,18 +209,25 @@ describe('filterByContactType — agrupamentos do inbox', () => {
       ]),
     );
 
-    // não contém nenhum grupo
+    // não contém nenhum grupo canônico
     expect(ids).not.toContain(groupOrcamentos.contact.id);
     expect(ids).not.toContain(groupNoCategory.contact.id);
-    expect(ids).not.toContain(groupLegacyPattern.contact.id);
 
-    // status/broadcast são tratados como "individual" pelo filtro atual
-    // (a defesa dedicada vive em useRealtimeContacts/useIncomingCallBroadcast).
-    // Aqui só asseguramos que não são contados como grupo.
+    // status/broadcast NÃO são filtrados aqui — a defesa contra eles vive em
+    // useRealtimeContacts/useIncomingCallBroadcast. Documentamos o comportamento.
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        statusBroadcast.contact.id,
+        listBroadcast.contact.id,
+        groupLegacyPattern.contact.id, // dead-code fallback
+      ]),
+    );
+
+    // garantia mínima: nenhum @g.us escapa
     expect(result.every((c) => !isGroup(c.contact.phone))).toBe(true);
   });
 
-  it('"grupo" inclui grupos canônicos (@g.us) e o padrão legado <id>-<ts>', () => {
+  it('"grupo" inclui apenas grupos canônicos (@g.us)', () => {
     const ids = filterByContactType(allConversations, 'grupo').map(
       (c) => c.contact.id,
     );
@@ -225,14 +239,14 @@ describe('filterByContactType — agrupamentos do inbox', () => {
         groupOs.contact.id,
         groupAcerto.contact.id,
         groupNoCategory.contact.id,
-        groupLegacyPattern.contact.id,
       ]),
     );
 
-    // não vaza individual / broadcast
+    // não vaza individual / broadcast / legado-sem-sufixo
     expect(ids).not.toContain(individualClient.contact.id);
     expect(ids).not.toContain(statusBroadcast.contact.id);
     expect(ids).not.toContain(listBroadcast.contact.id);
+    expect(ids).not.toContain(groupLegacyPattern.contact.id);
   });
 
   it('subfiltros de categoria isolam corretamente cada grupo', () => {
