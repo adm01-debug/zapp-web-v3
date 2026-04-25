@@ -59,6 +59,52 @@ Deno.test("detectFallbackReason — 5xx com error:true dispara upstream_error", 
   );
 });
 
+Deno.test("detectFallbackReason — HTTP 405 dispara http_405", () => {
+  assertEquals(detectFallbackReason('find-chats', 405, null), 'http_405');
+});
+
+Deno.test("detectFallbackReason — HTTP 501 dispara http_501", () => {
+  assertEquals(detectFallbackReason('fetch-profile', 501, null), 'http_501');
+});
+
+Deno.test("detectFallbackReason — payload 'Method Not Allowed' / 'Cannot POST' dispara method_not_allowed_payload", () => {
+  assertEquals(
+    detectFallbackReason('find-chats', 200, { error: true, message: 'Method Not Allowed' }),
+    'method_not_allowed_payload',
+  );
+  assertEquals(
+    detectFallbackReason('find-contacts', 400, { message: 'Cannot POST /chat/findContacts/wpp2' }),
+    'method_not_allowed_payload',
+  );
+  assertEquals(
+    detectFallbackReason('find-chats', 200, { code: 'method_not_allowed' }),
+    'method_not_allowed_payload',
+  );
+  assertEquals(
+    detectFallbackReason('find-chats', 200, { statusCode: 405, message: 'oops' }),
+    'method_not_allowed_payload',
+  );
+});
+
+Deno.test("detectFallbackReason — payload 'Not Implemented' / 'feature unavailable' dispara not_implemented_payload", () => {
+  assertEquals(
+    detectFallbackReason('fetch-profile', 200, { error: true, message: 'Not Implemented' }),
+    'not_implemented_payload',
+  );
+  assertEquals(
+    detectFallbackReason('find-chats', 200, { message: 'Endpoint deprecated in v2.3.7' }),
+    'not_implemented_payload',
+  );
+  assertEquals(
+    detectFallbackReason('find-contacts', 200, { code: 'not_implemented' }),
+    'not_implemented_payload',
+  );
+  assertEquals(
+    detectFallbackReason('find-chats', 200, { message: 'Feature unavailable' }),
+    'not_implemented_payload',
+  );
+});
+
 Deno.test("logFallbackEvent — emite linha única JSON com prefixo e campos estáveis", () => {
   const { result, logs } = withCapturedLogs(() =>
     logFallbackEvent({
