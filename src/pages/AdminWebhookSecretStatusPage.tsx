@@ -31,6 +31,7 @@ import { AlertThresholdsPanel } from './admin-webhook-secret-status/AlertThresho
 import { WebhookAlertHistoryPanel } from './admin-webhook-secret-status/WebhookAlertHistoryPanel';
 import { AdvancedFiltersPanel } from './admin-webhook-secret-status/AdvancedFiltersPanel';
 import { HmacSelfTestButton } from './admin-webhook-secret-status/HmacSelfTestButton';
+import { HmacAuditHistoryPanel } from './admin-webhook-secret-status/HmacAuditHistoryPanel';
 import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
 import { useWebhookViewPreferences } from '@/hooks/useWebhookViewPreferences';
 import {
