@@ -145,10 +145,19 @@ export function maybeLogFallback(params: {
   data: unknown;
   primary_ms?: number;
   mode?: EvolutionFallbackMode;
+  /**
+   * Cliente Supabase com service_role para persistir o evento em
+   * `public.evolution_fallback_events`. Quando ausente, o evento sai apenas
+   * via console.log (modo legado).
+   *
+   * A persistência é fire-and-forget: nunca bloqueia a request principal e
+   * nunca propaga falhas (silencia erros de rede/RLS para não cascatear).
+   */
+  supabase?: { from: (table: string) => { insert: (row: unknown) => Promise<unknown> | unknown } };
 }): EvolutionFallbackEvent | null {
   const reason = detectFallbackReason(params.action, params.status, params.data);
   if (!reason) return null;
-  return logFallbackEvent({
+  const event = logFallbackEvent({
     action: params.action,
     endpoint: params.endpoint,
     instance: params.instance,
@@ -157,4 +166,29 @@ export function maybeLogFallback(params: {
     mode: params.mode ?? 'detected',
     primary_ms: params.primary_ms,
   });
+
+  // Persistência best-effort. Roda fora do caminho crítico — qualquer erro é
+  // engolido pra não derrubar a action.
+  if (params.supabase) {
+    try {
+      const row = {
+        ts: event.ts,
+        action: event.action,
+        endpoint: event.endpoint,
+        instance: event.instance,
+        status: event.status,
+        reason: event.reason,
+        mode: event.mode,
+        fallback_target: event.fallback_target,
+        primary_ms: event.primary_ms ?? null,
+      };
+      const result = params.supabase.from('evolution_fallback_events').insert(row);
+      if (result && typeof (result as Promise<unknown>).then === 'function') {
+        (result as Promise<unknown>).catch(() => { /* silencia */ });
+      }
+    } catch {
+      // ignora
+    }
+  }
+  return event;
 }

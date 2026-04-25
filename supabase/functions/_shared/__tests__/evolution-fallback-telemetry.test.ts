@@ -146,3 +146,77 @@ Deno.test("maybeLogFallback — instance null é aceito (action sem instância n
   assertEquals(result?.instance, null);
   assertEquals(result?.reason, 'http_404');
 });
+
+Deno.test("maybeLogFallback — persiste no Supabase quando client é fornecido", () => {
+  const inserts: { table: string; row: unknown }[] = [];
+  const fakeSupabase = {
+    from: (table: string) => ({
+      insert: (row: unknown) => {
+        inserts.push({ table, row });
+        return Promise.resolve({ data: null, error: null });
+      },
+    }),
+  };
+
+  withCapturedLogs(() =>
+    maybeLogFallback({
+      action: 'find-chats',
+      endpoint: '/chat/findChats/wpp2',
+      instance: 'wpp2',
+      status: 404,
+      data: null,
+      primary_ms: 42,
+      supabase: fakeSupabase,
+    }),
+  );
+
+  assertEquals(inserts.length, 1);
+  assertEquals(inserts[0].table, 'evolution_fallback_events');
+  const row = inserts[0].row as Record<string, unknown>;
+  assertEquals(row.action, 'find-chats');
+  assertEquals(row.reason, 'http_404');
+  assertEquals(row.instance, 'wpp2');
+  assertEquals(row.status, 404);
+  assertEquals(row.mode, 'detected');
+  assertEquals(row.fallback_target, 'rpc:rpc_list_conversations');
+  assertEquals(row.primary_ms, 42);
+});
+
+Deno.test("maybeLogFallback — falha de insert NÃO derruba (silencia rejeição)", async () => {
+  const fakeSupabase = {
+    from: (_table: string) => ({
+      insert: (_row: unknown) => Promise.reject(new Error('boom')),
+    }),
+  };
+
+  // Não deve lançar
+  withCapturedLogs(() =>
+    maybeLogFallback({
+      action: 'fetch-profile',
+      endpoint: '/profile/fetchProfile/wpp2',
+      instance: 'wpp2',
+      status: 200,
+      data: {},
+      supabase: fakeSupabase,
+    }),
+  );
+
+  // Aguarda microtask pra garantir que .catch foi anexado
+  await new Promise((r) => setTimeout(r, 0));
+});
+
+Deno.test("maybeLogFallback — sem supabase NÃO tenta inserir", () => {
+  let inserted = false;
+  const _spy = { from: () => { inserted = true; return { insert: () => null }; } };
+  // Chamada sem supabase deve apenas logar
+  withCapturedLogs(() =>
+    maybeLogFallback({
+      action: 'find-contacts',
+      endpoint: '/chat/findContacts/wpp2',
+      instance: 'wpp2',
+      status: 404,
+      data: null,
+    }),
+  );
+  assertEquals(inserted, false);
+});

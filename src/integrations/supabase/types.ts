@@ -3899,6 +3899,48 @@ export type Database = {
         }
         Relationships: []
       }
+      evolution_fallback_events: {
+        Row: {
+          action: string
+          created_at: string
+          endpoint: string
+          fallback_target: string
+          id: string
+          instance: string | null
+          mode: string
+          primary_ms: number | null
+          reason: string
+          status: number
+          ts: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          endpoint: string
+          fallback_target: string
+          id?: string
+          instance?: string | null
+          mode?: string
+          primary_ms?: number | null
+          reason: string
+          status: number
+          ts?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          endpoint?: string
+          fallback_target?: string
+          id?: string
+          instance?: string | null
+          mode?: string
+          primary_ms?: number | null
+          reason?: string
+          status?: number
+          ts?: string
+        }
+        Relationships: []
+      }
       evolution_incidents: {
         Row: {
           created_at: string
@@ -9818,6 +9860,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_connection_status_audit: { Args: never; Returns: number }
+      cleanup_evolution_fallback_events: { Args: never; Returns: number }
       cleanup_evolution_send_idempotency: { Args: never; Returns: number }
       cleanup_expired_challenges: { Args: never; Returns: undefined }
       cleanup_expired_event_keys: { Args: never; Returns: undefined }
@@ -10139,6 +10182,10 @@ export type Database = {
       }
       rpc_dlq_retry_now: { Args: { p_id: string }; Returns: boolean }
       rpc_dlq_stats: { Args: never; Returns: Json }
+      rpc_evolution_fallback_stats: {
+        Args: { p_hours?: number }
+        Returns: Json
+      }
       rpc_instance_auth_event_summary: {
         Args: { p_hours?: number; p_instance?: string }
         Returns: Json

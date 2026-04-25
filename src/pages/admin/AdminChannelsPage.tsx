@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { EvolutionFallbackStatusCard } from "@/components/admin/EvolutionFallbackStatusCard";
 
 const CHANNEL_TYPES = [
   { value: "whatsapp", label: "WhatsApp" },
@@ -176,6 +177,8 @@ export default function AdminChannelsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <EvolutionFallbackStatusCard />
 
       {loading ? (
         <p className="text-muted-foreground">Carregando…</p>
