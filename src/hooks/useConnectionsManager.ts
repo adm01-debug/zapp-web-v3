@@ -566,6 +566,7 @@ export function useConnectionsManager() {
     // Invalida toda operação assíncrona em vôo: handlers que capturaram a
     // geração anterior vão detectar o mismatch e abortar antes de tocar no
     // estado, garantindo que NENHUM polling/auto-refresh dispare após o close.
+    log.info('[qr-auto-refresh] cancelled', { reason: 'dialog_closed', generation: dialogGenRef.current });
     dialogGenRef.current += 1;
     refreshInFlightRef.current = false;
     if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null); }
