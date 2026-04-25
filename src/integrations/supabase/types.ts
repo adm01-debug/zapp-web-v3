@@ -1867,6 +1867,109 @@ export type Database = {
           },
         ]
       }
+      channel_provider_routes: {
+        Row: {
+          channel_connection_id: string | null
+          created_at: string
+          current_provider_id: string | null
+          fallback_provider_id: string | null
+          id: string
+          primary_provider_id: string
+          switched_at: string | null
+          switched_reason: string | null
+          updated_at: string
+          whatsapp_connection_id: string | null
+        }
+        Insert: {
+          channel_connection_id?: string | null
+          created_at?: string
+          current_provider_id?: string | null
+          fallback_provider_id?: string | null
+          id?: string
+          primary_provider_id: string
+          switched_at?: string | null
+          switched_reason?: string | null
+          updated_at?: string
+          whatsapp_connection_id?: string | null
+        }
+        Update: {
+          channel_connection_id?: string | null
+          created_at?: string
+          current_provider_id?: string | null
+          fallback_provider_id?: string | null
+          id?: string
+          primary_provider_id?: string
+          switched_at?: string | null
+          switched_reason?: string | null
+          updated_at?: string
+          whatsapp_connection_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_provider_routes_channel_connection_id_fkey"
+            columns: ["channel_connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_provider_routes_channel_connection_id_fkey"
+            columns: ["channel_connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_provider_routes_current_provider_id_fkey"
+            columns: ["current_provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_provider_routes_fallback_provider_id_fkey"
+            columns: ["fallback_provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_provider_routes_primary_provider_id_fkey"
+            columns: ["primary_provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_provider_routes_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_provider_routes_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_agent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_provider_routes_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_provider_routes_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_routing_rules: {
         Row: {
           channel_connection_id: string | null
@@ -5909,6 +6012,197 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_configs: {
+        Row: {
+          auth_token: string | null
+          base_url: string
+          config: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          last_error: string | null
+          last_ping_at: string | null
+          last_ping_latency_ms: number | null
+          name: string
+          priority: number
+          provider_type: Database["public"]["Enums"]["provider_type"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          auth_token?: string | null
+          base_url: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          last_ping_at?: string | null
+          last_ping_latency_ms?: number | null
+          name: string
+          priority?: number
+          provider_type: Database["public"]["Enums"]["provider_type"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          auth_token?: string | null
+          base_url?: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          last_ping_at?: string | null
+          last_ping_latency_ms?: number | null
+          name?: string
+          priority?: number
+          provider_type?: Database["public"]["Enums"]["provider_type"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      provider_session_logs: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          latency_ms: number | null
+          level: string
+          message: string | null
+          payload: Json | null
+          provider_id: string
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          latency_ms?: number | null
+          level?: string
+          message?: string | null
+          payload?: Json | null
+          provider_id: string
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          latency_ms?: number | null
+          level?: string
+          message?: string | null
+          payload?: Json | null
+          provider_id?: string
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_session_logs_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_session_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "provider_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_sessions: {
+        Row: {
+          channel_connection_id: string | null
+          ended_at: string | null
+          id: string
+          last_heartbeat_at: string | null
+          metadata: Json
+          provider_id: string
+          started_at: string
+          status: string
+          whatsapp_connection_id: string | null
+        }
+        Insert: {
+          channel_connection_id?: string | null
+          ended_at?: string | null
+          id?: string
+          last_heartbeat_at?: string | null
+          metadata?: Json
+          provider_id: string
+          started_at?: string
+          status?: string
+          whatsapp_connection_id?: string | null
+        }
+        Update: {
+          channel_connection_id?: string | null
+          ended_at?: string | null
+          id?: string
+          last_heartbeat_at?: string | null
+          metadata?: Json
+          provider_id?: string
+          started_at?: string
+          status?: string
+          whatsapp_connection_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_sessions_channel_connection_id_fkey"
+            columns: ["channel_connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_sessions_channel_connection_id_fkey"
+            columns: ["channel_connection_id"]
+            isOneToOne: false
+            referencedRelation: "channel_connections_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_sessions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_sessions_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_sessions_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_agent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_sessions_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_sessions_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proxy_alerts: {
         Row: {
           details: Json | null
@@ -9929,6 +10223,45 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_provider_panel: {
+        Args: never
+        Returns: {
+          base_url: string
+          errors_24h: number
+          events_24h: number
+          is_active: boolean
+          last_error: string
+          last_ping_at: string
+          last_ping_latency_ms: number
+          name: string
+          open_sessions: number
+          priority: number
+          provider_id: string
+          provider_type: Database["public"]["Enums"]["provider_type"]
+          routes_active: number
+          routes_fallback: number
+          routes_primary: number
+          status: string
+        }[]
+      }
+      rpc_provider_session_timeline: {
+        Args: {
+          p_limit?: number
+          p_provider_id?: string
+          p_session_id?: string
+        }
+        Returns: {
+          created_at: string
+          event: string
+          latency_ms: number
+          level: string
+          log_id: string
+          message: string
+          provider_id: string
+          provider_name: string
+          session_id: string
+        }[]
+      }
       rpc_queue_rebalance_candidates: {
         Args: { p_limit?: number }
         Returns: {
@@ -10071,6 +10404,7 @@ export type Database = {
         | "messenger"
         | "webchat"
         | "email"
+      provider_type: "evolution" | "wppconnect" | "baileys" | "custom"
       service_account_type:
         | "google_sheets"
         | "google_docs"
@@ -10228,6 +10562,7 @@ export const Constants = {
         "webchat",
         "email",
       ],
+      provider_type: ["evolution", "wppconnect", "baileys", "custom"],
       service_account_type: [
         "google_sheets",
         "google_docs",
