@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { ALL_EVENTS, parseEdgeEvents, type Evt } from '@/lib/realtime/edgeEvents';
+
+export { parseEdgeEvents };
 
 /**
  * Valida que os rótulos de evento nas arestas DB -.->|...| <Hook> do diagrama
@@ -31,15 +34,6 @@ const NODE_TO_FILE: Record<string, string> = {
   AMP: 'src/components/inbox/AudioMessagePlayer.tsx',
 };
 
-type Evt = 'INSERT' | 'UPDATE' | 'DELETE';
-const ALL_EVENTS: Evt[] = ['INSERT', 'UPDATE', 'DELETE'];
-
-export function parseEdgeEvents(label: string): Set<Evt> {
-  const out = new Set<Evt>();
-  if (/\*/.test(label)) ALL_EVENTS.forEach((e) => out.add(e));
-  for (const e of ALL_EVENTS) if (new RegExp(`\\b${e}\\b`).test(label)) out.add(e);
-  return out;
-}
 
 function parseDiagramEdges(): Record<string, Set<Evt>> {
   const mmd = readFileSync(MMD_PATH, 'utf8');

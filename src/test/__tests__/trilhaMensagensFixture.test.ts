@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { parseEdgeEvents } from '../realtimeFanoutEvents.test';
+import { parseEdgeEvents } from '@/lib/realtime/edgeEvents';
 
 /**
  * Snapshot/fixture test: protege os rótulos REAIS do diagrama
