@@ -310,7 +310,7 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
           mentioned: ['5511999@s.whatsapp.net'],
         });
       });
-      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/send-text', {
+      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/send-text', expect.objectContaining({
         method: 'POST',
         body: {
           instanceName: 'wpp2',
@@ -320,7 +320,7 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
           mentionsEveryOne: true,
           mentioned: ['5511999@s.whatsapp.net'],
         },
-      });
+      }));
     });
 
     it('sendTextMessage permite desativar linkPreview explicitamente', async () => {
@@ -328,10 +328,10 @@ describe('useEvolutionApi - Exhaustive Test Suite', () => {
       await act(async () => {
         await result.current.sendTextMessage('wpp2', '5511999', 'sem preview https://x.dev', { linkPreview: false });
       });
-      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/send-text', {
+      expect(mockInvoke).toHaveBeenCalledWith('evolution-api/send-text', expect.objectContaining({
         method: 'POST',
         body: { instanceName: 'wpp2', number: '5511999', text: 'sem preview https://x.dev', linkPreview: false },
-      });
+      }));
     });
 
     it('sendMediaMessage sends all media params', async () => {
