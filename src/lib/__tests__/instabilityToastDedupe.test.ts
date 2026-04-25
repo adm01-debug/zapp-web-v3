@@ -206,6 +206,7 @@ describe('releaseInstabilityToastDedupe — liberação manual', () => {
     expect(shouldShowInstabilityToast('c1', { status: 401 }, { nowMs: t0 + 1 })).toBe(true);
     // c2 inalterado
     expect(shouldShowInstabilityToast('c2', { status: 500 }, { nowMs: t0 + 1 })).toBe(false);
+  });
 });
 
 describe('eviction LRU — limpa o Map quando excede INSTABILITY_TOAST_MAX_KEYS', () => {
