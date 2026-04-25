@@ -186,19 +186,20 @@ export function MessageBubble({
                   <MessageBubbleUnsupported extracted={extracted} rawContent={message.content} isSent={isSent} />
                 )}
 
+                {(() => null)()}
                 {message.type === 'image' && message.mediaUrl && (
                   <div className={cn("overflow-hidden", message.content ? "mb-1.5 -mx-1 -mt-0.5 rounded-xl" : "w-full")}>
-                    <MessageImage src={message.mediaUrl} />
+                    <MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} />
                   </div>
                 )}
 
                 {message.type === 'video' && message.mediaUrl && (
-                  <div className="mb-1.5"><VideoPreview url={message.mediaUrl} caption={message.content} isSent={isSent} /></div>
+                  <div className="mb-1.5"><VideoPreview url={message.mediaUrl} caption={message.content} isSent={isSent} refreshKey={mediaRefreshKey} /></div>
                 )}
 
                 {message.type === 'audio' && message.mediaUrl && (
                   <div className="mb-1">
-                    <AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} />
+                    <AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} refreshKey={mediaRefreshKey} />
                     {searchQuery && highlightedMessageIds?.has(message.id) && message.transcription && (
                       <p className="text-[11px] mt-1 px-1 italic text-muted-foreground"><HighlightedText text={message.transcription} query={searchQuery} /></p>
                     )}
