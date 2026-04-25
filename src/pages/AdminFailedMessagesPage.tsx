@@ -571,6 +571,8 @@ export default function AdminFailedMessagesPage() {
                   <TableRow
                     key={row.id}
                     data-testid="failed-message-row"
+                    data-remote-jid={row.remote_jid ?? ''}
+                    data-status={row.status ?? ''}
                     data-state={selectedIds.has(row.id) ? 'selected' : undefined}
                     className="cursor-pointer"
                     onClick={() => setSelected(row)}
