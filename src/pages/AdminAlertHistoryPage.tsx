@@ -76,8 +76,11 @@ export default function AdminAlertHistoryPage() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [instanceFilter, setInstanceFilter] = useState('');
   const [detailInstance, setDetailInstance] = useState<string | null>(null);
+  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'live' | 'offline'>('connecting');
+  const [lastEventAt, setLastEventAt] = useState<Date | null>(null);
 
   const since = useMemo(() => subHours(new Date(), Number(hoursBack)).toISOString(), [hoursBack]);
+  const queryClient = useQueryClient();
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['admin-alert-history', hoursBack, statusFilter, typeFilter, instanceFilter],
@@ -98,9 +101,44 @@ export default function AdminAlertHistoryPage() {
       if (error) throw error;
       return (data as AlertRow[]) ?? [];
     },
-    refetchInterval: 20_000,
-    staleTime: 10_000,
+    // Realtime é a fonte primária; polling fica como fallback caso a subscription caia.
+    refetchInterval: realtimeStatus === 'live' ? 60_000 : 15_000,
+    staleTime: 5_000,
   });
+
+  // Subscription Realtime — invalida a query (com debounce) sempre que
+  // warroom_alerts é alterado. Reduz tempo de detecção de ~20s para <1s.
+  const debounceRef = useRef<number | null>(null);
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-alert-history-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'warroom_alerts' },
+        () => {
+          setLastEventAt(new Date());
+          if (debounceRef.current) window.clearTimeout(debounceRef.current);
+          // Debounce 250ms: várias mudanças em sequência viram 1 refetch.
+          debounceRef.current = window.setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['admin-alert-history'] });
+          }, 250);
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setRealtimeStatus('live');
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          setRealtimeStatus('offline');
+        } else {
+          setRealtimeStatus('connecting');
+        }
+      });
+
+    return () => {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
 
   const types = useMemo(() => {
     const s = new Set<string>();
