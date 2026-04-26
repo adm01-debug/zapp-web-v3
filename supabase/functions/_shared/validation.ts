@@ -45,18 +45,12 @@ function getSensitiveValues(): string[] {
 // ─── Generic PII / credential patterns ──────────────────────────────────────
 // These catch leaks even when the value isn't a known env-var secret
 // (e.g. user-supplied tokens echoed inside webhook payloads).
-const PII_PATTERNS: ReadonlyArray<{ re: RegExp; replacement: string }> = [
-  // Authorization: Bearer xxx / Basic xxx (case-insensitive header form)
+const PII_PATTERNS: ReadonlyArray<{ re: RegExp; replacement: string | ((m: string) => string) }> = [
   { re: /(authorization\s*[:=]\s*)(bearer|basic)\s+[A-Za-z0-9._\-+/=]+/gi, replacement: '$1$2 ***REDACTED***' },
-  // apikey / x-api-key / api_key headers
   { re: /((?:x-)?api[_-]?key\s*[:=]\s*)["']?[A-Za-z0-9._\-]{16,}["']?/gi, replacement: '$1***REDACTED***' },
-  // Generic JWT (3 base64url segments)
   { re: /\beyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\b/g, replacement: '***JWT_REDACTED***' },
-  // Bitrix incoming webhook tokens path: /rest/<userId>/<token>/
   { re: /\/rest\/(\d+)\/[A-Za-z0-9]{20,}\b/g, replacement: '/rest/$1/***REDACTED***' },
-  // Email addresses → keep domain for ops debugging
   { re: /\b([A-Za-z0-9._%+\-]{1,64})@([A-Za-z0-9.\-]+\.[A-Za-z]{2,})\b/g, replacement: '***@$2' },
-  // E.164-ish phone numbers (8–15 digits, optional +) → keep last 4
   { re: /\+?\d{8,15}\b/g, replacement: (m: string) => '***' + m.slice(-4) },
 ];
 
@@ -64,13 +58,13 @@ const PII_PATTERNS: ReadonlyArray<{ re: RegExp; replacement: string }> = [
 export function redactSecrets(input: string): string {
   if (typeof input !== 'string' || input.length === 0) return input;
   let out = input;
-  // 1. Exact-value secrets from env (highest precision).
   for (const secret of getSensitiveValues()) {
     if (out.includes(secret)) out = out.split(secret).join('***REDACTED***');
   }
-  // 2. Generic patterns (catch-all for PII / inline credentials).
   for (const { re, replacement } of PII_PATTERNS) {
-    out = out.replace(re, replacement as string);
+    out = typeof replacement === 'string'
+      ? out.replace(re, replacement)
+      : out.replace(re, replacement);
   }
   return out;
 }
