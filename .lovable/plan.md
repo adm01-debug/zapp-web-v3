@@ -1,58 +1,64 @@
-# E2E: Conexão criada → Inbox unificado → webhook inbound mockado → bolha na thread certa
+## Goal
 
-## Objetivo
+Make every `external-db-proxy` retry attempt observable so recurring 503s can be diagnosed: each attempt's status, duration, error, transient classification, and the final outcome (success-after-retry vs exhausted) should be logged and counted.
 
-Cobrir o caminho do usuário: **abrir uma conexão criada** na tela de Conexões, **navegar para o Inbox unificado**, **disparar um webhook inbound mockado** e validar que **a bolha de mensagem renderiza dentro da thread correta** (sem vazar para outras conversas).
+## Changes
 
-Difere do spec já entregue (`inbox-created-thread-inbound.spec.ts`) por **interagir explicitamente com um card de conexão** (clique no `<h3>` do nome), garantindo que o fluxo "selecionei uma conexão antes de ir ao inbox" é exercitado.
+### 1. `src/lib/externalProxy.ts` — log every attempt
 
-## Arquivo novo
+Inside the retry loop:
 
-`e2e/connection-to-inbox-inbound.spec.ts`
+- Time each attempt independently (`attemptStartedAt = performance.now()`).
+- After each `supabase.functions.invoke(...)`, emit a structured log via `getLogger('externalProxy')`:
+  - `cid` (correlationId), `target`, `operation`, `attempt`, `maxAttempts`
+  - `attemptDurationMs`
+  - `ok` (boolean), `errorName`, `errorMessage`
+  - `transient` (true when matched by `isTransientRuntimeError`)
+  - `willRetry` (true if transient and attempt < MAX)
+  - `backoffMs` (the delay that will be waited)
+- Use `log.warn` for transient/error attempts, `log.debug` for successful ones.
 
-### Cenário (auto-skip se faltarem dados)
+Track `attemptsMade` and pass it through to telemetry.
 
-1. **Navegação para conexões**
-   - `goto("/#connections")`.
-   - Localiza qualquer card de conexão pelo `<h3>` dentro de um `Card`. Se não houver nenhum visível em 8s → `test.skip` ("nenhuma conexão criada para o usuário de teste").
-   - Captura o nome da primeira conexão e clica nela (best-effort: clique não precisa abrir nada — apenas exercita o gesto de "abrir a conexão criada"; se nada acontecer, seguimos).
+### 2. Final-outcome log + telemetry enrichment
 
-2. **Mocks instalados antes de tocar o inbox**
-   - Webhook hermético: `**/functions/v1/evolution-webhook**` e `**/functions/v1/whatsapp-cloud-webhook**` → 200, contando `webhookHits`.
-   - Camada de DB: `**/rest/v1/rpc/rpc_list_messages_lite` e `rpc_list_messages` no host do FATOR X. Captura o `p_remote_jid` da primeira chamada (= JID da thread alvo). Para JID alvo: devolve 2 mensagens base; quando `armed=true`, adiciona uma 3ª inbound com texto único `e2e-inbound-<runId>`. Para qualquer outro JID: `[]` (isolamento).
+Extend `recordQueryEvent` calls in `externalProxy.ts` to include retry context in the `filters` field (already a free-form bag) under a stable key:
 
-3. **Inbox unificado**
-   - `goto("/")`. Se `role="listbox"` "Lista de conversas" não aparecer em 8s, tenta `/inbox`. Se ainda assim não → `test.skip`.
+```
+filters: { ...existingFilters, __retry: { attempts, transientCount, recovered } }
+```
 
-4. **Abrir thread alvo**
-   - Clica no primeiro `role="option"` do listbox.
-   - Espera o `role="log"` "Mensagens da conversa" e a mensagem base aparecer.
-   - Asserta que `state.targetJid` foi capturado.
+- `recovered = attempts > 1 && success` → emit a `log.info('proxy recovered after retry', {...})`.
+- `exhausted = attempts === MAX && !success` → emit `log.error('proxy retry exhausted', {...})`.
 
-5. **Disparar webhook inbound sintético**
-   - `page.evaluate(() => fetch(<evolution-webhook URL>, { method: "POST", body: messages.upsert payload }))`.
-   - Asserta `webhookHits > 0`.
+### 3. `src/lib/clientTelemetry.ts` — aggregate retry counters
 
-6. **Armar mock de DB e forçar refetch**
-   - `state.armed = true`.
-   - Toggle: clica em outra conversa (se existir) e volta — comportamento natural do `useMessages`.
+Add to `State` and `TelemetrySnapshot`:
 
-7. **Validar render na thread certa**
-   - `expect(log.getByText(INBOUND_TEXT)).toBeVisible({ timeout: 15_000 })`.
-   - Mensagem base segue presente.
+```ts
+retry: {
+  totalRetries: number;       // sum of (attempts - 1)
+  recoveredAfterRetry: number; // succeeded on attempt > 1
+  exhausted: number;           // failed all attempts
+  transientByTarget: Record<string, number>;
+}
+```
 
-8. **Isolamento por thread (se houver 2+ conversas)**
-   - Alterna para outra conversa e asserta `toHaveCount(0)` para `INBOUND_TEXT` no `role="log"`.
+Expose a new helper `recordRetryOutcome({ target, attempts, recovered, exhausted, transientCount })` called from `externalProxy.ts` in the `finally`-style branch. Mirror to `window.__queryTelemetry` (already published) so it shows up in DevTools.
 
-## Defensividade
+### 4. Optional: tag the edge function with `x-attempt`
 
-- `test.skip` quando: sem conexões criadas, sem inbox acessível, sem conversas.
-- `RUN_ID` único por execução evita colisão entre runs paralelos.
-- Sem chamadas reais a Edge Functions ou banco — tudo interceptado em `page.route`.
+Add `x-attempt: <n>` header on each invoke so the existing edge function logs (which already log `cid`/`rid`) can be cross-referenced with the client-side attempt number when diagnosing.
 
-## Notas técnicas
+## Files touched
 
-- Reusa selectors padronizados (`role="listbox"`, `role="option"`, `role="log"`).
-- Reusa fixture `authenticatedPage`.
-- `process.env.E2E_SUPABASE_PROJECT_ID` opcional (default: `tdprnylgyrogbbhgdoik` — ref FATOR X).
-- Não exige mudanças em código de produção.
+- `src/lib/externalProxy.ts` — retry loop instrumentation, per-attempt log, final-outcome log, attempt header
+- `src/lib/clientTelemetry.ts` — `retry` counters in snapshot + `recordRetryOutcome` helper
+
+No UI, no schema, no edge function code changes.
+
+## How you'll diagnose 503s after this lands
+
+1. Open DevTools → console: each retry prints `[externalProxy] attempt 1 failed transient=true willRetry=true cid=… target=evolution_messages durationMs=…`.
+2. `window.__queryTelemetry.retry` shows running totals: how many recoveries vs exhaustions, which `target` is hit most.
+3. Cross-reference `cid` with `external-db-proxy` edge logs (already include `cid`) to see whether the request reached the function or died at the gateway (true 503 = no edge log for that `cid`/attempt).
