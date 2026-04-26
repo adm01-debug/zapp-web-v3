@@ -17,7 +17,9 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 vi.mock('@/hooks/useUserRole', () => ({
-  useUserRole: () => ({ isAdmin: true, loading: false }),
+  // Hook reads `isDev`; we keep `isAdmin` too for any other callsite that
+  // still expects the legacy field.
+  useUserRole: () => ({ isAdmin: true, isDev: true, loading: false }),
 }));
 
 const proxyMock = vi.fn();
