@@ -21,6 +21,58 @@ import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
 
 const log = getLogger('useExternalEvolution');
 
+/**
+ * Reconcilia uma lista existente de mensagens (`prev`) com mensagens canônicas
+ * recém-chegadas (`incoming`), substituindo bolhas otimistas pela versão real
+ * sem duplicar bubbles. Regras:
+ *
+ *  1. Toda mensagem otimista (`id` começa com `optimistic:`) cujo `external_id`
+ *     bate com algum `external_id` em `incoming` é **removida** — a versão
+ *     canônica toma seu lugar mantendo `id` definitivo, status oficial etc.
+ *  2. Fallback (otimista sem `external_id` ainda — ex.: erro do `key.id`): se
+ *     o conteúdo + sender + janela de ±2min combinarem com algum incoming,
+ *     também removemos a otimista.
+ *  3. Incomings são dedupados por `id` contra `prev` final.
+ *
+ * Retorna apenas as **adições** que devem ser anexadas em ordem cronológica e
+ * o `prev` filtrado (sem as otimistas reconciliadas) — o caller decide a
+ * ordem final (poll forward, initial replace, older prepend etc).
+ */
+const OPTIMISTIC_PREFIX = 'optimistic:';
+const OPTIMISTIC_FALLBACK_WINDOW_MS = 120_000;
+
+function reconcileOptimistic(
+  prev: RealtimeMessage[],
+  incoming: RealtimeMessage[],
+): { filteredPrev: RealtimeMessage[]; additions: RealtimeMessage[] } {
+  if (incoming.length === 0) return { filteredPrev: prev, additions: [] };
+
+  const incomingExternalIds = new Set(
+    incoming.map((m) => m.external_id).filter((v): v is string => Boolean(v)),
+  );
+
+  const filteredPrev = prev.filter((m) => {
+    if (!m.id.startsWith(OPTIMISTIC_PREFIX)) return true;
+    // Caso 1: external_id já reconciliado — remove otimista.
+    if (m.external_id && incomingExternalIds.has(m.external_id)) return false;
+    // Caso 2 (fallback): otimista sem external_id pareada por conteúdo+janela.
+    if (!m.external_id) {
+      const optTime = new Date(m.created_at).getTime();
+      const match = incoming.find((inc) =>
+        inc.sender === m.sender &&
+        inc.content === m.content &&
+        Math.abs(new Date(inc.created_at).getTime() - optTime) <= OPTIMISTIC_FALLBACK_WINDOW_MS,
+      );
+      if (match) return false;
+    }
+    return true;
+  });
+
+  const seen = new Set(filteredPrev.map((m) => m.id));
+  const additions = incoming.filter((m) => !seen.has(m.id));
+  return { filteredPrev, additions };
+}
+
 const POLL_INTERVAL = 5000; // 5s polling
 const DEFAULT_INSTANCE = 'wpp2';
 const SIDEBAR_DAYS_BACK = 7;
