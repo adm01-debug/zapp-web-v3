@@ -346,10 +346,33 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-6 md:px-8 space-y-4 scrollbar-thin bg-background/50 relative">
       <ChatWatermark />
       {messages.length > 0 && (
-        <div className="sticky top-0 z-20 flex justify-center pointer-events-none -mt-2 mb-2">
+        <div className="sticky top-0 z-20 flex flex-col items-center gap-1.5 pointer-events-none -mt-2 mb-2">
           <div className="pointer-events-auto">
             <ConversationDeliverySummary messages={messages} />
           </div>
+          <div className="pointer-events-auto">
+            <MessageStatusFilterBar
+              active={statusFilter}
+              onChange={setStatusFilter}
+              visibleCount={displayedMessages.length}
+              totalCount={messages.length}
+            />
+          </div>
+        </div>
+      )}
+
+      {messages.length > 0 && displayedMessages.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            Nenhuma mensagem corresponde ao filtro
+          </span>
+          <button
+            type="button"
+            onClick={() => setStatusFilter(new Set())}
+            className="text-xs text-primary hover:underline"
+          >
+            Limpar filtros
+          </button>
         </div>
       )}
 
