@@ -23,7 +23,13 @@ interface VirtualizedMessageListProps {
 
 export interface VirtualizedMessageListRef {
   scrollToBottom: () => void;
-  scrollToMessage: (messageId: string) => void;
+  /**
+   * Scrolls the virtualized list to the message with the given internal id.
+   * Returns `true` when the id was found in the current list (the scroll
+   * may still be a 2-step process — see implementation), `false` when the
+   * caller should keep polling because the message hasn't been loaded yet.
+   */
+  scrollToMessage: (messageId: string) => boolean;
 }
 
 function formatDateSeparator(date: Date): string {
@@ -68,10 +74,45 @@ export const VirtualizedMessageList = forwardRef<VirtualizedMessageListRef, Virt
   const virtualizer = useVirtualizer({ count: listItems.length, getScrollElement: () => parentRef.current, estimateSize: getItemSize, overscan: 10 });
 
   const scrollToBottom = useCallback(() => { if (listItems.length > 0) virtualizer.scrollToIndex(listItems.length - 1, { align: 'end' }); }, [listItems.length, virtualizer]);
-  const scrollToMessage = useCallback((messageId: string) => { const index = listItems.findIndex(item => item.type === 'message' && item.message.id === messageId); if (index !== -1) virtualizer.scrollToIndex(index, { align: 'center' }); }, [listItems, virtualizer]);
+  // Marca quando o último scroll foi disparado por `scrollToMessage`.
+  // Enquanto a marca estiver ativa, o auto-scroll-to-bottom (que dispara
+  // a cada mudança em `messages.length`) é suprimido por um ciclo para
+  // não competir com o destaque do deep-link "Ver no chat".
+  const suppressAutoBottomRef = useRef(false);
+
+  const scrollToMessage = useCallback((messageId: string): boolean => {
+    const index = listItems.findIndex(
+      (item) => item.type === 'message' && item.message.id === messageId,
+    );
+    if (index === -1) return false;
+
+    suppressAutoBottomRef.current = true;
+    // Pass 1 — virtualizer scrolls approximately based on estimated sizes.
+    virtualizer.scrollToIndex(index, { align: 'center' });
+
+    // Pass 2 — após o item ser montado / medido, refinamos via DOM
+    // `scrollIntoView` para garantir que a bolha fique realmente
+    // centralizada (importante quando `getItemSize` subestima a altura
+    // de bolhas com mídia ou texto longo).
+    requestAnimationFrame(() => {
+      virtualizer.scrollToIndex(index, { align: 'center' });
+      requestAnimationFrame(() => {
+        const node = parentRef.current?.querySelector<HTMLElement>(
+          `[data-message-id="${CSS.escape(messageId)}"]`,
+        );
+        node?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        // Libera o auto-bottom no próximo ciclo.
+        setTimeout(() => { suppressAutoBottomRef.current = false; }, 400);
+      });
+    });
+    return true;
+  }, [listItems, virtualizer]);
 
   useImperativeHandle(ref, () => ({ scrollToBottom, scrollToMessage }), [scrollToBottom, scrollToMessage]);
-  useEffect(() => { scrollToBottom(); }, [messages.length, isContactTyping, scrollToBottom]);
+  useEffect(() => {
+    if (suppressAutoBottomRef.current) return;
+    scrollToBottom();
+  }, [messages.length, isContactTyping, scrollToBottom]);
 
   if (messages.length === 0) {
     return <div className="flex items-center justify-center h-full"><EmptyState icon={Clock} title="Nenhuma mensagem ainda" description="As mensagens aparecerão aqui quando a conversa começar" illustration="messages" size="sm" /></div>;
