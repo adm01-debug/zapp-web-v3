@@ -94,10 +94,12 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     const messageContent = applySignature(currentInput.trim());
     const wasReply = replyToMessageRef.current;
     setIsSending(true); setInputValue(''); setReplyToMessage(null); handleTypingStop();
+    setLastSendError(null);
     if (wasReply) log.debug('Sending reply to:', wasReply.id);
 
     try {
-      onSendMessage(messageContent);
+      await Promise.resolve(onSendMessage(messageContent));
+      lastFailedPayloadRef.current = null;
       undoToast({
         message: 'Mensagem enviada', icon: '📨', delay: 3000,
         onUndo: () => {
@@ -106,12 +108,40 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
           toast({ title: '↩️ Mensagem restaurada', description: 'O texto foi restaurado no campo de entrada.' });
         },
       });
-    } catch (err) {
+    } catch (err: any) {
       log.error('Failed to send message:', err);
+      const msg = err?.message || 'Falha ao invocar a função de envio. Verifique sua conexão.';
+      lastFailedPayloadRef.current = messageContent;
+      setLastSendError(msg);
       setInputValue(messageContent);
-      toast({ title: 'Erro ao enviar', description: 'Tente novamente.', variant: 'destructive' });
+      if (wasReply) setReplyToMessage(wasReply);
+      toast({ title: 'Erro ao enviar', description: msg, variant: 'destructive' });
     } finally { setIsSending(false); }
   }, [contactPhone, instanceName, editMessageApi, applySignature, onSendMessage, handleTypingStop]);
+
+  const retryLastSend = useCallback(async () => {
+    const payload = lastFailedPayloadRef.current;
+    if (!payload || isSendingRef.current) return;
+    setIsSending(true);
+    setLastSendError(null);
+    try {
+      await Promise.resolve(onSendMessage(payload));
+      lastFailedPayloadRef.current = null;
+      toast({ title: '✅ Reenviado', description: 'A mensagem foi enviada com sucesso.' });
+    } catch (err: any) {
+      log.error('Retry failed:', err);
+      const msg = err?.message || 'Falha ao reenviar. Tente novamente.';
+      setLastSendError(msg);
+      toast({ title: 'Erro ao reenviar', description: msg, variant: 'destructive' });
+    } finally {
+      setIsSending(false);
+    }
+  }, [onSendMessage]);
+
+  const dismissSendError = useCallback(() => {
+    setLastSendError(null);
+    lastFailedPayloadRef.current = null;
+  }, []);
 
   const handleReplyToMessage = useCallback((message: Message) => { setReplyToMessage(message); inputRef.current?.focus(); }, []);
   const handleCopyMessage = useCallback((content: string) => { navigator.clipboard.writeText(content); toast({ title: 'Copiado!', description: 'Mensagem copiada para a área de transferência.' }); }, []);
