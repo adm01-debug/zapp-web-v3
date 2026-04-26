@@ -54,7 +54,13 @@ export type LoadOlderCancelReason = 'reverse-scroll' | 'navigation';
 export interface ChatMessagesAreaRef {
   scrollToBottom: () => void;
   registerMessageRef: (messageId: string, el: HTMLDivElement | null) => void;
-  scrollToMessage: (messageId: string) => void;
+  /**
+   * Centraliza a mensagem com `messageId` (id interno) e aplica o ring
+   * de destaque temporário. Retorna `true` quando o nó já estava
+   * registrado e o scroll foi disparado, `false` quando o caller deve
+   * tentar novamente (mensagem ainda não montada / fora do viewport).
+   */
+  scrollToMessage: (messageId: string) => boolean;
 }
 
 export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessagesAreaProps>(({
