@@ -2,9 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Search, MessageSquare, User, Mic, Zap, FileText,
-  Image, Video, FileDown, Sparkles, Loader2,
+  Image, Video, FileDown, Sparkles, Loader2, ArrowRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { SearchResult } from '../useGlobalSearchData';
@@ -81,32 +82,59 @@ export function GlobalSearchResults({
         <div className="px-2 pb-2 text-xs text-muted-foreground">
           {results.length} resultado{results.length !== 1 ? 's' : ''}
         </div>
-        {results.map((result, index) => (
-          <motion.button
-            key={`${result.type}-${result.id}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.02 }}
-            onClick={() => onSelect(result)}
-            className={`w-full text-left p-3 rounded-lg transition-colors flex items-start gap-3 ${
-              index === selectedIndex ? 'bg-muted' : 'hover:bg-muted/50'
-            }`}
-          >
-            <div className={`p-2 rounded-full ${getResultStyle(result.type)}`}>
-              {getResultIcon(result.type, result.messageType)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-sm truncate">{result.title}</span>
-                <Badge variant="secondary" className="text-[10px]">{getResultLabel(result.type, result.messageType)}</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground truncate mt-0.5">{result.preview}</p>
-              <span className="text-[10px] text-muted-foreground">
-                {format(result.timestamp, "d 'de' MMM, HH:mm", { locale: ptBR })}
-              </span>
-            </div>
-          </motion.button>
-        ))}
+        {results.map((result, index) => {
+          const isMessageLike = result.type === 'message' || result.type === 'transcription';
+          return (
+            <motion.div
+              key={`${result.type}-${result.id}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.02 }}
+              className={`group relative w-full rounded-lg transition-colors flex items-start gap-3 ${
+                index === selectedIndex ? 'bg-muted' : 'hover:bg-muted/50'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => onSelect(result)}
+                className="flex-1 min-w-0 text-left p-3 flex items-start gap-3"
+              >
+                <div className={`p-2 rounded-full ${getResultStyle(result.type)}`}>
+                  {getResultIcon(result.type, result.messageType)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm truncate">{result.title}</span>
+                    <Badge variant="secondary" className="text-[10px]">{getResultLabel(result.type, result.messageType)}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{result.preview}</p>
+                  <span className="text-[10px] text-muted-foreground">
+                    {format(result.timestamp, "d 'de' MMM, HH:mm", { locale: ptBR })}
+                  </span>
+                </div>
+              </button>
+              {isMessageLike && result.contactId && (
+                <div className="flex items-center pr-2 py-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect(result);
+                    }}
+                    className="h-8 px-2.5 gap-1.5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+                    title="Abrir conversa e destacar esta mensagem"
+                    aria-label="Ver no chat"
+                  >
+                    <span className="text-xs">Ver no chat</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
     );
   }
