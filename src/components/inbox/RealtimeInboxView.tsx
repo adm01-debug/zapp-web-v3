@@ -142,7 +142,20 @@ export function RealtimeInboxView() {
                       showDetails={isMobile ? false : inbox.showDetails}
                       onToggleDetails={() => inbox.setShowDetails(!inbox.showDetails)}
                       initialHighlightMessageId={inbox.pendingMessageId}
-                      onHighlightConsumed={() => inbox.setPendingMessageId(null)}
+                      onHighlightConsumed={() => {
+                        inbox.setPendingMessageId(null);
+                        // Strip the one-shot ?message= param so refresh
+                        // / future navigations don't replay the highlight.
+                        // Keep ?contact= so a refresh still lands on the
+                        // same conversation (deep-link friendly).
+                        try {
+                          const url = new URL(window.location.href);
+                          if (url.searchParams.has('message')) {
+                            url.searchParams.delete('message');
+                            window.history.replaceState(null, '', url.toString());
+                          }
+                        } catch { /* noop */ }
+                      }}
                       onBack={isMobile ? () => {
                         if (inbox.legacyConversation) {
                           inbox.setPipContact({ name: inbox.legacyConversation.contact.name, avatar: inbox.legacyConversation.contact.avatar, lastMessage: inbox.legacyConversation.lastMessage?.content, contactId: inbox.legacyConversation.id });
