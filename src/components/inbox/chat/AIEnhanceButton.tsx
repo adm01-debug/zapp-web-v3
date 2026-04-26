@@ -120,30 +120,26 @@ export function AIEnhanceButton({ inputValue, onInputChange, contactName }: AIEn
 
       {/* Enhance button */}
       <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  disabled={isLoading || !inputValue.trim()}
-                  className={cn(
-                    "w-8 h-8 text-muted-foreground hover:text-primary hover:bg-primary/10",
-                    isLoading && "animate-pulse text-primary"
-                  )}
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-4 h-4" />
-                  )}
-                </Button>
-              </motion.div>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent>Aprimorar mensagem com IA</TooltipContent>
-        </Tooltip>
+        <PopoverTrigger asChild>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            type="button"
+            disabled={isLoading || !inputValue.trim()}
+            aria-label="Aprimorar mensagem com IA"
+            title="Aprimorar mensagem com IA"
+            className={cn(
+              "w-8 h-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-50 disabled:pointer-events-none transition-colors",
+              isLoading && "animate-pulse text-primary"
+            )}
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+          </motion.button>
+        </PopoverTrigger>
 
         <PopoverContent className="w-64 p-2" align="start" side="top">
           <div className="space-y-1">
