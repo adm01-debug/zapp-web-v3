@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
-import { handleCors, errorResponse, jsonResponse, Logger, getCorsHeaders } from "../_shared/validation.ts";
+import { handleCors, errorResponse, jsonResponse, Logger, getCorsHeaders, validateBitrixOrigin } from "../_shared/validation.ts";
 
 const BitrixBodySchema = z.object({
   action: z.enum([
