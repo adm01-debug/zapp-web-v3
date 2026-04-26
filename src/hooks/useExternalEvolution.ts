@@ -21,6 +21,58 @@ import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
 
 const log = getLogger('useExternalEvolution');
 
+/**
+ * Reconcilia uma lista existente de mensagens (`prev`) com mensagens canônicas
+ * recém-chegadas (`incoming`), substituindo bolhas otimistas pela versão real
+ * sem duplicar bubbles. Regras:
+ *
+ *  1. Toda mensagem otimista (`id` começa com `optimistic:`) cujo `external_id`
+ *     bate com algum `external_id` em `incoming` é **removida** — a versão
+ *     canônica toma seu lugar mantendo `id` definitivo, status oficial etc.
+ *  2. Fallback (otimista sem `external_id` ainda — ex.: erro do `key.id`): se
+ *     o conteúdo + sender + janela de ±2min combinarem com algum incoming,
+ *     também removemos a otimista.
+ *  3. Incomings são dedupados por `id` contra `prev` final.
+ *
+ * Retorna apenas as **adições** que devem ser anexadas em ordem cronológica e
+ * o `prev` filtrado (sem as otimistas reconciliadas) — o caller decide a
+ * ordem final (poll forward, initial replace, older prepend etc).
+ */
+const OPTIMISTIC_PREFIX = 'optimistic:';
+const OPTIMISTIC_FALLBACK_WINDOW_MS = 120_000;
+
+function reconcileOptimistic(
+  prev: RealtimeMessage[],
+  incoming: RealtimeMessage[],
+): { filteredPrev: RealtimeMessage[]; additions: RealtimeMessage[] } {
+  if (incoming.length === 0) return { filteredPrev: prev, additions: [] };
+
+  const incomingExternalIds = new Set(
+    incoming.map((m) => m.external_id).filter((v): v is string => Boolean(v)),
+  );
+
+  const filteredPrev = prev.filter((m) => {
+    if (!m.id.startsWith(OPTIMISTIC_PREFIX)) return true;
+    // Caso 1: external_id já reconciliado — remove otimista.
+    if (m.external_id && incomingExternalIds.has(m.external_id)) return false;
+    // Caso 2 (fallback): otimista sem external_id pareada por conteúdo+janela.
+    if (!m.external_id) {
+      const optTime = new Date(m.created_at).getTime();
+      const match = incoming.find((inc) =>
+        inc.sender === m.sender &&
+        inc.content === m.content &&
+        Math.abs(new Date(inc.created_at).getTime() - optTime) <= OPTIMISTIC_FALLBACK_WINDOW_MS,
+      );
+      if (match) return false;
+    }
+    return true;
+  });
+
+  const seen = new Set(filteredPrev.map((m) => m.id));
+  const additions = incoming.filter((m) => !seen.has(m.id));
+  return { filteredPrev, additions };
+}
+
 const POLL_INTERVAL = 5000; // 5s polling
 const DEFAULT_INSTANCE = 'wpp2';
 const SIDEBAR_DAYS_BACK = 7;
@@ -183,7 +235,18 @@ export function useExternalMessages(remoteJid: string | null) {
       if (!mountedRef.current) return;
 
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
-      setMessages(mapped);
+      // Replace pode chegar com canônicas que substituem otimistas pendentes.
+      // Mantemos quaisquer otimistas que ainda não foram reconciliadas.
+      setMessages((prev) => {
+        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
+        // Initial: o servidor é a fonte da verdade — ordenamos por created_at
+        // garantindo que otimistas remanescentes (ainda sem external_id real)
+        // continuem visíveis ao final.
+        const merged = [...filteredPrev.filter((m) => m.id.startsWith(OPTIMISTIC_PREFIX)), ...additions];
+        return merged.sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        );
+      });
       setHasMore(evoMessages.length === CONVERSATION_PAGE_SIZE);
       lastSeenRef.current = evoMessages.length
         ? evoMessages[evoMessages.length - 1].created_at
@@ -213,11 +276,10 @@ export function useExternalMessages(remoteJid: string | null) {
       if (!mountedRef.current || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
-      setMessages(prev => {
-        const seen = new Set(prev.map(m => m.id));
-        const additions = mapped.filter(m => !seen.has(m.id));
-        if (additions.length === 0) return prev;
-        return [...prev, ...additions];
+      setMessages((prev) => {
+        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
+        if (additions.length === 0 && filteredPrev.length === prev.length) return prev;
+        return [...filteredPrev, ...additions];
       });
       lastSeenRef.current = newOnes[newOnes.length - 1].created_at;
     } catch (err) {
@@ -320,23 +382,23 @@ export function useExternalMessages(remoteJid: string | null) {
       const mapped = ordered.map(evolutionToRealtimeMessage);
 
       setMessages((prev) => {
-        const seen = new Set(prev.map((m) => m.id));
-        const additions = mapped.filter((m) => !seen.has(m.id));
-        if (additions.length === 0) return prev;
+        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
+        if (additions.length === 0 && filteredPrev.length === prev.length) return prev;
         if (key.startsWith(`inbox:initial:${remoteJid}:`)) {
-          // Initial completo de outra aba: substitui se ainda não tínhamos nada,
-          // senão apenas mescla as faltantes.
-          if (prev.length === 0) {
+          // Initial completo de outra aba: se não tínhamos nada, substitui
+          // pelas canônicas; caso contrário mescla preservando otimistas
+          // remanescentes (ainda não reconciliadas).
+          if (filteredPrev.length === 0) {
             lastSeenRef.current = mapped[mapped.length - 1]?.created_at ?? null;
-            return mapped;
+            return additions;
           }
-          return [...prev, ...additions].sort(
+          return [...filteredPrev, ...additions].sort(
             (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
           );
         }
-        if (isOlder) return [...additions, ...prev];
+        if (isOlder) return [...additions, ...filteredPrev];
         // poll forward
-        const next = [...prev, ...additions];
+        const next = [...filteredPrev, ...additions];
         lastSeenRef.current = additions[additions.length - 1]?.created_at ?? lastSeenRef.current;
         return next;
       });
@@ -348,8 +410,13 @@ export function useExternalMessages(remoteJid: string | null) {
   }, [remoteJid]);
 
   const addMessage = useCallback((message: RealtimeMessage) => {
-    setMessages(prev => {
-      if (prev.some(m => m.id === message.id)) return prev;
+    setMessages((prev) => {
+      // Dedupe por id (caso já exista) e por external_id (canônica já chegou
+      // via webhook/poll antes do sender resolver — não adicionamos a otimista).
+      if (prev.some((m) => m.id === message.id)) return prev;
+      if (message.external_id && prev.some((m) => m.external_id === message.external_id)) {
+        return prev;
+      }
       return [...prev, message];
     });
   }, []);
