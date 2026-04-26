@@ -12,7 +12,9 @@ import { TicketTabs } from './TicketTabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+// Tooltips were removed from this header to avoid Radix Slot ref-loop bug
+// (TooltipTrigger asChild on inline span/Button caused Maximum update depth).
+// Replaced with native title/aria-label which are equivalent for these controls.
 import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
