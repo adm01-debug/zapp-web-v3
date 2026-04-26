@@ -20,7 +20,26 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [resolvedUrl, setResolvedUrl] = useState<string>(audioUrl);
+  const [volume, setVolumeState] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('audio-player:volume');
+      const n = saved !== null ? parseFloat(saved) : 1;
+      return isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
+    } catch { return 1; }
+  });
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const setVolume = useCallback((v: number) => {
+    const clamped = Math.min(1, Math.max(0, v));
+    setVolumeState(clamped);
+    if (audioRef.current) audioRef.current.volume = clamped;
+    try { localStorage.setItem('audio-player:volume', String(clamped)); } catch { /* noop */ }
+  }, []);
+
+  // Apply volume whenever audio element re-mounts or volume changes
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume, resolvedUrl]);
 
   const waveformHeights = useMemo(
     () => Array.from({ length: 30 }, () => Math.random() * 60 + 20),
