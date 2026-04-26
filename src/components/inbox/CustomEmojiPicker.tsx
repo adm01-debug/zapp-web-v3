@@ -97,16 +97,12 @@ export function CustomEmojiPicker({ onSendEmoji, disabled }: CustomEmojiPickerPr
   const filteredNativeEmojis = activeNativeCategory?.emojis || [];
 
   return (
-    <Tooltip>
-      <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setPendingUpload(null); }}>
-        <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0" disabled={disabled} aria-label="Emojis Personalizados">
-              <SmilePlus className="w-[18px] h-[18px]" />
-            </Button>
-          </PopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="top">Emojis Personalizados</TooltipContent>
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setPendingUpload(null); }}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0" disabled={disabled} aria-label="Emojis Personalizados" title="Emojis Personalizados">
+          <SmilePlus className="w-[18px] h-[18px]" />
+        </Button>
+      </PopoverTrigger>
         <PopoverContent className="w-[360px] p-0 bg-popover border-border" align="end" side="top" sideOffset={8}>
           <div className="flex items-center justify-between px-3 py-2 border-b border-border">
             <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
