@@ -64,6 +64,39 @@ export const MessageStatusInline = memo(function MessageStatusInline({
 }: MessageStatusInlineProps) {
   const { showLabel } = useInboxStatusPref();
   const showTextLabel = forceLabel || showLabel;
+
+  // Inbound (recebida): renderiza um indicador minimalista clicável que
+  // abre o panel "Recebida / Lida por você". Não acessa o bus de envios.
+  if (message.sender !== 'agent') {
+    const inboundReachedRead = !!message.contact_read_at;
+    return (
+      <MessageStatusPanel message={message}>
+        <button
+          type="button"
+          className={cn(
+            'inline-flex items-center gap-0.5 cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/60 hover:opacity-80 transition-opacity',
+            className,
+          )}
+          data-testid="message-status-inline"
+          data-status={inboundReachedRead ? 'inbound-read' : 'inbound-received'}
+          aria-label={
+            inboundReachedRead
+              ? 'Detalhes — recebida e lida por você'
+              : 'Detalhes — recebida (ainda não lida)'
+          }
+          title={inboundReachedRead ? 'Lida por você' : 'Recebida'}
+        >
+          <MessageStatusIcon status={inboundReachedRead ? 'read' : 'delivered'} />
+          {showTextLabel && (
+            <span className="text-[10px] font-medium leading-none ml-0.5 opacity-90">
+              {inboundReachedRead ? 'Lida' : 'Recebida'}
+            </span>
+          )}
+        </button>
+      </MessageStatusPanel>
+    );
+  }
+
   const bus = useMessageSendStatus(message.id);
 
   // Reconciliation: when the persisted DB status reaches a terminal state but
