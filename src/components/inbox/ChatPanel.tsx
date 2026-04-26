@@ -236,12 +236,16 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     setActiveHighlightId(internalId);
 
     // Tentativas em sequência cobrem o caso de a virtualização ainda
-    // não ter renderizado o item visível.
+    // não ter renderizado o item visível. Paramos assim que o ref
+    // confirma que o id existe na lista — o `scrollToMessage` interno
+    // faz um segundo passe via DOM `scrollIntoView` para precisão.
     let attempts = 0;
+    let cancelled = false;
     const tryScroll = () => {
+      if (cancelled) return;
       attempts++;
-      messagesAreaRef.current?.scrollToMessage(internalId);
-      if (attempts < 6) setTimeout(tryScroll, 120);
+      const found = messagesAreaRef.current?.scrollToMessage(internalId) ?? false;
+      if (!found && attempts < 6) setTimeout(tryScroll, 120);
     };
     tryScroll();
 
