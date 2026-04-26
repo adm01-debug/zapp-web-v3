@@ -100,8 +100,40 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
   const startedAt = performance.now();
   const meta = deriveTelemetryMeta(body as Record<string, unknown>);
 
+  // Transient 503 retry: the Supabase Edge runtime occasionally fails to spin
+  // up an isolate (cold start) and returns SUPABASE_EDGE_RUNTIME_ERROR /
+  // "non-2xx status code". These are not real failures — a quick retry usually
+  // succeeds. We retry up to 2 times with small exponential backoff, but never
+  // for AbortError (caller-initiated cancellation).
+  const isTransientRuntimeError = (err: unknown): boolean => {
+    const message = (err as { message?: string })?.message ?? '';
+    return (
+      /SUPABASE_EDGE_RUNTIME_ERROR/i.test(message) ||
+      /temporarily unavailable/i.test(message) ||
+      /non-2xx status code/i.test(message) ||
+      /\b503\b/.test(message) ||
+      /\b502\b/.test(message) ||
+      /\b504\b/.test(message)
+    );
+  };
+
   try {
-    const { data, error } = await supabase.functions.invoke('external-db-proxy', invokeOptions);
+    let data: ProxyResponse<T> | null = null;
+    let error: { name?: string; message?: string } | null = null;
+    const MAX_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const result = await supabase.functions.invoke('external-db-proxy', invokeOptions);
+      data = result.data as ProxyResponse<T> | null;
+      error = result.error as typeof error;
+
+      if (!error) break;
+      const name = error.name;
+      if (name === 'AbortError') break;
+      if (!isTransientRuntimeError(error)) break;
+      if (attempt === MAX_ATTEMPTS) break;
+      // Backoff: 150ms, 400ms
+      await new Promise((r) => setTimeout(r, attempt === 1 ? 150 : 400));
+    }
 
     if (error) {
       const name = (error as { name?: string }).name;
