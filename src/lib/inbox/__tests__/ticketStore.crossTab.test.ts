@@ -24,6 +24,7 @@ describe('ticketStore — cross-tab cache invalidation', () => {
   });
 
   it('invalidates cache when storage event fires from another tab', () => {
+    const unsubscribe = ticketStore.subscribe(() => undefined);
     ticketStore.setStatus('contact-1', 'in_progress', 'agent-a');
     const before = ticketStore.snapshot();
     expect(before['contact-1']?.status).toBe('in_progress');
