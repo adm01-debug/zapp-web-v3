@@ -17,9 +17,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { jidToPhone } from '@/adapters/evolutionAdapter';
 import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
+import { parseEvolutionError } from '@/hooks/realtime/parseEvolutionError';
 
 const log = getLogger('externalMessageSender');
 const DEFAULT_INSTANCE = 'wpp2';
+
+/**
+ * SendError — Error enriquecido com o motivo bruto do upstream para que
+ * o `SendErrorBanner` possa oferecer "Ver detalhes" sem perder a frase
+ * humanizada exibida por padrão.
+ */
+export class SendError extends Error {
+  detail: string | null;
+  status?: number;
+  constructor(reason: string, detail: string | null, status?: number) {
+    super(reason);
+    this.name = 'SendError';
+    this.detail = detail;
+    this.status = status;
+  }
+}
 
 export interface SendExternalOptions {
   instanceName?: string;
