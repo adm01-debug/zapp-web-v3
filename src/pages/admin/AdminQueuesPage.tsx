@@ -13,7 +13,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Users, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, X, Pause, Play, Radio } from "lucide-react";
+
+type QueueStatus = "active" | "paused" | "archived";
+type DistAlgo = "round_robin" | "least_busy" | "longest_idle" | "manual_pull";
 
 interface Queue {
   id: string;
@@ -23,11 +26,29 @@ interface Queue {
   is_active: boolean;
   priority: number;
   max_wait_time_minutes: number;
+  status: QueueStatus;
+  distribution_algorithm: DistAlgo;
+  department_id: string | null;
+  max_queue_size: number | null;
+  max_wait_seconds: number | null;
+  max_per_queue_per_agent: number | null;
+  overflow_queue_id: string | null;
+  paused_reason: string | null;
 }
 
 interface Profile { id: string; name: string; avatar_url: string | null }
 interface QueueMember { id: string; queue_id: string; profile_id: string; profile?: Profile }
 interface QueueSkill { id: string; queue_id: string; skill_name: string; min_level: number }
+interface Department { id: string; name: string }
+interface ServiceChannel { id: string; name: string; channel_type: string; default_queue_id: string | null }
+interface ChannelQueue { id: string; channel_id: string; queue_id: string; priority: number; is_active: boolean }
+
+const ALGO_LABEL: Record<DistAlgo, string> = {
+  round_robin: "Round-robin",
+  least_busy: "Menos ocupado",
+  longest_idle: "Mais ocioso",
+  manual_pull: "Puxar manualmente",
+};
 
 export default function AdminQueuesPage() {
   const { toast } = useToast();
@@ -35,24 +56,34 @@ export default function AdminQueuesPage() {
   const [members, setMembers] = useState<QueueMember[]>([]);
   const [skills, setSkills] = useState<QueueSkill[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [channels, setChannels] = useState<ServiceChannel[]>([]);
+  const [channelQueues, setChannelQueues] = useState<ChannelQueue[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Queue> | null>(null);
   const [memberDialog, setMemberDialog] = useState<Queue | null>(null);
   const [newSkill, setNewSkill] = useState<{ name: string; level: number }>({ name: "", level: 1 });
   const [newMemberId, setNewMemberId] = useState<string>("");
+  const [newChannelId, setNewChannelId] = useState<string>("");
 
   const load = async () => {
     setLoading(true);
-    const [q, m, s, p] = await Promise.all([
+    const [q, m, s, p, d, c, cq] = await Promise.all([
       supabase.from("queues").select("*").order("priority", { ascending: false }),
       supabase.from("queue_members").select("id,queue_id,profile_id,profile:profiles(id,name,avatar_url)"),
       supabase.from("queue_skill_requirements").select("*"),
       supabase.from("profiles").select("id,name,avatar_url").eq("is_active", true).order("name"),
+      supabase.from("departments").select("id,name").order("name"),
+      supabase.from("service_channels").select("id,name,channel_type,default_queue_id").neq("status", "archived").order("name"),
+      supabase.from("channel_queues").select("*"),
     ]);
     setQueues((q.data ?? []) as Queue[]);
     setMembers((m.data ?? []) as unknown as QueueMember[]);
     setSkills((s.data ?? []) as QueueSkill[]);
     setProfiles((p.data ?? []) as Profile[]);
+    setDepartments((d.data ?? []) as Department[]);
+    setChannels((c.data ?? []) as ServiceChannel[]);
+    setChannelQueues((cq.data ?? []) as ChannelQueue[]);
     setLoading(false);
   };
 
@@ -70,6 +101,12 @@ export default function AdminQueuesPage() {
       is_active: editing.is_active ?? true,
       priority: editing.priority ?? 0,
       max_wait_time_minutes: editing.max_wait_time_minutes ?? 30,
+      distribution_algorithm: editing.distribution_algorithm ?? "least_busy",
+      department_id: editing.department_id ?? null,
+      max_queue_size: editing.max_queue_size ?? null,
+      max_wait_seconds: editing.max_wait_seconds ?? null,
+      max_per_queue_per_agent: editing.max_per_queue_per_agent ?? null,
+      overflow_queue_id: editing.overflow_queue_id ?? null,
     };
     const { error } = editing.id
       ? await supabase.from("queues").update(payload).eq("id", editing.id)
@@ -84,7 +121,7 @@ export default function AdminQueuesPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Excluir esta fila? Membros e regras vinculados serão removidos.")) return;
+    if (!confirm("Excluir esta fila? Membros, regras e vínculos serão removidos.")) return;
     const { error } = await supabase.from("queues").delete().eq("id", id);
     if (error) {
       toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
@@ -93,11 +130,24 @@ export default function AdminQueuesPage() {
     load();
   };
 
+  const togglePause = async (q: Queue) => {
+    const fn = q.status === "paused" ? "rpc_resume_queue" : "rpc_pause_queue";
+    const args = q.status === "paused"
+      ? { p_queue_id: q.id }
+      : { p_queue_id: q.id, p_reason: prompt("Motivo da pausa (opcional)") || null };
+    const { error } = await supabase.rpc(fn as never, args as never);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: q.status === "paused" ? "Fila retomada" : "Fila pausada" });
+    load();
+  };
+
   const addMember = async () => {
     if (!memberDialog || !newMemberId) return;
     const { error } = await supabase.from("queue_members").insert({
-      queue_id: memberDialog.id,
-      profile_id: newMemberId,
+      queue_id: memberDialog.id, profile_id: newMemberId,
     } as never);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
@@ -115,9 +165,7 @@ export default function AdminQueuesPage() {
   const addSkill = async () => {
     if (!memberDialog || !newSkill.name.trim()) return;
     const { error } = await supabase.from("queue_skill_requirements").insert({
-      queue_id: memberDialog.id,
-      skill_name: newSkill.name.trim(),
-      min_level: newSkill.level,
+      queue_id: memberDialog.id, skill_name: newSkill.name.trim(), min_level: newSkill.level,
     } as never);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
@@ -132,26 +180,54 @@ export default function AdminQueuesPage() {
     load();
   };
 
+  const linkChannel = async () => {
+    if (!memberDialog || !newChannelId) return;
+    const { error } = await supabase.rpc("rpc_link_channel_queue" as never, {
+      p_channel_id: newChannelId, p_queue_id: memberDialog.id, p_priority: 0, p_is_active: true,
+    } as never);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
+    }
+    setNewChannelId("");
+    load();
+  };
+
+  const unlinkChannel = async (channelId: string) => {
+    if (!memberDialog) return;
+    const { error } = await supabase.rpc("rpc_unlink_channel_queue" as never, {
+      p_channel_id: channelId, p_queue_id: memberDialog.id,
+    } as never);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      return;
+    }
+    load();
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Filas de Atendimento</h1>
           <p className="text-muted-foreground">
-            Distribuição com sticky agent + round-robin entre membros qualificados.
+            Capacidade, status, distribuição e vínculo a canais de atendimento.
           </p>
         </div>
         <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditing({ is_active: true, color: "#3B82F6", priority: 0, max_wait_time_minutes: 30 })}>
+            <Button onClick={() => setEditing({
+              is_active: true, color: "#3B82F6", priority: 0, max_wait_time_minutes: 30,
+              status: "active", distribution_algorithm: "least_busy",
+            })}>
               <Plus className="w-4 h-4 mr-2" /> Nova fila
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-xl">
             <DialogHeader>
               <DialogTitle>{editing?.id ? "Editar fila" : "Nova fila"}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
               <div>
                 <Label>Nome</Label>
                 <Input value={editing?.name ?? ""} onChange={(e) => setEditing({ ...editing!, name: e.target.value })} />
@@ -170,10 +246,80 @@ export default function AdminQueuesPage() {
                   <Input type="number" value={editing?.priority ?? 0} onChange={(e) => setEditing({ ...editing!, priority: Number(e.target.value) })} />
                 </div>
               </div>
-              <div>
-                <Label>Tempo máx. de espera (min)</Label>
-                <Input type="number" value={editing?.max_wait_time_minutes ?? 30} onChange={(e) => setEditing({ ...editing!, max_wait_time_minutes: Number(e.target.value) })} />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Algoritmo de distribuição</Label>
+                  <Select
+                    value={editing?.distribution_algorithm ?? "least_busy"}
+                    onValueChange={(v) => setEditing({ ...editing!, distribution_algorithm: v as DistAlgo })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(ALGO_LABEL) as DistAlgo[]).map((k) => (
+                        <SelectItem key={k} value={k}>{ALGO_LABEL[k]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Departamento (elegibilidade)</Label>
+                  <Select
+                    value={editing?.department_id ?? "none"}
+                    onValueChange={(v) => setEditing({ ...editing!, department_id: v === "none" ? null : v })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Todos os agentes</SelectItem>
+                      {departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label>Tamanho máx. da fila</Label>
+                  <Input type="number" placeholder="Ilimitado"
+                    value={editing?.max_queue_size ?? ""}
+                    onChange={(e) => setEditing({ ...editing!, max_queue_size: e.target.value ? Number(e.target.value) : null })} />
+                </div>
+                <div>
+                  <Label>Espera máx. (s)</Label>
+                  <Input type="number" placeholder="Ilimitado"
+                    value={editing?.max_wait_seconds ?? ""}
+                    onChange={(e) => setEditing({ ...editing!, max_wait_seconds: e.target.value ? Number(e.target.value) : null })} />
+                </div>
+                <div>
+                  <Label>Máx. por agente</Label>
+                  <Input type="number" placeholder="Sem limite"
+                    value={editing?.max_per_queue_per_agent ?? ""}
+                    onChange={(e) => setEditing({ ...editing!, max_per_queue_per_agent: e.target.value ? Number(e.target.value) : null })} />
+                </div>
+              </div>
+
+              <div>
+                <Label>Fila de overflow</Label>
+                <Select
+                  value={editing?.overflow_queue_id ?? "none"}
+                  onValueChange={(v) => setEditing({ ...editing!, overflow_queue_id: v === "none" ? null : v })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhuma</SelectItem>
+                    {queues.filter((q) => q.id !== editing?.id).map((q) => (
+                      <SelectItem key={q.id} value={q.id}>{q.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Tempo máx. de espera legado (min)</Label>
+                <Input type="number" value={editing?.max_wait_time_minutes ?? 30}
+                  onChange={(e) => setEditing({ ...editing!, max_wait_time_minutes: Number(e.target.value) })} />
+              </div>
+
               <div className="flex items-center justify-between">
                 <Label>Ativa</Label>
                 <Switch checked={editing?.is_active ?? true} onCheckedChange={(v) => setEditing({ ...editing!, is_active: v })} />
@@ -194,22 +340,33 @@ export default function AdminQueuesPage() {
           {queues.map((q) => {
             const qMembers = members.filter((m) => m.queue_id === q.id);
             const qSkills = skills.filter((s) => s.queue_id === q.id);
+            const qChannels = channelQueues.filter((cq) => cq.queue_id === q.id && cq.is_active);
+            const defaultIn = channels.filter((c) => c.default_queue_id === q.id);
+            const isPaused = q.status === "paused";
             return (
-              <Card key={q.id}>
+              <Card key={q.id} className={isPaused ? "opacity-70 border-warning/40" : undefined}>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full" style={{ background: q.color }} />
                       {q.name}
-                      <Badge variant={q.is_active ? "default" : "secondary"}>
-                        prioridade {q.priority}
+                      <Badge variant={isPaused ? "secondary" : "default"}>
+                        {isPaused ? "Pausada" : "Ativa"}
                       </Badge>
+                      <Badge variant="outline">{ALGO_LABEL[q.distribution_algorithm] ?? q.distribution_algorithm}</Badge>
+                      <Badge variant="outline">prioridade {q.priority}</Badge>
                     </CardTitle>
                     {q.description && <p className="text-sm text-muted-foreground mt-1">{q.description}</p>}
+                    {isPaused && q.paused_reason && (
+                      <p className="text-xs text-warning mt-1">Motivo: {q.paused_reason}</p>
+                    )}
                   </div>
                   <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => togglePause(q)}>
+                      {isPaused ? <><Play className="w-4 h-4 mr-1" />Retomar</> : <><Pause className="w-4 h-4 mr-1" />Pausar</>}
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => setMemberDialog(q)}>
-                      <Users className="w-4 h-4 mr-1" /> Membros & Skills
+                      <Users className="w-4 h-4 mr-1" /> Membros & Canais
                     </Button>
                     <Button size="icon" variant="ghost" onClick={() => setEditing(q)}>
                       <Pencil className="w-4 h-4" />
@@ -222,6 +379,13 @@ export default function AdminQueuesPage() {
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="outline">{qMembers.length} membros</Badge>
+                    <Badge variant="outline">
+                      <Radio className="w-3 h-3 mr-1" />
+                      {qChannels.length + defaultIn.length} canais
+                    </Badge>
+                    {q.max_queue_size && <Badge variant="outline">máx fila: {q.max_queue_size}</Badge>}
+                    {q.max_wait_seconds && <Badge variant="outline">espera: {q.max_wait_seconds}s</Badge>}
+                    {q.max_per_queue_per_agent && <Badge variant="outline">/agente: {q.max_per_queue_per_agent}</Badge>}
                     {qSkills.map((s) => (
                       <Badge key={s.id} variant="secondary">{s.skill_name} (≥{s.min_level})</Badge>
                     ))}
@@ -239,10 +403,10 @@ export default function AdminQueuesPage() {
       <Dialog open={!!memberDialog} onOpenChange={(o) => !o && setMemberDialog(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{memberDialog?.name} — Membros & Skills</DialogTitle>
+            <DialogTitle>{memberDialog?.name} — Membros, Skills & Canais</DialogTitle>
           </DialogHeader>
           {memberDialog && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
               <section>
                 <h3 className="font-semibold mb-2">Membros</h3>
                 <div className="flex gap-2 mb-3">
@@ -265,6 +429,46 @@ export default function AdminQueuesPage() {
                       </Button>
                     </div>
                   ))}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="font-semibold mb-2">Canais vinculados</h3>
+                <div className="flex gap-2 mb-3">
+                  <Select value={newChannelId} onValueChange={setNewChannelId}>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder="Vincular canal" /></SelectTrigger>
+                    <SelectContent>
+                      {channels
+                        .filter((c) => !channelQueues.some((cq) => cq.queue_id === memberDialog.id && cq.channel_id === c.id))
+                        .map((c) => <SelectItem key={c.id} value={c.id}>{c.name} ({c.channel_type})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={linkChannel} disabled={!newChannelId}>Vincular</Button>
+                </div>
+                <div className="space-y-1">
+                  {channels.filter((c) => c.default_queue_id === memberDialog.id).map((c) => (
+                    <div key={`def-${c.id}`} className="flex items-center justify-between bg-primary/5 px-3 py-2 rounded">
+                      <span>{c.name} <Badge variant="default" className="ml-2">default do canal</Badge></span>
+                      <span className="text-xs text-muted-foreground">configurado em /admin/channels</span>
+                    </div>
+                  ))}
+                  {channelQueues
+                    .filter((cq) => cq.queue_id === memberDialog.id)
+                    .map((cq) => {
+                      const ch = channels.find((c) => c.id === cq.channel_id);
+                      return (
+                        <div key={cq.id} className="flex items-center justify-between bg-muted/30 px-3 py-2 rounded">
+                          <span>
+                            {ch?.name ?? cq.channel_id}
+                            <Badge variant="outline" className="ml-2">prioridade {cq.priority}</Badge>
+                            {!cq.is_active && <Badge variant="secondary" className="ml-2">inativo</Badge>}
+                          </span>
+                          <Button size="icon" variant="ghost" onClick={() => unlinkChannel(cq.channel_id)}>
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
                 </div>
               </section>
 
