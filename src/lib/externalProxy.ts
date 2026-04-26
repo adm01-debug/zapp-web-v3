@@ -10,8 +10,11 @@
  * to the underlying request, so the body field is the reliable channel).
  */
 import { supabase } from '@/integrations/supabase/client';
-import { recordQueryEvent, classifySeverity, type QueryOperation } from '@/lib/clientTelemetry';
+import { recordQueryEvent, recordRetryOutcome, classifySeverity, type QueryOperation } from '@/lib/clientTelemetry';
 import { generateCorrelationId, CORRELATION_HEADER } from '@/lib/correlationId';
+import { getLogger } from '@/lib/logger';
+
+const proxyLog = getLogger('externalProxy');
 
 interface ProxySelectParams {
   table: string;
