@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type RoleType = 'dev' | 'admin' | 'supervisor' | 'agent';
+type RoleType = 'dev' | 'admin' | 'manager' | 'supervisor' | 'agent';
 
 export interface UserWithRole {
   id: string;
