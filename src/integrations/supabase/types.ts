@@ -3630,6 +3630,36 @@ export type Database = {
           },
         ]
       }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dispatch_error_logs: {
         Row: {
           agent_email: string | null
@@ -6055,6 +6085,7 @@ export type Database = {
           can_download: boolean
           created_at: string
           department: string | null
+          department_id: string | null
           email: string | null
           id: string
           is_active: boolean | null
@@ -6077,6 +6108,7 @@ export type Database = {
           can_download?: boolean
           created_at?: string
           department?: string | null
+          department_id?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -6099,6 +6131,7 @@ export type Database = {
           can_download?: boolean
           created_at?: string
           department?: string | null
+          department_id?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -6114,7 +6147,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       provider_configs: {
         Row: {
@@ -9917,6 +9958,14 @@ export type Database = {
         Returns: string
       }
       calculate_level: { Args: { xp_amount: number }; Returns: number }
+      can_supervise_profile: {
+        Args: { _target_profile_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_user_see_contact: {
+        Args: { _contact_id: string; _user_id: string }
+        Returns: boolean
+      }
       check_login_rate_limit: {
         Args: { p_email: string; p_ip?: string }
         Returns: Json
@@ -10072,6 +10121,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_department: { Args: { _user_id: string }; Returns: string }
       get_visible_agent_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
         Args: {
@@ -10105,6 +10155,7 @@ export type Database = {
       is_instance_paused: { Args: { p_instance: string }; Returns: boolean }
       is_ip_blocked: { Args: { check_ip: string }; Returns: boolean }
       is_ip_whitelisted: { Args: { check_ip: string }; Returns: boolean }
+      is_manager_or_above: { Args: { _user_id: string }; Returns: boolean }
       is_team_conversation_member: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
@@ -10536,7 +10587,13 @@ export type Database = {
         | "google_gemini"
         | "custom_webhook"
         | "custom_agent"
-      app_role: "admin" | "supervisor" | "agent" | "special_agent" | "dev"
+      app_role:
+        | "admin"
+        | "manager"
+        | "supervisor"
+        | "agent"
+        | "special_agent"
+        | "dev"
       channel_type:
         | "whatsapp"
         | "instagram"
@@ -10693,7 +10750,14 @@ export const Constants = {
         "custom_webhook",
         "custom_agent",
       ],
-      app_role: ["admin", "supervisor", "agent", "special_agent", "dev"],
+      app_role: [
+        "admin",
+        "manager",
+        "supervisor",
+        "agent",
+        "special_agent",
+        "dev",
+      ],
       channel_type: [
         "whatsapp",
         "instagram",
