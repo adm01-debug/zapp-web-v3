@@ -108,6 +108,7 @@ describe('ticketStore — cross-tab cache invalidation', () => {
   });
 
   it('round-trips local mutation → external storage event → fresh snapshot', () => {
+    const unsubscribe = ticketStore.subscribe(() => undefined);
     ticketStore.setStatus('c-rt', 'in_progress', 'agent-a');
     const local = ticketStore.snapshot();
     expect(local['c-rt']?.status).toBe('in_progress');
@@ -123,5 +124,6 @@ describe('ticketStore — cross-tab cache invalidation', () => {
     const fresh = ticketStore.snapshot();
     expect(fresh['c-rt']?.status).toBe('resolved');
     expect(fresh['c-rt']?.resolvedAt).toBe('2026-02-01T00:00:00.000Z');
+    unsubscribe();
   });
 });
