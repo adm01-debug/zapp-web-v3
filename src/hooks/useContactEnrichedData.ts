@@ -27,15 +27,65 @@ export interface SLAInfo {
   resolved_at: string | null;
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Extracts the digits from a WhatsApp JID (e.g. "5511999999999@s.whatsapp.net" -> "5511999999999").
+ * Returns null when the input doesn't look like a JID.
+ */
+function jidToPhone(value: string): string | null {
+  if (!value || !value.includes('@')) return null;
+  const local = value.split('@')[0]?.split(':')[0] ?? '';
+  const digits = local.replace(/\D/g, '');
+  return digits.length >= 8 ? digits : null;
+}
+
+/**
+ * Resolves the local `public.contacts.id` (UUID) for a given identifier that may be either:
+ *   - a real UUID (returned as-is)
+ *   - a WhatsApp JID coming from FATOR X (looked up by phone)
+ * Returns `null` when no local contact exists — callers must skip enriched queries in that case.
+ */
+async function resolveLocalContactId(identifier: string): Promise<string | null> {
+  if (!identifier) return null;
+  if (UUID_REGEX.test(identifier)) return identifier;
+
+  const phone = jidToPhone(identifier);
+  if (!phone) return null;
+
+  // Try exact match first, then trailing-digits fallback for stored numbers with country code variations
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('id')
+    .or(`phone.eq.${phone},phone.eq.+${phone},phone.ilike.%${phone.slice(-8)}`)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    log.warn('resolveLocalContactId lookup failed', { phone, error: error.message });
+    return null;
+  }
+  return data?.id ?? null;
+}
+
 export function useContactEnrichedData(contactId: string) {
+  // Step 1 — resolve the FATOR X identifier into a local Lovable Cloud UUID.
+  // Without this, JIDs were being passed straight into UUID columns, triggering 22P02 errors.
+  const { data: localId } = useQuery({
+    queryKey: ['contact-local-id', contactId],
+    queryFn: () => resolveLocalContactId(contactId),
+    enabled: !!contactId,
+    staleTime: 5 * 60 * 1000, // 5min — phone→uuid mapping is essentially immutable
+  });
+
   // Fetch enriched contact fields from DB
   const { data: enrichedData } = useQuery({
-    queryKey: ['contact-enriched', contactId],
+    queryKey: ['contact-enriched', localId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('contacts')
         .select('company, job_title, nickname, surname, contact_type, ai_sentiment, ai_priority, channel_type')
-        .eq('id', contactId)
+        .eq('id', localId!)
         .single();
 
       if (error) {
@@ -44,17 +94,17 @@ export function useContactEnrichedData(contactId: string) {
       }
       return data as EnrichedContactData;
     },
-    enabled: !!contactId,
+    enabled: !!localId,
   });
 
   // Fetch AI conversation tags
   const { data: aiTags = [] } = useQuery({
-    queryKey: ['contact-ai-tags', contactId],
+    queryKey: ['contact-ai-tags', localId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ai_conversation_tags')
         .select('id, tag_name, confidence, source')
-        .eq('contact_id', contactId)
+        .eq('contact_id', localId!)
         .order('confidence', { ascending: false });
 
       if (error) {
@@ -63,17 +113,17 @@ export function useContactEnrichedData(contactId: string) {
       }
       return data as AIConversationTag[];
     },
-    enabled: !!contactId,
+    enabled: !!localId,
   });
 
   // Fetch SLA info
   const { data: slaInfo } = useQuery({
-    queryKey: ['contact-sla', contactId],
+    queryKey: ['contact-sla', localId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conversation_sla')
         .select('first_response_breached, resolution_breached, first_response_at, resolved_at')
-        .eq('contact_id', contactId)
+        .eq('contact_id', localId!)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -84,7 +134,7 @@ export function useContactEnrichedData(contactId: string) {
       }
       return data as SLAInfo | null;
     },
-    enabled: !!contactId,
+    enabled: !!localId,
   });
 
   return { enrichedData, aiTags, slaInfo };
