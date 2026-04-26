@@ -58,8 +58,8 @@ interface AuditRow {
   id: string;
   created_at: string;
   action: string | null;
-  resource_type: string | null;
-  resource_id: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
 }
 
 function timeAgo(iso: string | null): string {
