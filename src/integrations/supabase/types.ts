@@ -7183,6 +7183,8 @@ export type Database = {
           distribution_algorithm: string
           id: string
           is_active: boolean | null
+          last_assigned_at: string | null
+          last_assigned_user_id: string | null
           max_concurrent_per_agent: number | null
           max_per_queue_per_agent: number | null
           max_queue_size: number | null
@@ -7208,6 +7210,8 @@ export type Database = {
           distribution_algorithm?: string
           id?: string
           is_active?: boolean | null
+          last_assigned_at?: string | null
+          last_assigned_user_id?: string | null
           max_concurrent_per_agent?: number | null
           max_per_queue_per_agent?: number | null
           max_queue_size?: number | null
@@ -7233,6 +7237,8 @@ export type Database = {
           distribution_algorithm?: string
           id?: string
           is_active?: boolean | null
+          last_assigned_at?: string | null
+          last_assigned_user_id?: string | null
           max_concurrent_per_agent?: number | null
           max_per_queue_per_agent?: number | null
           max_queue_size?: number | null
@@ -11299,6 +11305,8 @@ export type Database = {
           distribution_algorithm: string
           id: string
           is_active: boolean | null
+          last_assigned_at: string | null
+          last_assigned_user_id: string | null
           max_concurrent_per_agent: number | null
           max_per_queue_per_agent: number | null
           max_queue_size: number | null
@@ -11501,6 +11509,8 @@ export type Database = {
           distribution_algorithm: string
           id: string
           is_active: boolean | null
+          last_assigned_at: string | null
+          last_assigned_user_id: string | null
           max_concurrent_per_agent: number | null
           max_per_queue_per_agent: number | null
           max_queue_size: number | null
