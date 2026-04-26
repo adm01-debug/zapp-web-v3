@@ -76,16 +76,26 @@ export function AudioVolumeControl({ volume, onChange, isSent = false, size = 'm
               <span className="text-[10px] font-medium tabular-nums text-foreground">
                 {Math.round(volume * 100)}%
               </span>
-              <div className="h-24 flex items-center">
-                <Slider
-                  orientation="vertical"
-                  value={[Math.round(volume * 100)]}
+              <div className="h-24 flex items-center justify-center w-6">
+                <input
+                  type="range"
                   min={0}
                   max={100}
                   step={1}
-                  onValueChange={([v]) => onChange(v / 100)}
-                  className="h-24"
+                  value={Math.round(volume * 100)}
+                  onChange={(e) => onChange(Number(e.target.value) / 100)}
                   aria-label="Volume"
+                  className={cn(
+                    'appearance-none cursor-pointer',
+                    // rotate to make it vertical, sized to the popover height
+                    '-rotate-90 w-24 h-1.5 rounded-full bg-muted',
+                    // thumb (webkit + moz)
+                    '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-background [&::-webkit-slider-thumb]:shadow',
+                    '[&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-background',
+                  )}
+                  style={{
+                    background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${Math.round(volume * 100)}%, hsl(var(--muted)) ${Math.round(volume * 100)}%, hsl(var(--muted)) 100%)`,
+                  }}
                 />
               </div>
               <button
