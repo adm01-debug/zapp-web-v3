@@ -33,13 +33,13 @@ interface MessageStatusProps {
 }
 
 const statusConfig: Record<MessageStatusValue, { icon: typeof Check; label: string; color: string; iconClass?: string }> = {
-  pending: { icon: Clock, label: 'Enviando...', color: 'text-muted-foreground' },
-  sending: { icon: Clock, label: 'Enviando...', color: 'text-muted-foreground' },
+  pending: { icon: Clock, label: 'Enviando…', color: 'text-muted-foreground' },
+  sending: { icon: Clock, label: 'Enviando…', color: 'text-muted-foreground' },
   retrying: { icon: RefreshCw, label: 'Tentando reenviar…', color: 'text-warning', iconClass: 'animate-spin' },
-  sent: { icon: Check, label: 'Enviado', color: 'text-muted-foreground' },
+  sent: { icon: Check, label: 'Enviada', color: 'text-muted-foreground' },
   delivered: { icon: CheckCheck, label: 'Entregue', color: 'text-muted-foreground' },
-  read: { icon: CheckCheck, label: 'Lido', color: 'text-info' },
-  played: { icon: CheckCheck, label: 'Reproduzido', color: 'text-info' },
+  read: { icon: CheckCheck, label: 'Visualizada', color: 'text-info' },
+  played: { icon: CheckCheck, label: 'Reproduzida', color: 'text-info' },
   failed: { icon: AlertCircle, label: 'Falha no envio', color: 'text-destructive' },
   failed_auth: { icon: ShieldAlert, label: 'Falha de autenticação', color: 'text-destructive' },
   failed_retries: { icon: AlertCircle, label: 'Falhou após várias tentativas', color: 'text-destructive' },

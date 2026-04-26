@@ -46,7 +46,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   retrying:       { label: 'Tentando reenviar', className: 'bg-warning/15 text-warning border border-warning/30' },
   sent:           { label: 'Enviado',           className: 'bg-info/15 text-info border border-info/30' },
   delivered:      { label: 'Entregue',          className: 'bg-success/15 text-success border border-success/30' },
-  read:           { label: 'Lido',              className: 'bg-success/20 text-success border border-success/40' },
+  read:           { label: 'Visualizada',       className: 'bg-success/20 text-success border border-success/40' },
   failed:         { label: 'Falhou',            className: 'bg-destructive/15 text-destructive border border-destructive/30' },
   failed_auth:    { label: 'Falha de autenticação', className: 'bg-destructive/15 text-destructive border border-destructive/30' },
   failed_retries: { label: 'Falhou após retries',   className: 'bg-destructive/15 text-destructive border border-destructive/30' },

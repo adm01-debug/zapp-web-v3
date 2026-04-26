@@ -119,7 +119,7 @@ export const MessageStatusTimeline = memo(function MessageStatusTimeline({
         },
         {
           key: 'read',
-          label: effectiveStatus === 'played' ? 'Reproduzida' : 'Lida',
+          label: effectiveStatus === 'played' ? 'Reproduzida' : 'Visualizada',
           description: effectiveStatus === 'played'
             ? 'Áudio reproduzido pelo destinatário.'
             : 'Visualizada pelo destinatário.',
@@ -141,18 +141,18 @@ export const MessageStatusTimeline = memo(function MessageStatusTimeline({
       },
       {
         key: 'delivered',
-        label: 'Recebida pelo servidor',
-        description: 'Webhook processou a mensagem.',
+        label: 'Entregue',
+        description: 'Mensagem entregue ao seu inbox.',
         icon: Check,
         state: 'done',
         timestamp: createdAt,
       },
       {
         key: 'read',
-        label: status === 'read' ? 'Lida por você' : 'Não lida',
+        label: status === 'read' ? 'Visualizada' : 'Não visualizada',
         description: status === 'read'
-          ? 'Você abriu e marcou como lida.'
-          : 'A mensagem ainda não foi marcada como lida.',
+          ? 'Você abriu e marcou como visualizada.'
+          : 'A mensagem ainda não foi visualizada.',
         icon: CheckCheck,
         state: status === 'read' ? 'done' : 'pending',
         timestamp: status === 'read' ? statusAt ?? null : null,

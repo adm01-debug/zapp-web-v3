@@ -39,17 +39,9 @@ interface MessageStatusInlineProps {
   forceLabel?: boolean;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  sending: 'Enviando…',
-  retrying: 'Tentando reenviar…',
-  sent: 'Enviada',
-  delivered: 'Entregue',
-  read: 'Lida',
-  played: 'Reproduzida',
-  failed: 'Falhou',
-  failed_auth: 'Falha de autenticação',
-  failed_retries: 'Falhou após várias tentativas',
-};
+import { STATUS_LABEL_UNIFIED, describeStatus } from './messageStatusLanguage';
+
+const STATUS_LABELS: Record<string, string> = STATUS_LABEL_UNIFIED;
 
 const TRANSIENT = new Set(['sending', 'retrying']);
 const TERMINAL_FAILURES = new Set(['failed', 'failed_auth', 'failed_retries']);
@@ -112,7 +104,9 @@ export const MessageStatusInline = memo(function MessageStatusInline({
       ? `Falhou após ${totalRetries} tentativas`
       : isTerminalFailure
         ? 'Falha no envio'
-        : undefined;
+        : (effectiveStatus === 'sent' || effectiveStatus === 'delivered' || effectiveStatus === 'read' || effectiveStatus === 'played')
+          ? describeStatus(effectiveStatus, 'outbound')
+          : undefined;
 
   const tooltip = isTerminalFailure && failure
     ? `${baseTooltip} — ${formatFailureReason(failure.reason)} (após ${failure.attempts} tentativa${failure.attempts === 1 ? '' : 's'})`

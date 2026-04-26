@@ -15,6 +15,7 @@
 import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
+import { STAGE_LABEL_UNIFIED, STAGE_INITIAL_UNIFIED } from './messageStatusLanguage';
 
 type Stage = 'sent' | 'delivered' | 'read';
 
@@ -74,11 +75,8 @@ function resolveStages(message: Props['message']): Record<Stage, string | null> 
   };
 }
 
-const STAGE_LABEL: Record<Stage, string> = {
-  sent: 'Enviada',
-  delivered: 'Entregue',
-  read: 'Lida',
-};
+const STAGE_LABEL = STAGE_LABEL_UNIFIED;
+const STAGE_INITIAL = STAGE_INITIAL_UNIFIED;
 
 const STAGE_TONE: Record<Stage, string> = {
   sent: 'text-muted-foreground/80',
@@ -112,7 +110,7 @@ export const MessageStatusTimestamps = memo(function MessageStatusTimestamps({
             className={cn('font-medium', STAGE_TONE[e.stage])}
             title={`${STAGE_LABEL[e.stage]}: ${fmtFull(e.value)}`}
           >
-            <span className="opacity-70 mr-0.5">{STAGE_LABEL[e.stage][0]}</span>
+            <span className="opacity-70 mr-0.5">{STAGE_INITIAL[e.stage]}</span>
             {e.label}
           </span>
         </span>

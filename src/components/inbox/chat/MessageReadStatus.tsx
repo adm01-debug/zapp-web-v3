@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { MessageStatusIcon } from './messageUtils';
 import { MessageStatusPanel } from './MessageStatusPanel';
 import { MessageStatusTimestamps } from './MessageStatusTimestamps';
+import { describeStatus, STAGE_LABEL_UNIFIED } from './messageStatusLanguage';
 import { useInboxStatusPref } from '@/hooks/useInboxStatusPref';
 import type { Message } from '@/types/chat';
 
@@ -42,18 +43,18 @@ export const MessageReadStatus = memo(function MessageReadStatus({
           className,
         )}
         data-testid="message-read-status"
-        data-status={reachedRead ? 'inbound-read' : 'inbound-received'}
-        aria-label={
-          reachedRead
-            ? 'Detalhes — recebida e lida por você'
-            : 'Detalhes — recebida (ainda não lida)'
-        }
-        title={reachedRead ? 'Lida por você' : 'Recebida'}
+        data-status={reachedRead ? 'inbound-read' : 'inbound-delivered'}
+        aria-label={reachedRead
+          ? `Status — ${describeStatus('read', 'inbound')}`
+          : `Status — ${describeStatus('delivered', 'inbound')}`}
+        title={reachedRead
+          ? describeStatus('read', 'inbound')
+          : describeStatus('delivered', 'inbound')}
       >
         <MessageStatusIcon status={reachedRead ? 'read' : 'delivered'} />
         {showTextLabel && (
           <span className="text-[10px] font-medium leading-none ml-0.5 opacity-90">
-            {reachedRead ? 'Lida' : 'Recebida'}
+            {reachedRead ? STAGE_LABEL_UNIFIED.read : STAGE_LABEL_UNIFIED.delivered}
           </span>
         )}
         <MessageStatusTimestamps message={message} className="ml-1" />
