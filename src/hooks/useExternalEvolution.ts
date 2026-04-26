@@ -276,11 +276,10 @@ export function useExternalMessages(remoteJid: string | null) {
       if (!mountedRef.current || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
-      setMessages(prev => {
-        const seen = new Set(prev.map(m => m.id));
-        const additions = mapped.filter(m => !seen.has(m.id));
-        if (additions.length === 0) return prev;
-        return [...prev, ...additions];
+      setMessages((prev) => {
+        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
+        if (additions.length === 0 && filteredPrev.length === prev.length) return prev;
+        return [...filteredPrev, ...additions];
       });
       lastSeenRef.current = newOnes[newOnes.length - 1].created_at;
     } catch (err) {
