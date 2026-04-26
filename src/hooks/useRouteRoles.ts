@@ -2,43 +2,63 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { AppRole } from '@/hooks/useUserRole';
 
+/**
+ * Cache values:
+ *  - missing key : not yet fetched
+ *  - null        : fetched, no override exists for this path (use code default)
+ *  - AppRole[]   : fetched, explicit override (empty array = any authenticated)
+ */
 const cache = new Map<string, AppRole[] | null>();
+const inflight = new Map<string, Promise<void>>();
+
+function fetchRoles(path: string): Promise<void> {
+  const existing = inflight.get(path);
+  if (existing) return existing;
+  const p = supabase
+    .from('route_permissions')
+    .select('allowed_roles')
+    .eq('path', path)
+    .maybeSingle()
+    .then(({ data, error }) => {
+      if (error || !data) {
+        cache.set(path, null);
+      } else {
+        cache.set(path, (data.allowed_roles as AppRole[]) ?? []);
+      }
+    })
+    .finally(() => {
+      inflight.delete(path);
+    });
+  inflight.set(path, p);
+  return p;
+}
 
 /**
- * Fetches the configured roles for a given route path from route_permissions.
- * Returns:
- *  - undefined while loading
- *  - null if the path has no override (use code default)
- *  - AppRole[] (possibly empty = any authenticated) if configured
+ * Returns the dynamic role override for a route path. Non-blocking:
+ * returns `null` immediately while the override is loading, so callers
+ * fall back to their hard-coded `requiredRoles`. Once the fetch resolves,
+ * the hook re-renders once with the actual override.
  */
-export function useRouteRoles(path: string | undefined): AppRole[] | null | undefined {
-  const [roles, setRoles] = useState<AppRole[] | null | undefined>(
-    path && cache.has(path) ? cache.get(path) : undefined
-  );
+export function useRouteRoles(path: string | undefined): AppRole[] | null {
+  const initial = path && cache.has(path) ? (cache.get(path) ?? null) : null;
+  const [roles, setRoles] = useState<AppRole[] | null>(initial);
 
   useEffect(() => {
-    if (!path) return;
+    if (!path) {
+      setRoles(prev => (prev === null ? prev : null));
+      return;
+    }
     if (cache.has(path)) {
-      setRoles(cache.get(path));
+      const cached = cache.get(path) ?? null;
+      setRoles(prev => (prev === cached ? prev : cached));
       return;
     }
     let cancelled = false;
-    supabase
-      .from('route_permissions')
-      .select('allowed_roles')
-      .eq('path', path)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error || !data) {
-          cache.set(path, null);
-          setRoles(null);
-        } else {
-          const value = (data.allowed_roles as AppRole[]) ?? [];
-          cache.set(path, value);
-          setRoles(value);
-        }
-      });
+    fetchRoles(path).then(() => {
+      if (cancelled) return;
+      const cached = cache.get(path) ?? null;
+      setRoles(prev => (prev === cached ? prev : cached));
+    });
     return () => {
       cancelled = true;
     };
