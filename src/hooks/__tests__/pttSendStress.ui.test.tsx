@@ -191,12 +191,16 @@ describe('PTT FATOR X — stress UI (120 iterações)', () => {
         (el) => el.getAttribute('data-message-id') === optimistic.id,
       );
       expect(matchOpt, `iteração ${i}: bolha otimista deveria existir no DOM`).toBeTruthy();
-      expect(matchOpt!.getAttribute('data-external-id')).toBe(externalId);
+      // Quando o sender resolveu o external_id (i par), ele já vem na bolha.
+      // Quando não (i ímpar), a bolha fica sem external_id e a reconciliação
+      // depende do fallback de mídia (sender + message_type + janela).
+      const expectedOptExtId = i % 2 === 0 ? externalId : '';
+      expect(matchOpt!.getAttribute('data-external-id')).toBe(expectedOptExtId);
       expect(matchOpt!.getAttribute('data-media-url')).toContain('signed.example');
 
       // ETAPA 2 — webhook chega (alternamos cenários para cobrir ambos):
-      //   - i ímpar: canonical SEM media_url (testa herança de URL otimista);
-      //   - i par:   canonical COM media_url próprio.
+      //   - i ímpar: canonical SEM media_url (testa herança via fallback);
+      //   - i par:   canonical COM media_url próprio (match por external_id).
       const canonical = makeCanonicalFromOptimistic(optimistic, externalId!, {
         withMediaUrl: i % 2 === 0,
       });
@@ -207,7 +211,7 @@ describe('PTT FATOR X — stress UI (120 iterações)', () => {
 
       // ASSERT — otimista some, canônica aparece sem duplicar.
       const optimisticAfter = queryAll('bubble-optimistic').find(
-        (el) => el.getAttribute('data-external-id') === externalId,
+        (el) => el.getAttribute('data-message-id') === optimistic.id,
       );
       expect(optimisticAfter, `iteração ${i}: otimista deveria sumir após webhook`).toBeFalsy();
 
