@@ -70,6 +70,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     if (!audio) return;
     
     const updateProgress = () => {
+      setCurrentTime(audio.currentTime);
       if (audio.duration) {
         setPlaybackProgress((audio.currentTime / audio.duration) * 100);
       }
