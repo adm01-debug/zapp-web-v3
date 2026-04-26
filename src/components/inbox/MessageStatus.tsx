@@ -7,29 +7,29 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import type {
+  MessageStatusDetailFields,
+  MessageUIStatus,
+} from '@/types/messageStatus';
 
-export type MessageStatusValue =
-  | 'sending'
-  | 'pending'
-  | 'retrying'
-  | 'sent'
-  | 'delivered'
-  | 'read'
-  | 'played'
-  | 'failed'
-  | 'failed_auth'
-  | 'failed_retries';
+/**
+ * Backwards-compat alias: this component historically exported its own
+ * `MessageStatusValue` union. It is now the same as `MessageUIStatus`
+ * coming from the shared contract.
+ */
+export type MessageStatusValue = MessageUIStatus;
 
 interface MessageStatusProps {
   status: MessageStatusValue;
   className?: string;
   showLabel?: boolean;
-  detail?: {
-    attempt?: number;
-    totalRetries?: number;
-    errorCode?: string | number;
-    errorReason?: string;
-  };
+  /**
+   * Extra payload (attempts + error info) — same shape as
+   * `Omit<MessageStatusDetail, 'status'>` returned by `useMessageStatus`'
+   * `getMessageStatusDetail`. Sharing the type guarantees the hook output
+   * can be spread into this component without manual mapping.
+   */
+  detail?: MessageStatusDetailFields;
 }
 
 const statusConfig: Record<MessageStatusValue, { icon: typeof Check; label: string; color: string; iconClass?: string }> = {

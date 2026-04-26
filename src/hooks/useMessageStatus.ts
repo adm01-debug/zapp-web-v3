@@ -6,31 +6,21 @@ import {
   subscribeAllSendStatus,
   getSendStatus,
   type SendStatusDetail,
-  type SendUIStatus,
 } from '@/hooks/realtime/sendStatusBus';
+import type {
+  MessageStatusDbRow,
+  MessageStatusDetail,
+  MessageUIStatus,
+} from '@/types/messageStatus';
 
-export type MessageUIStatus = SendUIStatus | 'delivered' | 'read';
-
-interface MessageStatusUpdate {
-  id: string;
-  status: MessageUIStatus;
-  status_updated_at: string;
-  error_code?: string | null;
-  error_reason?: string | null;
-}
-
-export interface MessageStatusDetail {
-  status: MessageUIStatus;
-  attempt?: number;
-  totalRetries?: number;
-  errorCode?: string | number;
-  errorReason?: string;
-}
+// Re-export the shared contract so existing call sites
+// (`import { MessageStatusDetail } from '@/hooks/useMessageStatus'`) keep working.
+export type { MessageStatusDbRow, MessageStatusDetail, MessageUIStatus };
 
 const TRANSIENT: MessageUIStatus[] = ['sending', 'retrying'];
 
 export const useMessageStatus = (contactId?: string) => {
-  const [statusUpdates, setStatusUpdates] = useState<Map<string, MessageStatusUpdate>>(new Map());
+  const [statusUpdates, setStatusUpdates] = useState<Map<string, MessageStatusDbRow>>(new Map());
   const [busTick, setBusTick] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -57,7 +47,7 @@ export const useMessageStatus = (contactId?: string) => {
         }
 
         if (data) {
-          const statusMap = new Map<string, MessageStatusUpdate>();
+          const statusMap = new Map<string, MessageStatusDbRow>();
           data.forEach((msg) => {
             if (msg.status) {
               statusMap.set(msg.id, {
