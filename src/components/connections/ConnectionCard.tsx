@@ -50,6 +50,7 @@ export function ConnectionCard({
   const status = statusConfig[connection.status] || statusConfig.disconnected;
   const StatusIcon = status.icon;
   const isOfficial = (connection.api_type ?? 'evolution') === 'official';
+  const [officialConfigOpen, setOfficialConfigOpen] = useState(false);
 
   return (
     <motion.div whileHover={{ y: -2, boxShadow: '0 8px 30px hsl(var(--primary) / 0.1)' }}>
