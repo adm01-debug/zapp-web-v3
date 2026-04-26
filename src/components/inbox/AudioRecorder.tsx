@@ -220,22 +220,33 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
             <audio
               ref={audioRef}
               src={audioUrl}
-              onEnded={() => { setIsPlaying(false); setPlaybackProgress(0); }}
+              onEnded={() => { setIsPlaying(false); setPlaybackProgress(0); setCurrentTime(0); }}
+              onLoadedMetadata={(e) => { (e.currentTarget as HTMLAudioElement).volume = volume; }}
               className="hidden"
             />
             {/* Progress bar with actual playback tracking */}
-            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className="flex-1 h-2 bg-muted rounded-full overflow-hidden cursor-pointer"
+              onClick={(e) => {
+                const audio = audioRef.current;
+                if (!audio || !audio.duration) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+              }}
+            >
               <motion.div
                 className={cn(
                   "h-full rounded-full transition-all",
                   voiceChanged ? "bg-primary" : "bg-primary"
                 )}
-                style={{ width: `${isPlaying ? playbackProgress : 100}%` }}
+                style={{ width: `${playbackProgress}%` }}
               />
             </div>
-            <span className="text-sm font-mono text-muted-foreground w-14 text-right tabular-nums">
-              {formatDuration(duration)}
+            <span className="text-sm font-mono text-muted-foreground w-20 text-right tabular-nums">
+              {formatDuration(Math.floor(currentTime))} / {formatDuration(duration)}
             </span>
+            <AudioVolumeControl volume={volume} onChange={setVolume} size="sm" />
+          </>
           </>
         ) : null}
       </div>
