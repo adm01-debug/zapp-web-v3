@@ -494,6 +494,11 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           onDismiss={handlers.dismissSendError}
         />
 
+        <AutomationSuggestionsBar
+          remoteJid={conversation.contact.id}
+          onUseSuggestion={(t) => handlers.setInputValue(t)}
+        />
+
         <ChatInputArea inputValue={handlers.inputValue} replyToMessage={handlers.replyToMessage} editingMessage={handlers.editingMessage} isRecordingAudio={handlers.isRecordingAudio}
           showSlashCommands={dialogs.slashCommands} contactId={conversation.contact.id} contactPhone={conversation.contact.phone}
           contactName={conversation.contact.name} instanceName={instanceName} messages={messages} quickReplies={dbQuickReplies} isSending={handlers.isSending}
