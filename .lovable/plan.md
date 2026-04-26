@@ -1,84 +1,95 @@
-## Contexto
+# Auditoria Técnica Exaustiva — ZAPP Web (Promo Brindes)
 
-O prompt enviado é um runbook SRE/QA de 1.280 linhas para validar o deploy v6 de uma edge function `evolution-bitrix-connector` em outro repositório (`adm01-debug/zapp-web`). Boa parte é fora de escopo aqui:
+## O que será entregue
 
-- A function `evolution-bitrix-connector` **não existe** neste projeto.
-- Schema `zapp_history.edge_function_templates` e audit `activate_v6_enforcement` **não existem** no Lovable Cloud deste app.
-- Hashes (`3dde4b6b…`), backups, rotação de `WEBHOOK_SHARED_SECRET`, comandos `supabase functions deploy`, OAuth Bitrix, Evolution API real → todos exigem credenciais externas e acesso ao outro projeto.
+Um relatório completo gerado em **`/mnt/documents/AUDITORIA_22_DIMENSOES.md`** seguindo exatamente o protocolo do prompt:
 
-Conforme suas respostas: **adapto os 2 patches v6 às funções equivalentes existentes** (`evolution-webhook` + `bitrix-api`) e **deixo de fora tudo que pede credencial externa**.
+1. **Inventário do sistema** (Fase 0) — números reais já coletados.
+2. **Análise das 22 dimensões** — cada uma com nota 0–10 fundamentada em evidências (arquivo:linha, comandos rodados, queries SQL).
+3. **Scorecard consolidado** com média ponderada (×3 críticas, ×2 altas, ×1 padrão).
+4. **Top 10 ações de maior ROI** (impacto ÷ esforço).
+5. **Roadmap em 3 ondas**: Quick Wins / Sprint 1 / Sprint 2 / Backlog.
+6. **Nota final** + parágrafo de maturidade.
 
-## O que será feito
+Após o relatório, executo **Quick Wins + Sprint 1** (impacto alto ÷ esforço baixo–médio) em PRs separados por dimensão.
 
-### 1. Bug 2 — Origin validation (defesa em profundidade)
+## Inventário já confirmado
 
-**`supabase/functions/_shared/validation.ts`**: novo helper `validateBitrixOrigin(req, allowedPortal)` que aceita origin se:
-- hostname casa `/\.bitrix24\.com\.br$/` **OU**
-- origin === valor de `BITRIX_PORTAL` (env), quando configurado
+| Item | Valor |
+|---|---:|
+| Arquivos TS/TSX (src) | 1.397 |
+| Edge functions | 83 |
+| Migrations versionadas | 307 |
+| Tabelas em `public` | 186 |
+| Tabelas com RLS habilitado | 186/186 (100%) |
+| Tabelas com pelo menos 1 policy | 186/186 (100%) |
+| Testes unitários (Vitest) | 240 arquivos |
+| Testes E2E (Playwright) | 25 specs |
+| Testes Deno (edge functions) | 97+ (já passando 100%) |
+| ADRs | 5 (em `docs/decisions/`) |
+| Runbooks operacionais | `docs/runbooks/`, `docs/INCIDENT-RUNBOOK.md`, `docs/SLA-ESCALATION-CRON.md` |
+| CI pipeline | `.github/workflows/ci.yml` (lint, typecheck, vitest, deno tests, build) |
+| Stack | React 18 + Vite + TS + Tailwind + Supabase (Lovable Cloud + FATOR X externo) + Bitrix24 + Evolution API |
+| Linter Supabase | 193 warnings (todos do tipo `pg_graphql_anon_table_exposed`) |
+| Security scan | Limpo (3 findings ignorados com justificativa) |
 
-Retorna `{ ok: true }` ou `{ ok: false, reason }`.
+## Pontos de atenção já mapeados (preview do scorecard)
 
-**`supabase/functions/bitrix-api/index.ts`**: aplicar o guard logo após `handleCors`. Origin ausente ou não permitida → `401 { error: "invalid origin" }`. O CORS já filtra o browser; isto fecha o vetor server-to-server.
+Sem inflar notas — exemplos concretos do que será reportado:
 
-**`supabase/functions/evolution-webhook/index.ts`**: webhooks da Evolution não têm origin de browser, então mantém HMAC como camada primária. Adiciono apenas um log explícito quando `Origin` chega de host não-evolution (suspeito) — sem bloquear, para não quebrar o webhook em produção.
+- **Tipagem (Dim. 18)**: `tsconfig.app.json` usa `strict: false` e `noImplicitAny: false`. Existem **245 ocorrências de `any`** em **93 arquivos** de produção. ESLint não bloqueia `any` em src (só em testes). Nota provisória ≤ 6/10.
+- **Segurança DB (Dim. 16)**: 193 warnings `pg_graphql_anon_table_exposed` no linter — `anon` enxerga schema de tabelas via introspection do GraphQL. Precisa revogar `SELECT` do `anon` nas tabelas que não devem ser públicas. Nota provisória ≤ 7/10.
+- **Logging (Dim. 9)**: `redactSecrets` + Logger estruturado já implementados em `_shared/validation.ts` com PII patterns (JWT, Bearer, e-mail, telefone, Bitrix REST tokens). 1 `console.log` em produção (em comentário JSDoc — falso positivo). Nota provisória ≥ 8.5/10.
+- **Manutenibilidade (Dim. 12)**: 14 arquivos com **>500 linhas** em `src/` (maior: `AdminFailedMessagesPage.tsx` com 1.012 linhas). 8 TODOs/FIXME/HACK no código. Decomposição padrão já documentada em `mem://architecture/refactoring/hook-decomposition-pattern`. Nota provisória ~7/10.
+- **CI/CD (Dim. 5)**: Pipeline cobre lint + typecheck + vitest + deno tests + build. **Falta**: security scan (npm audit / dependabot), branch protection rules visíveis, deploy automatizado para staging. Nota provisória ~7/10.
+- **Arquitetura (Dim. 1)**: 5 ADRs documentados, separação clara `pages/components/hooks/lib/integrations`, dois clients Supabase (Cloud + FATOR X) com regras explícitas em project-knowledge. Nota provisória ≥ 8/10.
 
-### 2. Bug 1 — Sanitização de secrets em logs
+(Notas finais saem após auditar as 22 dimensões com profundidade igual.)
 
-**`supabase/functions/_shared/validation.ts`**: estender o `Logger` com `sanitizeLogValue()` que:
-- Coleta os valores de `EVOLUTION_WEBHOOK_SECRET`, `WEBHOOK_SECRET`, `WEBHOOK_SHARED_SECRET`, `BITRIX_WEBHOOK_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `EVOLUTION_API_KEY`, `BITRIX_CLIENT_SECRET` (apenas os que existirem no env).
-- Aplica `replaceAll(secret, '***REDACTED***')` em `message` e em qualquer string dentro de `ctx` (recursivo, profundidade ≤ 3) **antes** de serializar.
-- Faz isto uma vez na construção do Logger (cache de regex/lista) — sem custo por chamada significativo.
+## Quick Wins que serão executados após o relatório
 
-Aplicar em `Logger.log()` no shared, beneficiando todas as funções (`bitrix-api`, `evolution-api`, etc).
+Itens de impacto alto e esforço baixo, sem risco de regressão:
 
-No `evolution-webhook/index.ts` o log usa `console.warn/log/error` direto — adicionar import do helper `redactSecrets(str)` e envolver as 4 strings de log que poderiam carregar payload com secret (ex: linhas 57, 72).
+1. **Habilitar `noImplicitAny`** no `tsconfig.app.json` para novos arquivos (gradual via `// @ts-expect-error` onde explodir).
+2. **Revogar `GRANT SELECT` do `anon`** em tabelas internas (migration) para resolver 193 warnings do linter `pg_graphql`.
+3. **Adicionar `npm audit` job** no `.github/workflows/ci.yml` para falhar PR em CVE high/critical.
+4. **Headers de segurança** (`Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`) no `index.html` / Vite config.
+5. **Habilitar HIBP password check** via `configure_auth` (leaked password protection).
+6. **Limpar 8 TODO/FIXME** convertendo em issues GitHub ou removendo.
 
-### 3. Testes Deno adversariais (sem credenciais)
+## Sprint 1 (após aprovação dos Quick Wins)
 
-Novo arquivo **`supabase/functions/bitrix-api/__tests__/security.test.ts`** com Deno.test cases:
+Itens de impacto alto e esforço médio:
 
-1. `redactSecrets()` remove valor presente em mensagem
-2. `redactSecrets()` remove secret aninhado em `ctx`
-3. `validateBitrixOrigin()` aceita `https://promo.bitrix24.com.br`
-4. `validateBitrixOrigin()` aceita exact match com `BITRIX_PORTAL`
-5. `validateBitrixOrigin()` rejeita `https://attacker.evil.com`
-6. `validateBitrixOrigin()` rejeita ausência de header Origin
-7. `validateBitrixOrigin()` rejeita `https://fake-bitrix24.com.br.evil.com` (hostname suffix attack)
+7. **Schema Zod compartilhado** entre frontend ↔ edge functions para os 5 endpoints mais usados (atualmente só 7 arquivos usam Zod no frontend).
+8. **Decompor 3 arquivos > 800 linhas** seguindo o padrão de `mem://architecture/refactoring/hook-decomposition-pattern` (`AdminFailedMessagesPage.tsx`, `useConnectionsManager.ts`, `MediaLibraryAdmin.test.tsx`).
+9. **Error tracking centralizado** — verificar se Sentry/equivalente está configurado; senão, adicionar boundary global que envie para tabela `error_log` do FATOR X.
+10. **Testes de RLS** — script Deno que assume role `authenticated` com diferentes `auth.uid()` e valida que cada tabela bloqueia o que deve bloquear.
 
-Rodam via `supabase--test_edge_functions` — sem rede externa, sem secrets reais.
+## Detalhes técnicos da execução
 
-### 4. Documentação
+- **Não vou tocar em `src/integrations/supabase/types.ts`** (auto-gerado).
+- **Não vou alterar schemas reservados** do Supabase (`auth`, `storage`, `realtime`, `vault`).
+- Mudanças de DB usarão a ferramenta de migration (com aprovação automática do usuário).
+- Mudanças em `.github/workflows/ci.yml` rodam só após push — não posso testar localmente, então marcarei como "pendente de validação no próximo PR".
+- Cada Quick Win vira um commit isolado no relatório, com critério de aceite testável.
 
-**`supabase/functions/bitrix-api/SECURITY.md`** curto: documenta o guard de origin, a sanitização de logs, e referencia o checklist v6 do runbook como inspiração.
+## Arquivos que serão criados/editados
 
-## O que **NÃO** será feito (e por quê)
+**Criados:**
+- `/mnt/documents/AUDITORIA_22_DIMENSOES.md` (relatório principal, 15–25 KB)
+- `/mnt/documents/SCORECARD.csv` (tabela exportável)
+- Migration nova para revogar `GRANT SELECT` do `anon`
 
-| Item do prompt | Motivo |
-|---|---|
-| Fases 0.1, 0.2, 0.5, 0.7 (banco `zapp_history`, hashes, backups) | Schema/tabelas não existem aqui |
-| Fase 0.6, 1.1–1.2 (rotação de secret, deploy CLI, webhook Evolution real) | Credenciais externas + outro projeto |
-| Fases 0.8–0.9 (health Evolution/Bitrix reais) | Sem credenciais |
-| Fases 2.1–2.4 com curl real contra `$EDGE_FUNCTION_URL` v6 | Function não existe + URL externa |
-| Fases 3–7 (E2E WhatsApp→Bitrix, concorrência, teste de carga em prod) | Requer Evolution+Bitrix reais |
-| Plano de rollback v5↔v6 | Não há v5/v6 aqui |
+**Editados (Quick Wins):**
+- `tsconfig.app.json` (noImplicitAny)
+- `.github/workflows/ci.yml` (npm audit job)
+- `index.html` (security headers via meta tags / vite plugin)
+- `eslint.config.js` (regra `no-explicit-any` como warn em src)
+- 8 arquivos com TODO/FIXME
 
-Tudo isso fica documentado em `SECURITY.md` como "manual / responsabilidade do operador no projeto zapp-web externo".
+## Fora de escopo
 
-## Arquivos
-
-**Editar:**
-- `supabase/functions/_shared/validation.ts` (+ `redactSecrets`, `validateBitrixOrigin`, integração no `Logger`)
-- `supabase/functions/bitrix-api/index.ts` (chamar `validateBitrixOrigin` pós-CORS)
-- `supabase/functions/evolution-webhook/index.ts` (envolver logs sensíveis com `redactSecrets`)
-
-**Criar:**
-- `supabase/functions/bitrix-api/__tests__/security.test.ts`
-- `supabase/functions/_shared/__tests__/log-sanitizer.test.ts`
-- `supabase/functions/bitrix-api/SECURITY.md`
-
-## Validação final
-
-1. `supabase--test_edge_functions` nos dois novos arquivos de teste — todos verdes.
-2. `supabase--deploy_edge_functions` para `bitrix-api` e `evolution-webhook`.
-3. Smoke: `supabase--curl_edge_functions` em `bitrix-api` com `Origin: https://attacker.evil.com` → esperado 401.
-4. Smoke: chamada normal do app via preview continua funcionando (sem origin externa, CORS dá conta).
+- Pen test real (precisa de credenciais e contrato).
+- Mudanças em infra Bitrix24 / Evolution API (sem credenciais — confirmado no escopo anterior).
+- Sprint 2 e Backlog — entregues como roadmap, executados em loops futuros após sua aprovação.
