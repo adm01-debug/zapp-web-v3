@@ -85,16 +85,40 @@ function timeAgo(iso: string | null): string {
   return `${d}d atrás`;
 }
 
-function classifyHealth(lastInboundIso: string | null): {
+function classifyHealth(
+  lastInboundIso: string | null,
+  alertThresholdMin: number,
+): {
   variant: 'default' | 'secondary' | 'destructive';
   label: string;
   ok: boolean;
+  /** True quando ultrapassou o threshold configurado pelo admin. */
+  alerting: boolean;
+  ageMinutes: number | null;
 } {
-  if (!lastInboundIso) return { variant: 'destructive', label: 'Sem dados', ok: false };
+  if (!lastInboundIso) {
+    return { variant: 'destructive', label: 'Sem dados', ok: false, alerting: true, ageMinutes: null };
+  }
   const ms = Date.now() - new Date(lastInboundIso).getTime();
-  if (ms < 5 * 60_000) return { variant: 'default', label: 'Saudável', ok: true };
-  if (ms < 30 * 60_000) return { variant: 'secondary', label: 'Lento', ok: true };
-  return { variant: 'destructive', label: 'Sem sincronia', ok: false };
+  const ageMinutes = Math.max(0, Math.floor(ms / 60_000));
+  const thresholdMs = alertThresholdMin * 60_000;
+  if (ms >= thresholdMs) {
+    return { variant: 'destructive', label: 'Sem sincronia', ok: false, alerting: true, ageMinutes };
+  }
+  // "Lento" = passou de 50% do threshold mas ainda dentro.
+  if (ms >= thresholdMs / 2) {
+    return { variant: 'secondary', label: 'Lento', ok: true, alerting: false, ageMinutes };
+  }
+  return { variant: 'default', label: 'Saudável', ok: true, alerting: false, ageMinutes };
+}
+
+function readStoredThreshold(): number {
+  if (typeof window === 'undefined') return DEFAULT_ALERT_THRESHOLD_MIN;
+  const raw = window.localStorage.getItem(ALERT_THRESHOLD_KEY);
+  if (!raw) return DEFAULT_ALERT_THRESHOLD_MIN;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) return DEFAULT_ALERT_THRESHOLD_MIN;
+  return Math.min(MAX_THRESHOLD, Math.max(MIN_THRESHOLD, parsed));
 }
 
 export default function AdminInboxSyncStatusPage() {
