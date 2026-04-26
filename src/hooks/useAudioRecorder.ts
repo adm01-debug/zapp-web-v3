@@ -2,14 +2,16 @@ import { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { log } from '@/lib/logger';
+import { MAX_PTT_DURATION_SEC } from '@/lib/audio/pttLimits';
 
 interface UseAudioRecorderOptions {
   onRecordingComplete?: (audioBlob: Blob, audioUrl: string) => void;
-  maxDuration?: number; // in seconds
+  /** Limite de duração em segundos. Default: limite oficial de PTT (16 min). */
+  maxDuration?: number;
 }
 
 export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
-  const { onRecordingComplete, maxDuration = 300 } = options;
+  const { onRecordingComplete, maxDuration = MAX_PTT_DURATION_SEC } = options;
   
   const [isRecording, setIsRecording] = useState(false);
   const [duration, setDuration] = useState(0);
