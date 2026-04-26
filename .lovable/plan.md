@@ -1,41 +1,55 @@
-# E2E: Ciclo completo de envio (texto + mídia) com mocks
+# E2E: Mensagem nova aparece na thread correta do inbox unificado
 
 ## Objetivo
 
-Adicionar uma spec Playwright que valide o ciclo completo de envio de mensagens (texto **e** mídia) e a renderização correspondente no chat, **sem** depender de provedores reais — todos os endpoints de envio e webhook são mockados via `page.route`.
+Adicionar uma spec Playwright que abre o inbox unificado da conversa que o teste anterior criou (ou de uma conversa existente) e valida que **uma nova mensagem injetada via mock aparece na thread correta** — ou seja, dentro do `role="log"` da conversa selecionada e não em outra.
 
-A spec existente `e2e/send-message.spec.ts` cobre apenas o caminho "Nova Conversa" e checa só a bolha otimista de texto. A nova spec foca no fluxo principal do dia-a-dia: abrir uma conversa existente, enviar texto, enviar mídia, validar render e o payload que chegou na function.
+Complementa as specs de envio (`send-message-cycle.spec.ts`) cobrindo o lado de **recepção / atualização da view unificada**.
 
 ## Arquivo novo
 
-`e2e/send-message-cycle.spec.ts` — três casos:
+`e2e/inbox-thread-message-arrival.spec.ts`
 
-1. **Texto** — abre primeira conversa, digita mensagem, dispara envio (botão ou `Enter`), verifica:
-   - Bolha otimista renderiza em ≤ 3s.
-   - Mock de `evolution-api` recebeu `action='send-text'` com o texto correto.
+Dois casos:
 
-2. **Mídia (imagem)** — escreve um PNG 1x1 temporário, faz `setInputFiles` no `<input type="file">` do chat, confirma envio, verifica:
-   - Mock de `evolution-api` recebeu `action='send-media'` com `mediaUrl` definido.
-   - Algum `<img>` renderiza dentro da área de mensagens (`[role="log"]` / `[data-testid="chat-messages"]`).
+1. **Mensagem nova aparece na thread aberta**
+   - Mockar o RPC `rpc_list_messages_lite` (chamado via `externalSupabase`, URL `https://tdprnylgyrogbbhgdoik.supabase.co/rest/v1/rpc/rpc_list_messages_lite`) para devolver, na primeira chamada, uma lista base com 2 mensagens da conversa selecionada e, em chamadas subsequentes, a mesma lista **+** uma terceira mensagem nova com texto único `e2e-incoming-<runId>`.
+   - Mockar também `rpc_list_messages` (legacy) com a mesma resposta, por segurança.
+   - Abrir a primeira conversa do `role="listbox"` (idêntico padrão das specs existentes).
+   - Esperar a mensagem base renderizar dentro do `role="log"`.
+   - Disparar uma re-fetch (clicando na mesma conversa novamente, OU usando o `refetch` natural do `useMessages` ao trocar e voltar à conversa) e poll até que `e2e-incoming-<runId>` apareça **dentro do `role="log"`** (locator `page.getByRole('log').getByText(...)`).
 
-3. **Falha controlada** — força `evolution-api` a responder `503`, dispara um envio e garante:
-   - App não crasha (lista de conversas continua visível).
-   - Nenhum fallback de Error Boundary toma a tela.
+2. **A mensagem não vaza para outra conversa**
+   - Com o mesmo mock instalado, alternar para a segunda conversa do `listbox` (se existir; senão `test.skip`).
+   - Asseverar que dentro do `role="log"` da segunda conversa **não** aparece o texto `e2e-incoming-<runId>` — o mock por padrão devolve uma lista vazia para qualquer `p_remote_jid` diferente do alvo.
+   - Voltar para a primeira conversa e re-confirmar que a mensagem segue lá.
 
-## Mocks instalados em todos os casos (`installSendMocks`)
+## Mocks
 
-- `**/functions/v1/evolution-api**` → `200` com `MOCK_EVOLUTION_SEND_RESPONSE`; captura `body.text` e `body.mediaUrl` em um objeto compartilhado para asserts posteriores.
-- `**/functions/v1/whatsapp-cloud-api**` → `200` com `{ success:true, messages:[{id:'MOCK_CLOUD_WAMID'}] }` (parity com Cloud).
-- `**/functions/v1/whatsapp-cloud-webhook**` e `**/functions/v1/evolution-webhook**` → `200 ok` (hermetic — bloqueia chamada acidental).
+Função utilitária `installInboxMessagesMock(page, { targetJid, baseMessages, newMessage })`:
+
+- Intercepta `**/rest/v1/rpc/rpc_list_messages_lite` e `**/rest/v1/rpc/rpc_list_messages` (POST).
+- Lê o body (`postDataJSON()`) — pega `p_remote_jid`.
+- Se `p_remote_jid !== targetJid`: devolve `[]`.
+- Se `p_remote_jid === targetJid`:
+  - Primeiras `N` chamadas → devolve `baseMessages`.
+  - A partir de uma flag `armed=true` (setada após espera curta), passa a devolver `[...baseMessages, newMessage]`.
+
+A flag é alternada via `page.evaluate(() => window.__E2E_ARM__ = true)` ou simplesmente após `await page.waitForTimeout(500)` no handler — mantemos no handler com timestamp para evitar tocar `window`.
+
+## Resolução do `targetJid`
+
+Como a UI do inbox lê `remote_jid` do item selecionado, capturamos o JID **diretamente do clique**: extraímos o atributo `data-remote-jid` ou, se não existir, lemos a primeira chamada real ao RPC (antes de instalar o mock seletivo) com `page.waitForRequest` para descobrir o JID que a UI pediu, e então re-routeamos com esse JID. Isto evita acoplar o teste a um dado específico.
 
 ## Defensividade
 
-- Cada caso usa `test.skip` quando a UI/perfil do usuário de teste não expõe a peça necessária (sem conversas, sem input de chat, sem campo de upload). Isso evita falsos negativos no CI quando o seed do banco varia.
-- Seletores em cascata (`data-testid` primeiro, depois `role`/placeholder) para tolerar evolução do skin sem quebrar o teste.
+- `test.skip` se nenhuma conversa estiver visível (mesmo padrão das outras specs).
+- `test.skip` no segundo caso se houver apenas uma conversa.
+- Timeouts gerosos (10s) para tolerar render do virtualizado.
 
 ## Notas técnicas
 
-- Reutiliza `authenticatedPage` de `e2e/fixtures/auth.ts` e `MOCK_EVOLUTION_SEND_RESPONSE` de `e2e/fixtures/test-data.ts`.
-- O PNG é gerado via `fs.writeFileSync` em `os.tmpdir()` para evitar fixtures binários no repo.
-- A captura do payload usa `request.postDataJSON()` no handler do mock — funciona tanto para `supabase.functions.invoke` quanto para `fetch` direto, pois ambos serializam JSON.
-- Sem mudanças em código de produção e sem novos arquivos fora de `e2e/`.
+- Não toca produção: nenhum dado é escrito; o mock substitui as respostas em **memória** do navegador do teste.
+- Compatível com a fixture `authenticatedPage` existente.
+- Não requer mudanças em código de produção.
+- Reusa selectors já consolidados (`role="listbox"`, `role="option"`, `role="log"`).
