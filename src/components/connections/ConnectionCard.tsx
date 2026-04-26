@@ -183,6 +183,11 @@ export function ConnectionCard({
                       Mudar para API {isOfficial ? 'não-oficial (Evolution)' : 'oficial (Cloud API)'}
                     </DropdownMenuItem>
                   )}
+                  {isOfficial && (
+                    <DropdownMenuItem onClick={() => setOfficialConfigOpen(true)}>
+                      <ShieldCheck className="w-4 h-4 mr-2" />Configurar Cloud API
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => onBusinessHours(connection.id, connection.name)}><Clock className="w-4 h-4 mr-2" />Horário de Atendimento</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onQueues(connection.id, connection.name)}><Link2 className="w-4 h-4 mr-2" />Vincular Filas</DropdownMenuItem>
                   {connection.instance_id && (
