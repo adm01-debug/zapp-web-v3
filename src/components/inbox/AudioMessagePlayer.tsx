@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { log } from '@/lib/logger';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
+import { AudioVolumeControl } from './AudioVolumeControl';
 
 interface AudioMessagePlayerProps {
   audioUrl: string;
