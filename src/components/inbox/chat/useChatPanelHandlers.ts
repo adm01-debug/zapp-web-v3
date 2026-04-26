@@ -32,6 +32,8 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   const [inputValue, setInputValue] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const [lastSendError, setLastSendError] = useState<string | null>(null);
+  const lastFailedPayloadRef = useRef<string | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
