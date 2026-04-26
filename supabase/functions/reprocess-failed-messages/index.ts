@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, serviceKey);
 
-  const evolutionUrl = Deno.env.get('EVOLUTION_API_URL');
+  const evolutionUrl = (Deno.env.get('EVOLUTION_API_URL') || '').replace(/\/+$/, '');
   const evolutionKey = Deno.env.get('EVOLUTION_API_KEY');
   if (!evolutionUrl || !evolutionKey) {
     return json({ error: true, message: 'Evolution credentials missing' }, 500);
