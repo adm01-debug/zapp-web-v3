@@ -19,8 +19,28 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
   const [voiceChanged, setVoiceChanged] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolumeState] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('audio-player:volume');
+      const n = saved !== null ? parseFloat(saved) : 1;
+      return isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
+    } catch { return 1; }
+  });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isMobile = useIsMobile();
+
+  const setVolume = useCallback((v: number) => {
+    const clamped = Math.min(1, Math.max(0, v));
+    setVolumeState(clamped);
+    if (audioRef.current) audioRef.current.volume = clamped;
+    try { localStorage.setItem('audio-player:volume', String(clamped)); } catch { /* noop */ }
+  }, []);
+
+  // Apply volume to <audio> when it mounts/changes source
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume]);
   
   // Swipe-to-cancel
   const swipeX = useMotionValue(0);
