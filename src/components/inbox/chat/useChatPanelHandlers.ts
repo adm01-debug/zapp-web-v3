@@ -35,6 +35,14 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   const [lastSendError, setLastSendError] = useState<string | null>(null);
   const [lastSendErrorDetail, setLastSendErrorDetail] = useState<string | null>(null);
   const lastFailedPayloadRef = useRef<string | null>(null);
+  // PTT (push-to-talk) que falhou — guarda o blob original + a função de
+  // envio do contexto (depende do contato selecionado) para reenvio one-click.
+  // Quando setado, `retryLastSend` repete upload + envio + bolha otimista
+  // em vez de reenviar texto.
+  const lastFailedAudioRef = useRef<{
+    blob: Blob;
+    onSendAudio: (blob: Blob) => Promise<void>;
+  } | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
@@ -123,8 +131,35 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   }, [contactPhone, instanceName, editMessageApi, applySignature, onSendMessage, handleTypingStop]);
 
   const retryLastSend = useCallback(async () => {
+    if (isSendingRef.current) return;
+    // Áudio (PTT) tem prioridade — se há blob pendente, repete upload + envio.
+    // Cada retry cria UMA NOVA bolha otimista (signed URL nova, novo
+    // file path com timestamp, nova entry em `messages` via webhook).
+    const audioPending = lastFailedAudioRef.current;
+    if (audioPending) {
+      setIsSending(true);
+      setLastSendError(null);
+      setLastSendErrorDetail(null);
+      try {
+        await audioPending.onSendAudio(audioPending.blob);
+        lastFailedAudioRef.current = null;
+        toast({ title: '✅ Áudio reenviado', description: 'O áudio foi reenviado com sucesso.' });
+      } catch (err: any) {
+        log.error('Audio retry failed:', err);
+        const msg = err?.message || 'Falha ao reenviar áudio. Tente novamente.';
+        const detail = typeof err?.detail === 'string' ? err.detail : null;
+        // Mantém o blob no ref para permitir mais um retry.
+        setLastSendError(msg);
+        setLastSendErrorDetail(detail);
+        toast({ title: 'Erro ao reenviar áudio', description: msg, variant: 'destructive' });
+      } finally {
+        setIsSending(false);
+      }
+      return;
+    }
+
     const payload = lastFailedPayloadRef.current;
-    if (!payload || isSendingRef.current) return;
+    if (!payload) return;
     setIsSending(true);
     setLastSendError(null);
     setLastSendErrorDetail(null);
@@ -148,6 +183,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     setLastSendError(null);
     setLastSendErrorDetail(null);
     lastFailedPayloadRef.current = null;
+    lastFailedAudioRef.current = null;
   }, []);
 
   const handleReplyToMessage = useCallback((message: Message) => { setReplyToMessage(message); inputRef.current?.focus(); }, []);
@@ -221,10 +257,30 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   }, []);
 
   const handleAudioSend = useCallback(async (audioBlob: Blob, onSendAudio?: (blob: Blob) => Promise<void>) => {
-    if (onSendAudio) {
-      try { await onSendAudio(audioBlob); } catch (err) { log.error('Error sending audio:', err); toast({ title: 'Erro ao enviar áudio', description: 'Tente novamente.', variant: 'destructive' }); }
-    } else { toast({ title: 'Erro', description: 'Envio de áudio não configurado.', variant: 'destructive' }); }
-    setIsRecordingAudio(false);
+    if (!onSendAudio) {
+      toast({ title: 'Erro', description: 'Envio de áudio não configurado.', variant: 'destructive' });
+      setIsRecordingAudio(false);
+      return;
+    }
+    // Sucesso → limpa qualquer áudio pendente do retry anterior.
+    // Falha → guarda o blob + a função de envio para o `SendErrorBanner`
+    // disparar o reenvio com nova bolha otimista (upload + invoke + bubble).
+    try {
+      await onSendAudio(audioBlob);
+      lastFailedAudioRef.current = null;
+    } catch (err: any) {
+      log.error('Error sending audio:', err);
+      const msg = err?.message || 'Falha ao enviar áudio.';
+      const detail = typeof err?.detail === 'string' ? err.detail : null;
+      lastFailedAudioRef.current = { blob: audioBlob, onSendAudio };
+      // Limpa retry de texto pendente — só um tipo por vez no banner.
+      lastFailedPayloadRef.current = null;
+      setLastSendError(msg);
+      setLastSendErrorDetail(detail);
+      toast({ title: 'Erro ao enviar áudio', description: 'Clique em "Reenviar" para tentar novamente.', variant: 'destructive' });
+    } finally {
+      setIsRecordingAudio(false);
+    }
   }, []);
 
   return {
