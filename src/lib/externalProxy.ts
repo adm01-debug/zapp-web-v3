@@ -148,7 +148,7 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
 
   try {
     let data: ProxyResponse<T> | null = null;
-    let error: { name?: string; message?: string } | null = null;
+    let error: { name?: string; message?: string; code?: string; status?: number } | null = null;
     const MAX_ATTEMPTS = 3;
     let attemptsMade = 0;
     let transientCount = 0;
