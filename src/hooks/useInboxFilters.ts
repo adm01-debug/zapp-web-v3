@@ -127,15 +127,25 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       result = result.filter(c => statusOf(c.contact.id) === 'resolved');
     }
 
-    // Search
+    // Search — cobre nome, telefone, email, JID (contact.id) e texto da última mensagem
     if (search.trim()) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.contact.name.toLowerCase().includes(searchLower) ||
-          c.contact.phone.includes(search) ||
-          c.contact.email?.toLowerCase().includes(searchLower)
-      );
+      const raw = search.trim();
+      const searchLower = raw.toLowerCase();
+      const digits = raw.replace(/\D/g, '');
+      result = result.filter((c) => {
+        const name = c.contact.name?.toLowerCase() ?? '';
+        const phone = c.contact.phone ?? '';
+        const email = c.contact.email?.toLowerCase() ?? '';
+        const jid = String(c.contact.id ?? '').toLowerCase();
+        const lastMsg = c.lastMessage?.content?.toLowerCase() ?? '';
+        return (
+          name.includes(searchLower) ||
+          (digits.length > 0 && phone.replace(/\D/g, '').includes(digits)) ||
+          email.includes(searchLower) ||
+          jid.includes(searchLower) ||
+          lastMsg.includes(searchLower)
+        );
+      });
     }
 
     // Status filter
