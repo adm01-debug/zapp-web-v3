@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+// Tooltip removido para evitar loop de refs com Popover/Slot.
 import { cn } from '@/lib/utils';
 import { AnimatePresence } from 'framer-motion';
 import { Sticker, Search, Plus, Loader2, Upload, X, Grid3X3, LayoutGrid, Grid2X2 } from 'lucide-react';

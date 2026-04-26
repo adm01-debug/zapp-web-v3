@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+// Tooltip removido aqui para evitar composição instável (Tooltip + Popover em mesmo trigger).
 import { cn } from '@/lib/utils';
 import { AudioLines, Loader2, Play, Square, Send, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
