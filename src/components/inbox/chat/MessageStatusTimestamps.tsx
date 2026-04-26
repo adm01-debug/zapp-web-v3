@@ -15,6 +15,7 @@
 import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
+import { STAGE_LABEL_UNIFIED, STAGE_INITIAL_UNIFIED } from './messageStatusLanguage';
 
 type Stage = 'sent' | 'delivered' | 'read';
 
