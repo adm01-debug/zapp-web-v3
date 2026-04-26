@@ -33,6 +33,7 @@ export function useUserRole() {
   const [loading, setLoading] = useState(true);
   const [isDev, setIsDev] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isManager, setIsManager] = useState(false);
   const [isSupervisor, setIsSupervisor] = useState(false);
   const mountedRef = useRef(true);
 
@@ -66,6 +67,7 @@ export function useUserRole() {
       // Hierárquico: cada nível concede os abaixo.
       setIsDev(maxRank >= ROLE_RANK.dev);
       setIsAdmin(maxRank >= ROLE_RANK.admin);
+      setIsManager(maxRank >= ROLE_RANK.manager);
       setIsSupervisor(maxRank >= ROLE_RANK.supervisor);
     }
     setLoading(false);
@@ -78,6 +80,7 @@ export function useUserRole() {
       setRoles([]);
       setIsDev(false);
       setIsAdmin(false);
+      setIsManager(false);
       setIsSupervisor(false);
       setLoading(false);
     }
@@ -95,6 +98,7 @@ export function useUserRole() {
     roles,
     isDev,
     isAdmin,
+    isManager,
     isSupervisor,
     /** @deprecated O papel `special_agent` foi descontinuado. Sempre retorna `false`. */
     isSpecialAgent: false,
