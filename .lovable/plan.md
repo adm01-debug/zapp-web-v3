@@ -1,26 +1,55 @@
-## Diagnóstico
+## Objetivo
+Eliminar o erro `Maximum update depth exceeded` que ainda ocorre na home/Chat, restaurando o carregamento normal da aplicação sem depender de limpeza de cache.
 
-A regressão veio do commit "Criou tela de permissões de rota". O `ProtectedRoute` passou a bloquear o render enquanto `useRouteRoles` busca o override no banco — isso muda o ciclo de montagem do `Index` (Chat). Combinado com o `useState` inicial recebendo `cache.get(path)` (que pode ser `undefined`) e o `useEffect` chamando `setRoles` mesmo quando o cache estava sincronizado, o componente re-renderiza em loop, propagando o erro pelos `setRef` do Radix nos filhos do `Index`.
+## O que será feito
+1. Remover a composição problemática de triggers Radix no Chat
+- Reestruturar os pontos onde `TooltipTrigger asChild` está envolvendo `DropdownMenuTrigger asChild` ou `PopoverTrigger asChild` no mesmo botão.
+- Aplicar a correção primeiro no caminho crítico que monta em `/`:
+  - `src/components/inbox/chat/ChatPanelHeader.tsx`
+- Ajustar os outros pontos com o mesmo padrão para evitar recorrência:
+  - `src/components/inbox/KeyboardShortcutsHelp.tsx`
+  - `src/components/inbox/chat/AIEnhanceButton.tsx`
+  - `src/components/team-chat/TeamChatHeader.tsx`
 
-## Correção
+2. Tornar os alvos de tooltip/menu/popover estáveis
+- Garantir que cada primitive tenha um alvo estável, sem dois `asChild` competindo pelo mesmo elemento.
+- Usar uma destas abordagens conforme o componente:
+  - mover o tooltip para um wrapper estático
+  - deixar apenas o menu/popover como trigger do botão
+  - remover tooltip redundante em ações já autoexplicativas
 
-Tornar o `useRouteRoles` **não-bloqueante** e idempotente:
+3. Validar o caminho crítico do Chat
+- Confirmar que a rota `/` volta a montar a shell e o painel do chat sem cair no ErrorBoundary.
+- Verificar que os botões “Mais ações”, ajuda/atalhos e popovers continuam funcionando após a refatoração.
 
-1. **`src/hooks/useRouteRoles.ts`**
-   - Remover o estado `undefined` (loading). O hook passa a retornar `null` imediatamente enquanto o fetch ocorre.
-   - Deduplicar requests concorrentes para o mesmo path via mapa `inflight`.
-   - `setRoles` só dispara quando o valor realmente muda (`prev === cached ? prev : cached`), eliminando re-renders idênticos.
-   - Quando o fetch resolve com override existente, ocorre uma única transição `null → AppRole[]`, sem loop.
+## Resultado esperado
+- A página inicial carrega normalmente.
+- O Chat deixa de entrar em loop de renderização.
+- Menus, popovers e tooltips continuam operando sem regressões visíveis.
 
-2. **`src/components/auth/ProtectedRoute.tsx`**
-   - Remover `overrideLoading` do `loading` agregado. Auth/roles ainda bloqueiam o render como antes; o override aplica assincronamente.
-   - Lógica de `effectiveRoles` permanece: override `null` = usa `requiredRoles` do código; override array = substitui.
+## Detalhes técnicos
+- O stack atual (`setRef` / `composeRefs`) é compatível com refs instáveis em primitives do Radix quando há `asChild` aninhado.
+- O padrão problemático identificado é este:
 
-Resultado: o Chat (`/`) renderiza imediatamente após auth carregar, sem ciclo extra. Quando o override do banco chega para a rota atual, o `ProtectedRoute` reavalia uma única vez — se o usuário ainda tiver acesso, nada muda visualmente.
+```text
+TooltipTrigger asChild
+  -> DropdownMenuTrigger asChild
+    -> Button
+```
 
-## Arquivos afetados
+ou
 
-- `src/hooks/useRouteRoles.ts` (reescrita do hook)
-- `src/components/auth/ProtectedRoute.tsx` (3 linhas)
+```text
+TooltipTrigger asChild
+  -> PopoverTrigger asChild
+    -> Button
+```
 
-Sem mudanças de banco. Sem mudança de API/componentes consumidores.
+- Em React atual, a troca contínua da identidade do ref pode disparar cleanup + reattach em cascata, gerando `Maximum update depth exceeded`.
+- A correção será estrutural no JSX, não apenas um paliativo no hook de permissões.
+
+## Arquivos previstos
+- `src/components/inbox/chat/ChatPanelHeader.tsx`
+- `src/components/inbox/KeyboardShortcutsHelp.tsx`
+- `src/components/inbox/chat/AIEnhanceButton.tsx`
+- `src/components/team-chat/TeamChatHeader.tsx`
