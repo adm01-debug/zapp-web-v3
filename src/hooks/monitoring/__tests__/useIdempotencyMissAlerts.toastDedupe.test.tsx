@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Garante que o "toast de alerta" (insert em warroom_alerts, que é o gatilho
  * do toast em useWarRoomAlerts) só dispara UMA vez por (instância × janela
@@ -24,7 +23,7 @@ vi.mock('@/hooks/useUserRole', () => ({
 
 const proxyMock = vi.fn();
 vi.mock('@/lib/externalProxy', () => ({
-  queryExternalProxy: (...args: any[]) => proxyMock(...args),
+  queryExternalProxy: (...args: unknown[]) => proxyMock(...args),
 }));
 
 import {
@@ -92,7 +91,7 @@ describe('useIdempotencyMissAlerts — toast dedupe by (instance × hour window)
 
     const raw = window.localStorage.getItem(ALERT_DEDUPE_STORAGE_KEY);
     expect(raw).not.toBeNull();
-    const parsed = JSON.parse(raw!);
+    const parsed = JSON.parse(raw ?? '{}') as Record<string, unknown>;
     const expectedKey = buildPersistKey('wpp2', now.getTime());
     expect(parsed[expectedKey]).toBeTypeOf('number');
   });
