@@ -12,8 +12,11 @@ import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/components/in
 
 const log = getLogger('useRealtimeInbox');
 
-// Feature flag: use external evolution DB as data source
-const USE_EXTERNAL_DB = false;
+// Feature flag: use external evolution DB (FATOR X) as data source.
+// O projeto migrou todo o domínio WhatsApp/CRM para FATOR X. O caminho
+// legado (public.messages/contacts) está desativado em produção e os envios
+// caíam para `failed_retries` sem refletir entradas vindas do webhook.
+const USE_EXTERNAL_DB = true;
 
 export function useRealtimeInbox() {
   // Local DB source (original)
