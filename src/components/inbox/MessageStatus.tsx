@@ -45,19 +45,44 @@ const statusConfig: Record<MessageStatusValue, { icon: typeof Check; label: stri
   failed_retries: { icon: AlertCircle, label: 'Falhou após várias tentativas', color: 'text-destructive' },
 };
 
+/**
+ * Coerce a possibly-malformed runtime value (object, array, function, NaN,
+ * null) into a safe display string. Returns `null` when the value is not
+ * meaningful for the user — callers MUST treat `null` as "skip this field"
+ * to avoid emitting `[object Object]`, `NaN`, `()` or empty separators in
+ * the rendered badge / tooltip.
+ */
+function safeDisplay(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value !== 0 ? String(value) : null;
+  }
+  // Objects, arrays, functions, symbols, booleans → not safely displayable.
+  return null;
+}
+
 function buildLabel(status: MessageStatusValue, detail?: MessageStatusProps['detail']): string {
   const base = statusConfig[status]?.label ?? '';
-  if (status === 'retrying' && detail?.attempt && detail?.totalRetries) {
-    return `Tentando ${detail.attempt}/${detail.totalRetries}…`;
+  const attempt = safeDisplay(detail?.attempt);
+  const totalRetries = safeDisplay(detail?.totalRetries);
+  const errorCode = safeDisplay(detail?.errorCode);
+  const errorReason = safeDisplay(detail?.errorReason);
+
+  if (status === 'retrying' && attempt && totalRetries) {
+    return `Tentando ${attempt}/${totalRetries}…`;
   }
-  if (status === 'failed_auth' && detail?.errorCode) {
-    return `Falha de autenticação (${detail.errorCode})`;
+  if (status === 'failed_auth' && errorCode) {
+    return `Falha de autenticação (${errorCode})`;
   }
-  if (status === 'failed_retries' && detail?.totalRetries) {
-    return `Falhou após ${detail.totalRetries} tentativas`;
+  if (status === 'failed_retries' && totalRetries) {
+    return `Falhou após ${totalRetries} tentativas`;
   }
-  if ((status === 'failed' || status === 'failed_auth' || status === 'failed_retries') && detail?.errorReason) {
-    return `${base} — ${detail.errorReason}`;
+  if ((status === 'failed' || status === 'failed_auth' || status === 'failed_retries') && errorReason) {
+    return `${base} — ${errorReason}`;
   }
   return base;
 }
