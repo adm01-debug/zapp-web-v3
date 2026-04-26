@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { useMessageDetails } from '@/hooks/useMessageDetails';
 import { useAuth } from '@/hooks/useAuth';
 import { MessageAttemptsTimeline } from './MessageAttemptsTimeline';
+import { MessageStatusTimeline } from './MessageStatusTimeline';
 
 interface MessageDetailsDialogProps {
   messageId: string | null;
