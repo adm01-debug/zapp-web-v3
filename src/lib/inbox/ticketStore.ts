@@ -48,19 +48,31 @@ export interface TicketState {
 
 type Overlay = Record<string, TicketState>;
 
+// Cached snapshot — CRITICAL para useSyncExternalStore. Sem cache,
+// cada chamada de readAll() retorna um novo objeto (JSON.parse) e o
+// React entra em loop infinito ("Maximum update depth exceeded").
+let cachedOverlay: Overlay | null = null;
+
 function readAll(): Overlay {
-  if (typeof window === 'undefined') return {};
+  if (typeof window === 'undefined') return EMPTY_OVERLAY;
+  if (cachedOverlay !== null) return cachedOverlay;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
+    if (!raw) {
+      cachedOverlay = {};
+      return cachedOverlay;
+    }
     const parsed = JSON.parse(raw) as Overlay;
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    cachedOverlay = parsed && typeof parsed === 'object' ? parsed : {};
+    return cachedOverlay;
   } catch {
-    return {};
+    cachedOverlay = {};
+    return cachedOverlay;
   }
 }
 
 function writeAll(overlay: Overlay) {
+  cachedOverlay = overlay; // mutação local — atualiza a referência cacheada
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(overlay));
@@ -69,6 +81,12 @@ function writeAll(overlay: Overlay) {
     // localStorage cheio/desabilitado — silencioso, é overlay.
   }
 }
+
+function invalidateCache() {
+  cachedOverlay = null;
+}
+
+const EMPTY_OVERLAY: Overlay = Object.freeze({}) as Overlay;
 
 function cryptoId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -91,56 +109,77 @@ function ensure(state: Overlay, contactId: string): TicketState {
 }
 
 export const ticketStore = {
-  /** Snapshot completo (somente leitura). */
+  /** Snapshot completo (somente leitura) — referência ESTÁVEL entre renders. */
   snapshot(): Overlay {
     return readAll();
   },
 
   get(contactId: string): TicketState | null {
-    const state = readAll();
-    return state[contactId] ?? null;
+    return readAll()[contactId] ?? null;
   },
 
   /** Garante o registro inicial (idempotente, não dispara evento). */
   bootstrap(contactId: string, seed?: Partial<Pick<TicketState, 'assignedTo' | 'queueId' | 'openedAt'>>) {
-    const state = readAll();
-    if (state[contactId]) return;
+    const current = readAll();
+    if (current[contactId]) return;
     const now = new Date().toISOString();
-    state[contactId] = {
-      status: 'open',
-      assignedTo: seed?.assignedTo ?? null,
-      queueId: seed?.queueId ?? null,
-      openedAt: seed?.openedAt ?? now,
-      updatedAt: now,
-      events: [],
+    const next: Overlay = {
+      ...current,
+      [contactId]: {
+        status: 'open',
+        assignedTo: seed?.assignedTo ?? null,
+        queueId: seed?.queueId ?? null,
+        openedAt: seed?.openedAt ?? now,
+        updatedAt: now,
+        events: [],
+      },
     };
-    writeAll(state);
+    writeAll(next);
   },
 
-  setStatus(contactId: string, next: TicketStatus, performedBy: string | null) {
-    const state = readAll();
-    const t = ensure(state, contactId);
-    if (t.status === next) return;
+  setStatus(contactId: string, nextStatus: TicketStatus, performedBy: string | null) {
+    const current = readAll();
+    const existing = current[contactId];
+    const base: TicketState = existing ?? {
+      status: 'open',
+      assignedTo: null,
+      queueId: null,
+      openedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      events: [],
+    };
+    if (base.status === nextStatus && existing) return;
     const ev: TicketEvent = {
       id: cryptoId(),
       type: 'status_change',
       at: new Date().toISOString(),
       performedBy,
-      fromStatus: t.status,
-      toStatus: next,
+      fromStatus: base.status,
+      toStatus: nextStatus,
     };
-    t.status = next;
-    t.updatedAt = ev.at;
-    t.resolvedAt = next === 'resolved' ? ev.at : null;
-    t.events = [ev, ...t.events].slice(0, 50);
-    writeAll(state);
+    const updated: TicketState = {
+      ...base,
+      status: nextStatus,
+      updatedAt: ev.at,
+      resolvedAt: nextStatus === 'resolved' ? ev.at : null,
+      events: [ev, ...base.events].slice(0, 50),
+    };
+    writeAll({ ...current, [contactId]: updated });
   },
 
   assign(contactId: string, agentId: string | null, performedBy: string | null, opts?: { queueId?: string | null; auto?: boolean }) {
-    const state = readAll();
-    const t = ensure(state, contactId);
-    const prev = t.assignedTo;
-    if (prev === agentId && (opts?.queueId === undefined || opts.queueId === t.queueId)) return;
+    const current = readAll();
+    const existing = current[contactId];
+    const base: TicketState = existing ?? {
+      status: 'open',
+      assignedTo: null,
+      queueId: null,
+      openedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      events: [],
+    };
+    const prev = base.assignedTo;
+    if (prev === agentId && (opts?.queueId === undefined || opts.queueId === base.queueId) && existing) return;
     const now = new Date().toISOString();
     const evType: TicketEvent['type'] = opts?.auto
       ? 'auto_routed'
@@ -157,22 +196,31 @@ export const ticketStore = {
       fromAgentId: prev,
       toAgentId: agentId,
     };
-    t.assignedTo = agentId;
-    if (opts?.queueId !== undefined) t.queueId = opts.queueId;
-    // Atribuir reabre se estava resolvido
-    if (agentId && t.status === 'resolved') {
-      const statusEv: TicketEvent = { id: cryptoId(), type: 'status_change', at: now, performedBy, fromStatus: 'resolved', toStatus: 'in_progress' };
-      t.events = [statusEv, ev, ...t.events].slice(0, 50);
-      t.status = 'in_progress';
-    } else if (agentId && t.status === 'open') {
-      const statusEv: TicketEvent = { id: cryptoId(), type: 'status_change', at: now, performedBy, fromStatus: 'open', toStatus: 'in_progress' };
-      t.events = [statusEv, ev, ...t.events].slice(0, 50);
-      t.status = 'in_progress';
+    let nextStatus: TicketStatus = base.status;
+    let events = base.events;
+    if (agentId && (base.status === 'resolved' || base.status === 'open')) {
+      const statusEv: TicketEvent = {
+        id: cryptoId(),
+        type: 'status_change',
+        at: now,
+        performedBy,
+        fromStatus: base.status,
+        toStatus: 'in_progress',
+      };
+      events = [statusEv, ev, ...base.events].slice(0, 50);
+      nextStatus = 'in_progress';
     } else {
-      t.events = [ev, ...t.events].slice(0, 50);
+      events = [ev, ...base.events].slice(0, 50);
     }
-    t.updatedAt = now;
-    writeAll(state);
+    const updated: TicketState = {
+      ...base,
+      assignedTo: agentId,
+      queueId: opts?.queueId !== undefined ? opts.queueId : base.queueId,
+      status: nextStatus,
+      events,
+      updatedAt: now,
+    };
+    writeAll({ ...current, [contactId]: updated });
   },
 
   /** Subscreve mudanças (cross-tab via storage + intra-tab via custom). */
@@ -180,7 +228,10 @@ export const ticketStore = {
     if (typeof window === 'undefined') return () => undefined;
     const handler = () => listener();
     const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) listener();
+      if (e.key === STORAGE_KEY) {
+        invalidateCache();
+        listener();
+      }
     };
     window.addEventListener(EVENT_NAME, handler);
     window.addEventListener('storage', onStorage);
