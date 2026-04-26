@@ -95,9 +95,7 @@ export function StickerPicker({ onSendSticker, disabled }: StickerPickerProps) {
                 </Button>
               </div>
             </div>
-          </PopoverContent>
-        </Popover>
-      </Tooltip>
-    </TooltipProvider>
+      </PopoverContent>
+    </Popover>
   );
 }
