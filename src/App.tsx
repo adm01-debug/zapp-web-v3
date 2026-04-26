@@ -81,6 +81,7 @@ const AdminProvidersPage = lazyWithRetry(() => import("./pages/admin/AdminProvid
 const AdminFailedAuthMessagesPage = lazyWithRetry(() => import("./pages/admin/AdminFailedAuthMessagesPage"));
 const RoutePermissionsPage = lazyWithRetry(() => import("./pages/admin/RoutePermissionsPage"));
 const AdminStressTestPage = lazyWithRetry(() => import("./pages/admin/AdminStressTestPage"));
+const AdminInboxSyncStatusPage = lazyWithRetry(() => import("./pages/admin/AdminInboxSyncStatusPage"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("./pages/ChatPopup"));
 
