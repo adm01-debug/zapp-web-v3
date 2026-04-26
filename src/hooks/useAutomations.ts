@@ -1,0 +1,214 @@
+import { useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { getExternalSupabase } from "@/integrations/supabase/externalClient";
+
+const externalClient = getExternalSupabase();
+
+/**
+ * Hook que avalia regras de automação contra a conversa ativa.
+ * Roda em intervalo curto e dispara registros de execução pendentes.
+ *
+ * Gatilhos suportados:
+ * - first_response_pending: última msg é inbound e não houve resposta há > X seg
+ * - inactivity: nenhum lado falou há > X seg (configurável: side: 'client'|'agent'|'any')
+ * - keyword_match: última msg inbound contém alguma palavra-chave
+ * - tag_applied / tag_removed: avaliados via realtime/edge (placeholder — log)
+ */
+
+interface AutomationRule {
+  id: string;
+  name: string;
+  trigger_type: string;
+  trigger_config: any;
+  actions: any;
+  is_active: boolean;
+  priority: number;
+}
+
+interface UseAutomationsArgs {
+  remoteJid: string | null;
+  instanceName?: string;
+  assignedTo?: string | null;
+}
+
+const POLL_MS = 20_000;
+
+export function useAutomations({
+  remoteJid,
+  instanceName = "wpp2",
+  assignedTo = null,
+}: UseAutomationsArgs) {
+  const rulesRef = useRef<AutomationRule[]>([]);
+
+  // Carrega regras ativas (refresh a cada 60s)
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("automation_rules")
+        .select("id,name,trigger_type,trigger_config,actions,is_active,priority")
+        .eq("is_active", true)
+        .order("priority", { ascending: true });
+      if (!cancelled && data) rulesRef.current = data as AutomationRule[];
+    };
+    load();
+    const t = setInterval(load, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, []);
+
+  // Avalia gatilhos para a conversa ativa
+  useEffect(() => {
+    if (!remoteJid) return;
+    let cancelled = false;
+
+    const evaluate = async () => {
+      const rules = rulesRef.current;
+      if (!rules.length) return;
+
+      // Pega últimas 10 msgs do FATOR X
+      const { data: msgs } = await externalClient.rpc("rpc_list_messages", {
+        p_remote_jid: remoteJid,
+        p_instance: instanceName,
+        p_limit: 10,
+      });
+      if (!msgs || !Array.isArray(msgs) || cancelled) return;
+
+      const sorted = [...msgs].sort(
+        (a: any, b: any) =>
+          new Date(a.message_timestamp).getTime() -
+          new Date(b.message_timestamp).getTime(),
+      );
+      const last: any = sorted[sorted.length - 1];
+      if (!last) return;
+
+      const lastTime = new Date(last.message_timestamp).getTime();
+      const ageSec = (Date.now() - lastTime) / 1000;
+
+      for (const rule of rules) {
+        const cfg = rule.trigger_config ?? {};
+        let matched = false;
+        const payload: Record<string, unknown> = {};
+
+        if (rule.trigger_type === "first_response_pending") {
+          const thresh = Number(cfg.threshold_seconds ?? 60);
+          // Última msg é do cliente e nenhuma resposta posterior
+          const lastInboundIdx = [...sorted].reverse().findIndex((m: any) => !m.from_me);
+          if (lastInboundIdx === 0 && ageSec >= thresh) {
+            matched = true;
+            payload.age_seconds = Math.round(ageSec);
+          }
+        } else if (rule.trigger_type === "inactivity") {
+          const thresh = Number(cfg.threshold_seconds ?? 600);
+          const side = (cfg.side ?? "any") as "client" | "agent" | "any";
+          if (ageSec >= thresh) {
+            if (
+              side === "any" ||
+              (side === "client" && !last.from_me) ||
+              (side === "agent" && last.from_me)
+            ) {
+              matched = true;
+              payload.age_seconds = Math.round(ageSec);
+            }
+          }
+        } else if (rule.trigger_type === "keyword_match") {
+          const kws: string[] = Array.isArray(cfg.keywords) ? cfg.keywords : [];
+          if (!last.from_me && typeof last.content === "string" && kws.length) {
+            const text = last.content.toLowerCase();
+            const hit = kws.find((k) => text.includes(k.toLowerCase()));
+            if (hit) {
+              matched = true;
+              payload.keyword = hit;
+            }
+          }
+        }
+
+        if (!matched) continue;
+
+        // Registra execução respeitando cooldown (RPC)
+        const { data: execId } = await supabase.rpc(
+          "rpc_register_automation_execution",
+          {
+            p_rule_id: rule.id,
+            p_remote_jid: remoteJid,
+            p_instance_name: instanceName,
+            p_assigned_to: assignedTo,
+            p_trigger_payload: payload as any,
+          },
+        );
+
+        if (!execId) continue;
+
+        const actions = rule.actions ?? {};
+        // Aplicar tags imediatamente
+        const tags: string[] = Array.isArray(actions.apply_tags)
+          ? actions.apply_tags
+          : [];
+        if (tags.length) {
+          try {
+            await externalClient.rpc("rpc_upsert_contact", {
+              p_remote_jid: remoteJid,
+              p_instance: instanceName,
+              p_tags: tags,
+            } as any);
+            await supabase
+              .from("automation_executions")
+              .update({ applied_tags: tags })
+              .eq("id", execId);
+          } catch (e) {
+            console.warn("[automation] apply_tags failed", e);
+          }
+        }
+
+        // Pedir sugestão de IA
+        if (actions.suggest_reply || actions.auto_send) {
+          try {
+            await supabase.functions.invoke("automation-suggest-reply", {
+              body: {
+                executionId: execId,
+                ruleId: rule.id,
+                remoteJid,
+                recentMessages: sorted.map((m: any) => ({
+                  from_me: m.from_me,
+                  content: m.content,
+                })),
+              },
+            });
+
+            // Auto envio
+            if (actions.auto_send) {
+              const { data: exec } = await supabase
+                .from("automation_executions")
+                .select("suggestion_text")
+                .eq("id", execId)
+                .maybeSingle();
+              if (exec?.suggestion_text) {
+                await externalClient.rpc("rpc_insert_message", {
+                  p_remote_jid: remoteJid,
+                  p_content: exec.suggestion_text,
+                  p_from_me: true,
+                  p_message_type: "text",
+                } as any);
+                await supabase
+                  .from("automation_executions")
+                  .update({ status: "executed", acted_at: new Date().toISOString() })
+                  .eq("id", execId);
+              }
+            }
+          } catch (e) {
+            console.warn("[automation] suggest_reply failed", e);
+          }
+        }
+      }
+    };
+
+    evaluate();
+    const t = setInterval(evaluate, POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [remoteJid, instanceName, assignedTo]);
+}

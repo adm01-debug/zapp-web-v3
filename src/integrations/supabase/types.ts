@@ -1090,6 +1090,110 @@ export type Database = {
           },
         ]
       }
+      automation_executions: {
+        Row: {
+          acted_at: string | null
+          acted_by: string | null
+          applied_tags: string[] | null
+          assigned_to: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          instance_name: string
+          reassigned_to: string | null
+          remote_jid: string
+          rule_id: string
+          status: Database["public"]["Enums"]["automation_execution_status"]
+          suggestion_text: string | null
+          trigger_payload: Json
+        }
+        Insert: {
+          acted_at?: string | null
+          acted_by?: string | null
+          applied_tags?: string[] | null
+          assigned_to?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          instance_name?: string
+          reassigned_to?: string | null
+          remote_jid: string
+          rule_id: string
+          status?: Database["public"]["Enums"]["automation_execution_status"]
+          suggestion_text?: string | null
+          trigger_payload?: Json
+        }
+        Update: {
+          acted_at?: string | null
+          acted_by?: string | null
+          applied_tags?: string[] | null
+          assigned_to?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          instance_name?: string
+          reassigned_to?: string | null
+          remote_jid?: string
+          rule_id?: string
+          status?: Database["public"]["Enums"]["automation_execution_status"]
+          suggestion_text?: string | null
+          trigger_payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_executions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_rules: {
+        Row: {
+          actions: Json
+          cooldown_seconds: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          priority: number
+          trigger_config: Json
+          trigger_type: Database["public"]["Enums"]["automation_trigger_type"]
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          cooldown_seconds?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          priority?: number
+          trigger_config?: Json
+          trigger_type: Database["public"]["Enums"]["automation_trigger_type"]
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          cooldown_seconds?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          priority?: number
+          trigger_config?: Json
+          trigger_type?: Database["public"]["Enums"]["automation_trigger_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       automations: {
         Row: {
           actions: Json
@@ -11524,6 +11628,16 @@ export type Database = {
         Args: { p_query: string; p_result_id: string; p_result_type: string }
         Returns: undefined
       }
+      rpc_register_automation_execution: {
+        Args: {
+          p_assigned_to: string
+          p_instance_name: string
+          p_remote_jid: string
+          p_rule_id: string
+          p_trigger_payload: Json
+        }
+        Returns: string
+      }
       rpc_register_webhook_event: {
         Args: {
           p_event_key: string
@@ -11732,6 +11846,18 @@ export type Database = {
         | "agent"
         | "special_agent"
         | "dev"
+      automation_execution_status:
+        | "pending"
+        | "accepted"
+        | "dismissed"
+        | "executed"
+        | "failed"
+      automation_trigger_type:
+        | "first_response_pending"
+        | "inactivity"
+        | "tag_applied"
+        | "tag_removed"
+        | "keyword_match"
       channel_type:
         | "whatsapp"
         | "instagram"
@@ -11895,6 +12021,20 @@ export const Constants = {
         "agent",
         "special_agent",
         "dev",
+      ],
+      automation_execution_status: [
+        "pending",
+        "accepted",
+        "dismissed",
+        "executed",
+        "failed",
+      ],
+      automation_trigger_type: [
+        "first_response_pending",
+        "inactivity",
+        "tag_applied",
+        "tag_removed",
+        "keyword_match",
       ],
       channel_type: [
         "whatsapp",

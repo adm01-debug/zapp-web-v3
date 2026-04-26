@@ -23,6 +23,8 @@ import { TicketHistorySheet } from './TicketHistorySheet';
 import { ChatMessagesArea, ChatMessagesAreaRef } from './chat/ChatMessagesArea';
 import type { LoadOlderProps } from './chat/loadOlderTypes';
 import { ChatInputArea } from './chat/ChatInputArea';
+import { AutomationSuggestionsBar } from './chat/AutomationSuggestionsBar';
+import { useAutomations } from '@/hooks/useAutomations';
 import { SendErrorBanner } from './chat/SendErrorBanner';
 import { ChatDragOverlay } from './chat/ChatDragOverlay';
 import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
@@ -195,6 +197,13 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   });
 
   useEffect(() => { initResolve(); }, [conversation.contact.id]);
+
+  // Avalia regras de automação para a conversa ativa
+  useAutomations({
+    remoteJid: conversation.contact.id,
+    instanceName,
+    assignedTo: null,
+  });
   const lastMsgIdRef = useRef<string | null>(null);
   useEffect(() => {
     const lastId = messages[messages.length - 1]?.id ?? null;
@@ -483,6 +492,11 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           isRetrying={handlers.isSending}
           onRetry={handlers.retryLastSend}
           onDismiss={handlers.dismissSendError}
+        />
+
+        <AutomationSuggestionsBar
+          remoteJid={conversation.contact.id}
+          onUseSuggestion={(t) => handlers.setInputValue(t)}
         />
 
         <ChatInputArea inputValue={handlers.inputValue} replyToMessage={handlers.replyToMessage} editingMessage={handlers.editingMessage} isRecordingAudio={handlers.isRecordingAudio}
