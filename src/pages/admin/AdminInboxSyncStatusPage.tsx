@@ -11,17 +11,19 @@
  * Fonte FATOR X: lida via `queryExternalProxy` (mesmo caminho do Inbox).
  * Refresh manual + auto-poll (15s) com pausa quando a aba está oculta.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Activity, RefreshCw, AlertTriangle, CheckCircle2, MessageSquare,
-  Clock, ArrowDownLeft, ArrowUpRight, ExternalLink,
+  Clock, ArrowDownLeft, ArrowUpRight, ExternalLink, BellRing,
 } from 'lucide-react';
 import { queryExternalProxy } from '@/lib/externalProxy';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +33,13 @@ import { toast } from 'sonner';
 const log = getLogger('AdminInboxSyncStatusPage');
 const INSTANCE = 'wpp2';
 const POLL_MS = 15_000;
+
+// Threshold padrão para alerta de inatividade inbound (em minutos).
+// Persistido em localStorage para sobreviver a reloads.
+const ALERT_THRESHOLD_KEY = 'admin:inbox-sync:inbound-alert-threshold-min';
+const DEFAULT_ALERT_THRESHOLD_MIN = 10;
+const MIN_THRESHOLD = 1;
+const MAX_THRESHOLD = 1440; // 24h
 
 type SyncBucket = { label: string; sinceMs: number; count: number | null };
 
@@ -76,16 +85,40 @@ function timeAgo(iso: string | null): string {
   return `${d}d atrás`;
 }
 
-function classifyHealth(lastInboundIso: string | null): {
+function classifyHealth(
+  lastInboundIso: string | null,
+  alertThresholdMin: number,
+): {
   variant: 'default' | 'secondary' | 'destructive';
   label: string;
   ok: boolean;
+  /** True quando ultrapassou o threshold configurado pelo admin. */
+  alerting: boolean;
+  ageMinutes: number | null;
 } {
-  if (!lastInboundIso) return { variant: 'destructive', label: 'Sem dados', ok: false };
+  if (!lastInboundIso) {
+    return { variant: 'destructive', label: 'Sem dados', ok: false, alerting: true, ageMinutes: null };
+  }
   const ms = Date.now() - new Date(lastInboundIso).getTime();
-  if (ms < 5 * 60_000) return { variant: 'default', label: 'Saudável', ok: true };
-  if (ms < 30 * 60_000) return { variant: 'secondary', label: 'Lento', ok: true };
-  return { variant: 'destructive', label: 'Sem sincronia', ok: false };
+  const ageMinutes = Math.max(0, Math.floor(ms / 60_000));
+  const thresholdMs = alertThresholdMin * 60_000;
+  if (ms >= thresholdMs) {
+    return { variant: 'destructive', label: 'Sem sincronia', ok: false, alerting: true, ageMinutes };
+  }
+  // "Lento" = passou de 50% do threshold mas ainda dentro.
+  if (ms >= thresholdMs / 2) {
+    return { variant: 'secondary', label: 'Lento', ok: true, alerting: false, ageMinutes };
+  }
+  return { variant: 'default', label: 'Saudável', ok: true, alerting: false, ageMinutes };
+}
+
+function readStoredThreshold(): number {
+  if (typeof window === 'undefined') return DEFAULT_ALERT_THRESHOLD_MIN;
+  const raw = window.localStorage.getItem(ALERT_THRESHOLD_KEY);
+  if (!raw) return DEFAULT_ALERT_THRESHOLD_MIN;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) return DEFAULT_ALERT_THRESHOLD_MIN;
+  return Math.min(MAX_THRESHOLD, Math.max(MIN_THRESHOLD, parsed));
 }
 
 export default function AdminInboxSyncStatusPage() {
@@ -93,6 +126,13 @@ export default function AdminInboxSyncStatusPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+
+  // Threshold de alerta configurável (em minutos) — persistido em localStorage.
+  const [alertThresholdMin, setAlertThresholdMin] = useState<number>(() => readStoredThreshold());
+  // Marca o último ISO de inbound já alertado para evitar disparar toast a cada
+  // poll enquanto o problema persiste. Reseta quando uma nova inbound chega.
+  const alertedForInboundRef = useRef<string | null>(null);
+
 
   const [buckets, setBuckets] = useState<SyncBucket[]>([
     { label: 'Últimos 5 min', sinceMs: 5 * 60_000, count: null },
@@ -241,7 +281,59 @@ export default function AdminInboxSyncStatusPage() {
     return () => { if (id !== null) window.clearInterval(id); };
   }, [fetchAll]);
 
-  const health = useMemo(() => classifyHealth(lastEvents.inboundAt), [lastEvents.inboundAt]);
+  const health = useMemo(
+    () => classifyHealth(lastEvents.inboundAt, alertThresholdMin),
+    [lastEvents.inboundAt, alertThresholdMin],
+  );
+
+  // Persiste threshold sempre que muda.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(ALERT_THRESHOLD_KEY, String(alertThresholdMin));
+  }, [alertThresholdMin]);
+
+  // Dispara toast.error UMA vez por episódio quando ultrapassa o threshold.
+  // O dedupe usa o ISO da última inbound conhecida como chave: enquanto não
+  // chegar uma inbound mais nova, não re-alerta a cada poll.
+  useEffect(() => {
+    if (!health.alerting || loading) return;
+    const key = lastEvents.inboundAt ?? '__no_inbound__';
+    if (alertedForInboundRef.current === key) return;
+    alertedForInboundRef.current = key;
+    const minutesLabel = health.ageMinutes != null
+      ? `${health.ageMinutes}min sem inbound`
+      : 'nenhuma inbound encontrada';
+    log.warn('[inbox-sync] inactivity alert fired', {
+      lastInboundAt: lastEvents.inboundAt,
+      ageMinutes: health.ageMinutes,
+      thresholdMin: alertThresholdMin,
+    });
+    toast.error('Inbox sem mensagens recebidas', {
+      description: `${minutesLabel} (limite: ${alertThresholdMin}min). Verifique webhook e instância "${INSTANCE}".`,
+      duration: 10_000,
+    });
+  }, [health.alerting, health.ageMinutes, lastEvents.inboundAt, alertThresholdMin, loading]);
+
+  // Quando uma nova inbound chega e estamos saudáveis de novo, libera o
+  // alerta para um próximo episódio.
+  useEffect(() => {
+    if (!health.alerting && lastEvents.inboundAt) {
+      // só reseta quando o alerta anterior referia-se a OUTRO ISO (ou ao
+      // estado "sem dados") — assim evita reset durante a janela ainda OK.
+      if (alertedForInboundRef.current && alertedForInboundRef.current !== lastEvents.inboundAt) {
+        alertedForInboundRef.current = null;
+      }
+    }
+  }, [health.alerting, lastEvents.inboundAt]);
+
+  const handleThresholdChange = useCallback((raw: string) => {
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) return;
+    const clamped = Math.min(MAX_THRESHOLD, Math.max(MIN_THRESHOLD, parsed));
+    setAlertThresholdMin(clamped);
+    // Reseta o dedupe para que a nova régua tome efeito imediatamente.
+    alertedForInboundRef.current = null;
+  }, []);
 
   return (
     <div className="container max-w-6xl py-6 space-y-6">
@@ -256,7 +348,23 @@ export default function AdminInboxSyncStatusPage() {
             que alimenta o Inbox em tempo real. Atualiza a cada 15s.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="inbound-threshold" className="text-xs text-muted-foreground whitespace-nowrap">
+              Alerta após
+            </Label>
+            <Input
+              id="inbound-threshold"
+              type="number"
+              min={MIN_THRESHOLD}
+              max={MAX_THRESHOLD}
+              value={alertThresholdMin}
+              onChange={(e) => handleThresholdChange(e.target.value)}
+              className="h-8 w-20"
+              aria-label="Minutos sem inbound antes de alertar"
+            />
+            <span className="text-xs text-muted-foreground">min sem inbound</span>
+          </div>
           <Badge variant={health.variant} className="gap-1">
             {health.ok ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
             {health.label}
@@ -272,6 +380,26 @@ export default function AdminInboxSyncStatusPage() {
           </Button>
         </div>
       </header>
+
+      {health.alerting && !loading && (
+        <Alert variant="destructive">
+          <BellRing className="h-4 w-4" />
+          <AlertTitle>Sem mensagens inbound há {health.ageMinutes ?? '—'} min</AlertTitle>
+          <AlertDescription>
+            O cursor externo (<code className="font-mono">evolution_messages</code>) não recebe
+            mensagens da instância <strong>{INSTANCE}</strong> há mais de{' '}
+            <strong>{alertThresholdMin} min</strong>. Verifique o webhook em{' '}
+            <Link to="/admin/webhook-overview" className="underline">
+              Webhook Overview
+            </Link>{' '}
+            e o status da instância em{' '}
+            <Link to="/admin/channels" className="underline">
+              Canais
+            </Link>
+            .
+          </AlertDescription>
+        </Alert>
+      )}
 
       {error && (
         <Alert variant="destructive">
