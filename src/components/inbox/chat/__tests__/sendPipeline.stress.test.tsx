@@ -123,7 +123,7 @@ describe('Inbox send pipeline — 100+ iteration UI stress', () => {
   });
 
   it('clicks send for every message type and asserts a bubble appears each time', async () => {
-    const { onSendMessage, onSendAudio, pushFromSender, Harness } = makeHarness();
+    const { onSendMessage, onSendAudio, pushFromSender } = makeHarness();
     render(<Harness />);
 
     const { result } = renderHook(() => useChatPanelHandlers(baseHookOpts(onSendMessage)));
