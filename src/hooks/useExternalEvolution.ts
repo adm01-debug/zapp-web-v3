@@ -382,23 +382,23 @@ export function useExternalMessages(remoteJid: string | null) {
       const mapped = ordered.map(evolutionToRealtimeMessage);
 
       setMessages((prev) => {
-        const seen = new Set(prev.map((m) => m.id));
-        const additions = mapped.filter((m) => !seen.has(m.id));
-        if (additions.length === 0) return prev;
+        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
+        if (additions.length === 0 && filteredPrev.length === prev.length) return prev;
         if (key.startsWith(`inbox:initial:${remoteJid}:`)) {
-          // Initial completo de outra aba: substitui se ainda não tínhamos nada,
-          // senão apenas mescla as faltantes.
-          if (prev.length === 0) {
+          // Initial completo de outra aba: se não tínhamos nada, substitui
+          // pelas canônicas; caso contrário mescla preservando otimistas
+          // remanescentes (ainda não reconciliadas).
+          if (filteredPrev.length === 0) {
             lastSeenRef.current = mapped[mapped.length - 1]?.created_at ?? null;
-            return mapped;
+            return additions;
           }
-          return [...prev, ...additions].sort(
+          return [...filteredPrev, ...additions].sort(
             (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
           );
         }
-        if (isOlder) return [...additions, ...prev];
+        if (isOlder) return [...additions, ...filteredPrev];
         // poll forward
-        const next = [...prev, ...additions];
+        const next = [...filteredPrev, ...additions];
         lastSeenRef.current = additions[additions.length - 1]?.created_at ?? lastSeenRef.current;
         return next;
       });
@@ -410,8 +410,13 @@ export function useExternalMessages(remoteJid: string | null) {
   }, [remoteJid]);
 
   const addMessage = useCallback((message: RealtimeMessage) => {
-    setMessages(prev => {
-      if (prev.some(m => m.id === message.id)) return prev;
+    setMessages((prev) => {
+      // Dedupe por id (caso já exista) e por external_id (canônica já chegou
+      // via webhook/poll antes do sender resolver — não adicionamos a otimista).
+      if (prev.some((m) => m.id === message.id)) return prev;
+      if (message.external_id && prev.some((m) => m.external_id === message.external_id)) {
+        return prev;
+      }
       return [...prev, message];
     });
   }, []);
