@@ -76,6 +76,7 @@ const RateLimitDashboard = lazyWithRetry(() => import("./pages/admin/RateLimitDa
 const HmacSelfTestPage = lazyWithRetry(() => import("./pages/admin/HmacSelfTestPage"));
 const AdminChannelsPage = lazyWithRetry(() => import("./pages/admin/AdminChannelsPage"));
 const AdminQueuesPage = lazyWithRetry(() => import("./pages/admin/AdminQueuesPage"));
+const AdminOperationsPage = lazyWithRetry(() => import("./pages/admin/AdminOperationsPage"));
 const AdminProvidersPage = lazyWithRetry(() => import("./pages/admin/AdminProvidersPage"));
 const AdminFailedAuthMessagesPage = lazyWithRetry(() => import("./pages/admin/AdminFailedAuthMessagesPage"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
