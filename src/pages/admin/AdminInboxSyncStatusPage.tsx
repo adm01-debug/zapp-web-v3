@@ -11,17 +11,19 @@
  * Fonte FATOR X: lida via `queryExternalProxy` (mesmo caminho do Inbox).
  * Refresh manual + auto-poll (15s) com pausa quando a aba está oculta.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Activity, RefreshCw, AlertTriangle, CheckCircle2, MessageSquare,
-  Clock, ArrowDownLeft, ArrowUpRight, ExternalLink,
+  Clock, ArrowDownLeft, ArrowUpRight, ExternalLink, BellRing,
 } from 'lucide-react';
 import { queryExternalProxy } from '@/lib/externalProxy';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +33,13 @@ import { toast } from 'sonner';
 const log = getLogger('AdminInboxSyncStatusPage');
 const INSTANCE = 'wpp2';
 const POLL_MS = 15_000;
+
+// Threshold padrão para alerta de inatividade inbound (em minutos).
+// Persistido em localStorage para sobreviver a reloads.
+const ALERT_THRESHOLD_KEY = 'admin:inbox-sync:inbound-alert-threshold-min';
+const DEFAULT_ALERT_THRESHOLD_MIN = 10;
+const MIN_THRESHOLD = 1;
+const MAX_THRESHOLD = 1440; // 24h
 
 type SyncBucket = { label: string; sinceMs: number; count: number | null };
 
