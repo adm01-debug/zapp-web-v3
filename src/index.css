@@ -74,11 +74,4 @@ html, body, #root {
   .will-change-transform { will-change: transform; }
 }
 
-/* ===== MODULAR DESIGN SYSTEM ===== */
-@import './styles/tokens.css';
-@import './styles/base.css';
-@import './styles/utilities.css';
-@import './styles/components.css';
-@import './styles/animations.css';
-@import './styles/sidebar.css';
-@import './styles/accessibility.css';
+/* Modular design system imports already loaded at the top of this file. */
