@@ -131,8 +131,35 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   }, [contactPhone, instanceName, editMessageApi, applySignature, onSendMessage, handleTypingStop]);
 
   const retryLastSend = useCallback(async () => {
+    if (isSendingRef.current) return;
+    // Áudio (PTT) tem prioridade — se há blob pendente, repete upload + envio.
+    // Cada retry cria UMA NOVA bolha otimista (signed URL nova, novo
+    // file path com timestamp, nova entry em `messages` via webhook).
+    const audioPending = lastFailedAudioRef.current;
+    if (audioPending) {
+      setIsSending(true);
+      setLastSendError(null);
+      setLastSendErrorDetail(null);
+      try {
+        await audioPending.onSendAudio(audioPending.blob);
+        lastFailedAudioRef.current = null;
+        toast({ title: '✅ Áudio reenviado', description: 'O áudio foi reenviado com sucesso.' });
+      } catch (err: any) {
+        log.error('Audio retry failed:', err);
+        const msg = err?.message || 'Falha ao reenviar áudio. Tente novamente.';
+        const detail = typeof err?.detail === 'string' ? err.detail : null;
+        // Mantém o blob no ref para permitir mais um retry.
+        setLastSendError(msg);
+        setLastSendErrorDetail(detail);
+        toast({ title: 'Erro ao reenviar áudio', description: msg, variant: 'destructive' });
+      } finally {
+        setIsSending(false);
+      }
+      return;
+    }
+
     const payload = lastFailedPayloadRef.current;
-    if (!payload || isSendingRef.current) return;
+    if (!payload) return;
     setIsSending(true);
     setLastSendError(null);
     setLastSendErrorDetail(null);
@@ -156,6 +183,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     setLastSendError(null);
     setLastSendErrorDetail(null);
     lastFailedPayloadRef.current = null;
+    lastFailedAudioRef.current = null;
   }, []);
 
   const handleReplyToMessage = useCallback((message: Message) => { setReplyToMessage(message); inputRef.current?.focus(); }, []);
