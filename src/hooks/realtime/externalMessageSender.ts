@@ -98,3 +98,76 @@ export async function sendExternalText(
   optimistic.status = 'sent';
   return { optimistic, externalId };
 }
+
+/**
+ * sendExternalAudio — envia PTT (push-to-talk) no modo FATOR X.
+ *
+ * Fluxo:
+ *  1. Upload do blob no bucket privado `audio-messages` (mesmo do legacy).
+ *  2. Gera signed URL (1h) — a Edge Function `evolution-api` revalida e
+ *     re-assina internamente via `resolvePrivateBucketUrl` se necessário.
+ *  3. Invoca `send-audio` no proxy → `/message/sendWhatsAppAudio/{instance}`.
+ *  4. Devolve uma bolha otimista `message_type: 'audio'` para a UI exibir
+ *     enquanto o webhook materializa a mensagem definitiva (e a substitui
+ *     pelo `external_id`/`message_id` real do WhatsApp).
+ *
+ * Erros são propagados para alimentar o `SendErrorBanner` (sem swallow).
+ */
+export async function sendExternalAudio(
+  remoteJid: string,
+  blob: Blob,
+  opts: SendExternalOptions = {},
+): Promise<SendExternalResult> {
+  const phone = jidToPhone(remoteJid);
+  if (!phone) throw new Error('Contato sem JID válido para envio.');
+  const instance = opts.instanceName || DEFAULT_INSTANCE;
+
+  // Sanitiza o JID para uso como pasta no bucket (sem `@`/`:` etc).
+  const safeKey = remoteJid.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const fileName = `${safeKey}/${Date.now()}.webm`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('audio-messages')
+    .upload(fileName, blob, { contentType: blob.type || 'audio/webm', upsert: false });
+  if (uploadError) {
+    log.error('audio upload failed', uploadError);
+    throw new Error(uploadError.message || 'Falha no upload do áudio');
+  }
+
+  const { data: signed, error: signError } = await supabase.storage
+    .from('audio-messages')
+    .createSignedUrl(fileName, 3600);
+  if (signError || !signed?.signedUrl) {
+    log.error('audio signed url failed', signError);
+    throw new Error(signError?.message || 'Falha ao gerar URL do áudio');
+  }
+
+  const optimistic = makeOptimisticBubble(remoteJid, '[Áudio]', {
+    messageType: 'audio',
+    mediaUrl: signed.signedUrl,
+  });
+
+  const { data, error } = await supabase.functions.invoke('evolution-api', {
+    body: {
+      action: 'send-audio',
+      instanceName: instance,
+      number: phone,
+      audio: signed.signedUrl,
+    },
+  });
+
+  if (error) {
+    log.error('evolution-api send-audio failed', error);
+    throw new Error(error.message || 'Falha ao enviar áudio');
+  }
+  const envelope = data as { error?: boolean; message?: string; key?: { id?: string } } | null;
+  if (envelope?.error) {
+    log.error('evolution-api send-audio error envelope', envelope);
+    throw new Error(envelope.message || 'Falha ao enviar áudio');
+  }
+
+  const externalId = envelope?.key?.id ?? null;
+  optimistic.external_id = externalId;
+  optimistic.status = 'sent';
+  return { optimistic, externalId };
+}
