@@ -206,8 +206,7 @@ export function CustomEmojiPicker({ onSendEmoji, disabled }: CustomEmojiPickerPr
               </div>
             </>
           )}
-        </PopoverContent>
-      </Popover>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   );
 }
