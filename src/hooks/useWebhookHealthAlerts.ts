@@ -113,7 +113,10 @@ export function useWebhookHealthAlerts(
         select: 'instance_name,created_at',
         filters: [{ column: 'created_at', operator: 'gte', value: since24h }],
         order: { column: 'created_at', ascending: false },
-        limit: 500,
+        // Proxy caps `evolution_webhook_events` at 200 rows (heavy table).
+        // Pedir 500 dispara RUNTIME_ERROR (503) em cold-boots — alinhamos
+        // o cliente ao limite real para evitar a falha intermitente.
+        limit: 200,
       });
       const shortCutoff = Date.now() - SHORT_WINDOW_MIN * 60_000;
       return (res.data ?? []).map((r) => ({
