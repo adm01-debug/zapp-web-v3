@@ -14,21 +14,24 @@ const inflight = new Map<string, Promise<void>>();
 function fetchRoles(path: string): Promise<void> {
   const existing = inflight.get(path);
   if (existing) return existing;
-  const p = supabase
-    .from('route_permissions')
-    .select('allowed_roles')
-    .eq('path', path)
-    .maybeSingle()
-    .then(({ data, error }) => {
+  const p = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('route_permissions')
+        .select('allowed_roles')
+        .eq('path', path)
+        .maybeSingle();
       if (error || !data) {
         cache.set(path, null);
       } else {
         cache.set(path, (data.allowed_roles as AppRole[]) ?? []);
       }
-    })
-    .finally(() => {
+    } catch {
+      cache.set(path, null);
+    } finally {
       inflight.delete(path);
-    });
+    }
+  })();
   inflight.set(path, p);
   return p;
 }
