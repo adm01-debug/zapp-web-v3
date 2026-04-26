@@ -22,6 +22,9 @@ exports[`TRILHA_MENSAGENS_NAVEGAVEL.mmd — snapshot dos rótulos de aresta > sn
   "UPDATE media_url": [
     "UPDATE",
   ],
+  "UPDATE retry_attempt/status": [
+    "UPDATE",
+  ],
   "UPDATE status": [
     "UPDATE",
   ],

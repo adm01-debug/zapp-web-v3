@@ -46,6 +46,7 @@ flowchart LR
     URD["useRealtimeDashboard"]
     UEM["useEvolutionMonitoring"]
     AMP["AudioMessagePlayer"]
+    URRA["useRetryResolutionAlerts"]
   end
 
   subgraph RENDER["6. Render"]
@@ -114,6 +115,7 @@ flowchart LR
   DB -.->|INSERT/UPDATE KPIs| URD
   DB -.->|INSERT health| UEM
   DB -.->|UPDATE media_url| AMP
+  DB -.->|UPDATE retry_attempt/status| URRA
 
   %% Pipeline interno do realtime principal
   URM --> BATCH
@@ -160,6 +162,7 @@ flowchart LR
   click URD "src/hooks/useRealtimeDashboard.ts"
   click URM "src/hooks/useRealtimeMessages.ts"
   click URN "src/hooks/realtime/useRealtimeNotifications.ts"
+  click URRA "src/hooks/realtime/useRetryResolutionAlerts.ts"
   click UTN "src/hooks/useTranscriptionNotifications.ts"
   click VML "src/components/inbox/VirtualizedMessageList.tsx"
   %% AUTO:CLICKS:END
@@ -170,7 +173,7 @@ flowchart LR
 %%   ==>   escrita persistente em DB
 %%   -.->  evento realtime / pub-sub in-memory
 %%   -..-> enqueue assincrona (DLQ)
-%% Fan-out realtime (postgres_changes 'messages'): 7 consumidores diretos
+%% Fan-out realtime (postgres_changes 'messages'): 8 consumidores diretos
 %%   1. useRealtimeMessages              — feed global do inbox (INSERT/UPDATE/DELETE)
 %%   2. useMessages                      — lista por contato aberto (INSERT/UPDATE/DELETE)
 %%   3. useMessageStatus                 — status sent/delivered/read por mensagem (UPDATE)
@@ -178,5 +181,6 @@ flowchart LR
 %%   5. useRealtimeDashboard             — KPIs em tempo real (INSERT)
 %%   6. useEvolutionMonitoring           — saude do webhook/instancia (INSERT)
 %%   7. AudioMessagePlayer               — refresh de media_url assinada (UPDATE)
+%%   8. useRetryResolutionAlerts         — toast quando retrying -> sent/failed (UPDATE)
 %% Gerado por scripts/regen-trilha-mensagens.ts em 2026-04-24T17:13:45.705Z
 %% AUTO:LEGEND:END

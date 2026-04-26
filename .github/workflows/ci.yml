@@ -111,7 +111,7 @@ jobs:
         with:
           deno-version: v1.x
 
-      - name: 🧪 Run edge function Deno tests (evolution-api + public-api + webhook + dlq)
+      - name: 🧪 Run edge function Deno tests (evolution-api + public-api + webhook + dlq + _shared)
         run: |
           deno test \
             --allow-net \
@@ -121,7 +121,8 @@ jobs:
             supabase/functions/evolution-api/__tests__/ \
             supabase/functions/public-api/__tests__/ \
             supabase/functions/evolution-webhook/__tests__/ \
-            supabase/functions/reprocess-failed-messages/__tests__/
+            supabase/functions/reprocess-failed-messages/__tests__/ \
+            supabase/functions/_shared/__tests__/
 
   # ===========================================
   # JOB 3.5: Smoke Pre-Deploy (Evolution + WhatsApp Cloud)

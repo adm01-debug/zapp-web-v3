@@ -27,6 +27,7 @@ const EXPECTED_REALTIME_CONSUMERS: string[] = [
   'src/hooks/useRealtimeDashboard.ts',
   'src/components/monitoring/hooks/useEvolutionMonitoring.ts',
   'src/components/inbox/AudioMessagePlayer.tsx',
+  'src/hooks/realtime/useRetryResolutionAlerts.ts',
 ];
 
 const UPDATE_HINT = 'Atualize src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd (e a cópia em /mnt/documents/).';

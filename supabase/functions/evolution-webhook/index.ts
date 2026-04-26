@@ -19,13 +19,22 @@ import {
 import {
   handleIncomingMessage, handleOutgoingWhatsAppMessage,
 } from "../_shared/evolution-webhook-messages.ts";
-import { createWebhookValidator } from "../_shared/hmac-validation.ts";
+import { createWebhookValidator, readWebhookSecretsFromEnv } from "../_shared/hmac-validation.ts";
 import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
 
-const WEBHOOK_SECRET = Deno.env.get('EVOLUTION_WEBHOOK_SECRET') || Deno.env.get('WEBHOOK_SECRET') || '';
+// Multi-secret support enables zero-downtime rotation:
+//   - EVOLUTION_WEBHOOK_SECRETS=new,old  → validate both, sign with `new`
+//   - EVOLUTION_WEBHOOK_SECRET=single    → legacy single-secret mode
+// Falls back to the older WEBHOOK_SECRET env name for backwards compatibility.
+const WEBHOOK_SECRETS = (() => {
+  const evo = readWebhookSecretsFromEnv('EVOLUTION_WEBHOOK');
+  if (evo.length > 0) return evo;
+  const legacy = Deno.env.get('WEBHOOK_SECRET');
+  return legacy ? [legacy] : [];
+})();
 const STRICT_MODE = (Deno.env.get('EVOLUTION_WEBHOOK_STRICT') ?? 'true').toLowerCase() !== 'false';
-const validateWebhook = WEBHOOK_SECRET
-  ? createWebhookValidator(WEBHOOK_SECRET, STRICT_MODE)
+const validateWebhook = WEBHOOK_SECRETS.length > 0
+  ? createWebhookValidator(WEBHOOK_SECRETS, STRICT_MODE)
   : null;
 
 serve(async (req) => {
