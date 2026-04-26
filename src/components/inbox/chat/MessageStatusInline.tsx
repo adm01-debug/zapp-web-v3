@@ -104,7 +104,9 @@ export const MessageStatusInline = memo(function MessageStatusInline({
       ? `Falhou após ${totalRetries} tentativas`
       : isTerminalFailure
         ? 'Falha no envio'
-        : undefined;
+        : (effectiveStatus === 'sent' || effectiveStatus === 'delivered' || effectiveStatus === 'read' || effectiveStatus === 'played')
+          ? describeStatus(effectiveStatus, 'outbound')
+          : undefined;
 
   const tooltip = isTerminalFailure && failure
     ? `${baseTooltip} — ${formatFailureReason(failure.reason)} (após ${failure.attempts} tentativa${failure.attempts === 1 ? '' : 's'})`
