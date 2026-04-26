@@ -126,16 +126,17 @@ export function TeamChatHeader({
         
 
         <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted">
-                  <MoreVertical className="w-[18px] h-[18px]" />
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Mais ações</TooltipContent>
-          </Tooltip>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted"
+              aria-label="Mais ações"
+              title="Mais ações"
+            >
+              <MoreVertical className="w-[18px] h-[18px]" />
+            </Button>
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-popover border-border">
             {onToggleMute && (
               <DropdownMenuItem onClick={onToggleMute}>
