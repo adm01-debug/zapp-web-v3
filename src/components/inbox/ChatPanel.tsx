@@ -218,44 +218,70 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   // assíncrono). Após sumir o ring, removemos o pending no caller.
   useEffect(() => {
     if (!initialHighlightMessageId) return;
-    if (messages.length === 0) return;
 
     const targetId = initialHighlightMessageId;
-    const exists = messages.some(
-      (m) => m.id === targetId || m.external_id === targetId,
-    );
-    if (!exists) return;
-
-    // Resolve para o id interno (o que o data-message-id usa).
-    const internalId =
-      messages.find((m) => m.id === targetId)?.id ??
-      messages.find((m) => m.external_id === targetId)?.id ??
-      targetId;
-
-    setHighlightedMessageIds(new Set([internalId]));
-    setActiveHighlightId(internalId);
-
-    // Tentativas em sequência cobrem o caso de a virtualização ainda
-    // não ter renderizado o item visível. Paramos assim que o ref
-    // confirma que o id existe na lista — o `scrollToMessage` interno
-    // faz um segundo passe via DOM `scrollIntoView` para precisão.
-    let attempts = 0;
-    let cancelled = false;
-    const tryScroll = () => {
-      if (cancelled) return;
-      attempts++;
-      const found = messagesAreaRef.current?.scrollToMessage(internalId) ?? false;
-      if (!found && attempts < 6) setTimeout(tryScroll, 120);
+    const findInternal = () => {
+      const list = messages;
+      return (
+        list.find((m) => m.id === targetId)?.id ??
+        list.find((m) => m.external_id === targetId)?.id ??
+        null
+      );
     };
-    tryScroll();
 
-    const clear = setTimeout(() => {
-      setActiveHighlightId(null);
-      setHighlightedMessageIds(new Set());
+    let cancelled = false;
+    let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Caso 1 — mensagem já está carregada: rola, destaca e agenda
+    // a remoção do ring após ~3.2 s.
+    const internalId = findInternal();
+    if (internalId) {
+      setHighlightedMessageIds(new Set([internalId]));
+      setActiveHighlightId(internalId);
+
+      let attempts = 0;
+      const tryScroll = () => {
+        if (cancelled) return;
+        attempts++;
+        const found = messagesAreaRef.current?.scrollToMessage(internalId) ?? false;
+        if (!found && attempts < 6) setTimeout(tryScroll, 120);
+      };
+      tryScroll();
+
+      highlightTimer = setTimeout(() => {
+        setActiveHighlightId(null);
+        setHighlightedMessageIds(new Set());
+        onHighlightConsumed?.();
+      }, 3200);
+
+      return () => {
+        cancelled = true;
+        if (highlightTimer) clearTimeout(highlightTimer);
+      };
+    }
+
+    // Caso 2 — mensagem ainda não está na lista. Damos uma janela de
+    // graça (~2.5 s) para o fetch inicial / `loadOlder` materializá-la.
+    // Se o effect re-rodar antes (porque `messages` mudou e a mensagem
+    // apareceu), o cleanup cancela o timer e a próxima execução cai no
+    // Caso 1. Caso contrário, mostramos um aviso e seguimos com a
+    // conversa aberta normalmente, consumindo o pending para não
+    // tentar novamente em renders subsequentes.
+    const giveUpTimer = setTimeout(() => {
+      if (cancelled) return;
+      toast({
+        title: 'Mensagem não encontrada',
+        description:
+          'A mensagem original pode ter sido removida ou ainda não foi carregada. Abrimos a conversa normalmente.',
+        variant: 'destructive',
+      });
       onHighlightConsumed?.();
-    }, 3200);
+    }, 2500);
 
-    return () => { cancelled = true; clearTimeout(clear); };
+    return () => {
+      cancelled = true;
+      clearTimeout(giveUpTimer);
+    };
   }, [initialHighlightMessageId, messages, onHighlightConsumed]);
 
   const canGenerateSummary = messages.length >= 10;
