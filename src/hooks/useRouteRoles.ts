@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-type AppRole = 'admin' | 'manager' | 'supervisor' | 'agent' | 'special_agent' | 'dev';
+import type { AppRole } from '@/hooks/useUserRole';
 
 const cache = new Map<string, AppRole[] | null>();
 

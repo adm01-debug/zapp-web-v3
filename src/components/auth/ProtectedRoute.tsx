@@ -5,11 +5,9 @@ const log = getLogger('ProtectedRoute');
 import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole, type AppRole } from '@/hooks/useUserRole';
 import { useRouteRoles } from '@/hooks/useRouteRoles';
 import { supabase } from '@/integrations/supabase/client';
-
-type AppRole = 'admin' | 'manager' | 'supervisor' | 'agent' | 'special_agent' | 'dev';
 
 interface ProtectedRouteProps {
   children: ReactNode;
