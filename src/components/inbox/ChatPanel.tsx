@@ -255,7 +255,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
       onHighlightConsumed?.();
     }, 3200);
 
-    return () => clearTimeout(clear);
+    return () => { cancelled = true; clearTimeout(clear); };
   }, [initialHighlightMessageId, messages, onHighlightConsumed]);
 
   const canGenerateSummary = messages.length >= 10;
