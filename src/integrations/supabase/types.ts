@@ -2948,10 +2948,14 @@ export type Database = {
           from_agent_id: string | null
           from_queue_id: string | null
           id: string
+          idempotency_key: string | null
           metadata: Json | null
           performed_by: string | null
+          provider_message_log_id: string | null
+          thread_id: string | null
           to_agent_id: string | null
           to_queue_id: string | null
+          trace_id: string | null
         }
         Insert: {
           contact_id: string
@@ -2960,10 +2964,14 @@ export type Database = {
           from_agent_id?: string | null
           from_queue_id?: string | null
           id?: string
+          idempotency_key?: string | null
           metadata?: Json | null
           performed_by?: string | null
+          provider_message_log_id?: string | null
+          thread_id?: string | null
           to_agent_id?: string | null
           to_queue_id?: string | null
+          trace_id?: string | null
         }
         Update: {
           contact_id?: string
@@ -2972,10 +2980,14 @@ export type Database = {
           from_agent_id?: string | null
           from_queue_id?: string | null
           id?: string
+          idempotency_key?: string | null
           metadata?: Json | null
           performed_by?: string | null
+          provider_message_log_id?: string | null
+          thread_id?: string | null
           to_agent_id?: string | null
           to_queue_id?: string | null
+          trace_id?: string | null
         }
         Relationships: [
           {
@@ -3103,6 +3115,56 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_participants: {
+        Row: {
+          created_at: string
+          external_actor_id: string | null
+          id: string
+          joined_at: string
+          left_at: string | null
+          metadata: Json
+          participant_type: string
+          profile_id: string | null
+          reason_left: string | null
+          role: string
+          thread_id: string
+        }
+        Insert: {
+          created_at?: string
+          external_actor_id?: string | null
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          metadata?: Json
+          participant_type: string
+          profile_id?: string | null
+          reason_left?: string | null
+          role?: string
+          thread_id: string
+        }
+        Update: {
+          created_at?: string
+          external_actor_id?: string | null
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          metadata?: Json
+          participant_type?: string
+          profile_id?: string | null
+          reason_left?: string | null
+          role?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_threads"
             referencedColumns: ["id"]
           },
         ]
@@ -3362,6 +3424,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      conversation_threads: {
+        Row: {
+          channel: string
+          created_at: string
+          external_contact_id: string
+          external_conversation_id: string | null
+          health_score: number | null
+          id: string
+          instance_name: string
+          last_event_at: string | null
+          last_event_type: string | null
+          message_count: number
+          metadata: Json
+          remote_jid: string
+          status: string
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          external_contact_id: string
+          external_conversation_id?: string | null
+          health_score?: number | null
+          id?: string
+          instance_name?: string
+          last_event_at?: string | null
+          last_event_type?: string | null
+          message_count?: number
+          metadata?: Json
+          remote_jid: string
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          external_contact_id?: string
+          external_conversation_id?: string | null
+          health_score?: number | null
+          id?: string
+          instance_name?: string
+          last_event_at?: string | null
+          last_event_type?: string | null
+          message_count?: number
+          metadata?: Json
+          remote_jid?: string
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       crisis_room_alerts: {
         Row: {
@@ -5649,6 +5765,57 @@ export type Database = {
           },
         ]
       }
+      outbox_events: {
+        Row: {
+          aggregate_id: string
+          aggregate_type: string
+          attempts: number
+          created_at: string
+          dispatched_at: string | null
+          event_type: string
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          next_attempt_at: string
+          payload: Json
+          status: string
+          trace_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          aggregate_id: string
+          aggregate_type: string
+          attempts?: number
+          created_at?: string
+          dispatched_at?: string | null
+          event_type: string
+          id?: string
+          idempotency_key: string
+          last_error?: string | null
+          next_attempt_at?: string
+          payload: Json
+          status?: string
+          trace_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aggregate_id?: string
+          aggregate_type?: string
+          attempts?: number
+          created_at?: string
+          dispatched_at?: string | null
+          event_type?: string
+          id?: string
+          idempotency_key?: string
+          last_error?: string | null
+          next_attempt_at?: string
+          payload?: Json
+          status?: string
+          trace_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       passkey_credentials: {
         Row: {
           backed_up: boolean | null
@@ -6210,6 +6377,89 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      provider_message_log: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          delivery_status: string
+          direction: string
+          error_code: string | null
+          error_message: string | null
+          external_contact_id: string | null
+          external_message_id: string | null
+          http_status: number | null
+          id: string
+          idempotency_key: string
+          instance_name: string
+          metadata: Json
+          payload: Json
+          payload_hash: string
+          persisted_at: string | null
+          provider: string
+          received_at: string
+          remote_jid: string
+          routed_at: string | null
+          thread_id: string | null
+          trace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          direction: string
+          error_code?: string | null
+          error_message?: string | null
+          external_contact_id?: string | null
+          external_message_id?: string | null
+          http_status?: number | null
+          id?: string
+          idempotency_key: string
+          instance_name: string
+          metadata?: Json
+          payload: Json
+          payload_hash: string
+          persisted_at?: string | null
+          provider: string
+          received_at?: string
+          remote_jid: string
+          routed_at?: string | null
+          thread_id?: string | null
+          trace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          direction?: string
+          error_code?: string | null
+          error_message?: string | null
+          external_contact_id?: string | null
+          external_message_id?: string | null
+          http_status?: number | null
+          id?: string
+          idempotency_key?: string
+          instance_name?: string
+          metadata?: Json
+          payload?: Json
+          payload_hash?: string
+          persisted_at?: string | null
+          provider?: string
+          received_at?: string
+          remote_jid?: string
+          routed_at?: string | null
+          thread_id?: string | null
+          trace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_message_log_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_threads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       provider_session_logs: {
         Row: {
@@ -7049,6 +7299,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reprocess_jobs: {
+        Row: {
+          action: string
+          attempts: number
+          created_at: string
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          idempotency_key: string
+          max_attempts: number
+          reason: string | null
+          requested_by: string | null
+          result: Json | null
+          scheduled_at: string
+          started_at: string | null
+          status: string
+          target_id: string
+          target_kind: string
+          trace_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          attempts?: number
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          idempotency_key: string
+          max_attempts?: number
+          reason?: string | null
+          requested_by?: string | null
+          result?: Json | null
+          scheduled_at?: string
+          started_at?: string | null
+          status?: string
+          target_id: string
+          target_kind: string
+          trace_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          attempts?: number
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          idempotency_key?: string
+          max_attempts?: number
+          reason?: string | null
+          requested_by?: string | null
+          result?: Json | null
+          scheduled_at?: string
+          started_at?: string | null
+          status?: string
+          target_id?: string
+          target_kind?: string
+          trace_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
@@ -10325,6 +10638,15 @@ export type Database = {
       }
       rpc_dlq_retry_now: { Args: { p_id: string }; Returns: boolean }
       rpc_dlq_stats: { Args: never; Returns: Json }
+      rpc_enqueue_reprocess: {
+        Args: {
+          p_action: string
+          p_reason?: string
+          p_target_id: string
+          p_target_kind: string
+        }
+        Returns: string
+      }
       rpc_evolution_fallback_stats: {
         Args: { p_hours?: number }
         Returns: Json
@@ -10433,6 +10755,21 @@ export type Database = {
               updated_at: string
             }[]
           }
+      rpc_log_provider_message: {
+        Args: {
+          p_direction: string
+          p_external_contact_id: string
+          p_external_message_id: string
+          p_idempotency_key: string
+          p_instance_name: string
+          p_payload: Json
+          p_provider: string
+          p_remote_jid: string
+          p_thread_id?: string
+          p_trace_id?: string
+        }
+        Returns: string
+      }
       rpc_log_search_event: {
         Args: {
           p_entities: string[]
@@ -10480,6 +10817,17 @@ export type Database = {
           provider_name: string
           session_id: string
         }[]
+      }
+      rpc_publish_outbox: {
+        Args: {
+          p_aggregate_id: string
+          p_aggregate_type: string
+          p_event_type: string
+          p_idempotency_key?: string
+          p_payload: Json
+          p_trace_id?: string
+        }
+        Returns: string
       }
       rpc_queue_rebalance_candidates: {
         Args: { p_limit?: number }
