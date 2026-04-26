@@ -179,7 +179,9 @@ export function useRealtimeInbox() {
   const handleSelectConversation = useCallback((contactId: string) => {
     setSelectedContactId(contactId);
     setSelectedContact(contactId);
-    markAsRead(contactId);
+    // No modo externo, ids são remote_jid (string) — markAsRead local
+    // espera UUID e dispararia erro 22P02. Pulamos.
+    if (!USE_EXTERNAL_DB) markAsRead(contactId);
   }, [setSelectedContact, markAsRead]);
 
   const handleNotificationView = useCallback(() => {
