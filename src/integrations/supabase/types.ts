@@ -11123,6 +11123,7 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_ops_metrics: { Args: { p_window_hours?: number }; Returns: Json }
       rpc_pause_queue: {
         Args: { p_queue_id: string; p_reason?: string }
         Returns: {

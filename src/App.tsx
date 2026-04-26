@@ -76,6 +76,7 @@ const RateLimitDashboard = lazyWithRetry(() => import("./pages/admin/RateLimitDa
 const HmacSelfTestPage = lazyWithRetry(() => import("./pages/admin/HmacSelfTestPage"));
 const AdminChannelsPage = lazyWithRetry(() => import("./pages/admin/AdminChannelsPage"));
 const AdminQueuesPage = lazyWithRetry(() => import("./pages/admin/AdminQueuesPage"));
+const AdminOperationsPage = lazyWithRetry(() => import("./pages/admin/AdminOperationsPage"));
 const AdminProvidersPage = lazyWithRetry(() => import("./pages/admin/AdminProvidersPage"));
 const AdminFailedAuthMessagesPage = lazyWithRetry(() => import("./pages/admin/AdminFailedAuthMessagesPage"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
@@ -188,6 +189,7 @@ function AppContent() {
             <Route path="/admin/departamentos" element={<ProtectedRoute requiredRoles={['admin']}><DepartmentsPage /></ProtectedRoute>} />
             <Route path="/admin/rate-limit" element={<ProtectedRoute requiredRoles={['admin']}><RateLimitDashboard /></ProtectedRoute>} />
             <Route path="/admin/hmac-selftest" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><HmacSelfTestPage /></ProtectedRoute>} />
+            <Route path="/admin/operations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminOperationsPage /></ProtectedRoute>} />
             <Route path="/admin/channels" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminChannelsPage /></ProtectedRoute>} />
             <Route path="/admin/queues" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminQueuesPage /></ProtectedRoute>} />
             <Route path="/admin/providers" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminProvidersPage /></ProtectedRoute>} />
