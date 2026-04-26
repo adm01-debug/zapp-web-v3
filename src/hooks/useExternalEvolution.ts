@@ -29,10 +29,16 @@ const log = getLogger('useExternalEvolution');
  *  1. Toda mensagem otimista (`id` começa com `optimistic:`) cujo `external_id`
  *     bate com algum `external_id` em `incoming` é **removida** — a versão
  *     canônica toma seu lugar mantendo `id` definitivo, status oficial etc.
- *  2. Fallback (otimista sem `external_id` ainda — ex.: erro do `key.id`): se
- *     o conteúdo + sender + janela de ±2min combinarem com algum incoming,
- *     também removemos a otimista.
- *  3. Incomings são dedupados por `id` contra `prev` final.
+ *  2. Fallback texto (otimista sem `external_id`): match por sender + content
+ *     + janela ±2min.
+ *  3. Fallback mídia (áudio/imagem/vídeo/documento/sticker): a otimista usa
+ *     placeholder (`'[Áudio]'`) e signed URL local; o canônico do webhook
+ *     normalmente vem com `content: ''` e `media_url` real do WhatsApp. Match
+ *     por sender + mesmo `message_type` (não-text) + janela ±2min.
+ *  4. A versão canônica herda `media_url` da otimista quando ela mesma vier
+ *     sem URL ainda (race: webhook chegou antes do download da mídia) — assim
+ *     o player não pisca enquanto o backend resolve a mídia definitiva.
+ *  5. Incomings são dedupados por `id` contra `prev` final.
  *
  * Retorna apenas as **adições** que devem ser anexadas em ordem cronológica e
  * o `prev` filtrado (sem as otimistas reconciliadas) — o caller decide a
@@ -40,6 +46,7 @@ const log = getLogger('useExternalEvolution');
  */
 const OPTIMISTIC_PREFIX = 'optimistic:';
 const OPTIMISTIC_FALLBACK_WINDOW_MS = 120_000;
+const MEDIA_TYPES = new Set(['audio', 'image', 'video', 'document', 'sticker']);
 
 function reconcileOptimistic(
   prev: RealtimeMessage[],
@@ -51,25 +58,52 @@ function reconcileOptimistic(
     incoming.map((m) => m.external_id).filter((v): v is string => Boolean(v)),
   );
 
+  // Coleta canônicos que reconciliam mídia para herdar media_url da otimista
+  // se o canônico ainda não tiver a URL final resolvida.
+  const mediaUrlInheritance = new Map<string, string>(); // incoming.id -> optimistic.media_url
+
   const filteredPrev = prev.filter((m) => {
     if (!m.id.startsWith(OPTIMISTIC_PREFIX)) return true;
     // Caso 1: external_id já reconciliado — remove otimista.
     if (m.external_id && incomingExternalIds.has(m.external_id)) return false;
-    // Caso 2 (fallback): otimista sem external_id pareada por conteúdo+janela.
-    if (!m.external_id) {
-      const optTime = new Date(m.created_at).getTime();
+
+    if (m.external_id) return true;
+
+    const optTime = new Date(m.created_at).getTime();
+    const isMediaOpt = MEDIA_TYPES.has(m.message_type);
+
+    // Caso 3: fallback mídia — sender + message_type + janela.
+    if (isMediaOpt) {
       const match = incoming.find((inc) =>
         inc.sender === m.sender &&
-        inc.content === m.content &&
+        inc.message_type === m.message_type &&
         Math.abs(new Date(inc.created_at).getTime() - optTime) <= OPTIMISTIC_FALLBACK_WINDOW_MS,
       );
-      if (match) return false;
+      if (match) {
+        if (!match.media_url && m.media_url) mediaUrlInheritance.set(match.id, m.media_url);
+        return false;
+      }
+      return true;
     }
+
+    // Caso 2: fallback texto — sender + content + janela.
+    const match = incoming.find((inc) =>
+      inc.sender === m.sender &&
+      inc.message_type === m.message_type &&
+      inc.content === m.content &&
+      Math.abs(new Date(inc.created_at).getTime() - optTime) <= OPTIMISTIC_FALLBACK_WINDOW_MS,
+    );
+    if (match) return false;
     return true;
   });
 
   const seen = new Set(filteredPrev.map((m) => m.id));
-  const additions = incoming.filter((m) => !seen.has(m.id));
+  const additions = incoming
+    .filter((m) => !seen.has(m.id))
+    .map((m) => {
+      const inheritedUrl = mediaUrlInheritance.get(m.id);
+      return inheritedUrl ? { ...m, media_url: inheritedUrl } : m;
+    });
   return { filteredPrev, additions };
 }
 
