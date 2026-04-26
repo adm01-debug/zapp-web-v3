@@ -236,6 +236,6 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     handleInputChange, handleKeyDown, handleSlashCommand,
     handleSendProduct, handleSendInteractiveMessage, handleInteractiveButtonClick,
     handleSendLocation, handleAudioSend,
-    lastSendError, retryLastSend, dismissSendError,
+    lastSendError, lastSendErrorDetail, retryLastSend, dismissSendError,
   };
 }
