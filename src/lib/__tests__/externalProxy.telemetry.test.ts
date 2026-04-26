@@ -66,6 +66,27 @@ describe('externalProxy telemetry', () => {
     expect(ev.severity).toBe('timeout');
   });
 
+  it('retries when invoke throws a transient edge runtime 503 and then recovers', async () => {
+    invokeMock
+      .mockRejectedValueOnce({
+        code: 'SUPABASE_EDGE_RUNTIME_ERROR',
+        message: 'Service is temporarily unavailable',
+        context: { status: 503 },
+      })
+      .mockResolvedValueOnce({ data: { data: [{ id: 1 }] }, error: null });
+
+    await queryExternalProxy({ table: 'evolution_messages', limit: 1 });
+
+    expect(invokeMock).toHaveBeenCalledTimes(2);
+    const snapshot = getTelemetrySnapshot();
+    expect(snapshot.total).toBe(1);
+    expect(snapshot.recentEvents[0].severity).toBe('ok');
+    expect(snapshot.retry.totalRetries).toBe(1);
+    expect(snapshot.retry.recoveredAfterRetry).toBe(1);
+    expect(snapshot.retry.exhausted).toBe(0);
+    expect(snapshot.retry.transientByTarget.evolution_messages).toBe(1);
+  });
+
   it('extracts target from rpc body', async () => {
     invokeMock.mockResolvedValue({ data: { data: [] }, error: null });
     await queryExternalProxy({ action: 'rpc', rpc: 'rpc_list_contacts', params: { p_limit: 10 } });
