@@ -199,6 +199,7 @@ function AppContent() {
             <Route path="/admin/failed-auth-messages" element={<ProtectedRoute requiredRoles={['admin']}><AdminFailedAuthMessagesPage /></ProtectedRoute>} />
             <Route path="/admin/route-permissions" element={<ProtectedRoute requiredRoles={['admin']}><RoutePermissionsPage /></ProtectedRoute>} />
             <Route path="/admin/stress-test" element={<ProtectedRoute requiredRoles={['admin']}><AdminStressTestPage /></ProtectedRoute>} />
+            <Route path="/admin/inbox-sync-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminInboxSyncStatusPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
