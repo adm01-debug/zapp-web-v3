@@ -10997,6 +10997,41 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_conversation_sla_panel: {
+        Args: {
+          p_assigned_to?: string
+          p_limit?: number
+          p_priority?: string
+          p_queue_id?: string
+          p_search?: string
+          p_status?: string
+        }
+        Returns: {
+          agent_name: string
+          assigned_at: string
+          assigned_to: string
+          channel_type: string
+          contact_id: string
+          contact_name: string
+          contact_phone: string
+          entered_queue_at: string
+          first_response_at: string
+          first_response_breached: boolean
+          first_response_minutes: number
+          first_response_seconds: number
+          handle_seconds: number
+          priority: string
+          queue_color: string
+          queue_id: string
+          queue_name: string
+          resolution_breached: boolean
+          resolution_minutes: number
+          resolved_at: string
+          sla_progress_pct: number
+          sla_status: string
+          wait_seconds: number
+        }[]
+      }
       rpc_disable_service_channel: {
         Args: { p_id: string; p_reason?: string }
         Returns: {
