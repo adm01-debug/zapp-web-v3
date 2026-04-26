@@ -229,7 +229,7 @@ serve(async (req) => {
     // Logical/handler errors: log the detail internally, return 200 to evo so it does not
     // retry-storm the same event. The idempotency guard above makes retries safe.
     const detail = error instanceof Error ? error.message : String(error);
-    console.error(`[webhook][${requestId}] handler_error event=${event} instance=${instance}: ${detail}`);
+    console.error(redactSecrets(`[webhook][${requestId}] handler_error event=${event} instance=${instance}: ${detail}`));
     await auditWebhookEvent(supabase, {
       request_id: requestId, instance, event_type: event, status: 'error',
       duration_ms: Date.now() - startedAt, error_message: detail.slice(0, 500),
