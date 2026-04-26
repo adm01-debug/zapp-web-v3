@@ -22,8 +22,19 @@
 
 import type { SendUIStatus } from '@/hooks/realtime/sendStatusBus';
 
-/** Union of statuses the UI knows how to render. */
-export type MessageUIStatus = SendUIStatus | 'delivered' | 'read';
+/**
+ * Union of statuses the UI knows how to render.
+ *
+ * Superset of `SendUIStatus` (in-memory bus) plus persisted-only states
+ * that never originate from the bus: `pending` (queued, not yet sending),
+ * `delivered`, `read`, `played`.
+ */
+export type MessageUIStatus =
+  | SendUIStatus
+  | 'pending'
+  | 'delivered'
+  | 'read'
+  | 'played';
 
 /**
  * Mapped DB row stored in the hook's internal `Map<id, …>` cache.
