@@ -75,30 +75,31 @@ function BubbleList({ bubbles }: { bubbles: Bubble[] }) {
   );
 }
 
-// ── Factory for the hook + a controlled `messages` collector ──────────────
+// Module-scope dispatcher so the harness state setter can be reached from
+// outside React (e.g. when our send-side helpers want to push a synthetic
+// bubble for channels that don't go through `onSendMessage`).
+let setListExternal: ((updater: (prev: Bubble[]) => Bubble[]) => void) | null = null;
+
+function Harness() {
+  const [list, setList] = useState<Bubble[]>([]);
+  setListExternal = setList;
+  return <BubbleList bubbles={list} />;
+}
+
 function makeHarness() {
   const bubbles: Bubble[] = [];
-  let pushBubble: (b: Bubble) => void = () => {};
 
   function pushFromSender(channel: string, content: string) {
     const id = `msg-${bubbles.length + 1}-${channel}`;
     const bubble = { id, channel, content };
     bubbles.push(bubble);
-    pushBubble(bubble);
+    setListExternal?.((prev) => [...prev, bubble]);
   }
 
   const onSendMessage = vi.fn((content: string) => pushFromSender('text', content));
   const onSendAudio = vi.fn(async (blob: Blob) => pushFromSender('audio', `audio:${blob.size}b`));
 
-  function Harness() {
-    const [list, setList] = useState<Bubble[]>([]);
-    useEffect(() => {
-      pushBubble = (b) => setList((prev) => [...prev, b]);
-    }, []);
-    return <BubbleList bubbles={list} />;
-  }
-
-  return { bubbles, onSendMessage, onSendAudio, pushFromSender, Harness };
+  return { bubbles, onSendMessage, onSendAudio, pushFromSender };
 }
 
 const baseHookOpts = (onSendMessage: (c: string) => void) => ({
