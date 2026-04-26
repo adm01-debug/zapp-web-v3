@@ -13,6 +13,12 @@ Cobrimos os fluxos críticos do ZAPP Web com Playwright:
 | `e2e/evolution-retry-failure.spec.ts` | Falhas intermitentes Evolution: marca `failed` só após esgotar retries; recupera no meio sem marcar |
 | `e2e/admin-webhook-filters.spec.ts` | Filtros estruturados (remote_jid, push_name, message_type, status) em `/admin/webhook-events`. Garante ortogonalidade com a busca textual: filtros e busca operam por interseção, nunca união. Skip se bot não for admin. |
 | `e2e/admin-failed-messages-filters.spec.ts` | Filtros estruturados (status, search) em `/admin/failed-messages`. Mesma garantia de ortogonalidade. Skip se bot não for admin. |
+| `e2e/navigation.spec.ts` | Navegação pós-login: home, deep-link `/sla`, NotFound, role gating em `/admin/roles`, sidebar best-effort. |
+| `e2e/contacts-crud.spec.ts` | CRM: criar contato via "Nova Conversa", detectar duplicidade de telefone, busca rápida (<2.5s). Mocks Evolution. |
+| `e2e/admin-queues.spec.ts` | Admin → Filas: render, abrir formulário, validação de nome obrigatório. Skip se não-admin. |
+| `e2e/admin-channels.spec.ts` | Admin → Canais: lista renderiza, toggle de status com feedback. Skip se não-admin. |
+| `e2e/error-handling.spec.ts` | Edge function 500/timeout, rede offline — app não crasha, feedback ao usuário. |
+| `e2e/auth-extended.spec.ts` | Credenciais inválidas, /forgot-password, expiração de sessão força redirect /auth. |
 
 ## Rodando local
 

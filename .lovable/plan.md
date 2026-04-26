@@ -1,124 +1,82 @@
 ## Objetivo
 
-Criar uma suíte de **smoke tests automatizados pré-deploy** que valide envio (outbound) e webhook (inbound) em ambos os provedores — **Evolution API** e **WhatsApp Cloud API (Meta)** — garantindo paridade do modelo unificado de mensagens antes de cada release.
+Ampliar a suíte Playwright para cobrir, **por módulo**, os 5 fluxos críticos de qualquer recurso: **Login → Navegação → Criação → Edição/Submissão → Tratamento de erro**, complementando os specs já existentes (auth, send-message, inbox, admin filters, DLQ, retry).
 
-## Escopo
+## Cobertura atual vs. nova
 
-Testes determinísticos, sem chamadas reais a Evolution/Meta (mocks via `globalThis.fetch`), executáveis em < 30s e plugados no CI como **gate obrigatório** antes do job `build`.
+| Módulo | Existe | Adicionar |
+|---|---|---|
+| Auth | ✅ smoke | + reset-password, rota inválida → 404 |
+| Navegação global | ❌ | ✅ sidebar/rotas principais, deep-link, role gating |
+| Contatos (CRM) | ❌ | ✅ criar via "Nova conversa", editar nome, busca, dedupe |
+| Inbox | ✅ | + atribuir agente, fechar atendimento, erro de envio |
+| Filas (admin) | ❌ | ✅ pausar/retomar, criar fila, validação |
+| Departamentos | ❌ | ✅ CRUD básico |
+| Canais | ❌ | ✅ listar, alternar status |
+| Tratamento de erro | parcial | ✅ 500 do edge → toast, network offline → fallback, ErrorBoundary |
+
+Total de novos specs: **6 arquivos**, ~25 testes determinísticos, todos `test.skip` se papel insuficiente para não falsar CI.
 
 ## Arquivos a criar
 
-### 1) Testes Deno — Edge Functions
+### 1) `e2e/navigation.spec.ts`
+- Login → home renderiza sidebar.
+- Clica em cada item principal (Inbox, CRM, SLA, Operações) → URL muda + heading da página visível.
+- Deep-link `/sla` autenticado → carrega direto sem redirecionar.
+- Rota inexistente `/rota-que-nao-existe` → componente NotFound.
+- Role gating: `/admin/roles` para usuário não-admin → redireciona ou exibe acesso negado.
 
-**`supabase/functions/whatsapp-cloud-api/__tests__/smoke.test.ts`**
-- `send-text`: monta payload Graph correto (`messaging_product`, `to`, `type:text`), chama Graph mockada, persiste em `rpc_insert_message` com `from_me=true`, retorna `{ wamid }`.
-- `send-media` (image/audio/document): valida tipo, link/id, caption.
-- Erro Graph 4xx → propaga status, não persiste mensagem.
-- Credenciais ausentes (`api_type !== 'official'`) → 404 limpo.
+### 2) `e2e/contacts-crud.spec.ts`
+- Mock de `evolution-api` (send-text) e `batch-fetch-avatars`.
+- Criar contato novo via "Nova Conversa" (modo `novo contato`) → aparece na lista.
+- Tentar criar duplicado com mesmo telefone → toast de erro "Já existe".
+- Editar nome do contato (se UI exposta) — `test.skip` se não disponível.
+- Busca por nome/telefone retorna resultados em < 1s.
 
-**`supabase/functions/whatsapp-cloud-webhook/__tests__/smoke.test.ts`**
-- GET verify (`hub.mode=subscribe` + token) → echo do `hub.challenge`.
-- POST sem assinatura HMAC válida → 401.
-- POST com payload texto válido → normaliza para `NormalizedIncoming` e chama `rpc_insert_message` + `rpc_upsert_contact`.
-- POST com `statuses` (delivered/read/failed) → atualiza status via RPC.
-- Mídia (image/audio): faz fetch mockado da URL Graph e upload no bucket `whatsapp-media`.
+### 3) `e2e/admin-queues.spec.ts`
+- Skip se não-admin.
+- Acessar `/admin/queues`.
+- Criar fila com nome de teste (`E2E Queue ${ts}`).
+- Pausar → status visível como pausada → retomar.
+- Validação: criar com nome vazio → erro inline.
+- Cleanup via `cleanupTestData()`.
 
-**`supabase/functions/evolution-api/__tests__/smoke.test.ts`** (novo, complementa os existentes)
-- Smoke `send-text` end-to-end com Evolution mockada → 200 + persistência.
-- Smoke `send-media-audio` → ptt:true preservado.
-- URL normalization (sem trailing slash) — regressão do bug DLQ corrigido.
+### 4) `e2e/admin-channels.spec.ts`
+- Skip se não-admin.
+- Acessar `/admin/channels`.
+- Listar canais existentes → contador > 0.
+- Alternar status de um canal de teste (pausar/reativar) → toast de sucesso.
 
-**`supabase/functions/evolution-webhook/__tests__/smoke.test.ts`** (novo)
-- POST `messages.upsert` mockado → contato + mensagem inseridos via RPC.
-- POST `messages.update` (status) → atualização de status.
-- HMAC inválido → 401.
+### 5) `e2e/error-handling.spec.ts`
+- Edge function 500 ao enviar mensagem → toast "Erro ao enviar".
+- Edge function timeout → estado `failed` na bolha.
+- Network offline (`page.context().setOffline(true)`) durante envio → mensagem em fila local + reconexão recupera.
+- Forçar erro de render numa rota debug → ErrorBoundary mostra fallback com botão "Tentar novamente".
 
-### 2) Teste de paridade (cross-provider)
-
-**`supabase/functions/_shared/__tests__/parity.test.ts`**
-- Dado o mesmo "evento lógico" (texto recebido de `+5511999999999`), verifica que **tanto o normalizer Evolution quanto o Cloud** produzem a mesma forma final de argumentos para `rpc_insert_message` (mesmos campos: `p_remote_jid`, `p_content`, `p_message_type`, `p_from_me`, `p_message_id`).
-- Garante que adicionar provedor novo não quebre o modelo unificado.
-
-### 3) Teste Vitest do router
-
-**`src/lib/__tests__/sendFunctionRouter.smoke.test.ts`**
-- `api_type='official'` → `whatsapp-cloud-api`.
-- `api_type='evolution'` ou nulo → `evolution-api`.
-- Cache de 60s respeitado (segunda chamada não consulta DB).
-- Erro de DB → fallback `evolution-api`.
-
-### 4) Script orquestrador pré-deploy
-
-**`scripts/smoke-pre-deploy.sh`**
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-echo "▶ Vitest smoke (router + envio)"
-npm run test -- --run sendFunctionRouter.smoke
-echo "▶ Deno smoke (Evolution + Cloud + paridade)"
-deno test --allow-net --allow-env --allow-read \
-  supabase/functions/evolution-api/__tests__/smoke.test.ts \
-  supabase/functions/evolution-webhook/__tests__/smoke.test.ts \
-  supabase/functions/whatsapp-cloud-api/__tests__/ \
-  supabase/functions/whatsapp-cloud-webhook/__tests__/ \
-  supabase/functions/_shared/__tests__/parity.test.ts
-echo "✅ Pré-deploy verde"
-```
-
-Adicionar em `package.json`:
-```json
-"smoke:pre-deploy": "bash scripts/smoke-pre-deploy.sh"
-```
-
-### 5) Helper de mock compartilhado
-
-**`supabase/functions/_shared/test-fetch-mock.ts`**
-- `installFetchMock(handlers: Record<string, Response>)` para interceptar Graph API e Evolution API por padrão de URL.
-- `restoreFetch()` para teardown.
-- Reutilizável em todos os smoke tests.
+### 6) `e2e/auth-extended.spec.ts`
+- "Esqueci senha" abre `/forgot-password`, submete email → toast de confirmação.
+- Login com credenciais inválidas → mensagem de erro visível, permanece em `/auth`.
+- Sessão expira (limpa cookies) → próxima ação navega para `/auth`.
 
 ## Arquivos a editar
 
-**`.github/workflows/ci.yml`**
-- Adicionar novo job `smoke-pre-deploy` (depende de `test` e `deno-edge-tests`, é dependência de `build`):
+**`e2e/utils/supabase.ts`** — estender `cleanupTestData()` para também remover filas e canais com prefixo `e2e-`.
 
-```yaml
-smoke-pre-deploy:
-  name: 🚦 Smoke Pre-Deploy (Evolution + Cloud)
-  runs-on: ubuntu-latest
-  needs: [test, deno-edge-tests]
-  steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with: { node-version: '20' }
-    - uses: denoland/setup-deno@v1
-      with: { deno-version: v1.x }
-    - run: npm install --no-audit --no-fund
-    - run: npm run smoke:pre-deploy
-```
-- Alterar `build.needs` para incluir `smoke-pre-deploy`.
+**`docs/testing/e2e.md`** — adicionar entradas na tabela de specs.
 
-## Resumo técnico (como os mocks funcionam)
+**`playwright.config.ts`** — sem mudanças (config já adequada).
 
-```text
-┌───────────────────────────────────────────────┐
-│ smoke.test.ts                                 │
-│   1. installFetchMock({                       │
-│        'graph.facebook.com': fakeGraphOk,     │
-│        'evolution.api':     fakeEvoOk,        │
-│      })                                       │
-│   2. createClient = stubSupabase()            │
-│      → captura chamadas a rpc_insert_message  │
-│   3. await handler(req)                       │
-│   4. assertEquals(captured.rpc_args, expected)│
-└───────────────────────────────────────────────┘
-```
+## Padrões aplicados
 
-Sem nenhuma rede real; tudo em ≤ 5s por suíte. Falha em qualquer asserção bloqueia o `build` no CI.
+- Todos os specs autenticados usam `test` de `./fixtures/auth` (storage state reaproveitado).
+- Mocks de Evolution/Cloud via `page.route('**/functions/v1/{evolution-api,whatsapp-cloud-api}**', ...)`.
+- `test.skip(true, 'motivo')` quando perfil/feature não disponível — nunca falha falso-positivo.
+- Dados de teste prefixados (`e2e-`, `*-test`) para cleanup automático.
+- Asserções com `expect.poll()` (timeout 10s) para estados realtime.
+- Sem chamadas reais a Evolution/Meta — tudo mockado.
 
 ## Critério de aceite
 
-- `npm run smoke:pre-deploy` verde local e em CI.
-- Job `smoke-pre-deploy` aparece como required check.
-- Quebra intencional (ex.: alterar `messaging_product` para valor errado) faz o teste falhar.
-- Cobertura cruzada: cada provedor tem ≥ 1 teste de envio + ≥ 1 de webhook + paridade do modelo.
+- `npx playwright test e2e/navigation e2e/contacts-crud e2e/admin-queues e2e/admin-channels e2e/error-handling e2e/auth-extended` verde local.
+- Nenhum spec novo adiciona > 30s ao tempo total do CI.
+- Os 2 shards CI continuam sob 10 min cada.
