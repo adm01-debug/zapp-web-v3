@@ -23,7 +23,13 @@ interface VirtualizedMessageListProps {
 
 export interface VirtualizedMessageListRef {
   scrollToBottom: () => void;
-  scrollToMessage: (messageId: string) => void;
+  /**
+   * Scrolls the virtualized list to the message with the given internal id.
+   * Returns `true` when the id was found in the current list (the scroll
+   * may still be a 2-step process — see implementation), `false` when the
+   * caller should keep polling because the message hasn't been loaded yet.
+   */
+  scrollToMessage: (messageId: string) => boolean;
 }
 
 function formatDateSeparator(date: Date): string {
