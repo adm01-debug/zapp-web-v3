@@ -130,6 +130,7 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <button onClick={cycleSpeed} className={cn('h-6 px-1.5 rounded-full text-[10px] font-semibold transition-colors', playbackRate < 1 ? 'bg-destructive/20 hover:bg-destructive/30 text-destructive' : isSent ? 'bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground' : 'bg-primary/10 hover:bg-primary/20 text-primary')} title="Velocidade">{playbackRate}x</button>
         </motion.div>
+        <AudioVolumeControl volume={volume} onChange={setVolume} isSent={isSent} size="sm" />
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
           <Button variant="ghost" size="icon" className={cn('w-8 h-8 relative', showTranscription && transcription ? (isSent ? 'text-primary-foreground' : 'text-primary') : (isSent ? 'text-primary-foreground/50' : 'text-muted-foreground'))}
             onClick={() => { if (!transcription && !isProcessing) handleTranscribe(); else setShowTranscription(!showTranscription); }} disabled={isProcessing} title={transcription ? 'Mostrar/ocultar transcrição' : 'Transcrever áudio'}>
