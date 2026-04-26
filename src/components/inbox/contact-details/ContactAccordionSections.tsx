@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Tag, Sparkles, User, FileText, Clock, BarChart3, Brain, Info, TagsIcon, Smartphone, Image, ListTodo, Bell, TrendingUp, ShoppingBag, GitBranch, X, Activity } from 'lucide-react';
+import { Plus, Tag, Sparkles, User, FileText, Clock, BarChart3, Brain, Info, TagsIcon, Smartphone, Image, ListTodo, Bell, TrendingUp, ShoppingBag, GitBranch, X, Activity, CheckCheck } from 'lucide-react';
 import { Conversation, Contact } from '@/types/chat';
 
 import { ContactInfoSection } from './ContactInfoSection';
@@ -26,6 +26,7 @@ import { LeadRiskScorePanel } from '../LeadRiskScorePanel';
 import { ContactPurchasesPanel } from '../ContactPurchasesPanel';
 import { ConversationTimeline } from '../ConversationTimeline';
 import { SLATimelineSection } from './SLATimelineSection';
+import { DeliveryStatsPanel } from '../DeliveryStatsPanel';
 
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { log } from '@/lib/logger';
@@ -133,6 +134,10 @@ export function ContactAccordionSections({ contact, conversation, enrichedData, 
 
       <Section index={7} value="history" icon={<Clock className="w-3.5 h-3.5 text-primary" />} label="Histórico">
         <ConversationHistory contactId={contact.id} contactPhone={contact.phone} onSelectConversation={(id) => log.debug('Selected conversation:', id)} />
+      </Section>
+
+      <Section index={7.3} value="delivery-stats" icon={<CheckCheck className="w-3.5 h-3.5 text-primary" />} label="Entregas & Leituras">
+        <DeliveryStatsPanel remoteJid={contact.id} />
       </Section>
 
       <Section index={7.5} value="sla-timeline" icon={<Activity className="w-3.5 h-3.5 text-primary" />} label="Linha do tempo do atendimento">
