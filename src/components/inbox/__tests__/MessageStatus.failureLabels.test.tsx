@@ -125,23 +125,20 @@ describe('MessageStatus — failed_retries label with missing errorReason', () =
   });
 });
 
-describe('MessageStatus — documents current whitespace-only errorReason behavior', () => {
-  // NOTE: the label builder uses a truthy check on `errorReason`, so a
-  // whitespace-only string (e.g. '   ') is currently APPENDED as-is.
-  // This test pins the existing behavior so any future normalization
-  // (e.g. `.trim()`-then-fallback) is an intentional, reviewed change.
-  it('appends a whitespace-only errorReason verbatim (current behavior)', () => {
+describe('MessageStatus — whitespace-only errorReason is treated as missing', () => {
+  // The label builder normalizes `errorReason` via a safe-display coercer
+  // (`safeDisplay`) that trims strings and drops empty/whitespace-only
+  // values. A whitespace-only reason MUST render the base label only —
+  // no trailing " — " separator and no empty appendix. This is the same
+  // contract enforced for `''` and `undefined`.
+  it('renders only the base label for a whitespace-only errorReason', () => {
     const { container } = render(
       <MessageStatus status="failed_auth" showLabel detail={{ errorReason: '   ' }} />,
     );
-    // Read directly from the inline label span to avoid Radix portal noise.
     const inlineLabel = container.querySelector('span.text-xs');
     expect(inlineLabel).not.toBeNull();
-    const text = inlineLabel?.textContent ?? '';
-    // Truthy whitespace passes through: base + " — " + the spaces.
-    // We assert the em-dash separator is present and the text starts with
-    // the base label — exact trailing whitespace varies by DOM normalization.
-    expect(text.startsWith(`${FAILED_AUTH_BASE} — `)).toBe(true);
-    expect(text).not.toBe(FAILED_AUTH_BASE);
+    const text = (inlineLabel?.textContent ?? '').trim();
+    expect(text).toBe(FAILED_AUTH_BASE);
+    expect(text).not.toContain('—');
   });
 });
