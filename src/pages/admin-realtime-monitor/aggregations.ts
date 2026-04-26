@@ -45,8 +45,20 @@ export function extractAgent(row: FailedMessageRow): string {
   return UNKNOWN_AGENT;
 }
 
+/**
+ * Normaliza campos textuais que podem chegar como null, '' ou apenas espaços
+ * em branco do upstream. Whitespace-only é tratado como ausente para evitar
+ * que a UI agrupe falhas sob um "código" invisível ('   ').
+ */
+function normalizeText(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 function dispatchReason(row: FailedMessageRow): string {
-  if (row.error_code) return row.error_code;
+  const code = normalizeText(row.error_code);
+  if (code) return code;
   if (row.http_status) return `http_${row.http_status}`;
   return 'unknown';
 }
