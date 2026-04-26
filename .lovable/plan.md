@@ -1,55 +1,92 @@
 ## Objetivo
-Eliminar o erro `Maximum update depth exceeded` que ainda ocorre na home/Chat, restaurando o carregamento normal da aplicação sem depender de limpeza de cache.
+Eliminar de forma definitiva o erro `Maximum update depth exceeded` na home (`/`) e validar que o Chat volta a montar sem cair no `ErrorBoundary`.
 
-## O que será feito
-1. Remover a composição problemática de triggers Radix no Chat
-- Reestruturar os pontos onde `TooltipTrigger asChild` está envolvendo `DropdownMenuTrigger asChild` ou `PopoverTrigger asChild` no mesmo botão.
-- Aplicar a correção primeiro no caminho crítico que monta em `/`:
-  - `src/components/inbox/chat/ChatPanelHeader.tsx`
-- Ajustar os outros pontos com o mesmo padrão para evitar recorrência:
-  - `src/components/inbox/KeyboardShortcutsHelp.tsx`
-  - `src/components/inbox/chat/AIEnhanceButton.tsx`
-  - `src/components/team-chat/TeamChatHeader.tsx`
+## Problema identificado
+O erro atual não está mais apontando para permissões de rota. O stack mais recente cai em:
+- `ConversationListSidebar.tsx`
+- `@radix-ui/react-tooltip`
+- `setRef / composeRefs`
 
-2. Tornar os alvos de tooltip/menu/popover estáveis
-- Garantir que cada primitive tenha um alvo estável, sem dois `asChild` competindo pelo mesmo elemento.
-- Usar uma destas abordagens conforme o componente:
-  - mover o tooltip para um wrapper estático
-  - deixar apenas o menu/popover como trigger do botão
-  - remover tooltip redundante em ações já autoexplicativas
+Há dois padrões perigosos ainda ativos no caminho montado do Inbox:
 
-3. Validar o caminho crítico do Chat
-- Confirmar que a rota `/` volta a montar a shell e o painel do chat sem cair no ErrorBoundary.
-- Verificar que os botões “Mais ações”, ajuda/atalhos e popovers continuam funcionando após a refatoração.
+1. Tooltips usando `asChild` em elementos inline/instáveis (`span`) no sidebar
+- `src/components/inbox/ConversationListSidebar.tsx`
+- `src/components/inbox/RealtimeContactsIndicator.tsx`
 
-## Resultado esperado
-- A página inicial carrega normalmente.
-- O Chat deixa de entrar em loop de renderização.
-- Menus, popovers e tooltips continuam operando sem regressões visíveis.
-
-## Detalhes técnicos
-- O stack atual (`setRef` / `composeRefs`) é compatível com refs instáveis em primitives do Radix quando há `asChild` aninhado.
-- O padrão problemático identificado é este:
-
-```text
-TooltipTrigger asChild
-  -> DropdownMenuTrigger asChild
-    -> Button
-```
-
-ou
-
+2. Composição aninhada de primitives Radix no input do chat
 ```text
 TooltipTrigger asChild
   -> PopoverTrigger asChild
     -> Button
 ```
+Arquivos confirmados com esse padrão:
+- `src/components/inbox/TextToAudioButton.tsx`
+- `src/components/inbox/StickerPicker.tsx`
+- `src/components/inbox/VoiceChangerPicker.tsx`
+- `src/components/inbox/CustomEmojiPicker.tsx`
+- `src/components/inbox/AudioMemePicker.tsx`
+- `src/components/inbox/chat/AIRewriteButton.tsx`
 
-- Em React atual, a troca contínua da identidade do ref pode disparar cleanup + reattach em cascata, gerando `Maximum update depth exceeded`.
-- A correção será estrutural no JSX, não apenas um paliativo no hook de permissões.
+Esse padrão é compatível com o loop de refs do Radix/Slot (`setRef`, `composeRefs`) que dispara re-render em cascata.
 
-## Arquivos previstos
-- `src/components/inbox/chat/ChatPanelHeader.tsx`
-- `src/components/inbox/KeyboardShortcutsHelp.tsx`
-- `src/components/inbox/chat/AIEnhanceButton.tsx`
-- `src/components/team-chat/TeamChatHeader.tsx`
+## O que vou implementar
+### 1. Estabilizar os tooltips do sidebar
+- Remover `TooltipTrigger asChild` em `span` puros no sidebar.
+- Trocar por uma estrutura estável, por exemplo:
+  - wrapper fixo com `span/div` externo como trigger, ou
+  - remoção do tooltip quando o elemento já tem `aria-label/title` suficiente.
+- Aplicar isso em:
+  - `src/components/inbox/ConversationListSidebar.tsx`
+  - `src/components/inbox/RealtimeContactsIndicator.tsx`
+
+### 2. Desacoplar Tooltip de Popover nos controles do Chat
+- Reestruturar cada botão para que apenas um primitive controle o elemento clicável.
+- Preferência de correção:
+  - manter `PopoverTrigger asChild` no botão real
+  - mover tooltip para `title`/`aria-label` quando o botão for autoexplicativo
+  - ou envolver o botão/popover em wrapper estático, sem dois `asChild` competindo pelo mesmo nó
+- Aplicar nos componentes já confirmados:
+  - `src/components/inbox/TextToAudioButton.tsx`
+  - `src/components/inbox/StickerPicker.tsx`
+  - `src/components/inbox/VoiceChangerPicker.tsx`
+  - `src/components/inbox/CustomEmojiPicker.tsx`
+  - `src/components/inbox/AudioMemePicker.tsx`
+  - `src/components/inbox/chat/AIRewriteButton.tsx`
+
+### 3. Revisar o caminho crítico do Inbox após a refatoração
+- Verificar se o sidebar continua funcional:
+  - indicador online/offline
+  - atualizar
+  - nova conversa
+  - filtro de retry/falha
+- Verificar se os popovers do input continuam abrindo normalmente:
+  - emojis
+  - figurinhas
+  - áudio meme
+  - TTS
+  - voice changer
+  - IA rewrite
+
+### 4. Validar de verdade na preview
+Depois da implementação, vou testar o preview até confirmar:
+- a rota `/` monta o Inbox sem `Maximum update depth exceeded`
+- o `ErrorBoundary` do Chat não aparece
+- os botões do sidebar e os popovers principais continuam utilizáveis
+- se ainda houver erro, sigo para a próxima ocorrência real do stack antes de encerrar
+
+## Resultado esperado
+- A home volta a abrir normalmente.
+- O loop infinito de renderização deixa de ocorrer.
+- Os controles do Inbox/Chat continuam funcionando sem regressão visível.
+
+## Detalhes técnicos
+- O projeto usa React 18.3.1 e Radix Slot 1.2.3 / Tooltip 1.2.7.
+- Mesmo sem React 19, a combinação atual de `TooltipTrigger asChild` com `PopoverTrigger asChild` e refs compostas continua sendo um ponto de instabilidade.
+- A correção será estrutural no JSX, não um paliativo em hooks.
+- Não vou mexer no cliente gerado do backend nem em permissões de rota para este bug, porque o stack atual não aponta mais para essa área.
+
+## Validação prevista
+- Inspecionar console/runtime após a mudança
+- Abrir a rota `/` na preview
+- Confirmar visualmente que o Chat carrega
+- Exercitar ao menos os controles críticos do sidebar e do input do chat

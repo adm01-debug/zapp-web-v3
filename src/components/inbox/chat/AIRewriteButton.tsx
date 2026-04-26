@@ -4,7 +4,7 @@ import { getLogger } from '@/lib/logger';
 const log = getLogger('AIRewriteButton');
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+// Tooltip removido para evitar loop Tooltip+Popover.
 import { Sparkles, Briefcase, MessageCircle, Target, Heart, Scissors, BookOpen, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,31 +65,28 @@ export function AIRewriteButton({ inputValue, onRewrite, contactName }: AIRewrit
   const hasText = inputValue.trim().length > 0;
 
   return (
-    <Tooltip>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "w-9 h-9 shrink-0 transition-colors",
-                hasText
-                  ? "text-primary hover:text-primary hover:bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-              aria-label="Reescrever com IA"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="w-[18px] h-[18px] animate-spin" />
-              ) : (
-                <Sparkles className="w-[18px] h-[18px]" />
-              )}
-            </Button>
-          </PopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="top">Reescrever com IA</TooltipContent>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "w-9 h-9 shrink-0 transition-colors",
+            hasText
+              ? "text-primary hover:text-primary hover:bg-primary/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          )}
+          aria-label="Reescrever com IA"
+          title="Reescrever com IA"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="w-[18px] h-[18px] animate-spin" />
+          ) : (
+            <Sparkles className="w-[18px] h-[18px]" />
+          )}
+        </Button>
+      </PopoverTrigger>
       <PopoverContent className="w-64 p-2 bg-popover border-border" align="end" side="top">
         <div className="px-2 py-1.5 mb-1">
           <h4 className="text-sm font-medium text-foreground">✨ Reescrever com IA</h4>
@@ -129,7 +126,6 @@ export function AIRewriteButton({ inputValue, onRewrite, contactName }: AIRewrit
           </p>
         )}
       </PopoverContent>
-      </Popover>
-    </Tooltip>
+    </Popover>
   );
 }

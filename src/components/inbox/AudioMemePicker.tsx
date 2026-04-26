@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+// Tooltip removido para evitar loop Tooltip+Popover.
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Music, Search, Plus, Star, Trash2, Loader2, Upload, X, Play, Pause, Volume2, Tag, Check, ChevronDown } from 'lucide-react';
@@ -104,16 +104,12 @@ export function AudioMemePicker({ onSendAudio, disabled }: AudioMemePickerProps)
   });
 
   return (
-    <Tooltip>
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) cleanup(); }}>
-      <TooltipTrigger asChild>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0" disabled={disabled} aria-label="Áudio Memes">
-            <Volume2 className="w-[18px] h-[18px]" />
-          </Button>
-        </PopoverTrigger>
-      </TooltipTrigger>
-      <TooltipContent side="top">Áudio Memes</TooltipContent>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0" disabled={disabled} aria-label="Áudio Memes" title="Áudio Memes">
+          <Volume2 className="w-[18px] h-[18px]" />
+        </Button>
+      </PopoverTrigger>
       <PopoverContent className="w-[360px] p-0 bg-popover border-border" align="end" side="top" sideOffset={8}>
         <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
           <h4 className="text-sm font-semibold text-foreground flex items-center gap-2"><Music className="w-4 h-4 text-primary" />Áudios Meme</h4>
@@ -197,6 +193,5 @@ export function AudioMemePicker({ onSendAudio, disabled }: AudioMemePickerProps)
         </div>
       </PopoverContent>
     </Popover>
-    </Tooltip>
   );
 }

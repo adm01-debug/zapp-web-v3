@@ -3,7 +3,8 @@
  * Uses semantic tokens; supports compact (dot) and labeled modes.
  */
 import { Wifi, WifiOff, Loader2, AlertTriangle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+// Tooltip removido para evitar loop de refs do Radix Slot quando usado com asChild
+// em <span>. Substituído por title nativo, que cumpre o mesmo papel informativo.
 import { cn } from '@/lib/utils';
 import {
   useRealtimeContactsStatus,
@@ -63,27 +64,21 @@ export function RealtimeContactsIndicator({ className, withLabel = false }: Prop
   const isSpin = status === 'connecting' || status === 'idle';
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          role="status"
-          aria-live="polite"
-          aria-label={`Sincronização de contatos: ${meta.label}`}
-          className={cn('inline-flex items-center gap-1.5', className)}
-        >
-          {withLabel ? (
-            <>
-              <meta.Icon className={cn('w-3 h-3', meta.tone, isSpin && 'animate-spin')} />
-              <span className={cn('text-[10px] font-medium', meta.tone)}>{meta.label}</span>
-            </>
-          ) : (
-            <span className={cn('w-1.5 h-1.5 rounded-full', meta.dot)} />
-          )}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent className="text-[10px] font-medium">
-        Contatos: {meta.hint}
-      </TooltipContent>
-    </Tooltip>
+    <span
+      role="status"
+      aria-live="polite"
+      aria-label={`Sincronização de contatos: ${meta.label}`}
+      title={`Contatos: ${meta.hint}`}
+      className={cn('inline-flex items-center gap-1.5', className)}
+    >
+      {withLabel ? (
+        <>
+          <meta.Icon className={cn('w-3 h-3', meta.tone, isSpin && 'animate-spin')} />
+          <span className={cn('text-[10px] font-medium', meta.tone)}>{meta.label}</span>
+        </>
+      ) : (
+        <span className={cn('w-1.5 h-1.5 rounded-full', meta.dot)} />
+      )}
+    </span>
   );
 }

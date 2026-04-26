@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+// Tooltip removido para evitar loop de refs Tooltip+Popover (Radix Slot).
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Loader2, Play, Pause, Send, X, Wand2 } from 'lucide-react';
@@ -181,16 +181,12 @@ export function VoiceChangerPicker({ onSendAudio, disabled }: VoiceChangerPicker
   }, [transformedUrl, isSending, onSendAudio, cleanup]);
 
   return (
-    <Tooltip>
-      <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) cleanup(); }}>
-        <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0" disabled={disabled} aria-label="Voice Changer">
-              <Wand2 className="w-[18px] h-[18px]" />
-            </Button>
-          </PopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="top">Voice Changer</TooltipContent>
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) cleanup(); }}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0" disabled={disabled} aria-label="Voice Changer" title="Voice Changer">
+          <Wand2 className="w-[18px] h-[18px]" />
+        </Button>
+      </PopoverTrigger>
 
         <PopoverContent className="w-[320px] p-0 bg-popover border-border" align="end" side="top" sideOffset={8}>
           {/* Header */}
@@ -300,8 +296,7 @@ export function VoiceChangerPicker({ onSendAudio, disabled }: VoiceChangerPicker
               Grave → Escolha a voz → Transforme → Envie 🎭
             </p>
           </div>
-        </PopoverContent>
-      </Popover>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   );
 }
