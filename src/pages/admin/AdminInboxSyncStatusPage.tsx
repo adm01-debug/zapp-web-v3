@@ -441,8 +441,8 @@ export default function AdminInboxSyncStatusPage() {
                         <span className="text-muted-foreground">{timeAgo(a.created_at)}</span>
                       </div>
                       <p className="text-muted-foreground mt-0.5">
-                        {a.resource_type ?? '—'}
-                        {a.resource_id ? ` · ${a.resource_id.slice(0, 8)}…` : ''}
+                        {a.entity_type ?? '—'}
+                        {a.entity_id ? ` · ${a.entity_id.slice(0, 8)}…` : ''}
                       </p>
                     </li>
                   ))}
