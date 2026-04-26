@@ -184,6 +184,8 @@ function AppContent() {
             <Route path="/debug/send-status-bus" element={<ProtectedRoute><SendStatusBusDebug /></ProtectedRoute>} />
             <Route path="/debug/realtime-fanout" element={<ProtectedRoute><RealtimeFanoutDebug /></ProtectedRoute>} />
             <Route path="/admin/roles" element={<ProtectedRoute requiredRoles={['admin']}><RolesPage /></ProtectedRoute>} />
+            <Route path="/admin/departments" element={<ProtectedRoute requiredRoles={['admin']}><DepartmentsPage /></ProtectedRoute>} />
+            <Route path="/admin/departamentos" element={<ProtectedRoute requiredRoles={['admin']}><DepartmentsPage /></ProtectedRoute>} />
             <Route path="/admin/rate-limit" element={<ProtectedRoute requiredRoles={['admin']}><RateLimitDashboard /></ProtectedRoute>} />
             <Route path="/admin/hmac-selftest" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><HmacSelfTestPage /></ProtectedRoute>} />
             <Route path="/admin/channels" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminChannelsPage /></ProtectedRoute>} />
