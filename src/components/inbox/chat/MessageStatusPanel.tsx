@@ -144,7 +144,7 @@ export const MessageStatusPanel = memo(function MessageStatusPanel({
         },
         {
           reached: reachedRead,
-          label: message.status === 'played' ? 'Reproduzida' : 'Lida',
+          label: message.status === 'played' ? 'Reproduzida' : 'Visualizada',
           stamp: reachedRead ? formatStamp(lastUpdate) : 'ainda não',
           icon: <Eye className="h-3 w-3" />,
           highlight: true,
@@ -156,13 +156,19 @@ export const MessageStatusPanel = memo(function MessageStatusPanel({
     return [
       {
         reached: true,
-        label: 'Recebida',
+        label: 'Enviada',
         stamp: formatStamp(sentStamp),
         icon: <Check className="h-3 w-3" />,
       },
       {
+        reached: true,
+        label: 'Entregue',
+        stamp: formatStamp(message.created_at ?? sentStamp),
+        icon: <CheckCheck className="h-3 w-3" />,
+      },
+      {
         reached: reachedRead,
-        label: 'Lida por você',
+        label: 'Visualizada',
         stamp: reachedRead ? formatStamp(message.contact_read_at) : 'ainda não',
         icon: <Eye className="h-3 w-3" />,
         highlight: true,
