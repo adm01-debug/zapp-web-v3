@@ -84,13 +84,25 @@ export function MessageDetailsDialog({ messageId, open, onOpenChange }: MessageD
               <div><span className="text-muted-foreground">Bot:</span> {data.sent_by_bot ? 'Sim' : 'Não'}</div>
             </div>
 
-            <Tabs defaultValue="content" className="flex-1 overflow-hidden flex flex-col">
+            <Tabs defaultValue="timeline" className="flex-1 overflow-hidden flex flex-col">
               <TabsList className="self-start">
+                <TabsTrigger value="timeline">Linha do tempo</TabsTrigger>
                 <TabsTrigger value="content">Conteúdo</TabsTrigger>
                 <TabsTrigger value="attempts">Tentativas</TabsTrigger>
                 <TabsTrigger value="payload">Payload</TabsTrigger>
                 <TabsTrigger value="raw">Raw Data</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="timeline" className="flex-1 overflow-auto mt-2 px-1">
+                <MessageStatusTimeline
+                  messageId={data.id}
+                  status={data.status}
+                  createdAt={data.created_at}
+                  statusAt={data.status_at}
+                  direction={data.direction}
+                  fromMe={data.from_me}
+                />
+              </TabsContent>
 
               <TabsContent value="content" className="flex-1 overflow-auto mt-2">
                 <div className="space-y-2 text-sm">
