@@ -118,12 +118,12 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
   };
 
   try {
-    let data: unknown = null;
+    let data: ProxyResponse<T> | null = null;
     let error: { name?: string; message?: string } | null = null;
     const MAX_ATTEMPTS = 3;
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       const result = await supabase.functions.invoke('external-db-proxy', invokeOptions);
-      data = result.data;
+      data = result.data as ProxyResponse<T> | null;
       error = result.error as typeof error;
 
       if (!error) break;
