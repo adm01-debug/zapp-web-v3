@@ -1,92 +1,73 @@
-## Objetivo
-Eliminar de forma definitiva o erro `Maximum update depth exceeded` na home (`/`) e validar que o Chat volta a montar sem cair no `ErrorBoundary`.
+<final-text>## Correção definitiva do bug no Chat/Inbox
 
-## Problema identificado
-O erro atual não está mais apontando para permissões de rota. O stack mais recente cai em:
-- `ConversationListSidebar.tsx`
-- `@radix-ui/react-tooltip`
-- `setRef / composeRefs`
+### Diagnóstico
+O erro que ainda sobra não é mais o dos tooltips.
 
-Há dois padrões perigosos ainda ativos no caminho montado do Inbox:
+A falha atual está isolada neste caminho:
 
-1. Tooltips usando `asChild` em elementos inline/instáveis (`span`) no sidebar
-- `src/components/inbox/ConversationListSidebar.tsx`
-- `src/components/inbox/RealtimeContactsIndicator.tsx`
-
-2. Composição aninhada de primitives Radix no input do chat
 ```text
-TooltipTrigger asChild
-  -> PopoverTrigger asChild
-    -> Button
+ConversationListSidebar
+  -> ContactTypeFilter
+    -> src/components/ui/select.tsx
+      -> @radix-ui/react-select (SelectTrigger / PopperAnchor / Collection)
 ```
-Arquivos confirmados com esse padrão:
-- `src/components/inbox/TextToAudioButton.tsx`
-- `src/components/inbox/StickerPicker.tsx`
-- `src/components/inbox/VoiceChangerPicker.tsx`
-- `src/components/inbox/CustomEmojiPicker.tsx`
-- `src/components/inbox/AudioMemePicker.tsx`
-- `src/components/inbox/chat/AIRewriteButton.tsx`
 
-Esse padrão é compatível com o loop de refs do Radix/Slot (`setRef`, `composeRefs`) que dispara re-render em cascata.
+O stack do runtime aponta diretamente para `ContactTypeFilter.tsx:160` e `src/components/ui/select.tsx:26`, com loop em `setRef -> composeRefs -> SelectTrigger -> PopperAnchor`.
 
-## O que vou implementar
-### 1. Estabilizar os tooltips do sidebar
-- Remover `TooltipTrigger asChild` em `span` puros no sidebar.
-- Trocar por uma estrutura estável, por exemplo:
-  - wrapper fixo com `span/div` externo como trigger, ou
-  - remoção do tooltip quando o elemento já tem `aria-label/title` suficiente.
-- Aplicar isso em:
-  - `src/components/inbox/ConversationListSidebar.tsx`
-  - `src/components/inbox/RealtimeContactsIndicator.tsx`
+Também revisei o código e o problema restante faz sentido estruturalmente:
+- `ContactTypeFilter` usa `Select` com trigger totalmente customizado
+- o trigger renderiza um `div` manual dentro de `SelectTrigger`, em vez de usar o fluxo mais estável com `SelectValue`
+- as opções são renderizadas com wrapper extra (`<div key=...>`) envolvendo `SelectItem` + `SelectSeparator`
+- o `Select` do Radix mantém refs/estado internos para trigger, âncora popper e coleção de itens; nessa tela isso está entrando em cascata e estourando o limite de updates do React
 
-### 2. Desacoplar Tooltip de Popover nos controles do Chat
-- Reestruturar cada botão para que apenas um primitive controle o elemento clicável.
-- Preferência de correção:
-  - manter `PopoverTrigger asChild` no botão real
-  - mover tooltip para `title`/`aria-label` quando o botão for autoexplicativo
-  - ou envolver o botão/popover em wrapper estático, sem dois `asChild` competindo pelo mesmo nó
-- Aplicar nos componentes já confirmados:
-  - `src/components/inbox/TextToAudioButton.tsx`
-  - `src/components/inbox/StickerPicker.tsx`
-  - `src/components/inbox/VoiceChangerPicker.tsx`
-  - `src/components/inbox/CustomEmojiPicker.tsx`
-  - `src/components/inbox/AudioMemePicker.tsx`
-  - `src/components/inbox/chat/AIRewriteButton.tsx`
+Pesquisei referências externas e elas batem com o sintoma: há issues recentes do Radix envolvendo `PopperAnchor`, `composeRefs` e `Maximum update depth exceeded` quando há refs/efeitos internos disparando updates repetidos em componentes de overlay.
 
-### 3. Revisar o caminho crítico do Inbox após a refatoração
-- Verificar se o sidebar continua funcional:
-  - indicador online/offline
-  - atualizar
-  - nova conversa
-  - filtro de retry/falha
-- Verificar se os popovers do input continuam abrindo normalmente:
-  - emojis
-  - figurinhas
-  - áudio meme
-  - TTS
-  - voice changer
-  - IA rewrite
+### Do I know what the issue is?
+Sim.
 
-### 4. Validar de verdade na preview
-Depois da implementação, vou testar o preview até confirmar:
-- a rota `/` monta o Inbox sem `Maximum update depth exceeded`
-- o `ErrorBoundary` do Chat não aparece
-- os botões do sidebar e os popovers principais continuam utilizáveis
-- se ainda houver erro, sigo para a próxima ocorrência real do stack antes de encerrar
+O problema real é o `Select` montado no sidebar do inbox, especialmente `ContactTypeFilter`, e não mais os tooltips removidos antes.
 
-## Resultado esperado
-- A home volta a abrir normalmente.
-- O loop infinito de renderização deixa de ocorrer.
-- Os controles do Inbox/Chat continuam funcionando sem regressão visível.
+### Plano de implementação
+1. **Remover o Radix Select do `ContactTypeFilter`** no carregamento inicial do sidebar e substituir por uma implementação estável para esse filtro compacto.
+   - Preferência: botão + painel/lista controlado localmente, sem `Select`, sem `PopperAnchor`, sem registro de coleção do Radix Select.
+   - Manter label ativo, ícone, contagens e acessibilidade.
 
-## Detalhes técnicos
-- O projeto usa React 18.3.1 e Radix Slot 1.2.3 / Tooltip 1.2.7.
-- Mesmo sem React 19, a combinação atual de `TooltipTrigger asChild` com `PopoverTrigger asChild` e refs compostas continua sendo um ponto de instabilidade.
-- A correção será estrutural no JSX, não um paliativo em hooks.
-- Não vou mexer no cliente gerado do backend nem em permissões de rota para este bug, porque o stack atual não aponta mais para essa área.
+2. **Eliminar padrões de markup instáveis ligados ao filtro**.
+   - Remover wrappers extras ao redor das opções.
+   - Garantir que cada item clicável seja um único nó estável.
+   - Preservar `aria-label`, foco e navegação por teclado.
 
-## Validação prevista
-- Inspecionar console/runtime após a mudança
-- Abrir a rota `/` na preview
-- Confirmar visualmente que o Chat carrega
-- Exercitar ao menos os controles críticos do sidebar e do input do chat
+3. **Auditar os outros `Select`s do inbox que usam trigger customizado** para evitar recaída do mesmo padrão.
+   - `src/components/inbox/FailureCategoryFilter.tsx`
+   - `src/components/inbox/ConversationHistory.tsx`
+   - qualquer outro `SelectTrigger` com `div/span` custom dentro do trigger
+
+4. **Só usar atualização de dependência como complemento, não como solução principal**.
+   - Verificar se existe patch seguro para o conjunto Radix relacionado a `Select/Popper/compose-refs`
+   - aplicar apenas se fizer sentido, mas sem depender disso para o bug parar
+
+5. **Validação real no preview**.
+   - abrir `/`
+   - confirmar que o sidebar monta sem cair no `ErrorBoundary`
+   - abrir/trocar o filtro de tipo de contato várias vezes
+   - testar também o estado com retry/falha ativo
+   - confirmar ausência de novo `Maximum update depth exceeded` em runtime/console
+
+### Arquivos principais
+- `src/components/inbox/ContactTypeFilter.tsx`
+- `src/components/inbox/ConversationListSidebar.tsx`
+- `src/components/ui/select.tsx` (apenas se necessário para endurecer o wrapper compartilhado)
+- `src/components/inbox/FailureCategoryFilter.tsx`
+- `src/components/inbox/ConversationHistory.tsx`
+
+### Detalhes técnicos
+- Não vou atacar isso “no escuro” com mais remoções aleatórias.
+- A correção vai focar no ponto exato que continua no stack atual: o filtro de tipo de contato do sidebar.
+- O objetivo é tirar o inbox da dependência do caminho instável `SelectTrigger -> PopperAnchor -> ref/effect updates` já na montagem inicial.
+
+<lov-actions>
+  <lov-open-history>View History</lov-open-history>
+</lov-actions>
+<lov-actions>
+<lov-link url="https://docs.lovable.dev/tips-tricks/troubleshooting">Troubleshooting docs</lov-link>
+</lov-actions></final-text>
