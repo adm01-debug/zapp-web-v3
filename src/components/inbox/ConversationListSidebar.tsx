@@ -63,36 +63,35 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <h2 className="text-xs font-semibold text-foreground tracking-tight">Conversas</h2>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    className={cn('w-1.5 h-1.5 rounded-full', inbox.isOnline ? 'bg-success' : 'bg-destructive')}
-                    aria-label={inbox.isOnline ? 'Mensagens: online' : 'Mensagens: offline'}
-                  />
-                </TooltipTrigger>
-                <TooltipContent className="text-[10px] font-medium">
-                  Mensagens: {inbox.isOnline ? 'tempo real ativo' : 'desconectado'}
-                </TooltipContent>
-              </Tooltip>
+              <span
+                title={inbox.isOnline ? 'Mensagens: tempo real ativo' : 'Mensagens: desconectado'}
+                className={cn('w-1.5 h-1.5 rounded-full', inbox.isOnline ? 'bg-success' : 'bg-destructive')}
+                aria-label={inbox.isOnline ? 'Mensagens: online' : 'Mensagens: offline'}
+              />
               <RealtimeContactsIndicator />
             </div>
             <div className="flex items-center gap-0.5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={inbox.refetch} disabled={inbox.loading} className="w-7 h-7 rounded-lg hover:bg-muted/60 active:scale-90 transition-all duration-150" aria-label="Atualizar">
-                    <RefreshCw className={cn('w-3.5 h-3.5', inbox.loading && 'animate-spin')} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="text-[10px] font-medium">Atualizar</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => inbox.setShowNewConversation(true)} className="w-7 h-7 rounded-lg text-primary hover:bg-primary/10 active:scale-90 transition-all duration-150" aria-label="Nova conversa">
-                    <MessageSquarePlus className="w-3.5 h-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="text-[10px] font-medium">Nova Conversa</TooltipContent>
-              </Tooltip>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={inbox.refetch}
+                disabled={inbox.loading}
+                className="w-7 h-7 rounded-lg hover:bg-muted/60 active:scale-90 transition-all duration-150"
+                aria-label="Atualizar"
+                title="Atualizar"
+              >
+                <RefreshCw className={cn('w-3.5 h-3.5', inbox.loading && 'animate-spin')} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => inbox.setShowNewConversation(true)}
+                className="w-7 h-7 rounded-lg text-primary hover:bg-primary/10 active:scale-90 transition-all duration-150"
+                aria-label="Nova conversa"
+                title="Nova Conversa"
+              >
+                <MessageSquarePlus className="w-3.5 h-3.5" />
+              </Button>
             </div>
           </div>
         )}
