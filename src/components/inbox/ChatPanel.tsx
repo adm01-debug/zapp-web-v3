@@ -197,6 +197,13 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   });
 
   useEffect(() => { initResolve(); }, [conversation.contact.id]);
+
+  // Avalia regras de automação para a conversa ativa
+  useAutomations({
+    remoteJid: conversation.contact.id,
+    instanceName,
+    assignedTo: null,
+  });
   const lastMsgIdRef = useRef<string | null>(null);
   useEffect(() => {
     const lastId = messages[messages.length - 1]?.id ?? null;
