@@ -1,69 +1,118 @@
-# Plano para consertar o chat do front
+## Conector Evolution API "Modo Oficial" (WhatsApp Cloud API / Meta)
 
-Encontrei a causa principal do bug: o Inbox principal ainda está preso no modo legado local, enquanto o projeto já migrou o WhatsApp/CRM para o backend canônico de mensagens.
+Hoje o sistema já tem o **flag** `api_type = 'official' | 'evolution'` em `whatsapp_connections` e a UI permite alternar, mas **não existe integração real** com a API oficial. Toda mensagem outbound passa pela Evolution (`evolution-api` edge function → `send-text`/`send-media`) e toda mensagem inbound chega pelo `evolution-webhook`. O modelo de dados (`evolution_messages`, `evolution_contacts`, `evolution_conversations` no FATOR X) é o ponto de unificação.
 
-Hoje o front do Inbox está usando:
-- `useRealtimeInbox.ts` com `USE_EXTERNAL_DB = false`
-- leitura/escrita em `public.messages` e `public.contacts`
-- envio via `messageSender.ts` olhando `contacts/whatsapp_connections` locais
+O objetivo é plugar o WhatsApp Cloud API oficial (Meta Graph) **sem mudar uma linha** dos hooks/UI do Inbox: toda mensagem oficial cai no mesmo schema FATOR X, a UI continua agnóstica.
 
-Mas a arquitetura atual do projeto diz que o chat real está em:
-- `evolution_messages` / `evolution_conversations`
-- leitura via proxy/RPC do FATOR X
-- webhook canônico como fonte da verdade
+### Arquitetura
 
-Resultado: o front abre um chat “errado”, não acompanha as mensagens reais que chegam, e também tenta enviar pelo caminho antigo.
+```text
+                 ┌─────────────── Inbox UI / hooks ───────────────┐
+                 │  (sem mudanças — fala apenas em "rpc_*"        │
+                 │   e em "evolution-api" via supabase.functions) │
+                 └────────────────────┬───────────────────────────┘
+                                      │
+                       ┌──────────────▼───────────────┐
+                       │   provider-router (existe,    │
+                       │   estendido)                  │
+                       │   lê api_type da connection   │
+                       └──────┬───────────────┬───────┘
+                              │               │
+                  api_type=evolution     api_type=official
+                              │               │
+                  ┌───────────▼───┐   ┌───────▼─────────┐
+                  │ evolution-api │   │ whatsapp-cloud- │
+                  │   (atual)     │   │  api  (NOVO)    │
+                  └───────┬───────┘   └────────┬────────┘
+                          │                    │
+                Evolution server          graph.facebook.com
+                          │                    │
+                evolution-webhook        whatsapp-cloud-webhook (NOVO)
+                          │                    │
+                          └────────┬───────────┘
+                                   ▼
+                       FATOR X — evolution_messages
+                       (mesmo schema, mesma tabela)
+```
 
-## O que vou corrigir
+### O que será criado
 
-### 1) Trocar o Inbox para a fonte de dados correta
-- Remover o hardcode legado em `src/hooks/useRealtimeInbox.ts`.
-- Fazer a sidebar e o chat aberto consumirem a fonte externa como padrão.
-- Parar de depender de `useRealtimeMessages` / `useMessages` para o Inbox principal.
-- Usar o fluxo já existente para mensagens externas (`useExternalConversations` + cursor/realtime externo) como base oficial do chat.
+1. **Tabela `whatsapp_official_credentials`** (Lovable Cloud)
+   - `connection_id` (FK → whatsapp_connections, unique)
+   - `phone_number_id`, `waba_id`, `business_account_id`
+   - `access_token` (criptografado — service role only via RLS)
+   - `app_secret` (para validar webhook X-Hub-Signature)
+   - `verify_token` (para handshake do webhook Meta)
+   - RLS: SELECT/UPDATE só admin; service_role acessa nas edge functions
 
-### 2) Restaurar recebimento de mensagens no front
-- Garantir que o chat aberto observe `evolution_messages` e/ou o cursor externo em vez da tabela local `messages`.
-- Ajustar a atualização da conversa selecionada para refletir novas mensagens recebidas sem precisar recarregar manualmente.
-- Validar o mapeamento de status/timestamps para que a bolha apareça no chat certo.
+2. **Edge function `whatsapp-cloud-api`** (NOVA)
+   - Mesma assinatura externa que `evolution-api` (`{ action, instanceName, number, text, ... }`)
+   - Ações suportadas: `send-text`, `send-media`, `send-audio`, `send-sticker`, `send-template`, `mark-read`, `send-reaction`, `presence`
+   - Traduz para Graph API: `POST https://graph.facebook.com/v21.0/{phone_number_id}/messages`
+   - Após resposta OK, **insere via `rpc_insert_message`** no FATOR X com mesmo formato (`from_me=true`, `direction=outbound`, `message_id` = wamid retornado pela Meta)
+   - Mesmo envelope de resposta usado pela `evolution-api` (`{ key: { id }, status }`) para que `externalMessageSender.ts` continue funcionando sem if/else
 
-### 3) Restaurar envio pelo front no pipeline canônico
-- Substituir o envio legado do Inbox por um sender compatível com o backend real.
-- O envio do chat vai:
-  - resolver o contato/instância pelo backend canônico,
-  - chamar a função de envio correta,
-  - registrar/espelhar a mensagem na fonte usada pelo Inbox,
-  - reconciliar a bolha otimista quando o retorno/webhook confirmar.
-- Corrigir também ações do input que ainda gravam direto em `supabase.from('messages')` no `ChatPanel`.
+3. **Edge function `whatsapp-cloud-webhook`** (NOVA)
+   - GET → handshake (echo `hub.challenge` quando `hub.verify_token` bate)
+   - POST → valida `X-Hub-Signature-256` com `app_secret`
+   - Normaliza payload Meta → mesmo shape que os handlers Evolution já usam (`messages.upsert`, `messages.update`, `contacts.upsert`)
+   - Reusa `handleIncomingMessage` de `_shared/evolution-webhook-messages.ts` (refatorado para aceitar payload já normalizado) → grava em `evolution_messages` via `rpc_insert_message`
+   - Grava status delivery (`sent` / `delivered` / `read` / `failed`) atualizando `evolution_messages.status`
 
-### 4) Preservar feedback visual do operador
-- Manter o banner de erro/retry que já existe.
-- Ligar o status inline e a timeline ao fluxo real de mensagens para que “queued/sent/delivered/read” reflitam o chat correto.
-- Garantir que o chat continue mostrando a bolha imediatamente ao enviar, sem sumir ao refetch.
+4. **Roteador de envio** — pequeno wrapper em `src/hooks/realtime/messageSender.ts`
+   - Antes de invocar `evolution-api`, lê `connection.api_type`
+   - Se `official` → invoca `whatsapp-cloud-api` (mesma shape de body)
+   - Se `evolution` → comportamento atual
+   - **Nada mais muda** no hook/UI
 
-### 5) Fazer uma limpeza de regressões ligadas ao preview
-- Corrigir o problema de CSS visto no dev-server (`@import must precede all other statements`) para evitar preview/HMR instável durante o teste.
-- Revisar qualquer teste falso-positivo do chat: há indício de teste prometido anteriormente que nem existe no caminho esperado, então vou alinhar a cobertura com o fluxo real do Inbox.
+5. **UI de configuração da credencial oficial**
+   - Em `ConnectionsView`, quando `api_type='official'` e sem credencial, mostrar botão "Configurar Cloud API"
+   - Dialog com campos: Phone Number ID, WABA ID, Access Token, App Secret, Verify Token
+   - Botão "Testar conexão" → chama `whatsapp-cloud-api` action `ping` (faz GET no `phone_number_id` na Graph API)
+   - Mostra a URL do webhook a configurar no painel da Meta
 
-## Validação que vou fazer depois da correção
-- Abrir o Inbox principal.
-- Confirmar que mensagens recebidas aparecem no front sem refresh manual.
-- Enviar mensagem pelo campo do chat e verificar:
-  - bolha aparece na hora,
-  - status evolui no front,
-  - mensagem chega no celular,
-  - recarregar a tela não faz a mensagem sumir.
-- Repetir com pelo menos texto e áudio, e revisar os outros atalhos do input que ainda usam o caminho antigo.
+### Detalhes técnicos
 
-## Detalhes técnicos
-- Arquivos principais a mexer:
-  - `src/hooks/useRealtimeInbox.ts`
-  - `src/hooks/useExternalEvolution.ts` e/ou `src/hooks/useMessagesCursor.ts`
-  - `src/hooks/realtime/messageSender.ts` ou novo sender externo específico do Inbox
-  - `src/components/inbox/ChatPanel.tsx`
-  - `src/components/inbox/chat/useChatPanelHandlers.ts`
-  - `src/index.css` se o erro de `@import` estiver quebrando o preview
-- Não vou mexer no cliente auto-gerado de backend.
-- A correção vai seguir a arquitetura já definida no projeto: Inbox usando o backend externo como fonte da verdade para WhatsApp/CRM.
+- **Mapping Meta → modelo unificado** (gravado em `evolution_messages`):
+  - `wamid` (Meta) → `message_id`
+  - `from` (E.164) → `remote_jid` = `<numero>@s.whatsapp.net`
+  - `text.body` → `content`, `message_type='text'`
+  - `image/audio/video/document` → baixar via `media_id` Graph API → upload no bucket `whatsapp-media` (já existente) → URL persistida em `media_url`
+  - `interactive` / `button_reply` / `list_reply` → `message_type='interactive'`, payload completo em `metadata`
+  - Status callbacks → UPDATE em `evolution_messages.status`
+- **Idempotência**: usar `wamid` como chave (já é unique no schema), retry seguro
+- **Templates**: action `send-template` para mensagens fora da janela 24h (obrigatório na Cloud API)
+- **Rate limit**: respeitar `429` da Meta com backoff, mesmo padrão do `external-db-proxy`
+- **Telemetria**: registrar em `provider_call_logs` (já existe) com `provider_type='whatsapp_cloud'`
+- **CORS / auth**: `verify_jwt = false` no webhook (Meta não envia JWT); validação por HMAC obrigatória
 
-Assim que você aprovar, eu aplico a correção direto no front e valido o fluxo real do chat.
+### Arquivos
+
+**Criar:**
+- `supabase/functions/whatsapp-cloud-api/index.ts` — proxy para Graph API
+- `supabase/functions/whatsapp-cloud-webhook/index.ts` — receiver Meta
+- `supabase/functions/_shared/whatsapp-cloud-normalizer.ts` — Meta payload → modelo Evolution
+- `src/components/connections/OfficialApiConfigDialog.tsx` — UI de credenciais
+- `supabase/config.toml` — adicionar bloco `verify_jwt = false` para o webhook
+- Migração: tabela `whatsapp_official_credentials` + RLS + função `get_official_credentials(connection_id)` security definer
+
+**Editar:**
+- `src/hooks/realtime/messageSender.ts` — escolher edge function por `api_type`
+- `src/hooks/realtime/externalMessageSender.ts` — idem
+- `src/components/connections/ConnectionCard.tsx` — botão "Configurar Cloud API" quando oficial
+- `supabase/functions/_shared/evolution-webhook-messages.ts` — extrair `handleIncomingMessage` para receber payload pré-normalizado (refator mínimo)
+
+### O que NÃO muda
+
+- Schema `evolution_messages` / `evolution_contacts` no FATOR X
+- Nenhum componente do Inbox, Kanban, CRM, Reports
+- RPCs FATOR X (continuam sendo chamadas pelas mesmas edges)
+- Sticky agent, roteamento, SLA, CSAT — todos agnósticos
+
+### Critério de aceite
+
+1. Criar conexão com `api_type='official'`, configurar credenciais Meta, clicar "Testar" → toast de sucesso
+2. Enviar texto pelo Inbox numa conversa dessa conexão → mensagem aparece no FATOR X com `message_type='text'`, `from_me=true`, `message_id=wamid`
+3. Receber texto da Meta no webhook → conversa nova/atualizada no Inbox em <2s, igual ao fluxo Evolution
+4. Receber callback de status `delivered`/`read` → checkmarks atualizam em tempo real (realtime já existente)
+5. Conexões `evolution` continuam funcionando sem regressão
