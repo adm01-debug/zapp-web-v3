@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { externalClient } from '@/integrations/supabase/externalClient';
+import { getExternalSupabase } from '@/integrations/supabase/externalClient';
 
 export interface ParticipantStats {
   participantJid: string;
@@ -75,6 +75,7 @@ export function useDeliveryStats(remoteJid: string | undefined, instance = 'wpp2
     enabled: !!remoteJid,
     staleTime: 30_000,
     queryFn: async () => {
+      const externalClient = getExternalSupabase();
       const { data, error } = await externalClient.rpc('rpc_list_messages', {
         p_remote_jid: remoteJid!,
         p_instance: instance,
