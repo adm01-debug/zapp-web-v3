@@ -13,7 +13,8 @@
  * Defensivo: usa `test.skip` quando o usuário de teste não tem conversas,
  * input de chat, ou campo de upload disponível — evita falsos negativos.
  */
-import { test, expect, type Route, type Page } from "./fixtures/auth";
+import { test, expect } from "./fixtures/auth";
+import type { Route, Page } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs";
 import os from "node:os";
