@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { formatDateSeparator } from './messageUtils';
 import { MessageBubble } from './MessageBubble';
 import { ConversationDeliverySummary } from './ConversationDeliverySummary';
+import { MessageStatusFilterBar, filterMessagesByStatus, type MessageStatusFilter } from './MessageStatusFilterBar';
 import {
   recordLoadOlderStarted,
   recordLoadOlderCancelled,
