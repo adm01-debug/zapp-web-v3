@@ -8562,7 +8562,7 @@ export type Database = {
           {
             foreignKeyName: "sticky_assignments_contact_id_fkey"
             columns: ["contact_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
@@ -10562,6 +10562,31 @@ export type Database = {
         }
         Returns: Json
       }
+      fn_sticky_upsert: {
+        Args: {
+          p_agent_profile_id: string
+          p_channel_id?: string
+          p_contact_id: string
+          p_queue_id?: string
+          p_source?: string
+        }
+        Returns: {
+          agent_profile_id: string
+          channel_connection_id: string | null
+          contact_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_assigned_at: string
+          queue_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sticky_assignments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_channel_credentials: {
         Args: { _connection_id: string }
         Returns: Json
@@ -11333,6 +11358,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      rpc_route_inbound_message: {
+        Args: {
+          p_channel_id?: string
+          p_contact_id: string
+          p_queue_id?: string
+        }
+        Returns: Json
       }
       rpc_route_incoming_message: {
         Args: { p_connection_id: string; p_contact_id: string }
