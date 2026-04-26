@@ -24,12 +24,16 @@ const FAILED_RETRIES_BASE = 'Falhou após várias tentativas';
 
 function getLabelTexts(): string[] {
   // `showLabel` mounts an inline <span> AND the tooltip content also carries
-  // the label text. Collect every node whose text matches so we can assert
-  // the rendered string deterministically.
+  // the label text. Collect every node whose text starts with one of the
+  // known failure label prefixes (base or "Falhou após N tentativas").
   return screen.getAllByText((_, node) => {
     if (!node) return false;
     const text = node.textContent ?? '';
-    return text.startsWith(FAILED_AUTH_BASE) || text.startsWith(FAILED_RETRIES_BASE);
+    return (
+      text.startsWith(FAILED_AUTH_BASE) ||
+      text.startsWith(FAILED_RETRIES_BASE) ||
+      /^Falhou após \d+ tentativas$/.test(text)
+    );
   }).map(n => n.textContent ?? '');
 }
 
