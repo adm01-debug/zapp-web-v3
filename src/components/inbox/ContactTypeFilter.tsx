@@ -1,16 +1,8 @@
-import React, { useMemo } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import {
   Users, MessageSquare, UsersRound, FileText, ShieldCheck,
-  ClipboardList, Handshake, UserCheck, Truck, Wrench,
+  ClipboardList, Handshake, UserCheck, Truck, Wrench, ChevronDown,
 } from 'lucide-react';
 import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
 import { isGroup as isGroupJid } from '@/lib/jid';
@@ -27,11 +19,6 @@ export interface FilterOption {
   match: (c: ConversationWithMessages) => boolean;
 }
 
-/**
- * Detecta grupo a partir do campo `phone` do contato.
- * Usa o helper canônico `isGroup` (sufixo @g.us) e, como fallback,
- * o padrão legado de phone sem sufixo `<participant>-<timestamp>`.
- */
 const isGroup = (phone: string | null | undefined): boolean => {
   if (!phone) return false;
   if (isGroupJid(phone)) return true;
@@ -39,122 +26,45 @@ const isGroup = (phone: string | null | undefined): boolean => {
 };
 
 export const FILTER_OPTIONS: FilterOption[] = [
-  {
-    value: 'all',
-    label: 'Todos os tipos',
-    icon: Users,
-    iconColor: 'text-muted-foreground',
-    match: () => true,
-  },
-  {
-    value: 'individual',
-    label: 'Chats Individuais',
-    icon: MessageSquare,
-    iconColor: 'text-primary',
-    match: (c) => !isGroup(c.contact.phone),
-  },
-  {
-    value: 'grupo',
-    label: 'Todos os Grupos',
-    icon: UsersRound,
-    iconColor: 'text-warning',
-    match: (c) => isGroup(c.contact.phone),
-  },
-  {
-    value: 'grupo_orcamentos',
-    label: 'Orçamentos | Fornecedores',
-    icon: FileText,
-    iconColor: 'text-info',
-    indent: true,
-    match: (c) => isGroup(c.contact.phone) && c.contact.group_category === 'orcamentos',
-  },
-  {
-    value: 'grupo_aprovacao',
-    label: 'Aprovação | Fornecedores',
-    icon: ShieldCheck,
-    iconColor: 'text-success',
-    indent: true,
-    match: (c) => isGroup(c.contact.phone) && c.contact.group_category === 'aprovacao',
-  },
-  {
-    value: 'grupo_os',
-    label: 'O.S. | Fornecedores',
-    icon: ClipboardList,
-    iconColor: 'text-warning',
-    indent: true,
-    match: (c) => isGroup(c.contact.phone) && c.contact.group_category === 'os',
-  },
-  {
-    value: 'grupo_acerto',
-    label: 'Acerto | Fornecedores',
-    icon: Handshake,
-    iconColor: 'text-secondary',
-    indent: true,
-    match: (c) => isGroup(c.contact.phone) && c.contact.group_category === 'acerto',
-  },
-  {
-    value: 'grupo_sem_categoria',
-    label: 'Grupos sem categoria',
-    icon: UsersRound,
-    iconColor: 'text-muted-foreground',
-    indent: true,
-    match: (c) => isGroup(c.contact.phone) && !c.contact.group_category,
-  },
-  {
-    value: 'cliente',
-    label: 'Clientes',
-    icon: Users,
-    iconColor: 'text-info',
-    match: (c) => !isGroup(c.contact.phone) && (c.contact.contact_type || 'cliente') === 'cliente',
-  },
-  {
-    value: 'colaborador',
-    label: 'Colaboradores',
-    icon: UserCheck,
-    iconColor: 'text-success',
-    match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'colaborador',
-  },
-  {
-    value: 'fornecedor',
-    label: 'Fornecedores',
-    icon: Truck,
-    iconColor: 'text-secondary',
-    match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'fornecedor',
-  },
-  {
-    value: 'prestador_servico',
-    label: 'Prestadores de Serviço',
-    icon: Wrench,
-    iconColor: 'text-warning',
-    match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'prestador_servico',
-  },
-  {
-    value: 'transportadora',
-    label: 'Transportadoras',
-    icon: Truck,
-    iconColor: 'text-info',
-    match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'transportadora',
-  },
+  { value: 'all', label: 'Todos os tipos', icon: Users, iconColor: 'text-muted-foreground', match: () => true },
+  { value: 'individual', label: 'Chats Individuais', icon: MessageSquare, iconColor: 'text-primary',
+    match: (c) => !isGroup(c.contact.phone) },
+  { value: 'grupo', label: 'Todos os Grupos', icon: UsersRound, iconColor: 'text-warning',
+    match: (c) => isGroup(c.contact.phone) },
+  { value: 'grupo_orcamentos', label: 'Orçamentos | Fornecedores', icon: FileText, iconColor: 'text-info', indent: true,
+    match: (c) => isGroup(c.contact.phone) && c.contact.group_category === 'orcamentos' },
+  { value: 'grupo_aprovacao', label: 'Aprovação | Fornecedores', icon: ShieldCheck, iconColor: 'text-success', indent: true,
+    match: (c) => isGroup(c.contact.phone) && c.contact.group_category === 'aprovacao' },
+  { value: 'grupo_os', label: 'O.S. | Fornecedores', icon: ClipboardList, iconColor: 'text-warning', indent: true,
+    match: (c) => isGroup(c.contact.phone) && c.contact.group_category === 'os' },
+  { value: 'grupo_acerto', label: 'Acerto | Fornecedores', icon: Handshake, iconColor: 'text-secondary', indent: true,
+    match: (c) => isGroup(c.contact.phone) && c.contact.group_category === 'acerto' },
+  { value: 'grupo_sem_categoria', label: 'Grupos sem categoria', icon: UsersRound, iconColor: 'text-muted-foreground', indent: true,
+    match: (c) => isGroup(c.contact.phone) && !c.contact.group_category },
+  { value: 'cliente', label: 'Clientes', icon: Users, iconColor: 'text-info',
+    match: (c) => !isGroup(c.contact.phone) && (c.contact.contact_type || 'cliente') === 'cliente' },
+  { value: 'colaborador', label: 'Colaboradores', icon: UserCheck, iconColor: 'text-success',
+    match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'colaborador' },
+  { value: 'fornecedor', label: 'Fornecedores', icon: Truck, iconColor: 'text-secondary',
+    match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'fornecedor' },
+  { value: 'prestador_servico', label: 'Prestadores de Serviço', icon: Wrench, iconColor: 'text-warning',
+    match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'prestador_servico' },
+  { value: 'transportadora', label: 'Transportadoras', icon: Truck, iconColor: 'text-info',
+    match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'transportadora' },
 ];
 
-// Separators go AFTER these values
 const SEPARATOR_AFTER = new Set(['individual', 'grupo_sem_categoria']);
 
 // ---------- stats helper ----------
 
-interface FilterStats {
-  count: number;
-  unread: number;
-}
+interface FilterStats { count: number; unread: number; }
 
 function computeStats(
   conversations: ConversationWithMessages[],
   options: FilterOption[],
 ): Record<string, FilterStats> {
   const stats: Record<string, FilterStats> = {};
-  for (const opt of options) {
-    stats[opt.value] = { count: 0, unread: 0 };
-  }
+  for (const opt of options) stats[opt.value] = { count: 0, unread: 0 };
   for (const c of conversations) {
     for (const opt of options) {
       if (opt.match(c)) {
@@ -174,56 +84,108 @@ interface ContactTypeFilterProps {
   conversations: ConversationWithMessages[];
 }
 
-export const ContactTypeFilter = React.forwardRef<HTMLDivElement, ContactTypeFilterProps>(function ContactTypeFilter({ value, onChange, conversations }, ref) {
-  const stats = useMemo(
-    () => computeStats(conversations, FILTER_OPTIONS),
-    [conversations],
-  );
+/**
+ * Filtro compacto de tipo de contato.
+ *
+ * Implementação nativa (button + painel absoluto) — substitui o uso anterior
+ * de Radix Select para evitar o loop "Maximum update depth exceeded" causado
+ * pela cascata SelectTrigger -> PopperAnchor -> composeRefs no sidebar.
+ */
+export function ContactTypeFilter({ value, onChange, conversations }: ContactTypeFilterProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const activeOption = FILTER_OPTIONS.find((o) => o.value === (value || 'all'));
-  const TriggerIcon = activeOption?.icon || Users;
+  const stats = useMemo(() => computeStats(conversations, FILTER_OPTIONS), [conversations]);
+
+  const activeOption = FILTER_OPTIONS.find((o) => o.value === (value || 'all')) ?? FILTER_OPTIONS[0];
+  const TriggerIcon = activeOption.icon;
+
+  const handleSelect = useCallback((next: string) => {
+    setOpen(false);
+    onChange(next === 'all' ? null : next);
+  }, [onChange]);
+
+  // Click outside + Esc
+  useEffect(() => {
+    if (!open) return;
+    const onDocDown = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDocDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
 
   return (
-    <Select
-      value={value || 'all'}
-      onValueChange={(v) => onChange(v === 'all' ? null : v)}
-    >
-      <SelectTrigger className="h-7 text-[11px] bg-muted/40 border-0 rounded-md focus:ring-1 focus:ring-primary/30 px-2 gap-1">
-        <div className="flex items-center gap-1 truncate">
-          <TriggerIcon className={cn('w-3 h-3 shrink-0', activeOption?.iconColor || 'text-muted-foreground')} />
-          <span className="truncate">{activeOption?.label || 'Todos'}</span>
-        </div>
-      </SelectTrigger>
-      <SelectContent>
-        {FILTER_OPTIONS.map((opt) => {
-          const Icon = opt.icon;
-          const st = stats[opt.value];
-          return (
-            <div key={opt.value}>
-              <SelectItem value={opt.value}>
-                <span className={cn('flex items-center gap-2', opt.indent && 'pl-3')}>
+    <div ref={containerRef} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Filtro: ${activeOption.label}`}
+        className={cn(
+          'flex items-center justify-between w-full h-7 text-[11px] bg-muted/40 border-0 rounded-md',
+          'focus:outline-none focus:ring-1 focus:ring-primary/30 px-2 gap-1',
+        )}
+      >
+        <span className="flex items-center gap-1 truncate">
+          <TriggerIcon className={cn('w-3 h-3 shrink-0', activeOption.iconColor)} />
+          <span className="truncate">{activeOption.label}</span>
+        </span>
+        <ChevronDown className="w-3 h-3 opacity-60 shrink-0" />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          aria-label="Tipos de contato"
+          className={cn(
+            'absolute z-50 mt-1 left-0 min-w-[220px] max-h-[360px] overflow-y-auto',
+            'rounded-md border bg-popover text-popover-foreground shadow-md p-1',
+          )}
+        >
+          {FILTER_OPTIONS.map((opt, idx) => {
+            const Icon = opt.icon;
+            const st = stats[opt.value];
+            const selected = (value || 'all') === opt.value;
+            const showSeparator = SEPARATOR_AFTER.has(opt.value) && idx < FILTER_OPTIONS.length - 1;
+            return (
+              <React.Fragment key={opt.value}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => handleSelect(opt.value)}
+                  className={cn(
+                    'w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-left text-[11px]',
+                    'hover:bg-accent hover:text-accent-foreground focus:outline-none focus:bg-accent',
+                    selected && 'bg-accent/60',
+                    opt.indent && 'pl-5',
+                  )}
+                >
                   <Icon className={cn('w-3.5 h-3.5 shrink-0', opt.iconColor)} />
-                  <span className="flex-1 truncate text-[11px]">{opt.label}</span>
+                  <span className="flex-1 truncate">{opt.label}</span>
                   {st.count > 0 && (
                     <span className="ml-auto flex items-center gap-1 shrink-0">
-                      <span className="text-[9px] text-muted-foreground font-medium tabular-nums">
-                        {st.count}
-                      </span>
-                      {st.unread > 0 && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                      )}
+                      <span className="text-[9px] text-muted-foreground font-medium tabular-nums">{st.count}</span>
+                      {st.unread > 0 && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                     </span>
                   )}
-                </span>
-              </SelectItem>
-              {SEPARATOR_AFTER.has(opt.value) && <SelectSeparator />}
-            </div>
-          );
-        })}
-      </SelectContent>
-    </Select>
+                </button>
+                {showSeparator && <div className="-mx-1 my-1 h-px bg-muted" />}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
-});
+}
 
 // ---------- helper for filtering ----------
 
