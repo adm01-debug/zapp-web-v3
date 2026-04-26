@@ -62,6 +62,10 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         setDuration((prev) => {
           if (prev >= maxDuration) {
             stopRecording();
+            toast({
+              title: 'Limite de gravação atingido',
+              description: `O áudio foi encerrado em ${Math.floor(maxDuration / 60)} min (limite máximo).`,
+            });
             return prev;
           }
           return prev + 1;
