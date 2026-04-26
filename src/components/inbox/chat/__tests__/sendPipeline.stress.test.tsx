@@ -206,8 +206,8 @@ describe('Inbox send pipeline — 100+ iteration UI stress', () => {
               longitude: -48.95,
               name: `Anápolis Loja ${i}`,
             });
+            pushFromSender('location', `📍 Anápolis Loja ${i}`);
           });
-          pushFromSender('location', `📍 Anápolis Loja ${i}`);
           break;
         }
         case 'interactive': {
@@ -220,8 +220,8 @@ describe('Inbox send pipeline — 100+ iteration UI stress', () => {
                 { type: 'reply', id: 'no', title: 'Não' },
               ],
             } as any);
+            pushFromSender('interactive', `🔘 Confirma o pedido #${i}?`);
           });
-          pushFromSender('interactive', `🔘 Confirma o pedido #${i}?`);
           break;
         }
         case 'audio': {
