@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getWhatsAppMode,
@@ -32,6 +31,7 @@ export default function AdminWhatsAppModePage() {
   }, []);
 
   useEffect(() => {
+    document.title = "Modo WhatsApp — Oficial vs Não-oficial";
     refresh();
   }, [refresh]);
 
@@ -70,14 +70,6 @@ export default function AdminWhatsAppModePage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <Helmet>
-        <title>Modo WhatsApp — Oficial vs Não-oficial</title>
-        <meta
-          name="description"
-          content="Alterne entre WhatsApp Cloud API (oficial) e Evolution API (não-oficial)."
-        />
-      </Helmet>
-
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Modo de WhatsApp</h1>
         <p className="text-sm text-muted-foreground">
