@@ -22,6 +22,7 @@ import { useFailureReason, formatFailureReason } from '@/hooks/inbox/useFailureR
 import { clearSendStatus } from '@/hooks/realtime/sendStatusBus';
 import { useInboxStatusPref } from '@/hooks/useInboxStatusPref';
 import { MessageStatusPanel } from './MessageStatusPanel';
+import { MessageStatusTimestamps } from './MessageStatusTimestamps';
 
 interface MessageStatusInlineProps {
   message: Pick<
@@ -156,6 +157,7 @@ export const MessageStatusInline = memo(function MessageStatusInline({
             {labelText}
           </span>
         )}
+        <MessageStatusTimestamps message={message} className="ml-1" />
       </button>
     </MessageStatusPanel>
   );

@@ -9,6 +9,7 @@ import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { MessageStatusIcon } from './messageUtils';
 import { MessageStatusPanel } from './MessageStatusPanel';
+import { MessageStatusTimestamps } from './MessageStatusTimestamps';
 import { useInboxStatusPref } from '@/hooks/useInboxStatusPref';
 import type { Message } from '@/types/chat';
 
@@ -55,6 +56,7 @@ export const MessageReadStatus = memo(function MessageReadStatus({
             {reachedRead ? 'Lida' : 'Recebida'}
           </span>
         )}
+        <MessageStatusTimestamps message={message} className="ml-1" />
       </button>
     </MessageStatusPanel>
   );
