@@ -134,18 +134,24 @@ describe('PTT FATOR X — stress UI (120 iterações)', () => {
 
   it('envia 120 PTTs, mostra bolha otimista e reconcilia após webhook', async () => {
     // Mock do sender externo — simula upload + invoke + bolha otimista.
+    // Alternamos cenários reais:
+    //   - seq par:   sender resolveu `external_id` (proxy devolveu `key.id`).
+    //   - seq ímpar: sender NÃO resolveu (proxy devolveu envelope sem key) →
+    //                a otimista fica sem external_id e a reconciliação cai no
+    //                fallback de mídia (sender + message_type + janela).
     let seq = 0;
     const sendSpy = vi.spyOn(externalSender, 'sendExternalAudio').mockImplementation(
-      async (jid: string) => {
+      async (_jid: string) => {
         seq += 1;
         const optimistic = makeOptimisticAudioBubble(
           seq,
           `https://signed.example/audio/${seq}.webm?token=abc`,
         );
-        // Após o invoke, o sender real seta `external_id` + `status='sent'`.
         const externalId = `WAID-${seq.toString().padStart(5, '0')}`;
-        optimistic.external_id = externalId;
-        optimistic.status = 'sent';
+        if (seq % 2 === 0) {
+          optimistic.external_id = externalId;
+          optimistic.status = 'sent';
+        }
         return { optimistic, externalId };
       },
     );
