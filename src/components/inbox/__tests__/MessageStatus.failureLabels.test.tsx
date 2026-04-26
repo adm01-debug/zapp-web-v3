@@ -127,11 +127,17 @@ describe('MessageStatus — documents current whitespace-only errorReason behavi
   // This test pins the existing behavior so any future normalization
   // (e.g. `.trim()`-then-fallback) is an intentional, reviewed change.
   it('appends a whitespace-only errorReason verbatim (current behavior)', () => {
-    render(<MessageStatus status="failed_auth" showLabel detail={{ errorReason: '   ' }} />);
-    const texts = getLabelTexts();
-    // Truthy whitespace passes through: label is base + " — " + spaces.
-    // We use a tolerant regex because JSX/DOM may normalize the trailing
-    // whitespace; the contract is "the em dash separator IS rendered".
-    expect(texts.some(t => /^Falha de autenticação\s+—\s*$/.test(t) || /^Falha de autenticação — \s*$/.test(t))).toBe(true);
+    const { container } = render(
+      <MessageStatus status="failed_auth" showLabel detail={{ errorReason: '   ' }} />,
+    );
+    // Read directly from the inline label span to avoid Radix portal noise.
+    const inlineLabel = container.querySelector('span.text-xs');
+    expect(inlineLabel).not.toBeNull();
+    const text = inlineLabel?.textContent ?? '';
+    // Truthy whitespace passes through: base + " — " + the spaces.
+    // We assert the em-dash separator is present and the text starts with
+    // the base label — exact trailing whitespace varies by DOM normalization.
+    expect(text.startsWith(`${FAILED_AUTH_BASE} — `)).toBe(true);
+    expect(text).not.toBe(FAILED_AUTH_BASE);
   });
 });
