@@ -47,7 +47,7 @@ export const useMessageStatus = (contactId?: string) => {
         }
 
         if (data) {
-          const statusMap = new Map<string, MessageStatusUpdate>();
+          const statusMap = new Map<string, MessageStatusDbRow>();
           data.forEach((msg) => {
             if (msg.status) {
               statusMap.set(msg.id, {
