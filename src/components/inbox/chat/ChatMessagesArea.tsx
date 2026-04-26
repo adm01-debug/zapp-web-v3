@@ -121,17 +121,31 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     registerMessageRef: (messageId: string, el: HTMLDivElement | null) => {
       messageRefs.current[messageId] = el;
     },
-    scrollToMessage: (messageId: string) => {
+    scrollToMessage: (messageId: string): boolean => {
       const element = messageRefs.current[messageId];
       const container = scrollContainerRef.current;
-      if (element && container) {
-        const elementTop = element.offsetTop - container.offsetTop;
-        container.scrollTo({ top: elementTop - (container.clientHeight / 2) + (element.clientHeight / 2), behavior: 'smooth' });
-        if (!element.dataset.searchHighlight) {
-          element.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
-          setTimeout(() => element.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 2000);
-        }
+      if (!element || !container) return false;
+      const elementTop = element.offsetTop - container.offsetTop;
+      container.scrollTo({
+        top: elementTop - (container.clientHeight / 2) + (element.clientHeight / 2),
+        behavior: 'smooth',
+      });
+      // Re-confirma na próxima frame: se imagens/áudio recém-montados
+      // alteraram a altura entre o cálculo e o paint, `scrollIntoView`
+      // corrige sem efeito visual perceptível.
+      requestAnimationFrame(() => {
+        try {
+          element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } catch { /* noop em ambientes sem scrollIntoView */ }
+      });
+      if (!element.dataset.searchHighlight) {
+        element.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+        setTimeout(
+          () => element.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'),
+          2000,
+        );
       }
+      return true;
     },
   }));
 
