@@ -58,7 +58,54 @@ let now: () => number = () => Date.now();
 export function __setBreakerNow(fn: () => number) { now = fn; }
 
 /** @internal — for tests only. Wipes all breaker state. */
-export function __resetBreakerState() { breakers.clear(); now = () => Date.now(); }
+export function __resetBreakerState() { breakers.clear(); now = () => Date.now(); subscribers.clear(); }
+
+/**
+ * Structured event emitted on every breaker state transition. Logged with
+ * the `[breaker-event]` tag so ops dashboards can grep/filter for it. Also
+ * delivered to in-process subscribers (admin UI, telemetry pipelines).
+ */
+export interface BreakerEvent {
+  tag: 'evolution-breaker';
+  ts: string;
+  instance: string;
+  from: CircuitState;
+  to: CircuitState;
+  consecutiveFailures: number;
+  /** Cooldown duration in ms — only meaningful on transitions into OPEN. */
+  cooldownMs: number | null;
+}
+
+type Subscriber = (e: BreakerEvent) => void;
+const subscribers = new Set<Subscriber>();
+
+/**
+ * Subscribe to breaker state-change events. Returns an `unsubscribe` function.
+ * Subscribers receive every transition (CLOSED→OPEN, OPEN→HALF_OPEN, etc.)
+ * but NOT no-op recordings (e.g. a failure that doesn't trip the threshold).
+ */
+export function subscribeBreakerEvents(fn: Subscriber): () => void {
+  subscribers.add(fn);
+  return () => { subscribers.delete(fn); };
+}
+
+function emitTransition(instance: string, from: CircuitState, to: CircuitState, consecutiveFailures: number, cooldownMs: number | null): void {
+  const event: BreakerEvent = {
+    tag: 'evolution-breaker',
+    ts: new Date(now()).toISOString(),
+    instance, from, to, consecutiveFailures, cooldownMs,
+  };
+  // Single structured line — easy to grep / index in log aggregators.
+  try { log.info(`[breaker-event] ${JSON.stringify(event)}`); } catch { /* ignore */ }
+  for (const sub of subscribers) {
+    try { sub(event); } catch { /* subscriber errors must not break the breaker */ }
+  }
+}
+
+/** Snapshot of all known breaker states. Useful for admin dashboards. */
+export function getAllBreakerStates(): Array<{ instance: string } & BreakerEntry> {
+  return Array.from(breakers.entries()).map(([instance, entry]) => ({ instance, ...entry }));
+}
 
 function getEntry(instance: string): BreakerEntry {
   let e = breakers.get(instance);
@@ -89,6 +136,7 @@ export function canCall(
     // Cooldown elapsed → transition to HALF_OPEN, allow one probe.
     e.state = 'HALF_OPEN';
     log.info(`[breaker] instance=${instance} OPEN → HALF_OPEN (cooldown elapsed)`);
+    emitTransition(instance, 'OPEN', 'HALF_OPEN', e.consecutiveFailures, null);
   }
   return { allowed: true, state: e.state };
   // (CLOSED and HALF_OPEN both return allowed=true; HALF_OPEN limits to a
@@ -103,12 +151,18 @@ export function canCall(
  */
 export function recordSuccess(instance: string): void {
   const e = getEntry(instance);
-  if (e.state !== 'CLOSED' || e.consecutiveFailures > 0) {
-    log.info(`[breaker] instance=${instance} ${e.state} → CLOSED (success after ${e.consecutiveFailures} failures)`);
+  const wasState = e.state;
+  const wasFailures = e.consecutiveFailures;
+  if (wasState !== 'CLOSED' || wasFailures > 0) {
+    log.info(`[breaker] instance=${instance} ${wasState} → CLOSED (success after ${wasFailures} failures)`);
   }
   e.state = 'CLOSED';
   e.consecutiveFailures = 0;
   e.openUntil = 0;
+  // Only emit on real transitions (state change or counter reset from non-zero).
+  if (wasState !== 'CLOSED' || wasFailures > 0) {
+    emitTransition(instance, wasState, 'CLOSED', wasFailures, null);
+  }
 }
 
 /**
@@ -127,10 +181,12 @@ export function recordFailure(
     e.state = 'OPEN';
     e.openUntil = now() + cfg.cooldownMs;
     log.warn(`[breaker] instance=${instance} HALF_OPEN → OPEN (probe failed, cooldown ${cfg.cooldownMs}ms)`);
+    emitTransition(instance, 'HALF_OPEN', 'OPEN', e.consecutiveFailures, cfg.cooldownMs);
   } else if (e.state === 'CLOSED' && e.consecutiveFailures >= cfg.failureThreshold) {
     e.state = 'OPEN';
     e.openUntil = now() + cfg.cooldownMs;
     log.warn(`[breaker] instance=${instance} CLOSED → OPEN (${e.consecutiveFailures} consecutive failures, cooldown ${cfg.cooldownMs}ms)`);
+    emitTransition(instance, 'CLOSED', 'OPEN', e.consecutiveFailures, cfg.cooldownMs);
   }
   return { state: e.state, failures: e.consecutiveFailures };
 }
