@@ -178,14 +178,21 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     return () => { void supabase.removeChannel(channel); };
   }, [messageIds.length, messageIdsKey, messageIdsSet, queryClient]);
 
+  const [statusFilter, setStatusFilter] = useState<Set<MessageStatusFilter>>(new Set());
+
+  const displayedMessages = useMemo(
+    () => filterMessagesByStatus(messages, statusFilter),
+    [messages, statusFilter],
+  );
+
   const groupedMessages = useMemo(() => {
-    return messages.reduce((groups, message) => {
+    return displayedMessages.reduce((groups, message) => {
       const dateKey = format(message.timestamp, 'yyyy-MM-dd');
       if (!groups[dateKey]) groups[dateKey] = [];
       groups[dateKey].push(message);
       return groups;
     }, {} as Record<string, Message[]>);
-  }, [messages]);
+  }, [displayedMessages]);
 
   // Scroll-to-top detector → loadOlder (with cancellation on reverse-scroll)
   useEffect(() => {
