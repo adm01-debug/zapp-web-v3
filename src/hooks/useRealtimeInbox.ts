@@ -326,7 +326,7 @@ export function useRealtimeInbox() {
     handleSendAudio,
     refetch,
     setSelectedContact,
-    markAsRead,
+    markAsRead: USE_EXTERNAL_DB ? ((_id: string) => { /* noop em modo externo */ }) : markAsRead,
     // Pagination
     loadOlderMessages,
     cancelLoadOlderMessages,
