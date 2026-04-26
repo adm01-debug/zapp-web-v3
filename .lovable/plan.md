@@ -1,59 +1,50 @@
 ## Objetivo
+Fazer o Inbox voltar a enviar pelo front, pela própria interface, usando o backend real do WhatsApp/CRM que já está funcionando por trás. O problema hoje não é a API de envio em si; é o front estar preso em um fluxo legado e desalinhado da fonte de verdade.
 
-Disparar **200 mensagens reais** para `64 98445-0900` (Joaquim) usando a edge function `evolution-api` chamada **diretamente do chat** (sem depender da UI). Cada envio é uma chamada `curl_edge_functions` que retorna sucesso/erro na hora.
+## Diagnóstico confirmado
+- O Inbox principal ainda está preso no fluxo legado local em vez do fluxo real de WhatsApp/CRM.
+- Em `src/hooks/useRealtimeInbox.ts`, a flag `USE_EXTERNAL_DB = false` deixa a interface lendo e enviando pelo caminho antigo.
+- Em `src/hooks/realtime/messageSender.ts`, o envio ainda grava em tabelas locais (`messages`, `contacts`, `whatsapp_connections`) e depois tenta disparar a API.
+- A memória do projeto diz o contrário: o Inbox deveria estar 100% no backend externo de WhatsApp/CRM, com webhook como fonte da verdade.
+- Em `src/components/inbox/chat/useChatPanelHandlers.ts`, o `onSendMessage` é tratado como síncrono; o handler não espera a promessa do envio terminar, então o estado de envio/erro no input pode ficar incoerente.
 
-## Como vai funcionar
+## Plano de correção
+1. **Alinhar o Inbox à fonte de verdade**
+   - Ativar o modo externo no `useRealtimeInbox`.
+   - Fazer a conversa aberta e a lista lateral usarem o fluxo do backend real de WhatsApp/CRM de forma consistente.
+   - Garantir que o chat visível, os dados carregados e o envio usem a mesma identidade de conversa.
 
-- Em modo build, eu chamo `supabase--curl_edge_functions` no path `/evolution-api` com o payload de cada envio (texto, imagem, áudio, sticker, vídeo, documento, localização, áudio meme).
-- Cada chamada eu **vejo a resposta** (messageId ou erro) imediatamente.
-- Distribuição igual entre 8 tipos: 25 envios de cada → 200 total.
-- Mídia vinda da biblioteca existente (`stickers`, `audio_memes`) + URLs públicas pequenas para imagem/vídeo/documento/voz.
-- Política: **parar na 1ª falha** (sua escolha anterior).
+2. **Trocar o sender legado pelo sender real do Inbox**
+   - Substituir o fluxo de `messageSender.ts` baseado em tabelas locais por um fluxo compatível com o backend real.
+   - Resolver contato/conversa pelo backend correto.
+   - Enviar texto/mídia/áudio/sticker/localização pelo mesmo pipeline do front.
+   - Persistir/reconciliar a mensagem no histórico correto para ela aparecer imediatamente na interface e depois confirmar pelo webhook/realtime.
 
-## Estratégia de execução em lotes
+3. **Unificar os envios especiais do chat**
+   - Revisar `useChatMediaSending.ts` para sticker, emoji e áudio meme.
+   - Fazer esses envios usarem o mesmo backend real e o mesmo padrão de reconciliação do chat principal.
+   - Eliminar casos em que a mídia “vai” mas a interface não reflete, ou vice-versa.
 
-Não consigo fazer 200 chamadas numa só resposta (limite de tool calls por turno). Vou em **lotes de ~20 envios por turno**, parando entre lotes para você confirmar que chegou no celular:
+4. **Corrigir o comportamento do input e feedback visual**
+   - Tornar `onSendMessage` assíncrono no `useChatPanelHandlers` e aguardar o envio de verdade.
+   - Ajustar `isSending`, erro, retry e restauração de texto para refletirem o resultado real.
+   - Preservar feedback claro no botão de envio e na bolha da mensagem.
 
-```text
-Lote 1  (envios 1-10)   — smoke test: 1 de cada tipo + 2 textos extras
-                          → você confirma recebimento no celular
-Lote 2  (envios 11-30)  — escalada: 20 envios alternados
-Lote 3  (envios 31-60)  — 30 envios
-Lote 4  (envios 61-110) — 50 envios
-Lote 5  (envios 111-160) — 50 envios
-Lote 6  (envios 161-200) — 40 envios finais
-```
+5. **Validar no preview pelo front**
+   - Testar envio manual pela interface, não por automação de backend isolada.
+   - Confirmar: clique no botão, request do front, mensagem aparecendo no chat e entrega no celular.
+   - Começar com poucos envios reais pela interface para validar o conserto antes de qualquer carga maior.
 
-Entre cada lote eu reporto:
-- ✅ Quantos chegaram com sucesso (com `messageId`)
-- ❌ Quantos falharam e o erro exato
-- ⏱️ Latência média
-
-## Intervalo entre envios
-
-Como **eu** estou disparando (não um loop no browser), o intervalo é o tempo natural entre minhas tool calls (~1-3s cada). Isso já evita flood. Se chegar tudo muito rápido, adiciono `await sleep` artificial.
-
-## Salvaguarda crítica
-
-**Smoke test primeiro.** O Lote 1 envia só 10 mensagens (1 de cada tipo). Se nem o texto simples chegar no seu celular, paro tudo e investigo a edge function `evolution-api` antes de continuar. Só escalo se você confirmar "chegou".
+## Arquivos mais prováveis de ajuste
+- `src/hooks/useRealtimeInbox.ts`
+- `src/hooks/realtime/messageSender.ts`
+- `src/components/inbox/chat/useChatPanelHandlers.ts`
+- `src/components/inbox/useChatMediaSending.ts`
+- `src/hooks/useExternalEvolution.ts`
+- possivelmente `src/components/inbox/RealtimeInboxView.tsx` e adaptadores de mensagem
 
 ## Detalhes técnicos
-
-- Endpoint: `POST {SUPABASE_URL}/functions/v1/evolution-api`
-- Headers: Authorization Bearer (token do usuário logado é injetado automaticamente pela tool)
-- Payload por tipo:
-  - `text`: `{ action: "sendText", instance: "wpp2", number: "5564984450900", text: "..." }`
-  - `image/video/document`: `{ action: "sendMedia", mediatype, mimetype, media: <url>, ... }`
-  - `audio` (voz/meme): `{ action: "sendWhatsAppAudio", audio: <url>, encoding: true }`
-  - `sticker`: `{ action: "sendSticker", sticker: <url> }`
-  - `location`: `{ action: "sendLocation", latitude, longitude, name }`
-- Verifico assinatura real consultando `src/hooks/useEvolutionApi.ts` antes do Lote 1 (para garantir que o payload bate com o que a edge function espera).
-- Cada sucesso registro num arquivo `/tmp/stress_results.jsonl` para você baixar o log no final.
-
-## O que eu preciso de você
-
-1. **Aprovar este plano.**
-2. Manter o WhatsApp aberto no celular durante o Lote 1 para confirmar recebimento.
-3. Após o Lote 1, me responder simplesmente "chegou" ou "não chegou X tipos".
-
-Se chegar, eu sigo direto até os 200 sem precisar de mais aprovações.
+- O front hoje mistura dois mundos: UI de Inbox apontando para um caminho legado local, enquanto o tráfego real de WhatsApp/CRM já está em outro backend.
+- O conserto principal é eliminar essa divergência: leitura, envio, realtime e reconciliação precisam usar o mesmo pipeline.
+- Também vou revisar a configuração do cliente do backend externo para garantir que o Inbox esteja falando com a base correta do domínio WhatsApp/CRM.
+- A validação final será feita com envio pelo próprio chat da interface, porque esse é exatamente o comportamento quebrado que precisa ser corrigido.
