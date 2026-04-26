@@ -8605,6 +8605,51 @@ export type Database = {
           },
         ]
       }
+      stress_test_runs: {
+        Row: {
+          abort_reason: string | null
+          ended_at: string | null
+          id: string
+          instance_name: string
+          results: Json
+          started_at: string
+          started_by: string
+          status: string
+          target_phone: string
+          total_failed: number
+          total_planned: number
+          total_sent: number
+        }
+        Insert: {
+          abort_reason?: string | null
+          ended_at?: string | null
+          id?: string
+          instance_name?: string
+          results?: Json
+          started_at?: string
+          started_by: string
+          status?: string
+          target_phone: string
+          total_failed?: number
+          total_planned: number
+          total_sent?: number
+        }
+        Update: {
+          abort_reason?: string | null
+          ended_at?: string | null
+          id?: string
+          instance_name?: string
+          results?: Json
+          started_at?: string
+          started_by?: string
+          status?: string
+          target_phone?: string
+          total_failed?: number
+          total_planned?: number
+          total_sent?: number
+        }
+        Relationships: []
+      }
       system_event_keys: {
         Row: {
           created_at: string
