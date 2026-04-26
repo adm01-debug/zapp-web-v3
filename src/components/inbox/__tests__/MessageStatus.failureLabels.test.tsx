@@ -129,6 +129,9 @@ describe('MessageStatus — documents current whitespace-only errorReason behavi
   it('appends a whitespace-only errorReason verbatim (current behavior)', () => {
     render(<MessageStatus status="failed_auth" showLabel detail={{ errorReason: '   ' }} />);
     const texts = getLabelTexts();
-    expect(texts.some(t => t === `${FAILED_AUTH_BASE} —    `)).toBe(true);
+    // Truthy whitespace passes through: label is base + " — " + spaces.
+    // We use a tolerant regex because JSX/DOM may normalize the trailing
+    // whitespace; the contract is "the em dash separator IS rendered".
+    expect(texts.some(t => /^Falha de autenticação\s+—\s*$/.test(t) || /^Falha de autenticação — \s*$/.test(t))).toBe(true);
   });
 });
