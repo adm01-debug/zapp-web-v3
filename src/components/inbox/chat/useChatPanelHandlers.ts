@@ -112,8 +112,10 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     } catch (err: any) {
       log.error('Failed to send message:', err);
       const msg = err?.message || 'Falha ao invocar a função de envio. Verifique sua conexão.';
+      const detail = typeof err?.detail === 'string' ? err.detail : null;
       lastFailedPayloadRef.current = messageContent;
       setLastSendError(msg);
+      setLastSendErrorDetail(detail);
       setInputValue(messageContent);
       if (wasReply) setReplyToMessage(wasReply);
       toast({ title: 'Erro ao enviar', description: msg, variant: 'destructive' });
