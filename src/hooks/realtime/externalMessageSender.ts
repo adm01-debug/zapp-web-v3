@@ -30,7 +30,11 @@ export interface SendExternalResult {
   externalId: string | null;
 }
 
-function makeOptimisticBubble(remoteJid: string, content: string): RealtimeMessage {
+function makeOptimisticBubble(
+  remoteJid: string,
+  content: string,
+  opts: { messageType?: string; mediaUrl?: string | null } = {},
+): RealtimeMessage {
   const now = new Date().toISOString();
   // ID local começa com `optimistic:` pra reconciliação. O webhook insere
   // a mensagem real com outro id e o cursor/poll a substitui no merge.
@@ -41,8 +45,8 @@ function makeOptimisticBubble(remoteJid: string, content: string): RealtimeMessa
     agent_id: 'system',
     content,
     sender: 'agent',
-    message_type: 'text',
-    media_url: null,
+    message_type: opts.messageType ?? 'text',
+    media_url: opts.mediaUrl ?? null,
     is_read: true,
     status: 'sending',
     status_updated_at: now,
