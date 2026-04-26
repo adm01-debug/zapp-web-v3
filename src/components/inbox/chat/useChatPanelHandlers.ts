@@ -35,6 +35,14 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   const [lastSendError, setLastSendError] = useState<string | null>(null);
   const [lastSendErrorDetail, setLastSendErrorDetail] = useState<string | null>(null);
   const lastFailedPayloadRef = useRef<string | null>(null);
+  // PTT (push-to-talk) que falhou — guarda o blob original + a função de
+  // envio do contexto (depende do contato selecionado) para reenvio one-click.
+  // Quando setado, `retryLastSend` repete upload + envio + bolha otimista
+  // em vez de reenviar texto.
+  const lastFailedAudioRef = useRef<{
+    blob: Blob;
+    onSendAudio: (blob: Blob) => Promise<void>;
+  } | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
