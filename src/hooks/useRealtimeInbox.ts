@@ -227,9 +227,12 @@ export function useRealtimeInbox() {
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
     if (USE_EXTERNAL_DB) {
-      // Áudio externo ainda não suportado neste hook — informa o operador
-      // em vez de falhar silenciosamente.
-      toast.error('Envio de áudio temporariamente indisponível neste modo. Use texto ou mídia.');
+      // External path (FATOR X): upload + envio via evolution-api + bolha
+      // otimista. O webhook reconcilia o status/ID definitivos em segundos.
+      const { sendExternalAudio } = await import('@/hooks/realtime/externalMessageSender');
+      const { optimistic } = await sendExternalAudio(selectedContactId, blob);
+      try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+      setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
       return;
     }
     try {
@@ -245,7 +248,7 @@ export function useRealtimeInbox() {
     } finally {
       await refreshActiveConversation();
     }
-  }, [selectedContactId, sendMessage, refreshActiveConversation]);
+  }, [selectedContactId, sendMessage, refreshActiveConversation, externalMsgs, externalData]);
 
   // Convert to legacy format
   const legacyConversation: Conversation | null = resolvedSelectedConversation
