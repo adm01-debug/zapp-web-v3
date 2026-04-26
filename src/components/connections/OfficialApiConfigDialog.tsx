@@ -42,18 +42,23 @@ export function OfficialApiConfigDialog({
 
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
     setLoading(true);
-    supabase
-      .from('whatsapp_official_credentials')
-      .select('phone_number_id, waba_id, business_account_id, access_token, app_secret, verify_token, graph_api_version')
-      .eq('connection_id', connectionId)
-      .maybeSingle()
-      .then(({ data }) => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('whatsapp_official_credentials')
+          .select('phone_number_id, waba_id, business_account_id, access_token, app_secret, verify_token, graph_api_version')
+          .eq('connection_id', connectionId)
+          .maybeSingle();
+        if (cancelled) return;
         if (data) setForm({ ...EMPTY, ...data });
         else setForm(EMPTY);
-      })
-      .then(undefined, () => undefined)
-      .finally(() => setLoading(false));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [open, connectionId]);
 
   const update = (k: keyof CredentialsForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
