@@ -91,8 +91,7 @@ describe('MessageStatus — payloads malformados em errorCode/errorReason', () =
 
       expect(documentContains('[object Object]')).toBe(false);
       expect(documentContains('[object')).toBe(false);
-      expect(documentContains(',')).toBe(true === false ? true : documentContains(','));
-      // No literal "function" body leaks
+      // No literal arrow-function body leaks for function payloads
       expect(documentContains('=>')).toBe(false);
     });
   });
