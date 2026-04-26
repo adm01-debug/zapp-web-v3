@@ -1,50 +1,69 @@
-## Objetivo
-Fazer o Inbox voltar a enviar pelo front, pela própria interface, usando o backend real do WhatsApp/CRM que já está funcionando por trás. O problema hoje não é a API de envio em si; é o front estar preso em um fluxo legado e desalinhado da fonte de verdade.
+# Plano para consertar o chat do front
 
-## Diagnóstico confirmado
-- O Inbox principal ainda está preso no fluxo legado local em vez do fluxo real de WhatsApp/CRM.
-- Em `src/hooks/useRealtimeInbox.ts`, a flag `USE_EXTERNAL_DB = false` deixa a interface lendo e enviando pelo caminho antigo.
-- Em `src/hooks/realtime/messageSender.ts`, o envio ainda grava em tabelas locais (`messages`, `contacts`, `whatsapp_connections`) e depois tenta disparar a API.
-- A memória do projeto diz o contrário: o Inbox deveria estar 100% no backend externo de WhatsApp/CRM, com webhook como fonte da verdade.
-- Em `src/components/inbox/chat/useChatPanelHandlers.ts`, o `onSendMessage` é tratado como síncrono; o handler não espera a promessa do envio terminar, então o estado de envio/erro no input pode ficar incoerente.
+Encontrei a causa principal do bug: o Inbox principal ainda está preso no modo legado local, enquanto o projeto já migrou o WhatsApp/CRM para o backend canônico de mensagens.
 
-## Plano de correção
-1. **Alinhar o Inbox à fonte de verdade**
-   - Ativar o modo externo no `useRealtimeInbox`.
-   - Fazer a conversa aberta e a lista lateral usarem o fluxo do backend real de WhatsApp/CRM de forma consistente.
-   - Garantir que o chat visível, os dados carregados e o envio usem a mesma identidade de conversa.
+Hoje o front do Inbox está usando:
+- `useRealtimeInbox.ts` com `USE_EXTERNAL_DB = false`
+- leitura/escrita em `public.messages` e `public.contacts`
+- envio via `messageSender.ts` olhando `contacts/whatsapp_connections` locais
 
-2. **Trocar o sender legado pelo sender real do Inbox**
-   - Substituir o fluxo de `messageSender.ts` baseado em tabelas locais por um fluxo compatível com o backend real.
-   - Resolver contato/conversa pelo backend correto.
-   - Enviar texto/mídia/áudio/sticker/localização pelo mesmo pipeline do front.
-   - Persistir/reconciliar a mensagem no histórico correto para ela aparecer imediatamente na interface e depois confirmar pelo webhook/realtime.
+Mas a arquitetura atual do projeto diz que o chat real está em:
+- `evolution_messages` / `evolution_conversations`
+- leitura via proxy/RPC do FATOR X
+- webhook canônico como fonte da verdade
 
-3. **Unificar os envios especiais do chat**
-   - Revisar `useChatMediaSending.ts` para sticker, emoji e áudio meme.
-   - Fazer esses envios usarem o mesmo backend real e o mesmo padrão de reconciliação do chat principal.
-   - Eliminar casos em que a mídia “vai” mas a interface não reflete, ou vice-versa.
+Resultado: o front abre um chat “errado”, não acompanha as mensagens reais que chegam, e também tenta enviar pelo caminho antigo.
 
-4. **Corrigir o comportamento do input e feedback visual**
-   - Tornar `onSendMessage` assíncrono no `useChatPanelHandlers` e aguardar o envio de verdade.
-   - Ajustar `isSending`, erro, retry e restauração de texto para refletirem o resultado real.
-   - Preservar feedback claro no botão de envio e na bolha da mensagem.
+## O que vou corrigir
 
-5. **Validar no preview pelo front**
-   - Testar envio manual pela interface, não por automação de backend isolada.
-   - Confirmar: clique no botão, request do front, mensagem aparecendo no chat e entrega no celular.
-   - Começar com poucos envios reais pela interface para validar o conserto antes de qualquer carga maior.
+### 1) Trocar o Inbox para a fonte de dados correta
+- Remover o hardcode legado em `src/hooks/useRealtimeInbox.ts`.
+- Fazer a sidebar e o chat aberto consumirem a fonte externa como padrão.
+- Parar de depender de `useRealtimeMessages` / `useMessages` para o Inbox principal.
+- Usar o fluxo já existente para mensagens externas (`useExternalConversations` + cursor/realtime externo) como base oficial do chat.
 
-## Arquivos mais prováveis de ajuste
-- `src/hooks/useRealtimeInbox.ts`
-- `src/hooks/realtime/messageSender.ts`
-- `src/components/inbox/chat/useChatPanelHandlers.ts`
-- `src/components/inbox/useChatMediaSending.ts`
-- `src/hooks/useExternalEvolution.ts`
-- possivelmente `src/components/inbox/RealtimeInboxView.tsx` e adaptadores de mensagem
+### 2) Restaurar recebimento de mensagens no front
+- Garantir que o chat aberto observe `evolution_messages` e/ou o cursor externo em vez da tabela local `messages`.
+- Ajustar a atualização da conversa selecionada para refletir novas mensagens recebidas sem precisar recarregar manualmente.
+- Validar o mapeamento de status/timestamps para que a bolha apareça no chat certo.
+
+### 3) Restaurar envio pelo front no pipeline canônico
+- Substituir o envio legado do Inbox por um sender compatível com o backend real.
+- O envio do chat vai:
+  - resolver o contato/instância pelo backend canônico,
+  - chamar a função de envio correta,
+  - registrar/espelhar a mensagem na fonte usada pelo Inbox,
+  - reconciliar a bolha otimista quando o retorno/webhook confirmar.
+- Corrigir também ações do input que ainda gravam direto em `supabase.from('messages')` no `ChatPanel`.
+
+### 4) Preservar feedback visual do operador
+- Manter o banner de erro/retry que já existe.
+- Ligar o status inline e a timeline ao fluxo real de mensagens para que “queued/sent/delivered/read” reflitam o chat correto.
+- Garantir que o chat continue mostrando a bolha imediatamente ao enviar, sem sumir ao refetch.
+
+### 5) Fazer uma limpeza de regressões ligadas ao preview
+- Corrigir o problema de CSS visto no dev-server (`@import must precede all other statements`) para evitar preview/HMR instável durante o teste.
+- Revisar qualquer teste falso-positivo do chat: há indício de teste prometido anteriormente que nem existe no caminho esperado, então vou alinhar a cobertura com o fluxo real do Inbox.
+
+## Validação que vou fazer depois da correção
+- Abrir o Inbox principal.
+- Confirmar que mensagens recebidas aparecem no front sem refresh manual.
+- Enviar mensagem pelo campo do chat e verificar:
+  - bolha aparece na hora,
+  - status evolui no front,
+  - mensagem chega no celular,
+  - recarregar a tela não faz a mensagem sumir.
+- Repetir com pelo menos texto e áudio, e revisar os outros atalhos do input que ainda usam o caminho antigo.
 
 ## Detalhes técnicos
-- O front hoje mistura dois mundos: UI de Inbox apontando para um caminho legado local, enquanto o tráfego real de WhatsApp/CRM já está em outro backend.
-- O conserto principal é eliminar essa divergência: leitura, envio, realtime e reconciliação precisam usar o mesmo pipeline.
-- Também vou revisar a configuração do cliente do backend externo para garantir que o Inbox esteja falando com a base correta do domínio WhatsApp/CRM.
-- A validação final será feita com envio pelo próprio chat da interface, porque esse é exatamente o comportamento quebrado que precisa ser corrigido.
+- Arquivos principais a mexer:
+  - `src/hooks/useRealtimeInbox.ts`
+  - `src/hooks/useExternalEvolution.ts` e/ou `src/hooks/useMessagesCursor.ts`
+  - `src/hooks/realtime/messageSender.ts` ou novo sender externo específico do Inbox
+  - `src/components/inbox/ChatPanel.tsx`
+  - `src/components/inbox/chat/useChatPanelHandlers.ts`
+  - `src/index.css` se o erro de `@import` estiver quebrando o preview
+- Não vou mexer no cliente auto-gerado de backend.
+- A correção vai seguir a arquitetura já definida no projeto: Inbox usando o backend externo como fonte da verdade para WhatsApp/CRM.
+
+Assim que você aprovar, eu aplico a correção direto no front e valido o fluxo real do chat.
