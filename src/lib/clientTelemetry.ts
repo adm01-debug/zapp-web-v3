@@ -201,6 +201,28 @@ export function resetTelemetry(): void {
   state.totalDurationMs = 0;
   state.recentEvents = [];
   state.slowEvents = [];
+  state.retry = initialRetry();
+  publishToWindow();
+}
+
+export interface RetryOutcome {
+  target: string;
+  attempts: number;
+  recovered: boolean;
+  exhausted: boolean;
+  transientCount: number;
+  correlationId?: string;
+}
+
+export function recordRetryOutcome(outcome: RetryOutcome): void {
+  const extraAttempts = Math.max(0, outcome.attempts - 1);
+  state.retry.totalRetries += extraAttempts;
+  if (outcome.recovered) state.retry.recoveredAfterRetry += 1;
+  if (outcome.exhausted) state.retry.exhausted += 1;
+  if (outcome.transientCount > 0) {
+    state.retry.transientByTarget[outcome.target] =
+      (state.retry.transientByTarget[outcome.target] ?? 0) + outcome.transientCount;
+  }
   publishToWindow();
 }
 
