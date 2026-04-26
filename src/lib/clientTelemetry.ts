@@ -41,6 +41,13 @@ export interface TelemetrySnapshot {
   slowEvents: QueryEvent[];
 }
 
+export interface RetryStats {
+  totalRetries: number;
+  recoveredAfterRetry: number;
+  exhausted: number;
+  transientByTarget: Record<string, number>;
+}
+
 const RECENT_LIMIT = 50;
 const SLOW_LIMIT = 20;
 
@@ -54,10 +61,18 @@ interface State {
   totalDurationMs: number;
   recentEvents: QueryEvent[];
   slowEvents: QueryEvent[];
+  retry: RetryStats;
 }
 
 const initialBySeverity = (): Record<Severity, number> => ({
   ok: 0, slow: 0, very_slow: 0, timeout: 0, error: 0,
+});
+
+const initialRetry = (): RetryStats => ({
+  totalRetries: 0,
+  recoveredAfterRetry: 0,
+  exhausted: 0,
+  transientByTarget: {},
 });
 
 const state: State = {
@@ -67,6 +82,7 @@ const state: State = {
   totalDurationMs: 0,
   recentEvents: [],
   slowEvents: [],
+  retry: initialRetry(),
 };
 
 export function classifySeverity(
