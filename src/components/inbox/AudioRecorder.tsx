@@ -247,7 +247,6 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
             </span>
             <AudioVolumeControl volume={volume} onChange={setVolume} size="sm" />
           </>
-          </>
         ) : null}
       </div>
 
