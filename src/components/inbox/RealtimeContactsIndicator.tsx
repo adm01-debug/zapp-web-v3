@@ -3,7 +3,8 @@
  * Uses semantic tokens; supports compact (dot) and labeled modes.
  */
 import { Wifi, WifiOff, Loader2, AlertTriangle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+// Tooltip removido para evitar loop de refs do Radix Slot quando usado com asChild
+// em <span>. Substituído por title nativo, que cumpre o mesmo papel informativo.
 import { cn } from '@/lib/utils';
 import {
   useRealtimeContactsStatus,
