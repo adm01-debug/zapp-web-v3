@@ -108,12 +108,38 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
   // "non-2xx status code". These are not real failures — a quick retry usually
   // succeeds. We retry up to 2 times with small exponential backoff, but never
   // for AbortError (caller-initiated cancellation).
+  const normalizeInvokeError = (err: unknown): { name?: string; message?: string; code?: string; status?: number } => {
+    if (!err || typeof err !== 'object') {
+      return { message: typeof err === 'string' ? err : String(err) };
+    }
+    const maybeError = err as {
+      name?: string;
+      message?: string;
+      code?: string;
+      status?: number;
+      context?: { status?: number };
+    };
+    return {
+      name: maybeError.name,
+      message: maybeError.message,
+      code: maybeError.code,
+      status: maybeError.status ?? maybeError.context?.status,
+    };
+  };
+
   const isTransientRuntimeError = (err: unknown): boolean => {
-    const message = (err as { message?: string })?.message ?? '';
+    const normalized = normalizeInvokeError(err);
+    const message = normalized.message ?? '';
+    const code = normalized.code ?? '';
+    const status = normalized.status;
     return (
+      /SUPABASE_EDGE_RUNTIME_ERROR/i.test(code) ||
       /SUPABASE_EDGE_RUNTIME_ERROR/i.test(message) ||
       /temporarily unavailable/i.test(message) ||
       /non-2xx status code/i.test(message) ||
+      status === 502 ||
+      status === 503 ||
+      status === 504 ||
       /\b503\b/.test(message) ||
       /\b502\b/.test(message) ||
       /\b504\b/.test(message)
@@ -134,9 +160,14 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
         ...invokeOptions,
         headers: { ...(invokeOptions.headers ?? {}), 'x-attempt': String(attempt) },
       };
-      const result = await supabase.functions.invoke('external-db-proxy', perAttemptOptions);
-      data = result.data as ProxyResponse<T> | null;
-      error = result.error as typeof error;
+      try {
+        const result = await supabase.functions.invoke('external-db-proxy', perAttemptOptions);
+        data = result.data as ProxyResponse<T> | null;
+        error = result.error ? normalizeInvokeError(result.error) : null;
+      } catch (invokeErr) {
+        data = null;
+        error = normalizeInvokeError(invokeErr);
+      }
       const attemptDurationMs = Math.round(performance.now() - attemptStartedAt);
 
       const ok = !error;
@@ -154,8 +185,9 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
         maxAttempts: MAX_ATTEMPTS,
         attemptDurationMs,
         ok,
-        errorName: error?.name,
+        errorName: error?.code ?? error?.name,
         errorMessage: error?.message,
+        status: error?.status,
         transient,
         willRetry,
         backoffMs,
@@ -230,7 +262,7 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
         abortErr.name = 'AbortError';
         throw abortErr;
       }
-      throw new Error(message || 'External DB proxy error');
+      throw new Error(message ? `[cid=${correlationId}] ${message}` : `[cid=${correlationId}] External DB proxy error`);
     }
 
     if (data?.error) {
