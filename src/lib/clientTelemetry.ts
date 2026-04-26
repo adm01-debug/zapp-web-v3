@@ -116,6 +116,12 @@ function snapshot(): TelemetrySnapshot {
     p95DurationMs,
     recentEvents: [...state.recentEvents],
     slowEvents: [...state.slowEvents],
+    retry: {
+      totalRetries: state.retry.totalRetries,
+      recoveredAfterRetry: state.retry.recoveredAfterRetry,
+      exhausted: state.retry.exhausted,
+      transientByTarget: { ...state.retry.transientByTarget },
+    },
   };
 }
 
