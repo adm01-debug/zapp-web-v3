@@ -25,24 +25,18 @@ export function KeyboardShortcutsHelp() {
   );
 
   return (
-    <TooltipProvider>
-      <Popover>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-8 h-8 text-muted-foreground hover:text-foreground"
-              >
-                <Keyboard className="w-4 h-4" />
-              </Button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>Atalhos de teclado</p>
-          </TooltipContent>
-        </Tooltip>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-8 h-8 text-muted-foreground hover:text-foreground"
+          aria-label="Atalhos de teclado"
+          title="Atalhos de teclado"
+        >
+          <Keyboard className="w-4 h-4" />
+        </Button>
+      </PopoverTrigger>
 
         <PopoverContent className="w-72 p-0" align="end">
           <div className="p-3 border-b border-border">
