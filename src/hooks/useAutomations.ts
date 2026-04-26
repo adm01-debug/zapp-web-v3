@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { externalClient } from "@/integrations/supabase/externalClient";
+import { getExternalSupabase } from "@/integrations/supabase/externalClient";
+
+const externalClient = getExternalSupabase();
 
 /**
  * Hook que avalia regras de automação contra a conversa ativa.
@@ -133,7 +135,7 @@ export function useAutomations({
             p_remote_jid: remoteJid,
             p_instance_name: instanceName,
             p_assigned_to: assignedTo,
-            p_trigger_payload: payload,
+            p_trigger_payload: payload as any,
           },
         );
 
