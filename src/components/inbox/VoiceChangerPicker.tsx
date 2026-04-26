@@ -296,8 +296,7 @@ export function VoiceChangerPicker({ onSendAudio, disabled }: VoiceChangerPicker
               Grave → Escolha a voz → Transforme → Envie 🎭
             </p>
           </div>
-        </PopoverContent>
-      </Popover>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   );
 }
