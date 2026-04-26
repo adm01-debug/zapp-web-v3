@@ -20,7 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Pencil, Pause, Play, PowerOff, Eraser, MessageSquare,
-  Instagram, Send, Mail, Globe, Search,
+  Instagram, Send, Mail, Globe, Search, Facebook,
 } from "lucide-react";
 import { EvolutionFallbackStatusCard } from "@/components/admin/EvolutionFallbackStatusCard";
 import { log } from "@/lib/logger";
@@ -28,6 +28,7 @@ import { log } from "@/lib/logger";
 const CHANNEL_TYPES = [
   { value: "whatsapp", label: "WhatsApp", icon: MessageSquare },
   { value: "instagram", label: "Instagram", icon: Instagram },
+  { value: "messenger", label: "Messenger", icon: Facebook },
   { value: "telegram", label: "Telegram", icon: Send },
   { value: "webchat", label: "Webchat", icon: Globe },
   { value: "email", label: "Email", icon: Mail },
