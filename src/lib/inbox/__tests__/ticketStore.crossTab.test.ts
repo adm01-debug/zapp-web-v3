@@ -48,6 +48,7 @@ describe('ticketStore — cross-tab cache invalidation', () => {
     expect(after).not.toBe(before); // reference changed → cache was invalidated
     expect(after['contact-1']?.status).toBe('resolved');
     expect(after['contact-1']?.assignedTo).toBe('agent-b');
+    unsubscribe();
   });
 
   it('ignores storage events for unrelated keys', () => {
