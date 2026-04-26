@@ -9122,6 +9122,30 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_event_dedup: {
+        Row: {
+          event_key: string
+          event_type: string
+          instance_name: string
+          payload_hash: string | null
+          received_at: string
+        }
+        Insert: {
+          event_key: string
+          event_type: string
+          instance_name: string
+          payload_hash?: string | null
+          received_at?: string
+        }
+        Update: {
+          event_key?: string
+          event_type?: string
+          instance_name?: string
+          payload_hash?: string | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       webhook_rate_limits: {
         Row: {
           created_at: string
@@ -9228,6 +9252,7 @@ export type Database = {
           phone_number: string
           qr_code: string | null
           retry_count: number | null
+          routing_mode: string
           status: string | null
           updated_at: string
         }
@@ -9252,6 +9277,7 @@ export type Database = {
           phone_number: string
           qr_code?: string | null
           retry_count?: number | null
+          routing_mode?: string
           status?: string | null
           updated_at?: string
         }
@@ -9276,6 +9302,7 @@ export type Database = {
           phone_number?: string
           qr_code?: string | null
           retry_count?: number | null
+          routing_mode?: string
           status?: string | null
           updated_at?: string
         }
@@ -9987,6 +10014,7 @@ export type Database = {
       cleanup_old_send_failures: { Args: never; Returns: undefined }
       cleanup_proxy_metrics: { Args: never; Returns: undefined }
       cleanup_webhook_deliveries: { Args: never; Returns: undefined }
+      cleanup_webhook_event_dedup: { Args: never; Returns: number }
       clear_login_attempts: { Args: { p_email: string }; Returns: undefined }
       contacts_count_by_type: {
         Args: never
@@ -10493,6 +10521,19 @@ export type Database = {
       rpc_record_search_click: {
         Args: { p_query: string; p_result_id: string; p_result_type: string }
         Returns: undefined
+      }
+      rpc_register_webhook_event: {
+        Args: {
+          p_event_key: string
+          p_event_type: string
+          p_instance_name: string
+          p_payload_hash?: string
+        }
+        Returns: boolean
+      }
+      rpc_route_incoming_message: {
+        Args: { p_connection_id: string; p_contact_id: string }
+        Returns: Json
       }
       rpc_search_insights: { Args: { p_days?: number }; Returns: Json }
       search_contacts: {
