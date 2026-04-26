@@ -227,6 +227,16 @@ export function useRealtimeInbox() {
 
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
+
+    // Valida tamanho/duração ANTES de qualquer upload (storage ou external).
+    // Aborta cedo com mensagem amigável; lança erro para o SendErrorBanner
+    // exibir o motivo e oferecer "Reenviar" caso o usuário ajuste o áudio.
+    const validation = await validatePttBlob(blob);
+    if (!validation.ok) {
+      toast.error(validation.message ?? 'Áudio inválido.');
+      throw new Error(validation.message ?? 'Áudio inválido.');
+    }
+
     if (USE_EXTERNAL_DB) {
       // External path (FATOR X): upload + envio via evolution-api + bolha
       // otimista. O webhook reconcilia o status/ID definitivos em segundos.
