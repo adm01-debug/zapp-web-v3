@@ -39,6 +39,7 @@ export interface TelemetrySnapshot {
   p95DurationMs: number;
   recentEvents: QueryEvent[];
   slowEvents: QueryEvent[];
+  retry: RetryStats;
 }
 
 export interface RetryStats {
