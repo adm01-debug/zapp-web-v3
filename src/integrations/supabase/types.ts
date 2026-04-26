@@ -7903,6 +7903,117 @@ export type Database = {
         }
         Relationships: []
       }
+      service_channels: {
+        Row: {
+          channel_type: string
+          color: string
+          created_at: string
+          created_by: string | null
+          default_queue_id: string | null
+          description: string | null
+          disabled_at: string | null
+          disabled_reason: string | null
+          display_name: string | null
+          icon: string | null
+          id: string
+          is_default: boolean
+          metadata: Json
+          name: string
+          paused_at: string | null
+          paused_reason: string | null
+          routing_mode: string
+          status: string
+          sticky_enabled: boolean
+          sticky_ttl_hours: number
+          updated_at: string
+          whatsapp_connection_id: string | null
+        }
+        Insert: {
+          channel_type?: string
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          default_queue_id?: string | null
+          description?: string | null
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          display_name?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean
+          metadata?: Json
+          name: string
+          paused_at?: string | null
+          paused_reason?: string | null
+          routing_mode?: string
+          status?: string
+          sticky_enabled?: boolean
+          sticky_ttl_hours?: number
+          updated_at?: string
+          whatsapp_connection_id?: string | null
+        }
+        Update: {
+          channel_type?: string
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          default_queue_id?: string | null
+          description?: string | null
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          display_name?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean
+          metadata?: Json
+          name?: string
+          paused_at?: string | null
+          paused_reason?: string | null
+          routing_mode?: string
+          status?: string
+          sticky_enabled?: boolean
+          sticky_ttl_hours?: number
+          updated_at?: string
+          whatsapp_connection_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_channels_default_queue_id_fkey"
+            columns: ["default_queue_id"]
+            isOneToOne: false
+            referencedRelation: "queues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_channels_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_channels_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_agent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_channels_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_channels_whatsapp_connection_id_fkey"
+            columns: ["whatsapp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sicoob_contact_mapping: {
         Row: {
           contact_id: string
@@ -10595,6 +10706,39 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_disable_service_channel: {
+        Args: { p_id: string; p_reason?: string }
+        Returns: {
+          channel_type: string
+          color: string
+          created_at: string
+          created_by: string | null
+          default_queue_id: string | null
+          description: string | null
+          disabled_at: string | null
+          disabled_reason: string | null
+          display_name: string | null
+          icon: string | null
+          id: string
+          is_default: boolean
+          metadata: Json
+          name: string
+          paused_at: string | null
+          paused_reason: string | null
+          routing_mode: string
+          status: string
+          sticky_enabled: boolean
+          sticky_ttl_hours: number
+          updated_at: string
+          whatsapp_connection_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_channels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       rpc_dispatch_error_stats: { Args: { p_hours?: number }; Returns: Json }
       rpc_dlq_abandon: {
         Args: { p_id: string; p_reason: string }
@@ -10755,6 +10899,39 @@ export type Database = {
               updated_at: string
             }[]
           }
+      rpc_list_service_channels: {
+        Args: { p_channel_type?: string; p_search?: string; p_status?: string }
+        Returns: {
+          channel_type: string
+          color: string
+          created_at: string
+          created_by: string | null
+          default_queue_id: string | null
+          description: string | null
+          disabled_at: string | null
+          disabled_reason: string | null
+          display_name: string | null
+          icon: string | null
+          id: string
+          is_default: boolean
+          metadata: Json
+          name: string
+          paused_at: string | null
+          paused_reason: string | null
+          routing_mode: string
+          status: string
+          sticky_enabled: boolean
+          sticky_ttl_hours: number
+          updated_at: string
+          whatsapp_connection_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "service_channels"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       rpc_log_provider_message: {
         Args: {
           p_direction: string
@@ -10778,6 +10955,39 @@ export type Database = {
           p_used_vector: boolean
         }
         Returns: string
+      }
+      rpc_pause_service_channel: {
+        Args: { p_id: string; p_reason?: string }
+        Returns: {
+          channel_type: string
+          color: string
+          created_at: string
+          created_by: string | null
+          default_queue_id: string | null
+          description: string | null
+          disabled_at: string | null
+          disabled_reason: string | null
+          display_name: string | null
+          icon: string | null
+          id: string
+          is_default: boolean
+          metadata: Json
+          name: string
+          paused_at: string | null
+          paused_reason: string | null
+          routing_mode: string
+          status: string
+          sticky_enabled: boolean
+          sticky_ttl_hours: number
+          updated_at: string
+          whatsapp_connection_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_channels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       rpc_provider_panel: {
         Args: never
@@ -10829,6 +11039,7 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_purge_channel_sticky: { Args: { p_id: string }; Returns: number }
       rpc_queue_rebalance_candidates: {
         Args: { p_limit?: number }
         Returns: {
@@ -10862,6 +11073,39 @@ export type Database = {
           waiting_count: number
         }[]
       }
+      rpc_reactivate_service_channel: {
+        Args: { p_id: string }
+        Returns: {
+          channel_type: string
+          color: string
+          created_at: string
+          created_by: string | null
+          default_queue_id: string | null
+          description: string | null
+          disabled_at: string | null
+          disabled_reason: string | null
+          display_name: string | null
+          icon: string | null
+          id: string
+          is_default: boolean
+          metadata: Json
+          name: string
+          paused_at: string | null
+          paused_reason: string | null
+          routing_mode: string
+          status: string
+          sticky_enabled: boolean
+          sticky_ttl_hours: number
+          updated_at: string
+          whatsapp_connection_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_channels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       rpc_record_event_key_usage: {
         Args: { p_key_id: string }
         Returns: undefined
@@ -10884,6 +11128,53 @@ export type Database = {
         Returns: Json
       }
       rpc_search_insights: { Args: { p_days?: number }; Returns: Json }
+      rpc_upsert_service_channel: {
+        Args: {
+          p_channel_type?: string
+          p_color?: string
+          p_default_queue_id?: string
+          p_description?: string
+          p_display_name?: string
+          p_icon?: string
+          p_id?: string
+          p_is_default?: boolean
+          p_name?: string
+          p_routing_mode?: string
+          p_sticky_enabled?: boolean
+          p_sticky_ttl_hours?: number
+          p_whatsapp_connection_id?: string
+        }
+        Returns: {
+          channel_type: string
+          color: string
+          created_at: string
+          created_by: string | null
+          default_queue_id: string | null
+          description: string | null
+          disabled_at: string | null
+          disabled_reason: string | null
+          display_name: string | null
+          icon: string | null
+          id: string
+          is_default: boolean
+          metadata: Json
+          name: string
+          paused_at: string | null
+          paused_reason: string | null
+          routing_mode: string
+          status: string
+          sticky_enabled: boolean
+          sticky_ttl_hours: number
+          updated_at: string
+          whatsapp_connection_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_channels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       search_contacts: {
         Args: {
           company_filter?: string
