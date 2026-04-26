@@ -127,6 +127,13 @@ export default function AdminInboxSyncStatusPage() {
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
+  // Threshold de alerta configurável (em minutos) — persistido em localStorage.
+  const [alertThresholdMin, setAlertThresholdMin] = useState<number>(() => readStoredThreshold());
+  // Marca o último ISO de inbound já alertado para evitar disparar toast a cada
+  // poll enquanto o problema persiste. Reseta quando uma nova inbound chega.
+  const alertedForInboundRef = useRef<string | null>(null);
+
+
   const [buckets, setBuckets] = useState<SyncBucket[]>([
     { label: 'Últimos 5 min', sinceMs: 5 * 60_000, count: null },
     { label: 'Última 1 h', sinceMs: 60 * 60_000, count: null },
