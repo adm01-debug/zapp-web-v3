@@ -198,17 +198,35 @@ export function useRealtimeInbox() {
 
   const handleSendMessage = useCallback(async (content: string) => {
     if (!selectedContactId) return;
+    if (USE_EXTERNAL_DB) {
+      // External path: envio via evolution-api + bolha otimista no cursor.
+      // Erros são propagados (sem swallow) para o SendErrorBanner.
+      const { sendExternalText } = await import('@/hooks/realtime/externalMessageSender');
+      const { optimistic } = await sendExternalText(selectedContactId, content);
+      try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+      // Pequeno delay para o webhook materializar — depois refetch.
+      setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
+      return;
+    }
     try {
       await sendMessage(selectedContactId, content);
-    } catch {
-      toast.error('Erro ao enviar mensagem');
+    } catch (err) {
+      // Propagar para o ChatPanel exibir o SendErrorBanner em vez de
+      // apenas mostrar um toast genérico que se confundia com o sucesso.
+      throw err;
     } finally {
       await refreshActiveConversation();
     }
-  }, [selectedContactId, sendMessage, refreshActiveConversation]);
+  }, [selectedContactId, sendMessage, refreshActiveConversation, externalMsgs, externalData]);
 
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
+    if (USE_EXTERNAL_DB) {
+      // Áudio externo ainda não suportado neste hook — informa o operador
+      // em vez de falhar silenciosamente.
+      toast.error('Envio de áudio temporariamente indisponível neste modo. Use texto ou mídia.');
+      return;
+    }
     try {
       const fileName = `${selectedContactId}/${Date.now()}.webm`;
       const { error: uploadError } = await supabase.storage.from('audio-messages').upload(fileName, blob, { contentType: 'audio/webm' });
