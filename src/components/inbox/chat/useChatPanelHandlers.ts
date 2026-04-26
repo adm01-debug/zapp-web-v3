@@ -257,10 +257,30 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   }, []);
 
   const handleAudioSend = useCallback(async (audioBlob: Blob, onSendAudio?: (blob: Blob) => Promise<void>) => {
-    if (onSendAudio) {
-      try { await onSendAudio(audioBlob); } catch (err) { log.error('Error sending audio:', err); toast({ title: 'Erro ao enviar áudio', description: 'Tente novamente.', variant: 'destructive' }); }
-    } else { toast({ title: 'Erro', description: 'Envio de áudio não configurado.', variant: 'destructive' }); }
-    setIsRecordingAudio(false);
+    if (!onSendAudio) {
+      toast({ title: 'Erro', description: 'Envio de áudio não configurado.', variant: 'destructive' });
+      setIsRecordingAudio(false);
+      return;
+    }
+    // Sucesso → limpa qualquer áudio pendente do retry anterior.
+    // Falha → guarda o blob + a função de envio para o `SendErrorBanner`
+    // disparar o reenvio com nova bolha otimista (upload + invoke + bubble).
+    try {
+      await onSendAudio(audioBlob);
+      lastFailedAudioRef.current = null;
+    } catch (err: any) {
+      log.error('Error sending audio:', err);
+      const msg = err?.message || 'Falha ao enviar áudio.';
+      const detail = typeof err?.detail === 'string' ? err.detail : null;
+      lastFailedAudioRef.current = { blob: audioBlob, onSendAudio };
+      // Limpa retry de texto pendente — só um tipo por vez no banner.
+      lastFailedPayloadRef.current = null;
+      setLastSendError(msg);
+      setLastSendErrorDetail(detail);
+      toast({ title: 'Erro ao enviar áudio', description: 'Clique em "Reenviar" para tentar novamente.', variant: 'destructive' });
+    } finally {
+      setIsRecordingAudio(false);
+    }
   }, []);
 
   return {
