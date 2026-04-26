@@ -281,7 +281,59 @@ export default function AdminInboxSyncStatusPage() {
     return () => { if (id !== null) window.clearInterval(id); };
   }, [fetchAll]);
 
-  const health = useMemo(() => classifyHealth(lastEvents.inboundAt), [lastEvents.inboundAt]);
+  const health = useMemo(
+    () => classifyHealth(lastEvents.inboundAt, alertThresholdMin),
+    [lastEvents.inboundAt, alertThresholdMin],
+  );
+
+  // Persiste threshold sempre que muda.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(ALERT_THRESHOLD_KEY, String(alertThresholdMin));
+  }, [alertThresholdMin]);
+
+  // Dispara toast.error UMA vez por episódio quando ultrapassa o threshold.
+  // O dedupe usa o ISO da última inbound conhecida como chave: enquanto não
+  // chegar uma inbound mais nova, não re-alerta a cada poll.
+  useEffect(() => {
+    if (!health.alerting || loading) return;
+    const key = lastEvents.inboundAt ?? '__no_inbound__';
+    if (alertedForInboundRef.current === key) return;
+    alertedForInboundRef.current = key;
+    const minutesLabel = health.ageMinutes != null
+      ? `${health.ageMinutes}min sem inbound`
+      : 'nenhuma inbound encontrada';
+    log.warn('[inbox-sync] inactivity alert fired', {
+      lastInboundAt: lastEvents.inboundAt,
+      ageMinutes: health.ageMinutes,
+      thresholdMin: alertThresholdMin,
+    });
+    toast.error('Inbox sem mensagens recebidas', {
+      description: `${minutesLabel} (limite: ${alertThresholdMin}min). Verifique webhook e instância "${INSTANCE}".`,
+      duration: 10_000,
+    });
+  }, [health.alerting, health.ageMinutes, lastEvents.inboundAt, alertThresholdMin, loading]);
+
+  // Quando uma nova inbound chega e estamos saudáveis de novo, libera o
+  // alerta para um próximo episódio.
+  useEffect(() => {
+    if (!health.alerting && lastEvents.inboundAt) {
+      // só reseta quando o alerta anterior referia-se a OUTRO ISO (ou ao
+      // estado "sem dados") — assim evita reset durante a janela ainda OK.
+      if (alertedForInboundRef.current && alertedForInboundRef.current !== lastEvents.inboundAt) {
+        alertedForInboundRef.current = null;
+      }
+    }
+  }, [health.alerting, lastEvents.inboundAt]);
+
+  const handleThresholdChange = useCallback((raw: string) => {
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) return;
+    const clamped = Math.min(MAX_THRESHOLD, Math.max(MIN_THRESHOLD, parsed));
+    setAlertThresholdMin(clamped);
+    // Reseta o dedupe para que a nova régua tome efeito imediatamente.
+    alertedForInboundRef.current = null;
+  }, []);
 
   return (
     <div className="container max-w-6xl py-6 space-y-6">
@@ -296,7 +348,23 @@ export default function AdminInboxSyncStatusPage() {
             que alimenta o Inbox em tempo real. Atualiza a cada 15s.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="inbound-threshold" className="text-xs text-muted-foreground whitespace-nowrap">
+              Alerta após
+            </Label>
+            <Input
+              id="inbound-threshold"
+              type="number"
+              min={MIN_THRESHOLD}
+              max={MAX_THRESHOLD}
+              value={alertThresholdMin}
+              onChange={(e) => handleThresholdChange(e.target.value)}
+              className="h-8 w-20"
+              aria-label="Minutos sem inbound antes de alertar"
+            />
+            <span className="text-xs text-muted-foreground">min sem inbound</span>
+          </div>
           <Badge variant={health.variant} className="gap-1">
             {health.ok ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
             {health.label}
@@ -312,6 +380,26 @@ export default function AdminInboxSyncStatusPage() {
           </Button>
         </div>
       </header>
+
+      {health.alerting && !loading && (
+        <Alert variant="destructive">
+          <BellRing className="h-4 w-4" />
+          <AlertTitle>Sem mensagens inbound há {health.ageMinutes ?? '—'} min</AlertTitle>
+          <AlertDescription>
+            O cursor externo (<code className="font-mono">evolution_messages</code>) não recebe
+            mensagens da instância <strong>{INSTANCE}</strong> há mais de{' '}
+            <strong>{alertThresholdMin} min</strong>. Verifique o webhook em{' '}
+            <Link to="/admin/webhook-overview" className="underline">
+              Webhook Overview
+            </Link>{' '}
+            e o status da instância em{' '}
+            <Link to="/admin/channels" className="underline">
+              Canais
+            </Link>
+            .
+          </AlertDescription>
+        </Alert>
+      )}
 
       {error && (
         <Alert variant="destructive">
