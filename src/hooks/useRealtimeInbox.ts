@@ -142,6 +142,9 @@ export function useRealtimeInbox() {
   useEffect(() => {
     if (!selectedContactId) { setSelectedContactFallback(null); return; }
     if (selectedConversation) { setSelectedContactFallback(null); return; }
+    // No modo externo o `selectedContactId` é um remote_jid, não um UUID,
+    // então não tentamos buscar em `public.contacts` (causaria erro de tipo).
+    if (USE_EXTERNAL_DB) { setSelectedContactFallback(null); return; }
     let cancelled = false;
     const loadSelectedContact = async () => {
       const { data, error } = await supabase
