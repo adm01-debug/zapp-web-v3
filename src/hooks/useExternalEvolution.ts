@@ -48,7 +48,7 @@ const OPTIMISTIC_PREFIX = 'optimistic:';
 const OPTIMISTIC_FALLBACK_WINDOW_MS = 120_000;
 const MEDIA_TYPES = new Set(['audio', 'image', 'video', 'document', 'sticker']);
 
-function reconcileOptimistic(
+export function reconcileOptimistic(
   prev: RealtimeMessage[],
   incoming: RealtimeMessage[],
 ): { filteredPrev: RealtimeMessage[]; additions: RealtimeMessage[] } {
