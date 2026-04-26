@@ -1,118 +1,124 @@
-## Conector Evolution API "Modo Oficial" (WhatsApp Cloud API / Meta)
+## Objetivo
 
-Hoje o sistema já tem o **flag** `api_type = 'official' | 'evolution'` em `whatsapp_connections` e a UI permite alternar, mas **não existe integração real** com a API oficial. Toda mensagem outbound passa pela Evolution (`evolution-api` edge function → `send-text`/`send-media`) e toda mensagem inbound chega pelo `evolution-webhook`. O modelo de dados (`evolution_messages`, `evolution_contacts`, `evolution_conversations` no FATOR X) é o ponto de unificação.
+Criar uma suíte de **smoke tests automatizados pré-deploy** que valide envio (outbound) e webhook (inbound) em ambos os provedores — **Evolution API** e **WhatsApp Cloud API (Meta)** — garantindo paridade do modelo unificado de mensagens antes de cada release.
 
-O objetivo é plugar o WhatsApp Cloud API oficial (Meta Graph) **sem mudar uma linha** dos hooks/UI do Inbox: toda mensagem oficial cai no mesmo schema FATOR X, a UI continua agnóstica.
+## Escopo
 
-### Arquitetura
+Testes determinísticos, sem chamadas reais a Evolution/Meta (mocks via `globalThis.fetch`), executáveis em < 30s e plugados no CI como **gate obrigatório** antes do job `build`.
 
-```text
-                 ┌─────────────── Inbox UI / hooks ───────────────┐
-                 │  (sem mudanças — fala apenas em "rpc_*"        │
-                 │   e em "evolution-api" via supabase.functions) │
-                 └────────────────────┬───────────────────────────┘
-                                      │
-                       ┌──────────────▼───────────────┐
-                       │   provider-router (existe,    │
-                       │   estendido)                  │
-                       │   lê api_type da connection   │
-                       └──────┬───────────────┬───────┘
-                              │               │
-                  api_type=evolution     api_type=official
-                              │               │
-                  ┌───────────▼───┐   ┌───────▼─────────┐
-                  │ evolution-api │   │ whatsapp-cloud- │
-                  │   (atual)     │   │  api  (NOVO)    │
-                  └───────┬───────┘   └────────┬────────┘
-                          │                    │
-                Evolution server          graph.facebook.com
-                          │                    │
-                evolution-webhook        whatsapp-cloud-webhook (NOVO)
-                          │                    │
-                          └────────┬───────────┘
-                                   ▼
-                       FATOR X — evolution_messages
-                       (mesmo schema, mesma tabela)
+## Arquivos a criar
+
+### 1) Testes Deno — Edge Functions
+
+**`supabase/functions/whatsapp-cloud-api/__tests__/smoke.test.ts`**
+- `send-text`: monta payload Graph correto (`messaging_product`, `to`, `type:text`), chama Graph mockada, persiste em `rpc_insert_message` com `from_me=true`, retorna `{ wamid }`.
+- `send-media` (image/audio/document): valida tipo, link/id, caption.
+- Erro Graph 4xx → propaga status, não persiste mensagem.
+- Credenciais ausentes (`api_type !== 'official'`) → 404 limpo.
+
+**`supabase/functions/whatsapp-cloud-webhook/__tests__/smoke.test.ts`**
+- GET verify (`hub.mode=subscribe` + token) → echo do `hub.challenge`.
+- POST sem assinatura HMAC válida → 401.
+- POST com payload texto válido → normaliza para `NormalizedIncoming` e chama `rpc_insert_message` + `rpc_upsert_contact`.
+- POST com `statuses` (delivered/read/failed) → atualiza status via RPC.
+- Mídia (image/audio): faz fetch mockado da URL Graph e upload no bucket `whatsapp-media`.
+
+**`supabase/functions/evolution-api/__tests__/smoke.test.ts`** (novo, complementa os existentes)
+- Smoke `send-text` end-to-end com Evolution mockada → 200 + persistência.
+- Smoke `send-media-audio` → ptt:true preservado.
+- URL normalization (sem trailing slash) — regressão do bug DLQ corrigido.
+
+**`supabase/functions/evolution-webhook/__tests__/smoke.test.ts`** (novo)
+- POST `messages.upsert` mockado → contato + mensagem inseridos via RPC.
+- POST `messages.update` (status) → atualização de status.
+- HMAC inválido → 401.
+
+### 2) Teste de paridade (cross-provider)
+
+**`supabase/functions/_shared/__tests__/parity.test.ts`**
+- Dado o mesmo "evento lógico" (texto recebido de `+5511999999999`), verifica que **tanto o normalizer Evolution quanto o Cloud** produzem a mesma forma final de argumentos para `rpc_insert_message` (mesmos campos: `p_remote_jid`, `p_content`, `p_message_type`, `p_from_me`, `p_message_id`).
+- Garante que adicionar provedor novo não quebre o modelo unificado.
+
+### 3) Teste Vitest do router
+
+**`src/lib/__tests__/sendFunctionRouter.smoke.test.ts`**
+- `api_type='official'` → `whatsapp-cloud-api`.
+- `api_type='evolution'` ou nulo → `evolution-api`.
+- Cache de 60s respeitado (segunda chamada não consulta DB).
+- Erro de DB → fallback `evolution-api`.
+
+### 4) Script orquestrador pré-deploy
+
+**`scripts/smoke-pre-deploy.sh`**
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+echo "▶ Vitest smoke (router + envio)"
+npm run test -- --run sendFunctionRouter.smoke
+echo "▶ Deno smoke (Evolution + Cloud + paridade)"
+deno test --allow-net --allow-env --allow-read \
+  supabase/functions/evolution-api/__tests__/smoke.test.ts \
+  supabase/functions/evolution-webhook/__tests__/smoke.test.ts \
+  supabase/functions/whatsapp-cloud-api/__tests__/ \
+  supabase/functions/whatsapp-cloud-webhook/__tests__/ \
+  supabase/functions/_shared/__tests__/parity.test.ts
+echo "✅ Pré-deploy verde"
 ```
 
-### O que será criado
+Adicionar em `package.json`:
+```json
+"smoke:pre-deploy": "bash scripts/smoke-pre-deploy.sh"
+```
 
-1. **Tabela `whatsapp_official_credentials`** (Lovable Cloud)
-   - `connection_id` (FK → whatsapp_connections, unique)
-   - `phone_number_id`, `waba_id`, `business_account_id`
-   - `access_token` (criptografado — service role only via RLS)
-   - `app_secret` (para validar webhook X-Hub-Signature)
-   - `verify_token` (para handshake do webhook Meta)
-   - RLS: SELECT/UPDATE só admin; service_role acessa nas edge functions
+### 5) Helper de mock compartilhado
 
-2. **Edge function `whatsapp-cloud-api`** (NOVA)
-   - Mesma assinatura externa que `evolution-api` (`{ action, instanceName, number, text, ... }`)
-   - Ações suportadas: `send-text`, `send-media`, `send-audio`, `send-sticker`, `send-template`, `mark-read`, `send-reaction`, `presence`
-   - Traduz para Graph API: `POST https://graph.facebook.com/v21.0/{phone_number_id}/messages`
-   - Após resposta OK, **insere via `rpc_insert_message`** no FATOR X com mesmo formato (`from_me=true`, `direction=outbound`, `message_id` = wamid retornado pela Meta)
-   - Mesmo envelope de resposta usado pela `evolution-api` (`{ key: { id }, status }`) para que `externalMessageSender.ts` continue funcionando sem if/else
+**`supabase/functions/_shared/test-fetch-mock.ts`**
+- `installFetchMock(handlers: Record<string, Response>)` para interceptar Graph API e Evolution API por padrão de URL.
+- `restoreFetch()` para teardown.
+- Reutilizável em todos os smoke tests.
 
-3. **Edge function `whatsapp-cloud-webhook`** (NOVA)
-   - GET → handshake (echo `hub.challenge` quando `hub.verify_token` bate)
-   - POST → valida `X-Hub-Signature-256` com `app_secret`
-   - Normaliza payload Meta → mesmo shape que os handlers Evolution já usam (`messages.upsert`, `messages.update`, `contacts.upsert`)
-   - Reusa `handleIncomingMessage` de `_shared/evolution-webhook-messages.ts` (refatorado para aceitar payload já normalizado) → grava em `evolution_messages` via `rpc_insert_message`
-   - Grava status delivery (`sent` / `delivered` / `read` / `failed`) atualizando `evolution_messages.status`
+## Arquivos a editar
 
-4. **Roteador de envio** — pequeno wrapper em `src/hooks/realtime/messageSender.ts`
-   - Antes de invocar `evolution-api`, lê `connection.api_type`
-   - Se `official` → invoca `whatsapp-cloud-api` (mesma shape de body)
-   - Se `evolution` → comportamento atual
-   - **Nada mais muda** no hook/UI
+**`.github/workflows/ci.yml`**
+- Adicionar novo job `smoke-pre-deploy` (depende de `test` e `deno-edge-tests`, é dependência de `build`):
 
-5. **UI de configuração da credencial oficial**
-   - Em `ConnectionsView`, quando `api_type='official'` e sem credencial, mostrar botão "Configurar Cloud API"
-   - Dialog com campos: Phone Number ID, WABA ID, Access Token, App Secret, Verify Token
-   - Botão "Testar conexão" → chama `whatsapp-cloud-api` action `ping` (faz GET no `phone_number_id` na Graph API)
-   - Mostra a URL do webhook a configurar no painel da Meta
+```yaml
+smoke-pre-deploy:
+  name: 🚦 Smoke Pre-Deploy (Evolution + Cloud)
+  runs-on: ubuntu-latest
+  needs: [test, deno-edge-tests]
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with: { node-version: '20' }
+    - uses: denoland/setup-deno@v1
+      with: { deno-version: v1.x }
+    - run: npm install --no-audit --no-fund
+    - run: npm run smoke:pre-deploy
+```
+- Alterar `build.needs` para incluir `smoke-pre-deploy`.
 
-### Detalhes técnicos
+## Resumo técnico (como os mocks funcionam)
 
-- **Mapping Meta → modelo unificado** (gravado em `evolution_messages`):
-  - `wamid` (Meta) → `message_id`
-  - `from` (E.164) → `remote_jid` = `<numero>@s.whatsapp.net`
-  - `text.body` → `content`, `message_type='text'`
-  - `image/audio/video/document` → baixar via `media_id` Graph API → upload no bucket `whatsapp-media` (já existente) → URL persistida em `media_url`
-  - `interactive` / `button_reply` / `list_reply` → `message_type='interactive'`, payload completo em `metadata`
-  - Status callbacks → UPDATE em `evolution_messages.status`
-- **Idempotência**: usar `wamid` como chave (já é unique no schema), retry seguro
-- **Templates**: action `send-template` para mensagens fora da janela 24h (obrigatório na Cloud API)
-- **Rate limit**: respeitar `429` da Meta com backoff, mesmo padrão do `external-db-proxy`
-- **Telemetria**: registrar em `provider_call_logs` (já existe) com `provider_type='whatsapp_cloud'`
-- **CORS / auth**: `verify_jwt = false` no webhook (Meta não envia JWT); validação por HMAC obrigatória
+```text
+┌───────────────────────────────────────────────┐
+│ smoke.test.ts                                 │
+│   1. installFetchMock({                       │
+│        'graph.facebook.com': fakeGraphOk,     │
+│        'evolution.api':     fakeEvoOk,        │
+│      })                                       │
+│   2. createClient = stubSupabase()            │
+│      → captura chamadas a rpc_insert_message  │
+│   3. await handler(req)                       │
+│   4. assertEquals(captured.rpc_args, expected)│
+└───────────────────────────────────────────────┘
+```
 
-### Arquivos
+Sem nenhuma rede real; tudo em ≤ 5s por suíte. Falha em qualquer asserção bloqueia o `build` no CI.
 
-**Criar:**
-- `supabase/functions/whatsapp-cloud-api/index.ts` — proxy para Graph API
-- `supabase/functions/whatsapp-cloud-webhook/index.ts` — receiver Meta
-- `supabase/functions/_shared/whatsapp-cloud-normalizer.ts` — Meta payload → modelo Evolution
-- `src/components/connections/OfficialApiConfigDialog.tsx` — UI de credenciais
-- `supabase/config.toml` — adicionar bloco `verify_jwt = false` para o webhook
-- Migração: tabela `whatsapp_official_credentials` + RLS + função `get_official_credentials(connection_id)` security definer
+## Critério de aceite
 
-**Editar:**
-- `src/hooks/realtime/messageSender.ts` — escolher edge function por `api_type`
-- `src/hooks/realtime/externalMessageSender.ts` — idem
-- `src/components/connections/ConnectionCard.tsx` — botão "Configurar Cloud API" quando oficial
-- `supabase/functions/_shared/evolution-webhook-messages.ts` — extrair `handleIncomingMessage` para receber payload pré-normalizado (refator mínimo)
-
-### O que NÃO muda
-
-- Schema `evolution_messages` / `evolution_contacts` no FATOR X
-- Nenhum componente do Inbox, Kanban, CRM, Reports
-- RPCs FATOR X (continuam sendo chamadas pelas mesmas edges)
-- Sticky agent, roteamento, SLA, CSAT — todos agnósticos
-
-### Critério de aceite
-
-1. Criar conexão com `api_type='official'`, configurar credenciais Meta, clicar "Testar" → toast de sucesso
-2. Enviar texto pelo Inbox numa conversa dessa conexão → mensagem aparece no FATOR X com `message_type='text'`, `from_me=true`, `message_id=wamid`
-3. Receber texto da Meta no webhook → conversa nova/atualizada no Inbox em <2s, igual ao fluxo Evolution
-4. Receber callback de status `delivered`/`read` → checkmarks atualizam em tempo real (realtime já existente)
-5. Conexões `evolution` continuam funcionando sem regressão
+- `npm run smoke:pre-deploy` verde local e em CI.
+- Job `smoke-pre-deploy` aparece como required check.
+- Quebra intencional (ex.: alterar `messaging_product` para valor errado) faz o teste falhar.
+- Cobertura cruzada: cada provedor tem ≥ 1 teste de envio + ≥ 1 de webhook + paridade do modelo.
