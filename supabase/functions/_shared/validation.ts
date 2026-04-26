@@ -42,12 +42,29 @@ function getSensitiveValues(): string[] {
   return _sensitiveValuesCache;
 }
 
-/** Redact known secret values from any string. Safe to call on arbitrary input. */
+// ─── Generic PII / credential patterns ──────────────────────────────────────
+// These catch leaks even when the value isn't a known env-var secret
+// (e.g. user-supplied tokens echoed inside webhook payloads).
+const PII_PATTERNS: ReadonlyArray<{ re: RegExp; replacement: string | ((m: string) => string) }> = [
+  { re: /(authorization\s*[:=]\s*)(bearer|basic)\s+[A-Za-z0-9._\-+/=]+/gi, replacement: '$1$2 ***REDACTED***' },
+  { re: /((?:x-)?api[_-]?key\s*[:=]\s*)["']?[A-Za-z0-9._\-]{16,}["']?/gi, replacement: '$1***REDACTED***' },
+  { re: /\beyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\b/g, replacement: '***JWT_REDACTED***' },
+  { re: /\/rest\/(\d+)\/[A-Za-z0-9]{20,}\b/g, replacement: '/rest/$1/***REDACTED***' },
+  { re: /\b([A-Za-z0-9._%+\-]{1,64})@([A-Za-z0-9.\-]+\.[A-Za-z]{2,})\b/g, replacement: '***@$2' },
+  { re: /\+?\d{8,15}\b/g, replacement: (m: string) => '***' + m.slice(-4) },
+];
+
+/** Redact known secret values + generic PII patterns from any string. */
 export function redactSecrets(input: string): string {
   if (typeof input !== 'string' || input.length === 0) return input;
   let out = input;
   for (const secret of getSensitiveValues()) {
     if (out.includes(secret)) out = out.split(secret).join('***REDACTED***');
+  }
+  for (const { re, replacement } of PII_PATTERNS) {
+    out = typeof replacement === 'string'
+      ? out.replace(re, replacement)
+      : out.replace(re, replacement);
   }
   return out;
 }

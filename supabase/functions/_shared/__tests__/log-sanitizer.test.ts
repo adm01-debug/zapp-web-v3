@@ -106,3 +106,36 @@ Deno.test("Logger ignores trivially-short env values (no false positives)", () =
     assert(blob.includes("true"), "short env value should not trigger redaction");
   });
 });
+
+Deno.test("PII minimization patterns", async (t) => {
+  await t.step("redacts JWT tokens", () => {
+    const jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature_part_here_xx";
+    const out = redactSecrets(`token=${jwt} done`);
+    assert(!out.includes(jwt), "JWT must be removed");
+    assertStringIncludes(out, "***JWT_REDACTED***");
+  });
+
+  await t.step("redacts Authorization Bearer header", () => {
+    const out = redactSecrets("Authorization: Bearer abc123def456ghi789");
+    assert(!out.includes("abc123def456ghi789"));
+    assertStringIncludes(out.toLowerCase(), "***redacted***");
+  });
+
+  await t.step("masks phone numbers keeping last 4 digits", () => {
+    const out = redactSecrets("contact +5511987654321 called");
+    assert(!out.includes("987654321"));
+    assertStringIncludes(out, "***4321");
+  });
+
+  await t.step("masks email local-part but keeps domain for ops", () => {
+    const out = redactSecrets("user joao.silva@empresa.com.br logged in");
+    assert(!out.includes("joao.silva"));
+    assertStringIncludes(out, "***@empresa.com.br");
+  });
+
+  await t.step("redacts Bitrix REST webhook token in URL", () => {
+    const out = redactSecrets("calling https://x.bitrix24.com.br/rest/42/abcdefghij1234567890/crm.deal.add");
+    assert(!out.includes("abcdefghij1234567890"));
+    assertStringIncludes(out, "/rest/42/***REDACTED***");
+  });
+});
