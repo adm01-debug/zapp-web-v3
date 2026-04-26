@@ -18,6 +18,7 @@ import { enqueueClientFailedMessage } from '@/lib/failedMessagesEnqueue';
 import { loadRetryConfig } from '@/lib/retryConfig';
 import { crossTabDedupe } from '@/lib/crossTabSendDedupe';
 import { buildRequestDedupeKey } from '@/lib/requestDedupeKey';
+import { resolveSendFunction } from '@/lib/sendFunctionRouter';
 
 const log = getLogger('EvolutionSendRetry');
 
