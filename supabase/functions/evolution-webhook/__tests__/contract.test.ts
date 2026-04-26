@@ -15,10 +15,11 @@ import { hasMarker, readSource } from "./_helpers.ts";
 
 const SOURCE = await readSource();
 
-Deno.test("HMAC: lê WEBHOOK_SECRET (ou EVOLUTION_WEBHOOK_SECRET) e instala validador", () => {
-  assertMatch(SOURCE, /EVOLUTION_WEBHOOK_SECRET/);
+Deno.test("HMAC: lê WEBHOOK_SECRET[S] (incl. EVOLUTION_WEBHOOK_*) e instala validador", () => {
+  assertMatch(SOURCE, /EVOLUTION_WEBHOOK/);
   assertMatch(SOURCE, /WEBHOOK_SECRET/);
-  assertMatch(SOURCE, /createWebhookValidator\(WEBHOOK_SECRET, STRICT_MODE\)/);
+  // Validador é instalado com a lista (string|string[]) — multi-secret rotation.
+  assertMatch(SOURCE, /createWebhookValidator\(WEBHOOK_SECRETS, STRICT_MODE\)/);
 });
 
 Deno.test("HMAC: assinatura inválida => 401 + audit rejected", () => {
