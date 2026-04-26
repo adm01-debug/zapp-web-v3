@@ -4,6 +4,7 @@ import { Logger, checkRateLimit, getClientIP, getCorsHeaders, handleCors } from 
 import { EVOLUTION_ENVELOPE_VERSION, proxyToEvolution, resolvePrivateBucketUrl } from "../_shared/evolution-api-proxy.ts";
 import { normalizeChatList, normalizeContactList, normalizeProfile } from "../_shared/evolution-response-normalizers.ts";
 import { maybeLogFallback } from "../_shared/evolution-fallback-telemetry.ts";
+import { mapFetchInstancesToProfile, shouldFallbackForProfile } from "../_shared/evolution-profile-fallback.ts";
 import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
 
 serve(async (req) => {
@@ -16,9 +17,16 @@ serve(async (req) => {
   const rl = checkRateLimit(`evolution:${ip}`, 120, 60_000);
   if (!rl.allowed) {
     return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
-      status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' },
     });
   }
+
+  // Per-instance send rate limit. Protects Evolution + the WhatsApp account
+  // from being hammered when a single instance has a buggy automation or a
+  // runaway loop. Limits are deliberately separate from the global IP limit
+  // so multi-tenant deploys can't starve each other. Configurable via env so
+  // ops can tune without redeploy.
+  const SEND_PER_INSTANCE_PER_MIN = Number(Deno.env.get('EVOLUTION_SEND_RATE_PER_INSTANCE') ?? '60');
 
   const evolutionApiUrl = (Deno.env.get('EVOLUTION_API_URL') || '').replace(/\/+$/, '');
   const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY');
@@ -77,6 +85,24 @@ serve(async (req) => {
         code: 'INSTANCE_PAUSED',
         message: `Instância "${instance}" está pausada temporariamente por excesso de falhas de autenticação. Tente novamente em alguns minutos ou retome manualmente no painel.`,
       }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } });
+    }
+
+    // Per-instance send rate limit — only enforced on send-* actions where a
+    // runaway client could trigger WhatsApp account bans. Reads (find-chats,
+    // list-instances, etc) are unaffected. The limiter is best-effort
+    // in-memory per edge function instance — under heavy fan-out this is a
+    // soft cap, not a hard one.
+    if (instance && action.startsWith('send-') && SEND_PER_INSTANCE_PER_MIN > 0) {
+      const sendRl = checkRateLimit(`evolution-send:${instance}`, SEND_PER_INSTANCE_PER_MIN, 60_000);
+      if (!sendRl.allowed) {
+        return new Response(JSON.stringify({
+          version: EVOLUTION_ENVELOPE_VERSION,
+          error: true,
+          status: 429,
+          code: 'INSTANCE_RATE_LIMIT',
+          message: `Instância "${instance}" excedeu o limite de envios (${SEND_PER_INSTANCE_PER_MIN}/min). Tente novamente em alguns segundos.`,
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '30' } });
+      }
     }
 
     // ─── 1. Instance Management ───
@@ -315,7 +341,27 @@ serve(async (req) => {
       const endpoint = `/profile/fetchProfile/${instance}`;
       const response = await proxy(endpoint, 'GET');
       const data = await response.json();
-      maybeLogFallback({ action: 'fetch-profile', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: Date.now() - t0, supabase });
+      const primaryMs = Date.now() - t0;
+
+      // Fallback: when v2.3.7 reports the route as 404/empty, recover the
+      // profile fields from `/instance/fetchInstances` (which is always
+      // available on v2.x) and map them to the canonical profile shape.
+      if (instance && shouldFallbackForProfile(data)) {
+        const fbEndpoint = `/instance/fetchInstances?instanceName=${encodeURIComponent(String(instance))}`;
+        const fbResponse = await proxy(fbEndpoint, 'GET');
+        const fbData = await fbResponse.json();
+        const mapped = (fbData && typeof fbData === 'object' && (fbData as Record<string, unknown>).error === true)
+          ? null
+          : mapFetchInstancesToProfile(fbData, String(instance));
+        maybeLogFallback({ action: 'fetch-profile', endpoint, instance: String(instance), status: response.status, data, primary_ms: primaryMs, mode: 'triggered', supabase });
+        if (mapped) {
+          return new Response(JSON.stringify(mapped), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        // Fallback also failed → keep the original primary envelope so callers
+        // see a meaningful error instead of `null`.
+      }
+
+      maybeLogFallback({ action: 'fetch-profile', endpoint, instance: instance ? String(instance) : null, status: response.status, data, primary_ms: primaryMs, supabase });
       if (data?.error === true) return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       // Padroniza retorno: objeto válido ou null (primário e fallback). Ver _shared/evolution-response-normalizers.ts
       return new Response(JSON.stringify(normalizeProfile(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

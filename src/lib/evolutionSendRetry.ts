@@ -19,6 +19,7 @@ import { loadRetryConfig } from '@/lib/retryConfig';
 import { crossTabDedupe } from '@/lib/crossTabSendDedupe';
 import { buildRequestDedupeKey } from '@/lib/requestDedupeKey';
 import { resolveSendFunction } from '@/lib/sendFunctionRouter';
+import { canCall, recordFailure, recordSuccess, CircuitOpenError } from '@/lib/evolutionCircuitBreaker';
 
 const log = getLogger('EvolutionSendRetry');
 
@@ -105,6 +106,16 @@ export async function invokeEvolutionWithRetry<T = unknown>(
 
   const runRetryLoop = () => withRetry(
     async () => {
+      // Circuit breaker: short-circuit before paying retry cost on a known
+      // bad instance. Tracked per `instanceName`; uncovered when no instance
+      // is on the body (rare — instance management calls).
+      if (instanceName) {
+        const decision = canCall(instanceName);
+        if (!decision.allowed) {
+          throw new CircuitOpenError(instanceName, decision.retryAfterMs);
+        }
+      }
+
       const result = await supabase.functions.invoke(invokePath, {
         method: opts.method || 'POST',
         body: invokeBody,
@@ -115,9 +126,11 @@ export async function invokeEvolutionWithRetry<T = unknown>(
       if (result.error) {
         const err = result.error as { message?: string; status?: number };
         if (isTransient(err)) {
+          if (instanceName) recordFailure(instanceName);
           throw Object.assign(new Error(err.message || 'transient'), { status: err.status });
         }
-        // Erro definitivo — não retry
+        // Erro definitivo — não retry. Não conta como falha do breaker porque
+        // 4xx é "request inválida" do caller, não indisponibilidade do upstream.
         return result as EvolutionInvokeResult<T>;
       }
 
@@ -125,10 +138,13 @@ export async function invokeEvolutionWithRetry<T = unknown>(
       if (payload?.error || (payload?.status && payload.status >= 500)) {
         const reason = (payload.message || JSON.stringify(payload.error)).toString();
         if (isTransient({ message: reason, status: payload.status })) {
+          if (instanceName) recordFailure(instanceName);
           throw Object.assign(new Error(reason), { status: payload.status });
         }
       }
 
+      // Success → close circuit if it was open/half-open.
+      if (instanceName) recordSuccess(instanceName);
       return result as EvolutionInvokeResult<T>;
     },
     {
@@ -159,12 +175,17 @@ export async function invokeEvolutionWithRetry<T = unknown>(
     return await crossTabDedupe<EvolutionInvokeResult<T>>(dedupeKey, runRetryLoop);
   } catch (err) {
     // Falha definitiva (esgotou retries OU erro permanente). Tenta enqueue na DLQ.
-    if (instanceName && isTransient(err)) {
+    // CircuitOpenError também vai pra DLQ — a mensagem precisa eventualmente sair,
+    // o cron de reprocess tentará de novo quando o circuit fechar.
+    const isCircuitOpen = err instanceof CircuitOpenError;
+    if (instanceName && (isTransient(err) || isCircuitOpen)) {
       const status = (err as { status?: number })?.status ?? null;
       const message = err instanceof Error ? err.message : String(err);
-      const errorCode = status
-        ? `http_${status}`
-        : message.toLowerCase().includes('timeout') ? 'timeout' : 'network_error';
+      const errorCode = isCircuitOpen
+        ? 'circuit_open'
+        : status
+          ? `http_${status}`
+          : message.toLowerCase().includes('timeout') ? 'timeout' : 'network_error';
       // Embed the idem key in the DLQ payload so the cron worker reuses it.
       const dlqPayload = idempotencyKey
         ? { ...opts.body, __idemKey: idempotencyKey }
