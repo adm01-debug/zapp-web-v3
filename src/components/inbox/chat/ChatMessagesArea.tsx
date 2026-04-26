@@ -13,6 +13,7 @@ import { TypingIndicator } from '../TypingIndicator';
 import { format } from 'date-fns';
 import { formatDateSeparator } from './messageUtils';
 import { MessageBubble } from './MessageBubble';
+import { ConversationDeliverySummary } from './ConversationDeliverySummary';
 import {
   recordLoadOlderStarted,
   recordLoadOlderCancelled,
@@ -336,6 +337,13 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   return (
     <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-6 md:px-8 space-y-4 scrollbar-thin bg-background/50 relative">
       <ChatWatermark />
+      {messages.length > 0 && (
+        <div className="sticky top-0 z-20 flex justify-center pointer-events-none -mt-2 mb-2">
+          <div className="pointer-events-auto">
+            <ConversationDeliverySummary messages={messages} />
+          </div>
+        </div>
+      )}
 
       {/*
         Topo da lista — duas modalidades mutuamente exclusivas:
