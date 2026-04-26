@@ -479,6 +479,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
         <SendErrorBanner
           error={handlers.lastSendError}
+          detail={handlers.lastSendErrorDetail}
           isRetrying={handlers.isSending}
           onRetry={handlers.retryLastSend}
           onDismiss={handlers.dismissSendError}

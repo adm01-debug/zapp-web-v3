@@ -17,9 +17,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { jidToPhone } from '@/adapters/evolutionAdapter';
 import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
+import { parseEvolutionError } from '@/hooks/realtime/parseEvolutionError';
 
 const log = getLogger('externalMessageSender');
 const DEFAULT_INSTANCE = 'wpp2';
+
+/**
+ * SendError — Error enriquecido com o motivo bruto do upstream para que
+ * o `SendErrorBanner` possa oferecer "Ver detalhes" sem perder a frase
+ * humanizada exibida por padrão.
+ */
+export class SendError extends Error {
+  detail: string | null;
+  status?: number;
+  constructor(reason: string, detail: string | null, status?: number) {
+    super(reason);
+    this.name = 'SendError';
+    this.detail = detail;
+    this.status = status;
+  }
+}
 
 export interface SendExternalOptions {
   instanceName?: string;
@@ -82,15 +99,16 @@ export async function sendExternalText(
 
   if (error) {
     log.error('evolution-api send-text failed', error);
-    throw new Error(error.message || 'Falha ao enviar mensagem');
+    const info = parseEvolutionError(error);
+    throw new SendError(info.reason, info.detail, info.status);
   }
 
   // O proxy embrulha falhas de upstream em 200 + { error: true, message }.
-  const envelope = data as { error?: boolean; message?: string; key?: { id?: string } } | null;
+  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
   if (envelope?.error) {
-    const reason = envelope.message || 'Falha ao enviar mensagem';
     log.error('evolution-api send-text error envelope', envelope);
-    throw new Error(reason);
+    const info = parseEvolutionError(envelope);
+    throw new SendError(info.reason, info.detail, info.status);
   }
 
   const externalId = envelope?.key?.id ?? null;
@@ -158,12 +176,14 @@ export async function sendExternalAudio(
 
   if (error) {
     log.error('evolution-api send-audio failed', error);
-    throw new Error(error.message || 'Falha ao enviar áudio');
+    const info = parseEvolutionError(error);
+    throw new SendError(info.reason, info.detail, info.status);
   }
-  const envelope = data as { error?: boolean; message?: string; key?: { id?: string } } | null;
+  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
   if (envelope?.error) {
     log.error('evolution-api send-audio error envelope', envelope);
-    throw new Error(envelope.message || 'Falha ao enviar áudio');
+    const info = parseEvolutionError(envelope);
+    throw new SendError(info.reason, info.detail, info.status);
   }
 
   const externalId = envelope?.key?.id ?? null;

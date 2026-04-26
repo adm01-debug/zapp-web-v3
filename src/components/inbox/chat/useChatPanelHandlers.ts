@@ -33,6 +33,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   const [isSending, setIsSending] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [lastSendError, setLastSendError] = useState<string | null>(null);
+  const [lastSendErrorDetail, setLastSendErrorDetail] = useState<string | null>(null);
   const lastFailedPayloadRef = useRef<string | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
@@ -111,8 +112,10 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     } catch (err: any) {
       log.error('Failed to send message:', err);
       const msg = err?.message || 'Falha ao invocar a função de envio. Verifique sua conexão.';
+      const detail = typeof err?.detail === 'string' ? err.detail : null;
       lastFailedPayloadRef.current = messageContent;
       setLastSendError(msg);
+      setLastSendErrorDetail(detail);
       setInputValue(messageContent);
       if (wasReply) setReplyToMessage(wasReply);
       toast({ title: 'Erro ao enviar', description: msg, variant: 'destructive' });
@@ -124,6 +127,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     if (!payload || isSendingRef.current) return;
     setIsSending(true);
     setLastSendError(null);
+    setLastSendErrorDetail(null);
     try {
       await Promise.resolve(onSendMessage(payload));
       lastFailedPayloadRef.current = null;
@@ -131,7 +135,9 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     } catch (err: any) {
       log.error('Retry failed:', err);
       const msg = err?.message || 'Falha ao reenviar. Tente novamente.';
+      const detail = typeof err?.detail === 'string' ? err.detail : null;
       setLastSendError(msg);
+      setLastSendErrorDetail(detail);
       toast({ title: 'Erro ao reenviar', description: msg, variant: 'destructive' });
     } finally {
       setIsSending(false);
@@ -140,6 +146,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
 
   const dismissSendError = useCallback(() => {
     setLastSendError(null);
+    setLastSendErrorDetail(null);
     lastFailedPayloadRef.current = null;
   }, []);
 
@@ -229,6 +236,6 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     handleInputChange, handleKeyDown, handleSlashCommand,
     handleSendProduct, handleSendInteractiveMessage, handleInteractiveButtonClick,
     handleSendLocation, handleAudioSend,
-    lastSendError, retryLastSend, dismissSendError,
+    lastSendError, lastSendErrorDetail, retryLastSend, dismissSendError,
   };
 }
