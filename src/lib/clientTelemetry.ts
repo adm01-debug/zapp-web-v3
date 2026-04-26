@@ -39,6 +39,14 @@ export interface TelemetrySnapshot {
   p95DurationMs: number;
   recentEvents: QueryEvent[];
   slowEvents: QueryEvent[];
+  retry: RetryStats;
+}
+
+export interface RetryStats {
+  totalRetries: number;
+  recoveredAfterRetry: number;
+  exhausted: number;
+  transientByTarget: Record<string, number>;
 }
 
 const RECENT_LIMIT = 50;
@@ -54,10 +62,18 @@ interface State {
   totalDurationMs: number;
   recentEvents: QueryEvent[];
   slowEvents: QueryEvent[];
+  retry: RetryStats;
 }
 
 const initialBySeverity = (): Record<Severity, number> => ({
   ok: 0, slow: 0, very_slow: 0, timeout: 0, error: 0,
+});
+
+const initialRetry = (): RetryStats => ({
+  totalRetries: 0,
+  recoveredAfterRetry: 0,
+  exhausted: 0,
+  transientByTarget: {},
 });
 
 const state: State = {
@@ -67,6 +83,7 @@ const state: State = {
   totalDurationMs: 0,
   recentEvents: [],
   slowEvents: [],
+  retry: initialRetry(),
 };
 
 export function classifySeverity(
@@ -99,6 +116,12 @@ function snapshot(): TelemetrySnapshot {
     p95DurationMs,
     recentEvents: [...state.recentEvents],
     slowEvents: [...state.slowEvents],
+    retry: {
+      totalRetries: state.retry.totalRetries,
+      recoveredAfterRetry: state.retry.recoveredAfterRetry,
+      exhausted: state.retry.exhausted,
+      transientByTarget: { ...state.retry.transientByTarget },
+    },
   };
 }
 
@@ -178,6 +201,28 @@ export function resetTelemetry(): void {
   state.totalDurationMs = 0;
   state.recentEvents = [];
   state.slowEvents = [];
+  state.retry = initialRetry();
+  publishToWindow();
+}
+
+export interface RetryOutcome {
+  target: string;
+  attempts: number;
+  recovered: boolean;
+  exhausted: boolean;
+  transientCount: number;
+  correlationId?: string;
+}
+
+export function recordRetryOutcome(outcome: RetryOutcome): void {
+  const extraAttempts = Math.max(0, outcome.attempts - 1);
+  state.retry.totalRetries += extraAttempts;
+  if (outcome.recovered) state.retry.recoveredAfterRetry += 1;
+  if (outcome.exhausted) state.retry.exhausted += 1;
+  if (outcome.transientCount > 0) {
+    state.retry.transientByTarget[outcome.target] =
+      (state.retry.transientByTarget[outcome.target] ?? 0) + outcome.transientCount;
+  }
   publishToWindow();
 }
 
