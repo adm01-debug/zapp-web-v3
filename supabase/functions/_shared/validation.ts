@@ -148,15 +148,17 @@ export class Logger {
   }
 
   private log(level: LogLevel, message: string, ctx?: Record<string, unknown>) {
+    const safeMessage = redactSecrets(message);
+    const safeCtx = ctx ? (redactDeep(ctx) as Record<string, unknown>) : undefined;
     const entry = {
       level,
       fn: this.fn,
       rid: this.requestId,
       ms: Date.now() - this.startTime,
-      msg: message,
-      ...ctx,
+      msg: safeMessage,
+      ...(safeCtx ?? {}),
     };
-    const serialized = JSON.stringify(entry);
+    const serialized = redactSecrets(JSON.stringify(entry));
     if (level === 'error') console.error(serialized);
     else if (level === 'warn') console.warn(serialized);
     else console.log(serialized);
