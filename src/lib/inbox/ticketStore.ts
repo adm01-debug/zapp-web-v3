@@ -48,19 +48,31 @@ export interface TicketState {
 
 type Overlay = Record<string, TicketState>;
 
+// Cached snapshot — CRITICAL para useSyncExternalStore. Sem cache,
+// cada chamada de readAll() retorna um novo objeto (JSON.parse) e o
+// React entra em loop infinito ("Maximum update depth exceeded").
+let cachedOverlay: Overlay | null = null;
+
 function readAll(): Overlay {
-  if (typeof window === 'undefined') return {};
+  if (typeof window === 'undefined') return EMPTY_OVERLAY;
+  if (cachedOverlay !== null) return cachedOverlay;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
+    if (!raw) {
+      cachedOverlay = {};
+      return cachedOverlay;
+    }
     const parsed = JSON.parse(raw) as Overlay;
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    cachedOverlay = parsed && typeof parsed === 'object' ? parsed : {};
+    return cachedOverlay;
   } catch {
-    return {};
+    cachedOverlay = {};
+    return cachedOverlay;
   }
 }
 
 function writeAll(overlay: Overlay) {
+  cachedOverlay = overlay; // mutação local — atualiza a referência cacheada
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(overlay));
@@ -69,6 +81,12 @@ function writeAll(overlay: Overlay) {
     // localStorage cheio/desabilitado — silencioso, é overlay.
   }
 }
+
+function invalidateCache() {
+  cachedOverlay = null;
+}
+
+const EMPTY_OVERLAY: Overlay = Object.freeze({}) as Overlay;
 
 function cryptoId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
