@@ -127,6 +127,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     if (!payload || isSendingRef.current) return;
     setIsSending(true);
     setLastSendError(null);
+    setLastSendErrorDetail(null);
     try {
       await Promise.resolve(onSendMessage(payload));
       lastFailedPayloadRef.current = null;
@@ -134,7 +135,9 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     } catch (err: any) {
       log.error('Retry failed:', err);
       const msg = err?.message || 'Falha ao reenviar. Tente novamente.';
+      const detail = typeof err?.detail === 'string' ? err.detail : null;
       setLastSendError(msg);
+      setLastSendErrorDetail(detail);
       toast({ title: 'Erro ao reenviar', description: msg, variant: 'destructive' });
     } finally {
       setIsSending(false);
@@ -143,6 +146,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
 
   const dismissSendError = useCallback(() => {
     setLastSendError(null);
+    setLastSendErrorDetail(null);
     lastFailedPayloadRef.current = null;
   }, []);
 
