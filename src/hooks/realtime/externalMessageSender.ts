@@ -99,15 +99,16 @@ export async function sendExternalText(
 
   if (error) {
     log.error('evolution-api send-text failed', error);
-    throw new Error(error.message || 'Falha ao enviar mensagem');
+    const info = parseEvolutionError(error);
+    throw new SendError(info.reason, info.detail, info.status);
   }
 
   // O proxy embrulha falhas de upstream em 200 + { error: true, message }.
-  const envelope = data as { error?: boolean; message?: string; key?: { id?: string } } | null;
+  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
   if (envelope?.error) {
-    const reason = envelope.message || 'Falha ao enviar mensagem';
     log.error('evolution-api send-text error envelope', envelope);
-    throw new Error(reason);
+    const info = parseEvolutionError(envelope);
+    throw new SendError(info.reason, info.detail, info.status);
   }
 
   const externalId = envelope?.key?.id ?? null;
