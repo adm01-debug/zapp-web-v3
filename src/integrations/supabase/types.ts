@@ -7488,6 +7488,36 @@ export type Database = {
           },
         ]
       }
+      route_permissions: {
+        Row: {
+          allowed_roles: Database["public"]["Enums"]["app_role"][]
+          created_at: string
+          description: string | null
+          is_system: boolean
+          path: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allowed_roles?: Database["public"]["Enums"]["app_role"][]
+          created_at?: string
+          description?: string | null
+          is_system?: boolean
+          path: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allowed_roles?: Database["public"]["Enums"]["app_role"][]
+          created_at?: string
+          description?: string | null
+          is_system?: boolean
+          path?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       sales_deals: {
         Row: {
           assigned_to: string | null
@@ -10676,6 +10706,10 @@ export type Database = {
           user_agent: string
           user_id: string
         }[]
+      }
+      get_route_roles: {
+        Args: { _path: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
       }
       get_team_profiles: {
         Args: never
