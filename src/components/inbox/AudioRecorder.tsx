@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { VoiceChanger } from './VoiceChanger';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { AudioVolumeControl } from './AudioVolumeControl';
 
 interface AudioRecorderProps {
   onSend: (audioBlob: Blob) => void;
@@ -18,8 +19,28 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
   const [voiceChanged, setVoiceChanged] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolumeState] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('audio-player:volume');
+      const n = saved !== null ? parseFloat(saved) : 1;
+      return isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
+    } catch { return 1; }
+  });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isMobile = useIsMobile();
+
+  const setVolume = useCallback((v: number) => {
+    const clamped = Math.min(1, Math.max(0, v));
+    setVolumeState(clamped);
+    if (audioRef.current) audioRef.current.volume = clamped;
+    try { localStorage.setItem('audio-player:volume', String(clamped)); } catch { /* noop */ }
+  }, []);
+
+  // Apply volume to <audio> when it mounts/changes source
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume]);
   
   // Swipe-to-cancel
   const swipeX = useMotionValue(0);
@@ -49,6 +70,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     if (!audio) return;
     
     const updateProgress = () => {
+      setCurrentTime(audio.currentTime);
       if (audio.duration) {
         setPlaybackProgress((audio.currentTime / audio.duration) * 100);
       }
@@ -198,22 +220,32 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
             <audio
               ref={audioRef}
               src={audioUrl}
-              onEnded={() => { setIsPlaying(false); setPlaybackProgress(0); }}
+              onEnded={() => { setIsPlaying(false); setPlaybackProgress(0); setCurrentTime(0); }}
+              onLoadedMetadata={(e) => { (e.currentTarget as HTMLAudioElement).volume = volume; }}
               className="hidden"
             />
             {/* Progress bar with actual playback tracking */}
-            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className="flex-1 h-2 bg-muted rounded-full overflow-hidden cursor-pointer"
+              onClick={(e) => {
+                const audio = audioRef.current;
+                if (!audio || !audio.duration) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+              }}
+            >
               <motion.div
                 className={cn(
                   "h-full rounded-full transition-all",
                   voiceChanged ? "bg-primary" : "bg-primary"
                 )}
-                style={{ width: `${isPlaying ? playbackProgress : 100}%` }}
+                style={{ width: `${playbackProgress}%` }}
               />
             </div>
-            <span className="text-sm font-mono text-muted-foreground w-14 text-right tabular-nums">
-              {formatDuration(duration)}
+            <span className="text-sm font-mono text-muted-foreground w-20 text-right tabular-nums">
+              {formatDuration(Math.floor(currentTime))} / {formatDuration(duration)}
             </span>
+            <AudioVolumeControl volume={volume} onChange={setVolume} size="sm" />
           </>
         ) : null}
       </div>
