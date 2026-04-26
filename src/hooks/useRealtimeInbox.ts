@@ -78,12 +78,28 @@ export function useRealtimeInbox() {
   const loadingOlderMessages = USE_EXTERNAL_DB ? externalMsgs.loadingOlder : false;
   const hasMoreMessages = USE_EXTERNAL_DB ? externalMsgs.hasMore : false;
 
-  // Listen for open-contact-chat events
+  // Listen for open-contact-chat events + URL deep-link (?contact=&message=)
   useEffect(() => {
     const appWindow = window as Window & {
       __pendingOpenContactId?: string;
       __pendingOpenChatTarget?: { contactId?: string; messageId?: string };
     };
+
+    // 1) URL query string takes priority — supports refresh / shared
+    // deep-links. React-Router isn't mounted around this hook, so we read
+    // `window.location.search` directly. The `message` param is cleaned
+    // later by the consumer (RealtimeInboxView → onHighlightConsumed) so
+    // subsequent navigations don't re-trigger the highlight.
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlContact = params.get('contact');
+      const urlMessage = params.get('message');
+      if (urlContact) setPendingContactId(urlContact);
+      if (urlMessage) setPendingMessageId(urlMessage);
+    } catch {
+      /* noop — non-browser env */
+    }
+
     if (appWindow.__pendingOpenContactId) {
       setPendingContactId(appWindow.__pendingOpenContactId);
       appWindow.__pendingOpenContactId = undefined;

@@ -78,10 +78,36 @@ export async function openContactInChat(opts: OpenContactInChatOptions): Promise
   window.__pendingOpenContactId = contactId;
   window.__pendingOpenChatTarget = target;
 
-  if (window.location.hash !== '#inbox') {
-    window.location.hash = 'inbox';
-  } else {
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  // Persist the deep-link target in the URL query string so a refresh
+  // (or sharing the link) keeps the inbox aimed at the same conversation
+  // and message. The Inbox reads `?contact=<id>&message=<id>` on mount
+  // and clears `message` after the highlight is consumed.
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set('contact', contactId);
+    if (target.messageId) {
+      url.searchParams.set('message', target.messageId);
+    } else {
+      url.searchParams.delete('message');
+    }
+    if (url.hash !== '#inbox') {
+      url.hash = 'inbox';
+      window.history.pushState(null, '', url.toString());
+      // Notify hash listeners (replicates the side effect of assigning to
+      // `location.hash`, which `pushState` doesn't trigger on its own).
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    } else {
+      window.history.replaceState(null, '', url.toString());
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }
+  } catch {
+    // URL construction can fail in non-browser test envs — fall back to
+    // the original hash-only behavior so the handshake still runs.
+    if (window.location.hash !== '#inbox') {
+      window.location.hash = 'inbox';
+    } else {
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }
   }
 
   let attempts = 0;
