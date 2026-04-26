@@ -30,11 +30,11 @@ export function ProtectedRoute({
   const location = useLocation();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
-  // Dynamic override from route_permissions table
+  // Dynamic override from route_permissions table.
+  // Non-blocking: returns null until fetch resolves, so we never delay render.
   const overrideRoles = useRouteRoles(routePath ?? location.pathname);
-  const overrideLoading = overrideRoles === undefined;
 
-  const loading = authLoading || rolesLoading || overrideLoading;
+  const loading = authLoading || rolesLoading;
 
   useEffect(() => {
     if (!loading && user && requiredPermission) {
