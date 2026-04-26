@@ -83,6 +83,7 @@ const RoutePermissionsPage = lazyWithRetry(() => import("./pages/admin/RoutePerm
 const AdminStressTestPage = lazyWithRetry(() => import("./pages/admin/AdminStressTestPage"));
 const AdminInboxSyncStatusPage = lazyWithRetry(() => import("./pages/admin/AdminInboxSyncStatusPage"));
 const AdminAutomationsPage = lazyWithRetry(() => import("./pages/admin/AdminAutomationsPage"));
+const AdminWhatsAppModePage = lazyWithRetry(() => import("./pages/admin/AdminWhatsAppModePage"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("./pages/ChatPopup"));
 
@@ -202,6 +203,7 @@ function AppContent() {
             <Route path="/admin/stress-test" element={<ProtectedRoute requiredRoles={['admin']}><AdminStressTestPage /></ProtectedRoute>} />
             <Route path="/admin/inbox-sync-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminInboxSyncStatusPage /></ProtectedRoute>} />
             <Route path="/admin/automations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationsPage /></ProtectedRoute>} />
+            <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

@@ -1,206 +1,126 @@
-// Edge Function: whatsapp-cloud-webhook
-// Receives webhooks from Meta (WhatsApp Cloud API) and writes them into the unified
-// FATOR X model (evolution_messages / evolution_contacts) so the Inbox sees them
-// the exact same way as Evolution-API messages.
-
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import {
-  normalizeMetaPayload, validateMetaSignature,
-} from "../_shared/whatsapp-cloud-normalizer.ts";
+// WhatsApp Cloud API Webhook
+// - GET: Meta verification handshake (hub.mode=subscribe + hub.verify_token + hub.challenge)
+// - POST: receives messages/statuses and persists into FATOR X via rpc_insert_message
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-hub-signature-256",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-interface CredentialsRow {
-  connection_id: string;
-  phone_number_id: string;
-  access_token: string;
-  app_secret: string;
-  verify_token: string;
-  graph_api_version: string;
+const VERIFY_TOKEN = Deno.env.get("WHATSAPP_CLOUD_WEBHOOK_VERIFY_TOKEN") ?? "";
+const EXTERNAL_URL = Deno.env.get("EXTERNAL_SUPABASE_URL") ?? "";
+const EXTERNAL_KEY = Deno.env.get("EXTERNAL_SUPABASE_ANON_KEY") ?? "";
+
+const externalClient =
+  EXTERNAL_URL && EXTERNAL_KEY
+    ? createClient(EXTERNAL_URL, EXTERNAL_KEY)
+    : null;
+
+function jidFromPhone(phone: string): string {
+  const digits = String(phone || "").replace(/\D/g, "");
+  return `${digits}@s.whatsapp.net`;
 }
 
-async function fetchMediaUrl(creds: CredentialsRow, mediaId: string): Promise<string | null> {
-  const url = `https://graph.facebook.com/${creds.graph_api_version}/${mediaId}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${creds.access_token}` } });
-  if (!res.ok) return null;
-  const json = await res.json().catch(() => null) as { url?: string } | null;
-  return json?.url ?? null;
-}
+async function persistInbound(message: any, contact: any) {
+  if (!externalClient) return;
+  const remoteJid = jidFromPhone(message.from);
+  const content =
+    message.text?.body ??
+    message.image?.caption ??
+    message.video?.caption ??
+    message.document?.filename ??
+    `[${message.type}]`;
 
-async function downloadAndStore(
-  // deno-lint-ignore no-explicit-any
-  supabase: any,
-  creds: CredentialsRow,
-  mediaId: string,
-  mimeType: string | undefined,
-  wamid: string,
-): Promise<string | null> {
+  // Best-effort upsert contact
   try {
-    const directUrl = await fetchMediaUrl(creds, mediaId);
-    if (!directUrl) return null;
-    const fileRes = await fetch(directUrl, {
-      headers: { Authorization: `Bearer ${creds.access_token}` },
+    await externalClient.rpc("rpc_upsert_contact", {
+      p_remote_jid: remoteJid,
+      p_instance: "wpp2",
+      p_push_name: contact?.profile?.name ?? null,
     });
-    if (!fileRes.ok) return null;
-    const buf = new Uint8Array(await fileRes.arrayBuffer());
-    const ext = (mimeType?.split('/')[1] ?? 'bin').split(';')[0];
-    const safeId = wamid.replace(/[^a-zA-Z0-9]/g, '');
-    const path = `cloud/${safeId}.${ext}`;
-    const { error } = await supabase.storage.from('whatsapp-media').upload(path, buf, {
-      contentType: mimeType ?? 'application/octet-stream',
-      upsert: true,
-    });
-    if (error) {
-      console.error('[wa-cloud-webhook] upload error', error);
-      return null;
-    }
-    const { data: signed } = await supabase.storage.from('whatsapp-media').createSignedUrl(path, 60 * 60 * 24 * 7);
-    return signed?.signedUrl ?? null;
-  } catch (e) {
-    console.error('[wa-cloud-webhook] downloadAndStore error', e);
-    return null;
+  } catch (_e) {
+    // ignore — contact may already exist
   }
+
+  await externalClient.rpc("rpc_insert_message", {
+    p_remote_jid: remoteJid,
+    p_content: content,
+    p_message_id: message.id,
+    p_message_type: message.type ?? "text",
+    p_from_me: false,
+  });
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   const url = new URL(req.url);
 
-  // ---- 1. Meta verification handshake (GET) ----
-  if (req.method === 'GET') {
-    const mode = url.searchParams.get('hub.mode');
-    const token = url.searchParams.get('hub.verify_token');
-    const challenge = url.searchParams.get('hub.challenge');
-    if (mode === 'subscribe' && token && challenge) {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      );
-      const { data } = await supabase
-        .from('whatsapp_official_credentials')
-        .select('id')
-        .eq('verify_token', token)
-        .limit(1)
-        .maybeSingle();
-      if (data) return new Response(challenge, { status: 200 });
-      return new Response('forbidden', { status: 403 });
+  // GET: Meta verification
+  if (req.method === "GET") {
+    const mode = url.searchParams.get("hub.mode");
+    const token = url.searchParams.get("hub.verify_token");
+    const challenge = url.searchParams.get("hub.challenge");
+    if (mode === "subscribe" && token && token === VERIFY_TOKEN) {
+      return new Response(challenge ?? "", { status: 200, headers: corsHeaders });
     }
-    return new Response('bad request', { status: 400 });
+    return new Response("forbidden", { status: 403, headers: corsHeaders });
   }
 
-  if (req.method !== 'POST') {
-    return new Response('method not allowed', { status: 405 });
-  }
-
-  // ---- 2. Read raw body for signature validation ----
-  const rawBody = await req.text();
-  let payload: unknown;
-  try { payload = JSON.parse(rawBody); } catch {
-    return new Response('invalid json', { status: 400 });
-  }
-
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  );
-
-  const { events, phoneNumberId } = normalizeMetaPayload(payload);
-  if (!phoneNumberId || events.length === 0) {
-    return new Response(JSON.stringify({ ok: true, skipped: true }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
-  // Look up credentials by phone_number_id (which Meta sends in metadata)
-  const { data: credsRow } = await supabase
-    .from('whatsapp_official_credentials')
-    .select('connection_id, phone_number_id, access_token, app_secret, verify_token, graph_api_version')
-    .eq('phone_number_id', phoneNumberId)
-    .maybeSingle();
-
-  if (!credsRow) {
-    console.warn('[wa-cloud-webhook] no credentials for phone_number_id', phoneNumberId);
-    return new Response(JSON.stringify({ ok: true, skipped: true, reason: 'unknown_phone_number_id' }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-  const creds = credsRow as CredentialsRow;
-
-  // ---- 3. Validate signature ----
-  const sig = req.headers.get('x-hub-signature-256');
-  const valid = await validateMetaSignature(rawBody, sig, creds.app_secret);
-  if (!valid) {
-    console.warn('[wa-cloud-webhook] invalid signature for', phoneNumberId);
-    return new Response('invalid signature', { status: 401 });
-  }
-
-  // ---- 4. External client (FATOR X) ----
-  const externalUrl = Deno.env.get('EXTERNAL_SUPABASE_URL');
-  const externalKey = Deno.env.get('EXTERNAL_SUPABASE_SERVICE_ROLE_KEY')
-    ?? Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY');
-  if (!externalUrl || !externalKey) {
-    console.error('[wa-cloud-webhook] FATOR X env vars missing');
-    return new Response('config error', { status: 500 });
-  }
-  const externalClient = createClient(externalUrl, externalKey);
-
-  // ---- 5. Fan out events ----
-  const instanceName = `official_${creds.connection_id}`;
-
-  for (const ev of events) {
-    if (ev.kind === 'status') {
-      try {
-        await externalClient
-          .from('evolution_messages')
-          .update({
-            status: ev.status,
-            ...(ev.errorMessage ? { error_message: ev.errorMessage } : {}),
-          })
-          .eq('message_id', ev.wamid);
-      } catch (e) {
-        console.error('[wa-cloud-webhook] status update failed', e);
+  // POST: incoming events
+  if (req.method === "POST") {
+    try {
+      const body = await req.json();
+      const entries = body?.entry ?? [];
+      for (const entry of entries) {
+        const changes = entry?.changes ?? [];
+        for (const change of changes) {
+          const value = change?.value ?? {};
+          const messages = value?.messages ?? [];
+          const contacts = value?.contacts ?? [];
+          for (const msg of messages) {
+            const contact = contacts.find(
+              (c: any) => c?.wa_id === msg?.from
+            );
+            try {
+              await persistInbound(msg, contact);
+            } catch (e) {
+              console.error("[whatsapp-cloud-webhook] persist error", e);
+            }
+          }
+          // statuses (delivered/read/failed) — log only for now
+          const statuses = value?.statuses ?? [];
+          if (statuses.length) {
+            console.log(
+              "[whatsapp-cloud-webhook] statuses:",
+              JSON.stringify(statuses).slice(0, 500)
+            );
+          }
+        }
       }
-      continue;
-    }
-
-    // Upsert contact (best-effort, ignored if RPC fails)
-    try {
-      await externalClient.rpc('rpc_upsert_contact', {
-        p_remote_jid: ev.remoteJid,
-        p_instance: instanceName,
-        p_push_name: ev.pushName ?? null,
-      } as Record<string, unknown>);
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     } catch (e) {
-      console.warn('[wa-cloud-webhook] rpc_upsert_contact failed', e);
-    }
-
-    // Resolve media for media-bearing types
-    let mediaUrl: string | null = null;
-    if (ev.mediaId && ['image', 'audio', 'video', 'document', 'sticker'].includes(ev.messageType)) {
-      mediaUrl = await downloadAndStore(supabase, creds, ev.mediaId, ev.mediaMimeType, ev.wamid);
-    }
-
-    // Insert message via RPC (idempotent — wamid is unique, RPC handles dedup)
-    try {
-      await externalClient.rpc('rpc_insert_message', {
-        p_remote_jid: ev.remoteJid,
-        p_content: ev.content,
-        p_message_id: ev.wamid,
-        p_from_me: false,
-        p_message_type: ev.messageType,
-        p_media_url: mediaUrl,
-        p_metadata: ev.metadata ?? { source: 'whatsapp_cloud_api' },
-      } as Record<string, unknown>);
-    } catch (e) {
-      console.error('[wa-cloud-webhook] rpc_insert_message failed', e);
+      console.error("[whatsapp-cloud-webhook] error", e);
+      return new Response(
+        JSON.stringify({ ok: false, error: String(e) }),
+        {
+          status: 200, // ack to avoid Meta retries on bad payload
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
   }
 
-  return new Response(JSON.stringify({ ok: true, processed: events.length }), {
-    status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  return new Response("method not allowed", {
+    status: 405,
+    headers: corsHeaders,
   });
 });
