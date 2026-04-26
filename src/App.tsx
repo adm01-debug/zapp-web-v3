@@ -82,6 +82,7 @@ const AdminFailedAuthMessagesPage = lazyWithRetry(() => import("./pages/admin/Ad
 const RoutePermissionsPage = lazyWithRetry(() => import("./pages/admin/RoutePermissionsPage"));
 const AdminStressTestPage = lazyWithRetry(() => import("./pages/admin/AdminStressTestPage"));
 const AdminInboxSyncStatusPage = lazyWithRetry(() => import("./pages/admin/AdminInboxSyncStatusPage"));
+const AdminConversationSlaPage = lazyWithRetry(() => import("./pages/admin/AdminConversationSlaPage"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("./pages/ChatPopup"));
 
@@ -200,6 +201,7 @@ function AppContent() {
             <Route path="/admin/route-permissions" element={<ProtectedRoute requiredRoles={['admin']}><RoutePermissionsPage /></ProtectedRoute>} />
             <Route path="/admin/stress-test" element={<ProtectedRoute requiredRoles={['admin']}><AdminStressTestPage /></ProtectedRoute>} />
             <Route path="/admin/inbox-sync-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminInboxSyncStatusPage /></ProtectedRoute>} />
+            <Route path="/admin/sla-conversas" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminConversationSlaPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
