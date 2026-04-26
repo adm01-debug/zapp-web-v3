@@ -20,11 +20,35 @@ import { MessageStatusIcon } from './messageUtils';
 import { useMessageSendStatus } from '@/hooks/realtime/useMessageSendStatus';
 import { useFailureReason, formatFailureReason } from '@/hooks/inbox/useFailureReason';
 import { clearSendStatus } from '@/hooks/realtime/sendStatusBus';
+import { useInboxStatusPref } from '@/hooks/useInboxStatusPref';
+import { MessageStatusPanel } from './MessageStatusPanel';
 
 interface MessageStatusInlineProps {
-  message: Pick<Message, 'id' | 'status' | 'retry_attempt' | 'retry_total'>;
+  message: Pick<
+    Message,
+    'id' | 'status' | 'sender' | 'timestamp' | 'created_at' | 'updated_at' | 'retry_attempt' | 'retry_total'
+  > & {
+    status_updated_at?: string;
+    error_code?: string | null;
+    error_reason?: string | null;
+    contact_read_at?: string | null;
+  };
   className?: string;
+  /** Quando true, exibe sempre o rótulo textual (independente da preferência). */
+  forceLabel?: boolean;
 }
+
+const STATUS_LABELS: Record<string, string> = {
+  sending: 'Enviando…',
+  retrying: 'Tentando reenviar…',
+  sent: 'Enviada',
+  delivered: 'Entregue',
+  read: 'Lida',
+  played: 'Reproduzida',
+  failed: 'Falhou',
+  failed_auth: 'Falha de autenticação',
+  failed_retries: 'Falhou após várias tentativas',
+};
 
 const TRANSIENT = new Set(['sending', 'retrying']);
 const TERMINAL_FAILURES = new Set(['failed', 'failed_auth', 'failed_retries']);
