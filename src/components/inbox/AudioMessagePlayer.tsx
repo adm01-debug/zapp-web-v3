@@ -30,6 +30,7 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
     audioRef, resolvedUrl, isPlaying, isLoading, hasError,
     playbackRate, progress, waveformHeights,
     currentTime, duration,
+    volume, setVolume,
     togglePlay, handleSeek, cycleSpeed, formatTime, resolveAudioUrl,
   } = useAudioPlayer({ audioUrl, messageId, refreshKey });
 
