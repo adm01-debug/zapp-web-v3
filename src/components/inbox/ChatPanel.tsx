@@ -23,6 +23,7 @@ import { TicketHistorySheet } from './TicketHistorySheet';
 import { ChatMessagesArea, ChatMessagesAreaRef } from './chat/ChatMessagesArea';
 import type { LoadOlderProps } from './chat/loadOlderTypes';
 import { ChatInputArea } from './chat/ChatInputArea';
+import { SendErrorBanner } from './chat/SendErrorBanner';
 import { ChatDragOverlay } from './chat/ChatDragOverlay';
 import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
@@ -475,6 +476,13 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             <WhisperMode contactId={conversation.contact.id} className="mx-3 mb-2" />
           </Suspense>
         )}
+
+        <SendErrorBanner
+          error={handlers.lastSendError}
+          isRetrying={handlers.isSending}
+          onRetry={handlers.retryLastSend}
+          onDismiss={handlers.dismissSendError}
+        />
 
         <ChatInputArea inputValue={handlers.inputValue} replyToMessage={handlers.replyToMessage} editingMessage={handlers.editingMessage} isRecordingAudio={handlers.isRecordingAudio}
           showSlashCommands={dialogs.slashCommands} contactId={conversation.contact.id} contactPhone={conversation.contact.phone}
