@@ -124,18 +124,87 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
     let data: ProxyResponse<T> | null = null;
     let error: { name?: string; message?: string } | null = null;
     const MAX_ATTEMPTS = 3;
+    let attemptsMade = 0;
+    let transientCount = 0;
+
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const result = await supabase.functions.invoke('external-db-proxy', invokeOptions);
+      attemptsMade = attempt;
+      const attemptStartedAt = performance.now();
+      const perAttemptOptions = {
+        ...invokeOptions,
+        headers: { ...(invokeOptions.headers ?? {}), 'x-attempt': String(attempt) },
+      };
+      const result = await supabase.functions.invoke('external-db-proxy', perAttemptOptions);
       data = result.data as ProxyResponse<T> | null;
       error = result.error as typeof error;
+      const attemptDurationMs = Math.round(performance.now() - attemptStartedAt);
 
-      if (!error) break;
-      const name = error.name;
-      if (name === 'AbortError') break;
-      if (!isTransientRuntimeError(error)) break;
+      const ok = !error;
+      const transient = error ? isTransientRuntimeError(error) : false;
+      if (transient) transientCount += 1;
+      const isAbort = error?.name === 'AbortError';
+      const willRetry = !ok && !isAbort && transient && attempt < MAX_ATTEMPTS;
+      const backoffMs = willRetry ? (attempt === 1 ? 150 : 400) : 0;
+
+      const attemptMeta = {
+        cid: correlationId,
+        target: meta.target,
+        operation: meta.operation,
+        attempt,
+        maxAttempts: MAX_ATTEMPTS,
+        attemptDurationMs,
+        ok,
+        errorName: error?.name,
+        errorMessage: error?.message,
+        transient,
+        willRetry,
+        backoffMs,
+      };
+      if (ok) {
+        if (attempt > 1) {
+          proxyLog.info('proxy attempt succeeded after retry', attemptMeta);
+        } else {
+          proxyLog.debug('proxy attempt ok', attemptMeta);
+        }
+      } else {
+        proxyLog.warn('proxy attempt failed', attemptMeta);
+      }
+
+      if (ok) break;
+      if (isAbort) break;
+      if (!transient) break;
       if (attempt === MAX_ATTEMPTS) break;
-      // Backoff: 150ms, 400ms
-      await new Promise((r) => setTimeout(r, attempt === 1 ? 150 : 400));
+      await new Promise((r) => setTimeout(r, backoffMs));
+    }
+
+    const finalSuccess = !error;
+    const recovered = finalSuccess && attemptsMade > 1;
+    const exhausted = !finalSuccess && attemptsMade === MAX_ATTEMPTS && transientCount > 0;
+
+    recordRetryOutcome({
+      target: meta.target,
+      attempts: attemptsMade,
+      recovered,
+      exhausted,
+      transientCount,
+      correlationId,
+    });
+
+    if (recovered) {
+      proxyLog.info('proxy recovered after retry', {
+        cid: correlationId,
+        target: meta.target,
+        attempts: attemptsMade,
+        transientCount,
+      });
+    } else if (exhausted) {
+      proxyLog.error('proxy retry exhausted', {
+        cid: correlationId,
+        target: meta.target,
+        attempts: attemptsMade,
+        transientCount,
+        lastError: error?.message,
+      });
     }
 
     if (error) {
