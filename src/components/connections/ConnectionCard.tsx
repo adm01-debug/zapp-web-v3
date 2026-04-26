@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { BusinessHoursIndicator } from './BusinessHoursIndicator';
+import { OfficialApiConfigDialog } from './OfficialApiConfigDialog';
 import type { WhatsAppConnection } from '@/hooks/useConnectionsManager';
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Wifi }> = {
@@ -49,6 +50,7 @@ export function ConnectionCard({
   const status = statusConfig[connection.status] || statusConfig.disconnected;
   const StatusIcon = status.icon;
   const isOfficial = (connection.api_type ?? 'evolution') === 'official';
+  const [officialConfigOpen, setOfficialConfigOpen] = useState(false);
 
   return (
     <motion.div whileHover={{ y: -2, boxShadow: '0 8px 30px hsl(var(--primary) / 0.1)' }}>
@@ -181,6 +183,11 @@ export function ConnectionCard({
                       Mudar para API {isOfficial ? 'não-oficial (Evolution)' : 'oficial (Cloud API)'}
                     </DropdownMenuItem>
                   )}
+                  {isOfficial && (
+                    <DropdownMenuItem onClick={() => setOfficialConfigOpen(true)}>
+                      <ShieldCheck className="w-4 h-4 mr-2" />Configurar Cloud API
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => onBusinessHours(connection.id, connection.name)}><Clock className="w-4 h-4 mr-2" />Horário de Atendimento</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onQueues(connection.id, connection.name)}><Link2 className="w-4 h-4 mr-2" />Vincular Filas</DropdownMenuItem>
                   {connection.instance_id && (
@@ -201,6 +208,15 @@ export function ConnectionCard({
           </div>
         </CardContent>
       </Card>
+      {isOfficial && (
+        <OfficialApiConfigDialog
+          open={officialConfigOpen}
+          onOpenChange={setOfficialConfigOpen}
+          connectionId={connection.id}
+          connectionName={connection.name}
+          instanceId={connection.instance_id}
+        />
+      )}
     </motion.div>
   );
 }

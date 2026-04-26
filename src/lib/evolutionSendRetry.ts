@@ -18,6 +18,7 @@ import { enqueueClientFailedMessage } from '@/lib/failedMessagesEnqueue';
 import { loadRetryConfig } from '@/lib/retryConfig';
 import { crossTabDedupe } from '@/lib/crossTabSendDedupe';
 import { buildRequestDedupeKey } from '@/lib/requestDedupeKey';
+import { resolveSendFunction } from '@/lib/sendFunctionRouter';
 
 const log = getLogger('EvolutionSendRetry');
 
@@ -93,11 +94,20 @@ export async function invokeEvolutionWithRetry<T = unknown>(
     mergedHeaders['Idempotency-Key'] = idempotencyKey;
   }
 
+  // Route to the correct backend function based on the connection's api_type.
+  // Cloud API (official) functions accept the same `{ action, ... }` body shape.
+  const targetFn = await resolveSendFunction(instanceName);
+  // For the Cloud API edge function, action goes in the body (not the path).
+  const invokePath = targetFn === 'whatsapp-cloud-api' ? 'whatsapp-cloud-api' : `evolution-api/${action}`;
+  const invokeBody = targetFn === 'whatsapp-cloud-api'
+    ? { action, ...opts.body }
+    : opts.body;
+
   const runRetryLoop = () => withRetry(
     async () => {
-      const result = await supabase.functions.invoke(`evolution-api/${action}`, {
+      const result = await supabase.functions.invoke(invokePath, {
         method: opts.method || 'POST',
-        body: opts.body,
+        body: invokeBody,
         headers: mergedHeaders,
       });
 

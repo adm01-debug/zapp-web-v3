@@ -10077,6 +10077,80 @@ export type Database = {
           },
         ]
       }
+      whatsapp_official_credentials: {
+        Row: {
+          access_token: string
+          app_secret: string
+          business_account_id: string | null
+          connection_id: string
+          created_at: string
+          created_by: string | null
+          graph_api_version: string
+          id: string
+          phone_number_id: string
+          updated_at: string
+          verify_token: string
+          waba_id: string | null
+        }
+        Insert: {
+          access_token: string
+          app_secret: string
+          business_account_id?: string | null
+          connection_id: string
+          created_at?: string
+          created_by?: string | null
+          graph_api_version?: string
+          id?: string
+          phone_number_id: string
+          updated_at?: string
+          verify_token: string
+          waba_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          app_secret?: string
+          business_account_id?: string | null
+          connection_id?: string
+          created_at?: string
+          created_by?: string | null
+          graph_api_version?: string
+          id?: string
+          phone_number_id?: string
+          updated_at?: string
+          verify_token?: string
+          waba_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_official_credentials_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: true
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_official_credentials_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: true
+            referencedRelation: "whatsapp_connections_agent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_official_credentials_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: true
+            referencedRelation: "whatsapp_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_official_credentials_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: true
+            referencedRelation: "whatsapp_connections_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_templates: {
         Row: {
           buttons: Json | null
@@ -10677,6 +10751,17 @@ export type Database = {
       get_connection_qr_code: {
         Args: { _connection_id: string }
         Returns: string
+      }
+      get_official_credentials_by_phone_id: {
+        Args: { p_phone_number_id: string }
+        Returns: {
+          access_token: string
+          app_secret: string
+          connection_id: string
+          graph_api_version: string
+          phone_number_id: string
+          verify_token: string
+        }[]
       }
       get_own_gmail_accounts: {
         Args: never
