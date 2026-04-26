@@ -60,7 +60,10 @@ const TERMINAL_DB = new Set([
 export const MessageStatusInline = memo(function MessageStatusInline({
   message,
   className,
+  forceLabel,
 }: MessageStatusInlineProps) {
+  const { showLabel } = useInboxStatusPref();
+  const showTextLabel = forceLabel || showLabel;
   const bus = useMessageSendStatus(message.id);
 
   // Reconciliation: when the persisted DB status reaches a terminal state but
@@ -114,31 +117,46 @@ export const MessageStatusInline = memo(function MessageStatusInline({
     ? `${baseTooltip} — ${formatFailureReason(failure.reason)} (após ${failure.attempts} tentativa${failure.attempts === 1 ? '' : 's'})`
     : baseTooltip;
 
+  const labelText = STATUS_LABELS[effectiveStatus] ?? '';
+
   return (
-    <span
-      className={cn('inline-flex items-center gap-0.5', className)}
-      title={tooltip}
-      data-testid="message-status-inline"
-      data-status={effectiveStatus}
-      data-attempt={showAttemptBadge ? attempt : undefined}
-    >
-      <MessageStatusIcon status={effectiveStatus} />
-      {showAttemptBadge && (
-        <span
-          className="text-[9px] font-semibold leading-none text-warning tabular-nums px-0.5"
-          aria-label={`Tentativa ${attempt} de ${totalRetries}`}
-        >
-          {attempt}/{totalRetries}
-        </span>
-      )}
-      {showFailedAfterRetries && (
-        <span
-          className="text-[9px] font-semibold leading-none text-destructive tabular-nums px-0.5"
-          aria-label={`Falhou após ${totalRetries} tentativas`}
-        >
-          ×{totalRetries}
-        </span>
-      )}
-    </span>
+    <MessageStatusPanel message={message}>
+      <button
+        type="button"
+        className={cn(
+          'inline-flex items-center gap-0.5 cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/60',
+          'hover:opacity-80 transition-opacity',
+          className,
+        )}
+        title={tooltip}
+        data-testid="message-status-inline"
+        data-status={effectiveStatus}
+        data-attempt={showAttemptBadge ? attempt : undefined}
+        aria-label={`Detalhes de entrega — ${labelText || effectiveStatus}`}
+      >
+        <MessageStatusIcon status={effectiveStatus} />
+        {showAttemptBadge && (
+          <span
+            className="text-[9px] font-semibold leading-none text-warning tabular-nums px-0.5"
+            aria-label={`Tentativa ${attempt} de ${totalRetries}`}
+          >
+            {attempt}/{totalRetries}
+          </span>
+        )}
+        {showFailedAfterRetries && (
+          <span
+            className="text-[9px] font-semibold leading-none text-destructive tabular-nums px-0.5"
+            aria-label={`Falhou após ${totalRetries} tentativas`}
+          >
+            ×{totalRetries}
+          </span>
+        )}
+        {showTextLabel && labelText && (
+          <span className="text-[10px] font-medium leading-none ml-0.5 opacity-90">
+            {labelText}
+          </span>
+        )}
+      </button>
+    </MessageStatusPanel>
   );
 });
