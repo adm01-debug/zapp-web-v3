@@ -31,7 +31,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, render, renderHook, screen } from '@testing-library/react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 // ── Heavy/external mocks ──────────────────────────────────────────────────
 vi.mock('@/integrations/supabase/client', () => ({
