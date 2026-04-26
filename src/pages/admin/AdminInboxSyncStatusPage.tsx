@@ -200,7 +200,7 @@ export default function AdminInboxSyncStatusPage() {
           .limit(15),
         supabase
           .from('audit_logs')
-          .select('id, created_at, action, resource_type, resource_id')
+          .select('id, created_at, action, entity_type, entity_id')
           .order('created_at', { ascending: false })
           .limit(15),
       ]);
