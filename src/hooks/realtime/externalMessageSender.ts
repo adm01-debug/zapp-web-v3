@@ -176,12 +176,14 @@ export async function sendExternalAudio(
 
   if (error) {
     log.error('evolution-api send-audio failed', error);
-    throw new Error(error.message || 'Falha ao enviar áudio');
+    const info = parseEvolutionError(error);
+    throw new SendError(info.reason, info.detail, info.status);
   }
-  const envelope = data as { error?: boolean; message?: string; key?: { id?: string } } | null;
+  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
   if (envelope?.error) {
     log.error('evolution-api send-audio error envelope', envelope);
-    throw new Error(envelope.message || 'Falha ao enviar áudio');
+    const info = parseEvolutionError(envelope);
+    throw new SendError(info.reason, info.detail, info.status);
   }
 
   const externalId = envelope?.key?.id ?? null;
