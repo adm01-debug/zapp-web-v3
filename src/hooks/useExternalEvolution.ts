@@ -235,7 +235,18 @@ export function useExternalMessages(remoteJid: string | null) {
       if (!mountedRef.current) return;
 
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
-      setMessages(mapped);
+      // Replace pode chegar com canônicas que substituem otimistas pendentes.
+      // Mantemos quaisquer otimistas que ainda não foram reconciliadas.
+      setMessages((prev) => {
+        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
+        // Initial: o servidor é a fonte da verdade — ordenamos por created_at
+        // garantindo que otimistas remanescentes (ainda sem external_id real)
+        // continuem visíveis ao final.
+        const merged = [...filteredPrev.filter((m) => m.id.startsWith(OPTIMISTIC_PREFIX)), ...additions];
+        return merged.sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        );
+      });
       setHasMore(evoMessages.length === CONVERSATION_PAGE_SIZE);
       lastSeenRef.current = evoMessages.length
         ? evoMessages[evoMessages.length - 1].created_at
