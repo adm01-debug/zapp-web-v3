@@ -102,7 +102,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
               <Input
                 ref={contactSearchRef}
-                placeholder="Buscar contato..."
+                placeholder="Buscar nome, número, JID ou mensagem..."
                 value={contactSearch}
                 onChange={(e) => handleContactSearch(e.target.value)}
                 className="pl-8 pr-7 bg-muted/40 border-0 rounded-lg h-8 text-xs placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30"
@@ -120,7 +120,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/60" />
               <Input
                 ref={contactSearchRef}
-                placeholder="Buscar contato..."
+                placeholder="Buscar nome, número, JID ou mensagem..."
                 value={contactSearch}
                 onChange={(e) => handleContactSearch(e.target.value)}
                 className="pl-7 pr-7 bg-muted/40 border-0 rounded-md h-7 text-[11px] placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30"
