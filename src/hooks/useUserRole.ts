@@ -9,16 +9,20 @@ import { useAuth } from '@/hooks/useAuth';
  *                (telemetria, webhook, banco, infra) e informativos do sistema.
  *   admin      → Gestão completa do negócio (pessoas, integrações, configurações).
  *                Vê áreas técnicas em modo leitura. Não edita áreas técnicas.
- *   supervisor → Operação completa do atendimento (inbox, CRM, relatórios, equipe).
+ *   manager    → Gestor geral. Vê TUDO da empresa em todos os departamentos
+ *                (inbox, CRM, relatórios) mas NÃO gerencia usuários nem configurações.
+ *   supervisor → Supervisor de DEPARTAMENTO. Vê apenas conversas/contatos do
+ *                próprio departamento (dele + agentes do mesmo departamento).
  *   agent      → Atendente final. Apenas o próprio escopo.
  *
  * Cada nível superior herda os acessos dos níveis abaixo.
  */
-export type AppRole = 'dev' | 'admin' | 'supervisor' | 'agent';
+export type AppRole = 'dev' | 'admin' | 'manager' | 'supervisor' | 'agent';
 
 const ROLE_RANK: Record<AppRole, number> = {
-  dev: 4,
-  admin: 3,
+  dev: 5,
+  admin: 4,
+  manager: 3,
   supervisor: 2,
   agent: 1,
 };
