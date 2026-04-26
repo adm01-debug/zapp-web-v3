@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { BusinessHoursIndicator } from './BusinessHoursIndicator';
+import { OfficialApiConfigDialog } from './OfficialApiConfigDialog';
 import type { WhatsAppConnection } from '@/hooks/useConnectionsManager';
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Wifi }> = {
