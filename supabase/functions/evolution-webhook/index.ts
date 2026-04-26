@@ -69,7 +69,7 @@ serve(async (req) => {
     }
     rawBody = result.payload ?? '';
   } else {
-    console.warn(`[webhook][${requestId}] WEBHOOK_SECRET not configured — signature validation skipped`);
+    console.warn(redactSecrets(`[webhook][${requestId}] WEBHOOK_SECRET not configured — signature validation skipped`));
     rawBody = await req.text();
   }
 
