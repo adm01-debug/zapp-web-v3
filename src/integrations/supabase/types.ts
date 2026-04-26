@@ -11225,6 +11225,7 @@ export type Database = {
         Args: { p_hours?: number }
         Returns: Json
       }
+      rpc_get_whatsapp_mode: { Args: never; Returns: string }
       rpc_instance_auth_event_summary: {
         Args: { p_hours?: number; p_instance?: string }
         Returns: Json
@@ -11696,6 +11697,7 @@ export type Database = {
         Returns: Json
       }
       rpc_search_insights: { Args: { p_days?: number }; Returns: Json }
+      rpc_set_whatsapp_mode: { Args: { p_mode: string }; Returns: string }
       rpc_unlink_channel_queue: {
         Args: { p_channel_id: string; p_queue_id: string }
         Returns: boolean
