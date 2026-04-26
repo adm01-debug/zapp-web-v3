@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
-import { handleCors, errorResponse, jsonResponse, Logger, getCorsHeaders } from "../_shared/validation.ts";
+import { handleCors, errorResponse, jsonResponse, Logger, getCorsHeaders, validateBitrixOrigin } from "../_shared/validation.ts";
 
 const BitrixBodySchema = z.object({
   action: z.enum([
@@ -19,6 +19,28 @@ Deno.serve(async (req) => {
   if (cors) return cors;
 
   const log = new Logger("bitrix-api");
+
+  // Bug 2 fix — defense in depth: only accept requests from a trusted Bitrix
+  // portal (or local dev). CORS already blocks browser cross-origin; this
+  // closes the server-to-server vector. Skipped when origin is absent AND
+  // the request comes from a same-origin browser context (no Origin header).
+  // We require Origin to be present and trusted; missing Origin → 401.
+  // Same-origin browser calls from the app go through `getCorsHeaders` and
+  // include their Origin, so this stays safe.
+  // To allow internal calls without an origin, set BITRIX_ALLOW_NO_ORIGIN=1.
+  const allowNoOrigin = Deno.env.get('BITRIX_ALLOW_NO_ORIGIN') === '1';
+  const originCheck = validateBitrixOrigin(req);
+  const isAppOrigin = (() => {
+    const o = req.headers.get('origin');
+    if (!o) return false;
+    return /\.lovable(?:project)?\.app$/i.test(new URL(o).hostname) ||
+           /^localhost(?::\d+)?$/i.test(new URL(o).hostname) ||
+           /^127\.0\.0\.1(?::\d+)?$/i.test(new URL(o).hostname);
+  })();
+  if (!originCheck.ok && !isAppOrigin && !(allowNoOrigin && originCheck.reason === 'missing_origin')) {
+    log.warn('rejected: invalid origin', { reason: originCheck.reason, origin: originCheck.origin });
+    return errorResponse('invalid origin', 401, req);
+  }
 
   try {
     const BITRIX_WEBHOOK_URL = Deno.env.get('BITRIX_WEBHOOK_URL');

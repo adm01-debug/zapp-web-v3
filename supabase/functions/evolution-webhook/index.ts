@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { getCorsHeaders, handleCors } from "../_shared/validation.ts";
+import { getCorsHeaders, handleCors, redactSecrets } from "../_shared/validation.ts";
 import {
   isRecord, normalizeEventName, toEventRecords,
   handleReactionEvent, redactJid, generateRequestId,
@@ -54,7 +54,7 @@ serve(async (req) => {
   if (validateWebhook) {
     const result = await validateWebhook(req);
     if (!result.valid) {
-      console.warn(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`);
+      console.warn(redactSecrets(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`));
       // Auto-pause: conta invalid_signature na janela e persiste o evento
       recordAuthFailureAndMaybePause(supabase, headerInstance ?? 'unknown', 'invalid_signature', 'webhook', { message: result.error ?? 'invalid_signature' });
       await auditWebhookEvent(supabase, {
@@ -69,7 +69,7 @@ serve(async (req) => {
     }
     rawBody = result.payload ?? '';
   } else {
-    console.warn(`[webhook][${requestId}] WEBHOOK_SECRET not configured — signature validation skipped`);
+    console.warn(redactSecrets(`[webhook][${requestId}] WEBHOOK_SECRET not configured — signature validation skipped`));
     rawBody = await req.text();
   }
 
@@ -229,7 +229,7 @@ serve(async (req) => {
     // Logical/handler errors: log the detail internally, return 200 to evo so it does not
     // retry-storm the same event. The idempotency guard above makes retries safe.
     const detail = error instanceof Error ? error.message : String(error);
-    console.error(`[webhook][${requestId}] handler_error event=${event} instance=${instance}: ${detail}`);
+    console.error(redactSecrets(`[webhook][${requestId}] handler_error event=${event} instance=${instance}: ${detail}`));
     await auditWebhookEvent(supabase, {
       request_id: requestId, instance, event_type: event, status: 'error',
       duration_ms: Date.now() - startedAt, error_message: detail.slice(0, 500),

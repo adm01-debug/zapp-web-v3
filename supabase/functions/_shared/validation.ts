@@ -11,6 +11,110 @@ export {
   createWebhookValidator 
 } from './hmac-validation.ts';
 
+// ─── Secret Sanitization (Bug 1 fix — never log secrets) ────────────────────
+
+/**
+ * Names of env vars whose values must NEVER appear in logs.
+ * Inspired by the v6 hardening checklist (PROMPT_LOVABLE_ZAPPWEB_EVO_BITRIX).
+ */
+const SENSITIVE_ENV_NAMES = [
+  'EVOLUTION_WEBHOOK_SECRET',
+  'WEBHOOK_SECRET',
+  'WEBHOOK_SHARED_SECRET',
+  'BITRIX_WEBHOOK_URL',
+  'BITRIX_CLIENT_SECRET',
+  'BITRIX_PORTAL',
+  'EVOLUTION_API_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+] as const;
+
+let _sensitiveValuesCache: string[] | null = null;
+function getSensitiveValues(): string[] {
+  if (_sensitiveValuesCache) return _sensitiveValuesCache;
+  const out: string[] = [];
+  for (const name of SENSITIVE_ENV_NAMES) {
+    const v = Deno.env.get(name);
+    // Only redact non-trivial values to avoid false positives (e.g. empty / "true").
+    if (v && v.length >= 12) out.push(v);
+  }
+  // Sort longest first so substring matches do not partially mask shorter overlapping secrets.
+  _sensitiveValuesCache = out.sort((a, b) => b.length - a.length);
+  return _sensitiveValuesCache;
+}
+
+/** Redact known secret values from any string. Safe to call on arbitrary input. */
+export function redactSecrets(input: string): string {
+  if (typeof input !== 'string' || input.length === 0) return input;
+  let out = input;
+  for (const secret of getSensitiveValues()) {
+    if (out.includes(secret)) out = out.split(secret).join('***REDACTED***');
+  }
+  return out;
+}
+
+/** Recursively redact secrets in any value (depth-limited to avoid runaway). */
+function redactDeep(value: unknown, depth = 0): unknown {
+  if (depth > 3 || value == null) return value;
+  if (typeof value === 'string') return redactSecrets(value);
+  if (Array.isArray(value)) return value.map((v) => redactDeep(v, depth + 1));
+  if (typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = redactDeep(v, depth + 1);
+    }
+    return out;
+  }
+  return value;
+}
+
+/** Test-only: clear the sensitive-values cache (for unit tests that mutate Deno.env). */
+export function _resetSensitiveCacheForTests(): void {
+  _sensitiveValuesCache = null;
+}
+
+// ─── Bitrix Origin Validation (Bug 2 fix — defense in depth) ────────────────
+
+export interface OriginValidationResult {
+  ok: boolean;
+  reason?: string;
+  origin?: string;
+}
+
+/**
+ * Validate that a request originates from a Bitrix24 portal.
+ * Accepts:
+ *   - hostname matching `*.bitrix24.com.br` (Brazilian portals)
+ *   - exact match against the BITRIX_PORTAL env var (when set)
+ *
+ * Defense in depth — pairs with HMAC/auth on the same endpoint. CORS already
+ * blocks browser-initiated cross-origin requests; this closes the
+ * server-to-server vector documented in the v6 runbook.
+ */
+export function validateBitrixOrigin(
+  req: Request,
+  allowedPortal: string | null = Deno.env.get('BITRIX_PORTAL') ?? null,
+): OriginValidationResult {
+  const origin = req.headers.get('origin');
+  if (!origin) return { ok: false, reason: 'missing_origin' };
+
+  // Exact portal match (e.g. https://promo-brindes.bitrix24.com.br)
+  if (allowedPortal && origin === allowedPortal) return { ok: true, origin };
+
+  let hostname: string;
+  try {
+    hostname = new URL(origin).hostname.toLowerCase();
+  } catch {
+    return { ok: false, reason: 'malformed_origin', origin };
+  }
+
+  // Strict suffix match — `fake-bitrix24.com.br.evil.com` must NOT pass.
+  if (hostname === 'bitrix24.com.br' || hostname.endsWith('.bitrix24.com.br')) {
+    return { ok: true, origin };
+  }
+
+  return { ok: false, reason: 'untrusted_origin', origin };
+}
+
 // ─── Structured Logger ───────────────────────────────────────────────────────
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -44,15 +148,17 @@ export class Logger {
   }
 
   private log(level: LogLevel, message: string, ctx?: Record<string, unknown>) {
+    const safeMessage = redactSecrets(message);
+    const safeCtx = ctx ? (redactDeep(ctx) as Record<string, unknown>) : undefined;
     const entry = {
       level,
       fn: this.fn,
       rid: this.requestId,
       ms: Date.now() - this.startTime,
-      msg: message,
-      ...ctx,
+      msg: safeMessage,
+      ...(safeCtx ?? {}),
     };
-    const serialized = JSON.stringify(entry);
+    const serialized = redactSecrets(JSON.stringify(entry));
     if (level === 'error') console.error(serialized);
     else if (level === 'warn') console.warn(serialized);
     else console.log(serialized);
