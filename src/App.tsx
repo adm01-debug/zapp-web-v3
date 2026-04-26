@@ -71,6 +71,7 @@ const SLAAlertHistory = lazyWithRetry(() => import("./pages/SLAAlertHistory"));
 const SendStatusBusDebug = lazyWithRetry(() => import("./pages/SendStatusBusDebug"));
 const RealtimeFanoutDebug = lazyWithRetry(() => import("./pages/RealtimeFanoutDebug"));
 const RolesPage = lazyWithRetry(() => import("./pages/admin/RolesPage"));
+const DepartmentsPage = lazyWithRetry(() => import("./pages/admin/DepartmentsPage"));
 const RateLimitDashboard = lazyWithRetry(() => import("./pages/admin/RateLimitDashboard"));
 const HmacSelfTestPage = lazyWithRetry(() => import("./pages/admin/HmacSelfTestPage"));
 const AdminChannelsPage = lazyWithRetry(() => import("./pages/admin/AdminChannelsPage"));
