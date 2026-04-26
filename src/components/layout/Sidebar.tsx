@@ -7,6 +7,7 @@ import { useSidebarCollapse } from '@/hooks/useSidebarCollapse';
 import { useSidebarFavorites } from '@/hooks/useSidebarFavorites';
 import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
 import { ScreenProtectionToggle } from '@/components/notifications/ScreenProtectionToggle';
+import { StatusLabelToggle } from '@/components/notifications/StatusLabelToggle';
 import { SoundMuteToggle } from '@/components/notifications/SoundMuteToggle';
 import { SidebarNavItem } from './SidebarNavItem';
 import { SidebarNavGroup } from './SidebarNavGroup';
@@ -110,6 +111,7 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
           <ScreenProtectionToggle className="w-[36px] h-[36px]" />
           <PushNotificationToggle className="w-[36px] h-[36px]" />
           <SoundMuteToggle className="w-[36px] h-[36px]" />
+          <StatusLabelToggle className="w-[36px] h-[36px]" />
           <Tooltip delayDuration={200}><TooltipTrigger asChild>
             <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={cn("w-[36px] h-[36px] rounded-lg flex items-center justify-center transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none", isDark && "text-primary")} aria-label={isDark ? 'Modo claro' : 'Modo escuro'}>
               {isDark ? <Sun className="w-[16px] h-[16px]" /> : <Moon className="w-[16px] h-[16px]" />}
