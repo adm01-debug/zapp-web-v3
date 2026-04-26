@@ -31,7 +31,8 @@ async function fetchMediaUrl(creds: CredentialsRow, mediaId: string): Promise<st
 }
 
 async function downloadAndStore(
-  supabase: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
   creds: CredentialsRow,
   mediaId: string,
   mimeType: string | undefined,
