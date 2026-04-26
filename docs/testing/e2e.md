@@ -95,3 +95,35 @@ Todos os JIDs/instâncias de teste são prefixados com `*-test` para facilitar l
 3. Use mocks de `page.route` para Evolution/serviços externos.
 4. Adicione `test.afterAll(() => cleanupTestData())` se criar dados.
 5. Rode local antes de abrir PR.
+
+## Paridade de provedores (webhook → inbox)
+
+`e2e/webhook-providers-parity.spec.ts` envia eventos sintéticos de webhook
+para **ambos** os provedores (`evolution-webhook` e `whatsapp-cloud-webhook`)
+e valida que cada evento aterrissa em `evolution_messages` com o mesmo
+`remote_jid` normalizado, mesmo `content`, `from_me=false` e `direction`
+inbound. Garante paridade absoluta da pipeline `webhook → unified inbox`.
+
+### Como funciona
+
+A spec **não assina nada no cliente** — assinaturas HMAC ficam server-side.
+Tudo passa pela Edge Function `e2e-webhook-fixture` (admin-only), que:
+
+1. `seed-cloud-creds` cria temporariamente uma `whatsapp_connections` +
+   `whatsapp_official_credentials` com `phone_number_id` prefixado por `e2e-`.
+2. `send-evolution` monta o payload `messages.upsert`, assina com
+   `EVOLUTION_WEBHOOK_SECRET` e faz POST em `/functions/v1/evolution-webhook`.
+3. `send-cloud` monta o payload Meta, assina com o `app_secret` da credencial
+   seedada e faz POST em `/functions/v1/whatsapp-cloud-webhook`.
+4. `cleanup` remove credencial, conexão e linhas em `evolution_messages` /
+   `evolution_contacts` cujo `remote_jid`/`instance_name` carregam o prefixo
+   `e2e-` daquele `runId`. Recusa qualquer alvo sem o prefixo.
+
+### Como rodar
+
+```bash
+E2E_WEBHOOK_PARITY=1 bunx playwright test webhook-providers-parity
+```
+
+Sem a flag, a spec é skipada — assim CI default não falha em ambientes que
+não têm `EVOLUTION_WEBHOOK_SECRET` configurado.
