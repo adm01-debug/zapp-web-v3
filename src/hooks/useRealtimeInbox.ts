@@ -229,22 +229,39 @@ export function useRealtimeInbox() {
     if (USE_EXTERNAL_DB) {
       // External path (FATOR X): upload + envio via evolution-api + bolha
       // otimista. O webhook reconcilia o status/ID definitivos em segundos.
+      //
+      // ATENÇÃO: erros (upload OU envio) são PROPAGADOS para que o
+      // `SendErrorBanner` possa oferecer "Reenviar" mantendo o blob original
+      // — repete o upload + envio + cria uma NOVA bolha otimista.
       const { sendExternalAudio } = await import('@/hooks/realtime/externalMessageSender');
-      const { optimistic } = await sendExternalAudio(selectedContactId, blob);
-      try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
-      setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
+      try {
+        const { optimistic } = await sendExternalAudio(selectedContactId, blob);
+        try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+        setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
+      } catch (err) {
+        log.error('Error sending external audio:', err);
+        // Re-throw para o SendErrorBanner via useChatPanelHandlers.
+        throw err;
+      }
       return;
     }
     try {
       const fileName = `${selectedContactId}/${Date.now()}.webm`;
       const { error: uploadError } = await supabase.storage.from('audio-messages').upload(fileName, blob, { contentType: 'audio/webm' });
-      if (uploadError) { log.error('Error uploading audio:', uploadError); toast.error('Erro ao fazer upload do áudio'); return; }
+      if (uploadError) {
+        log.error('Error uploading audio:', uploadError);
+        // Propaga (em vez de engolir) para alimentar o retry de áudio.
+        throw new Error(uploadError.message || 'Falha no upload do áudio');
+      }
       const { data: signedData, error: signError } = await supabase.storage.from('audio-messages').createSignedUrl(fileName, 3600);
-      if (signError || !signedData?.signedUrl) { log.error('Error creating signed URL:', signError); toast.error('Erro ao gerar URL do áudio'); return; }
+      if (signError || !signedData?.signedUrl) {
+        log.error('Error creating signed URL:', signError);
+        throw new Error(signError?.message || 'Falha ao gerar URL do áudio');
+      }
       await sendMessage(selectedContactId, '[Áudio]', 'audio', signedData.signedUrl);
     } catch (err) {
       log.error('Error in handleSendAudio:', err);
-      toast.error('Erro ao enviar áudio. Tente novamente.');
+      throw err;
     } finally {
       await refreshActiveConversation();
     }
