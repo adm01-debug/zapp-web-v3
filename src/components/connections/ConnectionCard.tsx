@@ -208,6 +208,15 @@ export function ConnectionCard({
           </div>
         </CardContent>
       </Card>
+      {isOfficial && (
+        <OfficialApiConfigDialog
+          open={officialConfigOpen}
+          onOpenChange={setOfficialConfigOpen}
+          connectionId={connection.id}
+          connectionName={connection.name}
+          instanceId={connection.instance_id}
+        />
+      )}
     </motion.div>
   );
 }
