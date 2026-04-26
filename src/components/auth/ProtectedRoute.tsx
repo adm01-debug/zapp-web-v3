@@ -6,27 +6,37 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useRouteRoles } from '@/hooks/useRouteRoles';
 import { supabase } from '@/integrations/supabase/client';
+
+type AppRole = 'admin' | 'manager' | 'supervisor' | 'agent' | 'special_agent' | 'dev';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRoles?: ('admin' | 'supervisor' | 'agent')[];
+  requiredRoles?: AppRole[];
   requiredPermission?: string;
   fallback?: ReactNode;
+  /** Override the path used to look up dynamic role overrides. Defaults to location.pathname. */
+  routePath?: string;
 }
 
 export function ProtectedRoute({ 
   children, 
   requiredRoles,
   requiredPermission,
-  fallback 
+  fallback,
+  routePath,
 }: ProtectedRouteProps) {
   const { user, loading: authLoading } = useAuth();
   const { roles, loading: rolesLoading, hasRole } = useUserRole();
   const location = useLocation();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
-  const loading = authLoading || rolesLoading;
+  // Dynamic override from route_permissions table
+  const overrideRoles = useRouteRoles(routePath ?? location.pathname);
+  const overrideLoading = overrideRoles === undefined;
+
+  const loading = authLoading || rolesLoading || overrideLoading;
 
   useEffect(() => {
     if (!loading && user && requiredPermission) {
@@ -61,9 +71,16 @@ export function ProtectedRoute({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // Check required roles
-  if (requiredRoles && requiredRoles.length > 0) {
-    const hasRequiredRole = requiredRoles.some(role => hasRole(role));
+  // Resolve effective required roles: DB override wins when present
+  // overrideRoles === null  -> no override, use code default
+  // overrideRoles === []    -> any authenticated user
+  // overrideRoles === [...] -> explicit list
+  const effectiveRoles: AppRole[] | undefined =
+    overrideRoles === null ? requiredRoles : overrideRoles;
+
+  if (effectiveRoles && effectiveRoles.length > 0) {
+    // 'dev' always has access
+    const hasRequiredRole = hasRole('dev' as AppRole) || effectiveRoles.some(role => hasRole(role));
     if (!hasRequiredRole) {
       if (fallback) return <>{fallback}</>;
       return <Navigate to="/" replace />;
