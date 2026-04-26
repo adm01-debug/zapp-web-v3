@@ -117,7 +117,7 @@ export function aggregateByChannel(rows: FailedMessageRow[]): ChannelDispatchAgg
         const ts = r.last_attempt_at ?? r.updated_at ?? r.created_at;
         if (!lastErrorAt || new Date(ts) > new Date(lastErrorAt)) {
           lastErrorAt = ts;
-          lastError = r.error_message ?? r.error_code ?? null;
+          lastError = normalizeText(r.error_message) ?? normalizeText(r.error_code);
         }
       }
       return {
