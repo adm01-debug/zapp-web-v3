@@ -1970,6 +1970,54 @@ export type Database = {
           },
         ]
       }
+      channel_queues: {
+        Row: {
+          channel_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          priority: number
+          queue_id: string
+          updated_at: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          queue_id: string
+          updated_at?: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          queue_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_queues_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "service_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_queues_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "queues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_routing_rules: {
         Row: {
           channel_connection_id: string | null
@@ -7130,45 +7178,93 @@ export type Database = {
           auto_rebalance_enabled: boolean
           color: string
           created_at: string
+          department_id: string | null
           description: string | null
+          distribution_algorithm: string
           id: string
           is_active: boolean | null
+          max_concurrent_per_agent: number | null
+          max_per_queue_per_agent: number | null
+          max_queue_size: number | null
+          max_wait_seconds: number | null
           max_wait_time_minutes: number | null
           name: string
+          overflow_queue_id: string | null
+          paused_at: string | null
+          paused_by: string | null
+          paused_reason: string | null
           priority: number | null
           routing_weight: number
           sla_priority: string
+          status: string
           updated_at: string
         }
         Insert: {
           auto_rebalance_enabled?: boolean
           color?: string
           created_at?: string
+          department_id?: string | null
           description?: string | null
+          distribution_algorithm?: string
           id?: string
           is_active?: boolean | null
+          max_concurrent_per_agent?: number | null
+          max_per_queue_per_agent?: number | null
+          max_queue_size?: number | null
+          max_wait_seconds?: number | null
           max_wait_time_minutes?: number | null
           name: string
+          overflow_queue_id?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
+          paused_reason?: string | null
           priority?: number | null
           routing_weight?: number
           sla_priority?: string
+          status?: string
           updated_at?: string
         }
         Update: {
           auto_rebalance_enabled?: boolean
           color?: string
           created_at?: string
+          department_id?: string | null
           description?: string | null
+          distribution_algorithm?: string
           id?: string
           is_active?: boolean | null
+          max_concurrent_per_agent?: number | null
+          max_per_queue_per_agent?: number | null
+          max_queue_size?: number | null
+          max_wait_seconds?: number | null
           max_wait_time_minutes?: number | null
           name?: string
+          overflow_queue_id?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
+          paused_reason?: string | null
           priority?: number | null
           routing_weight?: number
           sla_priority?: string
+          status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "queues_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queues_overflow_queue_id_fkey"
+            columns: ["overflow_queue_id"]
+            isOneToOne: false
+            referencedRelation: "queues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limit_configs: {
         Row: {
@@ -10810,6 +10906,41 @@ export type Database = {
           total: number
         }[]
       }
+      rpc_link_channel_queue: {
+        Args: {
+          p_channel_id: string
+          p_is_active?: boolean
+          p_priority?: number
+          p_queue_id: string
+        }
+        Returns: {
+          channel_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          priority: number
+          queue_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "channel_queues"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      rpc_list_channel_queues: {
+        Args: { p_channel_id: string }
+        Returns: {
+          is_active: boolean
+          is_default: boolean
+          name: string
+          priority: number
+          queue_id: string
+          status: string
+        }[]
+      }
       rpc_list_dispatch_error_logs: {
         Args: {
           p_agent?: string
@@ -10837,6 +10968,17 @@ export type Database = {
           remote_jid: string
           retry_count: number
           total_count: number
+        }[]
+      }
+      rpc_list_eligible_agents: {
+        Args: { p_queue_id: string }
+        Returns: {
+          active_chats: number
+          department_id: string
+          display_name: string
+          is_active: boolean
+          max_chats: number
+          user_id: string
         }[]
       }
       rpc_list_failed_messages:
@@ -10956,6 +11098,40 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_pause_queue: {
+        Args: { p_queue_id: string; p_reason?: string }
+        Returns: {
+          auto_rebalance_enabled: boolean
+          color: string
+          created_at: string
+          department_id: string | null
+          description: string | null
+          distribution_algorithm: string
+          id: string
+          is_active: boolean | null
+          max_concurrent_per_agent: number | null
+          max_per_queue_per_agent: number | null
+          max_queue_size: number | null
+          max_wait_seconds: number | null
+          max_wait_time_minutes: number | null
+          name: string
+          overflow_queue_id: string | null
+          paused_at: string | null
+          paused_by: string | null
+          paused_reason: string | null
+          priority: number | null
+          routing_weight: number
+          sla_priority: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "queues"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       rpc_pause_service_channel: {
         Args: { p_id: string; p_reason?: string }
         Returns: {
@@ -10989,6 +11165,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      rpc_pick_next_agent: { Args: { p_queue_id: string }; Returns: string }
       rpc_provider_panel: {
         Args: never
         Returns: {
@@ -11123,11 +11300,49 @@ export type Database = {
         }
         Returns: boolean
       }
+      rpc_resume_queue: {
+        Args: { p_queue_id: string }
+        Returns: {
+          auto_rebalance_enabled: boolean
+          color: string
+          created_at: string
+          department_id: string | null
+          description: string | null
+          distribution_algorithm: string
+          id: string
+          is_active: boolean | null
+          max_concurrent_per_agent: number | null
+          max_per_queue_per_agent: number | null
+          max_queue_size: number | null
+          max_wait_seconds: number | null
+          max_wait_time_minutes: number | null
+          name: string
+          overflow_queue_id: string | null
+          paused_at: string | null
+          paused_by: string | null
+          paused_reason: string | null
+          priority: number | null
+          routing_weight: number
+          sla_priority: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "queues"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       rpc_route_incoming_message: {
         Args: { p_connection_id: string; p_contact_id: string }
         Returns: Json
       }
       rpc_search_insights: { Args: { p_days?: number }; Returns: Json }
+      rpc_unlink_channel_queue: {
+        Args: { p_channel_id: string; p_queue_id: string }
+        Returns: boolean
+      }
       rpc_upsert_service_channel: {
         Args: {
           p_channel_type?: string
