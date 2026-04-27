@@ -237,6 +237,10 @@ export function ConnectionCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onSetDefault(connection.id)}><Star className="w-4 h-4 mr-2" />Definir como padrão</DropdownMenuItem>
+                  <DropdownMenuItem disabled={recheckingHealth || !connection.instance_id} onClick={handleRecheckNow}>
+                    {recheckingHealth ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Activity className="w-4 h-4 mr-2" />}
+                    Verificar conexão agora
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => onShowQrCode(connection)}
                     disabled={isOfficial}
