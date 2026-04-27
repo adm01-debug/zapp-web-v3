@@ -27,6 +27,6 @@ describe('dbg', () => {
     await act(async () => { fireEvent.click(btn); });
     await new Promise(r => setTimeout(r, 50));
     await act(async () => { await Promise.resolve(); });
-    console.log('AFTER:', btn.outerHTML.slice(0, 300), 'disabled?', btn.disabled, 'mockPlay calls:', mockPlay.mock.calls.length);
+    console.log('AFTER svg:', btn.querySelector('svg')?.outerHTML?.slice(0, 200), 'mockPlay:', mockPlay.mock.calls.length);
   });
 });
