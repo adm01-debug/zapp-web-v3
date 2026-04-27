@@ -1,4 +1,7 @@
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('VirtualizedMessageList');
 import { EmptyState } from '@/components/ui/empty-state';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Message, InteractiveButton } from '@/types/chat';
