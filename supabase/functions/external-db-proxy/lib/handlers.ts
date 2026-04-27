@@ -112,14 +112,21 @@ export async function handleQuery(
   headers: Record<string, string>
 ): Promise<Response> {
   const queryStart = Date.now()
+  
+  if (!table) {
+    return new Response(JSON.stringify({ error: 'Table name is required', cid: ctx.cid, rid: ctx.rid }), { status: 400, headers })
+  }
+
   let query: any
 
   if (action === 'select') {
     query = client.from(table).select((body.select as string) || '*', {
       count: (body.countMode as any) || null,
     })
+  } else if (action === 'update') {
+    query = client.from(table).update(body.data || {}).match(body.match || {})
   } else {
-    query = client.from(table).update(body.data).match(body.match || {})
+    return new Response(JSON.stringify({ error: `Unsupported action: ${action}`, cid: ctx.cid, rid: ctx.rid }), { status: 400, headers })
   }
 
   if (Array.isArray(body.filters)) {

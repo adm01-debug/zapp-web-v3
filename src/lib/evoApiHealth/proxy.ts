@@ -72,17 +72,27 @@ class ExternalDbProxyClient {
         }),
       });
 
-      const result = await response.json().catch(() => null);
+      const text = await response.text();
+      let result: any = null;
+      try {
+        result = text ? JSON.parse(text) : null;
+      } catch {
+        result = { error: text || `HTTP ${response.status}` };
+      }
 
       if (!response.ok) {
-        const errorMsg = (result as ProxyErrorResponse | null)?.error ?? `HTTP ${response.status}`;
+        const errorMsg = result?.error ?? `HTTP ${response.status}`;
         
-        // PGRST106: Invalid schema - often transient during migrations or DB restarts
-        const isTransientSchemaError = errorMsg.includes('PGRST106') || errorMsg.includes('Invalid schema');
+        // PGRST106 (Invalid schema) or PGRST002 (Schema cache error)
+        const isTransientSchemaError = 
+          errorMsg.includes('PGRST106') || 
+          errorMsg.includes('Invalid schema') ||
+          errorMsg.includes('PGRST002') ||
+          errorMsg.includes('schema cache');
         
         if (isTransientSchemaError && retryCount < 3) {
           const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
-          console.warn(`[ExternalDbProxy] Transient schema error (PGRST106). Retrying in ${Math.round(delay)}ms... (Attempt ${retryCount + 1}/3)`);
+          console.warn(`[ExternalDbProxy] Transient error (${errorMsg}). Retrying in ${Math.round(delay)}ms... (Attempt ${retryCount + 1}/3)`);
           await new Promise(resolve => setTimeout(resolve, delay));
           return this.call<T>(body, retryCount + 1);
         }
@@ -95,8 +105,15 @@ class ExternalDbProxyClient {
         data: (okResult?.data ?? null) as T | null,
         schema_unavailable: !!okResult?.schema_unavailable,
       };
-    } catch (error) {
-      if (error instanceof Error && (error.message.includes('PGRST106') || error.message.includes('Invalid schema')) && retryCount < 3) {
+    } catch (error: any) {
+      const errorMsg = error?.message ?? String(error);
+      const isTransient = 
+        errorMsg.includes('PGRST106') || 
+        errorMsg.includes('Invalid schema') ||
+        errorMsg.includes('PGRST002') ||
+        errorMsg.includes('schema cache');
+
+      if (isTransient && retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.call<T>(body, retryCount + 1);
