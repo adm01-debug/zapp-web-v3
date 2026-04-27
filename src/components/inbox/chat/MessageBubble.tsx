@@ -117,7 +117,7 @@ export function MessageBubble({
             <div className="w-8 shrink-0">
               {isLastInGroup && (
                 <Avatar className="w-8 h-8 ring-2 ring-background shadow-sm">
-                  <AvatarImage src={avatarUrl || undefined} />
+                  <AvatarImage src={avatarUrl || undefined} referrerPolicy="no-referrer" />
                   <AvatarFallback className="bg-gradient-to-br from-accent to-accent/60 text-accent-foreground text-[10px] font-bold">
                     {senderName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
