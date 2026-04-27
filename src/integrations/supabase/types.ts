@@ -1096,7 +1096,9 @@ export type Database = {
           acted_by: string | null
           applied_tags: string[] | null
           assigned_to: string | null
+          channel_id: string | null
           created_at: string
+          department_id: string | null
           error_message: string | null
           id: string
           instance_name: string
@@ -1114,7 +1116,9 @@ export type Database = {
           acted_by?: string | null
           applied_tags?: string[] | null
           assigned_to?: string | null
+          channel_id?: string | null
           created_at?: string
+          department_id?: string | null
           error_message?: string | null
           id?: string
           instance_name?: string
@@ -1132,7 +1136,9 @@ export type Database = {
           acted_by?: string | null
           applied_tags?: string[] | null
           assigned_to?: string | null
+          channel_id?: string | null
           created_at?: string
+          department_id?: string | null
           error_message?: string | null
           id?: string
           instance_name?: string
@@ -1158,9 +1164,11 @@ export type Database = {
       automation_rules: {
         Row: {
           actions: Json
+          channel_id: string | null
           cooldown_seconds: number
           created_at: string
           created_by: string | null
+          department_id: string | null
           description: string | null
           id: string
           is_active: boolean
@@ -1172,9 +1180,11 @@ export type Database = {
         }
         Insert: {
           actions?: Json
+          channel_id?: string | null
           cooldown_seconds?: number
           created_at?: string
           created_by?: string | null
+          department_id?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
@@ -1186,9 +1196,11 @@ export type Database = {
         }
         Update: {
           actions?: Json
+          channel_id?: string | null
           cooldown_seconds?: number
           created_at?: string
           created_by?: string | null
+          department_id?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
@@ -1198,7 +1210,22 @@ export type Database = {
           trigger_type?: Database["public"]["Enums"]["automation_trigger_type"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "automation_rules_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "service_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_rules_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       automations: {
         Row: {
@@ -11641,16 +11668,29 @@ export type Database = {
         Args: { p_query: string; p_result_id: string; p_result_type: string }
         Returns: undefined
       }
-      rpc_register_automation_execution: {
-        Args: {
-          p_assigned_to: string
-          p_instance_name: string
-          p_remote_jid: string
-          p_rule_id: string
-          p_trigger_payload: Json
-        }
-        Returns: string
-      }
+      rpc_register_automation_execution:
+        | {
+            Args: {
+              p_assigned_to?: string
+              p_channel_id?: string
+              p_department_id?: string
+              p_instance_name: string
+              p_remote_jid: string
+              p_rule_id: string
+              p_trigger_payload?: Json
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_assigned_to: string
+              p_instance_name: string
+              p_remote_jid: string
+              p_rule_id: string
+              p_trigger_payload: Json
+            }
+            Returns: string
+          }
       rpc_register_webhook_event: {
         Args: {
           p_event_key: string
