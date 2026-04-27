@@ -251,8 +251,8 @@ async function invokeEvolution(action: string, body: Record<string, unknown>) {
 // ----- Envios ---------------------------------------------------------------
 
 export async function sendText(params: SendTextParams) {
-  const mode = await getWhatsAppMode();
-  if (mode === "official") {
+  const { transport } = await resolveTransport();
+  if (transport === "cloud") {
     return invokeCloud({
       to: jidToPhone(params.remoteJid),
       type: "text",
@@ -269,8 +269,8 @@ export async function sendText(params: SendTextParams) {
 }
 
 export async function sendMedia(params: SendMediaParams) {
-  const mode = await getWhatsAppMode();
-  if (mode === "official") {
+  const { transport } = await resolveTransport();
+  if (transport === "cloud") {
     return invokeCloud({
       to: jidToPhone(params.remoteJid),
       type: params.type,
@@ -291,8 +291,8 @@ export async function sendMedia(params: SendMediaParams) {
 }
 
 export async function sendAudio(params: SendAudioParams) {
-  const mode = await getWhatsAppMode();
-  if (mode === "official") {
+  const { transport } = await resolveTransport();
+  if (transport === "cloud") {
     return invokeCloud({
       to: jidToPhone(params.remoteJid),
       type: "audio",
@@ -308,8 +308,8 @@ export async function sendAudio(params: SendAudioParams) {
 }
 
 export async function sendSticker(params: SendStickerParams) {
-  const mode = await getWhatsAppMode();
-  if (mode === "official") {
+  const { transport } = await resolveTransport();
+  if (transport === "cloud") {
     // Cloud API trata sticker como mídia genérica
     return invokeCloud({
       to: jidToPhone(params.remoteJid),
@@ -325,8 +325,8 @@ export async function sendSticker(params: SendStickerParams) {
 }
 
 export async function sendReaction(params: SendReactionParams) {
-  const mode = await getWhatsAppMode();
-  if (mode === "official") {
+  const { transport } = await resolveTransport();
+  if (transport === "cloud") {
     return invokeCloud({
       to: jidToPhone(params.remoteJid),
       type: "reaction",
@@ -346,8 +346,8 @@ export async function sendReaction(params: SendReactionParams) {
 }
 
 export async function sendLocation(params: SendLocationParams) {
-  const mode = await getWhatsAppMode();
-  if (mode === "official") {
+  const { transport } = await resolveTransport();
+  if (transport === "cloud") {
     return invokeCloud({
       to: jidToPhone(params.remoteJid),
       type: "location",
@@ -368,8 +368,8 @@ export async function sendLocation(params: SendLocationParams) {
 }
 
 export async function sendContact(params: SendContactParams) {
-  const mode = await getWhatsAppMode();
-  if (mode === "official") {
+  const { transport } = await resolveTransport();
+  if (transport === "cloud") {
     return invokeCloud({
       to: jidToPhone(params.remoteJid),
       type: "contacts",
@@ -384,8 +384,8 @@ export async function sendContact(params: SendContactParams) {
 }
 
 export async function sendTemplate(params: SendTemplateParams) {
-  const mode = await getWhatsAppMode();
-  if (mode !== "official") {
+  const { transport, degraded, reason } = await resolveTransport();
+  if (transport !== "cloud") {
     throw new Error(
       "Templates exigem modo oficial (Cloud API). Ative o modo oficial nas configurações.",
     );
@@ -404,8 +404,8 @@ export async function sendTemplate(params: SendTemplateParams) {
 // ----- Sinais (presença / leitura) ------------------------------------------
 
 export async function sendPresence(params: PresenceParams) {
-  const mode = await getWhatsAppMode();
-  if (mode === "official") {
+  const { transport } = await resolveTransport();
+  if (transport === "cloud") {
     // Cloud API não expõe presença "composing" — no-op silencioso.
     return { skipped: true, reason: "presence_unsupported_on_cloud_api" };
   }
@@ -417,8 +417,8 @@ export async function sendPresence(params: PresenceParams) {
 }
 
 export async function markAsRead(params: MarkAsReadParams) {
-  const mode = await getWhatsAppMode();
-  if (mode === "official") {
+  const { transport } = await resolveTransport();
+  if (transport === "cloud") {
     return invokeCloud({
       to: jidToPhone(params.remoteJid),
       type: "read",
@@ -455,8 +455,8 @@ export function getEvolutionWebhookUrl(): string {
 
 /** URL que o provedor ativo deve chamar — escolhida pelo modo do workspace. */
 export async function getActiveWebhookUrl(): Promise<string> {
-  const mode = await getWhatsAppMode();
-  return mode === "official" ? getCloudWebhookUrl() : getEvolutionWebhookUrl();
+  const { transport } = await resolveTransport();
+  return transport === "cloud" ? getCloudWebhookUrl() : getEvolutionWebhookUrl();
 }
 
 // ----- Re-exports agrupados -------------------------------------------------
