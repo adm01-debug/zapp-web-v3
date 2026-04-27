@@ -49,7 +49,7 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({ item, current
       data-tour={item.id}
       onClick={() => onViewChange(item.id)}
       onMouseEnter={handleMouseEnter}
-      aria-label={badgeCount ? `${item.label} (${badgeCount} não lidas)` : item.label}
+      aria-label={badgeCount ? `${item.label} (${badgeTitle ?? `${badgeCount} não lidas`})` : item.label}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
         'relative rounded-full flex items-center gap-2.5 transition-all duration-200 ease-out group/item',
