@@ -5,6 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SidebarNavItem, type NavItemConfig } from './SidebarNavItem';
 
+interface BadgeInfo {
+  count: number;
+  variant?: 'destructive' | 'warning' | 'info';
+  title?: string;
+}
+
 interface SidebarNavGroupProps {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -15,9 +21,10 @@ interface SidebarNavGroupProps {
   collapsed?: boolean;
   onToggleFavorite?: (id: string) => void;
   isFavorite?: (id: string) => boolean;
+  badgeMap?: Record<string, BadgeInfo | undefined>;
 }
 
-export function SidebarNavGroup({ label, icon: GroupIcon, items, currentView, onViewChange, defaultOpen = false, collapsed = true, onToggleFavorite, isFavorite }: SidebarNavGroupProps) {
+export function SidebarNavGroup({ label, icon: GroupIcon, items, currentView, onViewChange, defaultOpen = false, collapsed = true, onToggleFavorite, isFavorite, badgeMap }: SidebarNavGroupProps) {
   const hasActiveItem = items.some(item => item.id === currentView);
   const [isOpen, setIsOpen] = useState(defaultOpen || hasActiveItem);
 
@@ -83,18 +90,24 @@ export function SidebarNavGroup({ label, icon: GroupIcon, items, currentView, on
               collapsed && 'items-center',
               !collapsed && 'pl-1'
             )}>
-              {items.map((item) => (
-                <li key={item.id}>
-                  <SidebarNavItem
-                    item={item}
-                    currentView={currentView}
-                    onViewChange={onViewChange}
-                    collapsed={collapsed}
-                    onToggleFavorite={onToggleFavorite}
-                    isFavorite={isFavorite?.(item.id)}
-                  />
-                </li>
-              ))}
+              {items.map((item) => {
+                const b = badgeMap?.[item.id];
+                return (
+                  <li key={item.id}>
+                    <SidebarNavItem
+                      item={item}
+                      currentView={currentView}
+                      onViewChange={onViewChange}
+                      collapsed={collapsed}
+                      onToggleFavorite={onToggleFavorite}
+                      isFavorite={isFavorite?.(item.id)}
+                      badge={b?.count}
+                      badgeVariant={b?.variant}
+                      badgeTitle={b?.title}
+                    />
+                  </li>
+                );
+              })}
             </ul>
           </motion.nav>
         )}
