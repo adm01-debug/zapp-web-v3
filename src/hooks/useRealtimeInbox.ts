@@ -114,10 +114,12 @@ export function useRealtimeInbox() {
 
       // Validamos e sanitizamos os parâmetros de deep-link
       if (urlContact && urlContact.trim() !== '') {
+        log.info('Deep-link: found pending contact', { contactId: urlContact.trim() });
         setPendingContactId(urlContact.trim());
       }
       
       if (urlMessage && urlMessage.trim() !== '') {
+        log.info('Deep-link: found pending message highlight', { messageId: urlMessage.trim() });
         setPendingMessageId(urlMessage.trim());
       }
 
@@ -197,6 +199,7 @@ export function useRealtimeInbox() {
 
   // Handlers
   const handleSelectConversation = useCallback((contactId: string) => {
+    log.info('Selecting conversation', { contactId });
     setSelectedContactId(contactId);
     setSelectedContact(contactId);
     // No modo externo, ids são remote_jid (string) — markAsRead local
