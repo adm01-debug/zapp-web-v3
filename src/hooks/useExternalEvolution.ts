@@ -358,6 +358,7 @@ export function useExternalConversations(enabled = true) {
 
 // ─── Hook: External Messages for a specific contact/jid ───────
 export function useExternalMessages(remoteJid: string | null) {
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<RealtimeMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingOlder, setLoadingOlder] = useState(false);
