@@ -29,6 +29,9 @@ export function useContactAvatar(jid: string | null | undefined, initialUrl?: st
 
     getContactAvatar(jid).then((url) => {
       if (mounted) {
+        if (!url && jid) {
+          log.warn('Avatar resolveu para nulo/vazio', { jid });
+        }
         setAvatarUrl(url);
         setLoading(false);
       }
