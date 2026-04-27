@@ -1,0 +1,12 @@
+{
+  "//": "Configuração strict informativa para a migração gradual. Roda no CI como check separado (não bloqueante por enquanto). Quando o número de erros chegar a zero, promovemos para tsconfig.app.json. Veja docs/TYPESCRIPT_STRICT_MIGRATION.md.",
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "strictNullChecks": false,
+    "strict": false,
+    "noImplicitThis": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true
+  }
+}
