@@ -34,6 +34,7 @@ export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessa
     transcription: null,
     transcription_status: null,
     is_deleted: evo.deleted_at != null,
+    contactAvatar: null, // Será preenchido pelo hook useExternalMessages durante a hidratação
   };
 }
 
