@@ -573,6 +573,13 @@ async function handler(req: Request): Promise<Response> {
           },
         ))
         if (error) {
+          if (isSchemaNotExposed(error)) {
+            return finish(
+              new Response(JSON.stringify({ data: null, cid, rid, schema_unavailable: true, schema: requestedSchema }), { headers: jsonHeaders }),
+              'update',
+              { table, schema_unavailable: true },
+            )
+          }
           return finish(
             new Response(JSON.stringify(errorBody(cid, rid, error)), {
               status: cls.status, headers: jsonHeaders,
