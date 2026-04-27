@@ -18,15 +18,9 @@ interface AudioMessagePlayerProps {
   transcriptionStatus?: string | null;
   /** When provided, enables Evolution `getMediaBase64` fallback for expired URLs (410/403). */
   refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
-  /**
-   * Identificador da conversa (ex: remoteJid). Quando presente, o volume passa
-   * a ser gerenciado por conversa: cada player desta conversa compartilha o
-   * mesmo override e o usuário pode promover/limpar via popover.
-   */
-  conversationId?: string | null;
 }
 
-export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey, conversationId }: AudioMessagePlayerProps) {
+export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey }: AudioMessagePlayerProps) {
   const [transcription, setTranscription] = useState<string | null>(existingTranscription || null);
   const [transcriptionStatus, setTranscriptionStatus] = useState<string>(initialStatus || 'pending');
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -37,9 +31,8 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
     playbackRate, progress, waveformHeights,
     currentTime, duration,
     volume, setVolume,
-    hasConversationOverride, promoteVolumeToGlobal, resetConversationVolume,
     togglePlay, handleSeek, cycleSpeed, formatTime, resolveAudioUrl,
-  } = useAudioPlayer({ audioUrl, messageId, refreshKey, conversationId });
+  } = useAudioPlayer({ audioUrl, messageId, refreshKey });
 
   // Realtime subscription for transcription updates
   useEffect(() => {
@@ -107,85 +100,37 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
     }
   };
 
-  // Áudio só está "pronto" quando temos a duration carregada (loadedmetadata).
-  // Antes disso bloqueamos togglePlay/seek e mostramos skeleton para evitar
-  // cliques que disparam play sem buffer e seeks em duration=0.
-  const isReady = duration > 0 && !hasError;
-  const showSkeleton = !isReady && !hasError;
-
   return (
     <div className="space-y-2">
       <audio ref={audioRef} src={resolvedUrl} preload="metadata" crossOrigin="anonymous" />
       <div className={cn('flex items-center gap-3 p-2 rounded-lg min-w-[200px]', isSent ? 'bg-primary-foreground/10' : 'bg-muted/50')}>
-        <motion.div whileHover={{ scale: isReady ? 1.1 : 1 }} whileTap={{ scale: isReady ? 0.9 : 1 }}>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn('w-10 h-10 rounded-full', hasError ? 'bg-destructive/10 hover:bg-destructive/20 text-destructive' : isSent ? 'bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground' : 'bg-primary/10 hover:bg-primary/20 text-primary', !isReady && !hasError && 'opacity-60 cursor-wait')}
-            onClick={togglePlay}
-            disabled={isLoading || showSkeleton}
-            aria-label={showSkeleton ? 'Carregando áudio' : isPlaying ? 'Pausar' : 'Reproduzir'}
-            aria-busy={showSkeleton}
-          >
-            {(isLoading || showSkeleton) ? <Loader2 className="w-5 h-5 animate-spin" /> : hasError ? <RefreshCw className="w-5 h-5" /> : isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+          <Button variant="ghost" size="icon" className={cn('w-10 h-10 rounded-full', hasError ? 'bg-destructive/10 hover:bg-destructive/20 text-destructive' : isSent ? 'bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground' : 'bg-primary/10 hover:bg-primary/20 text-primary')} onClick={togglePlay} disabled={isLoading}>
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : hasError ? <RefreshCw className="w-5 h-5" /> : isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
           </Button>
         </motion.div>
         <div className="flex-1 space-y-1">
-          <div
-            className={cn('relative h-8', isReady ? 'cursor-pointer' : 'cursor-wait')}
-            onClick={isReady ? handleSeek : undefined}
-            aria-disabled={!isReady}
-          >
-            {showSkeleton ? (
-              // Skeleton: barras pulsantes ocupando o lugar da waveform.
-              <div className="absolute inset-y-0 left-0 right-0 flex items-center gap-[2px]" aria-hidden="true">
-                {Array.from({ length: 30 }).map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className={cn('flex-1 rounded-full', isSent ? 'bg-primary-foreground/30' : 'bg-muted-foreground/30')}
-                    style={{ height: `${30 + ((i * 13) % 50)}%` }}
-                    animate={{ opacity: [0.35, 0.75, 0.35] }}
-                    transition={{ duration: 1.2, repeat: Infinity, delay: (i % 6) * 0.08, ease: 'easeInOut' }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="absolute inset-y-0 left-0 right-0 flex items-center gap-[2px]">
-                {waveformHeights.map((height, i) => {
-                  const isActive = (i / 30) * 100 <= progress;
-                  return (
-                    <motion.div key={i} initial={{ scaleY: 0.5 }} animate={{ scaleY: isPlaying && isActive ? [0.6, 1, 0.6] : 1 }}
-                      transition={{ duration: 0.5, repeat: isPlaying && isActive ? Infinity : 0, delay: i * 0.02 }}
-                      className={cn('flex-1 rounded-full transition-colors', hasError ? 'bg-destructive/30' : isActive ? (isSent ? 'bg-primary-foreground' : 'bg-primary') : (isSent ? 'bg-primary-foreground/30' : 'bg-muted-foreground/30'))}
-                      style={{ height: `${height}%` }} />
-                  );
-                })}
-              </div>
-            )}
+          <div className="relative h-8 cursor-pointer" onClick={handleSeek}>
+            <div className="absolute inset-y-0 left-0 right-0 flex items-center gap-[2px]">
+              {waveformHeights.map((height, i) => {
+                const isActive = (i / 30) * 100 <= progress;
+                return (
+                  <motion.div key={i} initial={{ scaleY: 0.5 }} animate={{ scaleY: isPlaying && isActive ? [0.6, 1, 0.6] : 1 }}
+                    transition={{ duration: 0.5, repeat: isPlaying && isActive ? Infinity : 0, delay: i * 0.02 }}
+                    className={cn('flex-1 rounded-full transition-colors', hasError ? 'bg-destructive/30' : isActive ? (isSent ? 'bg-primary-foreground' : 'bg-primary') : (isSent ? 'bg-primary-foreground/30' : 'bg-muted-foreground/30'))}
+                    style={{ height: `${height}%` }} />
+                );
+              })}
+            </div>
           </div>
           <div className={cn('flex justify-between text-[10px]', hasError ? 'text-destructive' : isSent ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
-            {hasError ? (
-              <span>Erro ao carregar — toque para tentar</span>
-            ) : showSkeleton ? (
-              <span className="opacity-70 italic">Carregando áudio…</span>
-            ) : (
-              <><span>{formatTime(currentTime)}</span><span>{duration ? formatTime(duration) : '--:--'}</span></>
-            )}
+            {hasError ? <span>Erro ao carregar — toque para tentar</span> : <><span>{formatTime(currentTime)}</span><span>{duration ? formatTime(duration) : '--:--'}</span></>}
           </div>
         </div>
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <button onClick={cycleSpeed} disabled={!isReady} className={cn('h-6 px-1.5 rounded-full text-[10px] font-semibold transition-colors', !isReady && 'opacity-50 cursor-not-allowed', playbackRate < 1 ? 'bg-destructive/20 hover:bg-destructive/30 text-destructive' : isSent ? 'bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground' : 'bg-primary/10 hover:bg-primary/20 text-primary')} title="Velocidade">{playbackRate}x</button>
+          <button onClick={cycleSpeed} className={cn('h-6 px-1.5 rounded-full text-[10px] font-semibold transition-colors', playbackRate < 1 ? 'bg-destructive/20 hover:bg-destructive/30 text-destructive' : isSent ? 'bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground' : 'bg-primary/10 hover:bg-primary/20 text-primary')} title="Velocidade">{playbackRate}x</button>
         </motion.div>
-        <AudioVolumeControl
-          volume={volume}
-          onChange={setVolume}
-          isSent={isSent}
-          size="sm"
-          hasConversationScope={Boolean(conversationId)}
-          hasConversationOverride={hasConversationOverride}
-          onPromoteToGlobal={promoteVolumeToGlobal}
-          onResetConversation={resetConversationVolume}
-        />
+        <AudioVolumeControl volume={volume} onChange={setVolume} isSent={isSent} size="sm" />
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
           <Button variant="ghost" size="icon" className={cn('w-8 h-8 relative', showTranscription && transcription ? (isSent ? 'text-primary-foreground' : 'text-primary') : (isSent ? 'text-primary-foreground/50' : 'text-muted-foreground'))}
             onClick={() => { if (!transcription && !isProcessing) handleTranscribe(); else setShowTranscription(!showTranscription); }} disabled={isProcessing} title={transcription ? 'Mostrar/ocultar transcrição' : 'Transcrever áudio'}>

@@ -11,26 +11,13 @@ interface AudioVolumeControlProps {
   isSent?: boolean;
   /** Size of the trigger button. */
   size?: 'sm' | 'md';
-  /**
-   * Quando true, o popover mostra uma badge "Por conversa" e ações para
-   * (a) salvar como volume global e (b) limpar override (voltar ao global).
-   */
-  hasConversationOverride?: boolean;
-  /** Mostra ações de override quando há um conversationId associado. */
-  hasConversationScope?: boolean;
-  onPromoteToGlobal?: () => void;
-  onResetConversation?: () => void;
 }
 
 /**
  * Compact volume control for in-bubble audio players.
  * Click the icon to open a vertical slider; click to mute/unmute.
  */
-export function AudioVolumeControl({
-  volume, onChange, isSent = false, size = 'md',
-  hasConversationOverride = false, hasConversationScope = false,
-  onPromoteToGlobal, onResetConversation,
-}: AudioVolumeControlProps) {
+export function AudioVolumeControl({ volume, onChange, isSent = false, size = 'md' }: AudioVolumeControlProps) {
   const [open, setOpen] = useState(false);
   const [lastVolume, setLastVolume] = useState(volume > 0 ? volume : 1);
 
@@ -64,16 +51,6 @@ export function AudioVolumeControl({
           aria-label="Controle de volume"
         >
           <Icon className={iconDim} />
-          {hasConversationOverride && (
-            <span
-              aria-hidden
-              className={cn(
-                'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ring-2 ring-background',
-                isSent ? 'bg-primary-foreground' : 'bg-primary'
-              )}
-              title="Volume personalizado para esta conversa"
-            />
-          )}
         </Button>
       </motion.div>
 
@@ -129,39 +106,6 @@ export function AudioVolumeControl({
               >
                 <Icon className="w-3.5 h-3.5" />
               </button>
-
-              {hasConversationScope && (
-                <div className="w-full border-t border-border/50 pt-2 mt-1 flex flex-col items-stretch gap-1">
-                  <span
-                    className={cn(
-                      'text-[9px] font-semibold text-center px-1.5 py-0.5 rounded',
-                      hasConversationOverride
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-muted text-muted-foreground'
-                    )}
-                  >
-                    {hasConversationOverride ? 'Por conversa' : 'Usando global'}
-                  </span>
-                  {hasConversationOverride && onResetConversation && (
-                    <button
-                      onClick={onResetConversation}
-                      className="text-[10px] text-muted-foreground hover:text-foreground hover:underline transition-colors"
-                      title="Voltar ao volume global"
-                    >
-                      Voltar ao global
-                    </button>
-                  )}
-                  {onPromoteToGlobal && (
-                    <button
-                      onClick={onPromoteToGlobal}
-                      className="text-[10px] text-muted-foreground hover:text-foreground hover:underline transition-colors"
-                      title="Usar este volume como padrão para todas as conversas"
-                    >
-                      Salvar como global
-                    </button>
-                  )}
-                </div>
-              )}
             </motion.div>
           </>
         )}

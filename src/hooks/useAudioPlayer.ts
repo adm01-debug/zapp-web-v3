@@ -3,23 +3,16 @@ import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { MediaRefreshKey } from '@/types/mediaRefresh';
-import { volumeStore } from '@/hooks/realtime/volumeStore';
+import { audioPlaybackBus } from '@/hooks/realtime/audioPlaybackBus';
 
 interface UseAudioPlayerOptions {
   audioUrl: string;
   messageId: string;
   /** Optional Evolution refresh key — enables `getMediaBase64` fallback when the URL expires (410/403). */
   refreshKey?: MediaRefreshKey;
-  /**
-   * Conversation scope (ex: remoteJid). Quando presente, o volume é resolvido
-   * via `volumeStore.getEffective(conversationId)` — aplicando override por
-   * conversa quando existir, senão usa o global. Mudanças em qualquer player
-   * da MESMA conversa propagam imediatamente via subscribe.
-   */
-  conversationId?: string | null;
 }
 
-export function useAudioPlayer({ audioUrl, messageId, refreshKey, conversationId }: UseAudioPlayerOptions) {
+export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlayerOptions) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -28,62 +21,67 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey, conversationId
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [resolvedUrl, setResolvedUrl] = useState<string>(audioUrl);
-  const [volume, setVolumeState] = useState<number>(() =>
-    volumeStore.getEffective(conversationId)
-  );
-  /** Indica se este player está usando override por conversa (UI badge). */
-  const [hasConversationOverride, setHasConversationOverride] = useState<boolean>(
-    () => Boolean(conversationId && volumeStore.getConversation(conversationId) !== null)
-  );
+  const [volume, setVolumeState] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('audio-player:volume');
+      const n = saved !== null ? parseFloat(saved) : 1;
+      return isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
+    } catch { return 1; }
+  });
   const audioRef = useRef<HTMLAudioElement>(null);
-
   /**
-   * Define volume aplicando ao escopo correto:
-   *  - Se há `conversationId`, salva como override da conversa.
-   *  - Senão, salva como global.
-   * Em ambos os casos atualiza o player local (via subscribe + apply effect).
+   * Último volume não-zero — usado pelo `toggleMute` para restaurar o volume
+   * anterior quando o usuário desmuta. Evita que mute deixe o player em "0
+   * permanente" se o usuário só queria um silêncio momentâneo.
    */
+  const lastNonZeroVolumeRef = useRef<number>(volume > 0 ? volume : 1);
+
   const setVolume = useCallback((v: number) => {
     const clamped = Math.min(1, Math.max(0, v));
-    if (conversationId) {
-      volumeStore.setConversation(conversationId, clamped);
-    } else {
-      volumeStore.setGlobal(clamped);
+    if (clamped > 0) lastNonZeroVolumeRef.current = clamped;
+    setVolumeState(clamped);
+    if (audioRef.current) audioRef.current.volume = clamped;
+    try { localStorage.setItem('audio-player:volume', String(clamped)); } catch { /* noop */ }
+  }, []);
+
+  /**
+   * Toggle entre mute (volume 0) e o último volume audível conhecido. Usado
+   * tanto pelo botão da UI quanto pelo atalho global `M` via `audioPlaybackBus`.
+   */
+  const toggleMute = useCallback((): { muted: boolean; volume: number } => {
+    if (volume > 0) {
+      lastNonZeroVolumeRef.current = volume;
+      setVolume(0);
+      return { muted: true, volume: 0 };
     }
-  }, [conversationId]);
-
-  /** Promove o volume atual a default global e remove o override da conversa. */
-  const promoteVolumeToGlobal = useCallback(() => {
-    volumeStore.setGlobal(volume);
-    if (conversationId) volumeStore.clearConversation(conversationId);
-  }, [volume, conversationId]);
-
-  /** Remove override da conversa, voltando ao global. */
-  const resetConversationVolume = useCallback(() => {
-    if (conversationId) volumeStore.clearConversation(conversationId);
-  }, [conversationId]);
-
-  // Subscribe à store: qualquer mudança que afete este escopo re-aplica.
-  useEffect(() => {
-    const apply = () => {
-      const next = volumeStore.getEffective(conversationId);
-      setVolumeState(next);
-      setHasConversationOverride(
-        Boolean(conversationId && volumeStore.getConversation(conversationId) !== null)
-      );
-    };
-    apply(); // sincroniza inicialmente caso conversationId mude
-    const unsub = volumeStore.subscribe((_v, scope, convId) => {
-      if (scope === 'global') return apply();
-      if (scope === 'conversation' && convId === conversationId) return apply();
-    });
-    return unsub;
-  }, [conversationId]);
+    const restored = lastNonZeroVolumeRef.current || 1;
+    setVolume(restored);
+    return { muted: false, volume: restored };
+  }, [volume, setVolume]);
 
   // Apply volume whenever audio element re-mounts or volume changes
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume, resolvedUrl]);
+
+  /**
+   * Registra/desregistra este player no `audioPlaybackBus` enquanto está
+   * tocando. Permite que o atalho global de mute (`M`) atue sobre o player
+   * ATIVO, sem precisar de foco em nenhum elemento. Apenas um player ativo
+   * por vez (último que deu play).
+   */
+  useEffect(() => {
+    if (!isPlaying) {
+      audioPlaybackBus.clearActive(messageId);
+      return;
+    }
+    audioPlaybackBus.setActive({
+      messageId,
+      toggleMute,
+      getVolume: () => volume,
+    });
+    return () => audioPlaybackBus.clearActive(messageId);
+  }, [isPlaying, messageId, toggleMute, volume]);
 
   const waveformHeights = useMemo(
     () => Array.from({ length: 30 }, () => Math.random() * 60 + 20),
@@ -261,8 +259,7 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey, conversationId
   return {
     audioRef, resolvedUrl, isPlaying, isLoading, hasError,
     playbackRate, progress, duration, currentTime, waveformHeights,
-    volume, setVolume,
-    hasConversationOverride, promoteVolumeToGlobal, resetConversationVolume,
+    volume, setVolume, toggleMute,
     togglePlay, handleSeek, cycleSpeed, formatTime, resolveAudioUrl,
   };
 }

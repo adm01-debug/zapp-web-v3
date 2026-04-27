@@ -1,5 +1,7 @@
 import React, { useEffect, useState, createContext, useContext, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
 import { useGlobalKeyboardShortcuts } from '@/hooks/useGlobalKeyboardShortcuts';
+import { audioPlaybackBus } from '@/hooks/realtime/audioPlaybackBus';
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import { CommandPalette } from '@/components/ui/command-palette';
 
@@ -46,6 +48,18 @@ export function GlobalKeyboardProvider({ children, customActions }: GlobalKeyboa
     {
       id: 'open-command-palette',
       action: () => setShowCommandPalette(true),
+    },
+    {
+      // Atalho `M` (sem modificadores): mute/unmute do áudio em playback.
+      // Action é noop se não há player ativo no `audioPlaybackBus`.
+      id: 'audio-toggle-mute',
+      action: () => {
+        const result = audioPlaybackBus.toggleMuteActive();
+        if (!result) return; // sem áudio tocando — usuário nem percebe
+        toast.info(result.muted ? '🔇 Áudio silenciado' : `🔊 ${Math.round(result.volume * 100)}%`, {
+          duration: 1200,
+        });
+      },
     },
   ]);
 
