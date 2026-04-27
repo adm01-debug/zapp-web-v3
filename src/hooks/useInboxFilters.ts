@@ -9,6 +9,9 @@ import { isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { MainTab, SubTab } from '@/components/inbox/TicketTabs';
 import { useFailureMetricsBatch, type FailureCategory } from '@/hooks/inbox/useFailureMetricsBatch';
 import { useAllTicketStates } from '@/hooks/useTicketStatus';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('useInboxFilters');
 
 interface UseInboxFiltersProps {
   conversations: ConversationWithMessages[];
@@ -44,6 +47,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
     // Failures Only (deep-link de monitoramento)
     if (params.get('failuresOnly') === 'true') {
+      log.info('Deep-link: filtering by failures only');
       setShowOnlyRetrying(true);
     }
 
@@ -146,6 +150,13 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
   const ticketStates = useAllTicketStates();
 
   const filteredConversations = useMemo(() => {
+    log.debug('Recomputing filtered conversations', { 
+      total: conversations.length, 
+      mainTab, 
+      subTab, 
+      showOnlyRetrying, 
+      failureCategoryFilter 
+    });
     let result = conversations.filter(c => c && c.contact && c.contact.id);
 
     // Memoize utility functions for current render
