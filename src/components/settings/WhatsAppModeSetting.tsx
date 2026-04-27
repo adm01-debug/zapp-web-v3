@@ -8,8 +8,19 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShieldCheck, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, ShieldCheck, Zap, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+
+interface IntegrationProfile {
+  provider: "evolution" | "cloud";
+  default_instance: string | null;
+  display_phone: string | null;
+  waba_name: string | null;
+  migration_status: "pending" | "migrated" | "pending_credentials" | "noop" | "error";
+  migration_notes: string | null;
+  migrated_at: string | null;
+}
 
 /**
  * Seletor de modo WhatsApp (Oficial Cloud API vs Não-oficial Evolution).
