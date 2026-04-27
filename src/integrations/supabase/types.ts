@@ -4615,6 +4615,36 @@ export type Database = {
           },
         ]
       }
+      file_scan_logs: {
+        Row: {
+          bucket_id: string
+          created_at: string | null
+          file_name: string
+          id: string
+          provider: string
+          provider_response: Json | null
+          status: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string | null
+          file_name: string
+          id?: string
+          provider: string
+          provider_response?: Json | null
+          status: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string | null
+          file_name?: string
+          id?: string
+          provider?: string
+          provider_response?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       followup_executions: {
         Row: {
           completed_at: string | null
