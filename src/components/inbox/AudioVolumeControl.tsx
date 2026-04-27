@@ -11,13 +11,26 @@ interface AudioVolumeControlProps {
   isSent?: boolean;
   /** Size of the trigger button. */
   size?: 'sm' | 'md';
+  /**
+   * Quando true, o popover mostra uma badge "Por conversa" e ações para
+   * (a) salvar como volume global e (b) limpar override (voltar ao global).
+   */
+  hasConversationOverride?: boolean;
+  /** Mostra ações de override quando há um conversationId associado. */
+  hasConversationScope?: boolean;
+  onPromoteToGlobal?: () => void;
+  onResetConversation?: () => void;
 }
 
 /**
  * Compact volume control for in-bubble audio players.
  * Click the icon to open a vertical slider; click to mute/unmute.
  */
-export function AudioVolumeControl({ volume, onChange, isSent = false, size = 'md' }: AudioVolumeControlProps) {
+export function AudioVolumeControl({
+  volume, onChange, isSent = false, size = 'md',
+  hasConversationOverride = false, hasConversationScope = false,
+  onPromoteToGlobal, onResetConversation,
+}: AudioVolumeControlProps) {
   const [open, setOpen] = useState(false);
   const [lastVolume, setLastVolume] = useState(volume > 0 ? volume : 1);
 
