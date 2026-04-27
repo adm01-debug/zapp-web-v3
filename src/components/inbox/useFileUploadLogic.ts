@@ -83,22 +83,15 @@ export function useFileUploadLogic(opts: {
     formData.append('bucket', 'whatsapp-media');
 
     // Chamada para a Edge Function de Upload Seguro (Middleware)
-    const { data, error } = await supabase.functions.invoke('file-security-scanner', {
+    const { data, error } = await supabase.functions.invoke('secure-upload', {
       body: formData,
     });
 
     if (error || !data?.success) {
-      log.error('Upload seguro falhou:', error || data?.error);
       throw new Error(error?.message || data?.error || 'Erro no upload seguro via Edge Function');
     }
 
-    // A função retorna o path relativo. Precisamos da URL assinada para visualização.
-    const { data: signedData, error: signError } = await supabase.storage
-      .from('whatsapp-media')
-      .createSignedUrl(data.path, 3600);
-
-    if (signError || !signedData?.signedUrl) throw new Error('Erro ao gerar URL do arquivo');
-    return signedData.signedUrl;
+    return data.url;
   }, []);
 
   const handleClose = useCallback(() => {

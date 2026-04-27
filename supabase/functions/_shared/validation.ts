@@ -262,6 +262,53 @@ export function errorResponse(message: string, status = 400, req?: Request) {
   );
 }
 
+/**
+ * Standardized security error response for upload/scan flows.
+ * Frontend can match on `code` to render specific UX (block, retry, quarantine).
+ *
+ * Shape: { error: true, code, message, verdict?, scanId?, details? }
+ *
+ * Conventional codes:
+ *  - MALWARE_DETECTED  → 422 (verdict: 'malicious')
+ *  - SUSPICIOUS_FILE   → 403 (verdict: 'suspicious')
+ *  - SCAN_TIMEOUT      → 408 (verdict: 'unknown')
+ *  - SCAN_UNAVAILABLE  → 502 (verdict: 'unknown')
+ *  - INVALID_INPUT     → 400
+ *  - UNAUTHORIZED      → 401
+ *  - METHOD_NOT_ALLOWED→ 405
+ *  - STORAGE_ERROR     → 500
+ *  - INTERNAL_ERROR    → 500
+ */
+export type SecurityVerdict = 'clean' | 'malicious' | 'suspicious' | 'unknown';
+
+export interface SecurityErrorPayload {
+  code: string;
+  message: string;
+  verdict?: SecurityVerdict;
+  scanId?: string | null;
+  details?: Record<string, unknown>;
+}
+
+export function securityErrorResponse(
+  payload: SecurityErrorPayload,
+  status: number,
+  req?: Request,
+) {
+  const headers = req ? getCorsHeaders(req) : corsHeaders;
+  const body = {
+    error: true,
+    code: payload.code,
+    message: payload.message,
+    verdict: payload.verdict ?? 'unknown',
+    scanId: payload.scanId ?? null,
+    ...(payload.details ? { details: payload.details } : {}),
+  };
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...headers, 'Content-Type': 'application/json' },
+  });
+}
+
 /** Standard JSON success response (with origin-validated CORS) */
 export function jsonResponse(data: unknown, status = 200, req?: Request) {
   const headers = req ? getCorsHeaders(req) : corsHeaders;

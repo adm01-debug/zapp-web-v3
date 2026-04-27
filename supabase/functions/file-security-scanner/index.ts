@@ -1,9 +1,23 @@
-import { handleCors, errorResponse, jsonResponse, requireEnv, Logger } from "../_shared/validation.ts";
+import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, securityErrorResponse } from "../_shared/validation.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /**
- * File Security Scanner Edge Function (Otimizada com Streaming e Hashing)
+ * File Security Scanner Edge Function
+ * Middleware for file uploads — scans via VirusTotal and persists clean files.
+ *
+ * Standardized error format (security flows):
+ *   { error: true, code, message, verdict, scanId, details? }
+ *
+ * Status codes:
+ *   422 MALWARE_DETECTED   — confirmed malicious (verdict: malicious)
+ *   403 SUSPICIOUS_FILE    — flagged suspicious (verdict: suspicious)
+ *   408 SCAN_TIMEOUT       — analysis did not complete in time
+ *   502 SCAN_UNAVAILABLE   — VirusTotal API unreachable
+ *   400 INVALID_INPUT      — missing/invalid file
+ *   405 METHOD_NOT_ALLOWED
+ *   500 STORAGE_ERROR / INTERNAL_ERROR
  */
+
 Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
@@ -14,140 +28,193 @@ Deno.serve(async (req) => {
     const VIRUSTOTAL_API_KEY = requireEnv("VIRUSTOTAL_API_KEY");
     const supabaseUrl = requireEnv("SUPABASE_URL");
     const supabaseServiceKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     if (req.method !== "POST") {
-      return errorResponse("Only POST requests are allowed", 405, req);
+      return securityErrorResponse(
+        { code: "METHOD_NOT_ALLOWED", message: "Apenas requisições POST são permitidas." },
+        405,
+        req,
+      );
     }
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const bucketId = formData.get("bucket") as string || "uploads";
+    const bucketId = (formData.get("bucket") as string) || "uploads";
 
-    if (!file) return errorResponse("No file provided", 400, req);
-
-    log.info("Iniciando escaneamento seguro", { name: file.name, size: file.size });
-
-    // --- 1. Cálculo de Hash usando Streaming para reduzir uso de memória ---
-    const fileHash = await calculateHashStreaming(file);
-    log.info("Hash calculado via streaming", { hash: fileHash });
-
-    // --- 2. Verificação Prévia no VirusTotal (Evita re-upload se já analisado) ---
-    let vtData: any = null;
-    let isMalicious = false;
-
-    try {
-      const vtCheck = await fetch(`https://www.virustotal.com/api/v3/files/${fileHash}`, {
-        headers: { "x-apikey": VIRUSTOTAL_API_KEY },
-      });
-
-      if (vtCheck.ok) {
-        vtData = await vtCheck.json();
-        const stats = vtData.data?.attributes?.last_analysis_stats;
-        if (stats && (stats.malicious > 0 || stats.suspicious > 5)) {
-          isMalicious = true;
-          log.warn("Arquivo identificado como malicioso pelo hash histórico", { stats });
-        }
-      } else if (file.size < 32 * 1024 * 1024) {
-        // Se não encontrado e < 32MB, envia para análise
-        const vtFormData = new FormData();
-        vtFormData.append("file", file);
-        const vtUpload = await fetch("https://www.virustotal.com/api/v3/files", {
-          method: "POST",
-          headers: { "x-apikey": VIRUSTOTAL_API_KEY },
-          body: vtFormData,
-        });
-        if (vtUpload.ok) vtData = await vtUpload.json();
-      }
-    } catch (err) {
-      log.error("Erro na comunicação com VirusTotal", { error: String(err) });
+    if (!file) {
+      return securityErrorResponse(
+        { code: "INVALID_INPUT", message: "Nenhum arquivo enviado.", details: { field: "file" } },
+        400,
+        req,
+      );
     }
 
-    // --- 3. Registro de Log Auditoria ---
-    await supabase.from("file_scan_logs").insert({
-      user_id: (await supabase.auth.getUser(req.headers.get('Authorization')?.replace('Bearer ', '') || '')).data.user?.id,
-      bucket: isMalicious ? "quarantine" : bucketId,
-      path: `secure/${Date.now()}_${file.name}`,
-      hash: fileHash,
-      scan_result: isMalicious ? "infected" : "clean",
-      raw_scan_data: vtData,
-      status_code: 200
+    log.info("Starting scan for file", { name: file.name, size: file.size, bucket: bucketId });
+
+    // 1. Submit to VirusTotal
+    const vtFormData = new FormData();
+    vtFormData.append("file", file);
+
+    const vtResponse = await fetch("https://www.virustotal.com/api/v3/files", {
+      method: "POST",
+      headers: { "x-apikey": VIRUSTOTAL_API_KEY },
+      body: vtFormData,
     });
 
-    if (isMalicious) {
-      log.warn("Bloqueando upload de arquivo malicioso", { name: file.name, hash: fileHash });
-      
-      // Mover para quarantine usando stream para análise posterior
-      await supabase.storage.from("quarantine").upload(`malicious/${fileHash}_${file.name}`, file.stream(), { 
-        contentType: file.type,
-        duplex: 'half' 
-      });
-
-      return errorResponse(
-        "Segurança: O arquivo foi identificado como malicioso e bloqueado preventivamente.", 
-        422, // Unprocessable Entity - Regra de negócio/segurança violada
-        req
+    if (!vtResponse.ok) {
+      const vtError = await vtResponse.text();
+      log.error("VirusTotal API error", { status: vtResponse.status, detail: vtError });
+      return securityErrorResponse(
+        {
+          code: "SCAN_UNAVAILABLE",
+          message: "Serviço de varredura indisponível. Tente novamente em instantes.",
+          verdict: "unknown",
+        },
+        502,
+        req,
       );
     }
 
-    // Se o veredito for inconclusivo mas suspeito, podemos usar 403
-    const isSuspicious = vtData?.data?.attributes?.last_analysis_stats?.suspicious > 2;
-    if (isSuspicious) {
-      return errorResponse(
-        "Acesso Negado: O arquivo possui características suspeitas e não pode ser processado.",
-        403, // Forbidden
-        req
+    const vtData = await vtResponse.json();
+    const analysisId: string = vtData.data.id;
+
+    log.info("Analysis submitted", { analysisId });
+
+    // 2. Poll for results
+    let analysisResult;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (attempts < maxAttempts) {
+      const pollResponse = await fetch(
+        `https://www.virustotal.com/api/v3/analyses/${analysisId}`,
+        { headers: { "x-apikey": VIRUSTOTAL_API_KEY } },
+      );
+
+      analysisResult = await pollResponse.json();
+      const status = analysisResult.data.attributes.status;
+
+      if (status === "completed") break;
+
+      log.debug("Analysis still in progress...", { attempt: attempts + 1 });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      attempts++;
+    }
+
+    if (!analysisResult || analysisResult.data.attributes.status !== "completed") {
+      log.warn("Analysis timed out, blocking for safety", { analysisId });
+      return securityErrorResponse(
+        {
+          code: "SCAN_TIMEOUT",
+          message: "A varredura de segurança expirou. Tente novamente.",
+          verdict: "unknown",
+          scanId: analysisId,
+        },
+        408,
+        req,
       );
     }
 
-    // --- 4. Upload Final Otimizado com Streaming ---
-    const finalPath = `secure/${Date.now()}_${file.name}`;
+    const stats = analysisResult.data.attributes.stats;
+    const malicious = stats.malicious ?? 0;
+    const suspicious = stats.suspicious ?? 0;
+    const isMalicious = malicious > 0;
+    const isSuspicious = !isMalicious && suspicious > 0;
+
+    // 3. Log scan result
+    await supabase.from("file_scan_logs").insert({
+      file_name: file.name,
+      bucket_id: bucketId,
+      status: isMalicious ? "malicious" : isSuspicious ? "suspicious" : "clean",
+      provider: "VirusTotal",
+      provider_response: analysisResult,
+    });
+
+    if (isMalicious || isSuspicious) {
+      log.error("Unsafe file detected", { name: file.name, stats, analysisId });
+
+      // Quarantine for forensic analysis
+      const { error: qError } = await supabase.storage
+        .from("quarantine")
+        .upload(`${Date.now()}_${file.name}`, file);
+
+      if (qError) log.error("Failed to move to quarantine", { error: qError });
+
+      if (isMalicious) {
+        return securityErrorResponse(
+          {
+            code: "MALWARE_DETECTED",
+            message: "Arquivo bloqueado: conteúdo malicioso identificado.",
+            verdict: "malicious",
+            scanId: analysisId,
+            details: { malicious, suspicious, fileName: file.name },
+          },
+          422,
+          req,
+        );
+      }
+
+      return securityErrorResponse(
+        {
+          code: "SUSPICIOUS_FILE",
+          message: "Arquivo bloqueado por suspeita de ameaça. Contate o suporte se acreditar ser um falso positivo.",
+          verdict: "suspicious",
+          scanId: analysisId,
+          details: { malicious, suspicious, fileName: file.name },
+        },
+        403,
+        req,
+      );
+    }
+
+    // 4. Clean → upload to target bucket
+    log.info("File is clean, proceeding with upload", { name: file.name });
+
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucketId)
-      .upload(finalPath, file.stream(), {
-        contentType: file.type,
-        upsert: true,
-        duplex: 'half'
-      });
+      .upload(`${Date.now()}_${file.name}`, file, { upsert: true });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      log.error("Storage upload failed", { error: uploadError });
+      return securityErrorResponse(
+        {
+          code: "STORAGE_ERROR",
+          message: "Falha ao salvar o arquivo no armazenamento.",
+          verdict: "clean",
+          scanId: analysisId,
+          details: { reason: uploadError.message },
+        },
+        500,
+        req,
+      );
+    }
 
     log.done(200, { path: uploadData.path });
-    return jsonResponse({
-      success: true,
-      path: uploadData.path,
-      hash: fileHash
-    }, 200, req);
-
-  } catch (error: any) {
-    log.error("Exception no scanner", { error: error.message });
-    return errorResponse("Internal security processing error", 500, req);
+    return jsonResponse(
+      {
+        success: true,
+        verdict: "clean",
+        scanId: analysisId,
+        message: "Arquivo verificado e enviado com sucesso.",
+        path: uploadData.path,
+      },
+      200,
+      req,
+    );
+  } catch (error: unknown) {
+    log.error("Unhandled exception in scanner", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return securityErrorResponse(
+      {
+        code: "INTERNAL_ERROR",
+        message: "Erro interno no processamento da varredura.",
+        verdict: "unknown",
+      },
+      500,
+      req,
+    );
   }
 });
-
-/**
- * Calcula o hash SHA-256 de um arquivo processando o stream para economia de memória
- */
-async function calculateHashStreaming(file: File): Promise<string> {
-  const stream = file.stream();
-  const reader = stream.getReader();
-  const chunks = [];
-  
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-  }
-  
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const combined = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const chunk of chunks) {
-    combined.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
