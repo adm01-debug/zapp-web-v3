@@ -157,7 +157,73 @@ function __resetBreakerAndCoalesce(): void {
 export async function queryExternalProxy<T = unknown>(params: ProxyParams): Promise<ProxyResponse<T>> {
   // Extract signal so it isn't sent in the JSON body.
   const { signal, ...body } = params as ProxyParams & { signal?: AbortSignal };
+  const meta = deriveTelemetryMeta(body as Record<string, unknown>);
 
+  // ── Circuit breaker check ──
+  // If too many recent ghost-POST failures hit this target, fail fast for a
+  // few seconds so we don't pile more cancelled requests onto an already
+  // overloaded edge runtime. Surface the breaker state to telemetry so the
+  // admin Health panel can see it.
+  const breakerState = isBreakerOpen(meta.target);
+  if (breakerState.open) {
+    proxyLog.warn('proxy circuit short-circuit', {
+      target: meta.target,
+      remainingMs: breakerState.remainingMs,
+    });
+    const startedAt = performance.now();
+    recordQueryEvent({
+      ...meta,
+      source: 'externalProxy',
+      durationMs: 0,
+      recordCount: null,
+      errorMessage: `circuit_open:${meta.target}`,
+      severity: 'error',
+      startedAt,
+      correlationId: 'circuit',
+    });
+    throw new Error(`Proxy circuit open for ${meta.target} (retry in ${breakerState.remainingMs}ms)`);
+  }
+
+  // ── Request coalescing ──
+  // Two identical reads issued within COALESCE_WINDOW_MS share a single
+  // in-flight Promise. Mutations are never coalesced (coalesceKey returns
+  // null) so we never silently drop writes. The signal is honoured by the
+  // caller separately — even if a coalesced caller aborts, the underlying
+  // promise keeps running for the other waiters.
+  const dedupeKey = coalesceKey(body as Record<string, unknown>);
+  if (dedupeKey) {
+    const existing = inflight.get(dedupeKey);
+    if (existing && existing.expiresAt > Date.now()) {
+      proxyLog.debug('proxy request coalesced', { target: meta.target });
+      return existing.promise as Promise<ProxyResponse<T>>;
+    }
+  }
+
+  const exec = executeProxyCall<T>(body as Record<string, unknown>, signal, meta);
+
+  if (dedupeKey) {
+    inflight.set(dedupeKey, {
+      promise: exec as Promise<ProxyResponse<unknown>>,
+      expiresAt: Date.now() + COALESCE_WINDOW_MS,
+    });
+    // Best-effort cleanup once the promise settles, so we never leak entries
+    // beyond their natural lifetime.
+    exec.finally(() => {
+      const cur = inflight.get(dedupeKey);
+      if (cur && cur.promise === (exec as unknown as Promise<ProxyResponse<unknown>>)) {
+        inflight.delete(dedupeKey);
+      }
+    });
+  }
+
+  return exec;
+}
+
+async function executeProxyCall<T>(
+  body: Record<string, unknown>,
+  signal: AbortSignal | undefined,
+  meta: ReturnType<typeof deriveTelemetryMeta>,
+): Promise<ProxyResponse<T>> {
   const correlationId = generateCorrelationId();
   // Echo the trace id in the body so the edge function can log it even when
   // headers are stripped by intermediate layers.
