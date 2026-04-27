@@ -237,6 +237,19 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // ── Sentinel fast-path ────────────────────────────────────────────
+  // GET ?ping=1 (or any GET) returns a tiny health payload WITHOUT touching
+  // Postgres. Used by the admin Health panel to distinguish:
+  //   - sentinel ok + queries failing → upstream Postgres / RLS issue
+  //   - sentinel failing              → edge runtime cold-start / overload
+  // Kept under 10ms so it can be polled aggressively without cost.
+  if (req.method === 'GET') {
+    return new Response(
+      JSON.stringify({ ok: true, fn: 'external-db-proxy', ts: Date.now() }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+
   const startedAt = Date.now()
   const rid = shortRid() // unique per worker invocation, even if cid is shared across retries
   // Initial cid from header — may be upgraded from body.__cid below.
