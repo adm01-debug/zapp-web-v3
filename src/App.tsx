@@ -82,6 +82,7 @@ const AdminFailedAuthMessagesPage = lazyWithRetry(() => import("./pages/admin/Ad
 const RoutePermissionsPage = lazyWithRetry(() => import("./pages/admin/RoutePermissionsPage"));
 const AdminStressTestPage = lazyWithRetry(() => import("./pages/admin/AdminStressTestPage"));
 const AdminInboxSyncStatusPage = lazyWithRetry(() => import("./pages/admin/AdminInboxSyncStatusPage"));
+const AdminExternalDbExplorerPage = lazyWithRetry(() => import("./pages/admin/AdminExternalDbExplorerPage"));
 const AdminAutomationsPage = lazyWithRetry(() => import("./pages/admin/AdminAutomationsPage"));
 const AdminAutomationLogsPage = lazyWithRetry(() => import("./pages/admin/AdminAutomationLogsPage"));
 const AdminWhatsAppModePage = lazyWithRetry(() => import("./pages/admin/AdminWhatsAppModePage"));
@@ -204,6 +205,7 @@ function AppContent() {
             <Route path="/admin/route-permissions" element={<ProtectedRoute requiredRoles={['admin']}><RoutePermissionsPage /></ProtectedRoute>} />
             <Route path="/admin/stress-test" element={<ProtectedRoute requiredRoles={['admin']}><AdminStressTestPage /></ProtectedRoute>} />
             <Route path="/admin/inbox-sync-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminInboxSyncStatusPage /></ProtectedRoute>} />
+            <Route path="/admin/external-db-explorer" element={<ProtectedRoute requiredRoles={['admin', 'dev']}><AdminExternalDbExplorerPage /></ProtectedRoute>} />
             <Route path="/admin/automations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationsPage /></ProtectedRoute>} />
             <Route path="/admin/automations/logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationLogsPage /></ProtectedRoute>} />
             <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
