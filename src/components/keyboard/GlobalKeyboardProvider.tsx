@@ -49,6 +49,18 @@ export function GlobalKeyboardProvider({ children, customActions }: GlobalKeyboa
       id: 'open-command-palette',
       action: () => setShowCommandPalette(true),
     },
+    {
+      // Atalho `M` (sem modificadores): mute/unmute do áudio em playback.
+      // Action é noop se não há player ativo no `audioPlaybackBus`.
+      id: 'audio-toggle-mute',
+      action: () => {
+        const result = audioPlaybackBus.toggleMuteActive();
+        if (!result) return; // sem áudio tocando — usuário nem percebe
+        toast.info(result.muted ? '🔇 Áudio silenciado' : `🔊 ${Math.round(result.volume * 100)}%`, {
+          duration: 1200,
+        });
+      },
+    },
   ]);
 
   // Listen for custom events
