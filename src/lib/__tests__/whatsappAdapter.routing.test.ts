@@ -20,15 +20,32 @@ import {
   invalidateWhatsAppModeCache,
 } from "../whatsappAdapter";
 
-function setMode(mode: "official" | "unofficial") {
+function setMode(mode: "official" | "unofficial", opts?: { cloudCreds?: "ok" | "missing" }) {
   invalidateWhatsAppModeCache();
   rpcMock.mockResolvedValue({ data: mode, error: null });
+  const credsOk = (opts?.cloudCreds ?? "ok") === "ok";
+  // Quando o adapter pergunta status dos secrets do Cloud, retorna config solicitada.
+  invokeMock.mockImplementation((fn: string) => {
+    if (fn === "whatsapp-cloud-secrets-status") {
+      return Promise.resolve({
+        data: {
+          secrets: [
+            { name: "WHATSAPP_CLOUD_PHONE_NUMBER_ID", configured: credsOk, length: credsOk ? 16 : 0 },
+            { name: "WHATSAPP_CLOUD_ACCESS_TOKEN", configured: credsOk, length: credsOk ? 200 : 0 },
+            { name: "WHATSAPP_CLOUD_WEBHOOK_VERIFY_TOKEN", configured: credsOk, length: credsOk ? 36 : 0 },
+            { name: "WHATSAPP_CLOUD_APP_SECRET", configured: credsOk, length: credsOk ? 32 : 0 },
+          ],
+        },
+        error: null,
+      });
+    }
+    return Promise.resolve({ data: { ok: true }, error: null });
+  });
 }
 
 beforeEach(() => {
   invokeMock.mockReset();
   rpcMock.mockReset();
-  invokeMock.mockResolvedValue({ data: { ok: true }, error: null });
 });
 
 describe("whatsappAdapter — roteamento por modo", () => {
