@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useMemo, forwardRef } from 'react';
+import { useRef, useState, useCallback, useMemo, forwardRef, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,6 +12,7 @@ import { Pin, Gift } from 'lucide-react';
 import { TypingIndicatorCompact } from './TypingIndicator';
 import { useContactTyping } from '@/hooks/useContactTyping';
 import { useInViewport } from '@/hooks/useInViewport';
+import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
 
 interface VirtualizedRealtimeListProps {
   conversations: ConversationWithMessages[];
