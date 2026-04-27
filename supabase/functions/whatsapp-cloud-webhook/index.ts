@@ -149,6 +149,7 @@ Deno.serve(async (req) => {
       console.warn(
         `[whatsapp-cloud-webhook][${rid}] invalid signature (strict=${STRICT_MODE} hasSig=${!!signature})`,
       );
+      void recordPing("invalid_signature", { rid, hasSig: !!signature, strict: STRICT_MODE });
       if (STRICT_MODE) {
         return new Response(
           JSON.stringify({ error: "invalid_signature", requestId: rid }),
