@@ -8,6 +8,7 @@ import { Globe, Users, MessageCircle, RotateCcw, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSelector } from '@/components/settings/LanguageSelector';
 import { WhatsAppModeSetting } from '@/components/settings/WhatsAppModeSetting';
+import { ConnectionTestPanel } from '@/components/settings/ConnectionTestPanel';
 
 export function GlobalSettingsSection() {
   const { settings, isLoading, getSetting, updateSetting } = useGlobalSettings();
@@ -120,6 +121,9 @@ export function GlobalSettingsSection() {
             className="h-8 text-sm"
           />
         </div>
+      </CardContent>
+      <CardContent className="pt-0">
+        <ConnectionTestPanel />
       </CardContent>
     </Card>
   );
