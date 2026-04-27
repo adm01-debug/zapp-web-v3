@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useInboxFilters } from '@/hooks/useInboxFilters';
-import { parseISO } from 'date-fns';
 
 // Mock dependencies
 vi.mock('@/integrations/supabase/client', () => ({
@@ -74,26 +75,35 @@ const mockConversations: any[] = [
   }
 ];
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+  },
+});
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  React.createElement(QueryClientProvider, { client: queryClient }, children)
+);
+
 describe('useInboxFilters (covering useChatFailureFilter)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSearchParams = new URLSearchParams();
+    queryClient.clear();
   });
 
   it('filters by failure status when showOnlyRetrying is true', () => {
     const { result } = renderHook(() => useInboxFilters({
       conversations: mockConversations,
       profileId: 'agent-1'
-    }));
+    }), { wrapper });
 
-    // Initially should show all valid conversations (both in this mock)
     expect(result.current.filteredConversations.length).toBe(2);
 
     act(() => {
       result.current.setShowOnlyRetrying(true);
     });
 
-    // Only Jane Smith has a failed message
     expect(result.current.filteredConversations.length).toBe(1);
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
@@ -102,18 +112,13 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     const { result } = renderHook(() => useInboxFilters({
       conversations: mockConversations,
       profileId: 'agent-1'
-    }));
+    }), { wrapper });
 
     act(() => {
       result.current.setShowOnlyRetrying(true);
       result.current.setFailureCategoryFilter('network');
     });
 
-    // Jane has a 'failed' message, and we mocked failureCategoryById as empty, 
-    // so it defaults to 'unknown' in the logic (if it weren't for failed_auth special case)
-    // Actually, in useInboxFilters.ts:
-    // const cat = m.status === 'failed_auth' ? 'auth' : (failureCategoryById[m.id] ?? 'unknown');
-    // So 'failed' message with empty category map -> 'unknown'
     expect(result.current.filteredConversations.length).toBe(0);
 
     act(() => {
@@ -126,7 +131,7 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     const { result } = renderHook(() => useInboxFilters({
       conversations: mockConversations,
       profileId: 'agent-1'
-    }));
+    }), { wrapper });
 
     act(() => {
       result.current.setMainTab('resolved');
@@ -143,7 +148,7 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     const { result } = renderHook(() => useInboxFilters({
       conversations: mockConversations,
       profileId: 'agent-1'
-    }));
+    }), { wrapper });
 
     act(() => {
       result.current.setSearch('Jane');
@@ -153,3 +158,4 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
 });
+
