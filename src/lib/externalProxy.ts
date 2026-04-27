@@ -557,4 +557,6 @@ async function executeProxyCall<T>(
 export const __testing = {
   resetBreakerAndCoalesce: __resetBreakerAndCoalesce,
   isBreakerOpen: (target: string) => isBreakerOpen(target),
+  setInvokeOverride: (fn: typeof __invokeOverride) => { __invokeOverride = fn; },
+  clearInvokeOverride: () => { __invokeOverride = null; },
 };
