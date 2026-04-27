@@ -388,8 +388,7 @@ export function useExternalMessages(remoteJid: string | null) {
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
       // Replace pode chegar com canônicas que substituem otimistas pendentes.
       // Mantemos quaisquer otimistas que ainda não foram reconciliadas.
-      setMessages((prev) => {
-        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
+      applyReconciliation(setMessages, mapped, (filteredPrev, additions) => {
         // Initial: o servidor é a fonte da verdade — ordenamos por created_at
         // garantindo que otimistas remanescentes (ainda sem external_id real)
         // continuem visíveis ao final.
@@ -427,9 +426,7 @@ export function useExternalMessages(remoteJid: string | null) {
       if (!mountedRef.current || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
-      setMessages((prev) => {
-        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
-        if (additions.length === 0 && filteredPrev.length === prev.length) return prev;
+      applyReconciliation(setMessages, mapped, (filteredPrev, additions) => {
         return [...filteredPrev, ...additions];
       });
       lastSeenRef.current = newOnes[newOnes.length - 1].created_at;
@@ -532,9 +529,7 @@ export function useExternalMessages(remoteJid: string | null) {
       const ordered = isOlder ? data.slice().reverse() : data;
       const mapped = ordered.map(evolutionToRealtimeMessage);
 
-      setMessages((prev) => {
-        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
-        if (additions.length === 0 && filteredPrev.length === prev.length) return prev;
+      applyReconciliation(setMessages, mapped, (filteredPrev, additions) => {
         if (key.startsWith(`inbox:initial:${remoteJid}:`)) {
           // Initial completo de outra aba: se não tínhamos nada, substitui
           // pelas canônicas; caso contrário mescla preservando otimistas
