@@ -298,6 +298,21 @@ async function executeProxyCall<T>(
         const result = await supabase.functions.invoke('external-db-proxy', perAttemptOptions);
         data = result.data as ProxyResponse<T> | null;
         error = result.error ? normalizeInvokeError(result.error) : null;
+        // Edge runtime guard: when the function crashes at boot/runtime the
+        // outer wrapper returns HTTP 200 with `{ fallback: true, code: ... }`.
+        // The SDK can't surface that as `result.error`, so we promote it
+        // here so the retry + breaker logic kicks in instead of letting
+        // callers consume a malformed payload.
+        if (!error && data && typeof data === 'object' && (data as { fallback?: boolean }).fallback === true) {
+          const d = data as { code?: string; message?: string; detail?: string };
+          error = {
+            name: 'FunctionsFetchError',
+            code: d.code ?? 'SUPABASE_EDGE_RUNTIME_ERROR',
+            message: d.message ?? d.detail ?? 'Service is temporarily unavailable',
+            status: undefined,
+          };
+          data = null;
+        }
       } catch (invokeErr) {
         data = null;
         error = normalizeInvokeError(invokeErr);
