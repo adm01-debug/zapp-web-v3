@@ -358,7 +358,7 @@ async function executeProxyCall<T>(
         headers: { ...(invokeOptions.headers ?? {}), 'x-attempt': String(attempt) },
       };
       try {
-        const result = await supabase.functions.invoke('external-db-proxy', perAttemptOptions);
+        const result = await invokeViaFetch<ProxyResponse<T>>('external-db-proxy', perAttemptOptions);
         data = result.data as ProxyResponse<T> | null;
         error = result.error ? normalizeInvokeError(result.error) : null;
         // Edge runtime guard: when the function crashes at boot/runtime the
