@@ -155,7 +155,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       if (state && state.assignedTo !== undefined) return state.assignedTo;
       return fallback ?? null;
     };
-
+    const searchTrimmed = (search || '').trim();
     // 1. Tab-based filtering
     if (mainTab === 'open' && searchTrimmed.length === 0) {
       result = result.filter(c => {
