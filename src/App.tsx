@@ -83,6 +83,7 @@ const RoutePermissionsPage = lazyWithRetry(() => import("./pages/admin/RoutePerm
 const AdminStressTestPage = lazyWithRetry(() => import("./pages/admin/AdminStressTestPage"));
 const AdminInboxSyncStatusPage = lazyWithRetry(() => import("./pages/admin/AdminInboxSyncStatusPage"));
 const AdminExternalDbExplorerPage = lazyWithRetry(() => import("./pages/admin/AdminExternalDbExplorerPage"));
+const AdminEvoApiHealthPage = lazyWithRetry(() => import("./pages/admin/AdminEvoApiHealthPage"));
 const AdminAutomationsPage = lazyWithRetry(() => import("./pages/admin/AdminAutomationsPage"));
 const AdminAutomationLogsPage = lazyWithRetry(() => import("./pages/admin/AdminAutomationLogsPage"));
 const AdminWhatsAppModePage = lazyWithRetry(() => import("./pages/admin/AdminWhatsAppModePage"));
