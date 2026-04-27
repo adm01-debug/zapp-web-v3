@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { externalClient } from "@/integrations/supabase/externalClient";
+import { getExternalSupabase } from "@/integrations/supabase/externalClient";
+
+const externalClient = getExternalSupabase();
 import { toast } from "@/hooks/use-toast";
 
 export interface AutomationSuggestion {
