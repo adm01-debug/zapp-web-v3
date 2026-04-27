@@ -73,6 +73,8 @@ export default function AdminWhatsAppModePage() {
   const [saving, setSaving] = useState(false);
   const [secrets, setSecrets] = useState<SecretStatus[] | null>(null);
   const [secretsLoading, setSecretsLoading] = useState(false);
+  const [verify, setVerify] = useState<VerifyResult | null>(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
   const webhookUrl = getCloudWebhookUrl();
 
   const refresh = useCallback(async () => {
