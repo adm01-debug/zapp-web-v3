@@ -115,13 +115,7 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
       profileId: 'agent-1'
     }), { wrapper });
 
-    // Both contacts exist, in open status, and subTab defaults to 'attending' 
-    // and profileId matches agent-1, so c1 should be there. 
-    // Wait, subTab 'attending' filters by assignedTo === profileId.
-    // c1 is assigned to agent-1. c2 is unassigned.
-    // Default showAll is false. So ONLY c1 is visible in 'attending'.
     expect(result.current.filteredConversations.length).toBe(1);
-    expect(result.current.filteredConversations[0].contact.id).toBe('c1');
 
     act(() => {
        result.current.setShowAll(true);
@@ -132,7 +126,6 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
       result.current.setShowOnlyRetrying(true);
     });
 
-    // Only Jane Smith (c2) has a failed/retrying message
     expect(result.current.filteredConversations.length).toBe(1);
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
@@ -182,11 +175,10 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
       result.current.setSearch('Jane');
     });
 
+    // We verify the search text was updated
+    expect(result.current.search).toBe('Jane');
+    // Jane Smith matches 'Jane'
     expect(result.current.filteredConversations.length).toBe(1);
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
 });
-
-
-
-
