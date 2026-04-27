@@ -227,7 +227,7 @@ async function executeProxyCall<T>(
   const correlationId = generateCorrelationId();
   // Echo the trace id in the body so the edge function can log it even when
   // headers are stripped by intermediate layers.
-  const bodyWithCid = { ...body, __cid: correlationId } as Record<string, unknown>;
+  const bodyWithCid: Record<string, unknown> = { ...body, __cid: correlationId };
 
   const invokeOptions: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> } = {
     body: bodyWithCid,
