@@ -211,6 +211,19 @@ function isAllowedOrigin(origin: string): boolean {
   return EXACT_ALLOWED_ORIGINS.has(origin) || LOCAL_ORIGIN_PATTERNS.some((pattern) => pattern.test(origin));
 }
 
+/** Merge comma-separated header values, normalizing casing and deduplicating tokens. */
+export function mergeCsvHeaderValues(...values: Array<string | undefined>): string {
+  const merged = new Set<string>()
+  for (const value of values) {
+    if (!value) continue
+    for (const token of value.split(',')) {
+      const normalized = token.trim().toLowerCase()
+      if (normalized) merged.add(normalized)
+    }
+  }
+  return Array.from(merged).join(', ')
+}
+
 /** Security headers applied to all responses */
 const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',

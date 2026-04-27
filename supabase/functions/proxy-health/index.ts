@@ -10,19 +10,7 @@
 // Ideal para chamar via cron a cada 5 minutos com evaluate=1.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
-import { getCorsHeaders } from '../_shared/validation.ts'
-
-function mergeCsvHeaderValues(...values: Array<string | undefined>): string {
-  const merged = new Set<string>()
-  for (const value of values) {
-    if (!value) continue
-    for (const token of value.split(',')) {
-      const normalized = token.trim().toLowerCase()
-      if (normalized) merged.add(normalized)
-    }
-  }
-  return Array.from(merged).join(', ')
-}
+import { getCorsHeaders, mergeCsvHeaderValues } from '../_shared/validation.ts'
 
 function getJsonCorsHeaders(req?: Request) {
   const shared = getCorsHeaders(req)
