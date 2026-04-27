@@ -196,23 +196,41 @@ export function useAutomations({
         if (!execId) continue;
 
         const actions = rule.actions ?? {};
-        // Aplicar tags imediatamente
-        const tags: string[] = Array.isArray(actions.apply_tags)
+
+        // Escalonar SLA: aplica tag de sistema sla:<level> e remove níveis anteriores
+        const escalate = actions.escalate_sla;
+        let slaTags: string[] = [];
+        if (escalate?.enabled) {
+          const level = String(escalate.level ?? "high");
+          slaTags = [`sla:${level}`];
+        }
+
+        // Aplicar tags (escalada SLA + tags configuradas)
+        const cfgTags: string[] = Array.isArray(actions.apply_tags)
           ? actions.apply_tags
           : [];
-        if (tags.length) {
+        const allTags = [...new Set([...cfgTags, ...slaTags])];
+        if (allTags.length) {
           try {
             await externalClient.rpc("rpc_upsert_contact", {
               p_remote_jid: remoteJid,
               p_instance: instanceName,
-              p_tags: tags,
+              p_tags: allTags,
             } as any);
             await supabase
               .from("automation_executions")
-              .update({ applied_tags: tags })
+              .update({
+                applied_tags: allTags,
+                trigger_payload: {
+                  ...payload,
+                  ...(escalate?.enabled
+                    ? { sla_escalated_to: escalate.level, sla_reason: escalate.reason ?? null }
+                    : {}),
+                },
+              })
               .eq("id", execId);
           } catch (e) {
-            console.warn("[automation] apply_tags failed", e);
+            console.warn("[automation] apply_tags/escalate failed", e);
           }
         }
 
