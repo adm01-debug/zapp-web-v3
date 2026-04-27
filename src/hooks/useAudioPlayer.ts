@@ -3,15 +3,23 @@ import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { MediaRefreshKey } from '@/types/mediaRefresh';
+import { volumeStore } from '@/hooks/realtime/volumeStore';
 
 interface UseAudioPlayerOptions {
   audioUrl: string;
   messageId: string;
   /** Optional Evolution refresh key — enables `getMediaBase64` fallback when the URL expires (410/403). */
   refreshKey?: MediaRefreshKey;
+  /**
+   * Conversation scope (ex: remoteJid). Quando presente, o volume é resolvido
+   * via `volumeStore.getEffective(conversationId)` — aplicando override por
+   * conversa quando existir, senão usa o global. Mudanças em qualquer player
+   * da MESMA conversa propagam imediatamente via subscribe.
+   */
+  conversationId?: string | null;
 }
 
-export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlayerOptions) {
+export function useAudioPlayer({ audioUrl, messageId, refreshKey, conversationId }: UseAudioPlayerOptions) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -20,21 +28,57 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [resolvedUrl, setResolvedUrl] = useState<string>(audioUrl);
-  const [volume, setVolumeState] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('audio-player:volume');
-      const n = saved !== null ? parseFloat(saved) : 1;
-      return isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
-    } catch { return 1; }
-  });
+  const [volume, setVolumeState] = useState<number>(() =>
+    volumeStore.getEffective(conversationId)
+  );
+  /** Indica se este player está usando override por conversa (UI badge). */
+  const [hasConversationOverride, setHasConversationOverride] = useState<boolean>(
+    () => Boolean(conversationId && volumeStore.getConversation(conversationId) !== null)
+  );
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  /**
+   * Define volume aplicando ao escopo correto:
+   *  - Se há `conversationId`, salva como override da conversa.
+   *  - Senão, salva como global.
+   * Em ambos os casos atualiza o player local (via subscribe + apply effect).
+   */
   const setVolume = useCallback((v: number) => {
     const clamped = Math.min(1, Math.max(0, v));
-    setVolumeState(clamped);
-    if (audioRef.current) audioRef.current.volume = clamped;
-    try { localStorage.setItem('audio-player:volume', String(clamped)); } catch { /* noop */ }
-  }, []);
+    if (conversationId) {
+      volumeStore.setConversation(conversationId, clamped);
+    } else {
+      volumeStore.setGlobal(clamped);
+    }
+  }, [conversationId]);
+
+  /** Promove o volume atual a default global e remove o override da conversa. */
+  const promoteVolumeToGlobal = useCallback(() => {
+    volumeStore.setGlobal(volume);
+    if (conversationId) volumeStore.clearConversation(conversationId);
+  }, [volume, conversationId]);
+
+  /** Remove override da conversa, voltando ao global. */
+  const resetConversationVolume = useCallback(() => {
+    if (conversationId) volumeStore.clearConversation(conversationId);
+  }, [conversationId]);
+
+  // Subscribe à store: qualquer mudança que afete este escopo re-aplica.
+  useEffect(() => {
+    const apply = () => {
+      const next = volumeStore.getEffective(conversationId);
+      setVolumeState(next);
+      setHasConversationOverride(
+        Boolean(conversationId && volumeStore.getConversation(conversationId) !== null)
+      );
+    };
+    apply(); // sincroniza inicialmente caso conversationId mude
+    const unsub = volumeStore.subscribe((_v, scope, convId) => {
+      if (scope === 'global') return apply();
+      if (scope === 'conversation' && convId === conversationId) return apply();
+    });
+    return unsub;
+  }, [conversationId]);
 
   // Apply volume whenever audio element re-mounts or volume changes
   useEffect(() => {
