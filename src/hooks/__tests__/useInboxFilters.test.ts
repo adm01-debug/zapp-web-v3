@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useInboxFilters } from '@/hooks/useInboxFilters';
+import { useFailureMetricsBatch } from '@/hooks/inbox/useFailureMetricsBatch';
 
 // Mock dependencies
 vi.mock('@/integrations/supabase/client', () => ({
