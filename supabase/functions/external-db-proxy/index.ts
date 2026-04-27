@@ -100,7 +100,10 @@ async function handler(req: Request): Promise<Response> {
     const client = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
       db: { schema: requestedSchema },
-      global: { headers: { 'x-statement-timeout': '12000' } },
+      global: { 
+        headers: { 'x-statement-timeout': '12000' },
+        fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' })
+      },
     })
 
     const ctx: QueryLogContext = { cid, rid, op: action || 'select', target: (rpc || table || 'unknown'), startedAt }

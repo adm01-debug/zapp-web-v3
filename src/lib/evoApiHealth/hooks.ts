@@ -12,7 +12,7 @@ export function useEvoApiDashboard(refetchMs = 30_000) {
     queryKey: [...KEY, 'dashboard'],
     queryFn: () => evoApi.rpc<DashboardResponse>('rpc_pipeline_dashboard'),
     refetchInterval: refetchMs,
-    staleTime: 10_000,
+    staleTime: 20_000, // Reduced from default to avoid excessive re-renders/fetches
   });
 }
 

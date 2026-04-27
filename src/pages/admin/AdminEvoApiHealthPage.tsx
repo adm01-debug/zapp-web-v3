@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,11 +28,14 @@ export default function AdminEvoApiHealthPage() {
   const drHealth = useDrHealth();
   const runTests = useRunTestSuite();
 
-  const schemaUnavailable = dash.data?.schema_unavailable || alerts.data?.schema_unavailable;
-  const dashboardData = dash.data?.data;
-  const alertsData = alerts.data?.data;
-  const runTestsData = runTests.data?.data;
-  const readiness = dashboardData?.readiness;
+  // Memoized values to prevent unnecessary re-renders of the large layout
+  const { schemaUnavailable, dashboardData, alertsData, runTestsData, readiness } = useMemo(() => ({
+    schemaUnavailable: dash.data?.schema_unavailable || alerts.data?.schema_unavailable,
+    dashboardData: dash.data?.data,
+    alertsData: alerts.data?.data,
+    runTestsData: runTests.data?.data,
+    readiness: dash.data?.data?.readiness
+  }), [dash.data, alerts.data, runTests.data]);
 
   const handleRefresh = async () => {
     await qc.invalidateQueries({ queryKey: ['evo-api-health'] });
