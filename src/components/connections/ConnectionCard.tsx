@@ -189,6 +189,8 @@ export function ConnectionCard({
                       {connection.health_status === 'healthy' ? 'Saudável' : connection.health_status === 'degraded' ? 'Degradado' :
                        connection.health_status === 'timeout' ? 'Timeout' : connection.health_status === 'error' ? 'Erro' : 'Desconectado'}
                       {connection.health_response_ms != null && <> · {connection.health_response_ms}ms</>}
+                      {connection.owner_jid && <> · {connection.owner_jid.split('@')[0]}</>}
+                      {reasonInfo && <> · {reasonInfo.short}</>}
                     </span>
                   </div>
                 )}
