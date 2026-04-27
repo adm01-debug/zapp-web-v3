@@ -46,9 +46,103 @@ export async function getWhatsAppMode(force = false): Promise<WhatsAppMode> {
 export function invalidateWhatsAppModeCache() {
   cachedMode = null;
   cacheExpiresAt = 0;
+  cachedTransport = null;
+  transportExpiresAt = 0;
+  cloudCredsCache = null;
 }
 
 const DEFAULT_INSTANCE = "wpp2";
+
+// ----- Resolução automática de transporte ----------------------------------
+//
+// "Modo" é a *intenção* do admin (oficial vs não-oficial).
+// "Transporte" é o que o adapter realmente vai usar agora — leva em conta se
+// as credenciais necessárias estão configuradas. Se o admin pediu oficial mas
+// faltam secrets do Cloud, caímos para Evolution e relatamos `degraded`.
+
+export type WhatsAppTransport = "cloud" | "evolution";
+
+export interface ResolvedTransport {
+  transport: WhatsAppTransport;
+  requestedMode: WhatsAppMode;
+  /** True quando o admin pediu official mas caímos para evolution por falta de secrets. */
+  degraded: boolean;
+  reason?: string;
+  missingSecrets?: string[];
+}
+
+interface CloudSecretsStatus {
+  secrets: { name: string; configured: boolean; length: number }[];
+}
+
+const REQUIRED_CLOUD_SECRETS = [
+  "WHATSAPP_CLOUD_PHONE_NUMBER_ID",
+  "WHATSAPP_CLOUD_ACCESS_TOKEN",
+];
+
+let cachedTransport: ResolvedTransport | null = null;
+let transportExpiresAt = 0;
+let cloudCredsCache: { ok: boolean; missing: string[]; expiresAt: number } | null = null;
+
+async function checkCloudCredentials(): Promise<{ ok: boolean; missing: string[] }> {
+  const now = Date.now();
+  if (cloudCredsCache && now < cloudCredsCache.expiresAt) {
+    return { ok: cloudCredsCache.ok, missing: cloudCredsCache.missing };
+  }
+  try {
+    const { data, error } = await supabase.functions.invoke("whatsapp-cloud-secrets-status");
+    if (error) throw error;
+    const list = (data as CloudSecretsStatus)?.secrets ?? [];
+    const byName = new Map(list.map((s) => [s.name, s.configured]));
+    const missing = REQUIRED_CLOUD_SECRETS.filter((n) => !byName.get(n));
+    const result = { ok: missing.length === 0, missing };
+    cloudCredsCache = { ...result, expiresAt: now + 30_000 };
+    return result;
+  } catch (e) {
+    console.warn("[whatsappAdapter] checkCloudCredentials fallback", e);
+    return { ok: false, missing: REQUIRED_CLOUD_SECRETS };
+  }
+}
+
+/**
+ * Resolve o transporte a usar AGORA, combinando o modo escolhido pelo admin
+ * com a disponibilidade real das credenciais. Cache de 30s.
+ */
+export async function resolveTransport(force = false): Promise<ResolvedTransport> {
+  const now = Date.now();
+  if (!force && cachedTransport && now < transportExpiresAt) return cachedTransport;
+
+  const requestedMode = await getWhatsAppMode(force);
+
+  if (requestedMode === "unofficial") {
+    const resolved: ResolvedTransport = { transport: "evolution", requestedMode, degraded: false };
+    cachedTransport = resolved;
+    transportExpiresAt = now + 30_000;
+    return resolved;
+  }
+
+  const creds = await checkCloudCredentials();
+  const resolved: ResolvedTransport = creds.ok
+    ? { transport: "cloud", requestedMode, degraded: false }
+    : {
+        transport: "evolution",
+        requestedMode,
+        degraded: true,
+        reason: `Modo oficial selecionado mas faltam secrets: ${creds.missing.join(", ")}. Usando Evolution como fallback.`,
+        missingSecrets: creds.missing,
+      };
+  if (resolved.degraded) console.warn("[whatsappAdapter] transport degraded —", resolved.reason);
+
+  cachedTransport = resolved;
+  transportExpiresAt = now + 30_000;
+  return resolved;
+}
+
+export function invalidateTransportCache() {
+  cachedTransport = null;
+  transportExpiresAt = 0;
+  cloudCredsCache = null;
+}
 
 // ----- Tipos ----------------------------------------------------------------
 
