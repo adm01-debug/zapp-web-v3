@@ -154,36 +154,37 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       ticketStates[id]?.assignedTo ?? fallback ?? null;
 
     // 1. Tab-based filtering
-    // If we are searching, we typically want to see results regardless of the tab filters,
-    // or at least respect the 'search' tab mode if active.
-    if (mainTab === 'open') {
-      result = result.filter(c => {
-        const s = statusOf(c.contact.id);
-        const isOpenOrProgress = s === 'open' || s === 'in_progress';
-        
-        if (!isOpenOrProgress) return false;
+    // Se estivermos em busca ativa, ignoramos os filtros de aba para permitir encontrar o contato.
+    const isSearching = search.trim().length > 0;
+    
+    if (!isSearching || mainTab === 'search') {
+      if (mainTab === 'open') {
+        result = result.filter(c => {
+          const s = statusOf(c.contact.id);
+          const isOpenOrProgress = s === 'open' || s === 'in_progress';
+          
+          if (!isOpenOrProgress) return false;
 
-        if (subTab === 'attending') {
-          if (!showAll) {
-            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
+          if (subTab === 'attending') {
+            if (!showAll) {
+              return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
+            }
+            return true;
+          } 
+          
+          if (subTab === 'waiting') {
+            return !assignedOf(c.contact.id, c.contact.assigned_to);
           }
+
           return true;
-        } 
-        
-        if (subTab === 'waiting') {
-          return !assignedOf(c.contact.id, c.contact.assigned_to);
+        });
+
+        if (selectedQueueId) {
+          result = result.filter(c => c.contact.queue_id === selectedQueueId);
         }
-
-        return true;
-      });
-
-      if (selectedQueueId) {
-        result = result.filter(c => c.contact.queue_id === selectedQueueId);
+      } else if (mainTab === 'resolved') {
+        result = result.filter(c => statusOf(c.contact.id) === 'resolved');
       }
-    } else if (mainTab === 'resolved') {
-      result = result.filter(c => statusOf(c.contact.id) === 'resolved');
-    } else if (mainTab === 'search') {
-      // In search mode, we don't filter by tab status by default
     }
 
     // 2. Search filtering
