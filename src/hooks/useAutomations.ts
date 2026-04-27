@@ -39,6 +39,12 @@ export function useAutomations({
   assignedTo = null,
 }: UseAutomationsArgs) {
   const rulesRef = useRef<AutomationRule[]>([]);
+  const prevTagsRef = useRef<string[] | null>(null);
+
+  // Reseta snapshot de tags ao trocar de conversa
+  useEffect(() => {
+    prevTagsRef.current = null;
+  }, [remoteJid, instanceName]);
 
   // Carrega regras ativas (refresh a cada 60s)
   useEffect(() => {
@@ -87,6 +93,27 @@ export function useAutomations({
       const lastTime = new Date(last.message_timestamp).getTime();
       const ageSec = (Date.now() - lastTime) / 1000;
 
+      // Snapshot de tags do contato para gatilhos tag_applied/tag_removed
+      let currentTags: string[] = [];
+      let addedTags: string[] = [];
+      let removedTags: string[] = [];
+      try {
+        const { data: contact } = await externalClient.rpc("rpc_get_contact", {
+          p_remote_jid: remoteJid,
+          p_instance: instanceName,
+        } as any);
+        const c: any = Array.isArray(contact) ? contact[0] : contact;
+        currentTags = Array.isArray(c?.tags) ? c.tags.map((t: any) => String(t)) : [];
+        if (prevTagsRef.current !== null) {
+          const prev = prevTagsRef.current;
+          addedTags = currentTags.filter((t) => !prev.includes(t));
+          removedTags = prev.filter((t) => !currentTags.includes(t));
+        }
+        prevTagsRef.current = currentTags;
+      } catch (e) {
+        console.warn("[automation] tag snapshot failed", e);
+      }
+
       for (const rule of rules) {
         const cfg = rule.trigger_config ?? {};
         let matched = false;
@@ -122,6 +149,33 @@ export function useAutomations({
               matched = true;
               payload.keyword = hit;
             }
+          }
+        } else if (rule.trigger_type === "tag_applied") {
+          // Aceita 'tag' (string) ou 'tags' (array). Se vazio, qualquer tag adicionada dispara.
+          const wanted: string[] = Array.isArray(cfg.tags)
+            ? cfg.tags.map((t: any) => String(t))
+            : cfg.tag
+              ? [String(cfg.tag)]
+              : [];
+          const hits = wanted.length
+            ? addedTags.filter((t) => wanted.includes(t))
+            : addedTags;
+          if (hits.length) {
+            matched = true;
+            payload.tags_added = hits;
+          }
+        } else if (rule.trigger_type === "tag_removed") {
+          const wanted: string[] = Array.isArray(cfg.tags)
+            ? cfg.tags.map((t: any) => String(t))
+            : cfg.tag
+              ? [String(cfg.tag)]
+              : [];
+          const hits = wanted.length
+            ? removedTags.filter((t) => wanted.includes(t))
+            : removedTags;
+          if (hits.length) {
+            matched = true;
+            payload.tags_removed = hits;
           }
         }
 
