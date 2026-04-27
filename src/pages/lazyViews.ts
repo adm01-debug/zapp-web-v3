@@ -69,6 +69,7 @@ export const AdminInstancePausesPage = lazyWithRetry(() => import('@/pages/Admin
 export const AgentsOperationsPage = lazyWithRetry(() => import('@/pages/inbox/AgentsOperationsPage'));
 export const AdminRealtimeMonitorPage = lazyWithRetry(() => import('@/pages/AdminRealtimeMonitorPage'));
 export const AdminDispatchErrorsHistoryPage = lazyWithRetry(() => import('@/pages/AdminDispatchErrorsHistoryPage'));
+export const AdminInboxSyncStatusPage = lazyWithRetry(() => import('@/pages/admin/AdminInboxSyncStatusPage'));
 export const AchievementsSystemLazy = lazyWithRetry(async () => {
   const m = await import('@/components/gamification/AchievementsSystem');
   return { default: m.AchievementsSystem };
