@@ -357,9 +357,14 @@ async function executeProxyCall<T>(
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       attemptsMade = attempt;
       const attemptStartedAt = performance.now();
+      // NOTE: do NOT add custom headers here. The edge function's CORS allowlist
+      // only includes `authorization, x-client-info, apikey, content-type,
+      // x-correlation-id`. Any other header (e.g. an old `x-attempt`) makes the
+      // browser preflight fail with `TypeError: Failed to fetch`. We pass the
+      // attempt number through the body instead.
       const perAttemptOptions = {
         ...invokeOptions,
-        headers: { ...(invokeOptions.headers ?? {}), 'x-attempt': String(attempt) },
+        body: { ...(invokeOptions.body as Record<string, unknown>), __attempt: attempt },
       };
       try {
         const result = __invokeOverride
