@@ -129,6 +129,39 @@ export function AudioVolumeControl({
               >
                 <Icon className="w-3.5 h-3.5" />
               </button>
+
+              {hasConversationScope && (
+                <div className="w-full border-t border-border/50 pt-2 mt-1 flex flex-col items-stretch gap-1">
+                  <span
+                    className={cn(
+                      'text-[9px] font-semibold text-center px-1.5 py-0.5 rounded',
+                      hasConversationOverride
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {hasConversationOverride ? 'Por conversa' : 'Usando global'}
+                  </span>
+                  {hasConversationOverride && onResetConversation && (
+                    <button
+                      onClick={onResetConversation}
+                      className="text-[10px] text-muted-foreground hover:text-foreground hover:underline transition-colors"
+                      title="Voltar ao volume global"
+                    >
+                      Voltar ao global
+                    </button>
+                  )}
+                  {onPromoteToGlobal && (
+                    <button
+                      onClick={onPromoteToGlobal}
+                      className="text-[10px] text-muted-foreground hover:text-foreground hover:underline transition-colors"
+                      title="Usar este volume como padrão para todas as conversas"
+                    >
+                      Salvar como global
+                    </button>
+                  )}
+                </div>
+              )}
             </motion.div>
           </>
         )}
