@@ -342,6 +342,7 @@ export function useRealtimeInbox() {
     external_id: m.external_id || undefined,
     retry_attempt: m.retry_attempt ?? null,
     retry_total: m.retry_total ?? null,
+    contactAvatar: m.contactAvatar || resolvedSelectedConversation?.contact.avatar_url,
   }));
 
   return {
