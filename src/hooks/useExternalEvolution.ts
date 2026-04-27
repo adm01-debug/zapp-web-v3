@@ -8,7 +8,7 @@
  * - Polling: cursor-forward (created_at > lastSeen) instead of full re-fetch.
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryExternalProxy } from '@/lib/externalProxy';
 import {
   buildExternalConversations,
