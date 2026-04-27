@@ -158,7 +158,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
     // 1. Tab-based filtering
     const searchTrimmed = (search || '').trim();
-    if (mainTab === 'open') {
+    if (mainTab === 'open' && searchTrimmed.length === 0) {
       result = result.filter(c => {
         const s = statusOf(c.contact.id);
         const isOpenOrProgress = s === 'open' || s === 'in_progress';
