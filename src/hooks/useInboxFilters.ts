@@ -155,40 +155,36 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
     // 1. Tab-based filtering
     // Se estivermos em busca ativa, ignoramos os filtros de aba para permitir encontrar o contato.
-    const isSearching = (search || '').trim().length > 0;
-    
-    if (!isSearching || mainTab === 'search') {
-      if (mainTab === 'open') {
-        result = result.filter(c => {
-          const s = statusOf(c.contact.id);
-          const isOpenOrProgress = s === 'open' || s === 'in_progress';
-          
-          if (!isOpenOrProgress) return false;
+    if (mainTab === 'open') {
+      result = result.filter(c => {
+        const s = statusOf(c.contact.id);
+        const isOpenOrProgress = s === 'open' || s === 'in_progress';
+        
+        if (!isOpenOrProgress) return false;
 
-          if (subTab === 'attending') {
-            if (!showAll) {
-              return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
-            }
-            return true;
-          } 
-          
-          if (subTab === 'waiting') {
-            return !assignedOf(c.contact.id, c.contact.assigned_to);
+        if (subTab === 'attending') {
+          if (!showAll) {
+            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
           }
-
           return true;
-        });
-
-        if (selectedQueueId) {
-          result = result.filter(c => c.contact.queue_id === selectedQueueId);
+        } 
+        
+        if (subTab === 'waiting') {
+          return !assignedOf(c.contact.id, c.contact.assigned_to);
         }
-      } else if (mainTab === 'resolved') {
-        result = result.filter(c => statusOf(c.contact.id) === 'resolved');
+
+        return true;
+      });
+
+      if (selectedQueueId) {
+        result = result.filter(c => c.contact.queue_id === selectedQueueId);
       }
+    } else if (mainTab === 'resolved') {
+      result = result.filter(c => statusOf(c.contact.id) === 'resolved');
     }
 
     // 2. Search filtering
-    const searchTrimmed = search.trim();
+    const searchTrimmed = (search || '').trim();
     if (searchTrimmed) {
       const searchLower = searchTrimmed.toLowerCase();
       const digits = searchTrimmed.replace(/\D/g, '');
