@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { HealthHistoryRow } from '@/lib/evoApiHealth/types';
@@ -6,7 +7,7 @@ interface HistoryTabProps {
   history?: HealthHistoryRow[];
 }
 
-export function HistoryTab({ history }: HistoryTabProps) {
+export const HistoryTab = React.memo(({ history }: HistoryTabProps) => {
   return (
     <Card>
       <CardHeader>
@@ -46,4 +47,4 @@ export function HistoryTab({ history }: HistoryTabProps) {
       </CardContent>
     </Card>
   );
-}
+});

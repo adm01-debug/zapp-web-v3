@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ interface ChannelsTabProps {
   testResult?: any;
 }
 
-export function ChannelsTab({ channels, onTest, isTesting, testResult }: ChannelsTabProps) {
+export const ChannelsTab = React.memo(({ channels, onTest, isTesting, testResult }: ChannelsTabProps) => {
   return (
     <div className="space-y-4">
       {!channels?.length && (
@@ -62,4 +63,4 @@ export function ChannelsTab({ channels, onTest, isTesting, testResult }: Channel
       )}
     </div>
   );
-}
+});
