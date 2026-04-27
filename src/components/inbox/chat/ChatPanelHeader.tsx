@@ -56,6 +56,7 @@ export function ChatPanelHeader({
   sendState = 'idle', failuresOnly, onToggleFailuresOnly, failuresCount,
 }: ChatPanelHeaderProps) {
   const isMobile = useIsMobile();
+  const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
 
   return (
     <div className="flex items-center justify-between px-3 md:px-5 h-[56px] md:h-[65px] border-b border-border bg-card shrink-0">
