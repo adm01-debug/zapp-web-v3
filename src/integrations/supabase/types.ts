@@ -1100,7 +1100,9 @@ export type Database = {
           error_message: string | null
           id: string
           instance_name: string
+          kb_sources: string[] | null
           reassigned_to: string | null
+          recommended_tag: string | null
           remote_jid: string
           rule_id: string
           status: Database["public"]["Enums"]["automation_execution_status"]
@@ -1116,7 +1118,9 @@ export type Database = {
           error_message?: string | null
           id?: string
           instance_name?: string
+          kb_sources?: string[] | null
           reassigned_to?: string | null
+          recommended_tag?: string | null
           remote_jid: string
           rule_id: string
           status?: Database["public"]["Enums"]["automation_execution_status"]
@@ -1132,7 +1136,9 @@ export type Database = {
           error_message?: string | null
           id?: string
           instance_name?: string
+          kb_sources?: string[] | null
           reassigned_to?: string | null
+          recommended_tag?: string | null
           remote_jid?: string
           rule_id?: string
           status?: Database["public"]["Enums"]["automation_execution_status"]
