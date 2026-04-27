@@ -157,33 +157,30 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     };
 
     // 1. Tab-based filtering
-    const searchTrimmed = (search || '').trim();
-    if (searchTrimmed.length === 0) {
-      if (mainTab === 'open') {
-        result = result.filter(c => {
-          const s = statusOf(c.contact.id);
-          const isOpenOrProgress = s === 'open' || s === 'in_progress';
-          
-          if (!isOpenOrProgress) return false;
+    if (mainTab === 'open' && searchTrimmed.length === 0) {
+      result = result.filter(c => {
+        const s = statusOf(c.contact.id);
+        const isOpenOrProgress = s === 'open' || s === 'in_progress';
+        
+        if (!isOpenOrProgress) return false;
 
-          if (subTab === 'attending') {
-            if (showAll) return true;
-            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
-          } 
-          
-          if (subTab === 'waiting') {
-            return !assignedOf(c.contact.id, c.contact.assigned_to);
-          }
-
-          return true;
-        });
-
-        if (selectedQueueId) {
-          result = result.filter(c => c.contact.queue_id === selectedQueueId);
+        if (subTab === 'attending') {
+          if (showAll) return true;
+          return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
+        } 
+        
+        if (subTab === 'waiting') {
+          return !assignedOf(c.contact.id, c.contact.assigned_to);
         }
-      } else if (mainTab === 'resolved') {
-        result = result.filter(c => statusOf(c.contact.id) === 'resolved');
+
+        return true;
+      });
+
+      if (selectedQueueId) {
+        result = result.filter(c => c.contact.queue_id === selectedQueueId);
       }
+    } else if (mainTab === 'resolved' && searchTrimmed.length === 0) {
+      result = result.filter(c => statusOf(c.contact.id) === 'resolved');
     }
 
     
