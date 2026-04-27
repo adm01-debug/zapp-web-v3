@@ -1,95 +1,86 @@
-# Auditoria Técnica Exaustiva — ZAPP Web (Promo Brindes)
+## Diagnóstico
 
-## O que será entregue
+A tela mostra **wpp2 — Conectado / Saudável (798ms)**, mas na prática a Evolution API não está realmente conectada ao WhatsApp.
 
-Um relatório completo gerado em **`/mnt/documents/AUDITORIA_22_DIMENSOES.md`** seguindo exatamente o protocolo do prompt:
+A causa está em `supabase/functions/connection-health-check/index.ts`:
 
-1. **Inventário do sistema** (Fase 0) — números reais já coletados.
-2. **Análise das 22 dimensões** — cada uma com nota 0–10 fundamentada em evidências (arquivo:linha, comandos rodados, queries SQL).
-3. **Scorecard consolidado** com média ponderada (×3 críticas, ×2 altas, ×1 padrão).
-4. **Top 10 ações de maior ROI** (impacto ÷ esforço).
-5. **Roadmap em 3 ondas**: Quick Wins / Sprint 1 / Sprint 2 / Backlog.
-6. **Nota final** + parágrafo de maturidade.
+```text
+GET /instance/connectionState/{instance}
+  → state === 'open'   ⇒ status = 'connected', health = 'healthy'
+  → state === 'close'  ⇒ disconnected
+  → outro              ⇒ degraded
+```
 
-Após o relatório, executo **Quick Wins + Sprint 1** (impacto alto ÷ esforço baixo–médio) em PRs separados por dimensão.
+**Problema:** `state === 'open'` na Evolution significa apenas que **a instância existe e o socket interno está aberto** — não garante que o número esteja pareado nem que o WhatsApp Web esteja entregando eventos. Cenários comuns que retornam `open` mas estão "fantasmas":
 
-## Inventário já confirmado
+- Pareamento perdido no celular sem o servidor detectar ainda
+- Sessão expirada (Baileys mantém o socket aberto até o próximo erro)
+- Banimento/bloqueio temporário do número
+- Webhook quebrado (o servidor "acha" que está bem mas nada chega ao FATOR X)
 
-| Item | Valor |
-|---|---:|
-| Arquivos TS/TSX (src) | 1.397 |
-| Edge functions | 83 |
-| Migrations versionadas | 307 |
-| Tabelas em `public` | 186 |
-| Tabelas com RLS habilitado | 186/186 (100%) |
-| Tabelas com pelo menos 1 policy | 186/186 (100%) |
-| Testes unitários (Vitest) | 240 arquivos |
-| Testes E2E (Playwright) | 25 specs |
-| Testes Deno (edge functions) | 97+ (já passando 100%) |
-| ADRs | 5 (em `docs/decisions/`) |
-| Runbooks operacionais | `docs/runbooks/`, `docs/INCIDENT-RUNBOOK.md`, `docs/SLA-ESCALATION-CRON.md` |
-| CI pipeline | `.github/workflows/ci.yml` (lint, typecheck, vitest, deno tests, build) |
-| Stack | React 18 + Vite + TS + Tailwind + Supabase (Lovable Cloud + FATOR X externo) + Bitrix24 + Evolution API |
-| Linter Supabase | 193 warnings (todos do tipo `pg_graphql_anon_table_exposed`) |
-| Security scan | Limpo (3 findings ignorados com justificativa) |
+Hoje o sistema só descobre o problema quando o usuário tenta enviar e falha.
 
-## Pontos de atenção já mapeados (preview do scorecard)
+## Solução: Health check de 3 camadas
 
-Sem inflar notas — exemplos concretos do que será reportado:
+Substituir o critério único (`state === 'open'`) por uma validação combinada que reflete o estado real:
 
-- **Tipagem (Dim. 18)**: `tsconfig.app.json` usa `strict: false` e `noImplicitAny: false`. Existem **245 ocorrências de `any`** em **93 arquivos** de produção. ESLint não bloqueia `any` em src (só em testes). Nota provisória ≤ 6/10.
-- **Segurança DB (Dim. 16)**: 193 warnings `pg_graphql_anon_table_exposed` no linter — `anon` enxerga schema de tabelas via introspection do GraphQL. Precisa revogar `SELECT` do `anon` nas tabelas que não devem ser públicas. Nota provisória ≤ 7/10.
-- **Logging (Dim. 9)**: `redactSecrets` + Logger estruturado já implementados em `_shared/validation.ts` com PII patterns (JWT, Bearer, e-mail, telefone, Bitrix REST tokens). 1 `console.log` em produção (em comentário JSDoc — falso positivo). Nota provisória ≥ 8.5/10.
-- **Manutenibilidade (Dim. 12)**: 14 arquivos com **>500 linhas** em `src/` (maior: `AdminFailedMessagesPage.tsx` com 1.012 linhas). 8 TODOs/FIXME/HACK no código. Decomposição padrão já documentada em `mem://architecture/refactoring/hook-decomposition-pattern`. Nota provisória ~7/10.
-- **CI/CD (Dim. 5)**: Pipeline cobre lint + typecheck + vitest + deno tests + build. **Falta**: security scan (npm audit / dependabot), branch protection rules visíveis, deploy automatizado para staging. Nota provisória ~7/10.
-- **Arquitetura (Dim. 1)**: 5 ADRs documentados, separação clara `pages/components/hooks/lib/integrations`, dois clients Supabase (Cloud + FATOR X) com regras explícitas em project-knowledge. Nota provisória ≥ 8/10.
+### Camada 1 — Socket (já existe)
+`GET /instance/connectionState/{instance}` → `state === 'open'`
 
-(Notas finais saem após auditar as 22 dimensões com profundidade igual.)
+### Camada 2 — Identidade do número (NOVA)
+`GET /instance/fetchInstances?instanceName={instance}` deve retornar:
+- `instance.owner` (JID do número conectado, ex.: `5511...@s.whatsapp.net`) **presente e não vazio**
+- `instance.profileName` ou `instance.profilePicUrl` populados
 
-## Quick Wins que serão executados após o relatório
+Se `state === 'open'` mas `owner` está vazio → conexão **fantasma** → marcar como `degraded` com motivo `phantom_session`.
 
-Itens de impacto alto e esforço baixo, sem risco de regressão:
+### Camada 3 — Atividade recente do webhook (NOVA)
+Consultar no FATOR X via RPC a última mensagem/evento da instância:
+- Se a última mensagem é de **> 30 min atrás** E o último webhook event também → marcar como `degraded` com motivo `webhook_silent` (não derruba para `disconnected` porque pode ser baixo tráfego, mas alerta).
+- Se a última mensagem é de **> 6 horas atrás** → marcar como `disconnected` mesmo com socket open.
 
-1. **Habilitar `noImplicitAny`** no `tsconfig.app.json` para novos arquivos (gradual via `// @ts-expect-error` onde explodir).
-2. **Revogar `GRANT SELECT` do `anon`** em tabelas internas (migration) para resolver 193 warnings do linter `pg_graphql`.
-3. **Adicionar `npm audit` job** no `.github/workflows/ci.yml` para falhar PR em CVE high/critical.
-4. **Headers de segurança** (`Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`) no `index.html` / Vite config.
-5. **Habilitar HIBP password check** via `configure_auth` (leaked password protection).
-6. **Limpar 8 TODO/FIXME** convertendo em issues GitHub ou removendo.
+### Mapeamento final de `health_status`
 
-## Sprint 1 (após aprovação dos Quick Wins)
+| Socket | Owner JID | Atividade webhook | health_status | status DB |
+|---|---|---|---|---|
+| open | presente | < 30min | `healthy` | connected |
+| open | presente | 30min–6h | `degraded` (webhook_silent) | connected |
+| open | presente | > 6h | `disconnected` (stale) | disconnected |
+| open | **ausente** | qualquer | `degraded` (phantom_session) | disconnected |
+| close | — | — | `disconnected` | disconnected |
+| timeout / error | — | — | `timeout`/`error` | disconnected |
 
-Itens de impacto alto e esforço médio:
+## Mudanças
 
-7. **Schema Zod compartilhado** entre frontend ↔ edge functions para os 5 endpoints mais usados (atualmente só 7 arquivos usam Zod no frontend).
-8. **Decompor 3 arquivos > 800 linhas** seguindo o padrão de `mem://architecture/refactoring/hook-decomposition-pattern` (`AdminFailedMessagesPage.tsx`, `useConnectionsManager.ts`, `MediaLibraryAdmin.test.tsx`).
-9. **Error tracking centralizado** — verificar se Sentry/equivalente está configurado; senão, adicionar boundary global que envie para tabela `error_log` do FATOR X.
-10. **Testes de RLS** — script Deno que assume role `authenticated` com diferentes `auth.uid()` e valida que cada tabela bloqueia o que deve bloquear.
+### 1. Edge function `connection-health-check`
+Adicionar:
+- Chamada paralela a `fetchInstances?instanceName=...` para obter `owner`/`profileName`
+- Chamada ao FATOR X (`externalClient` via service role) para `MAX(created_at)` em `evolution_messages` e/ou tabela de webhook events da instância
+- Lógica combinada acima, gravando o motivo em `connection_health_logs.error_message` (ex.: `"phantom_session: socket open but no ownerJid"`)
 
-## Detalhes técnicos da execução
+### 2. Persistir motivo de degradação
+Adicionar coluna `health_reason TEXT` em `whatsapp_connections` (migration) para o frontend exibir o porquê. Valores: `phantom_session`, `webhook_silent`, `stale_session`, `socket_closed`, `timeout`, `null`.
 
-- **Não vou tocar em `src/integrations/supabase/types.ts`** (auto-gerado).
-- **Não vou alterar schemas reservados** do Supabase (`auth`, `storage`, `realtime`, `vault`).
-- Mudanças de DB usarão a ferramenta de migration (com aprovação automática do usuário).
-- Mudanças em `.github/workflows/ci.yml` rodam só após push — não posso testar localmente, então marcarei como "pendente de validação no próximo PR".
-- Cada Quick Win vira um commit isolado no relatório, com critério de aceite testável.
+### 3. UI — `ConnectionCard.tsx`
+- Quando `health_status === 'degraded'` ou houver `health_reason`, exibir tooltip explicativo ao lado do badge "Saudável/Degradado" (ex.: "Socket aberto mas número não pareado — reconecte via QR").
+- Quando `phantom_session`, mudar o badge "Conectado" para "Atenção" (cor amber) e habilitar o botão "Ver QR Code" mesmo com `status === 'connected'`.
 
-## Arquivos que serão criados/editados
+### 4. Botão manual "Verificar agora"
+No `ConnectionCard`, adicionar um item de menu "Verificar conexão" que chama `connection-health-check` para a instância específica (passar `instanceName` no body) e atualiza só aquela linha — útil para o usuário forçar uma reavaliação imediata.
 
-**Criados:**
-- `/mnt/documents/AUDITORIA_22_DIMENSOES.md` (relatório principal, 15–25 KB)
-- `/mnt/documents/SCORECARD.csv` (tabela exportável)
-- Migration nova para revogar `GRANT SELECT` do `anon`
+### 5. Teste
+Edge function test em `supabase/functions/connection-health-check/__tests__/` cobrindo:
+- socket open + owner ausente → degraded/phantom
+- socket open + owner ok + sem mensagens > 6h → disconnected/stale
+- socket open + owner ok + mensagem recente → healthy
+- socket close → disconnected
 
-**Editados (Quick Wins):**
-- `tsconfig.app.json` (noImplicitAny)
-- `.github/workflows/ci.yml` (npm audit job)
-- `index.html` (security headers via meta tags / vite plugin)
-- `eslint.config.js` (regra `no-explicit-any` como warn em src)
-- 8 arquivos com TODO/FIXME
+## Detalhes técnicos
 
-## Fora de escopo
+- A query no FATOR X usa `externalClient` com service role (já configurado em `_shared/`); precisamos uma RPC nova `rpc_last_activity_for_instance(p_instance text)` retornando `{ last_message_at, last_event_at }` — peça ao operador do FATOR X criar, ou no curto prazo fazemos `externalClient.from('evolution_messages').select('created_at').eq('instance_name', instance).order('created_at', { ascending: false }).limit(1)` (RLS bloqueia, então precisa rodar via service-role na edge function — usar `EXTERNAL_SUPABASE_SERVICE_ROLE_KEY` se disponível; caso contrário criar a RPC).
+- A migration adiciona somente `health_reason TEXT NULL` — sem CHECK constraint (validação na edge function).
+- A `health_reason` entra no realtime payload existente (já escutado pelo `useConnectionsManager`).
 
-- Pen test real (precisa de credenciais e contrato).
-- Mudanças em infra Bitrix24 / Evolution API (sem credenciais — confirmado no escopo anterior).
-- Sprint 2 e Backlog — entregues como roadmap, executados em loops futuros após sua aprovação.
+## Resultado esperado
+
+Após o deploy, em ~5 min (próximo cron do health-check) o card do `wpp2` deve refletir o estado real: se a Evolution está realmente conversando com o WhatsApp, continua "Saudável"; se for sessão fantasma, vira "Atenção / Reconecte" com o motivo visível.

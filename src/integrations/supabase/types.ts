@@ -9944,6 +9944,7 @@ export type Database = {
           degraded_at: string | null
           farewell_enabled: boolean | null
           farewell_message: string | null
+          health_reason: string | null
           health_response_ms: number | null
           health_status: string | null
           id: string
@@ -9954,6 +9955,7 @@ export type Database = {
           max_retries: number | null
           metadata: Json
           name: string
+          owner_jid: string | null
           phone_number: string
           qr_code: string | null
           retry_count: number | null
@@ -9969,6 +9971,7 @@ export type Database = {
           degraded_at?: string | null
           farewell_enabled?: boolean | null
           farewell_message?: string | null
+          health_reason?: string | null
           health_response_ms?: number | null
           health_status?: string | null
           id?: string
@@ -9979,6 +9982,7 @@ export type Database = {
           max_retries?: number | null
           metadata?: Json
           name: string
+          owner_jid?: string | null
           phone_number: string
           qr_code?: string | null
           retry_count?: number | null
@@ -9994,6 +9998,7 @@ export type Database = {
           degraded_at?: string | null
           farewell_enabled?: boolean | null
           farewell_message?: string | null
+          health_reason?: string | null
           health_response_ms?: number | null
           health_status?: string | null
           id?: string
@@ -10004,6 +10009,7 @@ export type Database = {
           max_retries?: number | null
           metadata?: Json
           name?: string
+          owner_jid?: string | null
           phone_number?: string
           qr_code?: string | null
           retry_count?: number | null

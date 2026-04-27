@@ -10,7 +10,9 @@ import {
   Smartphone, MoreVertical, Trash2, Copy, QrCode, Wifi, WifiOff,
   Star, Clock, Loader2, RefreshCw, History, Link2, Settings, Boxes,
   BatteryCharging, BatteryLow, BatteryMedium, BatteryFull, ShieldCheck, Zap,
+  AlertTriangle, Activity,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -24,6 +26,28 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
   disconnected: { label: 'Desconectado', color: 'bg-status-offline', icon: WifiOff },
   connecting: { label: 'Conectando...', color: 'bg-status-away', icon: RefreshCw },
   pending: { label: 'Aguardando QR', color: 'bg-status-away', icon: QrCode },
+};
+
+/** Mensagens human-friendly para o motivo retornado pelo health check 3-camadas. */
+const HEALTH_REASON_LABEL: Record<string, { short: string; long: string; severe: boolean }> = {
+  phantom_session: {
+    short: 'Sessão fantasma',
+    long: 'O servidor Evolution mantém o socket aberto, mas nenhum número está pareado. Reconecte escaneando o QR Code novamente.',
+    severe: true,
+  },
+  webhook_silent: {
+    short: 'Webhook silencioso',
+    long: 'Sem eventos recebidos nos últimos 30 minutos. Pode ser baixo volume ou um webhook quebrado.',
+    severe: false,
+  },
+  stale_session: {
+    short: 'Sessão obsoleta',
+    long: 'Sem mensagens há mais de 6 horas. A sessão provavelmente perdeu vínculo com o WhatsApp — reconecte.',
+    severe: true,
+  },
+  socket_closed: { short: 'Socket fechado', long: 'A Evolution API reportou socket fechado.', severe: true },
+  http_error: { short: 'Erro HTTP', long: 'Resposta de erro da Evolution API.', severe: true },
+  timeout: { short: 'Timeout', long: 'A Evolution API não respondeu a tempo.', severe: true },
 };
 
 interface ConnectionCardProps {
@@ -51,6 +75,33 @@ export function ConnectionCard({
   const StatusIcon = status.icon;
   const isOfficial = (connection.api_type ?? 'evolution') === 'official';
   const [officialConfigOpen, setOfficialConfigOpen] = useState(false);
+  const [recheckingHealth, setRecheckingHealth] = useState(false);
+
+  const reasonInfo = connection.health_reason ? HEALTH_REASON_LABEL[connection.health_reason] : null;
+  // Sessão fantasma: o DB ainda pode estar 'connected' por uma janela curta antes do próximo health-check derrubar.
+  // Forçamos visualização de "Atenção" e habilitamos o QR mesmo se status === 'connected'.
+  const isPhantomLike = reasonInfo?.severe && connection.health_status !== 'healthy';
+  const showAttentionBadge = isPhantomLike || (connection.health_status === 'degraded');
+
+  const handleRecheckNow = async () => {
+    if (!connection.instance_id) return;
+    setRecheckingHealth(true);
+    try {
+      const { error } = await supabase.functions.invoke('connection-health-check', {
+        body: { instanceName: connection.instance_id },
+      });
+      if (error) throw error;
+      toast({ title: 'Verificação concluída', description: 'O status real foi atualizado.' });
+    } catch (e: unknown) {
+      toast({
+        title: 'Falha na verificação',
+        description: e instanceof Error ? e.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    } finally {
+      setRecheckingHealth(false);
+    }
+  };
 
   return (
     <motion.div whileHover={{ y: -2, boxShadow: '0 8px 30px hsl(var(--primary) / 0.1)' }}>
@@ -78,14 +129,30 @@ export function ConnectionCard({
                     {isOfficial ? <ShieldCheck className="w-3 h-3 mr-1" /> : <Zap className="w-3 h-3 mr-1" />}
                     {isOfficial ? 'API Oficial' : 'Não-oficial (QR)'}
                   </Badge>
-                  <Badge variant="outline" className={cn('text-xs',
-                    connection.status === 'connected' && 'border-status-online text-status-online',
-                    connection.status !== 'connected' && connection.status !== 'pending' && 'border-status-offline text-status-offline',
-                    connection.status === 'pending' && 'border-status-away text-status-away'
-                  )}>
-                    <StatusIcon className={cn('w-3 h-3 mr-1', connection.status === 'connecting' && 'animate-spin')} />
-                    {status.label}
-                  </Badge>
+                  {showAttentionBadge ? (
+                    <TooltipProvider delayDuration={150}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="text-xs border-warning text-warning cursor-help">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Atenção{reasonInfo ? ` · ${reasonInfo.short}` : ''}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-xs">{reasonInfo?.long ?? 'A conexão apresenta sinais de instabilidade. Verifique o status real.'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <Badge variant="outline" className={cn('text-xs',
+                      connection.status === 'connected' && 'border-status-online text-status-online',
+                      connection.status !== 'connected' && connection.status !== 'pending' && 'border-status-offline text-status-offline',
+                      connection.status === 'pending' && 'border-status-away text-status-away'
+                    )}>
+                      <StatusIcon className={cn('w-3 h-3 mr-1', connection.status === 'connecting' && 'animate-spin')} />
+                      {status.label}
+                    </Badge>
+                  )}
                   <BusinessHoursIndicator connectionId={connection.id} />
                 </div>
                 <div className="flex items-center gap-2">
@@ -122,6 +189,8 @@ export function ConnectionCard({
                       {connection.health_status === 'healthy' ? 'Saudável' : connection.health_status === 'degraded' ? 'Degradado' :
                        connection.health_status === 'timeout' ? 'Timeout' : connection.health_status === 'error' ? 'Erro' : 'Desconectado'}
                       {connection.health_response_ms != null && <> · {connection.health_response_ms}ms</>}
+                      {connection.owner_jid && <> · {connection.owner_jid.split('@')[0]}</>}
+                      {reasonInfo && <> · {reasonInfo.short}</>}
                     </span>
                   </div>
                 )}
@@ -132,18 +201,18 @@ export function ConnectionCard({
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button variant="outline" size="sm" onClick={() => onCopyId(connection.id)}><Copy className="w-4 h-4 mr-2" />Copiar ID</Button>
               </motion.div>
-              {connection.status !== 'connected' && !isOfficial && (
+              {(connection.status !== 'connected' || isPhantomLike) && !isOfficial && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
-                    variant={connection.status === 'disconnected' ? 'default' : 'outline'}
+                    variant={connection.status === 'disconnected' || isPhantomLike ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => onShowQrCode(connection)}
-                    className={connection.status === 'disconnected'
+                    className={connection.status === 'disconnected' || isPhantomLike
                       ? 'bg-whatsapp text-primary-foreground hover:bg-whatsapp/90 animate-pulse'
                       : 'border-whatsapp text-whatsapp hover:bg-whatsapp hover:text-primary-foreground'}
                   >
                     <QrCode className="w-4 h-4 mr-2" />
-                    {connection.status === 'disconnected' ? 'Ver QR Code' : 'Conectar'}
+                    {isPhantomLike ? 'Reconectar' : connection.status === 'disconnected' ? 'Ver QR Code' : 'Conectar'}
                   </Button>
                 </motion.div>
               )}
@@ -154,7 +223,7 @@ export function ConnectionCard({
                   </Button>
                 </motion.div>
               )}
-              {connection.status === 'connected' && (
+              {connection.status === 'connected' && !isPhantomLike && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button variant="outline" size="sm" onClick={() => onDisconnect(connection)}><WifiOff className="w-4 h-4 mr-2" />Desconectar</Button>
                 </motion.div>
@@ -168,6 +237,10 @@ export function ConnectionCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onSetDefault(connection.id)}><Star className="w-4 h-4 mr-2" />Definir como padrão</DropdownMenuItem>
+                  <DropdownMenuItem disabled={recheckingHealth || !connection.instance_id} onClick={handleRecheckNow}>
+                    {recheckingHealth ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Activity className="w-4 h-4 mr-2" />}
+                    Verificar conexão agora
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => onShowQrCode(connection)}
                     disabled={isOfficial}
