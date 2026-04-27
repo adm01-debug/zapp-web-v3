@@ -90,9 +90,9 @@ class ExternalDbProxyClient {
           errorMsg.includes('PGRST002') ||
           errorMsg.includes('schema cache');
         
-        if (isTransientSchemaError && retryCount < 3) {
+        if (isTransientSchemaError && retryCount < 5) {
           const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
-          console.warn(`[ExternalDbProxy] Transient error (${errorMsg}). Retrying in ${Math.round(delay)}ms... (Attempt ${retryCount + 1}/3)`);
+          console.warn(`[ExternalDbProxy] Transient error (${errorMsg}). Retrying in ${Math.round(delay)}ms... (Attempt ${retryCount + 1}/5)`);
           await new Promise(resolve => setTimeout(resolve, delay));
           return this.call<T>(body, retryCount + 1);
         }
@@ -113,7 +113,7 @@ class ExternalDbProxyClient {
         errorMsg.includes('PGRST002') ||
         errorMsg.includes('schema cache');
 
-      if (isTransient && retryCount < 3) {
+      if (isTransient && retryCount < 5) {
         const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.call<T>(body, retryCount + 1);

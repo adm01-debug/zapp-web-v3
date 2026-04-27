@@ -27,8 +27,8 @@ export function useActiveAlerts(refetchMs = 15_000) {
       limit: 100,
     }),
     refetchInterval: refetchMs,
-    staleTime: 10_000,
-    refetchOnWindowFocus: false,
+    staleTime: 5_000,
+    refetchOnWindowFocus: true,
   });
 }
 
