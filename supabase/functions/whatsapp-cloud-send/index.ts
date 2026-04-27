@@ -1,4 +1,4 @@
-// WhatsApp Cloud API sender — text, media, template
+// WhatsApp Cloud API sender — text, media, template, sticker, reaction, location, contacts, read
 // Auth: requires JWT (validated below). Body schema validated with Zod.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
@@ -19,7 +19,19 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
 const SendSchema = z.object({
   to: z.string().min(5), // E.164 phone w/o '+'
-  type: z.enum(["text", "image", "video", "audio", "document", "template"]),
+  type: z.enum([
+    "text",
+    "image",
+    "video",
+    "audio",
+    "document",
+    "sticker",
+    "template",
+    "reaction",
+    "location",
+    "contacts",
+    "read",
+  ]),
   text: z.string().optional(),
   mediaUrl: z.string().url().optional(),
   caption: z.string().optional(),
@@ -31,6 +43,18 @@ const SendSchema = z.object({
       components: z.array(z.any()).optional(),
     })
     .optional(),
+  // reaction
+  messageId: z.string().optional(),
+  emoji: z.string().optional(),
+  // location
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  name: z.string().optional(),
+  address: z.string().optional(),
+  // contacts
+  contacts: z.array(z.any()).optional(),
+  // read
+  messageIds: z.array(z.string()).optional(),
 });
 
 function jsonResponse(data: unknown, status = 200) {
@@ -38,6 +62,20 @@ function jsonResponse(data: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+async function callGraph(path: string, payload: Record<string, unknown>) {
+  const url = `https://graph.facebook.com/${GRAPH_VERSION}/${PHONE_NUMBER_ID}/${path}`;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await r.json().catch(() => ({}));
+  return { ok: r.ok, status: r.status, data };
 }
 
 Deno.serve(async (req) => {
@@ -91,7 +129,26 @@ Deno.serve(async (req) => {
   }
   const p = parsed.data;
 
-  // Build Graph payload
+  // Special case: marking messages as read uses the same /messages endpoint
+  // but with a different payload shape (no `to`, requires status=read + message_id).
+  if (p.type === "read") {
+    if (!p.messageIds?.length) {
+      return jsonResponse({ error: "message_ids_required" }, 400);
+    }
+    const results = [];
+    for (const mid of p.messageIds) {
+      const r = await callGraph("messages", {
+        messaging_product: "whatsapp",
+        status: "read",
+        message_id: mid,
+      });
+      results.push({ id: mid, ok: r.ok, status: r.status });
+    }
+    const allOk = results.every((x) => x.ok);
+    return jsonResponse({ ok: allOk, results }, allOk ? 200 : 502);
+  }
+
+  // Build Graph payload for messages
   const payload: Record<string, unknown> = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -113,6 +170,10 @@ Deno.serve(async (req) => {
         ...(p.caption && p.type !== "audio" ? { caption: p.caption } : {}),
       };
       break;
+    case "sticker":
+      if (!p.mediaUrl) return jsonResponse({ error: "media_url_required" }, 400);
+      payload.sticker = { link: p.mediaUrl };
+      break;
     case "document":
       if (!p.mediaUrl) return jsonResponse({ error: "media_url_required" }, 400);
       payload.document = {
@@ -129,32 +190,48 @@ Deno.serve(async (req) => {
         ...(p.template.components ? { components: p.template.components } : {}),
       };
       break;
+    case "reaction":
+      if (!p.messageId) return jsonResponse({ error: "message_id_required" }, 400);
+      payload.reaction = {
+        message_id: p.messageId,
+        emoji: p.emoji ?? "",
+      };
+      break;
+    case "location":
+      if (typeof p.latitude !== "number" || typeof p.longitude !== "number") {
+        return jsonResponse({ error: "lat_lng_required" }, 400);
+      }
+      payload.location = {
+        latitude: p.latitude,
+        longitude: p.longitude,
+        ...(p.name ? { name: p.name } : {}),
+        ...(p.address ? { address: p.address } : {}),
+      };
+      break;
+    case "contacts":
+      if (!p.contacts?.length) {
+        return jsonResponse({ error: "contacts_required" }, 400);
+      }
+      payload.contacts = p.contacts;
+      break;
   }
 
-  const url = `https://graph.facebook.com/${GRAPH_VERSION}/${PHONE_NUMBER_ID}/messages`;
   try {
-    const r = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-    const data = await r.json().catch(() => ({}));
+    const r = await callGraph("messages", payload);
     if (!r.ok) {
       console.error(
         "[whatsapp-cloud-send] graph error",
         r.status,
-        JSON.stringify(data).slice(0, 500)
+        JSON.stringify(r.data).slice(0, 500)
       );
       return jsonResponse(
-        { error: "graph_error", status: r.status, details: data },
+        { error: "graph_error", status: r.status, details: r.data },
         502
       );
     }
-    const waMsgId = data?.messages?.[0]?.id ?? null;
-    return jsonResponse({ ok: true, messageId: waMsgId, raw: data });
+    // deno-lint-ignore no-explicit-any
+    const waMsgId = (r.data as any)?.messages?.[0]?.id ?? null;
+    return jsonResponse({ ok: true, messageId: waMsgId, raw: r.data });
   } catch (e) {
     console.error("[whatsapp-cloud-send] fetch error", e);
     return jsonResponse({ error: "fetch_error", message: String(e) }, 502);
