@@ -99,7 +99,11 @@ export function useMessageUpdateBatcher(
         return;
       }
 
-      pendingUpdatesRef.current.set(updatedMessage.id, updatedMessage);
+      const messageWithAvatar = {
+        ...updatedMessage,
+        contactAvatar: updatedMessage.contactAvatar || existingConversation.contact.avatar_url
+      };
+      pendingUpdatesRef.current.set(updatedMessage.id, messageWithAvatar);
 
       // Fast-path: transições para 'played' (áudio reproduzido) precisam refletir
       // imediatamente na conversa aberta — o usuário acaba de ouvir o áudio e
