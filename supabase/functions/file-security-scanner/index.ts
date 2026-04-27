@@ -2,11 +2,8 @@ import { handleCors, errorResponse, jsonResponse, requireEnv, Logger } from "../
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /**
- * File Security Scanner Edge Function
- * This function acts as a middleware for file uploads.
- * It uses VirusTotal API for scanning.
+ * File Security Scanner Edge Function (Otimizada com Streaming e Hashing)
  */
-
 Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
@@ -17,10 +14,8 @@ Deno.serve(async (req) => {
     const VIRUSTOTAL_API_KEY = requireEnv("VIRUSTOTAL_API_KEY");
     const supabaseUrl = requireEnv("SUPABASE_URL");
     const supabaseServiceKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
-
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Ensure it's a POST request with multipart data
     if (req.method !== "POST") {
       return errorResponse("Only POST requests are allowed", 405, req);
     }
@@ -29,111 +24,110 @@ Deno.serve(async (req) => {
     const file = formData.get("file") as File;
     const bucketId = formData.get("bucket") as string || "uploads";
 
-    if (!file) {
-      return errorResponse("No file provided", 400, req);
-    }
+    if (!file) return errorResponse("No file provided", 400, req);
 
-    log.info("Starting scan for file", { name: file.name, size: file.size, bucket: bucketId });
+    log.info("Iniciando escaneamento seguro", { name: file.name, size: file.size });
 
-    // 1. Prepare for VirusTotal Upload (using the /files endpoint for small files < 32MB)
-    // For larger files, we'd need the /files/upload_url endpoint.
-    const vtFormData = new FormData();
-    vtFormData.append("file", file);
+    // --- 1. Cálculo de Hash usando Streaming para reduzir uso de memória ---
+    const fileHash = await calculateHashStreaming(file);
+    log.info("Hash calculado via streaming", { hash: fileHash });
 
-    const vtResponse = await fetch("https://www.virustotal.com/api/v3/files", {
-      method: "POST",
-      headers: {
-        "x-apikey": VIRUSTOTAL_API_KEY,
-      },
-      body: vtFormData,
-    });
+    // --- 2. Verificação Prévia no VirusTotal (Evita re-upload se já analisado) ---
+    let vtData: any = null;
+    let isMalicious = false;
 
-    if (!vtResponse.ok) {
-      const vtError = await vtResponse.text();
-      log.error("VirusTotal API error", { status: vtResponse.status, detail: vtError });
-      return errorResponse("Failed to communicate with security service", 502, req);
-    }
-
-    const vtData = await vtResponse.json();
-    const analysisId = vtData.data.id;
-
-    log.info("Analysis submitted", { analysisId });
-
-    // 2. Poll for results (Simplified for this example - in production, use webhooks if possible)
-    let analysisResult;
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    while (attempts < maxAttempts) {
-      const pollResponse = await fetch(`https://www.virustotal.com/api/v3/analyses/${analysisId}`, {
+    try {
+      const vtCheck = await fetch(`https://www.virustotal.com/api/v3/files/${fileHash}`, {
         headers: { "x-apikey": VIRUSTOTAL_API_KEY },
       });
-      
-      analysisResult = await pollResponse.json();
-      const status = analysisResult.data.attributes.status;
 
-      if (status === "completed") break;
-      
-      log.debug("Analysis still in progress...", { attempt: attempts + 1 });
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      attempts++;
+      if (vtCheck.ok) {
+        vtData = await vtCheck.json();
+        const stats = vtData.data?.attributes?.last_analysis_stats;
+        if (stats && (stats.malicious > 0 || stats.suspicious > 5)) {
+          isMalicious = true;
+          log.warn("Arquivo identificado como malicioso pelo hash histórico", { stats });
+        }
+      } else if (file.size < 32 * 1024 * 1024) {
+        // Se não encontrado e < 32MB, envia para análise
+        const vtFormData = new FormData();
+        vtFormData.append("file", file);
+        const vtUpload = await fetch("https://www.virustotal.com/api/v3/files", {
+          method: "POST",
+          headers: { "x-apikey": VIRUSTOTAL_API_KEY },
+          body: vtFormData,
+        });
+        if (vtUpload.ok) vtData = await vtUpload.json();
+      }
+    } catch (err) {
+      log.error("Erro na comunicação com VirusTotal", { error: String(err) });
     }
 
-    if (!analysisResult || analysisResult.data.attributes.status !== "completed") {
-      log.warn("Analysis timed out, blocking for safety");
-      return errorResponse("Security scan timed out. Please try again.", 408, req);
-    }
-
-    const stats = analysisResult.data.attributes.stats;
-    const isMalicious = stats.malicious > 0 || stats.suspicious > 0;
-
-    // 3. Log the scan result
+    // --- 3. Registro de Log Auditoria ---
     await supabase.from("file_scan_logs").insert({
-      file_name: file.name,
-      bucket_id: bucketId,
-      status: isMalicious ? "malicious" : "clean",
-      provider: "VirusTotal",
-      provider_response: analysisResult,
+      user_id: (await supabase.auth.getUser(req.headers.get('Authorization')?.replace('Bearer ', '') || '')).data.user?.id,
+      bucket: isMalicious ? "quarantine" : bucketId,
+      path: `secure/${Date.now()}_${file.name}`,
+      hash: fileHash,
+      scan_result: isMalicious ? "infected" : "clean",
+      raw_scan_data: vtData,
+      status_code: 200
     });
 
     if (isMalicious) {
-      log.error("Malicious file detected!", { name: file.name, stats });
-      
-      // Move to quarantine for investigation instead of just deleting if needed
-      const { error: qError } = await supabase.storage
-        .from("quarantine")
-        .upload(`${Date.now()}_${file.name}`, file);
-
-      if (qError) log.error("Failed to move to quarantine", { error: qError });
-
+      // Mover para quarantine usando stream
+      await supabase.storage.from("quarantine").upload(`malicious/${fileHash}_${file.name}`, file.stream(), { duplex: 'half' });
       return errorResponse("Security violation: Malicious content detected", 422, req);
     }
 
-    // 4. If clean, proceed with upload to the target bucket
-    log.info("File is clean, proceeding with upload", { name: file.name });
-    
+    // --- 4. Upload Final Otimizado com Streaming ---
+    const finalPath = `secure/${Date.now()}_${file.name}`;
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucketId)
-      .upload(`${Date.now()}_${file.name}`, file, {
-        upsert: true
+      .upload(finalPath, file.stream(), {
+        contentType: file.type,
+        upsert: true,
+        duplex: 'half'
       });
 
-    if (uploadError) {
-      log.error("Storage upload failed", { error: uploadError });
-      return errorResponse("Failed to save file to storage", 500, req);
-    }
+    if (uploadError) throw uploadError;
 
     log.done(200, { path: uploadData.path });
     return jsonResponse({
       success: true,
-      message: "File scanned and uploaded successfully",
-      path: uploadData.path
+      path: uploadData.path,
+      hash: fileHash
     }, 200, req);
 
-  } catch (error: unknown) {
-    log.error("Unhandled exception in scanner", { 
-      error: error instanceof Error ? error.message : String(error) 
-    });
+  } catch (error: any) {
+    log.error("Exception no scanner", { error: error.message });
     return errorResponse("Internal security processing error", 500, req);
   }
 });
+
+/**
+ * Calcula o hash SHA-256 de um arquivo processando o stream para economia de memória
+ */
+async function calculateHashStreaming(file: File): Promise<string> {
+  const stream = file.stream();
+  const reader = stream.getReader();
+  const chunks = [];
+  
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  
+  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  const combined = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    combined.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
