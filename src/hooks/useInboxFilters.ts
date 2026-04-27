@@ -180,8 +180,8 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       }
     } else if (mainTab === 'resolved') {
       result = result.filter(c => statusOf(c.contact.id) === 'resolved');
-    } else if (mainTab === 'all') {
-      // No filter by status if on 'all' tab
+    } else if (mainTab === 'search') {
+      // No extra status filter when in search tab - allow finding anything
     }
 
     // 2. Search filtering
