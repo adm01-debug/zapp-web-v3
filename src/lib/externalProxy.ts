@@ -286,12 +286,13 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
     });
     // Best-effort cleanup once the promise settles, so we never leak entries
     // beyond their natural lifetime.
-    exec.finally(() => {
+    const cleanup = () => {
       const cur = inflight.get(dedupeKey);
       if (cur && cur.promise === (exec as unknown as Promise<ProxyResponse<unknown>>)) {
         inflight.delete(dedupeKey);
       }
-    });
+    };
+    exec.then(cleanup, cleanup);
   }
 
   return exec;
