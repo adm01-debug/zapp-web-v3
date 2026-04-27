@@ -53,6 +53,16 @@ export function MessageBubble({
     ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
     : undefined;
 
+  useEffect(() => {
+    if (!isSent && !avatarUrl && !contactAvatar) {
+      log.warn('No avatar available for received message', {
+        messageId: message.id,
+        conversationId: message.conversationId,
+        senderName: message.senderName
+      });
+    }
+  }, [isSent, avatarUrl, contactAvatar, message]);
+
   return (
     <div className={cn('flex group px-4 py-1 gap-2', isSent ? 'justify-end' : 'justify-start')}>
       {!isSent && (
