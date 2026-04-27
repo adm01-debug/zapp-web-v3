@@ -1,54 +1,80 @@
-# Sincronização de conversas WhatsApp no Inbox
+## Página: `/admin/external-db-explorer`
 
-## Diagnóstico
+Painel admin para testar conexão e explorar amostras do FATOR X através da edge function `external-db-proxy` (sem expor credenciais no cliente).
 
-A sincronização **já está totalmente implementada** no projeto (ver `useExternalEvolution`, `useRealtimeInbox`, `useMessageStatus`, `ChatPanel`, `ConversationList`, `ConversationHistory`, `useAgentReassignment`, RPCs `rpc_list_conversations` / `rpc_list_messages` no FATOR X). O motivo do inbox estar vazio agora é operacional, não de feature:
+### Acesso
+- Rota protegida em `src/App.tsx` com `ProtectedRoute requiredRoles={['admin','dev']}`.
+- Link no `sidebarNavConfig.ts` (seção Admin → "Explorador FATOR X").
 
-1. **Env do FATOR X ausente no preview** — `VITE_EXTERNAL_SUPABASE_URL` e `VITE_EXTERNAL_SUPABASE_ANON_KEY` não estão definidas, gerando o crash `Uncaught Error: External Supabase is not configured` e travando hooks que usam `getExternalSupabase()`.
-2. **Cascata de "Failed to fetch"** — vista nos runtime errors, vinda do `external-db-proxy` que perde a base por causa do erro acima e do recente CORS.
-3. **Edge function `external-db-proxy` precisa estar servindo as RPCs do FATOR X** que o inbox consome (`rpc_list_conversations`, `rpc_list_messages`, `rpc_get_contact`).
+### Layout (uma única tela, 3 blocos)
 
-## O que vou fazer
+```text
+┌──────────────────────────────────────────────────────┐
+│ 1. HEALTH CHECK                                      │
+│   [Testar conexão]  status: ✅ 312ms · cid · rid    │
+│   Mostra latência média de 3 pings (rpc_dashboard…)  │
+├──────────────────────────────────────────────────────┤
+│ 2. CATÁLOGO DE TABELAS (cards clicáveis)             │
+│   evolution_messages (1.787.475)  evolution_contacts │
+│   evolution_conversations  evolution_calls  …        │
+│   → clique = preenche o explorador abaixo            │
+├──────────────────────────────────────────────────────┤
+│ 3. EXPLORADOR                                        │
+│   Modo:  ( ) SELECT table   ( ) RPC                  │
+│   Tabela: [select]  Limit:[10]  Filtros (k=v key)+   │
+│   ou RPC: [select rpc]  Params (JSON editor)         │
+│   [Executar]                                         │
+│   Resultado: tabela paginada + botão "Ver JSON cru"  │
+│   Footer: status, ms, count, cid, rid               │
+└──────────────────────────────────────────────────────┘
+```
 
-### 1. Corrigir crash do `externalClient`
-- `src/integrations/supabase/externalClient.ts`: tornar `getExternalSupabase()` tolerante (logar warning + retornar `null`) em vez de lançar, para os hooks fallback-arem para o proxy server-side em vez de derrubar a aplicação.
-- Hooks que ainda chamam `getExternalSupabase()` direto passam por `queryExternalProxy` (que usa o edge function com service role).
+### Funcionalidade detalhada
 
-### 2. Garantir que o inbox usa 100% o caminho server-side
-- Auditar `useExternalEvolution`, `useRealtimeInbox` e `externalMessageSender` para que toda leitura/escrita de `evolution_*` vá pelo `external-db-proxy` (já é o padrão; corrigir qualquer ponto que ainda use cliente direto).
-- Reaproveitar `invokeViaFetch` (correção de proxy + CORS já aplicada nas mensagens anteriores).
+**Bloco 1 — Health check**
+- Botão dispara 3 chamadas paralelas a `external-db-proxy` com `action: 'rpc'`, `rpc: 'rpc_dashboard_home'`, `params: { p_instance: 'wpp2', p_assigned_to: null }`.
+- Exibe: status agregado (✅/⚠️/❌), latência min/med/max, `cid`/`rid` da última, payload colapsável.
 
-### 3. Validar pipeline ponta-a-ponta
-- Conferir o `external-db-proxy/index.ts` aceita `rpc_list_conversations`, `rpc_list_messages`, `rpc_get_contact` e `rpc_insert_message`.
-- Smoke test via `supabase--curl_edge_functions` para `rpc_list_conversations({instance:'wpp2', limit:50})` confirmar retorno.
-- Garantir que `useRealtimeInbox` assina os canais `evolution_messages` e `evolution_contacts` via `externalClient` (quando configurado) **ou** via polling cursor-forward já existente (`useMessagesCursor`) quando não.
+**Bloco 2 — Catálogo**
+- Lista hardcoded das tabelas `evolution_*` conhecidas (do project-knowledge), agrupada por categoria (Operacional, Pipeline, Automação, Webhook, Config).
+- Para cada uma: faz `action: 'select'`, `select: 'id'`, `limit: 1`, `countMode: 'exact'` ao montar → exibe contagem real.
+- Card clicável → preenche bloco 3 e dá scroll.
 
-### 4. Inbox UI por atendente
-Já existente, apenas validar funcionando após fix:
-- **Lista de conversas** (`ConversationListSidebar`) com filtro por `assigned_to = userEmail` (sticky agent).
-- **Mensagens + status** (`ChatMessageBubble` + `useMessageStatus`) com sent/delivered/read/played.
-- **Histórico do atendente** (`ConversationHistory` + abas Atendendo/Aguardando/Resolvidos do `inbox/navigation-and-ticket-tabs`).
-- **Reatribuição** (`AgentReassignmentPanel`) usando `rpc_upsert_contact` com `assigned_to`.
+**Bloco 3 — Explorador**
+- **Modo SELECT**: dropdown com tabelas conhecidas, input numérico de `limit` (1–50, default 10), construtor de filtros simples `[coluna] [op: eq/ilike/gt/lt] [valor]` (até 5).
+- **Modo RPC**: dropdown com as 27 RPCs do catálogo (`rpc_list_messages`, `rpc_get_contact`, `rpc_dashboard_home`, …) + editor JSON para params, com placeholder do shape esperado por RPC.
+- Botão "Executar" → POST `external-db-proxy` via `supabase.functions.invoke('external-db-proxy', { body })`.
+- Resultado: tabela densa (até 50 linhas) com colunas dinâmicas; campos jsonb mostrados truncados com expandir; botão "Copiar JSON" e "Baixar JSON".
+- Footer permanente com `status`, `ms` (do `Server-Timing`), `count`, `cid`, `rid` para rastreio em logs.
 
-### 5. Painel de status de sync
-- Verificar `AdminInboxSyncStatusPage` mostra `v_webhook_health` + last sync timestamp para o operador validar.
+### Guard-rails
+- `limit` máx 50 no UI (proxy bloqueia >100 em heavy tables sem filtro narrow).
+- Bloquear `action: 'insert'/'update'` — esta tela é **read-only**.
+- Erros do proxy (cls 400/502/timeout) renderizados em alert vermelho com `detail` + cid para colar nos logs.
+- Toda chamada loga via `getLogger('AdminExternalDbExplorer')` com `cid`/`rid`.
 
-## Arquivos que devo tocar
+### Arquivos a criar/editar
 
-- `src/integrations/supabase/externalClient.ts` — tornar tolerante a env ausente.
-- `src/hooks/useExternalEvolution.ts` — confirmar 100% via `queryExternalProxy`; remover qualquer `getExternalSupabase()` direto.
-- `src/hooks/useRealtimeInbox.ts` — guardar realtime subscribe atrás de `isExternalConfigured`.
-- `supabase/functions/external-db-proxy/index.ts` — verificar allowlist das RPCs.
-- (opcional) `src/pages/admin/AdminInboxSyncStatusPage.tsx` — banner amarelo quando env do FATOR X faltar.
+Novos:
+- `src/pages/admin/AdminExternalDbExplorerPage.tsx` (composição)
+- `src/pages/admin/external-db-explorer/HealthCheckBlock.tsx`
+- `src/pages/admin/external-db-explorer/TableCatalogBlock.tsx`
+- `src/pages/admin/external-db-explorer/QueryExplorerBlock.tsx`
+- `src/pages/admin/external-db-explorer/catalog.ts` (lista de tabelas + RPCs com shape de params)
+- `src/hooks/useExternalDbProxy.ts` (wrapper único sobre `supabase.functions.invoke('external-db-proxy', …)` retornando `{data, error, ms, cid, rid, status}`)
+- `src/hooks/__tests__/useExternalDbProxy.test.ts`
 
-## Validação
+Editados:
+- `src/App.tsx` — registrar rota lazy `/admin/external-db-explorer` com gate `admin|dev`.
+- `src/components/sidebar/sidebarNavConfig.ts` — entrada admin.
 
-1. Recarregar `/inbox` — não deve haver mais `Uncaught Error: External Supabase is not configured`.
-2. Conversas listam via `rpc_list_conversations`.
-3. Abrir um chat → mensagens carregam via `rpc_list_messages` com cursor.
-4. Status sent/delivered/read aparece nos balões.
-5. `AdminInboxSyncStatusPage` mostra última sync e webhook health verde.
+### Stack
+- React Query para cache (`staleTime: 30s`) das contagens do catálogo.
+- shadcn `Card`, `Table`, `Tabs`, `Select`, `Button`, `Badge`, `Alert`, `Collapsible`.
+- `react-json-view-lite` (já presente no projeto se houver; senão `<pre>` com `JSON.stringify(…, null, 2)`).
+- Logger `src/lib/logger.ts`.
 
-## Pergunta operacional (não bloqueia o plano)
-
-Após a correção de código, vou precisar que você forneça (ou confirme já estarem cadastradas em Lovable Cloud) as variáveis `VITE_EXTERNAL_SUPABASE_URL=https://tdprnylgyrogbbhgdoik.supabase.co` e `VITE_EXTERNAL_SUPABASE_ANON_KEY=<anon do FATOR X>` para o realtime subscribe funcionar 100%. Sem elas o sistema funciona via proxy (polling), mas perde realtime push.
+### Não incluído (fora de escopo)
+- Não cria RPC nova no FATOR X (proxy não aceita SQL bruto — usa só catálogo existente).
+- Sem mutation/insert/update.
+- Sem listagem dinâmica via `information_schema` (não existe RPC para isso hoje; catálogo é estático).
