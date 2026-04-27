@@ -261,7 +261,7 @@ export function ChatMessageBubble({
           {/* Image message */}
           {message.type === 'image' && message.mediaUrl && (
             <div className="mb-2 rounded-lg overflow-hidden">
-              <MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} />
+              <MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} referrerPolicy="no-referrer" />
             </div>
           )}
 
