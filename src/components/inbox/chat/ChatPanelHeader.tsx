@@ -68,7 +68,13 @@ export function ChatPanelHeader({
         )}
         <div className="relative shrink-0">
           <Avatar className="w-9 h-9 md:w-10 md:h-10">
-            <AvatarImage src={avatarUrl || undefined} referrerPolicy="no-referrer" />
+            <AvatarImage 
+              src={avatarUrl || undefined} 
+              referrerPolicy="no-referrer" 
+              onError={(e) => {
+                (e.target as HTMLImageElement).removeAttribute('src');
+              }}
+            />
             <AvatarFallback className="bg-primary/15 text-primary font-semibold text-sm">
               {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
             </AvatarFallback>
