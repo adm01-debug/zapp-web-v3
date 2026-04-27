@@ -84,6 +84,8 @@ export function GlobalSettingsSection() {
           </div>
         ))}
 
+        <WhatsAppModeSetting />
+
         <div className="p-3 rounded-lg border border-border/20 space-y-2">
           <div className="flex items-center gap-2">
             <RotateCcw className="w-4 h-4 text-muted-foreground" />
