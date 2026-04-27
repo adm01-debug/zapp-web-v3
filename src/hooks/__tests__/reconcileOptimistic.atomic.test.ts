@@ -155,11 +155,12 @@ describe('playerStateStore — migração atômica', () => {
 
   it('preserva estado mais novo no destino se já existir', () => {
     playerStateStore.set('opt', { currentTime: 5 });
-    // Sleep simulado: força updatedAt diferente
-    const newer = { currentTime: 10, paused: false, playbackRate: 1, updatedAt: Date.now() + 10_000 };
-    // @ts-expect-error injeta diretamente para forçar updatedAt no futuro
-    (playerStateStore as { _internal?: Map<string, unknown> }); // ts-noop
-    playerStateStore.set('real', newer);
+    // Força destino com updatedAt no futuro para garantir que `migrate`
+    // não sobrescreva um estado mais novo.
+    const future = Date.now() + 10_000;
+    playerStateStore.set('real', { currentTime: 10, paused: false, playbackRate: 1 });
+    const newer = playerStateStore.get('real');
+    if (newer) (newer as { updatedAt: number }).updatedAt = future;
     playerStateStore.migrate('opt', 'real');
     // O destino tinha updatedAt no futuro — preserva o estado mais novo.
     expect(playerStateStore.get('real')?.currentTime).toBe(10);
