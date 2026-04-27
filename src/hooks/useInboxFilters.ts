@@ -166,7 +166,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         if (!isOpenOrProgress) return false;
 
         if (subTab === 'attending') {
-          if (showAll || searchTrimmed.length > 0) return true;
+          if (showAll) return true;
           return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
         } 
         
