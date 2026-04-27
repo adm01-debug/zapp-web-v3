@@ -155,6 +155,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'realtime-monitor', icon: Activity, label: 'Monitor em Tempo Real', requiredRoles: ['supervisor'] },
   { id: 'dispatch-errors-history', icon: ScrollText, label: 'Histórico Erros Dispatch', requiredRoles: ['supervisor'] },
   { id: 'inbox-sync-status', icon: Activity, label: 'Status do Inbox', requiredRoles: ['supervisor'] },
+  { id: 'evo-api-health', icon: HeartPulse, label: 'Evo API Health', requiredRoles: ['admin'] },
 ] as const;
 
 // ── Backward-compat re-exports ────────────────────────────
