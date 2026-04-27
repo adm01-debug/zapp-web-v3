@@ -206,6 +206,7 @@ function AppContent() {
             <Route path="/admin/automations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationsPage /></ProtectedRoute>} />
             <Route path="/admin/automations/logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationLogsPage /></ProtectedRoute>} />
             <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
+            <Route path="/admin/settings/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
