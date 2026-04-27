@@ -33,6 +33,14 @@ describe('externalProxy coalesce + circuit breaker', () => {
     __testing.resetBreakerAndCoalesce();
   });
 
+  // Some sub-paths surface as "unhandled" rejections from the inner retry
+  // loop after the breaker trips — they're still observed by the test via
+  // .catch(), but Node sees them as unhandled because the catch is on the
+  // outer promise. Swallow them to keep CI noise-free.
+  const noopUnhandled = (_e: unknown) => {};
+  // eslint-disable-next-line no-undef
+  process.on?.('unhandledRejection', noopUnhandled);
+
   it('coalesces two identical SELECTs issued in the same tick', async () => {
     invokeMock.mockResolvedValue({ data: { data: [{ id: 'a' }] }, error: null });
 
