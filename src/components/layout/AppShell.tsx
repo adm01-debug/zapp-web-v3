@@ -116,6 +116,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
       <RouteLoadingBar isLoading={loading} />
       <FailedMessageAlertsMount />
       <AutomationFailureAlertsMount />
+      <IntegrationMigrationMount />
 
       {/* Skip to content — a11y */}
       <a
