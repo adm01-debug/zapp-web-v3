@@ -262,6 +262,7 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey, conversationId
     audioRef, resolvedUrl, isPlaying, isLoading, hasError,
     playbackRate, progress, duration, currentTime, waveformHeights,
     volume, setVolume,
+    hasConversationOverride, promoteVolumeToGlobal, resetConversationVolume,
     togglePlay, handleSeek, cycleSpeed, formatTime, resolveAudioUrl,
   };
 }
