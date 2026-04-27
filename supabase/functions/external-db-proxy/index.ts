@@ -694,6 +694,13 @@ async function handler(req: Request): Promise<Response> {
     ))
 
     if (queryError) {
+      if (isSchemaNotExposed(queryError)) {
+        return finish(
+          new Response(JSON.stringify({ data: null, count: 0, cid, rid, schema_unavailable: true, schema: requestedSchema }), { headers: jsonHeaders }),
+          'select',
+          { table, schema_unavailable: true },
+        )
+      }
       return finish(
         new Response(JSON.stringify(errorBody(cid, rid, queryError)), {
           status: cls.status, headers: jsonHeaders,
