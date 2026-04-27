@@ -13,6 +13,7 @@ import { SidebarNavItem } from './SidebarNavItem';
 import { SidebarNavGroup } from './SidebarNavGroup';
 import { AgentProfilePopover } from './AgentProfilePopover';
 import { primaryNav, sidebarGroups, communicationNav, automationNav, salesNav, connectionsNav, analyticsNav, systemNav, advancedNav } from './sidebarNavConfig';
+import { useEvoApiAlertsBadge } from '@/lib/evoApiHealth/useEvoApiAlertsBadge';
 
 interface SidebarProps {
   currentView: string;
@@ -29,9 +30,24 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
   const [statusOpen, setStatusOpen] = useState(false);
   const { collapsed, toggle } = useSidebarCollapse();
   const { favorites, toggleFavorite, isFavorite } = useSidebarFavorites();
+  const evoBadge = useEvoApiAlertsBadge();
 
   const allNavItems = [...communicationNav, ...automationNav, ...salesNav, ...connectionsNav, ...analyticsNav, ...systemNav, ...advancedNav];
   const favoriteItems = favorites.map(id => allNavItems.find(item => item.id === id)).filter(Boolean) as typeof allNavItems;
+
+  // Per-group dynamic badges (currently: Sistema → evo-api-health alerts)
+  const groupBadges: Record<string, Record<string, { count: number; variant?: 'destructive' | 'warning' | 'info'; title?: string }>> = {
+    Sistema: {
+      'evo-api-health':
+        evoBadge.topSeverity
+          ? {
+              count: evoBadge.total,
+              variant: evoBadge.topSeverity === 'critical' ? 'destructive' : evoBadge.topSeverity === 'warning' ? 'warning' : 'info',
+              title: `${evoBadge.critical} críticos · ${evoBadge.warning} warnings · ${evoBadge.info} info`,
+            }
+          : { count: 0 },
+    },
+  };
 
   return (
     <aside id="main-navigation" role="navigation" aria-label="Menu de navegação principal"
@@ -99,7 +115,7 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
       {/* Groups */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scroll-smooth [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-primary/50">
         <div className={cn('flex flex-col gap-1.5 py-1', collapsed ? 'items-center px-[11px]' : 'px-2')}>
-          {sidebarGroups.map((group) => <SidebarNavGroup key={group.label} label={group.label} icon={group.icon} items={group.items} currentView={currentView} onViewChange={onViewChange} collapsed={collapsed} onToggleFavorite={toggleFavorite} isFavorite={isFavorite} />)}
+          {sidebarGroups.map((group) => <SidebarNavGroup key={group.label} label={group.label} icon={group.icon} items={group.items} currentView={currentView} onViewChange={onViewChange} collapsed={collapsed} onToggleFavorite={toggleFavorite} isFavorite={isFavorite} badgeMap={groupBadges[group.label]} />)}
         </div>
       </div>
 
