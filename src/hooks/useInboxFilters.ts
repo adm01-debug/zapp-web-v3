@@ -24,15 +24,15 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
   const [showOnlyRetrying, setShowOnlyRetrying] = useState(false);
   const [failureCategoryFilter, setFailureCategoryFilter] = useState<FailureCategory | 'all'>('all');
 
+  const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
+
   // Carrega categorias de falha em lote quando o filtro de retry está ativo
   const { data: failureCategoryById = {} } = useFailureMetricsBatch(
     conversations,
     showOnlyRetrying,
   );
 
-  const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
-
-  // Sync selectedContactType and Failure Filters with URL
+  // Sync state with URL on mount only
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     
@@ -59,12 +59,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
   const handleContactTypeChange = useCallback((value: string | null) => {
     setSelectedContactType(value);
-    setUrlFilters({ 
-      // Usamos useUrlFilters se quisermos manter consistência, 
-      // ou manipulamos diretamente se for um param customizado.
-    } as any);
     
-    // Manual sync para parâmetros não mapeados no PARAM_KEYS do useUrlFilters
     const params = new URLSearchParams(window.location.search);
     if (value && value !== 'all') {
       params.set('type', value);
@@ -74,7 +69,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     window.history.replaceState(null, '', `?${params.toString()}${window.location.hash}`);
   }, []);
 
-  // Update URL when Failure filters change
+  // Sync URL when failure filters change
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     let changed = false;
