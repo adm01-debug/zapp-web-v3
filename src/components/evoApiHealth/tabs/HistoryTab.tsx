@@ -1,0 +1,49 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { HealthHistoryRow } from '@/lib/evoApiHealth/types';
+
+interface HistoryTabProps {
+  history?: HealthHistoryRow[];
+}
+
+export function HistoryTab({ history }: HistoryTabProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">
+          Últimas 24h (snapshot a cada 5min)
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[500px]">
+          <table className="w-full text-sm">
+            <thead className="text-left text-muted-foreground border-b">
+              <tr>
+                <th className="py-2 pr-3">Bucket</th>
+                <th className="py-2 pr-3">Inst. abertas</th>
+                <th className="py-2 pr-3">Pico msgs/5m</th>
+                <th className="py-2 pr-3">Lag médio</th>
+                <th className="py-2 pr-3">Lag máx</th>
+                <th className="py-2">OK?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history?.map((h, idx) => (
+                <tr key={idx} className="border-b border-border/50">
+                  <td className="py-1.5 pr-3 whitespace-nowrap">
+                    {new Date(h.bucket).toLocaleString('pt-BR')}
+                  </td>
+                  <td className="py-1.5 pr-3">{h.avg_instances_open}</td>
+                  <td className="py-1.5 pr-3">{h.peak_messages_5m}</td>
+                  <td className="py-1.5 pr-3">{h.avg_lag_sec}s</td>
+                  <td className="py-1.5 pr-3">{h.max_lag_sec}s</td>
+                  <td className="py-1.5">{h.all_ok ? '🟢' : '🔴'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
+}
