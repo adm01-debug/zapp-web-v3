@@ -19,6 +19,7 @@ import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
 import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
 import { playerStateStore } from '@/hooks/realtime/playerStateStore';
+import { recordMatch } from '@/hooks/realtime/reconciliationTelemetry';
 
 const log = getLogger('useExternalEvolution');
 
