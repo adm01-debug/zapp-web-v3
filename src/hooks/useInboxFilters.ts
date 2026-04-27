@@ -157,30 +157,42 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     };
     const searchTrimmed = (search || '').trim();
     // 1. Tab-based filtering
-    if (mainTab === 'open' && searchTrimmed.length === 0) {
-      result = result.filter(c => {
-        const s = statusOf(c.contact.id);
-        const isOpenOrProgress = s === 'open' || s === 'in_progress';
-        
-        if (!isOpenOrProgress) return false;
+    if (searchTrimmed.length === 0) {
+      if (mainTab === 'open') {
+        result = result.filter(c => {
+          const s = statusOf(c.contact.id);
+          const isOpenOrProgress = s === 'open' || s === 'in_progress';
+          
+          if (!isOpenOrProgress) return false;
 
-        if (subTab === 'attending') {
-          if (showAll) return true;
-          return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
-        } 
-        
-        if (subTab === 'waiting') {
-          return !assignedOf(c.contact.id, c.contact.assigned_to);
+          if (subTab === 'attending') {
+            if (showAll) return true;
+            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
+          } 
+          
+          if (subTab === 'waiting') {
+            return !assignedOf(c.contact.id, c.contact.assigned_to);
+          }
+
+          return true;
+        });
+
+        if (selectedQueueId) {
+          result = result.filter(c => c.contact.queue_id === selectedQueueId);
         }
-
-        return true;
-      });
-
-      if (selectedQueueId) {
-        result = result.filter(c => c.contact.queue_id === selectedQueueId);
+      } else if (mainTab === 'resolved') {
+        result = result.filter(c => statusOf(c.contact.id) === 'resolved');
       }
-    } else if (mainTab === 'resolved' && searchTrimmed.length === 0) {
-      result = result.filter(c => statusOf(c.contact.id) === 'resolved');
+    } else {
+      // Quando há busca, filtramos apenas por aberto/resolvido se não estiver na aba de busca
+      if (mainTab === 'open') {
+        result = result.filter(c => {
+          const s = statusOf(c.contact.id);
+          return s === 'open' || s === 'in_progress';
+        });
+      } else if (mainTab === 'resolved') {
+        result = result.filter(c => statusOf(c.contact.id) === 'resolved');
+      }
     }
 
     
