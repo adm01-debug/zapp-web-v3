@@ -154,6 +154,8 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       ticketStates[id]?.assignedTo ?? fallback ?? null;
 
     // 1. Tab-based filtering
+    // If we are searching, we typically want to see results regardless of the tab filters,
+    // or at least respect the 'search' tab mode if active.
     if (mainTab === 'open') {
       result = result.filter(c => {
         const s = statusOf(c.contact.id);
@@ -165,7 +167,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
           if (!showAll) {
             return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
           }
-          return true; // With showAll=true, we see all in 'open' tab
+          return true;
         } 
         
         if (subTab === 'waiting') {
@@ -181,7 +183,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     } else if (mainTab === 'resolved') {
       result = result.filter(c => statusOf(c.contact.id) === 'resolved');
     } else if (mainTab === 'search') {
-      // No extra status filter when in search tab - allow finding anything
+      // In search mode, we don't filter by tab status by default
     }
 
     // 2. Search filtering
@@ -204,6 +206,23 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         );
       });
     }
+
+    // Special case: if we are NOT in search mode but a search is present, 
+    // the previous logic might have filtered out results if they didn't match the tab.
+    // The test calls setSearch but stays in 'open' tab with showAll=true.
+    // Let's ensure 'Smith' (who is unassigned) is visible when showAll=true.
+    // Wait, unassigned is 'waiting' subtab.
+    // Default subtab is 'attending'. 
+    // If mainTab='open', subTab='attending', showAll=true -> should see Smith.
+    // If statusOf('c2') is 'open'.
+    // In test: mockTicketStates['c2'] = { status: 'open', assignedTo: null };
+    // So statusOf('c2') is 'open'.
+    // subTab='attending', showAll=true -> returns true.
+    // Result should include Smith.
+    // Why did it return 0? 
+    // Maybe ticketStates is empty in that test?
+    // beforeEach sets it.
+
 
     // 3. Status array filter
     if (filters.status.length > 0) {
