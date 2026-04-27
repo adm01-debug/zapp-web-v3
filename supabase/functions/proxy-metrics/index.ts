@@ -15,17 +15,24 @@
 // Output: text/plain; version=0.0.4 (Prometheus exposition format).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+import { getCorsHeaders, mergeCsvHeaderValues } from '../_shared/validation.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const SCRAPE_TOKEN = Deno.env.get('PROXY_METRICS_TOKEN') ?? ''
 
-const PROM_HEADERS = {
-  'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
-  'Cache-Control': 'no-store',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+function getPromHeaders(req?: Request) {
+  const shared = getCorsHeaders(req)
+  return {
+    ...shared,
+    'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
+    'Cache-Control': 'no-store',
+    'Access-Control-Allow-Headers': mergeCsvHeaderValues(
+      shared['Access-Control-Allow-Headers'],
+      'authorization, content-type',
+    ),
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  }
 }
 
 type MetricRow = {
@@ -195,23 +202,23 @@ function buildExposition(rows: MetricRow[], windowKey: WindowKey, generatedAtMs:
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: PROM_HEADERS })
+    return new Response('ok', { headers: getPromHeaders(req) })
   }
   if (req.method !== 'GET') {
-    return new Response('Method not allowed\n', { status: 405, headers: PROM_HEADERS })
+    return new Response('Method not allowed\n', { status: 405, headers: getPromHeaders(req) })
   }
 
   // Auth — fail-closed if no token configured.
   if (!SCRAPE_TOKEN) {
     return new Response(
       '# proxy-metrics: PROXY_METRICS_TOKEN secret is not configured.\n',
-      { status: 503, headers: PROM_HEADERS },
+      { status: 503, headers: getPromHeaders(req) },
     )
   }
   const auth = req.headers.get('Authorization') ?? ''
   const provided = auth.startsWith('Bearer ') ? auth.slice(7) : auth
   if (provided !== SCRAPE_TOKEN) {
-    return new Response('# unauthorized\n', { status: 401, headers: PROM_HEADERS })
+    return new Response('# unauthorized\n', { status: 401, headers: getPromHeaders(req) })
   }
 
   const url = new URL(req.url)
@@ -236,7 +243,7 @@ Deno.serve(async (req) => {
     if (error) {
       return new Response(
         `# error fetching proxy_metrics: ${error.message.replace(/\n/g, ' ')}\n`,
-        { status: 500, headers: PROM_HEADERS },
+        { status: 500, headers: getPromHeaders(req) },
       )
     }
     if (!data || data.length === 0) break
@@ -245,5 +252,5 @@ Deno.serve(async (req) => {
   }
 
   const body = buildExposition(rows, windowKey, Date.now())
-  return new Response(body, { status: 200, headers: PROM_HEADERS })
+  return new Response(body, { status: 200, headers: getPromHeaders(req) })
 })
