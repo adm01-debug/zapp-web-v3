@@ -236,7 +236,6 @@ async function executeProxyCall<T>(
   if (signal) invokeOptions.signal = signal;
 
   const startedAt = performance.now();
-  const meta = deriveTelemetryMeta(body as Record<string, unknown>);
 
   // Transient 503 retry: the Supabase Edge runtime occasionally fails to spin
   // up an isolate (cold start) and returns SUPABASE_EDGE_RUNTIME_ERROR /
