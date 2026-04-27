@@ -7,6 +7,7 @@ import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
 
 interface NewMessageIndicatorProps {
   show: boolean;
+  contactId?: string | null;
   contactName: string;
   contactAvatar?: string | null;
   message: string;
