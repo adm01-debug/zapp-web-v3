@@ -20,15 +20,32 @@ import {
   invalidateWhatsAppModeCache,
 } from "../whatsappAdapter";
 
-function setMode(mode: "official" | "unofficial") {
+function setMode(mode: "official" | "unofficial", opts?: { cloudCreds?: "ok" | "missing" }) {
   invalidateWhatsAppModeCache();
   rpcMock.mockResolvedValue({ data: mode, error: null });
+  const credsOk = (opts?.cloudCreds ?? "ok") === "ok";
+  // Quando o adapter pergunta status dos secrets do Cloud, retorna config solicitada.
+  invokeMock.mockImplementation((fn: string) => {
+    if (fn === "whatsapp-cloud-secrets-status") {
+      return Promise.resolve({
+        data: {
+          secrets: [
+            { name: "WHATSAPP_CLOUD_PHONE_NUMBER_ID", configured: credsOk, length: credsOk ? 16 : 0 },
+            { name: "WHATSAPP_CLOUD_ACCESS_TOKEN", configured: credsOk, length: credsOk ? 200 : 0 },
+            { name: "WHATSAPP_CLOUD_WEBHOOK_VERIFY_TOKEN", configured: credsOk, length: credsOk ? 36 : 0 },
+            { name: "WHATSAPP_CLOUD_APP_SECRET", configured: credsOk, length: credsOk ? 32 : 0 },
+          ],
+        },
+        error: null,
+      });
+    }
+    return Promise.resolve({ data: { ok: true }, error: null });
+  });
 }
 
 beforeEach(() => {
   invokeMock.mockReset();
   rpcMock.mockReset();
-  invokeMock.mockResolvedValue({ data: { ok: true }, error: null });
 });
 
 describe("whatsappAdapter — roteamento por modo", () => {
@@ -45,10 +62,20 @@ describe("whatsappAdapter — roteamento por modo", () => {
   it("sendText em modo official → whatsapp-cloud-send", async () => {
     setMode("official");
     await sendText({ remoteJid: "5511988887777@s.whatsapp.net", text: "oi" });
-    const [fn, opts] = invokeMock.mock.calls[0];
-    expect(fn).toBe("whatsapp-cloud-send");
-    expect(opts.body.type).toBe("text");
-    expect(opts.body.to).toBe("5511988887777");
+    const sendCall = invokeMock.mock.calls.find(([fn]) => fn === "whatsapp-cloud-send");
+    expect(sendCall).toBeDefined();
+    expect(sendCall![1].body.type).toBe("text");
+    expect(sendCall![1].body.to).toBe("5511988887777");
+  });
+
+  it("sendText em modo official com secrets faltando → fallback evolution", async () => {
+    setMode("official", { cloudCreds: "missing" });
+    await sendText({ remoteJid: "5511988887777@s.whatsapp.net", text: "oi" });
+    const sendCall = invokeMock.mock.calls.find(([fn]) => fn === "evolution-api");
+    expect(sendCall).toBeDefined();
+    expect(sendCall![1].body.action).toBe("send-text");
+    // Não deve ter ido para o cloud
+    expect(invokeMock.mock.calls.some(([fn]) => fn === "whatsapp-cloud-send")).toBe(false);
   });
 
   it("sendMedia normaliza filename/mimetype para evolution", async () => {
@@ -85,7 +112,7 @@ describe("whatsappAdapter — roteamento por modo", () => {
   it("sendPresence é no-op no modo official (skipped)", async () => {
     setMode("official");
     const r = await sendPresence({ remoteJid: "x@s.whatsapp.net", presence: "composing" });
-    expect(invokeMock).not.toHaveBeenCalled();
+    expect(invokeMock.mock.calls.some(([fn]) => fn === "evolution-api" || fn === "whatsapp-cloud-send")).toBe(false);
     expect(r).toMatchObject({ skipped: true });
   });
 
