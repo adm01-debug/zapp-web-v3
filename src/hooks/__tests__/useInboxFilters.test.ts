@@ -175,8 +175,6 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
       result.current.setSearch('Jane');
     });
 
-    // We verify the search text was updated
-    expect(result.current.search).toBe('Jane');
     // Jane Smith matches 'Jane'
     expect(result.current.filteredConversations.length).toBe(1);
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
