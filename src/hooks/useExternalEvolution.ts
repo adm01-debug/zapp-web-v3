@@ -133,6 +133,12 @@ export function reconcileOptimistic(
         patch.status = promoted.status;
         patch.status_updated_at = promoted.status_updated_at;
         if (!can.media_url && m.media_url) patch.media_url = m.media_url;
+        recordMatch({
+          strategy: 'external_id',
+          messageType: m.message_type,
+          optimisticId: m.id,
+          canonicalId: can.id,
+        });
       }
       return false;
     }
@@ -156,6 +162,13 @@ export function reconcileOptimistic(
         patch.status = promoted.status;
         patch.status_updated_at = promoted.status_updated_at;
         if (!match.media_url && m.media_url) patch.media_url = m.media_url;
+        recordMatch({
+          strategy: 'media_fallback',
+          messageType: m.message_type,
+          optimisticId: m.id,
+          canonicalId: match.id,
+          deltaMs: Math.abs(new Date(match.created_at).getTime() - optTime),
+        });
         return false;
       }
       return true;
@@ -174,6 +187,13 @@ export function reconcileOptimistic(
       const promoted = promoteStatus(m, match);
       patch.status = promoted.status;
       patch.status_updated_at = promoted.status_updated_at;
+      recordMatch({
+        strategy: 'text_fallback',
+        messageType: m.message_type,
+        optimisticId: m.id,
+        canonicalId: match.id,
+        deltaMs: Math.abs(new Date(match.created_at).getTime() - optTime),
+      });
       return false;
     }
     return true;
