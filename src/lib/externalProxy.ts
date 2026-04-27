@@ -305,11 +305,27 @@ async function executeProxyCall<T>(
       const attemptDurationMs = Math.round(performance.now() - attemptStartedAt);
 
       const ok = !error;
-      const transient = error ? isTransientRuntimeError(error) : false;
+      // "Ghost POST": OPTIONS preflight succeeded but the POST never reached
+      // the edge runtime. Surface as `errorName: FunctionsFetchError` with
+      // status === undefined. We treat these as transient (worth retrying)
+      // AND count them toward the circuit breaker.
+      const isGhostPost = !ok
+        && (error?.name === 'FunctionsFetchError' || /Failed to send a request/i.test(error?.message ?? ''))
+        && error?.status === undefined;
+      const transient = error ? (isTransientRuntimeError(error) || isGhostPost) : false;
       if (transient) transientCount += 1;
+      if (isGhostPost) recordBreakerFailure(meta.target);
+      if (ok) recordBreakerSuccess(meta.target);
+
       const isAbort = error?.name === 'AbortError';
       const willRetry = !ok && !isAbort && transient && attempt < MAX_ATTEMPTS;
-      const backoffMs = willRetry ? (attempt === 1 ? 150 : 400) : 0;
+      // Exponential backoff with jitter — fixed short delays were piling
+      // retries on top of the original stampede. Range per attempt:
+      //   attempt 1 → 200..300ms
+      //   attempt 2 → 400..600ms
+      //   attempt 3 → 800..1200ms
+      const backoffBase = 200 * Math.pow(2, attempt - 1);
+      const backoffMs = willRetry ? backoffBase + Math.floor(Math.random() * (backoffBase * 0.5)) : 0;
 
       const attemptMeta = {
         cid: correlationId,
@@ -323,6 +339,7 @@ async function executeProxyCall<T>(
         errorMessage: error?.message,
         status: error?.status,
         transient,
+        ghostPost: isGhostPost,
         willRetry,
         backoffMs,
       };
