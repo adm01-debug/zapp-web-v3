@@ -52,7 +52,10 @@ function isTransient(err: unknown): boolean {
     const anyErr = err as { status?: number; message?: string };
     if (anyErr.status && anyErr.status >= 500) return true;
     if (anyErr.status === 429) return true;
-    if (anyErr.message) return TRANSIENT_PATTERNS.some((p) => anyErr.message!.toLowerCase().includes(p));
+    if (anyErr.message) {
+      const msg = anyErr.message.toLowerCase();
+      return TRANSIENT_PATTERNS.some((p) => msg.includes(p));
+    }
   }
   return false;
 }
