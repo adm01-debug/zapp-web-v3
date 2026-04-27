@@ -160,7 +160,6 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
 
     act(() => {
       result.current.setShowAll(true);
-      result.current.setMainTab('search');
       result.current.setSearch('Smith');
     });
 
