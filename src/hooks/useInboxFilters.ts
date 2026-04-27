@@ -171,7 +171,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         } 
         
         if (subTab === 'waiting') {
-          if (searchTrimmed.length > 0) return true;
+          // No bypass needed here since we are in searchTrimmed.length === 0 branch
           return !assignedOf(c.contact.id, c.contact.assigned_to);
         }
 
