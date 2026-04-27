@@ -40,19 +40,15 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   let parsed: unknown = null;
   try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
   if (!res.ok) {
-    const errObj = parsed as (ProxyErr & { code?: string }) | null;
-    const msg = errObj?.error ?? `HTTP ${res.status}`;
-    // PGRST106: schema not exposed via PostgREST on FATOR X.
-    // Treat as "feature not provisioned" → return empty payload instead of
-    // throwing, so the dashboard renders an empty state instead of blank-screening.
-    if (errObj?.code === 'PGRST106' || /Invalid schema:\s*evo_api/i.test(msg)) {
-      // eslint-disable-next-line no-console
-      console.warn('[evoApi] schema "evo_api" not exposed on FATOR X PostgREST. Returning empty result.');
-      return (null as unknown) as T;
-    }
-    throw new Error(msg);
+    const errObj = parsed as ProxyErr | null;
+    throw new Error(errObj?.error ?? `HTTP ${res.status}`);
   }
-  return ((parsed as ProxyOk<T>)?.data ?? null) as T;
+  // schema_unavailable: edge function returns 200 + data:null when the
+  // `evo_api` schema isn't exposed in PostgREST. Surface as null so the
+  // dashboard renders the "schema not exposed" banner instead of erroring.
+  const ok = parsed as (ProxyOk<T> & { schema_unavailable?: boolean }) | null;
+  if (ok?.schema_unavailable) return (null as unknown) as T;
+  return (ok?.data ?? null) as T;
 }
 
 export const evoApi = {
