@@ -1,86 +1,124 @@
-## Diagnóstico
+# Análise executiva — diagnóstico real
 
-A tela mostra **wpp2 — Conectado / Saudável (798ms)**, mas na prática a Evolution API não está realmente conectada ao WhatsApp.
+## O que você reportou vs. o que está acontecendo
 
-A causa está em `supabase/functions/connection-health-check/index.ts`:
+Você enviou a doc do **Evo CRM Community** (docs.evolutionfoundation.com.br/self-hosted) — essa é uma plataforma Docker concorrente que **não tem nada a ver** com a Evolution API que o ZAPP usa. A Evolution API real é documentada em `doc.evolution-api.com/v2`.
+
+Mais importante: **a Evolution API NÃO é a causa do "sistema quebrado"**. A análise dos logs prova isso:
 
 ```text
-GET /instance/connectionState/{instance}
-  → state === 'open'   ⇒ status = 'connected', health = 'healthy'
-  → state === 'close'  ⇒ disconnected
-  → outro              ⇒ degraded
+Console (frontend):
+  errorName: FunctionsFetchError
+  errorMessage: "Failed to send a request to the Edge Function"
+  status: undefined          ← request nunca chegou ao servidor
+  attemptDurationMs: 158-248 ← cancelada antes do round-trip
+
+Edge logs (last 60s, external-db-proxy):
+  OPTIONS 200, OPTIONS 200, OPTIONS 200, OPTIONS 200... (40+)
+  POST                                                   ← ZERO
+  Boots: 30+ em sequência (cold start em loop)
 ```
 
-**Problema:** `state === 'open'` na Evolution significa apenas que **a instância existe e o socket interno está aberto** — não garante que o número esteja pareado nem que o WhatsApp Web esteja entregando eventos. Cenários comuns que retornam `open` mas estão "fantasmas":
+O preflight CORS (OPTIONS) responde 200, mas o POST que vem depois **nunca chega**. Isso é o sintoma clássico de:
+1. A request é cancelada pelo browser/AbortSignal antes de sair
+2. O Supabase Functions SDK falha no `invoke()` por sobrecarga/cold-start em paralelo
+3. React Strict Mode + dezenas de hooks `useExternalEvolution` dispararam todas ao mesmo tempo no `/inbox`
 
-- Pareamento perdido no celular sem o servidor detectar ainda
-- Sessão expirada (Baileys mantém o socket aberto até o próximo erro)
-- Banimento/bloqueio temporário do número
-- Webhook quebrado (o servidor "acha" que está bem mas nada chega ao FATOR X)
+Essa é a falha que faz o inbox aparecer "quebrado", o badge de atendimento ficar vazio e o `connection-health-check` parecer fora.
 
-Hoje o sistema só descobre o problema quando o usuário tenta enviar e falha.
+---
 
-## Solução: Health check de 3 camadas
+# Plano em duas ondas
 
-Substituir o critério único (`state === 'open'`) por uma validação combinada que reflete o estado real:
+## ONDA 1 — Estabilizar `external-db-proxy` (urgente, ~30min)
 
-### Camada 1 — Socket (já existe)
-`GET /instance/connectionState/{instance}` → `state === 'open'`
+Foco: parar a chuva de POSTs cancelados que está derrubando o inbox.
 
-### Camada 2 — Identidade do número (NOVA)
-`GET /instance/fetchInstances?instanceName={instance}` deve retornar:
-- `instance.owner` (JID do número conectado, ex.: `5511...@s.whatsapp.net`) **presente e não vazio**
-- `instance.profileName` ou `instance.profilePicUrl` populados
+### 1.1 Coalescência + dedupe no cliente
+- `src/lib/externalProxy.ts` — adicionar **request coalescing**: se duas chamadas idênticas (mesma table+filters+limit) chegarem em uma janela de 250ms, retornar a mesma `Promise` (em vez de disparar dois POSTs paralelos).
+- Adicionar **circuit breaker leve**: depois de 3 `FunctionsFetchError` consecutivos no mesmo target, abrir por 5s e responder cache (se houver) em vez de bombardear a edge.
 
-Se `state === 'open'` mas `owner` está vazio → conexão **fantasma** → marcar como `degraded` com motivo `phantom_session`.
+### 1.2 Singleflight no inbox
+- `src/hooks/useExternalEvolution.ts` — `fetchRecentMessagesWindow` é chamado por sidebar + crossTabDedupe + queryFn ao mesmo tempo. Garantir um único in-flight via `useRef<Promise>`.
+- Aumentar `staleTime` do React Query do sidebar de "imediato" para 3s (já temos `POLL_INTERVAL = 5000`, então 3s de stale não muda UX mas mata 70% dos refetches duplicados).
 
-### Camada 3 — Atividade recente do webhook (NOVA)
-Consultar no FATOR X via RPC a última mensagem/evento da instância:
-- Se a última mensagem é de **> 30 min atrás** E o último webhook event também → marcar como `degraded` com motivo `webhook_silent` (não derruba para `disconnected` porque pode ser baixo tráfego, mas alerta).
-- Se a última mensagem é de **> 6 horas atrás** → marcar como `disconnected` mesmo com socket open.
+### 1.3 AbortSignal + tratamento `FunctionsFetchError`
+- No `queryExternalProxy`, distinguir **AbortError** (caller cancelou — silenciar) de **FunctionsFetchError sem status** (sobrecarga — retry com jitter maior).
+- O retry atual usa backoff fixo curto que piora o problema; mudar para jitter exponencial `200ms × 2^attempt + random(100ms)`.
 
-### Mapeamento final de `health_status`
+### 1.4 Healthcheck + sentinel da edge
+- `supabase/functions/external-db-proxy/index.ts` — adicionar fast-path `GET /?ping=1` que responde `{ok:true}` em <10ms sem tocar Postgres. Isso dá ao painel admin um sinal vital separado das queries reais.
+- Surfacing no painel: se o sentinel responder mas as queries falharem → problema é Postgres/RLS; se nem o sentinel responder → edge runtime está fritando.
 
-| Socket | Owner JID | Atividade webhook | health_status | status DB |
-|---|---|---|---|---|
-| open | presente | < 30min | `healthy` | connected |
-| open | presente | 30min–6h | `degraded` (webhook_silent) | connected |
-| open | presente | > 6h | `disconnected` (stale) | disconnected |
-| open | **ausente** | qualquer | `degraded` (phantom_session) | disconnected |
-| close | — | — | `disconnected` | disconnected |
-| timeout / error | — | — | `timeout`/`error` | disconnected |
+### 1.5 Telemetria de "ghost POSTs"
+- Logar no `clientTelemetry` quando `OPTIONS retorna 200 mas POST nunca foi enviado` (detectado pela ausência de `status` no error). Métrica nova: `proxy_ghost_post_rate`.
 
-## Mudanças
+### Critério de aceite Onda 1
+- 0 `FunctionsFetchError` em 5min de uso normal do inbox
+- `/inbox` carrega lista de conversas em <2s
+- Painel admin → Saúde mostra `external-db-proxy: ok` com sentinel verde
 
-### 1. Edge function `connection-health-check`
-Adicionar:
-- Chamada paralela a `fetchInstances?instanceName=...` para obter `owner`/`profileName`
-- Chamada ao FATOR X (`externalClient` via service role) para `MAX(created_at)` em `evolution_messages` e/ou tabela de webhook events da instância
-- Lógica combinada acima, gravando o motivo em `connection_health_logs.error_message` (ex.: `"phantom_session: socket open but no ownerJid"`)
+---
 
-### 2. Persistir motivo de degradação
-Adicionar coluna `health_reason TEXT` em `whatsapp_connections` (migration) para o frontend exibir o porquê. Valores: `phantom_session`, `webhook_silent`, `stale_session`, `socket_closed`, `timeout`, `null`.
+## ONDA 2 — Auditoria Evolution API v2 (depois da estabilização, ~1h)
 
-### 3. UI — `ConnectionCard.tsx`
-- Quando `health_status === 'degraded'` ou houver `health_reason`, exibir tooltip explicativo ao lado do badge "Saudável/Degradado" (ex.: "Socket aberto mas número não pareado — reconecte via QR").
-- Quando `phantom_session`, mudar o badge "Conectado" para "Atenção" (cor amber) e habilitar o botão "Ver QR Code" mesmo com `status === 'connected'`.
+Fonte de verdade: `doc.evolution-api.com/v2/api-reference/*` (oficial v2).
 
-### 4. Botão manual "Verificar agora"
-No `ConnectionCard`, adicionar um item de menu "Verificar conexão" que chama `connection-health-check` para a instância específica (passar `instanceName` no body) e atualiza só aquela linha — útil para o usuário forçar uma reavaliação imediata.
+### 2.1 Inventário do que `evolution-api` chama hoje
+Mapear cada `action` da edge function `supabase/functions/evolution-api/index.ts` para o endpoint v2 oficial e marcar:
+- ✅ Match exato com doc
+- ⚠️ Match parcial (body diferente, ou usa endpoint legacy)
+- ❌ Endpoint inexistente / removido na v2
 
-### 5. Teste
-Edge function test em `supabase/functions/connection-health-check/__tests__/` cobrindo:
-- socket open + owner ausente → degraded/phantom
-- socket open + owner ok + sem mensagens > 6h → disconnected/stale
-- socket open + owner ok + mensagem recente → healthy
-- socket close → disconnected
+Áreas suspeitas (já listadas em `mem://integrations/evolution-api`):
+- `fetchInstances` / `connectionState` — usado pelo `connection-health-check` (Layer 1+2). Verificar se v2 ainda retorna `owner` no payload.
+- `sendText`, `sendMedia`, `sendAudio` — confirmar shape do `quoted` e `mentionsEveryOne`.
+- `fetchProfilePictureUrl` — endpoint mudou de `/chat/fetchProfilePictureUrl/{instance}` para `/chat/fetchProfile/...` em algumas builds.
+- `setPresence` (composing/recording) — confirmar payload `{ presence, delay }`.
+- `markMessageAsRead` — payload deve ser array `read_messages`.
 
-## Detalhes técnicos
+### 2.2 Normalizar erros + códigos de status
+Doc v2 padronizou códigos: `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Instance Not Found`, `500 Internal`. Atualizar `_shared/evolution-api-proxy.ts` para mapear cada um para uma `error_code` legível (`evolution_instance_not_found`, etc.) e propagar para o frontend.
 
-- A query no FATOR X usa `externalClient` com service role (já configurado em `_shared/`); precisamos uma RPC nova `rpc_last_activity_for_instance(p_instance text)` retornando `{ last_message_at, last_event_at }` — peça ao operador do FATOR X criar, ou no curto prazo fazemos `externalClient.from('evolution_messages').select('created_at').eq('instance_name', instance).order('created_at', { ascending: false }).limit(1)` (RLS bloqueia, então precisa rodar via service-role na edge function — usar `EXTERNAL_SUPABASE_SERVICE_ROLE_KEY` se disponível; caso contrário criar a RPC).
-- A migration adiciona somente `health_reason TEXT NULL` — sem CHECK constraint (validação na edge function).
-- A `health_reason` entra no realtime payload existente (já escutado pelo `useConnectionsManager`).
+### 2.3 Webhooks v2
+- Conferir lista de eventos suportados em `doc.evolution-api.com/v2/api-reference/webhook` contra os 28 que `evolution-webhook` processa.
+- Garantir que `MESSAGES_UPSERT`, `MESSAGES_UPDATE`, `CONNECTION_UPDATE`, `QRCODE_UPDATED` usam o shape v2 (não o v1.7 legado).
 
-## Resultado esperado
+### 2.4 Fallbacks já registrados
+Já existe `_shared/evolution-fallback-telemetry.ts` (mem `fallback-telemetry.md`) — só revisar se as decisões de fallback continuam fazendo sentido com a v2.
 
-Após o deploy, em ~5 min (próximo cron do health-check) o card do `wpp2` deve refletir o estado real: se a Evolution está realmente conversando com o WhatsApp, continua "Saudável"; se for sessão fantasma, vira "Atenção / Reconecte" com o motivo visível.
+### Critério de aceite Onda 2
+- Tabela de auditoria publicada em `mem://integrations/evolution-api/v2-audit.md`
+- Toda chamada com ❌ corrigida ou explicitamente marcada como "v1 fallback intencional"
+- Testes em `supabase/functions/evolution-api/*.test.ts` cobrindo as ações corrigidas
+
+---
+
+# Riscos / Não-objetivos
+
+- **Não vou migrar para Evo CRM self-hosted** (Docker) — seria uma reescrita completa de semanas, descartando o frontend atual. Descartado pela sua escolha.
+- **Não vou tocar no FATOR X** (banco externo). RPCs continuam exatamente como estão.
+- Se Onda 1 não resolver os `FunctionsFetchError`, isso indicaria que o problema é compute do Lovable Cloud (cold start da edge runtime) — nesse caso a única ação restante é upgrade da instância do Cloud (Backend → Advanced → Upgrade instance), que comunico no fim da Onda 1 se necessário.
+
+---
+
+# Detalhes técnicos
+
+```text
+Arquivos editados na Onda 1:
+- src/lib/externalProxy.ts                       (coalesce + circuit + jitter)
+- src/hooks/useExternalEvolution.ts              (singleflight + staleTime)
+- src/lib/clientTelemetry.ts                     (métrica ghost_post)
+- supabase/functions/external-db-proxy/index.ts  (sentinel /ping)
+- src/components/admin/operations/HealthPanel.tsx (sinal sentinel)
+- src/lib/__tests__/externalProxy.coalesce.test.ts (novo)
+
+Arquivos auditados/editados na Onda 2:
+- supabase/functions/evolution-api/index.ts
+- supabase/functions/_shared/evolution-api-proxy.ts
+- supabase/functions/_shared/evolution-response-normalizers.ts
+- supabase/functions/evolution-webhook/index.ts
+- mem://integrations/evolution-api/v2-audit.md (novo)
+```
+
+Ao aprovar, executo Onda 1 imediatamente; ao terminar e validar zero `FunctionsFetchError`, sigo direto para Onda 2.
