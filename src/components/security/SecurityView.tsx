@@ -23,7 +23,7 @@ import { useSecurityPushNotifications } from '@/hooks/useSecurityPushNotificatio
 export function SecurityView() {
   const { hasRole } = useUserRole();
   const isAdmin = hasRole('admin');
-  const isDev = hasRole('developer');
+  const isDev = hasRole('dev');
   const [activeTab, setActiveTab] = useState('overview');
   
   // Initialize security push notifications
