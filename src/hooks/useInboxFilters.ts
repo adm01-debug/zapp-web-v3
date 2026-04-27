@@ -181,7 +181,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       if (selectedQueueId) {
         result = result.filter(c => c.contact.queue_id === selectedQueueId);
       }
-    } else if (mainTab === 'resolved') {
+    } else if (mainTab === 'resolved' && searchTrimmed.length === 0) {
       result = result.filter(c => statusOf(c.contact.id) === 'resolved');
     } else if (mainTab === 'search') {
       // No filter by status when in search mode
