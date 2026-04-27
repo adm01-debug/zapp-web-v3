@@ -159,9 +159,6 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         const s = statusOf(c.contact.id);
         const isOpenOrProgress = s === 'open' || s === 'in_progress';
         
-        // If searching and showAll is on, we might want to bypass tab filtering
-        // to find contacts in other tabs, but current logic keeps them scoped.
-        // The test has setShowAll(true), but we are in mainTab='open' (default).
         if (!isOpenOrProgress) return false;
 
         if (subTab === 'attending') {
@@ -183,6 +180,8 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       }
     } else if (mainTab === 'resolved') {
       result = result.filter(c => statusOf(c.contact.id) === 'resolved');
+    } else if (mainTab === 'all') {
+      // No filter by status if on 'all' tab
     }
 
     // 2. Search filtering
