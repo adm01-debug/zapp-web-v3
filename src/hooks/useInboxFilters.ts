@@ -158,33 +158,32 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
     // 1. Tab-based filtering
     const searchTrimmed = (search || '').trim();
-    if (mainTab === 'open' && searchTrimmed.length === 0) {
-      result = result.filter(c => {
-        const s = statusOf(c.contact.id);
-        const isOpenOrProgress = s === 'open' || s === 'in_progress';
-        
-        if (!isOpenOrProgress) return false;
+    if (searchTrimmed.length === 0) {
+      if (mainTab === 'open') {
+        result = result.filter(c => {
+          const s = statusOf(c.contact.id);
+          const isOpenOrProgress = s === 'open' || s === 'in_progress';
+          
+          if (!isOpenOrProgress) return false;
 
-        if (subTab === 'attending') {
-          if (showAll) return true;
-          return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
-        } 
-        
-        if (subTab === 'waiting') {
-          // No bypass needed here since we are in searchTrimmed.length === 0 branch
-          return !assignedOf(c.contact.id, c.contact.assigned_to);
+          if (subTab === 'attending') {
+            if (showAll) return true;
+            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
+          } 
+          
+          if (subTab === 'waiting') {
+            return !assignedOf(c.contact.id, c.contact.assigned_to);
+          }
+
+          return true;
+        });
+
+        if (selectedQueueId) {
+          result = result.filter(c => c.contact.queue_id === selectedQueueId);
         }
-
-        return true;
-      });
-
-      if (selectedQueueId) {
-        result = result.filter(c => c.contact.queue_id === selectedQueueId);
+      } else if (mainTab === 'resolved') {
+        result = result.filter(c => statusOf(c.contact.id) === 'resolved');
       }
-    } else if (mainTab === 'resolved' && searchTrimmed.length === 0) {
-      result = result.filter(c => statusOf(c.contact.id) === 'resolved');
-    } else if (mainTab === 'search') {
-      // No filter by status when in search mode
     }
 
     // DEBUG: console.log('After Tab Filtering:', result.map(r => r.contact.name));
