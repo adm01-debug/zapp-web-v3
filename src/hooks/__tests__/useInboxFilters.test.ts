@@ -172,10 +172,10 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
 
     act(() => {
       result.current.setShowAll(true);
-      result.current.setSearch('Jane');
+      result.current.setSearch('Smith');
     });
 
-    // Jane Smith matches 'Jane'
+    // Jane Smith matches 'Smith'
     expect(result.current.filteredConversations.length).toBe(1);
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
