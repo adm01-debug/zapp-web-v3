@@ -13,10 +13,10 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? '';
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 const FN_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/external-db-proxy` : '';
 
-interface ProxyOk<T> { data: T; cid: string; rid: string }
+interface ProxyResponse<T> { data: T; cid: string; rid: string; schema_unavailable?: boolean }
 interface ProxyErr { error: string; cid?: string; rid?: string }
 
-async function call<T>(body: Record<string, unknown>): Promise<T> {
+export async function call<T>(body: Record<string, unknown>): Promise<{ data: T | null; schema_unavailable: boolean }> {
   if (!FN_URL) throw new Error('VITE_SUPABASE_URL missing');
   const cid = generateCorrelationId();
   let auth = `Bearer ${SUPABASE_ANON}`;
@@ -36,19 +36,21 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
     },
     body: JSON.stringify({ ...body, __cid: cid, schema: 'evo_api' }),
   });
+
   const text = await res.text();
-  let parsed: unknown = null;
+  let parsed: any = null;
   try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
+
   if (!res.ok) {
     const errObj = parsed as ProxyErr | null;
     throw new Error(errObj?.error ?? `HTTP ${res.status}`);
   }
-  // schema_unavailable: edge function returns 200 + data:null when the
-  // `evo_api` schema isn't exposed in PostgREST. Surface as null so the
-  // dashboard renders the "schema not exposed" banner instead of erroring.
-  const ok = parsed as (ProxyOk<T> & { schema_unavailable?: boolean }) | null;
-  if (ok?.schema_unavailable) return (null as unknown) as T;
-  return (ok?.data ?? null) as T;
+
+  const ok = parsed as ProxyResponse<T> | null;
+  return {
+    data: (ok?.data ?? null) as T | null,
+    schema_unavailable: !!ok?.schema_unavailable,
+  };
 }
 
 export const evoApi = {
