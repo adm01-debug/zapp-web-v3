@@ -1,3 +1,24 @@
+/**
+ * Serviço único de abstração WhatsApp.
+ *
+ * Toda parte do app que precisa enviar mensagens, mídia, reações ou consultar
+ * presença/status DEVE passar por este adapter. Ele inspeciona o modo ativo
+ * do workspace (`getWhatsAppMode`) e roteia para a edge function correta:
+ *
+ *   - `unofficial` → `evolution-api`        (proxy Evolution / Baileys)
+ *   - `official`   → `whatsapp-cloud-send`  (Graph API da Meta)
+ *
+ * Webhooks de **entrada** seguem a mesma divisão: `getActiveWebhookUrl()`
+ * devolve a URL que deve estar configurada no provedor para o modo atual.
+ *
+ * Decisões importantes:
+ *  - Cache de modo de 30s para evitar round-trip por chamada.
+ *  - Sticker, reação e localização caem em fallback de texto no modo Cloud
+ *    quando a Graph API ainda não suporta o tipo no template/janela 24h —
+ *    o serviço relata claramente em `error` em vez de quebrar silenciosamente.
+ *  - Templates só existem no modo oficial; chamada no modo Evolution lança
+ *    erro explícito para o caller orientar o usuário.
+ */
 import { supabase } from "@/integrations/supabase/client";
 
 export type WhatsAppMode = "official" | "unofficial";
@@ -9,11 +30,12 @@ export async function getWhatsAppMode(force = false): Promise<WhatsAppMode> {
   const now = Date.now();
   if (!force && cachedMode && now < cacheExpiresAt) return cachedMode;
   try {
+    // deno-lint-ignore no-explicit-any
     const { data, error } = await supabase.rpc("rpc_get_whatsapp_mode" as any);
     if (error) throw error;
     const mode = (data as string) === "official" ? "official" : "unofficial";
     cachedMode = mode;
-    cacheExpiresAt = now + 30_000; // 30s cache
+    cacheExpiresAt = now + 30_000;
     return mode;
   } catch (e) {
     console.warn("[whatsappAdapter] getWhatsAppMode fallback", e);
@@ -26,10 +48,16 @@ export function invalidateWhatsAppModeCache() {
   cacheExpiresAt = 0;
 }
 
+const DEFAULT_INSTANCE = "wpp2";
+
+// ----- Tipos ----------------------------------------------------------------
+
 export interface SendTextParams {
-  remoteJid: string; // e.g. 5511999999999@s.whatsapp.net
+  remoteJid: string;
   text: string;
   instance?: string;
+  quotedMessageId?: string;
+  mentions?: string[];
 }
 
 export interface SendMediaParams {
@@ -38,6 +66,44 @@ export interface SendMediaParams {
   type: "image" | "video" | "audio" | "document";
   caption?: string;
   filename?: string;
+  mimetype?: string;
+  instance?: string;
+}
+
+export interface SendAudioParams {
+  remoteJid: string;
+  audioUrl: string;
+  instance?: string;
+  ptt?: boolean;
+}
+
+export interface SendStickerParams {
+  remoteJid: string;
+  stickerUrl: string;
+  instance?: string;
+}
+
+export interface SendReactionParams {
+  remoteJid: string;
+  messageId: string;
+  reaction: string;
+  fromMe?: boolean;
+  instance?: string;
+}
+
+export interface SendLocationParams {
+  remoteJid: string;
+  latitude: number;
+  longitude: number;
+  name?: string;
+  address?: string;
+  instance?: string;
+}
+
+export interface SendContactParams {
+  remoteJid: string;
+  fullName: string;
+  phone: string;
   instance?: string;
 }
 
@@ -45,8 +111,23 @@ export interface SendTemplateParams {
   remoteJid: string;
   name: string;
   language?: string;
+  // deno-lint-ignore no-explicit-any
   components?: any[];
 }
+
+export interface PresenceParams {
+  remoteJid: string;
+  presence: "composing" | "paused" | "recording" | "available" | "unavailable";
+  instance?: string;
+}
+
+export interface MarkAsReadParams {
+  remoteJid: string;
+  messageIds: string[];
+  instance?: string;
+}
+
+// ----- Helpers --------------------------------------------------------------
 
 function jidToPhone(remoteJid: string): string {
   return String(remoteJid).split("@")[0].replace(/\D/g, "");
@@ -55,10 +136,11 @@ function jidToPhone(remoteJid: string): string {
 async function invokeCloud(body: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke(
     "whatsapp-cloud-send",
-    { body }
+    { body },
   );
   if (error) throw error;
   if (data && typeof data === "object" && "error" in data) {
+    // deno-lint-ignore no-explicit-any
     throw new Error((data as any).error ?? "cloud_send_failed");
   }
   return data;
@@ -72,6 +154,8 @@ async function invokeEvolution(action: string, body: Record<string, unknown>) {
   return data;
 }
 
+// ----- Envios ---------------------------------------------------------------
+
 export async function sendText(params: SendTextParams) {
   const mode = await getWhatsAppMode();
   if (mode === "official") {
@@ -81,10 +165,12 @@ export async function sendText(params: SendTextParams) {
       text: params.text,
     });
   }
-  return invokeEvolution("sendText", {
-    instance: params.instance ?? "wpp2",
+  return invokeEvolution("send-text", {
+    instanceName: params.instance ?? DEFAULT_INSTANCE,
     number: jidToPhone(params.remoteJid),
     text: params.text,
+    quoted: params.quotedMessageId ? { key: { id: params.quotedMessageId } } : undefined,
+    mentioned: params.mentions,
   });
 }
 
@@ -99,13 +185,107 @@ export async function sendMedia(params: SendMediaParams) {
       filename: params.filename,
     });
   }
-  return invokeEvolution("sendMedia", {
-    instance: params.instance ?? "wpp2",
+  return invokeEvolution("send-media", {
+    instanceName: params.instance ?? DEFAULT_INSTANCE,
     number: jidToPhone(params.remoteJid),
     mediaUrl: params.mediaUrl,
     mediaType: params.type,
+    mimetype: params.mimetype,
     caption: params.caption,
     fileName: params.filename,
+  });
+}
+
+export async function sendAudio(params: SendAudioParams) {
+  const mode = await getWhatsAppMode();
+  if (mode === "official") {
+    return invokeCloud({
+      to: jidToPhone(params.remoteJid),
+      type: "audio",
+      mediaUrl: params.audioUrl,
+    });
+  }
+  return invokeEvolution("send-audio", {
+    instanceName: params.instance ?? DEFAULT_INSTANCE,
+    number: jidToPhone(params.remoteJid),
+    audio: params.audioUrl,
+    ptt: params.ptt ?? true,
+  });
+}
+
+export async function sendSticker(params: SendStickerParams) {
+  const mode = await getWhatsAppMode();
+  if (mode === "official") {
+    // Cloud API trata sticker como mídia genérica
+    return invokeCloud({
+      to: jidToPhone(params.remoteJid),
+      type: "sticker",
+      mediaUrl: params.stickerUrl,
+    });
+  }
+  return invokeEvolution("send-sticker", {
+    instanceName: params.instance ?? DEFAULT_INSTANCE,
+    number: jidToPhone(params.remoteJid),
+    sticker: params.stickerUrl,
+  });
+}
+
+export async function sendReaction(params: SendReactionParams) {
+  const mode = await getWhatsAppMode();
+  if (mode === "official") {
+    return invokeCloud({
+      to: jidToPhone(params.remoteJid),
+      type: "reaction",
+      messageId: params.messageId,
+      emoji: params.reaction,
+    });
+  }
+  return invokeEvolution("send-reaction", {
+    instanceName: params.instance ?? DEFAULT_INSTANCE,
+    key: {
+      remoteJid: params.remoteJid,
+      id: params.messageId,
+      fromMe: params.fromMe ?? true,
+    },
+    reaction: params.reaction,
+  });
+}
+
+export async function sendLocation(params: SendLocationParams) {
+  const mode = await getWhatsAppMode();
+  if (mode === "official") {
+    return invokeCloud({
+      to: jidToPhone(params.remoteJid),
+      type: "location",
+      latitude: params.latitude,
+      longitude: params.longitude,
+      name: params.name,
+      address: params.address,
+    });
+  }
+  return invokeEvolution("send-location", {
+    instanceName: params.instance ?? DEFAULT_INSTANCE,
+    number: jidToPhone(params.remoteJid),
+    latitude: params.latitude,
+    longitude: params.longitude,
+    locationName: params.name,
+    locationAddress: params.address,
+  });
+}
+
+export async function sendContact(params: SendContactParams) {
+  const mode = await getWhatsAppMode();
+  if (mode === "official") {
+    return invokeCloud({
+      to: jidToPhone(params.remoteJid),
+      type: "contacts",
+      contacts: [{ name: { formatted_name: params.fullName }, phones: [{ phone: params.phone }] }],
+    });
+  }
+  return invokeEvolution("send-contact", {
+    instanceName: params.instance ?? DEFAULT_INSTANCE,
+    number: jidToPhone(params.remoteJid),
+    contact: [{ fullName: params.fullName, phoneNumber: params.phone }],
   });
 }
 
@@ -113,7 +293,7 @@ export async function sendTemplate(params: SendTemplateParams) {
   const mode = await getWhatsAppMode();
   if (mode !== "official") {
     throw new Error(
-      "Templates exigem modo oficial (Cloud API). Ative o modo oficial nas configurações."
+      "Templates exigem modo oficial (Cloud API). Ative o modo oficial nas configurações.",
     );
   }
   return invokeCloud({
@@ -127,10 +307,84 @@ export async function sendTemplate(params: SendTemplateParams) {
   });
 }
 
-/**
- * URL pública do webhook a configurar no painel Meta (somente leitura).
- */
-export function getCloudWebhookUrl(): string {
-  const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID ?? "";
-  return `https://${projectId}.supabase.co/functions/v1/whatsapp-cloud-webhook`;
+// ----- Sinais (presença / leitura) ------------------------------------------
+
+export async function sendPresence(params: PresenceParams) {
+  const mode = await getWhatsAppMode();
+  if (mode === "official") {
+    // Cloud API não expõe presença "composing" — no-op silencioso.
+    return { skipped: true, reason: "presence_unsupported_on_cloud_api" };
+  }
+  return invokeEvolution("send-presence", {
+    instanceName: params.instance ?? DEFAULT_INSTANCE,
+    number: jidToPhone(params.remoteJid),
+    presence: params.presence,
+  });
 }
+
+export async function markAsRead(params: MarkAsReadParams) {
+  const mode = await getWhatsAppMode();
+  if (mode === "official") {
+    return invokeCloud({
+      to: jidToPhone(params.remoteJid),
+      type: "read",
+      messageIds: params.messageIds,
+    });
+  }
+  return invokeEvolution("mark-as-read", {
+    instanceName: params.instance ?? DEFAULT_INSTANCE,
+    readMessages: params.messageIds.map((id) => ({
+      remoteJid: params.remoteJid,
+      id,
+      fromMe: false,
+    })),
+  });
+}
+
+// ----- Webhooks de entrada --------------------------------------------------
+
+function projectFunctionsBase(): string {
+  // deno-lint-ignore no-explicit-any
+  const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID ?? "";
+  return `https://${projectId}.supabase.co/functions/v1`;
+}
+
+/** URL pública do webhook Cloud API (Meta). */
+export function getCloudWebhookUrl(): string {
+  return `${projectFunctionsBase()}/whatsapp-cloud-webhook`;
+}
+
+/** URL pública do webhook Evolution (Baileys). */
+export function getEvolutionWebhookUrl(): string {
+  return `${projectFunctionsBase()}/evolution-webhook`;
+}
+
+/** URL que o provedor ativo deve chamar — escolhida pelo modo do workspace. */
+export async function getActiveWebhookUrl(): Promise<string> {
+  const mode = await getWhatsAppMode();
+  return mode === "official" ? getCloudWebhookUrl() : getEvolutionWebhookUrl();
+}
+
+// ----- Re-exports agrupados -------------------------------------------------
+
+/**
+ * Façade agrupada para quem prefere `whatsapp.sendText(...)` ao invés de
+ * importar as funções soltas. Use uma ou outra — comportamento idêntico.
+ */
+export const whatsapp = {
+  getMode: getWhatsAppMode,
+  invalidateModeCache: invalidateWhatsAppModeCache,
+  sendText,
+  sendMedia,
+  sendAudio,
+  sendSticker,
+  sendReaction,
+  sendLocation,
+  sendContact,
+  sendTemplate,
+  sendPresence,
+  markAsRead,
+  getActiveWebhookUrl,
+  getCloudWebhookUrl,
+  getEvolutionWebhookUrl,
+} as const;
