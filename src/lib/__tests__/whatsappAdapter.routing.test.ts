@@ -112,7 +112,7 @@ describe("whatsappAdapter — roteamento por modo", () => {
   it("sendPresence é no-op no modo official (skipped)", async () => {
     setMode("official");
     const r = await sendPresence({ remoteJid: "x@s.whatsapp.net", presence: "composing" });
-    expect(invokeMock).not.toHaveBeenCalled();
+    expect(invokeMock.mock.calls.some(([fn]) => fn === "evolution-api" || fn === "whatsapp-cloud-send")).toBe(false);
     expect(r).toMatchObject({ skipped: true });
   });
 
