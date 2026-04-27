@@ -112,7 +112,7 @@ export async function invokeEvolutionWithRetry<T = unknown>(
       if (instanceName) {
         const decision = canCall(instanceName);
         if (!decision.allowed) {
-          throw new CircuitOpenError(instanceName, decision.retryAfterMs);
+          throw new CircuitOpenError(instanceName, decision.retryAfterMs ?? 0);
         }
       }
 

@@ -123,10 +123,16 @@ function getEntry(instance: string): BreakerEntry {
  * Returns `{ allowed: true }` when the call may proceed, or
  * `{ allowed: false, retryAfterMs }` when the circuit is OPEN.
  */
+export type CanCallResult = {
+  allowed: boolean;
+  state: CircuitState;
+  retryAfterMs?: number;
+};
+
 export function canCall(
   instance: string,
   cfg: CircuitBreakerConfig = DEFAULT_BREAKER_CONFIG,
-): { allowed: true; state: CircuitState } | { allowed: false; retryAfterMs: number; state: CircuitState } {
+): CanCallResult {
   const e = getEntry(instance);
   if (e.state === 'OPEN') {
     const remaining = e.openUntil - now();
