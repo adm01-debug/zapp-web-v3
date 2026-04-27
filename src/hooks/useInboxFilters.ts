@@ -165,13 +165,16 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         if (!isOpenOrProgress) return false;
 
         if (subTab === 'attending') {
-          // If we are searching and showAll is on, we skip the assignment check
+          // If we are searching or showAll is on, we skip the assignment check
           const searchTrimmed = (search || '').trim();
-          if (showAll || searchTrimmed.length > 0) return true;
+          const bypassAssignment = showAll || searchTrimmed.length > 0;
           
-          return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
+          if (!bypassAssignment) {
+            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
+          }
+          return true;
         } 
-        
+
         if (subTab === 'waiting') {
           return !assignedOf(c.contact.id, c.contact.assigned_to);
         }
