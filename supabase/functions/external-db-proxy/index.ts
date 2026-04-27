@@ -441,7 +441,7 @@ async function handler(req: Request): Promise<Response> {
         let error: { message: string; code?: string } | null = null
         let schemaRetries = 0
         for (let attempt = 0; attempt < 3; attempt++) {
-          const res = await withTimeout(ext.rpc(rpc as string, cleanParams))
+          const res = await withTimeout(scopedExt.rpc(rpc as string, cleanParams))
           rpcData = (res as { data: unknown }).data
           error = (res as { error: { message: string; code?: string } | null }).error
           if (!isSchemaCacheError(error)) break
@@ -500,7 +500,7 @@ async function handler(req: Request): Promise<Response> {
     if (action === 'insert' && table && data) {
       const queryStart = Date.now()
       try {
-        const { data: result, error } = await withTimeout(ext.from(table as string).insert(data).select())
+        const { data: result, error } = await withTimeout(scopedExt.from(table as string).insert(data).select())
         const ms = Date.now() - queryStart
         const cls = classifyUpstreamError(error?.message, false)
         logEvent(buildQueryLog(
@@ -540,7 +540,7 @@ async function handler(req: Request): Promise<Response> {
     // Mutation: update
     if (action === 'update' && table && data && match) {
       const queryStart = Date.now()
-      let q = ext.from(table as string).update(data)
+      let q = scopedExt.from(table as string).update(data)
       for (const [k, v] of Object.entries(match as Record<string, unknown>)) q = q.eq(k, v as string)
       try {
         const { data: result, error } = await withTimeout(q.select())
@@ -621,7 +621,7 @@ async function handler(req: Request): Promise<Response> {
       ? 'exact'
       : (countMode ? 'planned' : undefined)
 
-    let query = ext.from(table as string).select((select as string) || '*', {
+    let query = scopedExt.from(table as string).select((select as string) || '*', {
       count: safeCountMode as 'exact' | 'planned' | undefined,
     })
 
