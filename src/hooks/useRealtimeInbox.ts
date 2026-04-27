@@ -258,8 +258,9 @@ export function useRealtimeInbox() {
       // `SendErrorBanner` possa oferecer "Reenviar" mantendo o blob original
       // — repete o upload + envio + cria uma NOVA bolha otimista.
       const { sendExternalAudio } = await import('@/hooks/realtime/externalMessageSender');
+      const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
       try {
-        const { optimistic } = await sendExternalAudio(selectedContactId, blob);
+        const { optimistic } = await sendExternalAudio(selectedContactId, blob, { contactAvatar: currentAvatar });
         try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
         setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
       } catch (err) {
