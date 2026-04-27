@@ -125,10 +125,10 @@ describe('Bolha de áudio — controles play/seek/mute (inbound & outbound)', ()
       const playBtn = container.querySelectorAll('button')[0] as HTMLButtonElement;
       await act(async () => { fireEvent.click(playBtn); }); // play
       await waitFor(() => expect(mockPlay).toHaveBeenCalled());
-      // Ticks adicionais para o setIsPlaying(true) propagar
-      await act(async () => { await Promise.resolve(); });
+      // Aguarda o botão sair do estado disabled (isLoading=false)
+      await waitFor(() => expect((playBtn as HTMLButtonElement).disabled).toBe(false));
       await act(async () => { fireEvent.click(playBtn); }); // pause
-      expect(mockPause).toHaveBeenCalled();
+      await waitFor(() => expect(mockPause).toHaveBeenCalled());
     });
   });
 
