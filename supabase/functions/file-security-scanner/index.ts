@@ -75,9 +75,29 @@ Deno.serve(async (req) => {
     });
 
     if (isMalicious) {
-      // Mover para quarantine usando stream
-      await supabase.storage.from("quarantine").upload(`malicious/${fileHash}_${file.name}`, file.stream(), { duplex: 'half' });
-      return errorResponse("Security violation: Malicious content detected", 422, req);
+      log.warn("Bloqueando upload de arquivo malicioso", { name: file.name, hash: fileHash });
+      
+      // Mover para quarantine usando stream para análise posterior
+      await supabase.storage.from("quarantine").upload(`malicious/${fileHash}_${file.name}`, file.stream(), { 
+        contentType: file.type,
+        duplex: 'half' 
+      });
+
+      return errorResponse(
+        "Segurança: O arquivo foi identificado como malicioso e bloqueado preventivamente.", 
+        422, // Unprocessable Entity - Regra de negócio/segurança violada
+        req
+      );
+    }
+
+    // Se o veredito for inconclusivo mas suspeito, podemos usar 403
+    const isSuspicious = vtData?.data?.attributes?.last_analysis_stats?.suspicious > 2;
+    if (isSuspicious) {
+      return errorResponse(
+        "Acesso Negado: O arquivo possui características suspeitas e não pode ser processado.",
+        403, // Forbidden
+        req
+      );
     }
 
     // --- 4. Upload Final Otimizado com Streaming ---
