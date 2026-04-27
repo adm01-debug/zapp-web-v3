@@ -24,7 +24,7 @@ export function useEvoApiAlertsBadge(): EvoApiAlertsBadge {
   const { data } = useActiveAlerts();
 
   return useMemo(() => {
-    const list = (data ?? []) as ActiveAlert[];
+    const list = (data?.data ?? []) as ActiveAlert[];
     let critical = 0;
     let warning = 0;
     let info = 0;
@@ -36,5 +36,5 @@ export function useEvoApiAlertsBadge(): EvoApiAlertsBadge {
     const topSeverity =
       critical > 0 ? 'critical' : warning > 0 ? 'warning' : info > 0 ? 'info' : null;
     return { critical, warning, info, total: list.length, topSeverity };
-  }, [data]);
+  }, [data?.data]);
 }
