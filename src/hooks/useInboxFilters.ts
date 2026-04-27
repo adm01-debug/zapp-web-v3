@@ -148,15 +148,13 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
   const filteredConversations = useMemo(() => {
     let result = conversations.filter(c => c && c.contact && c.contact.id);
 
-    // Resolve status do ticket (overlay) com fallback para "open" quando ainda
-    // não existe registro local — alinhado com o comportamento de bootstrap.
+    // Memoize utility functions for current render
     const statusOf = (id: string) => ticketStates[id]?.status ?? 'open';
     const assignedOf = (id: string, fallback: string | null | undefined) =>
       ticketStates[id]?.assignedTo ?? fallback ?? null;
 
-    // Tab-based filtering
+    // 1. Tab-based filtering
     if (mainTab === 'open') {
-      // "Abertos" engloba tickets em status `open` ou `in_progress`.
       result = result.filter(c => {
         const s = statusOf(c.contact.id);
         return s === 'open' || s === 'in_progress';
@@ -175,11 +173,11 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       result = result.filter(c => statusOf(c.contact.id) === 'resolved');
     }
 
-    // Search — cobre nome, telefone, email, JID (contact.id) e texto da última mensagem
-    if (search.trim()) {
-      const raw = search.trim();
-      const searchLower = raw.toLowerCase();
-      const digits = raw.replace(/\D/g, '');
+    // 2. Search filtering
+    const searchTrimmed = search.trim();
+    if (searchTrimmed) {
+      const searchLower = searchTrimmed.toLowerCase();
+      const digits = searchTrimmed.replace(/\D/g, '');
       result = result.filter((c) => {
         const name = c.contact.name?.toLowerCase() ?? '';
         const phone = c.contact.phone ?? '';
@@ -196,7 +194,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       });
     }
 
-    // Status filter
+    // 3. Status array filter
     if (filters.status.length > 0) {
       result = result.filter((c) => {
         const hasUnread = c.unreadCount > 0;
@@ -209,7 +207,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       });
     }
 
-    // Tags filter
+    // 4. Tags filter
     if (filters.tags.length > 0) {
       result = result.filter((c) => {
         const tagIds = contactTagsMap[c.contact.id] || [];
@@ -217,28 +215,30 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       });
     }
 
-    // Agent filter
+    // 5. Agent filter
     if (filters.agentId) {
       result = result.filter((c) => c.contact.assigned_to === filters.agentId);
     }
 
-    // Date range filter
+    // 6. Date range filter
     if (filters.dateRange.from) {
+      const fromStart = startOfDay(filters.dateRange.from);
+      const toEnd = filters.dateRange.to ? endOfDay(filters.dateRange.to) : null;
+      
       result = result.filter((c) => {
         const lastMessageDate = c.lastMessage
           ? new Date(c.lastMessage.created_at)
           : new Date(c.contact.created_at);
-        if (filters.dateRange.from && isBefore(lastMessageDate, startOfDay(filters.dateRange.from))) return false;
-        if (filters.dateRange.to && isAfter(lastMessageDate, endOfDay(filters.dateRange.to))) return false;
+        if (isBefore(lastMessageDate, fromStart)) return false;
+        if (toEnd && isAfter(lastMessageDate, toEnd)) return false;
         return true;
       });
     }
 
-    // Contact type filter
+    // 7. Contact type filter
     result = filterByContactType(result, selectedContactType);
 
-    // Retry/failed filter — show only conversations with messages currently retrying
-    // or that finally failed after exhausting retries
+    // 8. Failure filter
     if (showOnlyRetrying) {
       result = result.filter((c) => {
         const failingMsgs = c.messages.filter(
@@ -248,7 +248,6 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
         if (failureCategoryFilter === 'all') return true;
 
-        // 'retrying' não tem métrica final ainda — só passa quando filtro = 'all'
         return failingMsgs.some((m) => {
           if (m.status === 'retrying') return false;
           if (m.status === 'failed_auth' && failureCategoryFilter === 'auth') return true;
@@ -257,17 +256,31 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         });
       });
     }
-    // Smart sorting
-    result.sort((a, b) => {
+
+    // 9. Sorting
+    return [...result].sort((a, b) => {
       if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
       if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
       const aTime = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : new Date(a.contact.updated_at).getTime();
       const bTime = b.lastMessage ? new Date(b.lastMessage.created_at).getTime() : new Date(b.contact.updated_at).getTime();
       return bTime - aTime;
     });
-
-    return result;
-  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, showOnlyRetrying, failureCategoryFilter, failureCategoryById, profileId, contactTagsMap, ticketStates]);
+  }, [
+    conversations, 
+    search, 
+    filters, 
+    mainTab, 
+    subTab, 
+    showAll, 
+    selectedQueueId, 
+    selectedContactType, 
+    showOnlyRetrying, 
+    failureCategoryFilter, 
+    failureCategoryById, 
+    profileId, 
+    contactTagsMap, 
+    ticketStates
+  ]);
 
   const retryingCount = useMemo(
     () => conversations.filter((c) =>
