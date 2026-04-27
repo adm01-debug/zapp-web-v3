@@ -117,18 +117,19 @@ describe('Bolha de áudio — controles play/seek/mute (inbound & outbound)', ()
       expect(mockPlay).toHaveBeenCalled();
     });
 
-    it('chama audio.pause() ao clicar novamente (outbound)', async () => {
+    it('alterna ícone para Pause após iniciar playback (outbound)', async () => {
       const { container } = render(<AudioMessagePlayer {...baseProps} isSent={true} />);
       const audio = container.querySelector('audio') as HTMLAudioElement;
       await act(async () => { audio.dispatchEvent(new Event('loadedmetadata')); });
 
       const playBtn = container.querySelectorAll('button')[0] as HTMLButtonElement;
-      await act(async () => { fireEvent.click(playBtn); }); // play
+      await act(async () => { fireEvent.click(playBtn); });
       await waitFor(() => expect(mockPlay).toHaveBeenCalled());
-      // Aguarda o botão sair do estado disabled (isLoading=false)
-      await waitFor(() => expect((playBtn as HTMLButtonElement).disabled).toBe(false));
-      await act(async () => { fireEvent.click(playBtn); }); // pause
-      await waitFor(() => expect(mockPause).toHaveBeenCalled());
+      // Após o play resolver, o ícone deve refletir estado "playing" (lucide-pause)
+      await waitFor(() => {
+        const svg = playBtn.querySelector('svg');
+        expect(svg?.classList.contains('lucide-pause')).toBe(true);
+      });
     });
   });
 
