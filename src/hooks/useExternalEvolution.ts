@@ -18,6 +18,7 @@ import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
 import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
+import { playerStateStore } from '@/hooks/realtime/playerStateStore';
 
 const log = getLogger('useExternalEvolution');
 
@@ -48,31 +49,99 @@ const OPTIMISTIC_PREFIX = 'optimistic:';
 const OPTIMISTIC_FALLBACK_WINDOW_MS = 120_000;
 const MEDIA_TYPES = new Set(['audio', 'image', 'video', 'document', 'sticker']);
 
+/**
+ * Hierarquia oficial de status do envio. Reconciliação NUNCA regride —
+ * se a otimista já foi promovida a `delivered` localmente (ACK 2-step),
+ * mas o webhook canônico chega como `sent`, mantemos `delivered`.
+ * Inclui também `played` (PTT ouvido) acima de `read`.
+ */
+const STATUS_RANK: Record<string, number> = {
+  sending: 0,
+  retrying: 1,
+  sent: 2,
+  delivered: 3,
+  read: 4,
+  played: 5,
+};
+
+function rankOf(status: string | null | undefined): number {
+  if (!status) return -1;
+  return STATUS_RANK[status] ?? -1;
+}
+
+/** Retorna o status de maior rank entre os dois (ou o do canônico em caso de empate). */
+function promoteStatus(
+  optimistic: RealtimeMessage,
+  canonical: RealtimeMessage,
+): { status: RealtimeMessage['status']; status_updated_at: string | null } {
+  const optRank = rankOf(optimistic.status);
+  const canRank = rankOf(canonical.status);
+  if (optRank > canRank) {
+    return {
+      status: optimistic.status,
+      // Mantém o timestamp mais recente entre os dois.
+      status_updated_at: optimistic.status_updated_at ?? canonical.status_updated_at,
+    };
+  }
+  return {
+    status: canonical.status,
+    status_updated_at: canonical.status_updated_at ?? optimistic.status_updated_at,
+  };
+}
+
+export interface ReconcileResult {
+  filteredPrev: RealtimeMessage[];
+  additions: RealtimeMessage[];
+  /** Map<optimisticId, canonicalId> — usado para migrar estado de player. */
+  remap: Map<string, string>;
+}
+
 export function reconcileOptimistic(
   prev: RealtimeMessage[],
   incoming: RealtimeMessage[],
-): { filteredPrev: RealtimeMessage[]; additions: RealtimeMessage[] } {
-  if (incoming.length === 0) return { filteredPrev: prev, additions: [] };
+): ReconcileResult {
+  if (incoming.length === 0) {
+    return { filteredPrev: prev, additions: [], remap: new Map() };
+  }
 
   const incomingExternalIds = new Set(
     incoming.map((m) => m.external_id).filter((v): v is string => Boolean(v)),
   );
 
-  // Coleta canônicos que reconciliam mídia para herdar media_url da otimista
-  // se o canônico ainda não tiver a URL final resolvida.
-  const mediaUrlInheritance = new Map<string, string>(); // incoming.id -> optimistic.media_url
+  // canonical.id -> patch (media_url herdada + status promovido)
+  const canonicalPatches = new Map<string, Partial<RealtimeMessage>>();
+  // optimisticId -> canonicalId (para migrar estado do player)
+  const remap = new Map<string, string>();
+
+  function ensurePatch(id: string): Partial<RealtimeMessage> {
+    let p = canonicalPatches.get(id);
+    if (!p) { p = {}; canonicalPatches.set(id, p); }
+    return p;
+  }
 
   const filteredPrev = prev.filter((m) => {
     if (!m.id.startsWith(OPTIMISTIC_PREFIX)) return true;
-    // Caso 1: external_id já reconciliado — remove otimista.
-    if (m.external_id && incomingExternalIds.has(m.external_id)) return false;
+
+    // Caso 1: external_id já reconciliado.
+    if (m.external_id && incomingExternalIds.has(m.external_id)) {
+      const can = incoming.find((c) => c.external_id === m.external_id);
+      if (can) {
+        remap.set(m.id, can.id);
+        const patch = ensurePatch(can.id);
+        const promoted = promoteStatus(m, can);
+        patch.status = promoted.status;
+        patch.status_updated_at = promoted.status_updated_at;
+        if (!can.media_url && m.media_url) patch.media_url = m.media_url;
+      }
+      return false;
+    }
 
     if (m.external_id) return true;
 
     const optTime = new Date(m.created_at).getTime();
     const isMediaOpt = MEDIA_TYPES.has(m.message_type);
 
-    // Caso 3: fallback mídia — sender + message_type + janela.
+    // Caso 3: fallback mídia.
     if (isMediaOpt) {
       const match = incoming.find((inc) =>
         inc.sender === m.sender &&
@@ -80,20 +149,32 @@ export function reconcileOptimistic(
         Math.abs(new Date(inc.created_at).getTime() - optTime) <= OPTIMISTIC_FALLBACK_WINDOW_MS,
       );
       if (match) {
-        if (!match.media_url && m.media_url) mediaUrlInheritance.set(match.id, m.media_url);
+        remap.set(m.id, match.id);
+        const patch = ensurePatch(match.id);
+        const promoted = promoteStatus(m, match);
+        patch.status = promoted.status;
+        patch.status_updated_at = promoted.status_updated_at;
+        if (!match.media_url && m.media_url) patch.media_url = m.media_url;
         return false;
       }
       return true;
     }
 
-    // Caso 2: fallback texto — sender + content + janela.
+    // Caso 2: fallback texto.
     const match = incoming.find((inc) =>
       inc.sender === m.sender &&
       inc.message_type === m.message_type &&
       inc.content === m.content &&
       Math.abs(new Date(inc.created_at).getTime() - optTime) <= OPTIMISTIC_FALLBACK_WINDOW_MS,
     );
-    if (match) return false;
+    if (match) {
+      remap.set(m.id, match.id);
+      const patch = ensurePatch(match.id);
+      const promoted = promoteStatus(m, match);
+      patch.status = promoted.status;
+      patch.status_updated_at = promoted.status_updated_at;
+      return false;
+    }
     return true;
   });
 
@@ -101,10 +182,46 @@ export function reconcileOptimistic(
   const additions = incoming
     .filter((m) => !seen.has(m.id))
     .map((m) => {
-      const inheritedUrl = mediaUrlInheritance.get(m.id);
-      return inheritedUrl ? { ...m, media_url: inheritedUrl } : m;
+      const patch = canonicalPatches.get(m.id);
+      return patch ? { ...m, ...patch } : m;
     });
-  return { filteredPrev, additions };
+  return { filteredPrev, additions, remap };
+}
+
+/**
+ * Aplica uma reconciliação como uma transação atômica:
+ *   1. Migra o estado do player (currentTime, paused, rate) do id otimista
+ *      para o canônico ANTES do React renderizar a nova bolha — assim o
+ *      player remontado já encontra seu estado no id correto.
+ *   2. Roda o updater de mensagens em UM único setState.
+ *
+ * Caller passa um `merge` que recebe `(filteredPrev, additions)` e devolve
+ * a lista final ordenada — assim cada callsite mantém sua lógica de ordem
+ * (initial vs poll vs older vs broadcast).
+ */
+export function applyReconciliation(
+  setMessages: (updater: (prev: RealtimeMessage[]) => RealtimeMessage[]) => void,
+  incoming: RealtimeMessage[],
+  merge: (filteredPrev: RealtimeMessage[], additions: RealtimeMessage[]) => RealtimeMessage[],
+): { remapSize: number } {
+  let remapSize = 0;
+  setMessages((prev) => {
+    const result = reconcileOptimistic(prev, incoming);
+    // Migra o estado do player ANTES de devolver a nova lista — o React
+    // só vai re-renderizar depois desse callback retornar, então a leitura
+    // subsequente em useAudioPlayer já encontra o estado no id novo.
+    if (result.remap.size > 0) {
+      for (const [from, to] of result.remap) {
+        playerStateStore.migrate(from, to);
+      }
+      remapSize = result.remap.size;
+    }
+    if (result.additions.length === 0 && result.filteredPrev.length === prev.length) {
+      return prev;
+    }
+    return merge(result.filteredPrev, result.additions);
+  });
+  return { remapSize };
 }
 
 const POLL_INTERVAL = 5000; // 5s polling
@@ -271,8 +388,7 @@ export function useExternalMessages(remoteJid: string | null) {
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
       // Replace pode chegar com canônicas que substituem otimistas pendentes.
       // Mantemos quaisquer otimistas que ainda não foram reconciliadas.
-      setMessages((prev) => {
-        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
+      applyReconciliation(setMessages, mapped, (filteredPrev, additions) => {
         // Initial: o servidor é a fonte da verdade — ordenamos por created_at
         // garantindo que otimistas remanescentes (ainda sem external_id real)
         // continuem visíveis ao final.
@@ -310,9 +426,7 @@ export function useExternalMessages(remoteJid: string | null) {
       if (!mountedRef.current || newOnes.length === 0) return;
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
-      setMessages((prev) => {
-        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
-        if (additions.length === 0 && filteredPrev.length === prev.length) return prev;
+      applyReconciliation(setMessages, mapped, (filteredPrev, additions) => {
         return [...filteredPrev, ...additions];
       });
       lastSeenRef.current = newOnes[newOnes.length - 1].created_at;
@@ -415,9 +529,7 @@ export function useExternalMessages(remoteJid: string | null) {
       const ordered = isOlder ? data.slice().reverse() : data;
       const mapped = ordered.map(evolutionToRealtimeMessage);
 
-      setMessages((prev) => {
-        const { filteredPrev, additions } = reconcileOptimistic(prev, mapped);
-        if (additions.length === 0 && filteredPrev.length === prev.length) return prev;
+      applyReconciliation(setMessages, mapped, (filteredPrev, additions) => {
         if (key.startsWith(`inbox:initial:${remoteJid}:`)) {
           // Initial completo de outra aba: se não tínhamos nada, substitui
           // pelas canônicas; caso contrário mescla preservando otimistas
