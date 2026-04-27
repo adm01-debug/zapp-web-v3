@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import React from 'react';
 
 // ─── Mocks ───────────────────────────────────────────────
@@ -124,6 +124,9 @@ describe('Bolha de áudio — controles play/seek/mute (inbound & outbound)', ()
 
       const playBtn = container.querySelectorAll('button')[0] as HTMLButtonElement;
       await act(async () => { fireEvent.click(playBtn); }); // play
+      await waitFor(() => expect(mockPlay).toHaveBeenCalled());
+      // Ticks adicionais para o setIsPlaying(true) propagar
+      await act(async () => { await Promise.resolve(); });
       await act(async () => { fireEvent.click(playBtn); }); // pause
       expect(mockPause).toHaveBeenCalled();
     });
