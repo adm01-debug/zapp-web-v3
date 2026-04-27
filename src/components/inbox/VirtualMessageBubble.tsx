@@ -1,4 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('VirtualMessageBubble');
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Message, InteractiveButton } from '@/types/chat';
