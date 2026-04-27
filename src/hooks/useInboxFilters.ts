@@ -196,11 +196,11 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       const searchLower = searchTrimmed.toLowerCase();
       const digits = searchTrimmed.replace(/\D/g, '');
       result = result.filter((c) => {
-        const name = c.contact.name?.toLowerCase() ?? '';
-        const phone = c.contact.phone ?? '';
-        const email = c.contact.email?.toLowerCase() ?? '';
-        const jid = String(c.contact.id ?? '').toLowerCase();
-        const lastMsg = c.lastMessage?.content?.toLowerCase() ?? '';
+        const name = (c.contact?.name || '').toLowerCase();
+        const phone = c.contact?.phone || '';
+        const email = (c.contact?.email || '').toLowerCase();
+        const jid = String(c.contact?.id || '').toLowerCase();
+        const lastMsg = (c.lastMessage?.content || '').toLowerCase();
         
         const matches = (
           name.includes(searchLower) ||
