@@ -39,8 +39,24 @@ export default function AdminEvoApiHealthPage() {
   const health = dash.data?.health;
   const readiness = dash.data?.readiness;
 
+  // Detect "schema not exposed" condition: every query returns null and none errored.
+  const schemaUnavailable =
+    !dash.isLoading && dash.data === null &&
+    !alerts.isLoading && alerts.data === null;
+
   return (
     <div className="container mx-auto p-6 space-y-6 max-w-7xl">
+      {schemaUnavailable && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Schema <code>evo_api</code> não está exposto no PostgREST</AlertTitle>
+          <AlertDescription>
+            Para esta página funcionar, o admin do FATOR X precisa adicionar
+            <code className="mx-1">evo_api</code> em <strong>Settings → API → Exposed schemas</strong>
+            (ou ajustar <code>db-schemas</code> em <code>postgrest</code>) e reiniciar o PostgREST.
+          </AlertDescription>
+        </Alert>
+      )}
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
