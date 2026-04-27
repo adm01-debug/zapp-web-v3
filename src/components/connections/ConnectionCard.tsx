@@ -75,6 +75,33 @@ export function ConnectionCard({
   const StatusIcon = status.icon;
   const isOfficial = (connection.api_type ?? 'evolution') === 'official';
   const [officialConfigOpen, setOfficialConfigOpen] = useState(false);
+  const [recheckingHealth, setRecheckingHealth] = useState(false);
+
+  const reasonInfo = connection.health_reason ? HEALTH_REASON_LABEL[connection.health_reason] : null;
+  // Sessão fantasma: o DB ainda pode estar 'connected' por uma janela curta antes do próximo health-check derrubar.
+  // Forçamos visualização de "Atenção" e habilitamos o QR mesmo se status === 'connected'.
+  const isPhantomLike = reasonInfo?.severe && connection.health_status !== 'healthy';
+  const showAttentionBadge = isPhantomLike || (connection.health_status === 'degraded');
+
+  const handleRecheckNow = async () => {
+    if (!connection.instance_id) return;
+    setRecheckingHealth(true);
+    try {
+      const { error } = await supabase.functions.invoke('connection-health-check', {
+        body: { instanceName: connection.instance_id },
+      });
+      if (error) throw error;
+      toast({ title: 'Verificação concluída', description: 'O status real foi atualizado.' });
+    } catch (e: unknown) {
+      toast({
+        title: 'Falha na verificação',
+        description: e instanceof Error ? e.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    } finally {
+      setRecheckingHealth(false);
+    }
+  };
 
   return (
     <motion.div whileHover={{ y: -2, boxShadow: '0 8px 30px hsl(var(--primary) / 0.1)' }}>
