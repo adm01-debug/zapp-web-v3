@@ -1,55 +1,54 @@
-# Conserto definitivo do `Failed to fetch` no inbox
+# Sincronização de conversas WhatsApp no Inbox
 
-## Diagnóstico (já confirmado por curl)
+## Diagnóstico
 
-O fetch direto que substituiu o `supabase.functions.invoke` está **funcionando do lado do servidor** — testei agora:
+A sincronização **já está totalmente implementada** no projeto (ver `useExternalEvolution`, `useRealtimeInbox`, `useMessageStatus`, `ChatPanel`, `ConversationList`, `ConversationHistory`, `useAgentReassignment`, RPCs `rpc_list_conversations` / `rpc_list_messages` no FATOR X). O motivo do inbox estar vazio agora é operacional, não de feature:
 
-- `POST external-db-proxy` → **HTTP 200 em 0.76s** ✅
-- `OPTIONS external-db-proxy` (preflight) → **HTTP 200**, mas com este header crítico:
+1. **Env do FATOR X ausente no preview** — `VITE_EXTERNAL_SUPABASE_URL` e `VITE_EXTERNAL_SUPABASE_ANON_KEY` não estão definidas, gerando o crash `Uncaught Error: External Supabase is not configured` e travando hooks que usam `getExternalSupabase()`.
+2. **Cascata de "Failed to fetch"** — vista nos runtime errors, vinda do `external-db-proxy` que perde a base por causa do erro acima e do recente CORS.
+3. **Edge function `external-db-proxy` precisa estar servindo as RPCs do FATOR X** que o inbox consome (`rpc_list_conversations`, `rpc_list_messages`, `rpc_get_contact`).
 
-```
-access-control-allow-headers: authorization, x-client-info, apikey, content-type, x-correlation-id
-```
+## O que vou fazer
 
-O cliente (`src/lib/externalProxy.ts` linha 362) envia em todo POST:
+### 1. Corrigir crash do `externalClient`
+- `src/integrations/supabase/externalClient.ts`: tornar `getExternalSupabase()` tolerante (logar warning + retornar `null`) em vez de lançar, para os hooks fallback-arem para o proxy server-side em vez de derrubar a aplicação.
+- Hooks que ainda chamam `getExternalSupabase()` direto passam por `queryExternalProxy` (que usa o edge function com service role).
 
-```ts
-headers: { ...(invokeOptions.headers ?? {}), 'x-attempt': String(attempt) }
-```
+### 2. Garantir que o inbox usa 100% o caminho server-side
+- Auditar `useExternalEvolution`, `useRealtimeInbox` e `externalMessageSender` para que toda leitura/escrita de `evolution_*` vá pelo `external-db-proxy` (já é o padrão; corrigir qualquer ponto que ainda use cliente direto).
+- Reaproveitar `invokeViaFetch` (correção de proxy + CORS já aplicada nas mensagens anteriores).
 
-`x-attempt` **não está na allowlist do CORS**. Resultado: o navegador aborta o preflight e o `fetch()` rejeita com `TypeError: Failed to fetch` (status `undefined`). É exatamente o erro que está vazando para o `ErrorBoundary` agora (todos os `cid=...` no console).
+### 3. Validar pipeline ponta-a-ponta
+- Conferir o `external-db-proxy/index.ts` aceita `rpc_list_conversations`, `rpc_list_messages`, `rpc_get_contact` e `rpc_insert_message`.
+- Smoke test via `supabase--curl_edge_functions` para `rpc_list_conversations({instance:'wpp2', limit:50})` confirmar retorno.
+- Garantir que `useRealtimeInbox` assina os canais `evolution_messages` e `evolution_contacts` via `externalClient` (quando configurado) **ou** via polling cursor-forward já existente (`useMessagesCursor`) quando não.
 
-`supabase.functions.invoke` não dava esse erro porque o SDK não enviava `x-attempt` antes — esse header foi adicionado quando a lógica de retry foi escrita assumindo `invoke` (que ignora silenciosamente headers extras em alguns paths).
+### 4. Inbox UI por atendente
+Já existente, apenas validar funcionando após fix:
+- **Lista de conversas** (`ConversationListSidebar`) com filtro por `assigned_to = userEmail` (sticky agent).
+- **Mensagens + status** (`ChatMessageBubble` + `useMessageStatus`) com sent/delivered/read/played.
+- **Histórico do atendente** (`ConversationHistory` + abas Atendendo/Aguardando/Resolvidos do `inbox/navigation-and-ticket-tabs`).
+- **Reatribuição** (`AgentReassignmentPanel`) usando `rpc_upsert_contact` com `assigned_to`.
 
-## Correção (1 arquivo, 1 linha)
+### 5. Painel de status de sync
+- Verificar `AdminInboxSyncStatusPage` mostra `v_webhook_health` + last sync timestamp para o operador validar.
 
-**`src/lib/externalProxy.ts` (linha ~362):** remover `x-attempt` do header. A informação de tentativa já existe:
+## Arquivos que devo tocar
 
-- no `__cid` correlacionado por chamada (cada attempt poderia ter um sufixo se quisermos),
-- nos logs estruturados do cliente (`attempt: N` em `proxy attempt failed`),
-- e o servidor não usa `x-attempt` para nada (verificado, não há leitura desse header em `external-db-proxy`).
-
-Se quisermos manter rastreabilidade do número da tentativa no servidor, embutimos no body como `__attempt: attempt` (já vai junto com `__cid`, sem CORS).
-
-```diff
-- const perAttemptOptions = {
--   ...invokeOptions,
--   headers: { ...(invokeOptions.headers ?? {}), 'x-attempt': String(attempt) },
-- };
-+ const perAttemptOptions = {
-+   ...invokeOptions,
-+   body: { ...(invokeOptions.body as Record<string, unknown>), __attempt: attempt },
-+ };
-```
+- `src/integrations/supabase/externalClient.ts` — tornar tolerante a env ausente.
+- `src/hooks/useExternalEvolution.ts` — confirmar 100% via `queryExternalProxy`; remover qualquer `getExternalSupabase()` direto.
+- `src/hooks/useRealtimeInbox.ts` — guardar realtime subscribe atrás de `isExternalConfigured`.
+- `supabase/functions/external-db-proxy/index.ts` — verificar allowlist das RPCs.
+- (opcional) `src/pages/admin/AdminInboxSyncStatusPage.tsx` — banner amarelo quando env do FATOR X faltar.
 
 ## Validação
 
-1. Recarregar a preview — o inbox volta a carregar (`evolution_messages`, `evolution_webhook_events`, etc.).
-2. Rodar `bunx vitest run src/lib/__tests__/externalProxy.*.test.ts` — os testes não inspecionam `x-attempt`, então passam sem mudança.
-3. Console deve voltar a mostrar `severity: ok` nos eventos do `clientTelemetry`, sem `Failed to fetch`.
+1. Recarregar `/inbox` — não deve haver mais `Uncaught Error: External Supabase is not configured`.
+2. Conversas listam via `rpc_list_conversations`.
+3. Abrir um chat → mensagens carregam via `rpc_list_messages` com cursor.
+4. Status sent/delivered/read aparece nos balões.
+5. `AdminInboxSyncStatusPage` mostra última sync e webhook health verde.
 
-## Fora de escopo
+## Pergunta operacional (não bloqueia o plano)
 
-- Não mexer no edge `external-db-proxy` (CORS allowlist atual cobre tudo que precisamos sem `x-attempt`).
-- Não mexer em outros chamadores do edge.
-- Não mexer no breaker / coalesce / telemetria — continuam idênticos.
+Após a correção de código, vou precisar que você forneça (ou confirme já estarem cadastradas em Lovable Cloud) as variáveis `VITE_EXTERNAL_SUPABASE_URL=https://tdprnylgyrogbbhgdoik.supabase.co` e `VITE_EXTERNAL_SUPABASE_ANON_KEY=<anon do FATOR X>` para o realtime subscribe funcionar 100%. Sem elas o sistema funciona via proxy (polling), mas perde realtime push.
