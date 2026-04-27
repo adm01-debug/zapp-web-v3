@@ -208,7 +208,7 @@ export function derivedToConversationContact(dc: DerivedContact): ConversationCo
     nickname: dc.pushName,
     phone: dc.phone,
     email: null,
-    avatar_url: null,
+    avatar_url: dc.profilePictureUrl || null,
     tags: null,
     company: null,
     job_title: null,
