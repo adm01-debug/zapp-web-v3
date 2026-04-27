@@ -208,7 +208,13 @@ export function ConversationList({
                           "w-11 h-11 ring-2 transition-all",
                           isSelected ? "ring-primary/40" : "ring-border/30"
                         )}>
-                          <AvatarImage src={conversation.contact.avatar} referrerPolicy="no-referrer" />
+                          <AvatarImage 
+                            src={conversation.contact.avatar} 
+                            referrerPolicy="no-referrer" 
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).removeAttribute('src');
+                            }}
+                          />
                           <AvatarFallback className="bg-primary/10 text-primary font-medium">
                             {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                           </AvatarFallback>
