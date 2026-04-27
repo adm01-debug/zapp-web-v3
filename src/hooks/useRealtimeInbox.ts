@@ -220,7 +220,8 @@ export function useRealtimeInbox() {
       // External path: envio via evolution-api + bolha otimista no cursor.
       // Erros são propagados (sem swallow) para o SendErrorBanner.
       const { sendExternalText } = await import('@/hooks/realtime/externalMessageSender');
-      const { optimistic } = await sendExternalText(selectedContactId, content);
+      const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
+      const { optimistic } = await sendExternalText(selectedContactId, content, { contactAvatar: currentAvatar });
       try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
       // Pequeno delay para o webhook materializar — depois refetch.
       setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
