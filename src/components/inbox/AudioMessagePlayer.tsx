@@ -18,9 +18,15 @@ interface AudioMessagePlayerProps {
   transcriptionStatus?: string | null;
   /** When provided, enables Evolution `getMediaBase64` fallback for expired URLs (410/403). */
   refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
+  /**
+   * Identificador da conversa (ex: remoteJid). Quando presente, o volume passa
+   * a ser gerenciado por conversa: cada player desta conversa compartilha o
+   * mesmo override e o usuário pode promover/limpar via popover.
+   */
+  conversationId?: string | null;
 }
 
-export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey }: AudioMessagePlayerProps) {
+export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey, conversationId }: AudioMessagePlayerProps) {
   const [transcription, setTranscription] = useState<string | null>(existingTranscription || null);
   const [transcriptionStatus, setTranscriptionStatus] = useState<string>(initialStatus || 'pending');
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -31,8 +37,9 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
     playbackRate, progress, waveformHeights,
     currentTime, duration,
     volume, setVolume,
+    hasConversationOverride, promoteVolumeToGlobal, resetConversationVolume,
     togglePlay, handleSeek, cycleSpeed, formatTime, resolveAudioUrl,
-  } = useAudioPlayer({ audioUrl, messageId, refreshKey });
+  } = useAudioPlayer({ audioUrl, messageId, refreshKey, conversationId });
 
   // Realtime subscription for transcription updates
   useEffect(() => {
