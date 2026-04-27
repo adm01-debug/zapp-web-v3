@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ const SEVERITY_VARIANT: Record<string, 'destructive' | 'warning' | 'info' | 'sec
   info: 'info',
 };
 
-export function AlertsTab({ alerts, onAcknowledge, isAcknowledging }: AlertsTabProps) {
+export const AlertsTab = React.memo(({ alerts, onAcknowledge, isAcknowledging }: AlertsTabProps) => {
   if (alerts?.length === 0) {
     return (
       <Alert>
@@ -72,4 +73,4 @@ export function AlertsTab({ alerts, onAcknowledge, isAcknowledging }: AlertsTabP
       </div>
     </ScrollArea>
   );
-}
+});

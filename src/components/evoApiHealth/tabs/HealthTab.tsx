@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Database, Server, Zap } from 'lucide-react';
 import { KpiCard } from '../KpiCard';
@@ -8,7 +9,7 @@ interface HealthTabProps {
   data?: DashboardResponse;
 }
 
-export function HealthTab({ data }: HealthTabProps) {
+export const HealthTab = React.memo(({ data }: HealthTabProps) => {
   const health = data?.health;
   const readiness = data?.readiness;
 
@@ -58,4 +59,4 @@ export function HealthTab({ data }: HealthTabProps) {
       )}
     </div>
   );
-}
+});
