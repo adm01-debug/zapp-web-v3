@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Globe, Users, MessageCircle, RotateCcw, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSelector } from '@/components/settings/LanguageSelector';
+import { WhatsAppModeSetting } from '@/components/settings/WhatsAppModeSetting';
 
 export function GlobalSettingsSection() {
   const { settings, isLoading, getSetting, updateSetting } = useGlobalSettings();
