@@ -12,7 +12,8 @@ export function useEvoApiDashboard(refetchMs = 30_000) {
     queryKey: [...KEY, 'dashboard'],
     queryFn: () => evoApi.rpc<DashboardResponse>('rpc_pipeline_dashboard'),
     refetchInterval: refetchMs,
-    staleTime: 20_000, // Reduced from default to avoid excessive re-renders/fetches
+    staleTime: 25_000, 
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -26,6 +27,8 @@ export function useActiveAlerts(refetchMs = 15_000) {
       limit: 100,
     }),
     refetchInterval: refetchMs,
+    staleTime: 10_000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -52,6 +55,8 @@ export function useHealthHistory() {
       limit: 288,
     }),
     refetchInterval: 60_000,
+    staleTime: 50_000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -63,6 +68,8 @@ export function useAlertChannels() {
       select: '*',
       limit: 50,
     }),
+    staleTime: 120_000, // Channels don't change often
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -82,6 +89,8 @@ export function useDrRunbook() {
       order: { column: 'step_number', ascending: true },
       limit: 50,
     }),
+    staleTime: 300_000, // Static documentation
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -90,6 +99,8 @@ export function useDrHealth() {
     queryKey: [...KEY, 'dr-health'],
     queryFn: () => evoApi.rpc<Record<string, unknown>>('rpc_dr_health_check'),
     refetchInterval: 60_000,
+    staleTime: 45_000,
+    refetchOnWindowFocus: false,
   });
 }
 

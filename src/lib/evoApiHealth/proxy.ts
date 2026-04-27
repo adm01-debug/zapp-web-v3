@@ -23,11 +23,28 @@ interface ProxyErrorResponse {
  * Encapsulates communication with the external DB proxy.
  */
 class ExternalDbProxyClient {
+  private cachedSession: { token: string; expires: number } | null = null;
+
   private async getAuthHeader(): Promise<string> {
+    const now = Date.now();
+    
+    // Cache session token for 30s to avoid redundant getSession() calls in parallel requests
+    if (this.cachedSession && this.cachedSession.expires > now) {
+      return `Bearer ${this.cachedSession.token}`;
+    }
+
     try {
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
-      return token ? `Bearer ${token}` : `Bearer ${SUPABASE_ANON}`;
+      
+      if (token) {
+        this.cachedSession = { 
+          token, 
+          expires: now + 30000 
+        };
+        return `Bearer ${token}`;
+      }
+      return `Bearer ${SUPABASE_ANON}`;
     } catch {
       return `Bearer ${SUPABASE_ANON}`;
     }

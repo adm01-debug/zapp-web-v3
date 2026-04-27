@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 import {
   corsHeaders,
   shortRid,
@@ -11,6 +11,9 @@ import { QueryLogContext } from './lib/types.ts'
 const CORRELATION_HEADER = 'x-correlation-id'
 const REQUEST_ID_HEADER = 'x-request-id'
 const SCHEMA_ALLOWLIST = new Set(['public', 'evo_api'])
+
+// Client cache to avoid re-initializing for every request
+const clientCache = new Map<string, SupabaseClient>()
 
 async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
@@ -97,14 +100,23 @@ async function handler(req: Request): Promise<Response> {
       )
     }
 
-    const client = createClient(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      db: { schema: requestedSchema },
-      global: { 
-        headers: { 'x-statement-timeout': '12000' },
-        fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' })
-      },
-    })
+    const cacheKey = `${url}:${requestedSchema}`
+    let client = clientCache.get(cacheKey)
+
+    if (!client) {
+      client = createClient(url, key, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        db: { schema: requestedSchema },
+        global: { 
+          headers: { 'x-statement-timeout': '12000' },
+          fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' })
+        },
+      })
+      clientCache.set(cacheKey, client)
+      
+      // Clear cache if it grows too large (unlikely given allowlist but good practice)
+      if (clientCache.size > 10) clientCache.clear()
+    }
 
     const ctx: QueryLogContext = { cid, rid, op: action || 'select', target: (rpc || table || 'unknown'), startedAt }
 
