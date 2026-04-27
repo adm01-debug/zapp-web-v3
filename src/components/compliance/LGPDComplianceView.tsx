@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('LGPDCompliance');
@@ -7,16 +7,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Shield, ShieldAlert, Download, Trash2, FileText, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Shield, ShieldAlert, Trash2, FileText, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { PrivacyPolicySection } from './PrivacyPolicySection';
+import { WhatsAppComplianceGuide } from './WhatsAppComplianceGuide';
+import { PrivacyAuditTrail } from './PrivacyAuditTrail';
 
 export function LGPDComplianceView() {
   const { user } = useAuth();
-  const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [exportedData, setExportedData] = useState<string | null>(null);
+
+  // Registra a visita à tela de privacidade no audit log (uma vez por sessão de view).
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    supabase
+      .rpc('log_audit_event', {
+        p_action: 'privacy_policy_viewed',
+        p_entity_type: 'user',
+        p_entity_id: user.id,
+        p_details: { viewed_at: new Date().toISOString() },
+        p_user_agent: navigator.userAgent,
+      })
+      .then(({ error }) => {
+        if (cancelled) return;
+        if (error) log.warn('Failed to log privacy view', error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
 
   const handleExportData = async () => {
     toast.error('🔒 Exportação bloqueada por política de segurança', {
