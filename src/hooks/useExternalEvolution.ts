@@ -458,7 +458,12 @@ export function useExternalMessages(remoteJid: string | null) {
 
       const mapped = newOnes.map(evolutionToRealtimeMessage);
       applyReconciliation(setMessages, mapped, (filteredPrev, additions) => {
-        return [...filteredPrev, ...additions];
+        // Encontra o avatar do contato atual para propagar nas mensagens poladas
+        const currentAvatar = (queryClient.getQueryData(['contact', remoteJid]) as any)?.avatar_url || 
+                             (queryClient.getQueryData(['external-evolution', 'contact', remoteJid]) as any)?.avatar_url;
+
+        const additionsWithAvatar = additions.map(m => ({ ...m, contactAvatar: currentAvatar }));
+        return [...filteredPrev, ...additionsWithAvatar];
       });
       lastSeenRef.current = newOnes[newOnes.length - 1].created_at;
     } catch (err) {
