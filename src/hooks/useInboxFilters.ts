@@ -157,6 +157,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     };
 
     // 1. Tab-based filtering
+    const searchTrimmed = (search || '').trim();
     if (mainTab === 'open') {
       result = result.filter(c => {
         const s = statusOf(c.contact.id);
@@ -165,17 +166,12 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         if (!isOpenOrProgress) return false;
 
         if (subTab === 'attending') {
-          // If we are searching or showAll is on, we skip the assignment check
-          const searchTrimmed = (search || '').trim();
-          const bypassAssignment = showAll || searchTrimmed.length > 0;
-          
-          if (!bypassAssignment) {
-            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
-          }
-          return true;
+          if (showAll || searchTrimmed.length > 0) return true;
+          return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
         } 
-
+        
         if (subTab === 'waiting') {
+          if (searchTrimmed.length > 0) return true;
           return !assignedOf(c.contact.id, c.contact.assigned_to);
         }
 
