@@ -113,9 +113,11 @@ Deno.serve(async (req) => {
     const challenge = url.searchParams.get("hub.challenge");
     if (mode === "subscribe" && token && VERIFY_TOKEN && token === VERIFY_TOKEN) {
       console.log(`[whatsapp-cloud-webhook][${rid}] verification ok`);
+      void recordPing("handshake", { rid, mode, source: req.headers.get("user-agent") ?? null });
       return new Response(challenge ?? "", { status: 200, headers: corsHeaders });
     }
     console.warn(`[whatsapp-cloud-webhook][${rid}] verification failed mode=${mode}`);
+    void recordPing("invalid_token", { rid, mode, hadToken: !!token });
     return new Response("forbidden", { status: 403, headers: corsHeaders });
   }
 
