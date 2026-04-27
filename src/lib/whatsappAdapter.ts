@@ -469,7 +469,9 @@ export async function getActiveWebhookUrl(): Promise<string> {
  */
 export const whatsapp = {
   getMode: getWhatsAppMode,
+  resolveTransport,
   invalidateModeCache: invalidateWhatsAppModeCache,
+  invalidateTransportCache,
   sendText,
   sendMedia,
   sendAudio,
