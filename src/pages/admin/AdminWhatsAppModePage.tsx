@@ -16,8 +16,26 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import {
   Copy, Loader2, ShieldCheck, Zap, AlertTriangle, CheckCircle2,
-  XCircle, ExternalLink,
+  XCircle, ExternalLink, RefreshCw, Activity,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface PingRow { kind: string; meta: Record<string, unknown>; created_at: string }
+interface VerifyResult {
+  verifyTokenConfigured: boolean;
+  webhookUrl: string;
+  handshake: { status: "pass" | "fail" | "skip"; httpStatus?: number; echoMatches?: boolean; durationMs?: number; error?: string };
+  delivery: {
+    status: "pass" | "warn";
+    lastEventAt: string | null;
+    lastHandshakeAt: string | null;
+    counts24h: { handshake: number; event: number; invalid_signature: number; invalid_token: number };
+    message: string;
+    recent: PingRow[];
+  };
+  checkedAt: string;
+}
 
 interface SecretStatus {
   name: string;
