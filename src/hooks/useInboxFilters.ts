@@ -157,15 +157,24 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     if (mainTab === 'open') {
       result = result.filter(c => {
         const s = statusOf(c.contact.id);
-        return s === 'open' || s === 'in_progress';
-      });
-      if (subTab === 'attending') {
-        if (!showAll) {
-          result = result.filter(c => assignedOf(c.contact.id, c.contact.assigned_to) === profileId);
+        const isOpenOrProgress = s === 'open' || s === 'in_progress';
+        
+        if (!isOpenOrProgress) return false;
+
+        if (subTab === 'attending') {
+          if (!showAll) {
+            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
+          }
+          return true;
+        } 
+        
+        if (subTab === 'waiting') {
+          return !assignedOf(c.contact.id, c.contact.assigned_to);
         }
-      } else if (subTab === 'waiting') {
-        result = result.filter(c => !assignedOf(c.contact.id, c.contact.assigned_to));
-      }
+
+        return true;
+      });
+
       if (selectedQueueId) {
         result = result.filter(c => c.contact.queue_id === selectedQueueId);
       }
