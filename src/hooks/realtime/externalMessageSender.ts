@@ -40,6 +40,7 @@ export class SendError extends Error {
 
 export interface SendExternalOptions {
   instanceName?: string;
+  contactAvatar?: string | null;
 }
 
 export interface SendExternalResult {
