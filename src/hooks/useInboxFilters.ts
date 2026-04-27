@@ -155,7 +155,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
     // 1. Tab-based filtering
     // Se estivermos em busca ativa, ignoramos os filtros de aba para permitir encontrar o contato.
-    const isSearching = search.trim().length > 0;
+    const isSearching = (search || '').trim().length > 0;
     
     if (!isSearching || mainTab === 'search') {
       if (mainTab === 'open') {
