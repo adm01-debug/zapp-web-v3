@@ -27,6 +27,10 @@ const SUPABASE_URL = (import.meta as { env?: Record<string, string> }).env?.VITE
 const SUPABASE_ANON = (import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 const FUNCTIONS_BASE = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : '';
 
+// Test-only override hook — when set, replaces the real fetch invoker so
+// existing unit tests that mocked `supabase.functions.invoke` keep working.
+let __invokeOverride: ((fnName: string, opts: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> }) => Promise<{ data: unknown; error: { name?: string; message?: string; code?: string; status?: number } | null }>) | null = null;
+
 async function invokeViaFetch<T>(
   fnName: string,
   opts: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> },
