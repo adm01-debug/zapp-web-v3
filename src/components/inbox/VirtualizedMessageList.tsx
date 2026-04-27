@@ -19,6 +19,7 @@ interface VirtualizedMessageListProps {
   onSpeak: (messageId: string, text: string) => void;
   onStopSpeak: () => void;
   isContactTyping?: boolean;
+  contactAvatar?: string;
 }
 
 export interface VirtualizedMessageListRef {
@@ -45,6 +46,7 @@ type ListItem =
 export const VirtualizedMessageList = forwardRef<VirtualizedMessageListRef, VirtualizedMessageListProps>(({
   messages, onReply, onForward, onCopy, onInteractiveButtonClick,
   ttsLoading, ttsPlaying, ttsMessageId, onSpeak, onStopSpeak, isContactTyping = false,
+  contactAvatar,
 }, ref) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -135,6 +137,7 @@ export const VirtualizedMessageList = forwardRef<VirtualizedMessageListRef, Virt
                   onInteractiveButtonClick={onInteractiveButtonClick}
                   ttsLoading={ttsLoading} ttsPlaying={ttsPlaying} ttsMessageId={ttsMessageId}
                   onSpeak={onSpeak} onStopSpeak={onStopSpeak} scrollToMessage={scrollToMessage}
+                  contactAvatar={contactAvatar}
                 />
               )}
             </div>

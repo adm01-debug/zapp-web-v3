@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Message, InteractiveButton } from '@/types/chat';
 import { motion } from 'framer-motion';
@@ -31,16 +32,15 @@ interface MessageBubbleProps {
   onSpeak: (messageId: string, text: string) => void;
   onStopSpeak: () => void;
   scrollToMessage: (messageId: string) => void;
-  /** Optional — enables auto-refresh of expired media URLs (410/403). */
   instanceName?: string;
-  /** Optional — enables auto-refresh of expired media URLs (410/403). */
   contactJid?: string;
+  contactAvatar?: string;
 }
 
 export function MessageBubble({
   message, onReply, onForward, onCopy, onInteractiveButtonClick,
   ttsLoading, ttsPlaying, ttsMessageId, onSpeak, onStopSpeak, scrollToMessage,
-  instanceName, contactJid,
+  instanceName, contactJid, contactAvatar,
 }: MessageBubbleProps) {
   const isSent = message.sender === 'agent';
   const mediaRefreshKey = (instanceName && contactJid && message.external_id)
@@ -48,7 +48,15 @@ export function MessageBubble({
     : undefined;
 
   return (
-    <div className={cn('flex group px-4 py-1', isSent ? 'justify-end' : 'justify-start')}>
+    <div className={cn('flex group px-4 py-1 gap-2', isSent ? 'justify-end' : 'justify-start')}>
+      {!isSent && (
+        <Avatar className="w-8 h-8 shrink-0 self-end mb-1 ring-1 ring-border/30">
+          <AvatarImage src={contactAvatar} />
+          <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+            {(message.senderName || 'C').slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      )}
       <div className="max-w-[70%] space-y-1 relative">
         <div className={cn(
           "absolute top-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10",
