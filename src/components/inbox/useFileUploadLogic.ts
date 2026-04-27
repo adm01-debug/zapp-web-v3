@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { validateFile, FileValidationResult } from '@/utils/whatsappFileTypes';
 import { compressImage, formatCompressionInfo } from '@/utils/imageCompression';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
+import { parseScanInvocation, ScanBlockedError } from '@/lib/scanResponse';
+import { useScanResponseHandler } from '@/hooks/useScanResponseHandler';
 
 interface FileMessageData {
   mediaUrl?: string;
@@ -53,6 +55,7 @@ export function useFileUploadLogic(opts: {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { sendMediaMessage, sendAudioMessage, isLoading: apiLoading } = useEvolutionApi();
+  const { handleScanResult } = useScanResponseHandler();
 
   const processFilesToQueue = useCallback((files: File[]): QueuedFile[] => {
     const processed = files.slice(0, MAX_FILES).map((file, index) => {
@@ -82,16 +85,30 @@ export function useFileUploadLogic(opts: {
     formData.append('file', fileToUpload);
     formData.append('bucket', 'whatsapp-media');
 
-    // Chamada para a Edge Function de Upload Seguro (Middleware)
+    // Edge Function: secure-upload (with VirusTotal middleware)
     const { data, error } = await supabase.functions.invoke('secure-upload', {
       body: formData,
     });
 
-    if (error || !data?.success) {
-      throw new Error(error?.message || data?.error || 'Erro no upload seguro via Edge Function');
+    // Normalize ANY response (success, FunctionsHttpError body, transport
+    // failure) into a single ScanResult so the caller can branch on `code`.
+    const result = await parseScanInvocation({
+      data: data as Record<string, unknown> | null | undefined,
+      error,
+    });
+
+    if (result.status === 'success') {
+      const url = result.payload.url ?? result.payload.path;
+      if (typeof url !== 'string' || !url) {
+        throw new Error('Upload concluído sem URL retornada.');
+      }
+      return url;
     }
 
-    return data.url;
+    // All non-success paths (MALWARE_DETECTED, SUSPICIOUS_FILE, timeouts,
+    // network errors, etc.) bubble up as a structured error so the UI layer
+    // decides how to render — toast with retry, hard block, etc.
+    throw new ScanBlockedError(result);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -137,17 +154,31 @@ export function useFileUploadLogic(opts: {
     const category = filePreview.validation.category;
     const currentCaption = caption;
     handleClose();
-    toast.info('Enviando arquivo...', { id: 'file-upload', duration: 30000 });
-    try {
-      const sent = await sendFileViaApi(file, category, currentCaption);
-      toast.success('Arquivo enviado!', { id: 'file-upload' });
-      if (sent) onFileSent?.({ ...sent.result, mediaUrl: sent.mediaUrl, messageType: sent.category });
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error');
-      log.error('Error sending file:', error);
-      toast.error(error.message || 'Erro ao enviar arquivo', { id: 'file-upload' });
-    }
-  }, [filePreview, instanceName, recipientNumber, caption, handleClose, sendFileViaApi, onFileSelect, onFileSent]);
+
+    // Wrapped so onRetry can replay the exact same attempt with the same closure vars.
+    const attempt = async () => {
+      toast.info('Enviando arquivo...', { id: 'file-upload', duration: 30000 });
+      try {
+        const sent = await sendFileViaApi(file, category, currentCaption);
+        toast.success('Arquivo enviado!', { id: 'file-upload' });
+        if (sent) onFileSent?.({ ...sent.result, mediaUrl: sent.mediaUrl, messageType: sent.category });
+      } catch (err) {
+        if (err instanceof ScanBlockedError) {
+          handleScanResult(err.result, {
+            fileName: file.name,
+            toastId: 'file-upload',
+            onRetry: () => { void attempt(); },
+          });
+          return;
+        }
+        const error = err instanceof Error ? err : new Error('Unknown error');
+        log.error('Error sending file:', error);
+        toast.error(error.message || 'Erro ao enviar arquivo', { id: 'file-upload' });
+      }
+    };
+
+    await attempt();
+  }, [filePreview, instanceName, recipientNumber, caption, handleClose, sendFileViaApi, onFileSent, onFileSelect, handleScanResult]);
 
   const sendSingleQueueFile = useCallback(async (queuedFile: QueuedFile, index: number): Promise<boolean> => {
     if (!queuedFile.validation.valid || !instanceName || !recipientNumber) return false;
@@ -158,12 +189,22 @@ export function useFileUploadLogic(opts: {
       if (sent) onFileSent?.({ ...sent.result, mediaUrl: sent.mediaUrl, messageType: sent.category });
       return true;
     } catch (err) {
+      if (err instanceof ScanBlockedError) {
+        const errorMsg = err.result.status === 'error' ? err.result.message : 'Erro';
+        handleScanResult(err.result, {
+          fileName: queuedFile.file.name,
+          toastId: `file-upload-${queuedFile.id}`,
+          onRetry: () => { void sendSingleQueueFile(queuedFile, index); },
+        });
+        setFileQueue(prev => prev.map((f, i) => i === index ? { ...f, status: 'error', error: errorMsg } : f));
+        return false;
+      }
       const error = err instanceof Error ? err : new Error('Unknown error');
       log.error('Error sending queued file:', error);
       setFileQueue(prev => prev.map((f, i) => i === index ? { ...f, status: 'error', error: error.message } : f));
       return false;
     }
-  }, [instanceName, recipientNumber, sendFileViaApi, onFileSent]);
+  }, [instanceName, recipientNumber, sendFileViaApi, onFileSent, handleScanResult]);
 
   const handleSendAllFiles = useCallback(async () => {
     if (fileQueue.length === 0) return;
