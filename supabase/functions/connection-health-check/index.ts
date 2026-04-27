@@ -327,7 +327,7 @@ async function persistResult(
         reason: evalResult.reason,
         previous_health: conn.health_status ?? null,
       },
-    }).then(({ error }) => { if (error) log.warn('audit insert failed', { error: error.message }); });
+    }).then(({ error }: { error: { message: string } | null }) => { if (error) log.warn('audit insert failed', { error: error.message }); });
   }
 
   await supabase.from('whatsapp_connections').update(updatePayload).eq('id', conn.id);
