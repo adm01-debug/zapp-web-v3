@@ -1,42 +1,55 @@
-# Consertar `externalProxy` — `Failed to send a request to the Edge Function`
+# Conserto definitivo do `Failed to fetch` no inbox
 
-## Diagnóstico (já confirmado)
+## Diagnóstico (já confirmado por curl)
 
-Testei a edge function `external-db-proxy` direto via `curl` com o mesmo body que o cliente envia:
+O fetch direto que substituiu o `supabase.functions.invoke` está **funcionando do lado do servidor** — testei agora:
+
+- `POST external-db-proxy` → **HTTP 200 em 0.76s** ✅
+- `OPTIONS external-db-proxy` (preflight) → **HTTP 200**, mas com este header crítico:
 
 ```
-HTTP 200 time=0.85s   ✅ função saudável
+access-control-allow-headers: authorization, x-client-info, apikey, content-type, x-correlation-id
 ```
 
-Ou seja, **o servidor está 100%**. O erro `FunctionsFetchError: Failed to send a request to the Edge Function` (status `undefined`) que dispara o circuit breaker (`evolution_messages → circuit open`) e derruba a tela com "Erro de conexão" é o padrão conhecido do **proxy `lovable.js` da preview** — ele intercepta `window.fetch` e ocasionalmente derruba o body de POSTs feitos via `supabase.functions.invoke()`. GETs e a app publicada não são afetados.
+O cliente (`src/lib/externalProxy.ts` linha 362) envia em todo POST:
 
-Sintomas que batem 1:1 com esse padrão:
-- `errorName: "FunctionsFetchError"`, `status: undefined`
-- 3 retries seguidas falham idênticas (não é cold start nem 5xx)
-- circuit abre, UI mostra "Proxy circuit open for evolution_messages"
+```ts
+headers: { ...(invokeOptions.headers ?? {}), 'x-attempt': String(attempt) }
+```
 
-## Correção
+`x-attempt` **não está na allowlist do CORS**. Resultado: o navegador aborta o preflight e o `fetch()` rejeita com `TypeError: Failed to fetch` (status `undefined`). É exatamente o erro que está vazando para o `ErrorBoundary` agora (todos os `cid=...` no console).
 
-Trocar `supabase.functions.invoke('external-db-proxy', …)` por um `fetch()` direto à URL da função em **um único arquivo** (`src/lib/externalProxy.ts`). Isso passa por baixo do proxy `lovable.js` e mantém:
-- mesma assinatura `{ data, error }` que o `executeProxyCall` espera (zero mudança no retry/breaker/telemetria)
-- `AbortSignal` para cancelamento
-- header `x-correlation-id` + body `__cid`
-- JWT do usuário logado (com fallback para anon) — RLS continua valendo
+`supabase.functions.invoke` não dava esse erro porque o SDK não enviava `x-attempt` antes — esse header foi adicionado quando a lógica de retry foi escrita assumindo `invoke` (que ignora silenciosamente headers extras em alguns paths).
 
-## Mudança em código
+## Correção (1 arquivo, 1 linha)
 
-Arquivo único: **`src/lib/externalProxy.ts`**
+**`src/lib/externalProxy.ts` (linha ~362):** remover `x-attempt` do header. A informação de tentativa já existe:
 
-1. Adicionar helper `invokeViaFetch(fnName, { body, signal, headers })` que faz `POST ${VITE_SUPABASE_URL}/functions/v1/${fnName}` com `apikey` + `Authorization` (sessão atual ou anon).
-2. Substituir a única linha `await supabase.functions.invoke('external-db-proxy', perAttemptOptions)` por `await invokeViaFetch('external-db-proxy', perAttemptOptions)`.
-3. Nada mais muda — retry, breaker, telemetria, coalesce, ghost-post detection, todos continuam funcionando porque o shape do retorno é idêntico.
+- no `__cid` correlacionado por chamada (cada attempt poderia ter um sufixo se quisermos),
+- nos logs estruturados do cliente (`attempt: N` em `proxy attempt failed`),
+- e o servidor não usa `x-attempt` para nada (verificado, não há leitura desse header em `external-db-proxy`).
+
+Se quisermos manter rastreabilidade do número da tentativa no servidor, embutimos no body como `__attempt: attempt` (já vai junto com `__cid`, sem CORS).
+
+```diff
+- const perAttemptOptions = {
+-   ...invokeOptions,
+-   headers: { ...(invokeOptions.headers ?? {}), 'x-attempt': String(attempt) },
+- };
++ const perAttemptOptions = {
++   ...invokeOptions,
++   body: { ...(invokeOptions.body as Record<string, unknown>), __attempt: attempt },
++ };
+```
 
 ## Validação
 
-- Rodar a suíte `bunx vitest run src/lib/__tests__/` para garantir zero regressão.
-- Atualizar a preview: o circuit breaker fecha sozinho em 5s e o inbox volta a carregar.
+1. Recarregar a preview — o inbox volta a carregar (`evolution_messages`, `evolution_webhook_events`, etc.).
+2. Rodar `bunx vitest run src/lib/__tests__/externalProxy.*.test.ts` — os testes não inspecionam `x-attempt`, então passam sem mudança.
+3. Console deve voltar a mostrar `severity: ok` nos eventos do `clientTelemetry`, sem `Failed to fetch`.
 
-## Fora do escopo
+## Fora de escopo
 
-- Não mexer no edge function (já está saudável).
-- Não mexer em outras chamadas a `supabase.functions.invoke` (só `external-db-proxy` é hot-path do inbox e só essa estava abrindo o breaker).
+- Não mexer no edge `external-db-proxy` (CORS allowlist atual cobre tudo que precisamos sem `x-attempt`).
+- Não mexer em outros chamadores do edge.
+- Não mexer no breaker / coalesce / telemetria — continuam idênticos.
