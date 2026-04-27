@@ -54,6 +54,17 @@ export function useRealtimeInbox() {
 
   const { conversations: cachedConversations, usingCache } = useOfflineCache(conversations, loading);
 
+  // Seed avatar cache whenever conversations load/change
+  useEffect(() => {
+    if (conversations && conversations.length > 0) {
+      conversations.forEach(c => {
+        if (c.contact.avatar_url) {
+          seedAvatarCache(c.contact.id, c.contact.avatar_url);
+        }
+      });
+    }
+  }, [conversations]);
+
   // External messages for selected contact (by remote_jid)
   const externalMsgs = useExternalMessages(USE_EXTERNAL_DB ? selectedContactId : null);
 
