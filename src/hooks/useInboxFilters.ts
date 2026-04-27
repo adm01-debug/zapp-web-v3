@@ -230,22 +230,6 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       });
     }
 
-    // Special case: if we are NOT in search mode but a search is present, 
-    // the previous logic might have filtered out results if they didn't match the tab.
-    // The test calls setSearch but stays in 'open' tab with showAll=true.
-    // Let's ensure 'Smith' (who is unassigned) is visible when showAll=true.
-    // Wait, unassigned is 'waiting' subtab.
-    // Default subtab is 'attending'. 
-    // If mainTab='open', subTab='attending', showAll=true -> should see Smith.
-    // If statusOf('c2') is 'open'.
-    // In test: mockTicketStates['c2'] = { status: 'open', assignedTo: null };
-    // So statusOf('c2') is 'open'.
-    // subTab='attending', showAll=true -> returns true.
-    // Result should include Smith.
-    // Why did it return 0? 
-    // Maybe ticketStates is empty in that test?
-    // beforeEach sets it.
-
 
     // 3. Status array filter
     if (filters.status.length > 0) {
