@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/components/inbox/chat/loadOlderTypes';
 import { validatePttBlob } from '@/lib/audio/pttLimits';
 import { seedAvatarCache } from '@/hooks/realtime/avatarBatchStore';
+import { mapToLegacyConversation, mapToLegacyMessages } from '@/adapters/inboxLegacyMapper';
 
 const log = getLogger('useRealtimeInbox');
 
@@ -298,60 +299,22 @@ export function useRealtimeInbox() {
     }
   }, [selectedContactId, sendMessage, refreshActiveConversation, externalMsgs, externalData]);
 
-  // Convert to legacy format
-  const legacyConversation: Conversation | null = resolvedSelectedConversation
-    ? {
-        id: resolvedSelectedConversation.contact.id,
-        contact: {
-          id: resolvedSelectedConversation.contact.id,
-          name: resolvedSelectedConversation.contact.name,
-          phone: resolvedSelectedConversation.contact.phone,
-          email: resolvedSelectedConversation.contact.email || undefined,
-          avatar: resolvedSelectedConversation.contact.avatar_url || undefined,
-          tags: resolvedSelectedConversation.contact.tags || [],
-          createdAt: new Date(resolvedSelectedConversation.contact.created_at),
-          contact_type: resolvedSelectedConversation.contact.contact_type || undefined,
-          whatsapp_connection_id: resolvedSelectedConversation.contact.whatsapp_connection_id || undefined,
-        },
-        lastMessage: resolvedSelectedConversation.lastMessage
-          ? {
-              id: resolvedSelectedConversation.lastMessage.id,
-              conversationId: resolvedSelectedConversation.contact.id,
-              content: resolvedSelectedConversation.lastMessage.content,
-              type: resolvedSelectedConversation.lastMessage.message_type as Message['type'],
-              sender: resolvedSelectedConversation.lastMessage.sender as Message['sender'],
-              timestamp: new Date(resolvedSelectedConversation.lastMessage.created_at),
-              status: 'read' as const,
-            }
-          : undefined,
-        unreadCount: resolvedSelectedConversation.unreadCount,
-        status: 'open',
-        priority: 'medium',
-        tags: resolvedSelectedConversation.contact.tags || [],
-        createdAt: new Date(resolvedSelectedConversation.contact.created_at),
-        updatedAt: new Date(resolvedSelectedConversation.contact.updated_at),
-      }
-    : null;
+  // Convert to legacy format using the pure mapper
+  const legacyConversation = useMemo(
+    () => mapToLegacyConversation(resolvedSelectedConversation),
+    [resolvedSelectedConversation]
+  );
 
   const messageSource = selectedContactId ? selectedMessages : resolvedSelectedConversation?.messages || [];
-  const legacyMessages: Message[] = messageSource.map((m) => ({
-    id: m.id,
-    conversationId: resolvedSelectedConversation?.contact.id || selectedContactId || '',
-    content: m.content,
-    type: m.message_type as Message['type'],
-    sender: m.sender as Message['sender'],
-    agentId: m.agent_id || undefined,
-    timestamp: new Date(m.created_at),
-    status: (m.status as Message['status'] | null) || (m.is_read ? 'read' : 'delivered'),
-    mediaUrl: m.media_url || undefined,
-    transcription: m.transcription || null,
-    transcriptionStatus: m.transcription_status as Message['transcriptionStatus'] || null,
-    is_deleted: m.is_deleted ?? false,
-    external_id: m.external_id || undefined,
-    retry_attempt: m.retry_attempt ?? null,
-    retry_total: m.retry_total ?? null,
-    contactAvatar: m.contactAvatar || resolvedSelectedConversation?.contact.avatar_url,
-  }));
+  
+  const legacyMessages = useMemo(
+    () => mapToLegacyMessages(
+      messageSource, 
+      resolvedSelectedConversation?.contact.id || selectedContactId || '',
+      resolvedSelectedConversation?.contact.avatar_url
+    ),
+    [messageSource, resolvedSelectedConversation, selectedContactId]
+  );
 
   return {
     // State
