@@ -205,9 +205,10 @@ export default function AdminAutomationLogsPage() {
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="accepted">Aceita</SelectItem>
               <SelectItem value="executed">Executada</SelectItem>
               <SelectItem value="dismissed">Descartada</SelectItem>
-              <SelectItem value="error">Erro</SelectItem>
+              <SelectItem value="failed">Falhou</SelectItem>
             </SelectContent>
           </Select>
         </div>
