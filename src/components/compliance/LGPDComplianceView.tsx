@@ -213,6 +213,15 @@ export function LGPDComplianceView() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Política de Privacidade completa */}
+      <PrivacyPolicySection />
+
+      {/* Guia de conformidade WhatsApp */}
+      <WhatsAppComplianceGuide />
+
+      {/* Histórico de auditoria */}
+      <PrivacyAuditTrail />
     </div>
   );
 }
