@@ -1,4 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('VirtualMessageBubble');
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Message, InteractiveButton } from '@/types/chat';
@@ -49,6 +52,16 @@ export function MessageBubble({
   const mediaRefreshKey = (instanceName && contactJid && message.external_id)
     ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
     : undefined;
+
+  useEffect(() => {
+    if (!isSent && !avatarUrl && !contactAvatar) {
+      log.warn('No avatar available for received message', {
+        messageId: message.id,
+        conversationId: message.conversationId,
+        senderName: message.senderName
+      });
+    }
+  }, [isSent, avatarUrl, contactAvatar, message]);
 
   return (
     <div className={cn('flex group px-4 py-1 gap-2', isSent ? 'justify-end' : 'justify-start')}>

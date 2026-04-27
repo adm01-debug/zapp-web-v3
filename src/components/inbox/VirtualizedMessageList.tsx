@@ -1,4 +1,7 @@
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('VirtualizedMessageList');
 import { EmptyState } from '@/components/ui/empty-state';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Message, InteractiveButton } from '@/types/chat';
@@ -115,6 +118,16 @@ export const VirtualizedMessageList = forwardRef<VirtualizedMessageListRef, Virt
     if (suppressAutoBottomRef.current) return;
     scrollToBottom();
   }, [messages.length, isContactTyping, scrollToBottom]);
+
+  useEffect(() => {
+    if (!contactAvatar) {
+      log.warn('contactAvatar is empty or null', {
+        messageCount: messages.length,
+        firstMessageId: messages[0]?.id,
+        contactId: messages[0]?.conversationId
+      });
+    }
+  }, [contactAvatar, messages]);
 
   if (messages.length === 0) {
     return <div className="flex items-center justify-center h-full"><EmptyState icon={Clock} title="Nenhuma mensagem ainda" description="As mensagens aparecerão aqui quando a conversa começar" illustration="messages" size="sm" /></div>;

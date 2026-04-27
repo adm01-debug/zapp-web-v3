@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getContactAvatar } from './avatarBatchStore';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('useContactAvatar');
 
 /**
  * Hook para obter o avatar de um contato com carregamento em lote e cache.
@@ -26,6 +29,9 @@ export function useContactAvatar(jid: string | null | undefined, initialUrl?: st
 
     getContactAvatar(jid).then((url) => {
       if (mounted) {
+        if (!url && jid) {
+          log.warn('Avatar resolveu para nulo/vazio', { jid });
+        }
         setAvatarUrl(url);
         setLoading(false);
       }
