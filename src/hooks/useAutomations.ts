@@ -229,8 +229,13 @@ export function useAutomations({
                 },
               })
               .eq("id", execId);
-          } catch (e) {
+          } catch (e: any) {
             console.warn("[automation] apply_tags/escalate failed", e);
+            await supabase.rpc("rpc_record_automation_error", {
+              p_execution_id: execId,
+              p_error: String(e?.message ?? e),
+              p_context: { stage: "apply_tags_or_escalate", tags: allTags } as any,
+            } as any);
           }
         }
 
@@ -269,8 +274,13 @@ export function useAutomations({
                   .eq("id", execId);
               }
             }
-          } catch (e) {
+          } catch (e: any) {
             console.warn("[automation] suggest_reply failed", e);
+            await supabase.rpc("rpc_record_automation_error", {
+              p_execution_id: execId,
+              p_error: String(e?.message ?? e),
+              p_context: { stage: "suggest_reply_or_autosend" } as any,
+            } as any);
           }
         }
       }

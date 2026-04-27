@@ -1099,6 +1099,7 @@ export type Database = {
           channel_id: string | null
           created_at: string
           department_id: string | null
+          error_at: string | null
           error_message: string | null
           id: string
           instance_name: string
@@ -1107,6 +1108,7 @@ export type Database = {
           recommended_tag: string | null
           remote_jid: string
           rule_id: string
+          rule_snapshot: Json | null
           status: Database["public"]["Enums"]["automation_execution_status"]
           suggestion_text: string | null
           trigger_payload: Json
@@ -1119,6 +1121,7 @@ export type Database = {
           channel_id?: string | null
           created_at?: string
           department_id?: string | null
+          error_at?: string | null
           error_message?: string | null
           id?: string
           instance_name?: string
@@ -1127,6 +1130,7 @@ export type Database = {
           recommended_tag?: string | null
           remote_jid: string
           rule_id: string
+          rule_snapshot?: Json | null
           status?: Database["public"]["Enums"]["automation_execution_status"]
           suggestion_text?: string | null
           trigger_payload?: Json
@@ -1139,6 +1143,7 @@ export type Database = {
           channel_id?: string | null
           created_at?: string
           department_id?: string | null
+          error_at?: string | null
           error_message?: string | null
           id?: string
           instance_name?: string
@@ -1147,6 +1152,7 @@ export type Database = {
           recommended_tag?: string | null
           remote_jid?: string
           rule_id?: string
+          rule_snapshot?: Json | null
           status?: Database["public"]["Enums"]["automation_execution_status"]
           suggestion_text?: string | null
           trigger_payload?: Json
@@ -11659,6 +11665,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      rpc_record_automation_error: {
+        Args: { p_context?: Json; p_error: string; p_execution_id: string }
+        Returns: undefined
       }
       rpc_record_event_key_usage: {
         Args: { p_key_id: string }

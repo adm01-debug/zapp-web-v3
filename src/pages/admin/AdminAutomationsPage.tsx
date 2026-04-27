@@ -234,9 +234,16 @@ export default function AdminAutomationsPage() {
             Regras por canal e filial: sugestão de resposta com IA, aplicação de tag e escalonamento de SLA.
           </p>
         </div>
-        <Button onClick={startNew}>
-          <Plus className="h-4 w-4 mr-1" /> Nova regra
-        </Button>
+        <div className="flex items-center gap-2">
+          <a href="/admin/automations/logs">
+            <Button variant="outline" size="sm">
+              Audit trail
+            </Button>
+          </a>
+          <Button onClick={startNew}>
+            <Plus className="h-4 w-4 mr-1" /> Nova regra
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
