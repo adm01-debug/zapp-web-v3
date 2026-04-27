@@ -167,4 +167,5 @@ export interface DerivedContact {
   lastMessageContent: string | null;
   lastMessageDirection: string;
   instanceName: string;
+  profilePictureUrl?: string | null;
 }
