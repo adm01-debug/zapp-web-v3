@@ -50,7 +50,7 @@ export interface SendExternalResult {
 function makeOptimisticBubble(
   remoteJid: string,
   content: string,
-  opts: { messageType?: string; mediaUrl?: string | null } = {},
+  opts: { messageType?: string; mediaUrl?: string | null; contactAvatar?: string | null } = {},
 ): RealtimeMessage {
   const now = new Date().toISOString();
   // ID local começa com `optimistic:` pra reconciliação. O webhook insere
@@ -74,6 +74,7 @@ function makeOptimisticBubble(
     transcription: null,
     transcription_status: null,
     is_deleted: false,
+    contactAvatar: opts.contactAvatar ?? null,
   };
 }
 
