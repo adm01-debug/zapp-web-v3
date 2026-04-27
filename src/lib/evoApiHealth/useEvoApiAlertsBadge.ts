@@ -25,16 +25,19 @@ export function useEvoApiAlertsBadge(): EvoApiAlertsBadge {
 
   return useMemo(() => {
     const list = (data?.data ?? []) as ActiveAlert[];
-    let critical = 0;
-    let warning = 0;
-    let info = 0;
-    for (const a of list) {
-      if (a.severity === 'critical') critical++;
-      else if (a.severity === 'warning') warning++;
-      else if (a.severity === 'info') info++;
-    }
+    const counts = list.reduce(
+      (acc, a) => {
+        if (a.severity === 'critical') acc.critical++;
+        else if (a.severity === 'warning') acc.warning++;
+        else if (a.severity === 'info') acc.info++;
+        return acc;
+      },
+      { critical: 0, warning: 0, info: 0 }
+    );
+
     const topSeverity =
-      critical > 0 ? 'critical' : warning > 0 ? 'warning' : info > 0 ? 'info' : null;
-    return { critical, warning, info, total: list.length, topSeverity };
+      counts.critical > 0 ? 'critical' : counts.warning > 0 ? 'warning' : counts.info > 0 ? 'info' : null;
+
+    return { ...counts, total: list.length, topSeverity };
   }, [data?.data]);
 }
