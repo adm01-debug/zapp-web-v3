@@ -129,14 +129,30 @@ export function ConnectionCard({
                     {isOfficial ? <ShieldCheck className="w-3 h-3 mr-1" /> : <Zap className="w-3 h-3 mr-1" />}
                     {isOfficial ? 'API Oficial' : 'Não-oficial (QR)'}
                   </Badge>
-                  <Badge variant="outline" className={cn('text-xs',
-                    connection.status === 'connected' && 'border-status-online text-status-online',
-                    connection.status !== 'connected' && connection.status !== 'pending' && 'border-status-offline text-status-offline',
-                    connection.status === 'pending' && 'border-status-away text-status-away'
-                  )}>
-                    <StatusIcon className={cn('w-3 h-3 mr-1', connection.status === 'connecting' && 'animate-spin')} />
-                    {status.label}
-                  </Badge>
+                  {showAttentionBadge ? (
+                    <TooltipProvider delayDuration={150}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="text-xs border-warning text-warning cursor-help">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Atenção{reasonInfo ? ` · ${reasonInfo.short}` : ''}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-xs">{reasonInfo?.long ?? 'A conexão apresenta sinais de instabilidade. Verifique o status real.'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <Badge variant="outline" className={cn('text-xs',
+                      connection.status === 'connected' && 'border-status-online text-status-online',
+                      connection.status !== 'connected' && connection.status !== 'pending' && 'border-status-offline text-status-offline',
+                      connection.status === 'pending' && 'border-status-away text-status-away'
+                    )}>
+                      <StatusIcon className={cn('w-3 h-3 mr-1', connection.status === 'connecting' && 'animate-spin')} />
+                      {status.label}
+                    </Badge>
+                  )}
                   <BusinessHoursIndicator connectionId={connection.id} />
                 </div>
                 <div className="flex items-center gap-2">
