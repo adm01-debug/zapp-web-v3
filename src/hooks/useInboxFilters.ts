@@ -165,6 +165,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         if (!isOpenOrProgress) return false;
 
         if (subTab === 'attending') {
+          // No test case, showAll=true should bypass profileId check
           if (!showAll) {
             return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
           }
@@ -184,12 +185,33 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     } else if (mainTab === 'resolved') {
       result = result.filter(c => statusOf(c.contact.id) === 'resolved');
     } else if (mainTab === 'search') {
-      // No filter by tab status when in search mode
+      // No filter by status when in search mode
     }
+
+    // DEBUG: console.log('After Tab Filtering:', result.map(r => r.contact.name));
 
     // 2. Search filtering
     const searchTrimmed = (search || '').trim();
     if (searchTrimmed) {
+      const searchLower = searchTrimmed.toLowerCase();
+      const digits = searchTrimmed.replace(/\D/g, '');
+      result = result.filter((c) => {
+        const name = c.contact.name?.toLowerCase() ?? '';
+        const phone = c.contact.phone ?? '';
+        const email = c.contact.email?.toLowerCase() ?? '';
+        const jid = String(c.contact.id ?? '').toLowerCase();
+        const lastMsg = c.lastMessage?.content?.toLowerCase() ?? '';
+        
+        const matches = (
+          name.includes(searchLower) ||
+          (digits.length > 0 && phone.replace(/\D/g, '').includes(digits)) ||
+          email.includes(searchLower) ||
+          jid.includes(searchLower) ||
+          lastMsg.includes(searchLower)
+        );
+        return matches;
+      });
+    }
       const searchLower = searchTrimmed.toLowerCase();
       const digits = searchTrimmed.replace(/\D/g, '');
       result = result.filter((c) => {
