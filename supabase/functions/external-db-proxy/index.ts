@@ -232,7 +232,12 @@ function recordMetric(sample: MetricSample) {
   })
 }
 
-Deno.serve(async (req) => {
+// Outer guard — converts ANY uncaught throw (including runtime/boot
+// failures that would otherwise surface as 503 SUPABASE_EDGE_RUNTIME_ERROR
+// and a blank screen) into a structured JSON response with HTTP 200.
+// The client SDK only reads the body on 2xx, so we use 200 + `fallback:true`
+// to let the caller degrade gracefully instead of throwing.
+async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -693,5 +698,39 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: (error as Error).message, cid, rid }), {
       status: 500, headers: jsonHeaders,
     })
+  }
+}
+
+Deno.serve(async (req) => {
+  try {
+    return await handler(req)
+  } catch (e) {
+    // Last-resort guard: anything that escaped `handler` (including async
+    // throws after the response was started) becomes a 200 + fallback
+    // payload instead of a runtime 503. Frontend treats `fallback:true` as
+    // a soft failure (no blank screen, no toast spam).
+    const msg = (e as Error)?.message ?? 'unknown_error'
+    try {
+      console.error(JSON.stringify({
+        fn: 'external-db-proxy',
+        phase: 'runtime_guard',
+        ts: new Date().toISOString(),
+        err_msg: msg,
+        stack: (e as Error)?.stack?.split('\n').slice(0, 3).join(' | '),
+      }))
+    } catch { /* ignore */ }
+    return new Response(
+      JSON.stringify({
+        code: 'SUPABASE_EDGE_RUNTIME_ERROR',
+        message: 'Service is temporarily unavailable',
+        error: 'SERVICE_UNAVAILABLE',
+        fallback: true,
+        detail: msg,
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    )
   }
 })
