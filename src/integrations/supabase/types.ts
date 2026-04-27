@@ -5087,6 +5087,51 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_profiles: {
+        Row: {
+          created_at: string
+          default_instance: string | null
+          detected_signals: Json
+          display_phone: string | null
+          id: string
+          is_active: boolean
+          migrated_at: string | null
+          migration_notes: string | null
+          migration_status: string
+          provider: string
+          updated_at: string
+          waba_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          default_instance?: string | null
+          detected_signals?: Json
+          display_phone?: string | null
+          id?: string
+          is_active?: boolean
+          migrated_at?: string | null
+          migration_notes?: string | null
+          migration_status?: string
+          provider: string
+          updated_at?: string
+          waba_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          default_instance?: string | null
+          detected_signals?: Json
+          display_phone?: string | null
+          id?: string
+          is_active?: boolean
+          migrated_at?: string | null
+          migration_notes?: string | null
+          migration_status?: string
+          provider?: string
+          updated_at?: string
+          waba_name?: string | null
+        }
+        Relationships: []
+      }
       ip_whitelist: {
         Row: {
           added_by: string | null
@@ -11270,6 +11315,29 @@ export type Database = {
         Args: { p_hours?: number }
         Returns: Json
       }
+      rpc_get_active_integration_profile: {
+        Args: never
+        Returns: {
+          created_at: string
+          default_instance: string | null
+          detected_signals: Json
+          display_phone: string | null
+          id: string
+          is_active: boolean
+          migrated_at: string | null
+          migration_notes: string | null
+          migration_status: string
+          provider: string
+          updated_at: string
+          waba_name: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "integration_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       rpc_get_whatsapp_mode: { Args: never; Returns: string }
       rpc_instance_auth_event_summary: {
         Args: { p_hours?: number; p_instance?: string }
@@ -11478,6 +11546,7 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_migrate_whatsapp_integration: { Args: never; Returns: Json }
       rpc_ops_metrics: { Args: { p_window_hours?: number }; Returns: Json }
       rpc_pause_queue: {
         Args: { p_queue_id: string; p_reason?: string }
