@@ -209,18 +209,20 @@ describe('Bolha de áudio — controles play/seek/mute (inbound & outbound)', ()
       await act(async () => { audio.dispatchEvent(new Event('loadedmetadata')); });
 
       const trigger = screen.getByLabelText('Controle de volume');
-      // Set volume to 70%
+      // Set volume to 70% via slider
       await act(async () => { fireEvent.click(trigger); });
       const slider = screen.getByLabelText('Volume') as HTMLInputElement;
       await act(async () => { fireEvent.change(slider, { target: { value: '70' } }); });
       expect(mockVolume).toBeCloseTo(0.7, 2);
 
-      // Duplo clique no trigger → mute
-      await act(async () => { fireEvent.doubleClick(trigger); });
+      // Mute via botão dentro do popover (mesmo handler do duplo clique)
+      const muteBtn = screen.getByLabelText('Silenciar');
+      await act(async () => { fireEvent.click(muteBtn); });
       expect(mockVolume).toBe(0);
 
-      // Duplo clique novamente → desmuta restaurando 70%
-      await act(async () => { fireEvent.doubleClick(trigger); });
+      // Desmuta restaurando o último volume audível
+      const unmuteBtn = screen.getByLabelText('Tirar mudo');
+      await act(async () => { fireEvent.click(unmuteBtn); });
       expect(mockVolume).toBeCloseTo(0.7, 2);
     });
 
