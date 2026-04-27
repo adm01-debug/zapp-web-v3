@@ -73,7 +73,7 @@ export function MessageBubble({
   const [historyOpen, setHistoryOpen] = useState(false);
   const isSent = message.sender === 'agent';
   const senderName = isSent ? 'Você' : message.senderName || 'Contato';
-  const { avatarUrl } = useContactAvatar(message.conversationId, contactAvatar);
+  const { avatarUrl } = useContactAvatar(message.conversationId, message.contactAvatar || contactAvatar);
   
   const agentInitials = profile?.name ? profile.name.slice(0, 2).toUpperCase() : 'EU';
   const isFailedTerminal = isSent && !message.is_deleted && (
