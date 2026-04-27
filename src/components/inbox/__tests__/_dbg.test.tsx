@@ -23,10 +23,10 @@ describe('dbg', () => {
     const audio = container.querySelector('audio') as HTMLAudioElement;
     await act(async () => { audio.dispatchEvent(new Event('loadedmetadata')); });
     const btn = container.querySelectorAll('button')[0] as HTMLButtonElement;
-    console.log('BEFORE:', btn.outerHTML.slice(0, 200), 'disabled?', btn.disabled);
-    await act(async () => { fireEvent.click(btn); });
-    await new Promise(r => setTimeout(r, 50));
-    await act(async () => { await Promise.resolve(); });
-    console.log('SVG CLASS:', btn.querySelector('svg')?.getAttribute('class'));
+    console.log('BEFORE:', btn.querySelector('svg')?.getAttribute('class'));
+    await act(async () => { btn.click(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
+    console.log('AFTER1:', btn.querySelector('svg')?.getAttribute('class'), 'play:', mockPlay.mock.calls.length);
+    await act(async () => { await new Promise(r => setTimeout(r, 100)); });
+    console.log('AFTER2:', btn.querySelector('svg')?.getAttribute('class'));
   });
 });
