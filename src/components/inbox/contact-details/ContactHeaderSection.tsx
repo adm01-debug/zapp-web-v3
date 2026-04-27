@@ -100,7 +100,13 @@ export function ContactHeaderSection({ contact, enrichedData, conversation, onQu
             </svg>
             <Avatar className="w-24 h-24 ring-2 ring-background cursor-pointer hover:ring-primary/50 transition-all"
               onClick={() => contact.avatar && setShowAvatarPreview(true)}>
-              <AvatarImage src={contact.avatar} />
+              <AvatarImage 
+                src={contact.avatar} 
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).removeAttribute('src');
+                }}
+              />
               <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
                 {contact.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
