@@ -88,7 +88,7 @@ export async function sendExternalText(
   if (!phone) throw new Error('Contato sem JID válido para envio.');
   const instance = opts.instanceName || DEFAULT_INSTANCE;
 
-  const optimistic = makeOptimisticBubble(remoteJid, content);
+  const optimistic = makeOptimisticBubble(remoteJid, content, { contactAvatar: opts.contactAvatar });
 
   const { data, error } = await supabase.functions.invoke('evolution-api', {
     body: {
