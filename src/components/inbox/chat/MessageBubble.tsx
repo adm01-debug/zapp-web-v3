@@ -32,6 +32,7 @@ import {
 import { MessageSendHistorySheet } from './MessageSendHistorySheet';
 import { extractMessageType } from '@/adapters/evolutionAdapter';
 import { MessageBubbleUnsupported } from './MessageBubbleUnsupported';
+import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('MessageBubble');
@@ -72,6 +73,8 @@ export function MessageBubble({
   const [historyOpen, setHistoryOpen] = useState(false);
   const isSent = message.sender === 'agent';
   const senderName = isSent ? 'Você' : message.senderName || 'Contato';
+  const { avatarUrl } = useContactAvatar(message.conversationId, contactAvatar);
+  
   const agentInitials = profile?.name ? profile.name.slice(0, 2).toUpperCase() : 'EU';
   const isFailedTerminal = isSent && !message.is_deleted && (
     message.status === 'failed' || message.status === 'failed_auth' || message.status === 'failed_retries'
@@ -114,7 +117,7 @@ export function MessageBubble({
             <div className="w-8 shrink-0">
               {isLastInGroup && (
                 <Avatar className="w-8 h-8 ring-2 ring-background shadow-sm">
-                  <AvatarImage src={contactAvatar} />
+                  <AvatarImage src={avatarUrl || undefined} />
                   <AvatarFallback className="bg-gradient-to-br from-accent to-accent/60 text-accent-foreground text-[10px] font-bold">
                     {senderName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>

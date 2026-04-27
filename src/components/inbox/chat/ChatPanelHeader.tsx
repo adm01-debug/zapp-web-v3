@@ -12,6 +12,7 @@ import {
 
 import { MoreVertical, Tag, Archive, CheckCircle, Clock, ArrowRight, ArrowLeft, ExternalLink, XCircle } from 'lucide-react';
 import { openChatPopup } from '@/lib/popupManager';
+import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
 
 interface ChatMessage { id: string; content: string; sender: string; timestamp: string; }
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
@@ -55,6 +56,7 @@ export function ChatPanelHeader({
   sendState = 'idle', failuresOnly, onToggleFailuresOnly, failuresCount,
 }: ChatPanelHeaderProps) {
   const isMobile = useIsMobile();
+  const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
 
   return (
     <div className="flex items-center justify-between px-3 md:px-5 h-[56px] md:h-[65px] border-b border-border bg-card shrink-0">
@@ -66,7 +68,7 @@ export function ChatPanelHeader({
         )}
         <div className="relative shrink-0">
           <Avatar className="w-9 h-9 md:w-10 md:h-10">
-            <AvatarImage src={conversation.contact.avatar} />
+            <AvatarImage src={avatarUrl || undefined} />
             <AvatarFallback className="bg-primary/15 text-primary font-semibold text-sm">
               {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
             </AvatarFallback>

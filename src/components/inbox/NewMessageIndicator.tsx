@@ -3,9 +3,11 @@ import { MessageSquare, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
 
 interface NewMessageIndicatorProps {
   show: boolean;
+  contactId?: string | null;
   contactName: string;
   contactAvatar?: string | null;
   message: string;
@@ -15,12 +17,14 @@ interface NewMessageIndicatorProps {
 
 export function NewMessageIndicator({
   show,
+  contactId,
   contactName,
   contactAvatar,
   message,
   onView,
   onDismiss,
 }: NewMessageIndicatorProps) {
+  const { avatarUrl } = useContactAvatar(contactId, contactAvatar);
   return (
     <AnimatePresence>
       {show && (
@@ -82,7 +86,7 @@ export function NewMessageIndicator({
                     }}
                   />
                   <Avatar className="w-12 h-12 ring-2 ring-primary/50">
-                    <AvatarImage src={contactAvatar || undefined} />
+                    <AvatarImage src={avatarUrl || undefined} />
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold">
                       {contactName
                         .split(' ')

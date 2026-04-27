@@ -110,7 +110,15 @@ export function RealtimeInboxView() {
         <Suspense fallback={null}><GlobalSearch open={inbox.globalSearchOpen} onOpenChange={inbox.setGlobalSearchOpen} onSelectResult={handleGlobalSearchResult} /></Suspense>
       )}
 
-      <NewMessageIndicator show={!!inbox.newMessageNotification} contactName={inbox.newMessageNotification?.contactName || ''} contactAvatar={inbox.newMessageNotification?.contactAvatar} message={inbox.newMessageNotification?.message || ''} onView={inbox.handleNotificationView} onDismiss={inbox.dismissNotification} />
+      <NewMessageIndicator 
+        show={!!inbox.newMessageNotification} 
+        contactId={inbox.newMessageNotification?.contactId}
+        contactName={inbox.newMessageNotification?.contactName || ''} 
+        contactAvatar={inbox.newMessageNotification?.contactAvatar} 
+        message={inbox.newMessageNotification?.message || ''} 
+        onView={inbox.handleNotificationView} 
+        onDismiss={inbox.dismissNotification} 
+      />
 
       <MessageBatcherIndicator status={inbox.batcherStatus} />
 

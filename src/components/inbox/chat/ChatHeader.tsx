@@ -20,6 +20,7 @@ import { BusinessHoursBadge } from '../BusinessHoursBadge';
 import { AnalysisBadges } from '../AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench } from 'lucide-react';
+import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
 
 const contactTypeConfig: Record<string, { label: string; icon: typeof Users; color: string }> = {
   cliente: { label: 'Cliente', icon: Users, color: 'bg-info/10 text-info border-info/30' },
@@ -58,13 +59,14 @@ export function ChatHeader({
 
   const { data: intel } = useContactIntelligence(isExternalConfigured ? conversation.contact.phone : undefined);
   const briefing = intel?.found ? intel.briefing : null;
+  const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
 
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between px-4 py-3 border-b border-border/20 bg-card">
       <div className="flex items-center gap-3">
         <motion.div whileHover={{ scale: 1.05 }}>
           <Avatar className="w-10 h-10 ring-2 ring-border/30">
-            <AvatarImage src={conversation.contact.avatar} />
+            <AvatarImage src={avatarUrl || undefined} />
             <AvatarFallback className="bg-primary/10 text-primary font-medium">
               {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
             </AvatarFallback>

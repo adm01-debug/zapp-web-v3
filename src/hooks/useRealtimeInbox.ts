@@ -10,6 +10,7 @@ import { Conversation, Message } from '@/types/chat';
 import { toast } from 'sonner';
 import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/components/inbox/chat/loadOlderTypes';
 import { validatePttBlob } from '@/lib/audio/pttLimits';
+import { seedAvatarCache } from '@/hooks/realtime/avatarBatchStore';
 
 const log = getLogger('useRealtimeInbox');
 
@@ -52,6 +53,17 @@ export function useRealtimeInbox() {
   const { profile } = useAuth();
 
   const { conversations: cachedConversations, usingCache } = useOfflineCache(conversations, loading);
+
+  // Seed avatar cache whenever conversations load/change
+  useEffect(() => {
+    if (conversations && conversations.length > 0) {
+      conversations.forEach(c => {
+        if (c.contact.avatar_url) {
+          seedAvatarCache(c.contact.id, c.contact.avatar_url);
+        }
+      });
+    }
+  }, [conversations]);
 
   // External messages for selected contact (by remote_jid)
   const externalMsgs = useExternalMessages(USE_EXTERNAL_DB ? selectedContactId : null);

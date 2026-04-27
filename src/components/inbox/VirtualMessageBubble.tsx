@@ -15,6 +15,7 @@ import { TextToSpeechButton } from './TextToSpeechButton';
 import { Reply, Forward, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { MessageStatusInline } from './chat/MessageStatusInline';
+import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
 
 function formatMessageTime(date: Date): string {
   return format(date, 'HH:mm');
@@ -43,6 +44,8 @@ export function MessageBubble({
   instanceName, contactJid, contactAvatar,
 }: MessageBubbleProps) {
   const isSent = message.sender === 'agent';
+  const { avatarUrl } = useContactAvatar(message.conversationId, contactAvatar);
+  
   const mediaRefreshKey = (instanceName && contactJid && message.external_id)
     ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
     : undefined;
@@ -51,7 +54,7 @@ export function MessageBubble({
     <div className={cn('flex group px-4 py-1 gap-2', isSent ? 'justify-end' : 'justify-start')}>
       {!isSent && (
         <Avatar className="w-8 h-8 shrink-0 self-end mb-1 ring-1 ring-border/30">
-          <AvatarImage src={contactAvatar} />
+          <AvatarImage src={avatarUrl || undefined} />
           <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
             {(message.senderName || 'C').slice(0, 2).toUpperCase()}
           </AvatarFallback>
