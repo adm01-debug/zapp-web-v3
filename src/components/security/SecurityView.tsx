@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Key, Lock, Activity, Users, Bell, Smartphone, LayoutDashboard, Fingerprint, Globe, FileText, Gauge } from 'lucide-react';
+import { Shield, Key, Lock, Activity, Users, Bell, Smartphone, LayoutDashboard, Fingerprint, Globe, FileText, Gauge, Bug } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,12 +16,14 @@ import { PasswordResetRequestsPanel } from './PasswordResetRequestsPanel';
 import { RateLimitRealtimeAlerts } from './RateLimitRealtimeAlerts';
 import { RateLimitConfigPanel } from './RateLimitConfigPanel';
 import { AuditLogDashboard } from './AuditLogDashboard';
+import { VirusTotalConfig } from './VirusTotalConfig';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useSecurityPushNotifications } from '@/hooks/useSecurityPushNotifications';
 
 export function SecurityView() {
   const { hasRole } = useUserRole();
   const isAdmin = hasRole('admin');
+  const isDev = hasRole('developer');
   const [activeTab, setActiveTab] = useState('overview');
   
   // Initialize security push notifications
@@ -52,7 +54,7 @@ export function SecurityView() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 md:grid-cols-10">
+          <TabsList className="grid w-full grid-cols-5 md:grid-cols-11">
             <TabsTrigger value="overview" className="gap-2">
               <LayoutDashboard className="w-4 h-4" />
               <span className="hidden sm:inline">Visão Geral</span>
@@ -73,6 +75,12 @@ export function SecurityView() {
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Alertas</span>
             </TabsTrigger>
+            {(isAdmin || isDev) && (
+              <TabsTrigger value="virustotal" className="gap-2">
+                <Bug className="w-4 h-4" />
+                <span className="hidden sm:inline">VirusTotal</span>
+              </TabsTrigger>
+            )}
             {isAdmin && (
               <>
                 <TabsTrigger value="blocked" className="gap-2">
@@ -118,6 +126,12 @@ export function SecurityView() {
           <TabsContent value="notifications">
             <SecurityNotificationsPanel />
           </TabsContent>
+
+          {(isAdmin || isDev) && (
+            <TabsContent value="virustotal">
+              <VirusTotalConfig />
+            </TabsContent>
+          )}
 
           {isAdmin && (
             <>
