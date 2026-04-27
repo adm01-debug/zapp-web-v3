@@ -165,11 +165,11 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         if (!isOpenOrProgress) return false;
 
         if (subTab === 'attending') {
-          // No test case, showAll=true should bypass profileId check
-          if (!showAll) {
-            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
-          }
-          return true;
+          // If we are searching and showAll is on, we skip the assignment check
+          const searchTrimmed = (search || '').trim();
+          if (showAll || searchTrimmed.length > 0) return true;
+          
+          return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
         } 
         
         if (subTab === 'waiting') {
