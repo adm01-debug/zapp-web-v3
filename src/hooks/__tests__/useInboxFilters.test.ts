@@ -5,19 +5,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useInboxFilters } from '@/hooks/useInboxFilters';
 
 // Mock dependencies
-const mockSelect = vi.fn().mockResolvedValue({ data: [], error: null });
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn().mockReturnValue({
-      select: () => ({
-        in: () => ({
-          eq: () => ({
-            not: () => ({
+      select: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            not: vi.fn().mockReturnValue({
               limit: vi.fn().mockResolvedValue({ data: [], error: null })
             })
           })
-        }),
-        select: mockSelect
+        })
       }),
     }),
   },
@@ -64,8 +62,10 @@ vi.mock('@/hooks/inbox/useFailureMetricsBatch', () => ({
   useFailureMetricsBatch: () => mockFailureMetrics,
 }));
 
+// IMPORTANT: statusOf logic depends on this
+const mockTicketStates: Record<string, any> = {};
 vi.mock('@/hooks/useTicketStatus', () => ({
-  useAllTicketStates: () => ({}),
+  useAllTicketStates: () => mockTicketStates,
 }));
 
 // Mock data
@@ -104,6 +104,9 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     mockSearchParams = new URLSearchParams();
     queryClient.clear();
     mockFailureMetrics.data = {};
+    // Ensure both are considered "open" so they pass mainTab === 'open'
+    mockTicketStates['c1'] = { status: 'open', assignedTo: 'agent-1' };
+    mockTicketStates['c2'] = { status: 'open', assignedTo: null };
   });
 
   it('filters by failure status when showOnlyRetrying is true', () => {
@@ -112,14 +115,24 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
       profileId: 'agent-1'
     }), { wrapper });
 
-    // Both contacts exist, and in open status (default mock)
+    // Both contacts exist, in open status, and subTab defaults to 'attending' 
+    // and profileId matches agent-1, so c1 should be there. 
+    // Wait, subTab 'attending' filters by assignedTo === profileId.
+    // c1 is assigned to agent-1. c2 is unassigned.
+    // Default showAll is false. So ONLY c1 is visible in 'attending'.
+    expect(result.current.filteredConversations.length).toBe(1);
+    expect(result.current.filteredConversations[0].contact.id).toBe('c1');
+
+    act(() => {
+       result.current.setShowAll(true);
+    });
     expect(result.current.filteredConversations.length).toBe(2);
 
     act(() => {
       result.current.setShowOnlyRetrying(true);
     });
 
-    // Only Jane Smith has a failed/retrying message
+    // Only Jane Smith (c2) has a failed/retrying message
     expect(result.current.filteredConversations.length).toBe(1);
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
@@ -133,6 +146,7 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     }), { wrapper });
 
     act(() => {
+      result.current.setShowAll(true);
       result.current.setShowOnlyRetrying(true);
       result.current.setFailureCategoryFilter('network');
     });
@@ -164,6 +178,7 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     }), { wrapper });
 
     act(() => {
+      result.current.setShowAll(true);
       result.current.setSearch('Jane');
     });
 
@@ -171,6 +186,7 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
 });
+
 
 
 
