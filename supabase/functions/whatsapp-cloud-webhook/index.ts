@@ -42,6 +42,18 @@ function reqId(): string {
   return crypto.randomUUID().slice(0, 8);
 }
 
+// Registra atividade do webhook (best-effort, nunca bloqueia o fluxo)
+async function recordPing(
+  kind: "handshake" | "event" | "invalid_signature" | "invalid_token",
+  meta: Record<string, unknown> = {},
+): Promise<void> {
+  try {
+    await localClient.from("whatsapp_cloud_webhook_pings").insert({ kind, meta });
+  } catch (e) {
+    console.warn(`[whatsapp-cloud-webhook] ping insert failed: ${(e as Error).message}`);
+  }
+}
+
 async function isDuplicate(messageId: string): Promise<boolean> {
   if (!messageId) return false;
   const eventId = `whatsapp-cloud:${messageId}`;
