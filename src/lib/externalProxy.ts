@@ -121,6 +121,16 @@ interface ProxyResponse<T = unknown> {
   error?: string;
 }
 
+function normalizeProxyBody(body: Record<string, unknown>): Record<string, unknown> {
+  const action = typeof body.action === 'string' ? body.action : undefined;
+  const hasTable = typeof body.table === 'string' && body.table.length > 0;
+  const hasRpc = typeof body.rpc === 'string' && body.rpc.length > 0;
+
+  if (action || (!hasTable && !hasRpc)) return body;
+  if (hasRpc) return { ...body, action: 'rpc' };
+  return { ...body, action: 'select' };
+}
+
 function deriveTelemetryMeta(body: Record<string, unknown>): {
   operation: QueryOperation;
   target: string;
@@ -223,8 +233,9 @@ function __resetBreakerAndCoalesce(): void {
 
 export async function queryExternalProxy<T = unknown>(params: ProxyParams): Promise<ProxyResponse<T>> {
   // Extract signal so it isn't sent in the JSON body.
-  const { signal, ...body } = params as ProxyParams & { signal?: AbortSignal };
-  const meta = deriveTelemetryMeta(body as Record<string, unknown>);
+  const { signal, ...rawBody } = params as ProxyParams & { signal?: AbortSignal };
+  const body = normalizeProxyBody(rawBody as Record<string, unknown>);
+  const meta = deriveTelemetryMeta(body);
 
   // ── Circuit breaker check ──
   // If too many recent ghost-POST failures hit this target, fail fast for a
