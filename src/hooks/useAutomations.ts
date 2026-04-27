@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getExternalSupabase } from "@/integrations/supabase/externalClient";
 
-const externalClient = getExternalSupabase();
+// Lazy: getExternalSupabase() can return null when FATOR X env vars are absent.
+// Resolve at call time so module import never crashes the inbox.
+const getClient = () => getExternalSupabase();
 
 /**
  * Hook que avalia regras de automação contra a conversa ativa.
