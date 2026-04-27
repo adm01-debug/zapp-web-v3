@@ -9,6 +9,7 @@ import { ViewLoadingFallback } from '@/components/layout/ViewLoadingFallback';
 import { RouteLoadingBar } from '@/components/ui/route-loading-bar';
 import { FailedMessageAlertsMount } from '@/components/system/FailedMessageAlertsMount';
 import { AutomationFailureAlertsMount } from '@/components/system/AutomationFailureAlertsMount';
+import { IntegrationMigrationMount } from '@/components/system/IntegrationMigrationMount';
 import { MobileShell } from '@/components/mobile/MobileShell';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
@@ -115,6 +116,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
       <RouteLoadingBar isLoading={loading} />
       <FailedMessageAlertsMount />
       <AutomationFailureAlertsMount />
+      <IntegrationMigrationMount />
 
       {/* Skip to content — a11y */}
       <a

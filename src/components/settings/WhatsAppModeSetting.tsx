@@ -8,8 +8,19 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShieldCheck, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, ShieldCheck, Zap, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+
+interface IntegrationProfile {
+  provider: "evolution" | "cloud";
+  default_instance: string | null;
+  display_phone: string | null;
+  waba_name: string | null;
+  migration_status: "pending" | "migrated" | "pending_credentials" | "noop" | "error";
+  migration_notes: string | null;
+  migrated_at: string | null;
+}
 
 /**
  * Seletor de modo WhatsApp (Oficial Cloud API vs Não-oficial Evolution).
@@ -20,20 +31,45 @@ export function WhatsAppModeSetting() {
   const [mode, setMode] = useState<WhatsAppMode>("unofficial");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<IntegrationProfile | null>(null);
+  const [migrating, setMigrating] = useState(false);
+
+  const loadProfile = useCallback(async () => {
+    // deno-lint-ignore no-explicit-any
+    const { data } = await supabase.rpc("rpc_get_active_integration_profile" as any);
+    if (data) setProfile(data as IntegrationProfile);
+  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const m = await getWhatsAppMode(true);
       setMode(m);
+      await loadProfile();
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadProfile]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  const handleRunMigration = async () => {
+    setMigrating(true);
+    try {
+      // deno-lint-ignore no-explicit-any
+      const { error } = await supabase.rpc("rpc_migrate_whatsapp_integration" as any);
+      if (error) throw error;
+      invalidateWhatsAppModeCache();
+      await refresh();
+      toast.success("Migração de integração re-executada");
+    } catch (e) {
+      toast.error(`Falha na migração: ${e instanceof Error ? e.message : "erro"}`);
+    } finally {
+      setMigrating(false);
+    }
+  };
 
   const handleToggle = async (checked: boolean) => {
     const next: WhatsAppMode = checked ? "official" : "unofficial";
@@ -97,6 +133,50 @@ export function WhatsAppModeSetting() {
       <p className="text-[11px] text-muted-foreground/80 pl-7">
         Preferência salva por workspace. Alterações afetam todos os usuários imediatamente.
       </p>
+
+      {profile && (
+        <div className="mt-2 ml-7 p-2 rounded-md border border-border/30 bg-muted/20 text-xs space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium">Perfil ativo:</span>
+              <Badge variant="outline" className="text-[10px]">
+                {profile.provider === "cloud" ? "Meta Cloud" : "Evolution"}
+              </Badge>
+              <Badge
+                variant={
+                  profile.migration_status === "migrated" ? "default" :
+                  profile.migration_status === "pending_credentials" ? "secondary" : "outline"
+                }
+                className="text-[10px]"
+              >
+                {profile.migration_status === "migrated" && "migrado"}
+                {profile.migration_status === "pending_credentials" && "credenciais pendentes"}
+                {profile.migration_status === "pending" && "pendente"}
+                {profile.migration_status === "noop" && "sem alterações"}
+                {profile.migration_status === "error" && "erro"}
+              </Badge>
+              {profile.default_instance && (
+                <span className="text-muted-foreground">instância: <code>{profile.default_instance}</code></span>
+              )}
+              {profile.display_phone && (
+                <span className="text-muted-foreground">tel: <code>{profile.display_phone}</code></span>
+              )}
+            </div>
+            <Button
+              variant="ghost" size="sm" className="h-7 px-2"
+              onClick={handleRunMigration} disabled={migrating}
+            >
+              {migrating
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <RefreshCw className="h-3 w-3" />}
+              <span className="ml-1">Re-migrar</span>
+            </Button>
+          </div>
+          {profile.migration_notes && (
+            <p className="text-muted-foreground text-[11px]">{profile.migration_notes}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
