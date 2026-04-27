@@ -16,8 +16,26 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import {
   Copy, Loader2, ShieldCheck, Zap, AlertTriangle, CheckCircle2,
-  XCircle, ExternalLink,
+  XCircle, ExternalLink, RefreshCw, Activity,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface PingRow { kind: string; meta: Record<string, unknown>; created_at: string }
+interface VerifyResult {
+  verifyTokenConfigured: boolean;
+  webhookUrl: string;
+  handshake: { status: "pass" | "fail" | "skip"; httpStatus?: number; echoMatches?: boolean; durationMs?: number; error?: string };
+  delivery: {
+    status: "pass" | "warn";
+    lastEventAt: string | null;
+    lastHandshakeAt: string | null;
+    counts24h: { handshake: number; event: number; invalid_signature: number; invalid_token: number };
+    message: string;
+    recent: PingRow[];
+  };
+  checkedAt: string;
+}
 
 interface SecretStatus {
   name: string;
@@ -55,6 +73,8 @@ export default function AdminWhatsAppModePage() {
   const [saving, setSaving] = useState(false);
   const [secrets, setSecrets] = useState<SecretStatus[] | null>(null);
   const [secretsLoading, setSecretsLoading] = useState(false);
+  const [verify, setVerify] = useState<VerifyResult | null>(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
   const webhookUrl = getCloudWebhookUrl();
 
   const refresh = useCallback(async () => {
@@ -78,6 +98,23 @@ export default function AdminWhatsAppModePage() {
       });
     } finally {
       setSecretsLoading(false);
+    }
+  }, [toast]);
+
+  const runVerify = useCallback(async () => {
+    setVerifyLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("whatsapp-cloud-webhook-verify");
+      if (error) throw error;
+      setVerify(data as VerifyResult);
+    } catch (e) {
+      toast({
+        title: "Falha na verificação",
+        description: e instanceof Error ? e.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setVerifyLoading(false);
     }
   }, [toast]);
 
@@ -200,6 +237,125 @@ export default function AdminWhatsAppModePage() {
           </CardContent>
         </Card>
       )}
+
+      {/* ---- Verificação do Webhook ---- */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                Verificação do Webhook
+              </CardTitle>
+              <CardDescription>
+                Valida o Verify Token (handshake da Meta) e confirma se o webhook está recebendo eventos.
+              </CardDescription>
+            </div>
+            <Button onClick={runVerify} disabled={verifyLoading} size="sm">
+              {verifyLoading
+                ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                : <RefreshCw className="h-4 w-4 mr-2" />}
+              Executar verificação
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!verify && !verifyLoading && (
+            <p className="text-sm text-muted-foreground">
+              Clique em "Executar verificação" para checar o handshake do Verify Token e a entrega de eventos das últimas 24h.
+            </p>
+          )}
+
+          {verify && (
+            <>
+              {/* Etapa 1: Handshake */}
+              <div className="rounded-lg border p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    {verify.handshake.status === "pass" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                    {verify.handshake.status === "fail" && <XCircle className="h-4 w-4 text-destructive" />}
+                    {verify.handshake.status === "skip" && <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                    <span className="text-sm font-medium">1. Handshake do Verify Token</span>
+                  </div>
+                  <Badge variant={verify.handshake.status === "pass" ? "default" : verify.handshake.status === "skip" ? "secondary" : "destructive"}>
+                    {verify.handshake.status === "pass" ? "OK" : verify.handshake.status === "skip" ? "Pulado" : "Falhou"}
+                  </Badge>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-0.5 pl-6">
+                  {verify.handshake.status === "pass" && (
+                    <p>Echo do challenge confere e HTTP {verify.handshake.httpStatus} em {verify.handshake.durationMs}ms. O token configurado nos secrets bate com o que o webhook valida.</p>
+                  )}
+                  {verify.handshake.status === "fail" && (
+                    <>
+                      <p>HTTP {verify.handshake.httpStatus ?? "—"} • echo confere: {String(verify.handshake.echoMatches ?? false)}</p>
+                      {verify.handshake.error && <p className="text-destructive">{verify.handshake.error}</p>}
+                      <p>Verifique se o secret <code>WHATSAPP_CLOUD_WEBHOOK_VERIFY_TOKEN</code> está igual ao colado no painel do Meta.</p>
+                    </>
+                  )}
+                  {verify.handshake.status === "skip" && <p>{verify.handshake.error}</p>}
+                </div>
+              </div>
+
+              {/* Etapa 2: Entrega de eventos */}
+              <div className="rounded-lg border p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    {verify.delivery.status === "pass"
+                      ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                    <span className="text-sm font-medium">2. Recebimento de eventos (últimas 24h)</span>
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    <Badge variant="outline" className="text-[10px]">eventos: {verify.delivery.counts24h.event}</Badge>
+                    <Badge variant="outline" className="text-[10px]">handshakes: {verify.delivery.counts24h.handshake}</Badge>
+                    {verify.delivery.counts24h.invalid_signature > 0 && (
+                      <Badge variant="destructive" className="text-[10px]">assinatura inválida: {verify.delivery.counts24h.invalid_signature}</Badge>
+                    )}
+                    {verify.delivery.counts24h.invalid_token > 0 && (
+                      <Badge variant="destructive" className="text-[10px]">token inválido: {verify.delivery.counts24h.invalid_token}</Badge>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground pl-6">{verify.delivery.message}</p>
+                {verify.delivery.lastEventAt && (
+                  <p className="text-[11px] text-muted-foreground/80 pl-6">
+                    Último evento: {formatDistanceToNow(new Date(verify.delivery.lastEventAt), { addSuffix: true, locale: ptBR })}
+                  </p>
+                )}
+              </div>
+
+              {/* Histórico recente */}
+              {verify.delivery.recent.length > 0 && (
+                <details className="rounded-lg border p-3">
+                  <summary className="text-xs font-medium cursor-pointer">Atividade recente (últimos 10 pings)</summary>
+                  <ul className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
+                    {verify.delivery.recent.map((p, i) => (
+                      <li key={i} className="text-[11px] flex items-center justify-between gap-2 font-mono">
+                        <span className="flex items-center gap-2">
+                          <Badge
+                            variant={p.kind === "event" ? "default" : p.kind.startsWith("invalid") ? "destructive" : "secondary"}
+                            className="text-[9px]"
+                          >
+                            {p.kind}
+                          </Badge>
+                          <span className="text-muted-foreground truncate">{JSON.stringify(p.meta).slice(0, 80)}</span>
+                        </span>
+                        <span className="text-muted-foreground shrink-0">
+                          {formatDistanceToNow(new Date(p.created_at), { addSuffix: true, locale: ptBR })}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+
+              <p className="text-[11px] text-muted-foreground">
+                Verificado em {new Date(verify.checkedAt).toLocaleTimeString("pt-BR")}.
+              </p>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ---- Secrets ---- */}
       <Card>

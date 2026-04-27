@@ -9962,6 +9962,27 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_cloud_webhook_pings: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          meta: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          meta?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          meta?: Json
+        }
+        Relationships: []
+      }
       whatsapp_connection_queues: {
         Row: {
           created_at: string
@@ -10882,6 +10903,7 @@ export type Database = {
       cleanup_old_qr_attempts: { Args: never; Returns: undefined }
       cleanup_old_send_failures: { Args: never; Returns: undefined }
       cleanup_proxy_metrics: { Args: never; Returns: undefined }
+      cleanup_wa_cloud_pings: { Args: never; Returns: undefined }
       cleanup_webhook_deliveries: { Args: never; Returns: undefined }
       cleanup_webhook_event_dedup: { Args: never; Returns: number }
       clear_login_attempts: { Args: { p_email: string }; Returns: undefined }

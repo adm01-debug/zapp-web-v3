@@ -42,6 +42,18 @@ function reqId(): string {
   return crypto.randomUUID().slice(0, 8);
 }
 
+// Registra atividade do webhook (best-effort, nunca bloqueia o fluxo)
+async function recordPing(
+  kind: "handshake" | "event" | "invalid_signature" | "invalid_token",
+  meta: Record<string, unknown> = {},
+): Promise<void> {
+  try {
+    await localClient.from("whatsapp_cloud_webhook_pings").insert({ kind, meta });
+  } catch (e) {
+    console.warn(`[whatsapp-cloud-webhook] ping insert failed: ${(e as Error).message}`);
+  }
+}
+
 async function isDuplicate(messageId: string): Promise<boolean> {
   if (!messageId) return false;
   const eventId = `whatsapp-cloud:${messageId}`;
@@ -113,9 +125,11 @@ Deno.serve(async (req) => {
     const challenge = url.searchParams.get("hub.challenge");
     if (mode === "subscribe" && token && VERIFY_TOKEN && token === VERIFY_TOKEN) {
       console.log(`[whatsapp-cloud-webhook][${rid}] verification ok`);
+      void recordPing("handshake", { rid, mode, source: req.headers.get("user-agent") ?? null });
       return new Response(challenge ?? "", { status: 200, headers: corsHeaders });
     }
     console.warn(`[whatsapp-cloud-webhook][${rid}] verification failed mode=${mode}`);
+    void recordPing("invalid_token", { rid, mode, hadToken: !!token });
     return new Response("forbidden", { status: 403, headers: corsHeaders });
   }
 
@@ -135,6 +149,7 @@ Deno.serve(async (req) => {
       console.warn(
         `[whatsapp-cloud-webhook][${rid}] invalid signature (strict=${STRICT_MODE} hasSig=${!!signature})`,
       );
+      void recordPing("invalid_signature", { rid, hasSig: !!signature, strict: STRICT_MODE });
       if (STRICT_MODE) {
         return new Response(
           JSON.stringify({ error: "invalid_signature", requestId: rid }),
@@ -208,6 +223,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    void recordPing("event", { rid, processed, duplicates, ignoredFields });
     return new Response(
       JSON.stringify({ ok: true, processed, duplicates, ignoredFields, requestId: rid }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
