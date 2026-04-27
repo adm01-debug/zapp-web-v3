@@ -32,24 +32,77 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
   const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
 
-  // Sync selectedContactType with URL
+  // Sync selectedContactType and Failure Filters with URL
   useEffect(() => {
-    const typeFromUrl = new URLSearchParams(window.location.search).get('type');
+    const params = new URLSearchParams(window.location.search);
+    
+    // Contact Type
+    const typeFromUrl = params.get('type');
     if (typeFromUrl && typeFromUrl !== 'all') {
       setSelectedContactType(typeFromUrl);
+    }
+
+    // Failures Only (deep-link de monitoramento)
+    if (params.get('failuresOnly') === 'true') {
+      setShowOnlyRetrying(true);
+    }
+
+    // Failure Category (deep-link de monitoramento)
+    const catFromUrl = params.get('failureCategory');
+    if (catFromUrl) {
+      const validCategories: (FailureCategory | 'all')[] = ['all', 'auth', 'http_4xx', 'http_5xx', 'network', 'unknown'];
+      if (validCategories.includes(catFromUrl as any)) {
+        setFailureCategoryFilter(catFromUrl as any);
+      }
     }
   }, []);
 
   const handleContactTypeChange = useCallback((value: string | null) => {
     setSelectedContactType(value);
+    setUrlFilters({ 
+      // Usamos useUrlFilters se quisermos manter consistência, 
+      // ou manipulamos diretamente se for um param customizado.
+    } as any);
+    
+    // Manual sync para parâmetros não mapeados no PARAM_KEYS do useUrlFilters
     const params = new URLSearchParams(window.location.search);
     if (value && value !== 'all') {
       params.set('type', value);
     } else {
       params.delete('type');
     }
-    window.history.replaceState(null, '', params.toString() ? `?${params}` : window.location.pathname + window.location.hash);
+    window.history.replaceState(null, '', `?${params.toString()}${window.location.hash}`);
   }, []);
+
+  // Update URL when Failure filters change
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    let changed = false;
+
+    if (showOnlyRetrying) {
+      if (params.get('failuresOnly') !== 'true') {
+        params.set('failuresOnly', 'true');
+        changed = true;
+      }
+    } else if (params.has('failuresOnly')) {
+      params.delete('failuresOnly');
+      changed = true;
+    }
+
+    if (failureCategoryFilter !== 'all') {
+      if (params.get('failureCategory') !== failureCategoryFilter) {
+        params.set('failureCategory', failureCategoryFilter);
+        changed = true;
+      }
+    } else if (params.has('failureCategory')) {
+      params.delete('failureCategory');
+      changed = true;
+    }
+
+    if (changed) {
+      window.history.replaceState(null, '', `?${params.toString()}${window.location.hash}`);
+    }
+  }, [showOnlyRetrying, failureCategoryFilter]);
 
   // Load contact_tags mapping
   const { data: contactTagsMap = {} } = useQuery({
