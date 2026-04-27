@@ -35,6 +35,18 @@ describe('externalProxy telemetry', () => {
     expect(s.recentEvents[0].target).toBe('evolution_contacts');
   });
 
+  it('normalizes table-only reads into action=select before invoking the proxy', async () => {
+    invokeMock.mockResolvedValue({ data: { data: [] }, error: null });
+
+    await queryExternalProxy({ table: 'evolution_contacts', limit: 10 });
+
+    const [, options] = invokeMock.mock.calls[0] as [string, {
+      body: Record<string, unknown>;
+    }];
+    expect(options.body.action).toBe('select');
+    expect(options.body.table).toBe('evolution_contacts');
+  });
+
   it('propagates filters and offset into the event', async () => {
     invokeMock.mockResolvedValue({ data: { data: [] }, error: null });
     await queryExternalProxy({

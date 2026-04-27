@@ -90,7 +90,11 @@ async function handler(req: Request): Promise<Response> {
       jsonHeaders[CORRELATION_HEADER] = cid
     }
 
-    const { action, table, rpc, schema } = body
+    const rawAction = typeof body.action === 'string' ? body.action : undefined
+    const table = typeof body.table === 'string' ? body.table : undefined
+    const rpc = typeof body.rpc === 'string' ? body.rpc : undefined
+    const action = rawAction ?? (rpc ? 'rpc' : table ? 'select' : undefined)
+    const { schema } = body
     const requestedSchema = typeof schema === 'string' && schema.length > 0 ? schema : 'public'
     
     if (!SCHEMA_ALLOWLIST.has(requestedSchema)) {
