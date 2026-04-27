@@ -1,4 +1,4 @@
-import { Sparkles, Check, X, Send } from "lucide-react";
+import { Sparkles, Check, X, Send, Tag, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,8 @@ export function AutomationSuggestionsBar({
   onUseSuggestion,
   onSendNow,
 }: AutomationSuggestionsBarProps) {
-  const { suggestions, accept, dismiss } = useAutomationSuggestions(remoteJid);
+  const { suggestions, accept, dismiss, applyRecommendedTag } =
+    useAutomationSuggestions(remoteJid);
 
   if (!suggestions.length) return null;
 
@@ -31,7 +32,7 @@ export function AutomationSuggestionsBar({
         >
           <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <Badge variant="secondary" className="text-[10px] uppercase">
                 Automação
               </Badge>
@@ -40,10 +41,43 @@ export function AutomationSuggestionsBar({
                   {s.rule_name}
                 </span>
               )}
+              {s.kb_sources.length > 0 && (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] gap-1"
+                  title={`Fontes: ${s.kb_sources.join(", ")}`}
+                >
+                  <BookOpen className="h-3 w-3" />
+                  {s.kb_sources.length} fonte
+                  {s.kb_sources.length > 1 ? "s" : ""}
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-foreground leading-snug whitespace-pre-wrap">
               {s.suggestion_text}
             </p>
+
+            {s.recommended_tag && (
+              <div className="flex items-center gap-2 mt-2 px-2 py-1.5 rounded-md bg-accent/40 border border-accent">
+                <Tag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="text-xs text-muted-foreground">
+                  Tag sugerida:
+                </span>
+                <Badge variant="default" className="text-[10px]">
+                  {s.recommended_tag}
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 px-2 text-xs ml-auto"
+                  onClick={() => applyRecommendedTag(s.id)}
+                  title="Aplicar tag ao contato"
+                >
+                  Aplicar
+                </Button>
+              </div>
+            )}
+
             <div className="flex items-center gap-2 mt-2">
               <Button
                 size="sm"

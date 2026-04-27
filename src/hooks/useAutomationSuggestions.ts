@@ -1,13 +1,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { externalClient } from "@/integrations/supabase/externalClient";
+import { toast } from "@/hooks/use-toast";
 
 export interface AutomationSuggestion {
   id: string;
   rule_id: string;
   rule_name?: string;
   suggestion_text: string | null;
+  recommended_tag: string | null;
+  kb_sources: string[];
   status: string;
   created_at: string;
+  instance_name: string;
+  remote_jid: string;
 }
 
 export function useAutomationSuggestions(remoteJid: string | null) {
@@ -22,7 +28,9 @@ export function useAutomationSuggestions(remoteJid: string | null) {
     setLoading(true);
     const { data } = await supabase
       .from("automation_executions")
-      .select("id, rule_id, suggestion_text, status, created_at, automation_rules(name)")
+      .select(
+        "id, rule_id, suggestion_text, recommended_tag, kb_sources, status, created_at, instance_name, remote_jid, automation_rules(name)",
+      )
       .eq("remote_jid", remoteJid)
       .eq("status", "pending")
       .not("suggestion_text", "is", null)
@@ -34,8 +42,12 @@ export function useAutomationSuggestions(remoteJid: string | null) {
         rule_id: r.rule_id,
         rule_name: r.automation_rules?.name,
         suggestion_text: r.suggestion_text,
+        recommended_tag: r.recommended_tag ?? null,
+        kb_sources: Array.isArray(r.kb_sources) ? r.kb_sources : [],
         status: r.status,
         created_at: r.created_at,
+        instance_name: r.instance_name,
+        remote_jid: r.remote_jid,
       })),
     );
     setLoading(false);
@@ -76,5 +88,42 @@ export function useAutomationSuggestions(remoteJid: string | null) {
     refresh();
   }, [refresh]);
 
-  return { suggestions, loading, refresh, accept, dismiss };
+  /**
+   * Aplica a tag recomendada via FATOR X (rpc_upsert_contact). Mantém auditoria
+   * em automation_executions.applied_tags. NÃO altera o status — o usuário ainda
+   * decide aceitar/descartar a sugestão de texto separadamente.
+   */
+  const applyRecommendedTag = useCallback(
+    async (id: string) => {
+      const sugg = suggestions.find((s) => s.id === id);
+      if (!sugg?.recommended_tag) return false;
+      try {
+        await (externalClient.rpc as any)("rpc_upsert_contact", {
+          p_remote_jid: sugg.remote_jid,
+          p_instance: sugg.instance_name,
+          p_tags: [sugg.recommended_tag],
+        });
+        await supabase
+          .from("automation_executions")
+          .update({ applied_tags: [sugg.recommended_tag] })
+          .eq("id", id);
+        toast({
+          title: "Tag aplicada",
+          description: `"${sugg.recommended_tag}" foi adicionada ao contato.`,
+        });
+        refresh();
+        return true;
+      } catch (e) {
+        toast({
+          title: "Falha ao aplicar tag",
+          description: e instanceof Error ? e.message : "Erro desconhecido",
+          variant: "destructive",
+        });
+        return false;
+      }
+    },
+    [suggestions, refresh],
+  );
+
+  return { suggestions, loading, refresh, accept, dismiss, applyRecommendedTag };
 }
