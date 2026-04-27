@@ -21,12 +21,28 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const SCRAPE_TOKEN = Deno.env.get('PROXY_METRICS_TOKEN') ?? ''
 
+function mergeCsvHeaderValues(...values: Array<string | undefined>): string {
+  const merged = new Set<string>()
+  for (const value of values) {
+    if (!value) continue
+    for (const token of value.split(',')) {
+      const normalized = token.trim().toLowerCase()
+      if (normalized) merged.add(normalized)
+    }
+  }
+  return Array.from(merged).join(', ')
+}
+
 function getPromHeaders(req?: Request) {
+  const shared = getCorsHeaders(req)
   return {
-    ...getCorsHeaders(req),
+    ...shared,
     'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
     'Cache-Control': 'no-store',
-    'Access-Control-Allow-Headers': 'authorization, content-type',
+    'Access-Control-Allow-Headers': mergeCsvHeaderValues(
+      shared['Access-Control-Allow-Headers'],
+      'authorization, content-type',
+    ),
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
   }
 }
