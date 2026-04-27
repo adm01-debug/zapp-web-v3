@@ -5,6 +5,7 @@ const invokeMock = vi.fn();
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     functions: { invoke: (...args: unknown[]) => invokeMock(...args) },
+    auth: { getSession: async () => ({ data: { session: null } }) },
   },
 }));
 
@@ -12,13 +13,15 @@ vi.mock('@/lib/logger', () => ({
   getLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
-import { queryExternalProxy } from '../externalProxy';
+import { queryExternalProxy, __testing } from '../externalProxy';
 import { getTelemetrySnapshot, resetTelemetry } from '../clientTelemetry';
 
 describe('externalProxy telemetry', () => {
   beforeEach(() => {
     resetTelemetry();
     invokeMock.mockReset();
+    __testing.resetBreakerAndCoalesce();
+    __testing.setInvokeOverride(async (_fn, opts) => invokeMock(_fn, opts));
   });
 
   it('records ok event on success with recordCount', async () => {
