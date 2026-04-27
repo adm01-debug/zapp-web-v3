@@ -85,6 +85,7 @@ const AdminInboxSyncStatusPage = lazyWithRetry(() => import("./pages/admin/Admin
 const AdminAutomationsPage = lazyWithRetry(() => import("./pages/admin/AdminAutomationsPage"));
 const AdminAutomationLogsPage = lazyWithRetry(() => import("./pages/admin/AdminAutomationLogsPage"));
 const AdminWhatsAppModePage = lazyWithRetry(() => import("./pages/admin/AdminWhatsAppModePage"));
+const AdminWhatsAppLogsPage = lazyWithRetry(() => import("./pages/admin/AdminWhatsAppLogsPage"));
 const Install = lazyWithRetry(() => import("./pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("./pages/ChatPopup"));
 
@@ -207,6 +208,7 @@ function AppContent() {
             <Route path="/admin/automations/logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationLogsPage /></ProtectedRoute>} />
             <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
             <Route path="/admin/settings/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
+            <Route path="/admin/whatsapp-logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppLogsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
