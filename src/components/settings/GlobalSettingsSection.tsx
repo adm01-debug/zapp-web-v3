@@ -122,6 +122,9 @@ export function GlobalSettingsSection() {
           />
         </div>
       </CardContent>
+      <CardContent className="pt-0">
+        <ConnectionTestPanel />
+      </CardContent>
     </Card>
   );
 }
