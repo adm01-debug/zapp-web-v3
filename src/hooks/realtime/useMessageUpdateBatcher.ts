@@ -70,7 +70,12 @@ export function useMessageUpdateBatcher(
         if (msgIdx < 0) continue;
         if (!changed) { next = [...next]; changed = true; }
         const updatedMessages = [...conv.messages];
-        updatedMessages[msgIdx] = updatedMessage;
+        // Preserva o contactAvatar já cacheado na mensagem antiga ao aplicar o update
+        const existingMessage = conv.messages[msgIdx];
+        updatedMessages[msgIdx] = { 
+          ...updatedMessage, 
+          contactAvatar: updatedMessage.contactAvatar || existingMessage.contactAvatar || conv.contact.avatar_url 
+        };
         next[convIdx] = buildConversation(conv.contact, updatedMessages);
       }
 
