@@ -52,7 +52,16 @@
 <!-- Link para issues relacionadas: Closes #123, Fixes #456 -->
 
 
+## 🏛️ Compliance de arquitetura
+
+<!-- Obrigatório para PRs que tocam o inbox ou pipelines de mensagem. -->
+
+- [ ] Esta PR NÃO faz leitura de mensagens via Evolution API no inbox
+- [ ] Toda leitura de inbox passa por `queryExternalProxy` → `external-db-proxy` → FATOR X
+- [ ] Li e respeito o [`docs/INBOX_READ_CONTRACT.md`](../docs/INBOX_READ_CONTRACT.md)
+
 ## ⚠️ Notas para Reviewer
 
 <!-- Pontos que merecem atenção especial -->
+
 

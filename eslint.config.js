@@ -47,6 +47,36 @@ export default tseslint.config(
       "@typescript-eslint/no-non-null-assertion": "warn",
     },
   },
+  // INBOX READ CONTRACT — bloqueia leitura via Evolution API dentro do inbox.
+  // Toda leitura de mensagens deve passar por queryExternalProxy → external-db-proxy → FATOR X.
+  // Envio (useEvolutionApi para editMessage/sendSticker/etc.) continua permitido por R2.
+  // Veja docs/INBOX_READ_CONTRACT.md.
+  {
+    files: [
+      "src/components/inbox/**/*.{ts,tsx}",
+      "src/hooks/inbox/**/*.{ts,tsx}",
+      "src/pages/Inbox*.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "**/evolution-api/**/find*",
+                "**/evolution-api/**/list-messages*",
+                "**/evolution-api/**/find-messages*",
+                "**/evolution-api/**/find-chats*",
+              ],
+              message:
+                "Inbox lê do FATOR X via queryExternalProxy → external-db-proxy. Não consulte Evolution API para popular UI. Para envio, use externalMessageSender. Veja docs/INBOX_READ_CONTRACT.md",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // STRICT ZONE — código novo / já migrado. Adicione globs aqui ao
   // limpar uma área. Tudo nesta zona é tratado como produção strict:
   // `any` explícito = error, casts inseguros bloqueados em PR.
