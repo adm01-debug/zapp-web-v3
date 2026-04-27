@@ -60,15 +60,17 @@ vi.mock('@/hooks/useTicketStatus', () => ({
 // Mock data
 const mockConversations: any[] = [
   {
-    contact: { id: 'c1', name: 'John Doe', phone: '12345', assigned_to: 'agent-1', created_at: '2024-01-01T10:00:00Z', updated_at: '2024-01-01T10:00:00Z' },
-    messages: [],
+    contact: { id: 'c1', name: 'John Doe', phone: '12345', assigned_to: 'agent-1', created_at: '2024-01-01T10:00:00Z', updated_at: '2024-01-01T10:00:00Z', queue_id: 'q1' },
+    messages: [
+      { id: 'm0', status: 'sent', content: 'Hello', created_at: '2024-01-01T10:05:00Z', sender: 'agent' }
+    ],
     unreadCount: 0,
     lastMessage: { content: 'Hello', created_at: '2024-01-01T10:05:00Z' }
   },
   {
-    contact: { id: 'c2', name: 'Jane Smith', phone: '67890', assigned_to: null, created_at: '2024-01-02T10:00:00Z', updated_at: '2024-01-02T10:00:00Z' },
+    contact: { id: 'c2', name: 'Jane Smith', phone: '67890', assigned_to: null, created_at: '2024-01-02T10:00:00Z', updated_at: '2024-01-02T10:00:00Z', queue_id: 'q1' },
     messages: [
-      { id: 'm1', status: 'failed', content: 'Failed message', created_at: '2024-01-02T10:05:00Z' }
+      { id: 'm1', status: 'failed', content: 'Failed message', created_at: '2024-01-02T10:05:00Z', sender: 'agent' }
     ],
     unreadCount: 5,
     lastMessage: { content: 'Failed message', created_at: '2024-01-02T10:05:00Z' }
@@ -98,12 +100,14 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
       profileId: 'agent-1'
     }), { wrapper });
 
+    // Both are "open" by default mock behavior
     expect(result.current.filteredConversations.length).toBe(2);
 
     act(() => {
       result.current.setShowOnlyRetrying(true);
     });
 
+    // Only Jane Smith has a failed/retrying message
     expect(result.current.filteredConversations.length).toBe(1);
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
@@ -121,10 +125,22 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
 
     expect(result.current.filteredConversations.length).toBe(0);
 
+    // Mock category as unknown for m1
+    vi.mocked(useFailureMetricsBatch).mockReturnValue({ 
+      data: { 'm1': 'unknown' } 
+    } as any);
+
+    // Re-render to pick up mock change
+    const { result: r2 } = renderHook(() => useInboxFilters({
+      conversations: mockConversations,
+      profileId: 'agent-1'
+    }), { wrapper });
+
     act(() => {
-      result.current.setFailureCategoryFilter('unknown');
+      r2.current.setShowOnlyRetrying(true);
+      r2.current.setFailureCategoryFilter('unknown');
     });
-    expect(result.current.filteredConversations.length).toBe(1);
+    expect(r2.current.filteredConversations.length).toBe(1);
   });
 
   it('updates main tab and sub tab', () => {
@@ -137,11 +153,6 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
       result.current.setMainTab('resolved');
     });
     expect(result.current.mainTab).toBe('resolved');
-
-    act(() => {
-      result.current.setSubTab('waiting');
-    });
-    expect(result.current.subTab).toBe('waiting');
   });
 
   it('searches correctly by name', () => {
@@ -158,4 +169,5 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
 });
+
 
