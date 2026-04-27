@@ -112,6 +112,13 @@ export function isStatementTimeout(err: { message?: string; code?: string } | nu
   return /statement timeout|canceling statement/i.test(err.message || '')
 }
 
+/** Detect PostgREST PGRST106: requested schema is not in db-schemas allowlist. */
+export function isSchemaNotExposed(err: { message?: string; code?: string } | null | undefined): boolean {
+  if (!err) return false
+  if (err.code === 'PGRST106') return true
+  return /Invalid schema:/i.test(err.message || '')
+}
+
 /** Run an upstream query with automatic retry for PGRST002 (schema cache reload). */
 export async function runWithSchemaRetry<T>(
   fn: () => PromiseLike<{ data: T; error: { message: string; code?: string } | null }>,
