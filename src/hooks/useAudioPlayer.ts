@@ -29,13 +29,35 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
     } catch { return 1; }
   });
   const audioRef = useRef<HTMLAudioElement>(null);
+  /**
+   * Último volume não-zero — usado pelo `toggleMute` para restaurar o volume
+   * anterior quando o usuário desmuta. Evita que mute deixe o player em "0
+   * permanente" se o usuário só queria um silêncio momentâneo.
+   */
+  const lastNonZeroVolumeRef = useRef<number>(volume > 0 ? volume : 1);
 
   const setVolume = useCallback((v: number) => {
     const clamped = Math.min(1, Math.max(0, v));
+    if (clamped > 0) lastNonZeroVolumeRef.current = clamped;
     setVolumeState(clamped);
     if (audioRef.current) audioRef.current.volume = clamped;
     try { localStorage.setItem('audio-player:volume', String(clamped)); } catch { /* noop */ }
   }, []);
+
+  /**
+   * Toggle entre mute (volume 0) e o último volume audível conhecido. Usado
+   * tanto pelo botão da UI quanto pelo atalho global `M` via `audioPlaybackBus`.
+   */
+  const toggleMute = useCallback((): { muted: boolean; volume: number } => {
+    if (volume > 0) {
+      lastNonZeroVolumeRef.current = volume;
+      setVolume(0);
+      return { muted: true, volume: 0 };
+    }
+    const restored = lastNonZeroVolumeRef.current || 1;
+    setVolume(restored);
+    return { muted: false, volume: restored };
+  }, [volume, setVolume]);
 
   // Apply volume whenever audio element re-mounts or volume changes
   useEffect(() => {
