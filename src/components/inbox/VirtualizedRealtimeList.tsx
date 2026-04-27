@@ -118,7 +118,7 @@ function ConversationItem({
 
         <div className="relative flex-shrink-0">
           <Avatar className="w-10 h-10">
-            <AvatarImage src={avatarUrl || undefined} />
+            <AvatarImage src={avatarUrl || undefined} referrerPolicy="no-referrer" />
             <AvatarFallback className={cn(
               'text-xs font-semibold',
               getAvatarColor(conversation.contact.name || '?').bg,
