@@ -86,7 +86,7 @@ export function NewMessageIndicator({
                     }}
                   />
                   <Avatar className="w-12 h-12 ring-2 ring-primary/50">
-                    <AvatarImage src={contactAvatar || undefined} />
+                    <AvatarImage src={avatarUrl || undefined} />
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold">
                       {contactName
                         .split(' ')
