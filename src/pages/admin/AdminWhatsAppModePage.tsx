@@ -117,6 +117,8 @@ export default function AdminWhatsAppModePage() {
       setVerifyLoading(false);
     }
   }, [toast]);
+
+  useEffect(() => {
     document.title = "Modo WhatsApp — Configurações";
     refresh();
     refreshSecrets();
