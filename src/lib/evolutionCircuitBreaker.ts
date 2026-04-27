@@ -123,9 +123,11 @@ function getEntry(instance: string): BreakerEntry {
  * Returns `{ allowed: true }` when the call may proceed, or
  * `{ allowed: false, retryAfterMs }` when the circuit is OPEN.
  */
-export type CanCallResult =
-  | { allowed: true; state: CircuitState }
-  | { allowed: false; retryAfterMs: number; state: CircuitState };
+export type CanCallResult = {
+  allowed: boolean;
+  state: CircuitState;
+  retryAfterMs?: number;
+};
 
 export function canCall(
   instance: string,
