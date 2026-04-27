@@ -129,12 +129,18 @@ export function useRealtimeMessages() {
           if (idx >= 0) {
             const existing = prev[idx];
             if (existing.messages.some((m) => m.id === message.id)) return prev;
+            
+            // Atribui o avatar do contato à mensagem reidratada
+            const messageWithAvatar = { ...message, contactAvatar: contact.avatar_url || message.contactAvatar };
+            
             const updated = [...prev];
             updated.splice(idx, 1);
-            updated.unshift(buildConversation(contact, [...existing.messages, message]));
+            updated.unshift(buildConversation(contact, [...existing.messages, messageWithAvatar]));
             return updated;
           }
-          return [buildConversation(contact, [message]), ...prev];
+          
+          const initialMessageWithAvatar = { ...message, contactAvatar: contact.avatar_url || message.contactAvatar };
+          return [buildConversation(contact, [initialMessageWithAvatar]), ...prev];
         });
         notifyAboutIncomingMessage(contact, message);
       } catch (err) { log.error('Error hydrating conversation for incoming message:', err); }
