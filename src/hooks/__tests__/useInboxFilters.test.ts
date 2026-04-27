@@ -28,41 +28,32 @@ vi.mock('react-router-dom', () => ({
   useSearchParams: () => [mockSearchParams, mockSetSearchParams],
 }));
 
-vi.mock('@/hooks/useUrlFilters', () => ({
-  useUrlFilters: () => ({
-    filters: {
-      status: mockSearchParams.get('status')?.split(',') || [],
-      tags: mockSearchParams.get('tags')?.split(',') || [],
-      agentId: mockSearchParams.get('agent'),
-      dateFrom: mockSearchParams.get('from'),
-      dateTo: mockSearchParams.get('to'),
-      search: mockSearchParams.get('q') || '',
-    },
-    setFilters: (newFilters: any) => {
-      Object.entries(newFilters).forEach(([key, value]) => {
-        if (value) {
-          if (Array.isArray(value)) {
-             if (value.length > 0) mockSearchParams.set(key, value.join(','));
-             else mockSearchParams.delete(key);
-          } else {
-             mockSearchParams.set(key, String(value));
-          }
-        } else {
-          mockSearchParams.delete(key);
-        }
-      });
-      mockSetSearchParams(mockSearchParams);
-    },
-    clearFilters: vi.fn(),
-  }),
-}));
+vi.mock('@/hooks/useUrlFilters', () => {
+  let internalSearch = '';
+  return {
+    useUrlFilters: () => ({
+      filters: {
+        status: mockSearchParams.get('status')?.split(',') || [],
+        tags: mockSearchParams.get('tags')?.split(',') || [],
+        agentId: mockSearchParams.get('agent'),
+        dateFrom: mockSearchParams.get('from'),
+        dateTo: mockSearchParams.get('to'),
+        search: internalSearch,
+      },
+      setFilters: (newFilters: any) => {
+        if (newFilters.search !== undefined) internalSearch = newFilters.search;
+        mockSetSearchParams(newFilters);
+      },
+      clearFilters: vi.fn(),
+    })
+  };
+});
 
 const mockFailureMetrics = { data: {} as Record<string, string> };
 vi.mock('@/hooks/inbox/useFailureMetricsBatch', () => ({
   useFailureMetricsBatch: () => mockFailureMetrics,
 }));
 
-// IMPORTANT: statusOf logic depends on this
 const mockTicketStates: Record<string, any> = {};
 vi.mock('@/hooks/useTicketStatus', () => ({
   useAllTicketStates: () => mockTicketStates,
@@ -89,9 +80,7 @@ const mockConversations: any[] = [
 ];
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: false },
-  },
+  defaultOptions: { queries: { retry: false } },
 });
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -104,7 +93,6 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     mockSearchParams = new URLSearchParams();
     queryClient.clear();
     mockFailureMetrics.data = {};
-    // Ensure both are considered "open" so they pass mainTab === 'open'
     mockTicketStates['c1'] = { status: 'open', assignedTo: 'agent-1' };
     mockTicketStates['c2'] = { status: 'open', assignedTo: null };
   });
@@ -175,7 +163,7 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
       result.current.setSearch('Smith');
     });
 
-    // Jane Smith matches 'Smith'
+    expect(result.current.search).toBe('Smith');
     expect(result.current.filteredConversations.length).toBe(1);
     expect(result.current.filteredConversations[0].contact.name).toBe('Jane Smith');
   });
