@@ -10,10 +10,13 @@
 // Ideal para chamar via cron a cada 5 minutos com evaluate=1.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+import { getCorsHeaders } from '../_shared/validation.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+function getJsonCorsHeaders(req?: Request) {
+  return {
+    ...getCorsHeaders(req),
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
 }
 
 // Limiares de alerta — ajustáveis via env vars.
@@ -168,7 +171,7 @@ export function evaluateAlerts(m: ComputedMetrics): AlertCandidate[] {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: getJsonCorsHeaders(req) })
   }
 
   const url = new URL(req.url)
@@ -192,7 +195,7 @@ Deno.serve(async (req) => {
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500, headers: { ...getJsonCorsHeaders(req), 'Content-Type': 'application/json' },
     })
   }
 
@@ -259,6 +262,6 @@ Deno.serve(async (req) => {
     alert_candidates: candidates,
     fired_alerts: firedAlerts,
   }, null, 2), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...getJsonCorsHeaders(req), 'Content-Type': 'application/json' },
   })
 })
