@@ -17,12 +17,14 @@ interface NewMessageIndicatorProps {
 
 export function NewMessageIndicator({
   show,
+  contactId,
   contactName,
   contactAvatar,
   message,
   onView,
   onDismiss,
 }: NewMessageIndicatorProps) {
+  const { avatarUrl } = useContactAvatar(contactId, contactAvatar);
   return (
     <AnimatePresence>
       {show && (
