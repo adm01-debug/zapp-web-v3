@@ -165,6 +165,7 @@ export async function sendExternalAudio(
   const optimistic = makeOptimisticBubble(remoteJid, '[Áudio]', {
     messageType: 'audio',
     mediaUrl: signed.signedUrl,
+    contactAvatar: opts.contactAvatar,
   });
 
   const { data, error } = await supabase.functions.invoke('evolution-api', {
