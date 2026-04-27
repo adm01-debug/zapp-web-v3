@@ -154,7 +154,6 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       ticketStates[id]?.assignedTo ?? fallback ?? null;
 
     // 1. Tab-based filtering
-    // Se estivermos em busca ativa, ignoramos os filtros de aba para permitir encontrar o contato.
     if (mainTab === 'open') {
       result = result.filter(c => {
         const s = statusOf(c.contact.id);
@@ -181,6 +180,8 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       }
     } else if (mainTab === 'resolved') {
       result = result.filter(c => statusOf(c.contact.id) === 'resolved');
+    } else if (mainTab === 'search') {
+      // No filter by tab status when in search mode
     }
 
     // 2. Search filtering
