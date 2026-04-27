@@ -201,18 +201,18 @@ export function ConnectionCard({
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button variant="outline" size="sm" onClick={() => onCopyId(connection.id)}><Copy className="w-4 h-4 mr-2" />Copiar ID</Button>
               </motion.div>
-              {connection.status !== 'connected' && !isOfficial && (
+              {(connection.status !== 'connected' || isPhantomLike) && !isOfficial && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
-                    variant={connection.status === 'disconnected' ? 'default' : 'outline'}
+                    variant={connection.status === 'disconnected' || isPhantomLike ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => onShowQrCode(connection)}
-                    className={connection.status === 'disconnected'
+                    className={connection.status === 'disconnected' || isPhantomLike
                       ? 'bg-whatsapp text-primary-foreground hover:bg-whatsapp/90 animate-pulse'
                       : 'border-whatsapp text-whatsapp hover:bg-whatsapp hover:text-primary-foreground'}
                   >
                     <QrCode className="w-4 h-4 mr-2" />
-                    {connection.status === 'disconnected' ? 'Ver QR Code' : 'Conectar'}
+                    {isPhantomLike ? 'Reconectar' : connection.status === 'disconnected' ? 'Ver QR Code' : 'Conectar'}
                   </Button>
                 </motion.div>
               )}
@@ -223,7 +223,7 @@ export function ConnectionCard({
                   </Button>
                 </motion.div>
               )}
-              {connection.status === 'connected' && (
+              {connection.status === 'connected' && !isPhantomLike && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button variant="outline" size="sm" onClick={() => onDisconnect(connection)}><WifiOff className="w-4 h-4 mr-2" />Desconectar</Button>
                 </motion.div>
