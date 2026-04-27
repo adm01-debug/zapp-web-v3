@@ -212,7 +212,6 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         return matches;
       });
     }
-    }
 
 
     // 3. Status array filter
