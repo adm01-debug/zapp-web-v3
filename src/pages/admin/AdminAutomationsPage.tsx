@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,7 +21,18 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Sparkles, Tag, Send, Clock, Search } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Sparkles,
+  Tag,
+  Send,
+  Clock,
+  AlertTriangle,
+  Building2,
+  Radio,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type TriggerType =
@@ -41,7 +52,12 @@ interface Rule {
   actions: any;
   priority: number;
   cooldown_seconds: number;
+  channel_id: string | null;
+  department_id: string | null;
 }
+
+interface Channel { id: string; name: string }
+interface Department { id: string; name: string }
 
 const TRIGGER_LABEL: Record<TriggerType, string> = {
   first_response_pending: "Primeira resposta pendente",
@@ -50,6 +66,13 @@ const TRIGGER_LABEL: Record<TriggerType, string> = {
   tag_removed: "Etiqueta removida",
   keyword_match: "Palavra-chave",
 };
+
+const SLA_LEVELS = [
+  { value: "low", label: "Baixa" },
+  { value: "normal", label: "Normal" },
+  { value: "high", label: "Alta" },
+  { value: "critical", label: "Crítica" },
+];
 
 const EMPTY_RULE: Omit<Rule, "id"> = {
   name: "",
@@ -63,30 +86,65 @@ const EMPTY_RULE: Omit<Rule, "id"> = {
     apply_tags: [] as string[],
     ai_prompt: "",
     template: "",
+    escalate_sla: { enabled: false, level: "high", reason: "" },
   },
   priority: 100,
   cooldown_seconds: 300,
+  channel_id: null,
+  department_id: null,
 };
 
 export default function AdminAutomationsPage() {
   const { toast } = useToast();
   const [rules, setRules] = useState<Rule[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<Rule | null>(null);
   const [open, setOpen] = useState(false);
 
+  // Filtros do painel
+  const [filterChannel, setFilterChannel] = useState<string>("all");
+  const [filterDepartment, setFilterDepartment] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("automation_rules")
-      .select("*")
-      .order("priority", { ascending: true });
+    const [{ data: rulesData, error }, { data: chs }, { data: deps }] = await Promise.all([
+      supabase
+        .from("automation_rules")
+        .select("*")
+        .order("priority", { ascending: true }),
+      supabase.from("service_channels").select("id,name").order("name"),
+      supabase.from("departments").select("id,name").order("name"),
+    ]);
     if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
-    setRules((data ?? []) as Rule[]);
+    setRules((rulesData ?? []) as Rule[]);
+    setChannels((chs ?? []) as Channel[]);
+    setDepartments((deps ?? []) as Department[]);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
+
+  const channelMap = useMemo(
+    () => Object.fromEntries(channels.map((c) => [c.id, c.name])),
+    [channels],
+  );
+  const deptMap = useMemo(
+    () => Object.fromEntries(departments.map((d) => [d.id, d.name])),
+    [departments],
+  );
+
+  const filtered = useMemo(() => {
+    return rules.filter((r) => {
+      if (filterChannel !== "all" && (r.channel_id ?? "none") !== filterChannel) return false;
+      if (filterDepartment !== "all" && (r.department_id ?? "none") !== filterDepartment) return false;
+      if (filterStatus === "active" && !r.is_active) return false;
+      if (filterStatus === "inactive" && r.is_active) return false;
+      return true;
+    });
+  }, [rules, filterChannel, filterDepartment, filterStatus]);
 
   const startNew = () => {
     setEditing({ ...(EMPTY_RULE as Rule), id: "" });
@@ -94,7 +152,16 @@ export default function AdminAutomationsPage() {
   };
 
   const startEdit = (r: Rule) => {
-    setEditing(JSON.parse(JSON.stringify(r)));
+    const cloned = JSON.parse(JSON.stringify(r)) as Rule;
+    cloned.actions = {
+      ...EMPTY_RULE.actions,
+      ...(cloned.actions ?? {}),
+      escalate_sla: {
+        ...EMPTY_RULE.actions.escalate_sla,
+        ...(cloned.actions?.escalate_sla ?? {}),
+      },
+    };
+    setEditing(cloned);
     setOpen(true);
   };
 
@@ -113,6 +180,8 @@ export default function AdminAutomationsPage() {
       actions: editing.actions,
       priority: editing.priority,
       cooldown_seconds: editing.cooldown_seconds,
+      channel_id: editing.channel_id || null,
+      department_id: editing.department_id || null,
     };
     const op = editing.id
       ? supabase.from("automation_rules").update(payload).eq("id", editing.id)
@@ -146,6 +215,14 @@ export default function AdminAutomationsPage() {
     load();
   };
 
+  const adjustPriority = async (r: Rule, delta: number) => {
+    await supabase
+      .from("automation_rules")
+      .update({ priority: Math.max(1, r.priority + delta) })
+      .eq("id", r.id);
+    load();
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="flex items-center justify-between mb-6">
@@ -154,7 +231,7 @@ export default function AdminAutomationsPage() {
             <Sparkles className="h-5 w-5 text-primary" /> Automações por gatilho
           </h1>
           <p className="text-sm text-muted-foreground">
-            Sugestões de resposta com IA, aplicação automática de tags e reatribuição.
+            Regras por canal e filial: sugestão de resposta com IA, aplicação de tag e escalonamento de SLA.
           </p>
         </div>
         <Button onClick={startNew}>
@@ -162,27 +239,86 @@ export default function AdminAutomationsPage() {
         </Button>
       </div>
 
+      {/* Filtros */}
+      <Card className="p-3 mb-4 flex flex-wrap gap-3 items-end">
+        <div className="min-w-[180px]">
+          <Label className="text-xs">Canal</Label>
+          <Select value={filterChannel} onValueChange={setFilterChannel}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os canais</SelectItem>
+              <SelectItem value="none">Sem canal (global)</SelectItem>
+              {channels.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="min-w-[180px]">
+          <Label className="text-xs">Filial / Departamento</Label>
+          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="none">Sem filial (global)</SelectItem>
+              {departments.map((d) => (
+                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="min-w-[140px]">
+          <Label className="text-xs">Status</Label>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="active">Ativas</SelectItem>
+              <SelectItem value="inactive">Inativas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="ml-auto text-xs text-muted-foreground">
+          {filtered.length} de {rules.length} regras
+        </div>
+      </Card>
+
       <div className="space-y-3">
         {loading && <p className="text-muted-foreground">Carregando…</p>}
-        {!loading && rules.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <Card className="p-8 text-center text-muted-foreground">
-            Nenhuma regra ainda. Crie a primeira para começar a automatizar.
+            Nenhuma regra com esses filtros.
           </Card>
         )}
-        {rules.map((r) => (
+        {filtered.map((r) => (
           <Card key={r.id} className="p-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h3 className="font-medium truncate">{r.name}</h3>
                   <Badge variant={r.is_active ? "default" : "secondary"}>
                     {r.is_active ? "Ativa" : "Inativa"}
                   </Badge>
                   <Badge variant="outline">{TRIGGER_LABEL[r.trigger_type]}</Badge>
                   <Badge variant="outline" className="text-xs">
+                    Prioridade {r.priority}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
                     <Clock className="h-3 w-3 mr-1" />
                     cooldown {r.cooldown_seconds}s
                   </Badge>
+                  {r.channel_id && channelMap[r.channel_id] && (
+                    <Badge variant="outline" className="text-xs">
+                      <Radio className="h-3 w-3 mr-1" />
+                      {channelMap[r.channel_id]}
+                    </Badge>
+                  )}
+                  {r.department_id && deptMap[r.department_id] && (
+                    <Badge variant="outline" className="text-xs">
+                      <Building2 className="h-3 w-3 mr-1" />
+                      {deptMap[r.department_id]}
+                    </Badge>
+                  )}
                 </div>
                 {r.description && (
                   <p className="text-sm text-muted-foreground mb-2">{r.description}</p>
@@ -200,9 +336,21 @@ export default function AdminAutomationsPage() {
                       {r.actions.apply_tags.join(", ")}
                     </Badge>
                   )}
+                  {r.actions?.escalate_sla?.enabled && (
+                    <Badge variant="destructive">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      SLA → {r.actions.escalate_sla.level ?? "high"}
+                    </Badge>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Button size="icon" variant="ghost" onClick={() => adjustPriority(r, -10)} title="Subir">
+                  ↑
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => adjustPriority(r, 10)} title="Descer">
+                  ↓
+                </Button>
                 <Switch checked={r.is_active} onCheckedChange={() => toggleActive(r)} />
                 <Button size="icon" variant="ghost" onClick={() => startEdit(r)}>
                   <Pencil className="h-4 w-4" />
@@ -240,6 +388,44 @@ export default function AdminAutomationsPage() {
                 />
               </div>
 
+              {/* Escopo */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Canal (opcional)</Label>
+                  <Select
+                    value={editing.channel_id ?? "none"}
+                    onValueChange={(v) =>
+                      setEditing({ ...editing, channel_id: v === "none" ? null : v })
+                    }
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Todos os canais</SelectItem>
+                      {channels.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Filial / Departamento (opcional)</Label>
+                  <Select
+                    value={editing.department_id ?? "none"}
+                    onValueChange={(v) =>
+                      setEditing({ ...editing, department_id: v === "none" ? null : v })
+                    }
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Todas as filiais</SelectItem>
+                      {departments.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Gatilho</Label>
@@ -258,7 +444,7 @@ export default function AdminAutomationsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Prioridade</Label>
+                  <Label>Prioridade (menor = primeiro)</Label>
                   <Input
                     type="number"
                     value={editing.priority}
@@ -338,16 +524,26 @@ export default function AdminAutomationsPage() {
               {(editing.trigger_type === "tag_applied" ||
                 editing.trigger_type === "tag_removed") && (
                 <div>
-                  <Label>Etiqueta alvo</Label>
+                  <Label>Etiquetas alvo (separadas por vírgula — vazio = qualquer)</Label>
                   <Input
-                    value={editing.trigger_config?.tag ?? ""}
+                    value={
+                      Array.isArray(editing.trigger_config?.tags)
+                        ? editing.trigger_config.tags.join(", ")
+                        : (editing.trigger_config?.tag ?? "")
+                    }
                     onChange={(e) =>
                       setEditing({
                         ...editing,
-                        trigger_config: { ...editing.trigger_config, tag: e.target.value },
+                        trigger_config: {
+                          ...editing.trigger_config,
+                          tags: e.target.value
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean),
+                        },
                       })
                     }
-                    placeholder="Ex: vip"
+                    placeholder="vip, urgente"
                   />
                 </div>
               )}
@@ -357,7 +553,7 @@ export default function AdminAutomationsPage() {
                 <h4 className="font-medium text-sm">Ações</h4>
 
                 <div className="flex items-center justify-between">
-                  <Label>Sugerir resposta (rascunho)</Label>
+                  <Label>Sugerir resposta (rascunho com IA)</Label>
                   <Switch
                     checked={!!editing.actions.suggest_reply}
                     onCheckedChange={(v) =>
@@ -392,6 +588,79 @@ export default function AdminAutomationsPage() {
                       })
                     }
                   />
+                </div>
+
+                {/* Escalonar SLA */}
+                <div className="border rounded-md p-3 bg-muted/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
+                      Escalar SLA
+                    </Label>
+                    <Switch
+                      checked={!!editing.actions.escalate_sla?.enabled}
+                      onCheckedChange={(v) =>
+                        setEditing({
+                          ...editing,
+                          actions: {
+                            ...editing.actions,
+                            escalate_sla: {
+                              ...(editing.actions.escalate_sla ?? {}),
+                              enabled: v,
+                            },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  {editing.actions.escalate_sla?.enabled && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs">Novo nível</Label>
+                        <Select
+                          value={editing.actions.escalate_sla?.level ?? "high"}
+                          onValueChange={(v) =>
+                            setEditing({
+                              ...editing,
+                              actions: {
+                                ...editing.actions,
+                                escalate_sla: {
+                                  ...editing.actions.escalate_sla,
+                                  level: v,
+                                },
+                              },
+                            })
+                          }
+                        >
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {SLA_LEVELS.map((l) => (
+                              <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Motivo (opcional)</Label>
+                        <Input
+                          value={editing.actions.escalate_sla?.reason ?? ""}
+                          onChange={(e) =>
+                            setEditing({
+                              ...editing,
+                              actions: {
+                                ...editing.actions,
+                                escalate_sla: {
+                                  ...editing.actions.escalate_sla,
+                                  reason: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          placeholder="Sem resposta há > 1h"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
