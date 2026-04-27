@@ -64,10 +64,13 @@ interface RuleLite { id: string; name: string }
 
 const STATUS_META: Record<string, { label: string; icon: any; variant: any }> = {
   pending: { label: "Pendente", icon: Clock, variant: "outline" },
+  accepted: { label: "Aceita", icon: CheckCircle2, variant: "default" },
   executed: { label: "Executada", icon: CheckCircle2, variant: "default" },
   dismissed: { label: "Descartada", icon: XCircle, variant: "secondary" },
-  error: { label: "Erro", icon: AlertTriangle, variant: "destructive" },
+  failed: { label: "Falhou", icon: AlertTriangle, variant: "destructive" },
 };
+
+type AutomationStatus = "pending" | "accepted" | "executed" | "dismissed" | "failed";
 
 const PAGE_SIZE = 50;
 
@@ -95,7 +98,7 @@ export default function AdminAutomationLogsPage() {
       .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
     if (filterRule !== "all") q = q.eq("rule_id", filterRule);
-    if (filterStatus !== "all") q = q.eq("status", filterStatus);
+    if (filterStatus !== "all") q = q.eq("status", filterStatus as AutomationStatus);
     if (filterJid.trim()) q = q.ilike("remote_jid", `%${filterJid.trim()}%`);
     if (filterFrom) q = q.gte("created_at", new Date(filterFrom).toISOString());
     if (filterTo) {
