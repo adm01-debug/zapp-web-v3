@@ -118,7 +118,14 @@ function ConversationItem({
 
         <div className="relative flex-shrink-0">
           <Avatar className="w-10 h-10">
-            <AvatarImage src={avatarUrl || undefined} referrerPolicy="no-referrer" />
+            <AvatarImage 
+              src={avatarUrl || undefined} 
+              referrerPolicy="no-referrer" 
+              onError={(e) => {
+                // Se falhar (404/403), remove o src para forçar o fallback
+                (e.target as HTMLImageElement).removeAttribute('src');
+              }}
+            />
             <AvatarFallback className={cn(
               'text-xs font-semibold',
               getAvatarColor(conversation.contact.name || '?').bg,
