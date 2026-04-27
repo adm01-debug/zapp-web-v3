@@ -47,7 +47,7 @@ export function MessageBubble({
   instanceName, contactJid, contactAvatar,
 }: MessageBubbleProps) {
   const isSent = message.sender === 'agent';
-  const { avatarUrl } = useContactAvatar(message.conversationId, contactAvatar);
+  const { avatarUrl } = useContactAvatar(message.conversationId, message.contactAvatar || contactAvatar);
   
   const mediaRefreshKey = (instanceName && contactJid && message.external_id)
     ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
