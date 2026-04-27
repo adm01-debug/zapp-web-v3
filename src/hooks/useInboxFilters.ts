@@ -156,12 +156,6 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       return fallback ?? null;
     };
 
-    // console.log('DEBUG conversations:', conversations.length);
-    // console.log('DEBUG mainTab:', mainTab, 'subTab:', subTab, 'showAll:', showAll, 'profileId:', profileId);
-    // conversations.forEach(c => {
-    //   console.log(`DEBUG contact ${c.contact.id}: status=${statusOf(c.contact.id)} assigned=${assignedOf(c.contact.id, c.contact.assigned_to)}`);
-    // });
-
     // 1. Tab-based filtering
     if (mainTab === 'open') {
       result = result.filter(c => {
