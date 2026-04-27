@@ -1,0 +1,58 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Shield } from 'lucide-react';
+import { DrRunbookStep } from '@/lib/evoApiHealth/types';
+
+interface DrTabProps {
+  drHealth?: any;
+  runbook?: DrRunbookStep[];
+}
+
+export function DrTab({ drHealth, runbook }: DrTabProps) {
+  return (
+    <div className="space-y-4">
+      {drHealth && (
+        <Alert>
+          <Shield className="h-4 w-4" />
+          <AlertTitle>{(drHealth as { overall?: string }).overall ?? 'DR Health'}</AlertTitle>
+          <AlertDescription>
+            <pre className="text-xs bg-muted p-2 rounded overflow-x-auto mt-2">
+              {JSON.stringify(drHealth, null, 2)}
+            </pre>
+          </AlertDescription>
+        </Alert>
+      )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Runbook (11 passos)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[500px]">
+            <ol className="space-y-3">
+              {runbook?.map((s) => (
+                <li key={s.step_number} className="border-l-2 border-primary/40 pl-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline">{s.icon} {s.category}</Badge>
+                    <span className="font-medium">Passo {s.step_number}: {s.title}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{s.description}</p>
+                  {s.command && (
+                    <pre className="text-xs bg-muted p-2 rounded mt-2 overflow-x-auto">{s.command}</pre>
+                  )}
+                  {(s.rto_minutes != null || s.rpo_minutes != null) && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {s.rto_minutes != null && <>RTO: {s.rto_minutes}min · </>}
+                      {s.rpo_minutes != null && <>RPO: {s.rpo_minutes}min</>}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
