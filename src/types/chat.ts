@@ -113,6 +113,8 @@ export interface Message {
   // Persisted retry counters (survive page reload)
   retry_attempt?: number | null;
   retry_total?: number | null;
+  /** Cache do avatar do contato para mensagens recebidas. */
+  contactAvatar?: string | null;
 }
 
 
