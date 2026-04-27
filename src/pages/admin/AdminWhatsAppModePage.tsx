@@ -101,7 +101,22 @@ export default function AdminWhatsAppModePage() {
     }
   }, [toast]);
 
-  useEffect(() => {
+  const runVerify = useCallback(async () => {
+    setVerifyLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("whatsapp-cloud-webhook-verify");
+      if (error) throw error;
+      setVerify(data as VerifyResult);
+    } catch (e) {
+      toast({
+        title: "Falha na verificação",
+        description: e instanceof Error ? e.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setVerifyLoading(false);
+    }
+  }, [toast]);
     document.title = "Modo WhatsApp — Configurações";
     refresh();
     refreshSecrets();
