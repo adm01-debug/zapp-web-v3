@@ -388,13 +388,33 @@ async function handler(req: Request): Promise<Response> {
         'bad_request',
       )
     }
-    const { action, table, select, filters, order, limit, offset, countMode, rpc, params, data, match } =
+    const { action, table, select, filters, order, limit, offset, countMode, rpc, params, data, match, schema } =
       body as Record<string, unknown>
     // Upgrade cid from body if header was missing/auto-generated.
     if (!req.headers.get(CORRELATION_HEADER) && typeof body.__cid === 'string' && body.__cid) {
       cid = body.__cid as string
       jsonHeaders = { ...jsonHeaders, [CORRELATION_HEADER]: cid }
     }
+
+    // Optional schema override (allowlisted). Defaults to 'public'.
+    // We rebuild a scoped client on demand to avoid leaking access to arbitrary schemas.
+    const SCHEMA_ALLOWLIST = new Set(['public', 'evo_api'])
+    const requestedSchema = typeof schema === 'string' && schema.length > 0 ? schema : 'public'
+    if (!SCHEMA_ALLOWLIST.has(requestedSchema)) {
+      return finish(
+        new Response(JSON.stringify({ error: `Schema not allowed: ${requestedSchema}`, cid, rid }), {
+          status: 400, headers: jsonHeaders,
+        }),
+        'bad_request',
+      )
+    }
+    const scopedExt = requestedSchema === 'public'
+      ? ext
+      : createClient(url, key, {
+          auth: { persistSession: false, autoRefreshToken: false },
+          db: { schema: requestedSchema },
+          global: { headers: { 'x-statement-timeout': '12000' } },
+        })
 
     logEvent({
       phase: 'start',
