@@ -25,6 +25,8 @@ export interface WhatsAppConnection {
   health_status?: string | null;
   health_response_ms?: number | null;
   last_health_check?: string | null;
+  health_reason?: string | null;
+  owner_jid?: string | null;
 }
 
 /** Origem do TTL do QR atual — útil para diagnóstico (telemetria/UI). */
