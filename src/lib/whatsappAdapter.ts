@@ -387,7 +387,9 @@ export async function sendTemplate(params: SendTemplateParams) {
   const { transport, degraded, reason } = await resolveTransport();
   if (transport !== "cloud") {
     throw new Error(
-      "Templates exigem modo oficial (Cloud API). Ative o modo oficial nas configurações.",
+      degraded && reason
+        ? `Templates exigem Cloud API. ${reason}`
+        : "Templates exigem modo oficial (Cloud API). Ative o modo oficial e configure os secrets.",
     );
   }
   return invokeCloud({
