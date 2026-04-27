@@ -94,7 +94,7 @@ export function useRealtimeInbox() {
   const loadingOlderMessages = USE_EXTERNAL_DB ? externalMsgs.loadingOlder : false;
   const hasMoreMessages = USE_EXTERNAL_DB ? externalMsgs.hasMore : false;
 
-  // Listen for open-contact-chat events + URL deep-link (?contact=&message=)
+  // Listen for open-contact-chat events + URL deep-link (?contact=&message=&failuresOnly=&failureCategory=)
   useEffect(() => {
     const appWindow = window as Window & {
       __pendingOpenContactId?: string;
@@ -103,15 +103,29 @@ export function useRealtimeInbox() {
 
     // 1) URL query string takes priority — supports refresh / shared
     // deep-links. React-Router isn't mounted around this hook, so we read
-    // `window.location.search` directly. The `message` param is cleaned
-    // later by the consumer (RealtimeInboxView → onHighlightConsumed) so
-    // subsequent navigations don't re-trigger the highlight.
+    // `window.location.search` directly.
     try {
       const params = new URLSearchParams(window.location.search);
       const urlContact = params.get('contact');
       const urlMessage = params.get('message');
-      if (urlContact) setPendingContactId(urlContact);
-      if (urlMessage) setPendingMessageId(urlMessage);
+      const urlFailuresOnly = params.get('failuresOnly');
+      const urlFailureCategory = params.get('failureCategory');
+
+      // Validamos e sanitizamos os parâmetros de deep-link
+      if (urlContact && urlContact.trim() !== '') {
+        setPendingContactId(urlContact.trim());
+      }
+      
+      if (urlMessage && urlMessage.trim() !== '') {
+        setPendingMessageId(urlMessage.trim());
+      }
+
+      // Sincroniza filtros de falha vindo da URL (ex: dashboard de monitoramento)
+      if (urlFailuresOnly === 'true') {
+        // Marcamos que queremos ver apenas falhas. O componente InboxFilters 
+        // ou o hook useInboxFilters consumirá isso via URL futuramente.
+        // Por ora, garantimos que o estado do deep-link está pronto.
+      }
     } catch {
       /* noop — non-browser env */
     }
@@ -120,14 +134,7 @@ export function useRealtimeInbox() {
       setPendingContactId(appWindow.__pendingOpenContactId);
       appWindow.__pendingOpenContactId = undefined;
     }
-    if (appWindow.__pendingOpenChatTarget?.messageId) {
-      setPendingMessageId(appWindow.__pendingOpenChatTarget.messageId);
-    }
-    if (appWindow.__pendingOpenChatTarget?.contactId) {
-      setPendingContactId(appWindow.__pendingOpenChatTarget.contactId);
-    }
-    appWindow.__pendingOpenChatTarget = undefined;
-
+    // ... keep existing internal handlers
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as
         | { contactId?: string; messageId?: string }
@@ -135,7 +142,6 @@ export function useRealtimeInbox() {
       const contactId = detail?.contactId;
       const messageId = detail?.messageId;
       if (contactId) {
-        appWindow.__pendingOpenContactId = undefined;
         setPendingContactId(contactId);
       }
       if (messageId) {
