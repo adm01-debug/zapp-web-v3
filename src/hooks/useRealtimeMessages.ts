@@ -159,7 +159,7 @@ export function useRealtimeMessages() {
         if (conv.messages.some((m) => m.id === newMessage.id)) return prev;
         
         // Atribui o avatar do contato à nova mensagem para cache
-        const messageWithAvatar = { ...newMessage, contactAvatar: conv.contact.avatar_url };
+        const messageWithAvatar = { ...newMessage, contactAvatar: conv.contact.avatar_url || newMessage.contactAvatar };
         
         const updated = [...prev];
         updated.splice(idx, 1);
