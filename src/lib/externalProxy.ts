@@ -85,6 +85,75 @@ function deriveTelemetryMeta(body: Record<string, unknown>): {
   return { operation, target, limit, offset, filters };
 }
 
+// ─── Request coalescing ──────────────────────────────────────────────
+// Many components mount in parallel and hit the same proxy endpoint within
+// a few ms (sidebar + crossTab + queryFn etc). Without coalescing this
+// causes a stampede that the edge runtime cannot absorb (we observed 40+
+// OPTIONS preflights with zero POST completions). We dedupe by a stable
+// signature of the request body for a short window and return the same
+// in-flight Promise to all callers.
+const COALESCE_WINDOW_MS = 250;
+const inflight = new Map<string, { promise: Promise<ProxyResponse<unknown>>; expiresAt: number }>();
+
+function coalesceKey(body: Record<string, unknown>): string | null {
+  // Mutations must NEVER be coalesced — two identical inserts are two real
+  // operations. Only SELECT and read-only RPCs are eligible.
+  const action = body.action as string | undefined;
+  if (action === 'insert' || action === 'update' || action === 'delete') return null;
+  try {
+    // Stable key: action + table/rpc + filters/match/params + limit + offset.
+    // We intentionally drop __cid and signal — they don't change the result.
+    const { __cid, signal, ...stable } = body as Record<string, unknown> & { __cid?: string; signal?: unknown };
+    void __cid; void signal;
+    return JSON.stringify(stable);
+  } catch {
+    return null;
+  }
+}
+
+// ─── Per-target circuit breaker ──────────────────────────────────────
+// After N consecutive ghost-POST failures (FunctionsFetchError without a
+// status code — the request never made it to the server), the breaker
+// trips for COOLDOWN_MS so we stop bombarding an already-overloaded edge.
+// Closes automatically on the first successful response after cooldown.
+const BREAKER_THRESHOLD = 4;
+const BREAKER_COOLDOWN_MS = 5_000;
+const breaker = new Map<string, { fails: number; openedAt: number }>();
+
+function isBreakerOpen(target: string): { open: boolean; remainingMs: number } {
+  const entry = breaker.get(target);
+  if (!entry || entry.fails < BREAKER_THRESHOLD) return { open: false, remainingMs: 0 };
+  const elapsed = Date.now() - entry.openedAt;
+  if (elapsed >= BREAKER_COOLDOWN_MS) {
+    breaker.delete(target);
+    return { open: false, remainingMs: 0 };
+  }
+  return { open: true, remainingMs: BREAKER_COOLDOWN_MS - elapsed };
+}
+
+function recordBreakerFailure(target: string): void {
+  const cur = breaker.get(target) ?? { fails: 0, openedAt: 0 };
+  cur.fails += 1;
+  if (cur.fails >= BREAKER_THRESHOLD && cur.openedAt === 0) {
+    cur.openedAt = Date.now();
+    proxyLog.warn('proxy circuit opened', { target, fails: cur.fails, cooldownMs: BREAKER_COOLDOWN_MS });
+  }
+  breaker.set(target, cur);
+}
+
+function recordBreakerSuccess(target: string): void {
+  if (breaker.has(target)) {
+    proxyLog.info('proxy circuit closed', { target });
+    breaker.delete(target);
+  }
+}
+
+// Test-only reset hook — exported via __testing namespace below.
+function __resetBreakerAndCoalesce(): void {
+  breaker.clear();
+  inflight.clear();
+}
+
 export async function queryExternalProxy<T = unknown>(params: ProxyParams): Promise<ProxyResponse<T>> {
   // Extract signal so it isn't sent in the JSON body.
   const { signal, ...body } = params as ProxyParams & { signal?: AbortSignal };
