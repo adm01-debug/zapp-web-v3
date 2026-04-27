@@ -185,6 +185,9 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         result = result.filter(c => statusOf(c.contact.id) === 'resolved');
       }
     }
+    
+    // DEBUG: if (searchTrimmed) console.log('DEBUG: Before searching result size:', result.length);
+
 
     // DEBUG: console.log('After Tab Filtering:', result.map(r => r.contact.name));
 
