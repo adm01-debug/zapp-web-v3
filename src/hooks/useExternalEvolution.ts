@@ -407,13 +407,22 @@ export function useExternalMessages(remoteJid: string | null) {
       if (!mountedRef.current) return;
 
       const mapped = evoMessages.map(evolutionToRealtimeMessage);
+      
       // Replace pode chegar com canônicas que substituem otimistas pendentes.
       // Mantemos quaisquer otimistas que ainda não foram reconciliadas.
       applyReconciliation(setMessages, mapped, (filteredPrev, additions) => {
+        // Encontra o avatar do contato atual para propagar nas mensagens
+        const currentAvatar = (queryClient.getQueryData(['contact', remoteJid]) as any)?.avatar_url || 
+                             (queryClient.getQueryData(['external-evolution', 'contact', remoteJid]) as any)?.avatar_url;
+
+        // Propaga o avatar para todas as mensagens (canônicas e otimistas remanescentes)
+        const additionsWithAvatar = additions.map(m => ({ ...m, contactAvatar: currentAvatar }));
+        const filteredWithAvatar = filteredPrev.map(m => m.id.startsWith(OPTIMISTIC_PREFIX) ? { ...m, contactAvatar: currentAvatar } : m);
+
         // Initial: o servidor é a fonte da verdade — ordenamos por created_at
         // garantindo que otimistas remanescentes (ainda sem external_id real)
         // continuem visíveis ao final.
-        const merged = [...filteredPrev.filter((m) => m.id.startsWith(OPTIMISTIC_PREFIX)), ...additions];
+        const merged = [...filteredWithAvatar.filter((m) => m.id.startsWith(OPTIMISTIC_PREFIX)), ...additionsWithAvatar];
         return merged.sort(
           (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         );
