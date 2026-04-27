@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getContactAvatar } from './avatarBatchStore';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('useContactAvatar');
 
 /**
  * Hook para obter o avatar de um contato com carregamento em lote e cache.
