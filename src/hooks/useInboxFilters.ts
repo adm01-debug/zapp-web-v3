@@ -212,22 +212,6 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
         return matches;
       });
     }
-      const searchLower = searchTrimmed.toLowerCase();
-      const digits = searchTrimmed.replace(/\D/g, '');
-      result = result.filter((c) => {
-        const name = c.contact.name?.toLowerCase() ?? '';
-        const phone = c.contact.phone ?? '';
-        const email = c.contact.email?.toLowerCase() ?? '';
-        const jid = String(c.contact.id ?? '').toLowerCase();
-        const lastMsg = c.lastMessage?.content?.toLowerCase() ?? '';
-        return (
-          name.includes(searchLower) ||
-          (digits.length > 0 && phone.replace(/\D/g, '').includes(digits)) ||
-          email.includes(searchLower) ||
-          jid.includes(searchLower) ||
-          lastMsg.includes(searchLower)
-        );
-      });
     }
 
 
