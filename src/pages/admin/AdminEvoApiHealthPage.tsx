@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,13 +20,14 @@ import type {
   Severity, ActiveAlert, AlertChannel, HealthHistoryRow, DrRunbookStep,
 } from '@/lib/evoApiHealth/types';
 
-const SEVERITY_VARIANT: Record<Severity, 'destructive' | 'warning' | 'info'> = {
+const SEVERITY_VARIANT: Record<string, 'destructive' | 'warning' | 'info' | 'secondary'> = {
   critical: 'destructive',
   warning: 'warning',
   info: 'info',
 };
 
 export default function AdminEvoApiHealthPage() {
+  const qc = useQueryClient();
   const dash = useEvoApiDashboard();
   const alerts = useActiveAlerts();
   const ack = useAcknowledgeAlert();
@@ -36,13 +38,23 @@ export default function AdminEvoApiHealthPage() {
   const drHealth = useDrHealth();
   const runTests = useRunTestSuite();
 
-  const health = dash.data?.health;
-  const readiness = dash.data?.readiness;
+  // Detect "schema not exposed" condition: either dash or alerts query returns it.
+  const schemaUnavailable = dash.data?.schema_unavailable || alerts.data?.schema_unavailable;
 
-  // Detect "schema not exposed" condition: every query returns null and none errored.
-  const schemaUnavailable =
-    !dash.isLoading && dash.data === null &&
-    !alerts.isLoading && alerts.data === null;
+  const dashboardData = dash.data?.data;
+  const alertsData = alerts.data?.data;
+  const runTestsData = runTests.data?.data;
+  const historyData = history.data?.data;
+  const channelsData = channels.data?.data;
+  const runbookData = runbook.data?.data;
+  const drHealthData = drHealth.data?.data;
+
+  const health = dashboardData?.health;
+  const readiness = dashboardData?.readiness;
+
+  const handleRefresh = async () => {
+    await qc.invalidateQueries({ queryKey: ['evo-api-health'] });
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6 max-w-7xl">
@@ -57,6 +69,7 @@ export default function AdminEvoApiHealthPage() {
           </AlertDescription>
         </Alert>
       )}
+
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
@@ -69,12 +82,12 @@ export default function AdminEvoApiHealthPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => dash.refetch()} disabled={dash.isFetching}>
-            <RefreshCw className={`h-4 w-4 ${dash.isFetching ? 'animate-spin' : ''}`} />
+          <Button variant="outline" onClick={handleRefresh} disabled={dash.isFetching}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${dash.isFetching ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
-          <Button onClick={() => runTests.mutate()} disabled={runTests.isPending} isLoading={runTests.isPending}>
-            <PlayCircle className="h-4 w-4" />
+          <Button onClick={() => runTests.mutate()} disabled={runTests.isPending}>
+            <PlayCircle className="h-4 w-4 mr-2" />
             {runTests.isPending ? 'Rodando 50 testes…' : 'Run test suite'}
           </Button>
         </div>
@@ -93,18 +106,18 @@ export default function AdminEvoApiHealthPage() {
       )}
 
       {/* Test suite result */}
-      {runTests.data && (
-        <Alert variant={runTests.data.overall?.includes('🟢') ? 'default' : 'destructive'}>
+      {runTestsData && (
+        <Alert variant={runTestsData.overall?.includes('🟢') ? 'default' : 'destructive'}>
           <CheckCircle2 className="h-4 w-4" />
-          <AlertTitle>{runTests.data.overall}</AlertTitle>
+          <AlertTitle>{runTestsData.overall}</AlertTitle>
           <AlertDescription>
-            {runTests.data.passed}/{runTests.data.total_tests} testes passando
-            {' '}({runTests.data.pass_rate_pct}%)
+            {runTestsData.passed}/{runTestsData.total_tests} testes passando
+            {' '}({runTestsData.pass_rate_pct}%)
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Loading / error states */}
+      {/* Error states */}
       {dash.isError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -118,8 +131,8 @@ export default function AdminEvoApiHealthPage() {
           <TabsTrigger value="health">Saúde</TabsTrigger>
           <TabsTrigger value="alerts" className="gap-2">
             Alertas
-            {alerts.data?.length ? (
-              <Badge variant="destructive">{alerts.data.length}</Badge>
+            {alertsData?.length ? (
+              <Badge variant="destructive">{alertsData.length}</Badge>
             ) : null}
           </TabsTrigger>
           <TabsTrigger value="channels">Canais</TabsTrigger>
@@ -175,7 +188,7 @@ export default function AdminEvoApiHealthPage() {
 
         {/* === ALERTAS === */}
         <TabsContent value="alerts" className="space-y-4">
-          {alerts.data?.length === 0 && (
+          {alertsData?.length === 0 && (
             <Alert>
               <CheckCircle2 className="h-4 w-4" />
               <AlertTitle>Nenhum alerta ativo</AlertTitle>
@@ -186,7 +199,7 @@ export default function AdminEvoApiHealthPage() {
           )}
           <ScrollArea className="max-h-[600px]">
             <div className="space-y-3">
-              {alerts.data?.map((a: ActiveAlert) => (
+              {alertsData?.map((a: ActiveAlert) => (
                 <Card key={a.id}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
@@ -225,7 +238,7 @@ export default function AdminEvoApiHealthPage() {
 
         {/* === CANAIS === */}
         <TabsContent value="channels" className="space-y-4">
-          {channels.data?.length === 0 && (
+          {!channelsData?.length && (
             <Alert>
               <Bell className="h-4 w-4" />
               <AlertTitle>Nenhum canal configurado</AlertTitle>
@@ -236,14 +249,14 @@ export default function AdminEvoApiHealthPage() {
             </Alert>
           )}
           <div className="grid gap-3">
-            {channels.data?.map((c: AlertChannel) => (
+            {channelsData?.map((c: AlertChannel) => (
               <Card key={c.id}>
                 <CardContent className="flex items-center justify-between gap-4 p-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold">{c.name}</span>
                       <Badge variant="outline">{c.channel_type}</Badge>
-                      <Badge variant={c.active ? 'success' : 'subtle'}>
+                      <Badge variant={c.active ? 'default' : 'secondary'}>
                         {c.active ? 'ativo' : 'desativado'}
                       </Badge>
                     </div>
@@ -261,7 +274,7 @@ export default function AdminEvoApiHealthPage() {
             ))}
           </div>
           {testChan.data !== undefined && (
-            <Alert>
+            <Alert className="mt-4">
               <CheckCircle2 className="h-4 w-4" />
               <AlertTitle>Resultado do teste</AlertTitle>
               <AlertDescription>
@@ -295,7 +308,7 @@ export default function AdminEvoApiHealthPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {history.data?.map((h: HealthHistoryRow, idx: number) => (
+                    {historyData?.map((h: HealthHistoryRow, idx: number) => (
                       <tr key={idx} className="border-b border-border/50">
                         <td className="py-1.5 pr-3 whitespace-nowrap">
                           {new Date(h.bucket).toLocaleString('pt-BR')}
@@ -316,13 +329,13 @@ export default function AdminEvoApiHealthPage() {
 
         {/* === DR === */}
         <TabsContent value="dr" className="space-y-4">
-          {drHealth.data && (
+          {drHealthData && (
             <Alert>
               <Shield className="h-4 w-4" />
-              <AlertTitle>{(drHealth.data as { overall?: string }).overall ?? 'DR Health'}</AlertTitle>
+              <AlertTitle>{(drHealthData as { overall?: string }).overall ?? 'DR Health'}</AlertTitle>
               <AlertDescription>
                 <pre className="text-xs bg-muted p-2 rounded overflow-x-auto mt-2">
-                  {JSON.stringify(drHealth.data, null, 2)}
+                  {JSON.stringify(drHealthData, null, 2)}
                 </pre>
               </AlertDescription>
             </Alert>
@@ -334,7 +347,7 @@ export default function AdminEvoApiHealthPage() {
             <CardContent>
               <ScrollArea className="h-[500px]">
                 <ol className="space-y-3">
-                  {runbook.data?.map((s: DrRunbookStep) => (
+                  {runbookData?.map((s: DrRunbookStep) => (
                     <li key={s.step_number} className="border-l-2 border-primary/40 pl-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant="outline">{s.icon} {s.category}</Badge>

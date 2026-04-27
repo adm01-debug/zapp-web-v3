@@ -39,7 +39,7 @@ export function useAcknowledgeAlert() {
         match: { id: alertId },
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...KEY, 'alerts-active'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
 
