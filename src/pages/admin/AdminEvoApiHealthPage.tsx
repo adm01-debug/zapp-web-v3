@@ -39,7 +39,10 @@ export default function AdminEvoApiHealthPage() {
   const health = dash.data?.health;
   const readiness = dash.data?.readiness;
 
-  return (
+  // Detect "schema not exposed" condition: every query returns null and none errored.
+  const schemaUnavailable =
+    !dash.isLoading && dash.data === null &&
+    !alerts.isLoading && alerts.data === null;
     <div className="container mx-auto p-6 space-y-6 max-w-7xl">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
