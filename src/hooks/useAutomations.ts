@@ -77,7 +77,7 @@ export function useAutomations({
       if (!rules.length) return;
 
       // Pega últimas 10 msgs do FATOR X
-      const { data: msgs } = await externalClient.rpc("rpc_list_messages", {
+      const { data: msgs } = await getClient()?.rpc("rpc_list_messages", {
         p_remote_jid: remoteJid,
         p_instance: instanceName,
         p_limit: 10,
@@ -100,7 +100,7 @@ export function useAutomations({
       let addedTags: string[] = [];
       let removedTags: string[] = [];
       try {
-        const { data: contact } = await externalClient.rpc("rpc_get_contact", {
+        const { data: contact } = await getClient()?.rpc("rpc_get_contact", {
           p_remote_jid: remoteJid,
           p_instance: instanceName,
         } as any);
@@ -214,7 +214,7 @@ export function useAutomations({
         const allTags = [...new Set([...cfgTags, ...slaTags])];
         if (allTags.length) {
           try {
-            await externalClient.rpc("rpc_upsert_contact", {
+            await getClient()?.rpc("rpc_upsert_contact", {
               p_remote_jid: remoteJid,
               p_instance: instanceName,
               p_tags: allTags,
@@ -264,7 +264,7 @@ export function useAutomations({
                 .eq("id", execId)
                 .maybeSingle();
               if (exec?.suggestion_text) {
-                await externalClient.rpc("rpc_insert_message", {
+                await getClient()?.rpc("rpc_insert_message", {
                   p_remote_jid: remoteJid,
                   p_content: exec.suggestion_text,
                   p_from_me: true,
