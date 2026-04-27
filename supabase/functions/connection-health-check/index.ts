@@ -266,7 +266,8 @@ Deno.serve(async (req) => {
 });
 
 async function persistResult(
-  supabase: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
   conn: { id: string; instance_id: string; status: string; health_status: string | null; phone_number: string | null },
   evalResult: EvalResult,
   responseTime: number,
