@@ -4617,37 +4617,31 @@ export type Database = {
       }
       file_scan_logs: {
         Row: {
-          bucket: string
-          created_at: string
-          hash: string | null
+          bucket_id: string
+          created_at: string | null
+          file_name: string
           id: string
-          path: string
-          raw_scan_data: Json | null
-          scan_result: Database["public"]["Enums"]["scan_verdict"] | null
-          status_code: number | null
-          user_id: string | null
+          provider: string
+          provider_response: Json | null
+          status: string
         }
         Insert: {
-          bucket: string
-          created_at?: string
-          hash?: string | null
+          bucket_id: string
+          created_at?: string | null
+          file_name: string
           id?: string
-          path: string
-          raw_scan_data?: Json | null
-          scan_result?: Database["public"]["Enums"]["scan_verdict"] | null
-          status_code?: number | null
-          user_id?: string | null
+          provider: string
+          provider_response?: Json | null
+          status: string
         }
         Update: {
-          bucket?: string
-          created_at?: string
-          hash?: string | null
+          bucket_id?: string
+          created_at?: string | null
+          file_name?: string
           id?: string
-          path?: string
-          raw_scan_data?: Json | null
-          scan_result?: Database["public"]["Enums"]["scan_verdict"] | null
-          status_code?: number | null
-          user_id?: string | null
+          provider?: string
+          provider_response?: Json | null
+          status?: string
         }
         Relationships: []
       }
@@ -12057,7 +12051,6 @@ export type Database = {
         | "webchat"
         | "email"
       provider_type: "evolution" | "wppconnect" | "baileys" | "custom"
-      scan_verdict: "clean" | "infected" | "suspicious" | "pending" | "error"
       service_account_type:
         | "google_sheets"
         | "google_docs"
@@ -12237,7 +12230,6 @@ export const Constants = {
         "email",
       ],
       provider_type: ["evolution", "wppconnect", "baileys", "custom"],
-      scan_verdict: ["clean", "infected", "suspicious", "pending", "error"],
       service_account_type: [
         "google_sheets",
         "google_docs",
