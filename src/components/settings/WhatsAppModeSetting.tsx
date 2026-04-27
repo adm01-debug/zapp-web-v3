@@ -31,20 +31,45 @@ export function WhatsAppModeSetting() {
   const [mode, setMode] = useState<WhatsAppMode>("unofficial");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<IntegrationProfile | null>(null);
+  const [migrating, setMigrating] = useState(false);
+
+  const loadProfile = useCallback(async () => {
+    // deno-lint-ignore no-explicit-any
+    const { data } = await supabase.rpc("rpc_get_active_integration_profile" as any);
+    if (data) setProfile(data as IntegrationProfile);
+  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const m = await getWhatsAppMode(true);
       setMode(m);
+      await loadProfile();
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadProfile]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  const handleRunMigration = async () => {
+    setMigrating(true);
+    try {
+      // deno-lint-ignore no-explicit-any
+      const { error } = await supabase.rpc("rpc_migrate_whatsapp_integration" as any);
+      if (error) throw error;
+      invalidateWhatsAppModeCache();
+      await refresh();
+      toast.success("Migração de integração re-executada");
+    } catch (e) {
+      toast.error(`Falha na migração: ${e instanceof Error ? e.message : "erro"}`);
+    } finally {
+      setMigrating(false);
+    }
+  };
 
   const handleToggle = async (checked: boolean) => {
     const next: WhatsAppMode = checked ? "official" : "unofficial";
