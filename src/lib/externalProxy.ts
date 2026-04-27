@@ -16,6 +16,73 @@ import { getLogger } from '@/lib/logger';
 
 const proxyLog = getLogger('externalProxy');
 
+// ─── Direct-fetch invoker ─────────────────────────────────────────────
+// The Lovable preview injects a `lovable.js` fetch proxy that occasionally
+// drops POST bodies sent through `supabase.functions.invoke()`, surfacing as
+// `FunctionsFetchError: Failed to send a request to the Edge Function` with
+// `status: undefined`. Calling the function URL directly with `fetch` bypasses
+// that proxied transport. We keep the SDK-style return shape so the rest of
+// executeProxyCall (retry, breaker, telemetry) is untouched.
+const SUPABASE_URL = (import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_URL ?? '';
+const SUPABASE_ANON = (import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+const FUNCTIONS_BASE = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : '';
+
+// Test-only override hook — when set, replaces the real fetch invoker so
+// existing unit tests that mocked `supabase.functions.invoke` keep working.
+let __invokeOverride: ((fnName: string, opts: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> }) => Promise<{ data: unknown; error: { name?: string; message?: string; code?: string; status?: number } | null }>) | null = null;
+
+async function invokeViaFetch<T>(
+  fnName: string,
+  opts: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> },
+): Promise<{ data: T | null; error: { name?: string; message?: string; code?: string; status?: number } | null }> {
+  if (!FUNCTIONS_BASE) {
+    return { data: null, error: { name: 'ConfigError', message: 'VITE_SUPABASE_URL missing' } };
+  }
+  let authHeader = `Bearer ${SUPABASE_ANON}`;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (token) authHeader = `Bearer ${token}`;
+  } catch { /* fall back to anon */ }
+
+  try {
+    const res = await fetch(`${FUNCTIONS_BASE}/${fnName}`, {
+      method: 'POST',
+      signal: opts.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON,
+        Authorization: authHeader,
+        ...(opts.headers ?? {}),
+      },
+      body: JSON.stringify(opts.body ?? {}),
+    });
+    const text = await res.text();
+    let parsed: unknown = null;
+    try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
+    if (!res.ok) {
+      const msg =
+        parsed && typeof parsed === 'object' && 'error' in (parsed as Record<string, unknown>)
+          ? String((parsed as Record<string, unknown>).error)
+          : `HTTP ${res.status}`;
+      return {
+        data: null,
+        error: { name: 'FunctionsHttpError', message: msg, status: res.status },
+      };
+    }
+    return { data: (parsed as T) ?? null, error: null };
+  } catch (e: unknown) {
+    const err = e as { name?: string; message?: string };
+    return {
+      data: null,
+      error: {
+        name: err.name ?? 'FunctionsFetchError',
+        message: err.message ?? 'fetch_failed',
+      },
+    };
+  }
+}
+
 interface ProxySelectParams {
   table: string;
   select?: string;
@@ -295,7 +362,9 @@ async function executeProxyCall<T>(
         headers: { ...(invokeOptions.headers ?? {}), 'x-attempt': String(attempt) },
       };
       try {
-        const result = await supabase.functions.invoke('external-db-proxy', perAttemptOptions);
+        const result = __invokeOverride
+          ? (await __invokeOverride('external-db-proxy', perAttemptOptions)) as { data: ProxyResponse<T> | null; error: { name?: string; message?: string; code?: string; status?: number } | null }
+          : await invokeViaFetch<ProxyResponse<T>>('external-db-proxy', perAttemptOptions);
         data = result.data as ProxyResponse<T> | null;
         error = result.error ? normalizeInvokeError(result.error) : null;
         // Edge runtime guard: when the function crashes at boot/runtime the
@@ -488,4 +557,6 @@ async function executeProxyCall<T>(
 export const __testing = {
   resetBreakerAndCoalesce: __resetBreakerAndCoalesce,
   isBreakerOpen: (target: string) => isBreakerOpen(target),
+  setInvokeOverride: (fn: typeof __invokeOverride) => { __invokeOverride = fn; },
+  clearInvokeOverride: () => { __invokeOverride = null; },
 };

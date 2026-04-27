@@ -16,6 +16,7 @@ const invokeMock = vi.fn();
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     functions: { invoke: (...args: unknown[]) => invokeMock(...args) },
+    auth: { getSession: async () => ({ data: { session: null } }) },
   },
 }));
 
@@ -31,6 +32,9 @@ describe('externalProxy coalesce + circuit breaker', () => {
     resetTelemetry();
     invokeMock.mockReset();
     __testing.resetBreakerAndCoalesce();
+    // Route the in-module fetch invoker to the same mock the tests already
+    // configure, preserving the SDK-style { data, error } contract.
+    __testing.setInvokeOverride(async (_fn, opts) => invokeMock(_fn, opts));
   });
 
   // Some sub-paths surface as "unhandled" rejections from the inner retry
