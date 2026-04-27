@@ -77,16 +77,21 @@ export function useFileUploadLogic(opts: {
         }
       } catch (err) { log.warn('Image compression failed:', err); }
     }
-    const fileExt = fileToUpload.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const filePath = `uploads/${fileName}`;
 
-    const { error } = await supabase.storage.from('whatsapp-media').upload(filePath, fileToUpload, { cacheControl: '31536000', upsert: false });
-    if (error) throw new Error(`Erro ao fazer upload: ${error.message}`);
+    const formData = new FormData();
+    formData.append('file', fileToUpload);
+    formData.append('bucket', 'whatsapp-media');
 
-    const { data: signedData, error: signError } = await supabase.storage.from('whatsapp-media').createSignedUrl(filePath, 3600);
-    if (signError || !signedData?.signedUrl) throw new Error('Erro ao gerar URL do arquivo');
-    return signedData.signedUrl;
+    // Chamada para a Edge Function de Upload Seguro (Middleware)
+    const { data, error } = await supabase.functions.invoke('secure-upload', {
+      body: formData,
+    });
+
+    if (error || !data?.success) {
+      throw new Error(error?.message || data?.error || 'Erro no upload seguro via Edge Function');
+    }
+
+    return data.url;
   }, []);
 
   const handleClose = useCallback(() => {
