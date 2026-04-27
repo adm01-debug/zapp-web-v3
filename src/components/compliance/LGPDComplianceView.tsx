@@ -42,10 +42,20 @@ export function LGPDComplianceView() {
 
 
   const handleExportData = async () => {
+    if (user) {
+      void supabase.rpc('log_audit_event', {
+        p_action: 'gdpr_export_blocked',
+        p_entity_type: 'user',
+        p_entity_id: user.id,
+        p_details: { reason: 'export_disabled_by_policy', attempted_at: new Date().toISOString() },
+        p_user_agent: navigator.userAgent,
+      });
+    }
     toast.error('🔒 Exportação bloqueada por política de segurança', {
       description: 'A exportação de dados está desabilitada para proteção dos dados de clientes e fornecedores.',
     });
   };
+
 
   const handleDeleteRequest = async () => {
     if (!user) return;
