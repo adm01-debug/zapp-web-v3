@@ -67,7 +67,7 @@ export function MessageBubble({
     <div className={cn('flex group px-4 py-1 gap-2', isSent ? 'justify-end' : 'justify-start')}>
       {!isSent && (
         <Avatar className="w-8 h-8 shrink-0 self-end mb-1 ring-1 ring-border/30">
-          <AvatarImage src={avatarUrl || undefined} />
+          <AvatarImage src={avatarUrl || undefined} referrerPolicy="no-referrer" />
           <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
             {(message.senderName || 'C').slice(0, 2).toUpperCase()}
           </AvatarFallback>
