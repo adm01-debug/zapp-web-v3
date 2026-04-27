@@ -64,6 +64,16 @@ export function AudioVolumeControl({
           aria-label="Controle de volume"
         >
           <Icon className={iconDim} />
+          {hasConversationOverride && (
+            <span
+              aria-hidden
+              className={cn(
+                'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ring-2 ring-background',
+                isSent ? 'bg-primary-foreground' : 'bg-primary'
+              )}
+              title="Volume personalizado para esta conversa"
+            />
+          )}
         </Button>
       </motion.div>
 
