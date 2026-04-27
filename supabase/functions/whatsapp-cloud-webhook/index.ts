@@ -223,6 +223,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    void recordPing("event", { rid, processed, duplicates, ignoredFields });
     return new Response(
       JSON.stringify({ ok: true, processed, duplicates, ignoredFields, requestId: rid }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
