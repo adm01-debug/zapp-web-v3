@@ -150,8 +150,11 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
     // Memoize utility functions for current render
     const statusOf = (id: string) => ticketStates[id]?.status ?? 'open';
-    const assignedOf = (id: string, fallback: string | null | undefined) =>
-      ticketStates[id]?.assignedTo ?? fallback ?? null;
+    const assignedOf = (id: string, fallback: string | null | undefined) => {
+      const state = ticketStates[id];
+      if (state && state.assignedTo !== undefined) return state.assignedTo;
+      return fallback ?? null;
+    };
 
     // 1. Tab-based filtering
     if (mainTab === 'open') {
