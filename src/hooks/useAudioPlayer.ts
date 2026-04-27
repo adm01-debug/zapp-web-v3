@@ -64,6 +64,25 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume, resolvedUrl]);
 
+  /**
+   * Registra/desregistra este player no `audioPlaybackBus` enquanto está
+   * tocando. Permite que o atalho global de mute (`M`) atue sobre o player
+   * ATIVO, sem precisar de foco em nenhum elemento. Apenas um player ativo
+   * por vez (último que deu play).
+   */
+  useEffect(() => {
+    if (!isPlaying) {
+      audioPlaybackBus.clearActive(messageId);
+      return;
+    }
+    audioPlaybackBus.setActive({
+      messageId,
+      toggleMute,
+      getVolume: () => volume,
+    });
+    return () => audioPlaybackBus.clearActive(messageId);
+  }, [isPlaying, messageId, toggleMute, volume]);
+
   const waveformHeights = useMemo(
     () => Array.from({ length: 30 }, () => Math.random() * 60 + 20),
     []
