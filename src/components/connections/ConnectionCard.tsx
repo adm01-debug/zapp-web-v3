@@ -10,7 +10,9 @@ import {
   Smartphone, MoreVertical, Trash2, Copy, QrCode, Wifi, WifiOff,
   Star, Clock, Loader2, RefreshCw, History, Link2, Settings, Boxes,
   BatteryCharging, BatteryLow, BatteryMedium, BatteryFull, ShieldCheck, Zap,
+  AlertTriangle, Activity,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
