@@ -159,7 +159,8 @@ describe('useInboxFilters (covering useChatFailureFilter)', () => {
     }), { wrapper });
 
     act(() => {
-      result.current.setShowAll(true);
+      // In search mode, results are global
+      result.current.setMainTab('search');
       result.current.setSearch('Smith');
     });
 
