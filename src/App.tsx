@@ -207,6 +207,7 @@ function AppContent() {
             <Route path="/admin/stress-test" element={<ProtectedRoute requiredRoles={['admin']}><AdminStressTestPage /></ProtectedRoute>} />
             <Route path="/admin/inbox-sync-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminInboxSyncStatusPage /></ProtectedRoute>} />
             <Route path="/admin/external-db-explorer" element={<ProtectedRoute requiredRoles={['admin', 'dev']}><AdminExternalDbExplorerPage /></ProtectedRoute>} />
+            <Route path="/admin/evo-api-health" element={<ProtectedRoute requiredRoles={['admin', 'dev']}><AdminEvoApiHealthPage /></ProtectedRoute>} />
             <Route path="/admin/automations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationsPage /></ProtectedRoute>} />
             <Route path="/admin/automations/logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationLogsPage /></ProtectedRoute>} />
             <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
