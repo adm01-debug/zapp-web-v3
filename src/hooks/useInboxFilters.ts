@@ -47,6 +47,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
     // Failures Only (deep-link de monitoramento)
     if (params.get('failuresOnly') === 'true') {
+      log.info('Deep-link: filtering by failures only');
       setShowOnlyRetrying(true);
     }
 
