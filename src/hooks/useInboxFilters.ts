@@ -190,7 +190,6 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     // DEBUG: console.log('After Tab Filtering:', result.map(r => r.contact.name));
 
     // 2. Search filtering
-    const searchTrimmed = (search || '').trim();
     if (searchTrimmed) {
       const searchLower = searchTrimmed.toLowerCase();
       const digits = searchTrimmed.replace(/\D/g, '');
