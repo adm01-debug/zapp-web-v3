@@ -40,7 +40,16 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   let parsed: unknown = null;
   try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
   if (!res.ok) {
-    const msg = (parsed as ProxyErr)?.error ?? `HTTP ${res.status}`;
+    const errObj = parsed as (ProxyErr & { code?: string }) | null;
+    const msg = errObj?.error ?? `HTTP ${res.status}`;
+    // PGRST106: schema not exposed via PostgREST on FATOR X.
+    // Treat as "feature not provisioned" → return empty payload instead of
+    // throwing, so the dashboard renders an empty state instead of blank-screening.
+    if (errObj?.code === 'PGRST106' || /Invalid schema:\s*evo_api/i.test(msg)) {
+      // eslint-disable-next-line no-console
+      console.warn('[evoApi] schema "evo_api" not exposed on FATOR X PostgREST. Returning empty result.');
+      return (null as unknown) as T;
+    }
     throw new Error(msg);
   }
   return ((parsed as ProxyOk<T>)?.data ?? null) as T;
