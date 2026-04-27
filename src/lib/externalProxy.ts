@@ -466,3 +466,11 @@ async function executeProxyCall<T>(
     throw err;
   }
 }
+
+// Test-only namespace. Not part of the public API. Used by unit tests to
+// reset the per-target circuit breaker and the in-flight coalesce map
+// between cases without exporting the internals individually.
+export const __testing = {
+  resetBreakerAndCoalesce: __resetBreakerAndCoalesce,
+  isBreakerOpen: (target: string) => isBreakerOpen(target),
+};
