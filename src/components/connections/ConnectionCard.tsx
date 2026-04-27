@@ -28,6 +28,28 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
   pending: { label: 'Aguardando QR', color: 'bg-status-away', icon: QrCode },
 };
 
+/** Mensagens human-friendly para o motivo retornado pelo health check 3-camadas. */
+const HEALTH_REASON_LABEL: Record<string, { short: string; long: string; severe: boolean }> = {
+  phantom_session: {
+    short: 'Sessão fantasma',
+    long: 'O servidor Evolution mantém o socket aberto, mas nenhum número está pareado. Reconecte escaneando o QR Code novamente.',
+    severe: true,
+  },
+  webhook_silent: {
+    short: 'Webhook silencioso',
+    long: 'Sem eventos recebidos nos últimos 30 minutos. Pode ser baixo volume ou um webhook quebrado.',
+    severe: false,
+  },
+  stale_session: {
+    short: 'Sessão obsoleta',
+    long: 'Sem mensagens há mais de 6 horas. A sessão provavelmente perdeu vínculo com o WhatsApp — reconecte.',
+    severe: true,
+  },
+  socket_closed: { short: 'Socket fechado', long: 'A Evolution API reportou socket fechado.', severe: true },
+  http_error: { short: 'Erro HTTP', long: 'Resposta de erro da Evolution API.', severe: true },
+  timeout: { short: 'Timeout', long: 'A Evolution API não respondeu a tempo.', severe: true },
+};
+
 interface ConnectionCardProps {
   connection: WhatsAppConnection;
   syncingHistory: string | null;
