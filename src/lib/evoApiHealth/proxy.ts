@@ -50,39 +50,59 @@ class ExternalDbProxyClient {
     }
   }
 
-  async call<T>(body: Record<string, unknown>): Promise<{ data: T | null; schema_unavailable: boolean }> {
+  async call<T>(body: Record<string, unknown>, retryCount = 0): Promise<{ data: T | null; schema_unavailable: boolean }> {
     if (!PROXY_URL) throw new Error('VITE_SUPABASE_URL missing');
 
     const cid = generateCorrelationId();
     const auth = await this.getAuthHeader();
 
-    const response = await fetch(PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_ANON,
-        Authorization: auth,
-        [CORRELATION_HEADER]: cid,
-      },
-      body: JSON.stringify({
-        ...body,
-        __cid: cid,
-        schema: 'evo_api', // Default for this proxy client
-      }),
-    });
+    try {
+      const response = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON,
+          Authorization: auth,
+          [CORRELATION_HEADER]: cid,
+        },
+        body: JSON.stringify({
+          ...body,
+          __cid: cid,
+          schema: 'evo_api', // Default for this proxy client
+        }),
+      });
 
-    const result = await response.json().catch(() => null);
+      const result = await response.json().catch(() => null);
 
-    if (!response.ok) {
-      const errorMsg = (result as ProxyErrorResponse | null)?.error ?? `HTTP ${response.status}`;
-      throw new Error(errorMsg);
+      if (!response.ok) {
+        const errorMsg = (result as ProxyErrorResponse | null)?.error ?? `HTTP ${response.status}`;
+        
+        // PGRST106: Invalid schema - often transient during migrations or DB restarts
+        const isTransientSchemaError = errorMsg.includes('PGRST106') || errorMsg.includes('Invalid schema');
+        
+        if (isTransientSchemaError && retryCount < 3) {
+          const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+          console.warn(`[ExternalDbProxy] Transient schema error (PGRST106). Retrying in ${Math.round(delay)}ms... (Attempt ${retryCount + 1}/3)`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return this.call<T>(body, retryCount + 1);
+        }
+
+        throw new Error(errorMsg);
+      }
+
+      const okResult = result as ProxyResponse<T> | null;
+      return {
+        data: (okResult?.data ?? null) as T | null,
+        schema_unavailable: !!okResult?.schema_unavailable,
+      };
+    } catch (error) {
+      if (error instanceof Error && (error.message.includes('PGRST106') || error.message.includes('Invalid schema')) && retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.call<T>(body, retryCount + 1);
+      }
+      throw error;
     }
-
-    const okResult = result as ProxyResponse<T> | null;
-    return {
-      data: (okResult?.data ?? null) as T | null,
-      schema_unavailable: !!okResult?.schema_unavailable,
-    };
   }
 
   rpc<T = unknown>(name: string, params: Record<string, unknown> = {}) {
