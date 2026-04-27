@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,7 +11,7 @@ interface DrTabProps {
   runbook?: DrRunbookStep[];
 }
 
-export function DrTab({ drHealth, runbook }: DrTabProps) {
+export const DrTab = React.memo(({ drHealth, runbook }: DrTabProps) => {
   return (
     <div className="space-y-4">
       {drHealth && (
@@ -55,4 +56,4 @@ export function DrTab({ drHealth, runbook }: DrTabProps) {
       </Card>
     </div>
   );
-}
+});
