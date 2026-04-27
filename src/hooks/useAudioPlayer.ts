@@ -259,7 +259,7 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
   return {
     audioRef, resolvedUrl, isPlaying, isLoading, hasError,
     playbackRate, progress, duration, currentTime, waveformHeights,
-    volume, setVolume,
+    volume, setVolume, toggleMute,
     togglePlay, handleSeek, cycleSpeed, formatTime, resolveAudioUrl,
   };
 }
