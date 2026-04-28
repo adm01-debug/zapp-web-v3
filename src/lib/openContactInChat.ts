@@ -68,14 +68,22 @@ export async function openContactInChat(opts: OpenContactInChatOptions): Promise
   const contactId = await resolveContactId(opts);
   if (!contactId) return false;
 
+  // Phone/JID resolution: o Inbox em modo externo (FATOR X) identifica
+  // conversas pelo `remote_jid` (ex: `5511999@s.whatsapp.net`), não pelo
+  // UUID local. Quando temos o telefone, derivamos o JID e o entregamos
+  // ao handshake — caso contrário caímos no UUID legado.
+  const phone = opts.phone ?? jidToPhone(opts.remoteJid) ?? null;
+  const remoteJid = opts.remoteJid ?? (phone ? `${phone}@s.whatsapp.net` : undefined);
+  const handshakeId = remoteJid ?? contactId;
+
   const target: PendingChatTarget = {
     contactId,
-    remoteJid: opts.remoteJid,
-    phone: opts.phone ?? jidToPhone(opts.remoteJid) ?? undefined,
+    remoteJid,
+    phone: phone ?? undefined,
     messageId: opts.messageId,
   };
 
-  window.__pendingOpenContactId = contactId;
+  window.__pendingOpenContactId = handshakeId;
   window.__pendingOpenChatTarget = target;
 
   // Persist the deep-link target in the URL query string so a refresh
@@ -84,7 +92,7 @@ export async function openContactInChat(opts: OpenContactInChatOptions): Promise
   // and clears `message` after the highlight is consumed.
   try {
     const url = new URL(window.location.href);
-    url.searchParams.set('contact', contactId);
+    url.searchParams.set('contact', handshakeId);
     if (target.messageId) {
       url.searchParams.set('message', target.messageId);
     } else {
@@ -115,7 +123,7 @@ export async function openContactInChat(opts: OpenContactInChatOptions): Promise
     attempts++;
     window.dispatchEvent(
       new CustomEvent('open-contact-chat', {
-        detail: { contactId, messageId: target.messageId },
+        detail: { contactId: handshakeId, messageId: target.messageId },
       }),
     );
     if (attempts < 15) setTimeout(tryDispatch, 200);

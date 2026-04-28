@@ -61,13 +61,15 @@ describe('openContactInChat', () => {
 
     expect(ok).toBe(true);
     expect(fromMock).not.toHaveBeenCalled();
+    // Sem phone/JID, o handshake usa o UUID legado.
     expect((window as unknown as { __pendingOpenContactId?: string }).__pendingOpenContactId).toBe('uuid-123');
-    const target = (window as unknown as { __pendingOpenChatTarget?: { messageId?: string } }).__pendingOpenChatTarget;
+    const target = (window as unknown as { __pendingOpenChatTarget?: { messageId?: string; contactId?: string } }).__pendingOpenChatTarget;
     expect(target?.messageId).toBe('msg-1');
+    expect(target?.contactId).toBe('uuid-123');
     expect(window.location.hash).toBe('#inbox');
   });
 
-  it('resolve por remoteJid via lookup em contacts', async () => {
+  it('resolve por remoteJid via lookup em contacts e usa JID no handshake', async () => {
     maybeSingleMock.mockResolvedValueOnce({ data: { id: 'uuid-from-lookup' }, error: null });
 
     const ok = await openContactInChat({
@@ -78,14 +80,21 @@ describe('openContactInChat', () => {
     expect(ok).toBe(true);
     expect(fromMock).toHaveBeenCalledWith('contacts');
     expect(eqMock).toHaveBeenCalledWith('phone', '5511777776666');
-    expect((window as unknown as { __pendingOpenContactId?: string }).__pendingOpenContactId).toBe('uuid-from-lookup');
+    // Inbox externo (FATOR X) precisa do remote_jid, não do UUID local.
+    expect((window as unknown as { __pendingOpenContactId?: string }).__pendingOpenContactId)
+      .toBe('5511777776666@s.whatsapp.net');
+    const target = (window as unknown as { __pendingOpenChatTarget?: { contactId?: string; remoteJid?: string } }).__pendingOpenChatTarget;
+    expect(target?.contactId).toBe('uuid-from-lookup');
+    expect(target?.remoteJid).toBe('5511777776666@s.whatsapp.net');
   });
 
-  it('resolve por phone explícito sem reparse', async () => {
+  it('resolve por phone explícito derivando o JID', async () => {
     maybeSingleMock.mockResolvedValueOnce({ data: { id: 'uuid-phone' }, error: null });
     const ok = await openContactInChat({ phone: '5511555554444' });
     expect(ok).toBe(true);
     expect(eqMock).toHaveBeenCalledWith('phone', '5511555554444');
+    expect((window as unknown as { __pendingOpenContactId?: string }).__pendingOpenContactId)
+      .toBe('5511555554444@s.whatsapp.net');
   });
 
   it('retorna false e não muta janela quando contato não existe', async () => {

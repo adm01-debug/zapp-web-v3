@@ -1,81 +1,43 @@
+## Diagnóstico
 
-# Blindar contrato de leitura do Inbox (FATOR X, não Evolution API)
+Quando o usuário clica num contato em **Contatos**, o handler `openContactChat` (em `src/components/contacts/useContactsCRUD.ts`) entrega o **UUID do `contacts.id` do Lovable Cloud** ao Inbox via `window.__pendingOpenContactId` + evento `open-contact-chat`.
 
-A arquitetura já está correta: Inbox lê de `zapp.evolution_messages` no FATOR X via `queryExternalProxy` → edge `external-db-proxy`. Falta **formalizar** o contrato e **bloquear regressões**. Esta tarefa não altera código de inbox existente.
+Porém, após a migração FATOR X, o Inbox roda em modo externo (`USE_EXTERNAL_DB = true` em `useRealtimeInbox.ts`) e identifica cada conversa pelo `remote_jid` do WhatsApp (ex.: `5511999999999@s.whatsapp.net`) — veja `derivedToConversationContact` em `src/adapters/evolutionAdapter.ts` (`id: dc.remoteJid`).
 
-## Estado atual relevante (já existe)
+Resultado:
+1. `selectedConversation` nunca casa (UUID ≠ JID).
+2. O fallback que buscaria em `public.contacts` é **explicitamente pulado** no modo externo (`useRealtimeInbox.ts` linhas 167–169).
+3. `resolvedSelectedConversation` fica `null` → o ChatPanel não tem contato resolvido → o input de envio fica inerte / não há `remoteJid` para o `rpc_insert_message`.
 
-- `src/lib/externalProxy.ts` — wrapper de leitura.
-- Edge `external-db-proxy` deployada.
-- `src/pages/admin/AdminInboxSyncStatusPage.tsx` — **já existe** uma versão mais completa que o ANEXO 3 (cobre lag inbound/outbound, contagens 5min/1h/24h, top conversas, falhas). Rota `/admin/inbox-sync-status` registrada em `App.tsx`.
-- Imports de `useEvolutionApi` dentro de `src/components/inbox/**` existem em 3 arquivos, mas são **somente para envio/edição** (editMessage, sendStickerMessage, sendPollMessage, sendContactMessage, sendStatusMessage) — o contrato proíbe leitura, não envio.
+Por isso “seleciono o contato e não consigo enviar mensagem”.
 
-## O que vou fazer
+## Correção
 
-### 1. Criar `docs/INBOX_READ_CONTRACT.md`
-Conteúdo exato do ANEXO 1 (TL;DR, tabela comparativa, fluxos LEITURA/ESCRITA1/ESCRITA2, regras R1–R6, proibições, ordem de diagnóstico, processo de mudança).
+Centralizar a abertura do chat no helper já existente `openContactInChat` (`src/lib/openContactInChat.ts`), que aceita `phone`/`remoteJid` e resolve para o identificador correto. O módulo Contatos passa a entregar o **telefone** do contato (e gera o `remote_jid` `${phone}@s.whatsapp.net`), em vez do UUID.
 
-### 2. ESLint — bloquear leitura via Evolution API no inbox
-Editar `eslint.config.js` adicionando um override scoped:
+### Mudanças
 
-```text
-files: [
-  'src/components/inbox/**/*.{ts,tsx}',
-  'src/hooks/inbox/**/*.{ts,tsx}',
-  'src/pages/Inbox*.{ts,tsx}',
-]
-```
+1. **`src/components/contacts/useContactsCRUD.ts`**
+   - Trocar `openContactChat(contactId)` por `openContactChat(contact)` que recebe o objeto `Contact` (precisamos do `phone`).
+   - Implementação: chamar `openContactInChat({ phone: contact.phone, remoteJid: \`${contact.phone}@s.whatsapp.net\` })`. Remover o push direto de UUID em `__pendingOpenContactId`.
 
-com `no-restricted-imports` patterns:
+2. **`src/components/contacts/ContactsView.tsx`**
+   - Ajustar os 3 call-sites (`onContactClick`, `onOpenChat`, `onContactSelected`) para passar o objeto `Contact` em vez do `id`. Onde o componente filho hoje envia só o id, encapsular em `(c) => openContactChat(c)`.
 
-- `**/evolution-api/**/find*` e `**/evolution-api/**/list-messages*` → bloqueado com mensagem apontando para `docs/INBOX_READ_CONTRACT.md`.
-- **Não bloquear `useEvolutionApi` por completo** — faria 3 arquivos atuais (ChatPanel, AdvancedMessageMenu, MessageContextActions) quebrarem o build, pois usam para **envio** (legítimo pela R2). Em vez disso, bloqueio dirigido a names específicos via `paths` com `importNames`:
-  - bloquear apenas exports de leitura caso existissem (`findMessages`, `listMessages`, `findChats` se forem expostos pelo hook). Como `useEvolutionApi` hoje não expõe leitura, fica como **regra defensiva** com comentário explicando o racional.
-- Mensagem padrão: `"Inbox lê do FATOR X via externalProxy. Não consulte Evolution API para popular UI. Para envio, use externalMessageSender. Veja docs/INBOX_READ_CONTRACT.md"`.
+3. **`src/hooks/useRealtimeInbox.ts`** (defesa em profundidade)
+   - No bloco que lê `__pendingOpenContactId` (linhas 136–139), se o valor **não** parecer um `remote_jid` (sem `@`) e o modo for externo, ignorar/avisar via `log.warn` em vez de gravar como `selectedContactId`. Evita regressão silenciosa caso outro caller ainda envie UUID.
 
-Isso atende ao espírito do ANEXO 2 sem quebrar a build atual. Documentado no próprio contrato.
+4. **`src/lib/openContactInChat.ts`** (pequeno reforço)
+   - Quando `phone` for fornecido e `remoteJid` ausente, **derivar** `remoteJid = \`${phone}@s.whatsapp.net\`` antes de gravar o `__pendingOpenContactId` — e gravar o **JID**, não o UUID, no modo externo. Hoje ele grava `contactId` (UUID do `public.contacts` resolvido por phone), o que também não funciona no Inbox externo.
+   - Regra: `__pendingOpenContactId` recebe o JID; `__pendingOpenChatTarget` mantém ambos (jid + uuid + phone) para telas que ainda usam UUID.
 
-### 3. Sidebar — adicionar link "Status do Inbox"
-Editar `src/components/sidebar/sidebarNavConfig.ts` adicionando entrada na seção admin apontando para `/admin/inbox-sync-status`, ícone `Activity` (lucide-react). Visível para `admin` e `supervisor`.
+5. **Teste rápido**
+   - Atualizar `src/lib/__tests__/openContactInChat.test.ts` para refletir que, dado `{ phone }`, o handshake deposita o `remote_jid` (não o UUID) em `__pendingOpenContactId`.
 
-### 4. PR template
-Editar `.github/PULL_REQUEST_TEMPLATE.md` adicionando seção:
+## Resultado esperado
 
-```text
-## Compliance de arquitetura
-- [ ] Esta PR NÃO faz leitura de mensagens via useEvolutionApi no inbox
-- [ ] Toda leitura de inbox passa por queryExternalProxy → external-db-proxy → FATOR X
-- [ ] Li e respeito o docs/INBOX_READ_CONTRACT.md
-```
+- Clicar em qualquer contato no módulo Contatos abre o Inbox **já posicionado na conversa correta** (lista cacheada casa pelo JID, ou um placeholder de “primeira conversa” se nunca houve mensagem).
+- O ChatPanel renderiza input ativo e o envio chama `rpc_insert_message` com o `remote_jid` válido.
+- Deep-links existentes (URL `?contact=`, AdminFailedMessages, busca global) continuam funcionando porque já usam `openContactInChat` com `remoteJid`/`phone`.
 
-### 5. NÃO recriar `InboxSyncStatus.tsx`
-A página existente (`AdminInboxSyncStatusPage.tsx`) já é superior ao ANEXO 3 (cobre lag inbound/outbound separados, janelas múltiplas, top conversas, falhas, persistência de threshold). Vou apenas garantir que o link aparece no sidebar. Anoto no contrato que o Card "Realtime" e "Evolution API reachability" do ANEXO 3 podem ser adicionados como follow-up se desejado — não recriar agora para não regredir a UX atual.
-
-## Arquivos
-
-**Novos:**
-- `docs/INBOX_READ_CONTRACT.md`
-
-**Editados:**
-- `eslint.config.js` — override scoped no inbox com `no-restricted-imports`.
-- `src/components/sidebar/sidebarNavConfig.ts` — entrada "Status do Inbox".
-- `.github/PULL_REQUEST_TEMPLATE.md` — checklist de compliance.
-
-**Não tocar:**
-- Qualquer arquivo em `src/components/inbox/**`, `src/hooks/inbox/**`, `src/pages/Inbox*`.
-- `AdminInboxSyncStatusPage.tsx` (já existe, melhor que o anexo).
-- `external-db-proxy`, `externalProxy.ts`, `evolution-webhook`, `evolution-api`.
-
-## Fora de escopo (follow-ups opcionais mencionados no contrato)
-- Criar `rpc_canary_check` no FATOR X.
-- View `v_webhook_health` agregada por instância.
-- Card de Realtime + Evolution API reachability no health page.
-- Quebrar `evolution-api` em domínios menores.
-
-## Critérios de aceitação
-1. `docs/INBOX_READ_CONTRACT.md` existe com o conteúdo do ANEXO 1.
-2. ESLint falha ao tentar importar `find-messages`/`list-messages` da Evolution API em arquivos do inbox.
-3. Sidebar admin mostra "Status do Inbox" → leva à página existente.
-4. PR template tem o checklist de compliance.
-5. Build passa sem novos erros (não bloqueamos imports existentes legítimos de envio).
-6. Nenhum arquivo do inbox foi modificado.
+Sem migrações de DB, sem mudanças em edge functions.

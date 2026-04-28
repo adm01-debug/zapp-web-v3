@@ -134,7 +134,16 @@ export function useRealtimeInbox() {
     }
 
     if (appWindow.__pendingOpenContactId) {
-      setPendingContactId(appWindow.__pendingOpenContactId);
+      const pending = appWindow.__pendingOpenContactId;
+      // Em modo externo (FATOR X) o Inbox identifica contatos por `remote_jid`.
+      // Se o caller depositou um UUID legado (sem `@`), ignoramos para evitar
+      // selecionar uma conversa inexistente — preferindo deixar o usuário na
+      // lista até que algum caller atualizado reentregue o JID.
+      if (USE_EXTERNAL_DB && !pending.includes('@')) {
+        log.warn('Ignoring legacy UUID handshake in external mode', { pending });
+      } else {
+        setPendingContactId(pending);
+      }
       appWindow.__pendingOpenContactId = undefined;
     }
     // ... keep existing internal handlers
