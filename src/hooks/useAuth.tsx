@@ -56,9 +56,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Defensive: if token refresh fails repeatedly, the stored refresh_token
+        // is corrupted/orphaned. Clear local session so user can re-login.
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          try {
+            Object.keys(localStorage)
+              .filter((k) => k.startsWith('sb-') && k.includes('-auth-token'))
+              .forEach((k) => localStorage.removeItem(k));
+          } catch (e) {
+            log.warn('[Auth] Failed to clear stale auth tokens', e);
+          }
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
           setTimeout(() => {
             fetchProfile(session.user.id);
@@ -75,6 +87,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         fetchProfile(session.user.id);
       }
+      setLoading(false);
+    }).catch((err) => {
+      // getSession failure (network/corrupted token) — clear and continue unauth
+      log.warn('[Auth] getSession failed, clearing local session', err);
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith('sb-') && k.includes('-auth-token'))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch { /* noop */ }
       setLoading(false);
     });
 
