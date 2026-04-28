@@ -38,6 +38,10 @@ export function useThemePreset() {
     }
   }, []);
 
+  const applyBorderRadius = useCallback((radius: number) => {
+    document.documentElement.style.setProperty('--radius', `${radius / 16}rem`);
+  }, []);
+
   const applyPresetById = useCallback((presetId: string, notify = true) => {
     const preset = PRESETS.find(p => p.id === presetId);
     if (!preset) return;
@@ -47,17 +51,24 @@ export function useThemePreset() {
 
     applyPresetColors(preset, resolvedTheme);
     setActivePreset(presetId);
+
+    // Skins podem sugerir um border-radius próprio (ex.: Opera GX usa
+    // cantos retos). Quando o usuário escolhe explicitamente um skin,
+    // aplicamos o radius sugerido — ele continua editável depois pelo
+    // controle de Border Radius.
+    const nextRadius = preset.borderRadius ?? borderRadius;
+    if (preset.borderRadius != null && preset.borderRadius !== borderRadius) {
+      setBorderRadius(preset.borderRadius);
+      applyBorderRadius(preset.borderRadius);
+    }
+
     if (notify) {
-      save(presetId, borderRadius);
+      save(presetId, nextRadius);
       toast.success(`Tema "${preset.name}" aplicado!`);
     }
 
     setTimeout(() => root.classList.remove('theme-transitioning'), 350);
-  }, [applyPresetColors, resolvedTheme, borderRadius, save]);
-
-  const applyBorderRadius = useCallback((radius: number) => {
-    document.documentElement.style.setProperty('--radius', `${radius / 16}rem`);
-  }, []);
+  }, [applyPresetColors, resolvedTheme, borderRadius, save, applyBorderRadius]);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);

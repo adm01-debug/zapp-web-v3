@@ -98,6 +98,12 @@ export interface ThemePreset {
   swatches: [string, string, string, string];
   light: ThemeModeColors;
   dark: ThemeModeColors;
+  /**
+   * Border-radius (em px) sugerido pelo skin. Quando definido, o helper
+   * `applyPreset` aplica esse valor ao `--radius` global. Permite que
+   * skins angulares (Opera GX) coexistam com skins arredondados.
+   */
+  borderRadius?: number;
 }
 
 /**
@@ -341,8 +347,15 @@ const applyGxGlass = (preset: ThemePreset, h: number, s: number, l: number): The
   return preset;
 };
 
-const buildGxPreset = (p: PresetParams): ThemePreset =>
-  applyGxGlass(applyGxNeonGlow(applyGxDarkSurfaces(buildPreset(p))), p.h, p.s, p.l);
+const buildGxPreset = (p: PresetParams): ThemePreset => {
+  const preset = applyGxGlass(
+    applyGxNeonGlow(applyGxDarkSurfaces(buildPreset(p))),
+    p.h, p.s, p.l,
+  );
+  // Opera GX usa cantos quase retos em botões/cards/sidebar.
+  preset.borderRadius = 4;
+  return preset;
+};
 
 // ──────────── PRESETS ────────────
 export const PRESETS: ThemePreset[] = [
