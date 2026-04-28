@@ -59,6 +59,15 @@ export function ThemeInitializer() {
         cssVarsCache[key] = value;
       }
 
+      // Fonte por skin: opcional, fallback no :root do tokens.css.
+      if (preset.font) {
+        root.style.setProperty('--font-sans', preset.font);
+        root.style.setProperty('--font-display', preset.font);
+      } else {
+        root.style.removeProperty('--font-sans');
+        root.style.removeProperty('--font-display');
+      }
+
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           ...storedConfig,
@@ -66,6 +75,7 @@ export function ThemeInitializer() {
           cacheMode: resolvedTheme,
           cachePreset: presetId,
           cssVarsCache,
+          presetFont: preset.font ?? null,
           preset: presetId,
         }));
       } catch (err) { log.error('Unexpected error in ThemeInitializer:', err); }

@@ -104,6 +104,13 @@ export interface ThemePreset {
    * skins angulares (Opera GX) coexistam com skins arredondados.
    */
   borderRadius?: number;
+  /**
+   * Família de fonte (CSS font-family list) sugerida pelo skin. Quando
+   * definida, é aplicada às variáveis globais `--font-sans` e
+   * `--font-display`. Permite skins com tipografia distinta (ex.: Opera
+   * GX usa uma sans-serif geométrica como Rajdhani).
+   */
+  font?: string;
 }
 
 /**
@@ -347,6 +354,10 @@ const applyGxGlass = (preset: ThemePreset, h: number, s: number, l: number): The
   return preset;
 };
 
+// Tipografia geométrica usada pelo Opera GX (sans-serif tech/gamer).
+// Rajdhani é nativamente geométrica e largamente usada em UIs de jogos.
+const GX_FONT_STACK = "'Rajdhani', 'Outfit', system-ui, sans-serif";
+
 const buildGxPreset = (p: PresetParams): ThemePreset => {
   const preset = applyGxGlass(
     applyGxNeonGlow(applyGxDarkSurfaces(buildPreset(p))),
@@ -354,6 +365,8 @@ const buildGxPreset = (p: PresetParams): ThemePreset => {
   );
   // Opera GX usa cantos quase retos em botões/cards/sidebar.
   preset.borderRadius = 4;
+  // Tipografia geométrica/tech para reforçar a vibe gamer.
+  preset.font = GX_FONT_STACK;
   return preset;
 };
 
