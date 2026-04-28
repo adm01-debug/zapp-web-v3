@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useActionFeedback } from '@/hooks/useActionFeedback';
 import { useContactsSearch } from '@/hooks/useContactsSearch';
+import { openContactInChat } from '@/lib/openContactInChat';
 
 interface ContactFormData {
   name: string;
