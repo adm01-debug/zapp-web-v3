@@ -289,6 +289,19 @@ export const PRESETS: ThemePreset[] = [
   buildPreset({ id: 'ocean', name: 'Oceano', description: 'Azul profundo', emoji: '🌊', h: 200, s: 85, l: 55, gh: 210, sh: 190, ss: 75, sl: 50 }),
   buildPreset({ id: 'amber', name: 'Âmbar', description: 'Dourado e premium', emoji: '✨', h: 38, s: 92, l: 50, gh: 45, sh: 30, ss: 80, sl: 55 }),
   buildPreset({ id: 'cyber', name: 'Cyber', description: 'Neon futurista', emoji: '🤖', h: 180, s: 100, l: 50, gh: 300, sh: 320, ss: 100, sl: 60 }),
+
+  // ──────────── Opera GX Edition ────────────
+  // Skins inspirados nos temas oficiais do navegador Opera GX.
+  buildPreset({ id: 'gx-classic', name: 'GX Classic', description: 'Vermelho neon assinatura do Opera GX 🦈', emoji: '🦈', h: 347, s: 96, l: 54, gh: 340, sh: 280, ss: 60, sl: 40 }),
+  buildPreset({ id: 'gx-pink-addiction', name: 'Pink Addiction', description: 'Rosa intenso e viciante', emoji: '🍭', h: 330, s: 95, l: 60, gh: 340, sh: 300, ss: 90, sl: 55 }),
+  buildPreset({ id: 'gx-purple-haze', name: 'Purple Haze', description: 'Roxo profundo e psicodélico', emoji: '🟣', h: 265, s: 65, l: 50, gh: 275, sh: 245, ss: 70, sl: 55 }),
+  buildPreset({ id: 'gx-rose-quartz', name: 'Rose Quartz', description: 'Rosa quartzo cristalino', emoji: '💗', h: 345, s: 75, l: 68, gh: 355, sh: 320, ss: 60, sl: 70 }),
+  buildPreset({ id: 'gx-ultraviolet', name: 'Ultraviolet', description: 'Violeta UV vibrante', emoji: '🔮', h: 271, s: 76, l: 53, gh: 280, sh: 255, ss: 80, sl: 55 }),
+  buildPreset({ id: 'gx-hackerman', name: 'Hackerman', description: 'Verde Matrix de hacker', emoji: '👨‍💻', h: 127, s: 65, l: 46, gh: 135, sh: 115, ss: 60, sl: 42 }),
+  buildPreset({ id: 'gx-frutti-di-mare', name: 'Frutti di Mare', description: 'Azul-petróleo do fundo do mar', emoji: '🐙', h: 182, s: 90, l: 42, gh: 190, sh: 200, ss: 75, sl: 45 }),
+  buildPreset({ id: 'gx-cyberpunk', name: 'Cyberpunk', description: 'Amarelo neon de Night City', emoji: '⚡', h: 55, s: 100, l: 51, gh: 180, sh: 320, ss: 95, sl: 55 }),
+  buildPreset({ id: 'gx-razer', name: 'Razer', description: 'Verde RGB Razer Chroma', emoji: '🐍', h: 113, s: 70, l: 51, gh: 120, sh: 100, ss: 60, sl: 48 }),
+
   (() => {
     // Diversity — Rainbow Pride theme 🏳️‍🌈
     // Use a vibrant magenta/pink as primary for max color pop
