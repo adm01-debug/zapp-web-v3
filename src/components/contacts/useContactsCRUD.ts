@@ -51,22 +51,19 @@ export function useContactsCRUD() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Abre o Inbox no contato selecionado. No modo FATOR X (USE_EXTERNAL_DB),
+  // o Inbox identifica conversas pelo `remote_jid` — não pelo UUID local.
+  // Por isso passamos o `phone` (resolvido na lista carregada) para o helper
+  // central `openContactInChat`, que monta o JID e cuida do handshake.
   const openContactChat = useCallback((contactId: string) => {
-    const appWindow = window as Window & { __pendingOpenContactId?: string };
-    appWindow.__pendingOpenContactId = contactId;
-    if (window.location.hash !== '#inbox') {
-      window.location.hash = 'inbox';
-    } else {
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    }
-    let attempts = 0;
-    const tryDispatch = () => {
-      attempts++;
-      window.dispatchEvent(new CustomEvent('open-contact-chat', { detail: { contactId } }));
-      if (attempts < 15) setTimeout(tryDispatch, 200);
-    };
-    setTimeout(tryDispatch, 150);
-  }, []);
+    const found = searchHook.contacts.find((c) => c.id === contactId);
+    const phone = found?.phone?.replace(/\D/g, '') || undefined;
+    void openContactInChat({
+      contactId,
+      phone,
+      remoteJid: phone ? `${phone}@s.whatsapp.net` : undefined,
+    });
+  }, [searchHook.contacts]);
 
   const generateProtocol = useCallback(() => {
     const now = new Date();
