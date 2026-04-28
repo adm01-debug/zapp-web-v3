@@ -329,8 +329,20 @@ const applyGxNeonGlow = (preset: ThemePreset): ThemePreset => {
   return preset;
 };
 
+// ──────────── Opera GX glass transparency ────────────
+// Reduz drasticamente a opacidade do glass-bg e tinge a glass-border
+// com a cor primária do skin para reproduzir o efeito de painéis
+// translúcidos do Opera GX, onde a UI deixa transparecer o backdrop.
+const applyGxGlass = (preset: ThemePreset, h: number, s: number, l: number): ThemePreset => {
+  preset.light['glass-bg'] = '0 0% 100% / 0.55';
+  preset.light['glass-border'] = `${h} ${s}% ${l}% / 0.35`;
+  preset.dark['glass-bg'] = '265 22% 12% / 0.55';
+  preset.dark['glass-border'] = `${h} ${Math.min(100, s + 5)}% ${l}% / 0.5`;
+  return preset;
+};
+
 const buildGxPreset = (p: PresetParams): ThemePreset =>
-  applyGxNeonGlow(applyGxDarkSurfaces(buildPreset(p)));
+  applyGxGlass(applyGxNeonGlow(applyGxDarkSurfaces(buildPreset(p))), p.h, p.s, p.l);
 
 // ──────────── PRESETS ────────────
 export const PRESETS: ThemePreset[] = [
