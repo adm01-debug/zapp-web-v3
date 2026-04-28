@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
-import { getContactAvatar } from './avatarBatchStore';
+import { getContactAvatar, seedAvatarCache } from './avatarBatchStore';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('useContactAvatar');
 
 /**
  * Hook para obter o avatar de um contato com carregamento em lote e cache.
+ *
+ * - Se `initialUrl` é fornecido (já populado pela lista de conversas), usa
+ *   imediatamente E semeia o cache para que outros chamadores do mesmo jid
+ *   não disparem novo round-trip.
+ * - Se não, agenda fetch em batch.
+ * - Falhas do batch viram `null` (UI cai no AvatarFallback com iniciais).
  */
 export function useContactAvatar(jid: string | null | undefined, initialUrl?: string | null) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialUrl || null);
@@ -13,6 +19,9 @@ export function useContactAvatar(jid: string | null | undefined, initialUrl?: st
 
   useEffect(() => {
     if (initialUrl) {
+      // Sincroniza com o cache global para evitar refetch de outros consumidores
+      // do mesmo jid (ChatHeader, MessageBubble, NewMessageIndicator, etc.).
+      if (jid) seedAvatarCache(jid, initialUrl);
       setAvatarUrl(initialUrl);
       setLoading(false);
       return;
@@ -27,15 +36,26 @@ export function useContactAvatar(jid: string | null | undefined, initialUrl?: st
     let mounted = true;
     setLoading(true);
 
-    getContactAvatar(jid).then((url) => {
-      if (mounted) {
+    getContactAvatar(jid)
+      .then((url) => {
+        if (!mounted) return;
         if (!url && jid) {
-          log.warn('Avatar resolveu para nulo/vazio', { jid });
+          log.debug('Avatar resolveu para nulo/vazio', { jid });
         }
         setAvatarUrl(url);
         setLoading(false);
-      }
-    });
+      })
+      .catch((err: unknown) => {
+        // Defesa em profundidade: o batchStore não lança, mas se algo mudar
+        // no futuro, a UI não pode quebrar — apenas cai no fallback.
+        if (!mounted) return;
+        log.warn('Avatar fetch threw, falling back to null', {
+          jid,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        setAvatarUrl(null);
+        setLoading(false);
+      });
 
     return () => {
       mounted = false;

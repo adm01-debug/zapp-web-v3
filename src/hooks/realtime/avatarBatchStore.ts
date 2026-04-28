@@ -1,23 +1,32 @@
 /**
  * avatarBatchStore — Gerencia o carregamento e cache dos avatares do WhatsApp.
- * 
+ *
  * Problema: Componentes de conversa e chat montam em paralelo e tentam resolver
  * a URL do avatar (`profile_picture_url`) individualmente via RPC no FATOR X.
- * 
+ *
  * Solução:
  *  1. Coalesce: Agrupa JIDs solicitados em uma janela de 100ms.
- *  2. Batch RPC: Faz uma única chamada para resolver N avatares.
+ *  2. Batch RPC: Faz uma única chamada `get_avatars_by_jids_batch(p_jids)`
+ *     que retorna `{ jid: url|null }`.
  *  3. Cache: Mantém as URLs em memória (30 min) e propaga via BroadcastChannel
  *     para outras abas evitarem chamadas repetidas.
+ *  4. Failover: Se `VITE_EXTERNAL_SUPABASE_*` não estiver configurada (cliente
+ *     direto indisponível), cai para o edge function `external-db-proxy`,
+ *     que usa service-role secrets server-side. Esse caminho é o que mantém
+ *     as fotos aparecendo em deploys sem env client-side (Lovable preview etc.).
  */
 import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { queryExternalProxy } from '@/lib/externalProxy';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('AvatarBatchStore');
 
 const BATCH_WINDOW_MS = 100;
 const CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutos
+const NEGATIVE_TTL_MS = 1000 * 60 * 5; // null persiste por 5 min (não 30) para
+                                        // dar chance ao backend popular a foto.
 const BC_NAME = 'avatar-updates';
+const RPC_NAME = 'get_avatars_by_jids_batch';
 
 interface AvatarCacheEntry {
   url: string | null;
@@ -41,15 +50,69 @@ if (typeof window !== 'undefined') {
     bc.onmessage = (e) => {
       const { jid, url } = e.data;
       if (jid && url !== undefined) {
-        avatarCache.set(jid, { url, expiresAt: Date.now() + CACHE_TTL_MS });
+        avatarCache.set(jid, {
+          url,
+          expiresAt: Date.now() + (url ? CACHE_TTL_MS : NEGATIVE_TTL_MS),
+        });
         const list = resolvers.get(jid);
         if (list) {
-          list.forEach(resolve => resolve(url));
+          list.forEach((resolve) => resolve(url));
           resolvers.delete(jid);
         }
       }
     };
-  } catch { /* BroadcastChannel indisponível */ }
+  } catch {
+    /* BroadcastChannel indisponível */
+  }
+}
+
+/**
+ * Resolve a batch via RPC direta (cliente externo) ou via proxy edge function.
+ * Sempre retorna `Record<jid, url|null>` — falhas são logadas e viram null.
+ */
+async function fetchAvatarBatch(jids: string[]): Promise<Record<string, string | null>> {
+  if (jids.length === 0) return {};
+
+  // 1. Caminho rápido: cliente externo direto (env vars presentes)
+  if (isExternalConfigured) {
+    const client = getExternalSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client.rpc(RPC_NAME, { p_jids: jids });
+        if (error) {
+          log.warn('Direct RPC failed, falling back to proxy', { error: error.message });
+        } else {
+          return (data ?? {}) as Record<string, string | null>;
+        }
+      } catch (err) {
+        log.warn('Direct RPC threw, falling back to proxy', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  }
+
+  // 2. Fallback servidor-side via edge function (sem dependência de env client).
+  //    O proxy normaliza a resposta para `{ data: T[] }` — para uma RPC que
+  //    devolve um único objeto jsonb, isso vira `data[0]`.
+  try {
+    const result = await queryExternalProxy<Record<string, string | null>>({
+      action: 'rpc',
+      rpc: RPC_NAME,
+      params: { p_jids: jids },
+    });
+    if (result.error) {
+      log.error('Proxy RPC error', { error: result.error });
+      return {};
+    }
+    const first = Array.isArray(result.data) ? result.data[0] : result.data;
+    return (first ?? {}) as Record<string, string | null>;
+  } catch (err) {
+    log.error('Proxy RPC threw', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return {};
+  }
 }
 
 async function processBatch() {
@@ -59,43 +122,23 @@ async function processBatch() {
 
   if (jidsToFetch.length === 0) return;
 
-  try {
-    if (!isExternalConfigured) {
-      jidsToFetch.forEach(jid => resolveJid(jid, null));
-      return;
-    }
+  const results = await fetchAvatarBatch(jidsToFetch);
 
-    // RPC que deve retornar um objeto { [jid]: url | null }
-    const { data, error } = await getExternalSupabase().rpc('get_avatars_by_jids_batch', {
-      p_jids: jidsToFetch
-    });
-
-    if (error) {
-      log.error('Erro ao buscar avatares em lote:', error);
-      jidsToFetch.forEach(jid => resolveJid(jid, null));
-      return;
-    }
-
-    const results = (data || {}) as Record<string, string | null>;
-    
-    jidsToFetch.forEach(jid => {
-      const url = results[jid] ?? null;
-      resolveJid(jid, url);
-      // Sync com outras abas
-      bc?.postMessage({ jid, url });
-    });
-
-  } catch (err) {
-    log.error('Falha crítica no processBatch de avatares:', err);
-    jidsToFetch.forEach(jid => resolveJid(jid, null));
-  }
+  jidsToFetch.forEach((jid) => {
+    const url = results[jid] ?? null;
+    resolveJid(jid, url);
+    bc?.postMessage({ jid, url });
+  });
 }
 
 function resolveJid(jid: string, url: string | null) {
-  avatarCache.set(jid, { url, expiresAt: Date.now() + CACHE_TTL_MS });
+  avatarCache.set(jid, {
+    url,
+    expiresAt: Date.now() + (url ? CACHE_TTL_MS : NEGATIVE_TTL_MS),
+  });
   const list = resolvers.get(jid);
   if (list) {
-    list.forEach(resolve => resolve(url));
+    list.forEach((resolve) => resolve(url));
     resolvers.delete(jid);
   }
 }
@@ -103,6 +146,7 @@ function resolveJid(jid: string, url: string | null) {
 /**
  * Solicita a URL do avatar de um contato.
  * Retorna do cache se disponível, caso contrário entra no próximo lote.
+ * Nunca lança — falhas viram `null` para o caller renderizar fallback.
  */
 export async function getContactAvatar(jid: string): Promise<string | null> {
   if (!jid) return null;
@@ -132,5 +176,19 @@ export async function getContactAvatar(jid: string): Promise<string | null> {
 /** Pre-popula o cache (usado quando a lista de contatos já traz a URL). */
 export function seedAvatarCache(jid: string, url: string | null) {
   if (!jid) return;
-  avatarCache.set(jid, { url, expiresAt: Date.now() + CACHE_TTL_MS });
+  avatarCache.set(jid, {
+    url,
+    expiresAt: Date.now() + (url ? CACHE_TTL_MS : NEGATIVE_TTL_MS),
+  });
+}
+
+/** Limpa o cache (para testes ou quando o usuário muda de workspace). */
+export function clearAvatarCache() {
+  avatarCache.clear();
+  resolvers.clear();
+  pendingJids.clear();
+  if (batchTimer) {
+    clearTimeout(batchTimer);
+    batchTimer = null;
+  }
 }
