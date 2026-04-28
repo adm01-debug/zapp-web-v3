@@ -303,8 +303,34 @@ const applyGxDarkSurfaces = (preset: ThemePreset): ThemePreset => {
   return preset;
 };
 
+// Substitui a cor (HSL string sem alpha) de um valor "shadow-glow-*"
+// preservando offset/blur/spread. Ex.:
+//   '0 4px 24px hsl(347 96% 54% / 0.45)'  →  '0 4px 24px hsl(347 96% 54% / 0.7)'
+const boostGlowAlpha = (shadow: string, alpha: number): string =>
+  shadow.replace(/\/\s*[0-9.]+\s*\)/, `/ ${alpha})`);
+
+// ──────────── Opera GX neon glow boost ────────────
+// Reforça a intensidade das sombras/neon em torno dos elementos
+// principais e amplia o brilho da borda glass para reproduzir o
+// "RGB feel" do Opera GX. Aplicado tanto em light quanto em dark.
+const applyGxNeonGlow = (preset: ThemePreset): ThemePreset => {
+  const { light, dark } = preset;
+
+  light['shadow-glow-primary'] = boostGlowAlpha(light['shadow-glow-primary'], 0.45);
+  light['shadow-glow-secondary'] = boostGlowAlpha(light['shadow-glow-secondary'], 0.4);
+  light['shadow-glow-accent'] = boostGlowAlpha(light['shadow-glow-accent'], 0.45);
+  light['shadow-glow-purple'] = boostGlowAlpha(light['shadow-glow-purple'], 0.5);
+
+  dark['shadow-glow-primary'] = boostGlowAlpha(dark['shadow-glow-primary'], 0.7);
+  dark['shadow-glow-secondary'] = boostGlowAlpha(dark['shadow-glow-secondary'], 0.65);
+  dark['shadow-glow-accent'] = boostGlowAlpha(dark['shadow-glow-accent'], 0.65);
+  dark['shadow-glow-purple'] = boostGlowAlpha(dark['shadow-glow-purple'], 0.75);
+
+  return preset;
+};
+
 const buildGxPreset = (p: PresetParams): ThemePreset =>
-  applyGxDarkSurfaces(buildPreset(p));
+  applyGxNeonGlow(applyGxDarkSurfaces(buildPreset(p)));
 
 // ──────────── PRESETS ────────────
 export const PRESETS: ThemePreset[] = [
