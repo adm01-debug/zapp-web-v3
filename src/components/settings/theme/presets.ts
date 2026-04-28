@@ -98,6 +98,19 @@ export interface ThemePreset {
   swatches: [string, string, string, string];
   light: ThemeModeColors;
   dark: ThemeModeColors;
+  /**
+   * Border-radius (em px) sugerido pelo skin. Quando definido, o helper
+   * `applyPreset` aplica esse valor ao `--radius` global. Permite que
+   * skins angulares (Opera GX) coexistam com skins arredondados.
+   */
+  borderRadius?: number;
+  /**
+   * Família de fonte (CSS font-family list) sugerida pelo skin. Quando
+   * definida, é aplicada às variáveis globais `--font-sans` e
+   * `--font-display`. Permite skins com tipografia distinta (ex.: Opera
+   * GX usa uma sans-serif geométrica como Rajdhani).
+   */
+  font?: string;
 }
 
 /**
@@ -278,6 +291,85 @@ const buildPreset = (p: PresetParams): ThemePreset => {
   };
 };
 
+// ──────────── Opera GX dark surface palette ────────────
+// Hex de referência: #251F33 (roxo escuro icônico do Opera GX).
+// Aplicamos uma família de tons em torno desse hue para dar identidade
+// "GX" em todas as superfícies do dark mode (background, cards, sidebar,
+// chat etc.) sem depender da cor primária de cada skin.
+const applyGxDarkSurfaces = (preset: ThemePreset): ThemePreset => {
+  const d = preset.dark;
+  d.background = '265 22% 8%';
+  d.card = '265 22% 12%';
+  d['card-elevated'] = '265 18% 17%';
+  d.popover = '265 22% 14%';
+  d.muted = '265 18% 17%';
+  d.input = '265 18% 17%';
+  d.border = '265 18% 22%';
+  d['sidebar-background'] = '265 24% 10%';
+  d['sidebar-border'] = '265 18% 20%';
+  d['chat-header'] = '265 22% 12%';
+  d['chat-input-bg'] = '265 22% 14%';
+  d['chat-bubble-received'] = '265 18% 17%';
+  d.elevated = '265 18% 17%';
+  d['elevated-hover'] = '265 18% 22%';
+  d['gradient-surface'] = 'linear-gradient(180deg, hsl(265 22% 12%), hsl(265 24% 8%))';
+  return preset;
+};
+
+// Substitui a cor (HSL string sem alpha) de um valor "shadow-glow-*"
+// preservando offset/blur/spread. Ex.:
+//   '0 4px 24px hsl(347 96% 54% / 0.45)'  →  '0 4px 24px hsl(347 96% 54% / 0.7)'
+const boostGlowAlpha = (shadow: string, alpha: number): string =>
+  shadow.replace(/\/\s*[0-9.]+\s*\)/, `/ ${alpha})`);
+
+// ──────────── Opera GX neon glow boost ────────────
+// Reforça a intensidade das sombras/neon em torno dos elementos
+// principais e amplia o brilho da borda glass para reproduzir o
+// "RGB feel" do Opera GX. Aplicado tanto em light quanto em dark.
+const applyGxNeonGlow = (preset: ThemePreset): ThemePreset => {
+  const { light, dark } = preset;
+
+  light['shadow-glow-primary'] = boostGlowAlpha(light['shadow-glow-primary'], 0.45);
+  light['shadow-glow-secondary'] = boostGlowAlpha(light['shadow-glow-secondary'], 0.4);
+  light['shadow-glow-accent'] = boostGlowAlpha(light['shadow-glow-accent'], 0.45);
+  light['shadow-glow-purple'] = boostGlowAlpha(light['shadow-glow-purple'], 0.5);
+
+  dark['shadow-glow-primary'] = boostGlowAlpha(dark['shadow-glow-primary'], 0.7);
+  dark['shadow-glow-secondary'] = boostGlowAlpha(dark['shadow-glow-secondary'], 0.65);
+  dark['shadow-glow-accent'] = boostGlowAlpha(dark['shadow-glow-accent'], 0.65);
+  dark['shadow-glow-purple'] = boostGlowAlpha(dark['shadow-glow-purple'], 0.75);
+
+  return preset;
+};
+
+// ──────────── Opera GX glass transparency ────────────
+// Reduz drasticamente a opacidade do glass-bg e tinge a glass-border
+// com a cor primária do skin para reproduzir o efeito de painéis
+// translúcidos do Opera GX, onde a UI deixa transparecer o backdrop.
+const applyGxGlass = (preset: ThemePreset, h: number, s: number, l: number): ThemePreset => {
+  preset.light['glass-bg'] = '0 0% 100% / 0.55';
+  preset.light['glass-border'] = `${h} ${s}% ${l}% / 0.35`;
+  preset.dark['glass-bg'] = '265 22% 12% / 0.55';
+  preset.dark['glass-border'] = `${h} ${Math.min(100, s + 5)}% ${l}% / 0.5`;
+  return preset;
+};
+
+// Tipografia geométrica usada pelo Opera GX (sans-serif tech/gamer).
+// Rajdhani é nativamente geométrica e largamente usada em UIs de jogos.
+const GX_FONT_STACK = "'Rajdhani', 'Outfit', system-ui, sans-serif";
+
+const buildGxPreset = (p: PresetParams): ThemePreset => {
+  const preset = applyGxGlass(
+    applyGxNeonGlow(applyGxDarkSurfaces(buildPreset(p))),
+    p.h, p.s, p.l,
+  );
+  // Opera GX usa cantos quase retos em botões/cards/sidebar.
+  preset.borderRadius = 4;
+  // Tipografia geométrica/tech para reforçar a vibe gamer.
+  preset.font = GX_FONT_STACK;
+  return preset;
+};
+
 // ──────────── PRESETS ────────────
 export const PRESETS: ThemePreset[] = [
   buildPreset({ id: 'corporate', name: 'Padrão', description: 'Azul profissional', emoji: '💼', h: 221, s: 83, l: 53, gh: 230, sh: 215, ss: 70, sl: 55 }),
@@ -289,6 +381,19 @@ export const PRESETS: ThemePreset[] = [
   buildPreset({ id: 'ocean', name: 'Oceano', description: 'Azul profundo', emoji: '🌊', h: 200, s: 85, l: 55, gh: 210, sh: 190, ss: 75, sl: 50 }),
   buildPreset({ id: 'amber', name: 'Âmbar', description: 'Dourado e premium', emoji: '✨', h: 38, s: 92, l: 50, gh: 45, sh: 30, ss: 80, sl: 55 }),
   buildPreset({ id: 'cyber', name: 'Cyber', description: 'Neon futurista', emoji: '🤖', h: 180, s: 100, l: 50, gh: 300, sh: 320, ss: 100, sl: 60 }),
+
+  // ──────────── Opera GX Edition ────────────
+  // Skins inspirados nos temas oficiais do navegador Opera GX.
+  buildGxPreset({ id: 'gx-classic', name: 'GX Classic', description: 'Vermelho neon assinatura do Opera GX 🦈', emoji: '🦈', h: 347, s: 96, l: 54, gh: 340, sh: 280, ss: 60, sl: 40 }),
+  buildGxPreset({ id: 'gx-pink-addiction', name: 'Pink Addiction', description: 'Rosa intenso e viciante', emoji: '🍭', h: 330, s: 95, l: 60, gh: 340, sh: 300, ss: 90, sl: 55 }),
+  buildGxPreset({ id: 'gx-purple-haze', name: 'Purple Haze', description: 'Roxo profundo e psicodélico', emoji: '🟣', h: 265, s: 65, l: 50, gh: 275, sh: 245, ss: 70, sl: 55 }),
+  buildGxPreset({ id: 'gx-rose-quartz', name: 'Rose Quartz', description: 'Rosa quartzo cristalino', emoji: '💗', h: 345, s: 75, l: 68, gh: 355, sh: 320, ss: 60, sl: 70 }),
+  buildGxPreset({ id: 'gx-ultraviolet', name: 'Ultraviolet', description: 'Violeta UV vibrante', emoji: '🔮', h: 271, s: 76, l: 53, gh: 280, sh: 255, ss: 80, sl: 55 }),
+  buildGxPreset({ id: 'gx-hackerman', name: 'Hackerman', description: 'Verde Matrix de hacker', emoji: '👨‍💻', h: 127, s: 65, l: 46, gh: 135, sh: 115, ss: 60, sl: 42 }),
+  buildGxPreset({ id: 'gx-frutti-di-mare', name: 'Frutti di Mare', description: 'Azul-petróleo do fundo do mar', emoji: '🐙', h: 182, s: 90, l: 42, gh: 190, sh: 200, ss: 75, sl: 45 }),
+  buildGxPreset({ id: 'gx-cyberpunk', name: 'Cyberpunk', description: 'Amarelo neon de Night City', emoji: '⚡', h: 55, s: 100, l: 51, gh: 180, sh: 320, ss: 95, sl: 55 }),
+  buildGxPreset({ id: 'gx-razer', name: 'Razer', description: 'Verde RGB Razer Chroma', emoji: '🐍', h: 113, s: 70, l: 51, gh: 120, sh: 100, ss: 60, sl: 48 }),
+
   (() => {
     // Diversity — Rainbow Pride theme 🏳️‍🌈
     // Use a vibrant magenta/pink as primary for max color pop

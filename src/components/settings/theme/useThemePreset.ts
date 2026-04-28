@@ -36,6 +36,19 @@ export function useThemePreset() {
     for (const key of CSS_VARS_TO_APPLY) {
       root.style.setProperty(`--${key}`, colors[key]);
     }
+    // Fonte por skin: aplica no token global ou volta ao default
+    // (o tokens.css define o fallback em :root).
+    if (preset.font) {
+      root.style.setProperty('--font-sans', preset.font);
+      root.style.setProperty('--font-display', preset.font);
+    } else {
+      root.style.removeProperty('--font-sans');
+      root.style.removeProperty('--font-display');
+    }
+  }, []);
+
+  const applyBorderRadius = useCallback((radius: number) => {
+    document.documentElement.style.setProperty('--radius', `${radius / 16}rem`);
   }, []);
 
   const applyPresetById = useCallback((presetId: string, notify = true) => {
@@ -47,17 +60,24 @@ export function useThemePreset() {
 
     applyPresetColors(preset, resolvedTheme);
     setActivePreset(presetId);
+
+    // Skins podem sugerir um border-radius próprio (ex.: Opera GX usa
+    // cantos retos). Quando o usuário escolhe explicitamente um skin,
+    // aplicamos o radius sugerido — ele continua editável depois pelo
+    // controle de Border Radius.
+    const nextRadius = preset.borderRadius ?? borderRadius;
+    if (preset.borderRadius != null && preset.borderRadius !== borderRadius) {
+      setBorderRadius(preset.borderRadius);
+      applyBorderRadius(preset.borderRadius);
+    }
+
     if (notify) {
-      save(presetId, borderRadius);
+      save(presetId, nextRadius);
       toast.success(`Tema "${preset.name}" aplicado!`);
     }
 
     setTimeout(() => root.classList.remove('theme-transitioning'), 350);
-  }, [applyPresetColors, resolvedTheme, borderRadius, save]);
-
-  const applyBorderRadius = useCallback((radius: number) => {
-    document.documentElement.style.setProperty('--radius', `${radius / 16}rem`);
-  }, []);
+  }, [applyPresetColors, resolvedTheme, borderRadius, save, applyBorderRadius]);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);

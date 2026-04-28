@@ -49,8 +49,8 @@
     <link rel="dns-prefetch" href="https://ai.gateway.lovable.dev" />
     
     <!-- Preload critical fonts for faster LCP -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" as="style" />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" as="style" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
     <!-- Preload critical resources -->
     <link rel="preload" href="/src/index.css" as="style" />
@@ -110,6 +110,10 @@
             }
             if (c.borderRadius != null) {
               document.documentElement.style.setProperty('--radius', (c.borderRadius / 16) + 'rem');
+            }
+            if (c.presetFont) {
+              document.documentElement.style.setProperty('--font-sans', c.presetFont);
+              document.documentElement.style.setProperty('--font-display', c.presetFont);
             }
           }
         } catch(e){}
