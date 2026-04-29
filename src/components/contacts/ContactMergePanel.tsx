@@ -77,7 +77,7 @@ export function ContactMergePanel({ open, onOpenChange, contacts, onMergeComplet
       // Update primary with merged data
       const { error: updateError } = await supabase
         .from('contacts')
-        .update(mergedData)
+        .update(mergedData as never)
         .eq('id', primary.id);
 
       if (updateError) throw updateError;

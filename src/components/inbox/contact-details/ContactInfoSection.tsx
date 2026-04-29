@@ -104,7 +104,7 @@ export function ContactInfoSection({ contact, enrichedData }: ContactInfoSection
   };
 
   const updateContact = useCallback(async (field: string, value: string) => {
-    const { error } = await supabase.from('contacts').update({ [field]: value }).eq('id', contact.id);
+    const { error } = await supabase.from('contacts').update({ [field]: value } as never).eq('id', contact.id);
     if (error) throw error;
   }, [contact.id]);
 
