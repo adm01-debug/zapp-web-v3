@@ -81,51 +81,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Resilient boot: in the Lovable preview iframe the proxy occasionally
-    // returns HTTP 412 / "Failed to fetch" on the very first /auth/v1/token
-    // call. Retry once with a short backoff before giving up.
-    const isPreconditionLikeError = (err: unknown) => {
-      const msg = err instanceof Error ? err.message : String(err ?? '');
-      return /412|precondition|failed to fetch|networkerror/i.test(msg);
-    };
-
-    const loadSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) fetchProfile(session.user.id);
-        setLoading(false);
-        document.dispatchEvent(new CustomEvent('preview-precondition-recovered'));
-      } catch (err) {
-        if (isPreconditionLikeError(err)) {
-          log.warn('[Auth] getSession hit preview proxy, retrying once', err);
-          document.dispatchEvent(new CustomEvent('preview-precondition-error'));
-          await new Promise((r) => setTimeout(r, 800));
-          try {
-            const { data: { session } } = await supabase.auth.getSession();
-            setSession(session);
-            setUser(session?.user ?? null);
-            if (session?.user) fetchProfile(session.user.id);
-            setLoading(false);
-            document.dispatchEvent(new CustomEvent('preview-precondition-recovered'));
-            return;
-          } catch (retryErr) {
-            log.warn('[Auth] getSession retry also failed', retryErr);
-          }
-        } else {
-          log.warn('[Auth] getSession failed, clearing local session', err);
-        }
-        try {
-          Object.keys(localStorage)
-            .filter((k) => k.startsWith('sb-') && k.includes('-auth-token'))
-            .forEach((k) => localStorage.removeItem(k));
-        } catch { /* noop */ }
-        setLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
       }
-    };
-
-    void loadSession();
+      setLoading(false);
+    }).catch((err) => {
+      // getSession failure (network/corrupted token) — clear and continue unauth
+      log.warn('[Auth] getSession failed, clearing local session', err);
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith('sb-') && k.includes('-auth-token'))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch { /* noop */ }
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, [fetchProfile]);
@@ -138,35 +110,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, fetchProfile]);
 
   const signIn = async (email: string, password: string) => {
-    const attempt = () => supabase.auth.signInWithPassword({ email, password });
-    const isPreviewProxyError = (err: unknown) => {
-      const msg = err instanceof Error ? err.message : String(err ?? '');
-      return /412|precondition|failed to fetch|networkerror/i.test(msg);
-    };
-
-    try {
-      const { error } = await attempt();
-      if (error && isPreviewProxyError(error)) {
-        document.dispatchEvent(new CustomEvent('preview-precondition-error'));
-        await new Promise((r) => setTimeout(r, 800));
-        const retry = await attempt();
-        if (!retry.error) {
-          document.dispatchEvent(new CustomEvent('preview-precondition-recovered'));
-        }
-        return { error: retry.error };
-      }
-      return { error };
-    } catch (err) {
-      if (isPreviewProxyError(err)) {
-        document.dispatchEvent(new CustomEvent('preview-precondition-error'));
-        return {
-          error: new Error(
-            'Falha temporária do preview. Tente novamente em alguns segundos ou abra a versão publicada.'
-          ),
-        };
-      }
-      return { error: err instanceof Error ? err : new Error(String(err)) };
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
   };
 
   const signUp = async (email: string, password: string, name: string) => {

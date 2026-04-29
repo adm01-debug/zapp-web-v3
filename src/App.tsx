@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { PreviewPreconditionBanner } from "@/components/auth/PreviewPreconditionBanner";
 import { GlobalKeyboardProvider } from "@/components/keyboard/GlobalKeyboardProvider";
 import { AccessibleToastProvider } from "@/components/ui/accessible-toast";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
@@ -265,7 +264,6 @@ function AppWithErrorRecovery() {
           <HighContrastProvider>
             <AccessibleToastProvider>
               <TooltipProvider delayDuration={300}>
-                <PreviewPreconditionBanner />
                 <AppContent />
               </TooltipProvider>
             </AccessibleToastProvider>
