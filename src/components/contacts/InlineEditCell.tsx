@@ -30,7 +30,7 @@ export function InlineEditCell({ contactId, field, value, onUpdate }: InlineEdit
     setSaving(true);
     const { error } = await supabase
       .from('contacts')
-      .update({ [field]: editValue || null })
+      .update({ [field]: editValue || null } as never)
       .eq('id', contactId);
 
     if (error) {

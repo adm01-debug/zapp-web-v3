@@ -1,70 +1,56 @@
-# Corrigir HTTP 412 no Preview
+# Destravar o preview — corrigir build TypeScript
 
-## Diagnóstico
+## O que está acontecendo
 
-O HTTP ERROR 412 que aparece ao abrir o preview **não vem do código do app**. Vem do `lovable.js`, o proxy de fetch que o iframe do preview injeta para algumas rotas (notadamente `/auth/v1/token` do Supabase). Confirmado por:
+O preview abre, mas a tela fica branca. Não é mais o HTTP 412 — agora é o **Vite recusando a compilar** por causa de 5 erros de tipo do Supabase. Sem build, nada renderiza.
 
-- Não há override de `window.fetch` no código (`grep` em `src/` e `public/` limpo).
-- `supabase/client.ts` está intacto (auto-gerado).
-- O endpoint `/auth/v1/token` é exatamente o que o stack-overflow knowledge da Lovable lista como afetado.
-- A app **funciona normalmente na URL publicada** (`https://pronto-talk-suite.lovable.app` e `https://zappweb.app.br`).
+A causa é a mesma em todos: o cliente Supabase usa um tipo estrito (`RejectExcessProperties`) para `update()` e `insert()`. Passar um objeto genérico (`Record<string, unknown>`, `Record<string, any>`, ou `{ [field]: value }` com chave dinâmica) é tratado como "propriedade não-conhecida da tabela" e bloqueia a compilação. Não é bug do schema — é só uma anotação de tipo faltando.
 
-Ou seja: não há "fix de código" que elimine o 412 dentro do iframe do preview — é infraestrutura. O que dá pra fazer é blindar o app para que **nunca trave numa tela em branco** quando uma chamada inicial recebe 412 transiente.
-
-## O que vamos mudar
-
-### 1. `src/hooks/useAuth.tsx` — robustez no boot
-
-- Detectar especificamente erros tipo `412 / Precondition Failed / Failed to fetch` em `getSession()` e em `signIn`.
-- Quando detectar 412 transiente: **fazer 1 retry com backoff curto (800ms)** antes de dar up. Hoje a falha de `getSession()` já limpa tokens e segue como deslogado, mas se o 412 acontece **durante o login**, o usuário fica preso.
-- No `signIn`, capturar `error.message` contendo "412" / "Failed to fetch" / "Precondition" e retornar uma mensagem amigável: *"Falha temporária do preview. Tente novamente em alguns segundos ou abra a versão publicada."*
-
-### 2. `src/components/auth/` — banner discreto no preview
-
-Mostrar um banner pequeno **somente quando o host é `*.lovable.app` (preview, não publicado)** e detectarmos um 412 recente, com botão "Recarregar" e link para a URL publicada. Some sozinho após sucesso. Em produção (`zappweb.app.br`) nunca aparece.
-
-### 3. `src/main.tsx` — handler global de 412
-
-No `unhandledrejection` listener já existente, identificar mensagens de erro de fetch com 412 e:
-- evitar o log barulhento (downgrade pra `info`),
-- disparar um `CustomEvent('preview-precondition-error')` que o banner do passo 2 escuta.
-
-### 4. Não vamos mexer
-
-- `client.ts` (auto-gerado, proibido).
-- `vite.config.ts` (irrelevante — o 412 é do runtime do iframe).
-- Service worker (`public/sw.js`) — já limpa caches legados; nenhuma relação com 412.
-- Headers/CORS (warning explícito da knowledge: *"Do not attempt to add CORS headers"*).
-
-## Detalhes técnicos
+## Arquivos e correções
 
 ```text
-Boot flow após mudança:
- useAuth.useEffect()
-   └─ getSession()
-        ├─ ok            → segue normal
-        ├─ 412/network   → wait 800ms → retry 1×
-        │                    ├─ ok    → segue normal
-        │                    └─ falha → limpa sb-* tokens, loading=false (igual hoje)
-        └─ outro erro    → limpa sb-* tokens, loading=false (igual hoje)
+1. src/components/contacts/ContactMergeDialog.tsx (linha 57)
+   merged: Record<string, unknown>   →   merged: Database['public']['Tables']['contacts']['Update']
+   .update(merged)                   →   .update(merged as never)  (alternativa simples)
+
+2. src/components/contacts/ContactMergePanel.tsx (linha 80)
+   mergedData: Record<string, any>   →   tipar como ContactsUpdate
+   .update(mergedData)               →   passa tipado
+
+3. src/components/contacts/InlineEditCell.tsx (linha 33)
+   .update({ [field]: editValue || null })
+     → .update({ [field]: editValue || null } as Database['public']['Tables']['contacts']['Update'])
+
+4. src/components/inbox/contact-details/ContactInfoSection.tsx (linha 107)
+   .update({ [field]: value })
+     → mesmo cast da linha acima
+
+5. src/hooks/useGeoBlocking.ts (linha 71)
+   .from(table).insert({ country_code, country_name, [userField]: user?.id })
+     → o problema é que `table` é union ('allowed_countries' | 'blocked_countries') e o
+       objeto literal não satisfaz nenhum dos dois schemas isoladamente.
+     Solução: separar em dois branches if/else, um por tabela, com objetos
+     literais concretos. Sem cast, código mais legível.
 ```
 
-```text
-Banner (apenas preview):
- [🟡 Preview instável: requisição bloqueada pelo proxy do iframe]
- [ Recarregar ]  [ Abrir versão publicada ↗ ]
+## Abordagem
+
+Para 1–4 (updates de `contacts` com chaves dinâmicas), o caminho mais limpo é importar o tipo da tabela e tipar o objeto antes do `.update()`:
+
+```ts
+import type { Database } from '@/integrations/supabase/types';
+type ContactsUpdate = Database['public']['Tables']['contacts']['Update'];
+
+const merged: ContactsUpdate = {};
+// ...
+await supabase.from('contacts').update(merged).eq('id', primary.id);
 ```
 
-## Arquivos afetados
-
-- `src/hooks/useAuth.tsx` — adicionar retry de 1 tentativa em `getSession()` e tratamento amigável em `signIn`.
-- `src/components/auth/PreviewPreconditionBanner.tsx` (NOVO) — banner condicional ao host.
-- `src/App.tsx` ou `src/components/AppShell.tsx` — montar o banner no topo.
-- `src/main.tsx` — listener de `unhandledrejection` filtrando 412.
+Para 5 (insert em tabela union), refatorar pra dois inserts dedicados, um por aba (`whitelist` → `allowed_countries`, `blacklist` → `blocked_countries`). Mais verboso, mas o TS valida cada um corretamente.
 
 ## Resultado esperado
 
-- App **nunca fica em tela branca** por causa de 412 do iframe.
-- Usuário no preview recebe feedback claro e atalho para a versão publicada.
-- Zero impacto em produção (banner some, retry só dispara em falha real).
-- Login continua passando normalmente assim que o proxy do preview liberar a request.
+- Build passa, preview deixa de ser tela branca.
+- Banner de 412 (já implementado) continua disponível como rede de segurança.
+- Zero mudança de comportamento — só anotações de tipo e refator local em `useGeoBlocking`.
+- Plano de auto-reconexão do `wpp2` (ainda pendente) pode ser retomado em seguida.
