@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { newRequestId } from '@/lib/withRequestId';
+import { z } from 'zod';
+import { createCriticalPayloadSchemas, mapValidationIssuesToContractError } from '@/shared/criticalPayloadSchemas';
 
 interface ContactResult {
   id: string;
@@ -15,6 +17,7 @@ export function useNewConversation(
   onConversationStarted?: (contactId: string) => void,
   onClose?: () => void,
 ) {
+  const { sendTextPayloadSchema } = createCriticalPayloadSchemas(z);
   const [searchQuery, setSearchQuery] = useState('');
   const [contacts, setContacts] = useState<ContactResult[]>([]);
   const [selectedContact, setSelectedContact] = useState<ContactResult | null>(null);
@@ -86,9 +89,20 @@ export function useNewConversation(
         request_id: trace.requestId,
       });
       if (msgError) throw msgError;
+      const rawSendPayload = {
+        instanceName: connections.find(c => c.id === selectedConnection)?.name || 'wpp2',
+        number: selectedContact?.phone || newPhone,
+        text: messageText.trim(),
+      };
+      const sendValidation = sendTextPayloadSchema.safeParse(rawSendPayload);
+      if (!sendValidation.success) {
+        const mapped = mapValidationIssuesToContractError(sendValidation.error.issues);
+        toast.error(`${mapped.message} (código: ${mapped.code})`);
+        setIsSending(false);
+        return;
+      }
       await supabase.functions.invoke('evolution-api', {
-        body: { action: 'send-text', instanceName: connections.find(c => c.id === selectedConnection)?.name || 'wpp2',
-          number: selectedContact?.phone || newPhone, text: messageText.trim() },
+        body: { action: 'send-text', ...sendValidation.data },
         headers: trace.headers,
       });
       toast.success('Mensagem enviada!');

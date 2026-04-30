@@ -2,13 +2,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, checkRateLimit, getClientIP } from "../_shared/validation.ts";
 import { extractEvolutionMessageId } from "../_shared/evolution-message-id.ts";
+import { createCriticalPayloadSchemas, mapValidationIssuesToContractError } from "../../../src/shared/criticalPayloadSchemas.ts";
 
-const SendActionSchema = z.object({
-  action: z.literal('send'),
-  number: z.string().min(6, 'number is required').max(30),
-  message: z.string().min(1, 'message is required').max(10000),
-  connectionId: z.string().uuid().optional(),
-});
+const { publicApiSendSchema } = createCriticalPayloadSchemas(z);
 
 Deno.serve(async (req) => {
   const cors = handleCors(req);
@@ -55,13 +51,10 @@ Deno.serve(async (req) => {
       return errorResponse('Unknown action. Supported: send', 400, req);
     }
 
-    const parsed = SendActionSchema.safeParse(raw);
+    const parsed = publicApiSendSchema.safeParse(raw);
     if (!parsed.success) {
-      const errors = parsed.error.flatten();
-      const msg = Object.entries(errors.fieldErrors)
-        .map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
-        .join('; ');
-      return errorResponse(msg || 'Validation error', 400, req);
+      const mapped = mapValidationIssuesToContractError(parsed.error.issues);
+      return errorResponse(`${mapped.message} (code: ${mapped.code})`, 400, req);
     }
 
     const { number, message, connectionId } = parsed.data;
