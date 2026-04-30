@@ -1,196 +1,91 @@
-# 🤝 Guia de Contribuição — ZAPP-WEB
+# Guia de Contribuição
 
-Obrigado pelo interesse em contribuir! Este guia explica como participar do desenvolvimento.
+> Padrão de trabalho da Promo Brindes. Aplica-se a todo este repositório.
 
-## 🚀 Quick Start
+## 🎯 Princípio
 
-```bash
-# 1. Clone o repositório
-git clone https://github.com/adm01-debug/zapp-web.git
-cd zapp-web
+**Toda alteração em `main` passa por Pull Request.** Sem exceção. Mesmo configs.
 
-# 2. Instale dependências
-npm install
+Razão: rastreabilidade + revisão automática (CodeRabbit) + ponto de gate antes de deploy.
 
-# 3. Configure ambiente
-cp .env.example .env
-# Edite .env com suas credenciais Supabase
+## 🔄 Fluxo de trabalho
 
-# 4. Rode em desenvolvimento
-npm run dev
-```
+1. **Criar branch** a partir de `main`:
+   ```bash
+   git checkout main
+   git pull
+   git checkout -b <tipo>/<descricao-curta>
+   ```
 
-## 📐 Stack Tecnológico
+2. **Tipos de branch** (prefixo obrigatório):
+   - `feat/` — funcionalidade nova
+   - `fix/` — correção de bug
+   - `chore/` — manutenção, deps, configs
+   - `docs/` — documentação
+   - `refactor/` — refatoração sem mudança de comportamento
+   - `hotfix/` — correção urgente em produção
 
-| Camada | Tecnologia |
-|--------|------------|
-| Frontend | React 18 + TypeScript + Vite |
-| Estilo | Tailwind CSS + shadcn/ui |
-| Backend | Supabase (PostgreSQL + Auth + Realtime + Storage) |
-| Edge Functions | Deno (Supabase Functions) |
-| WhatsApp | Evolution API |
-| Deploy | Lovable |
+3. **Commits** seguindo Conventional Commits:
+   ```
+   <tipo>(<escopo opcional>): descrição curta
 
-## 📁 Estrutura do Projeto
+   Corpo opcional explicando o porquê.
 
-```
-zapp-web/
-├── src/
-│   ├── components/     # Componentes React
-│   ├── hooks/          # Custom hooks
-│   ├── lib/            # Utilitários
-│   ├── pages/          # Páginas/rotas
-│   ├── integrations/   # Clientes Supabase
-│   └── types/          # Tipos TypeScript
-├── supabase/
-│   ├── functions/      # Edge Functions (Deno)
-│   └── migrations/     # Migrations SQL
-├── docs/               # Documentação
-└── public/             # Assets estáticos
-```
+   Refs: #issue
+   ```
+   Exemplos:
+   - `feat(bitrix): adiciona sync de contatos para SPA Lalamove`
+   - `fix(edge-function): corrige timeout em webhook-evolution`
+   - `chore(deps): atualiza @supabase/supabase-js para 2.39.0`
 
-## 🔀 Workflow de Desenvolvimento
+4. **Abrir Pull Request** com base em `main`.
+   - Preencher o template
+   - Aguardar revisão automática do **CodeRabbit** (~3 min)
+   - Endereçar comentários críticos
+   - Solicitar aprovação humana se mudança não-trivial
 
-### Branches
+5. **Merge** somente após:
+   - ✅ CodeRabbit revisou
+   - ✅ Comentários críticos / security resolvidos
+   - ✅ CI passou (se aplicável)
+   - ✅ Aprovação humana (para mudanças em produção)
 
-- `main` — Produção (protegida)
-- `develop` — Desenvolvimento
-- `feature/*` — Novas funcionalidades
-- `fix/*` — Correções
-- `hotfix/*` — Correções urgentes em produção
+## 🚫 Proibido
 
-### Fluxo
+- `git push --force` em `main`
+- Commit direto em `main` (use sempre PR)
+- Commitar `.env`, tokens, chaves SSH ou qualquer credencial
+- Merge sem revisão do CodeRabbit
+- Renomear ou deletar tabelas/colunas Supabase sem backup `_backup_*_YYYYMMDD`
 
-1. Crie branch a partir de `develop`
-2. Desenvolva e teste localmente
-3. Commit com mensagem padronizada
-4. Abra PR para `develop`
-5. Aguarde review e CI passar
-6. Merge!
+## 🔐 Secrets
 
-## 📝 Padrão de Commits
+- **Nunca** commitar tokens, credenciais ou URLs com auth embutida
+- Usar `Deno.env.get()` em Edge Functions
+- Usar `process.env` (com validação) em Node.js
+- Configurar via dashboard Supabase, n8n credentials ou GitHub Secrets
 
-Usamos [Conventional Commits](https://www.conventionalcommits.org/):
+## 🧪 Antes de abrir PR
 
-```
-<tipo>(<escopo>): <descrição>
-
-[corpo opcional]
-
-[rodapé opcional]
-```
-
-### Tipos
-
-| Tipo | Descrição |
-|------|----------|
-| `feat` | Nova funcionalidade |
-| `fix` | Correção de bug |
-| `docs` | Documentação |
-| `style` | Formatação (sem mudança de código) |
-| `refactor` | Refatoração |
-| `perf` | Performance |
-| `test` | Testes |
-| `chore` | Manutenção |
-| `ci` | CI/CD |
-
-### Exemplos
-
-```bash
-feat(chat): adicionar botão de anexar arquivo
-fix(auth): corrigir loop de redirect no login
-docs(readme): atualizar instruções de setup
-perf(messages): otimizar query de histórico
-```
-
-## ✅ Checklist de PR
-
-Antes de abrir um PR, verifique:
-
-- [ ] Código compila sem erros (`npm run build`)
-- [ ] Linter passa (`npm run lint`)
-- [ ] Tipos corretos (`npm run typecheck`)
-- [ ] Testes passam (`npm run test`)
-- [ ] Sem `console.log` ou debug code
+Checklist mínimo:
+- [ ] Código roda local (ou justifica por que não dá pra testar local)
+- [ ] Sem `console.log` esquecidos com payloads sensíveis
 - [ ] Sem secrets hardcoded
-- [ ] Documentação atualizada (se necessário)
-- [ ] Screenshots para mudanças visuais
+- [ ] Migrations SQL com backup das tabelas afetadas
+- [ ] Variáveis de ambiente documentadas se forem novas
 
-## 🧪 Testes
+## 🎓 Convenções específicas
 
-### Unitários (Vitest)
+### Edge Functions Supabase
+- Sempre validar payload de webhook (assinatura HMAC ou shared secret)
+- Sempre retornar JSON estruturado em erros
+- Nunca vazar mensagem de erro com detalhes internos para o cliente
 
-```bash
-# Rodar todos os testes
-npm run test
+### Migrations Supabase
+- Operações destrutivas isoladas em migrations próprias
+- Backup antes de DROP em tabela `_backup_<original>_YYYYMMDD`
+- RLS ON em qualquer tabela nova
 
-# Rodar com coverage
-npm run test:coverage
-
-# Rodar em watch mode
-npm run test:watch
-```
-
-### E2E (Playwright)
-
-```bash
-# Build + roda todos os specs E2E
-npm run build && npm run test:e2e
-
-# Modo interativo
-npm run test:e2e:ui
-
-# Ver relatório HTML
-npm run test:e2e:report
-```
-
-Configure `.env.test.local` com `E2E_USER_EMAIL` e `E2E_USER_PASSWORD`.
-Detalhes completos em [docs/testing/e2e.md](./docs/testing/e2e.md).
-
-## 🎨 Padrões de Código
-
-### TypeScript
-
-- Sempre tipar props e retornos
-- Evitar `any` — usar `unknown` se necessário
-- Preferência por interfaces sobre types
-
-### React
-
-- Componentes funcionais com hooks
-- Preferência por composição sobre herança
-- Usar shadcn/ui components quando possível
-
-### CSS/Tailwind
-
-- Usar classes Tailwind, evitar CSS custom
-- Seguir design tokens do projeto
-- Mobile-first responsive design
-
-### Supabase
-
-- Sempre testar RLS policies
-- Usar prepared statements
-- Documentar migrations
-
-## 🔐 Segurança
-
-- **NUNCA** commitar secrets ou tokens
-- Usar `.env` para variáveis sensíveis
-- Reportar vulnerabilidades conforme `SECURITY.md`
-
-## 📚 Recursos
-
-- [Documentação Técnica](./docs/)
-- [Supabase Docs](https://supabase.com/docs)
-- [Evolution API Docs](https://doc.evolution-api.com/)
-- [shadcn/ui](https://ui.shadcn.com/)
-
-## 📧 Contato
-
-- **Issues:** Abra uma issue no GitHub
-- **Email:** dev@promobrindes.com.br
-
----
-
-🙏 Obrigado por contribuir!
+### Bitrix24
+- `crm.item.get` com `entityTypeId=4` para Smart Companies (não usar `crm.company.get`)
+- OAuth2 sempre — webhook clássico está deprecado para nosso uso

@@ -1,67 +1,50 @@
-## 📝 Descrição
+## 📋 Descrição
 
-<!-- Descreva as mudanças realizadas. Seja claro e objetivo. -->
+<!-- O que muda e por quê. Seja conciso. -->
 
+## 🎯 Tipo de mudança
 
-## 🎯 Tipo de Mudança
+- [ ] 🚀 feat — nova funcionalidade
+- [ ] 🐛 fix — correção de bug
+- [ ] ♻️ refactor — refatoração (sem mudança de comportamento)
+- [ ] 🔧 chore — manutenção, deps, config
+- [ ] 📚 docs — documentação
+- [ ] 🚨 hotfix — correção urgente em produção
 
-<!-- Marque com [x] as opções aplicáveis -->
+## 🌐 Sistemas afetados
 
-- [ ] 🐛 Bug fix (correção de bug)
-- [ ] ✨ Nova feature (funcionalidade nova)
-- [ ] 💥 Breaking change (mudança que quebra compatibilidade)
-- [ ] 📚 Documentação
-- [ ] 🎨 Estilo/UI
-- [ ] ♻️ Refatoração
-- [ ] ⚡ Performance
-- [ ] ✅ Testes
-- [ ] 🔧 DevOps/CI
-- [ ] 🔒 Segurança
+<!-- Marque todos os que se aplicam -->
 
-## 📷 Screenshots (se aplicável)
+- [ ] Bitrix24 (CRM, SPAs, BizProc)
+- [ ] Supabase (DB, Edge Functions, RLS, migrations)
+- [ ] n8n (workflows)
+- [ ] Evolution API / WhatsApp
+- [ ] Bling (NFe, OAuth)
+- [ ] Cloudflare (Workers, Images, Tunnels)
+- [ ] Frontend (UI, dashboards)
+- [ ] Outro: ____
 
-<!-- Adicione screenshots para mudanças visuais -->
+## 🧪 Como testar
 
+<!-- Passo a passo para validar. Inclua dados de teste se necessário. -->
 
-## 🧪 Testes Realizados
+1. 
+2. 
+3. 
 
-<!-- Descreva como testou as mudanças -->
+## ✅ Checklist pré-merge
 
-- [ ] Testei localmente
-- [ ] Testes unitários passam (`npm run test`)
-- [ ] Testes E2E passam (`npm run test:e2e`)
-- [ ] Testei no ambiente de staging
-- [ ] Testei em múltiplos navegadores
-- [ ] Testei em dispositivos móveis
+- [ ] Sem secrets, tokens ou credenciais hardcoded
+- [ ] Variáveis de ambiente novas documentadas
+- [ ] Migrations com backup em `_backup_*_YYYYMMDD` se destrutivas
+- [ ] Testado em ambiente local ou staging quando aplicável
+- [ ] Sem `console.log` com payloads sensíveis
+- [ ] CodeRabbit revisou o PR
 
-## ✅ Checklist
+## 🔄 Plano de rollback
 
-<!-- Verifique todos os itens antes de solicitar review -->
+<!-- Como reverter se algo der errado em produção? -->
 
-- [ ] Código segue o padrão do projeto
-- [ ] Self-review realizado
-- [ ] Comentei código complexo
-- [ ] Documentação atualizada (se necessário)
-- [ ] Sem console.log ou debug code
-- [ ] Sem secrets/credenciais hardcoded
-- [ ] Tipos TypeScript corretos
-- [ ] RLS policies consideradas (se DB)
+## 🔗 Issues relacionadas
 
-## 🔗 Issues Relacionadas
-
-<!-- Link para issues relacionadas: Closes #123, Fixes #456 -->
-
-
-## 🏛️ Compliance de arquitetura
-
-<!-- Obrigatório para PRs que tocam o inbox ou pipelines de mensagem. -->
-
-- [ ] Esta PR NÃO faz leitura de mensagens via Evolution API no inbox
-- [ ] Toda leitura de inbox passa por `queryExternalProxy` → `external-db-proxy` → FATOR X
-- [ ] Li e respeito o [`docs/INBOX_READ_CONTRACT.md`](../docs/INBOX_READ_CONTRACT.md)
-
-## ⚠️ Notas para Reviewer
-
-<!-- Pontos que merecem atenção especial -->
-
-
+<!-- Closes #123, Refs #456 -->
