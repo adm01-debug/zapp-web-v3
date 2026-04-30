@@ -1,8 +1,8 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
-  - name: 📚 Documentação
-    url: https://github.com/adm01-debug/zapp-web/tree/main/docs
-    about: Consulte nossa documentação antes de abrir uma issue
-  - name: 💬 Suporte
-    url: https://wa.me/5511999999999
-    about: Para suporte urgente, entre em contato via WhatsApp
+  - name: 📚 Guia de Contribuição
+    url: https://github.com/adm01-debug/zapp-web/blob/main/CONTRIBUTING.md
+    about: Antes de abrir issue, leia o guia
+  - name: 🔒 Reportar vulnerabilidade de segurança
+    url: https://github.com/adm01-debug/zapp-web/security/advisories/new
+    about: Use o canal privado para issues de segurança (não crie issue pública!)
