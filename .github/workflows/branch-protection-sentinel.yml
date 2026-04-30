@@ -1,0 +1,58 @@
+name: Branch Protection Sentinel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-merge-pattern:
+    name: Verify push to main is from PR merge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Inspect last commit on main
+        run: |
+          MSG=$(git log -1 --pretty=%B)
+          AUTHOR=$(git log -1 --pretty=%an)
+          SHA=$(git log -1 --pretty=%H)
+
+          echo "### Commit inspecionado" >> $GITHUB_STEP_SUMMARY
+          echo "- SHA: \`$SHA\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Autor: $AUTHOR" >> $GITHUB_STEP_SUMMARY
+          echo "- Mensagem: $MSG" >> $GITHUB_STEP_SUMMARY
+
+          if echo "$MSG" | head -1 | grep -qE '\(#[0-9]+\)$'; then
+            echo "OK: squash merge de PR" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          if echo "$MSG" | head -1 | grep -qE '^Merge pull request #[0-9]+'; then
+            echo "OK: merge commit de PR" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          case "$AUTHOR" in
+            "github-actions[bot]"|"dependabot[bot]"|"lovable-dev[bot]"|"renovate[bot]")
+              echo "OK: bot oficial ($AUTHOR)" >> $GITHUB_STEP_SUMMARY
+              exit 0
+              ;;
+          esac
+
+          if echo "$MSG" | head -1 | grep -qE '^chore\(release\):'; then
+            echo "OK: release commit" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          echo "::error::Push em main sem padrao de PR/bot/release detectado."
+          echo "### Direct push detectado" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Verificar se branch protection esta ativa em:" >> $GITHUB_STEP_SUMMARY
+          echo "https://github.com/${{ github.repository }}/settings/branches" >> $GITHUB_STEP_SUMMARY
+          exit 1
