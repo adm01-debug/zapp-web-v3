@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "portainer": {
+      "type": "http",
+      "url": "https://portainer-mcp.atomicabr.com.br/mcp"
+    },
+    "evolution": {
+      "type": "http",
+      "url": "https://evolution-mcp.adm01.workers.dev/mcp"
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=tdprnylgyrogbbhgdoik"
+    }
+  }
+}
