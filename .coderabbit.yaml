@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Config CodeRabbit - Promo Brindes (zapp-web)
+# Revisões automáticas de PR em PT-BR
+
+language: "pt-BR"
+
+tone_instructions: |
+  Seja direto e prático. Use português brasileiro claro.
+  Foque em bugs reais, problemas de segurança, performance e regressões.
+  Evite nitpicks de estilo (formatação, espaçamento, etc).
+  Sinalize com prioridade alta:
+  - Credenciais, tokens ou secrets hardcoded
+  - Queries SQL com risco de injection
+  - Promises sem await ou catch
+  - Tipos any/unknown sem tratamento
+  - URLs de API hardcoded em vez de variáveis de ambiente
+  - Operações destrutivas em SQL (DROP/TRUNCATE) sem backup
+
+early_access: false
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+  assess_linked_issues: true
+  related_issues: true
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    base_branches:
+      - "main"
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+      - "[skip review]"
+
+  path_filters:
+    - "!**/*.lock"
+    - "!**/pnpm-lock.yaml"
+    - "!**/package-lock.json"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/.next/**"
+    - "!**/node_modules/**"
+    - "!**/*.min.js"
+    - "!**/*.bundle.js"
+    - "!**/coverage/**"
+
+  path_instructions:
+    - path: "supabase/functions/**/*.ts"
+      instructions: |
+        Edge Functions Supabase em produção. Verificar com rigor:
+        - Secrets sempre via Deno.env.get(), NUNCA hardcoded
+        - Tratamento de erro não pode vazar tokens, SQL ou credenciais no response
+        - Validação de payload em webhooks (shared secret, assinatura HMAC quando aplicável)
+        - Idempotência em endpoints que recebem retries (Bitrix24, Evolution API, etc)
+        - CORS configurado para origem esperada, não wildcard em produção
+        - Rate limiting ou debouncing onde fizer sentido
+        - Logs não devem incluir payloads completos com dados sensíveis
+    - path: "supabase/migrations/**/*.sql"
+      instructions: |
+        Migrations Supabase. Verificar:
+        - Operações destrutivas (DROP TABLE/COLUMN, TRUNCATE) DEVEM ter backup em tabela _backup_*_YYYYMMDD antes
+        - RLS policies não devem ser desabilitadas sem justificativa explícita no comentário
+        - Funções com SECURITY DEFINER apenas quando absolutamente necessário e com search_path explícito
+        - ALTER COLUMN com mudança de tipo incompatível precisa de USING clause
+        - Indices em colunas usadas em policies de RLS para performance
+    - path: "**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        Código TypeScript/JavaScript. Verificar:
+        - any/unknown sem narrowing posterior
+        - Promises sem await ou .catch()
+        - Tokens, secrets ou URLs de API hardcoded (mover para env)
+        - Loops infinitos potenciais (while sem break, recursão sem caso base)
+        - Memory leaks (event listeners não removidos, intervalos não limpos)
+
+  tools:
+    gitleaks:
+      enabled: true
+    eslint:
+      enabled: true
+    biome:
+      enabled: true
+    markdownlint:
+      enabled: true
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+    languagetool:
+      enabled: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  pull_requests:
+    scope: auto
