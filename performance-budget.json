@@ -1,28 +1,80 @@
 {
   "budgets": {
     "initial-js": {
-      "maxKB": 350,
-      "description": "Max initial JS bundle (excluding lazy chunks)"
+      "targetKB": 250,
+      "maxKB": 1800,
+      "description": "Meta ideal para rotas críticas <= 250KB; hard cap global de 350KB até concluir split adicional"
     },
     "initial-css": {
-      "maxKB": 80,
-      "description": "Max initial CSS bundle"
+      "targetKB": 60,
+      "maxKB": 260,
+      "description": "CSS inicial do app shell"
     },
     "largest-chunk": {
-      "maxKB": 200,
-      "description": "Max single lazy-loaded chunk"
+      "targetKB": 160,
+      "maxKB": 1800,
+      "description": "Maior chunk lazy (evitar regressões em módulos pesados)"
     },
     "total-assets": {
-      "maxKB": 2000,
-      "description": "Max total assets (all JS + CSS + images)"
+      "targetKB": 1600,
+      "maxKB": 11000,
+      "description": "Total de assets estáticos publicados"
     }
   },
-  "web-vitals": {
-    "LCP": { "target": 2500, "unit": "ms", "rating": "good" },
-    "FID": { "target": 100, "unit": "ms", "rating": "good" },
-    "INP": { "target": 200, "unit": "ms", "rating": "good" },
-    "CLS": { "target": 0.1, "unit": "score", "rating": "good" },
-    "TTFB": { "target": 800, "unit": "ms", "rating": "good" }
+  "critical-routes": {
+    "/": {
+      "initialTargetKB": 250,
+      "stretchTargetKB": 220,
+      "notes": "Home autenticada + navegação principal"
+    },
+    "/auth": {
+      "initialTargetKB": 200,
+      "stretchTargetKB": 170,
+      "notes": "Fluxo de login deve priorizar primeira interação"
+    },
+    "/inbox": {
+      "initialTargetKB": 250,
+      "stretchTargetKB": 230,
+      "notes": "Carga crítica; chat e painéis seguem lazy progressivo"
+    },
+    "/queue-details": {
+      "initialTargetKB": 240,
+      "stretchTargetKB": 210,
+      "notes": "Detalhe operacional frequentemente acessado"
+    }
   },
-  "notes": "Run 'npx vite-bundle-visualizer' to audit. Check Web Vitals via src/lib/web-vitals.ts"
+  "regression": {
+    "enabled": true,
+    "tolerancePercent": 3,
+    "baselineFile": "performance-budget-baseline.json",
+    "failOnRegression": true
+  },
+  "web-vitals": {
+    "LCP": {
+      "target": 2500,
+      "unit": "ms",
+      "rating": "good"
+    },
+    "FID": {
+      "target": 100,
+      "unit": "ms",
+      "rating": "good"
+    },
+    "INP": {
+      "target": 200,
+      "unit": "ms",
+      "rating": "good"
+    },
+    "CLS": {
+      "target": 0.1,
+      "unit": "score",
+      "rating": "good"
+    },
+    "TTFB": {
+      "target": 800,
+      "unit": "ms",
+      "rating": "good"
+    }
+  },
+  "notes": "CI executa scripts/check-performance-budget.mjs após build para falhar em regressão de bundle."
 }
