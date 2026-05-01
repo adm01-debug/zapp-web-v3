@@ -1,4 +1,4 @@
-import { useRealtimeInbox } from '@/inbox/hooks/useRealtimeInbox';
+import { useRealtimeInbox } from '@/features/inbox/hooks/useRealtimeInbox';
 
 export function Test() {
   const x = useRealtimeInbox();
