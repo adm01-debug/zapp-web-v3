@@ -1,1 +1,1 @@
-// Export connection hooks
+export * from './useConnectionsManager';

@@ -1,4 +1,4 @@
-export * from '../useConnectionsManager';
+export * from '@/features/connections';
 export * from '../useEvolutionApi';
 export * from '@/features/inbox/hooks/useWhatsAppStatus';
 export * from '../useWhatsAppTemplates';

@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { Users, Search } from 'lucide-react';
 import { useAgents, type AgentWithStats } from '@/features/admin';
-import { useConnectionsManager } from '@/hooks/useConnectionsManager';
+import { useConnectionsManager } from '@/features/connections';
 import { useAgentPendingCounts } from '@/features/inbox';
 import { useAgentRecentSends } from '@/features/inbox';
 import { AgentsConnectionsHeader } from '@/features/inbox/components/agents-ops/AgentsConnectionsHeader';

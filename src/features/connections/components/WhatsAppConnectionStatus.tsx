@@ -1,4 +1,4 @@
-import { useConnectionsManager } from '@/hooks/useConnectionsManager';
+import { useConnectionsManager } from '@/features/connections';
 import { Badge } from '@/components/ui/badge';
 import { Wifi, WifiOff, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
