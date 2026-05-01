@@ -60,7 +60,8 @@ function compute(params: UseSLACalculationParams): SLATimerState {
     params.firstResponseMinutes * 60_000,
     !!params.firstResponseAt,
     params.firstResponseAt,
-    frDeadline
+    frDeadline,
+    params.firstMessageAt
   );
 
   const resolution = calculateStatus(
@@ -68,7 +69,8 @@ function compute(params: UseSLACalculationParams): SLATimerState {
     params.resolutionMinutes * 60_000,
     !!params.resolvedAt,
     params.resolvedAt,
-    resDeadline
+    resDeadline,
+    params.firstMessageAt
   );
 
   const worstStatus: SLAStatus =
