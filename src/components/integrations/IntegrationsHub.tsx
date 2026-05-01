@@ -15,7 +15,7 @@ const integrations = [
   {
     id: 'evolution-api' as const,
     name: 'Evolution API',
-    description: 'Conex\u00e3o com WhatsApp via Evolution API. Configure URL e chave de acesso.',
+    description: 'Conexão com WhatsApp via Evolution API. Configure URL e chave de acesso.',
     icon: Wifi,
     color: 'bg-whatsapp',
     status: 'available' as const,
@@ -23,7 +23,7 @@ const integrations = [
   {
     id: 'n8n' as const,
     name: 'n8n',
-    description: 'Automa\u00e7\u00e3o de workflows via webhooks. Conecte eventos do sistema a fluxos n8n.',
+    description: 'Automação de workflows via webhooks. Conecte eventos do sistema a fluxos n8n.',
     icon: Zap,
     color: 'bg-warning',
     status: 'available' as const,
@@ -39,7 +39,7 @@ const integrations = [
   {
     id: 'bitrix24' as const,
     name: 'Bitrix24',
-    description: 'CRM completo com sincroniza\u00e7\u00e3o de leads, contatos, neg\u00f3cios e telefonia VoIP.',
+    description: 'CRM completo com sincronização de leads, contatos, negócios e telefonia VoIP.',
     icon: Building2,
     color: 'bg-[hsl(193_92%_58%)]',
     status: 'available' as const,
@@ -52,7 +52,7 @@ export function IntegrationsHub() {
   if (currentView === 'evolution-api') return (
     <div>
       <div className="p-4 pb-0">
-        <Button variant="ghost" size="sm" onClick={() => setCurrentView('hub')}>\u2190 Voltar</Button>
+        <Button variant="ghost" size="sm" onClick={() => setCurrentView('hub')}>← Voltar</Button>
       </div>
       <EvolutionApiIntegrationView />
     </div>
@@ -61,7 +61,7 @@ export function IntegrationsHub() {
   if (currentView === 'n8n') return (
     <div>
       <div className="p-4 pb-0">
-        <Button variant="ghost" size="sm" onClick={() => setCurrentView('hub')}>\u2190 Voltar</Button>
+        <Button variant="ghost" size="sm" onClick={() => setCurrentView('hub')}>← Voltar</Button>
       </div>
       <N8nIntegrationView />
     </div>
@@ -70,7 +70,7 @@ export function IntegrationsHub() {
   if (currentView === 'sentry') return (
     <div>
       <div className="p-4 pb-0">
-        <Button variant="ghost" size="sm" onClick={() => setCurrentView('hub')}>\u2190 Voltar</Button>
+        <Button variant="ghost" size="sm" onClick={() => setCurrentView('hub')}>← Voltar</Button>
       </div>
       <SentryIntegrationView />
     </div>
@@ -79,7 +79,7 @@ export function IntegrationsHub() {
   if (currentView === 'bitrix24') return (
     <div>
       <div className="p-4 pb-0">
-        <Button variant="ghost" size="sm" onClick={() => setCurrentView('hub')}>\u2190 Voltar</Button>
+        <Button variant="ghost" size="sm" onClick={() => setCurrentView('hub')}>← Voltar</Button>
       </div>
       <BitrixIntegrationView />
     </div>
@@ -88,7 +88,7 @@ export function IntegrationsHub() {
   return (
     <div className="space-y-6 p-6 max-w-4xl mx-auto">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="font-display text-2xl font-bold text-foreground">Integra\u00e7\u00f5es</h1>
+        <h1 className="font-display text-2xl font-bold text-foreground">Integrações</h1>
         <p className="text-muted-foreground text-sm">Conecte ferramentas externas ao seu sistema</p>
       </motion.div>
 
@@ -107,7 +107,7 @@ export function IntegrationsHub() {
                     </div>
                   </div>
                   <Badge variant="outline" className="text-[10px]">
-                    {integration.status === 'available' ? 'Dispon\u00edvel' : integration.status}
+                    {integration.status === 'available' ? 'Disponível' : integration.status}
                   </Badge>
                 </div>
               </CardHeader>
