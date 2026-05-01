@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getDirectConfig, callEvolutionDirect } from '@/lib/evolutionDirectClient';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
 import { normalizeIdempotencyKey, deriveIdempotencyKey } from '@/lib/idempotency';
@@ -122,6 +123,12 @@ export function useEvolutionApiCore() {
             };
             if (userKey) {
               invokeOpts.headers = { 'Idempotency-Key': userKey };
+            }
+            // Direct mode: bypass edge function if Evolution config is in localStorage
+            const directCfg = getDirectConfig();
+            if (directCfg) {
+              const directResult = await callEvolutionDirect<T>(directCfg, action, body as Record<string, unknown>);
+              return directResult;
             }
             const { data, error } = await supabase.functions.invoke(`evolution-api/${action}`, invokeOpts);
             if (error) {
