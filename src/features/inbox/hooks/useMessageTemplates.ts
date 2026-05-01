@@ -11,7 +11,11 @@ export interface Template {
   shortcut: string | null;
   category: string;
   use_count: number;
+  is_global?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
+
 
 export function useMessageTemplates() {
   const [templates, setTemplates] = useState<Template[]>([]);

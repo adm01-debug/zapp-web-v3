@@ -17,17 +17,8 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
-interface Template {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  shortcut: string | null;
-  is_global: boolean;
-  use_count: number;
-  created_at: string;
-  updated_at: string;
-}
+import { type Template } from '../../hooks/useMessageTemplates';
+
 
 function VariableInserter({ onInsert, className }: { onInsert: (variable: string) => void; className?: string }) {
   return (
