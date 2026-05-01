@@ -78,16 +78,18 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleReconnect = async (conn: ConnectionRow) => {
+  const reconnectInstance = async (
+    conn: ConnectionRow,
+    opts: { silent?: boolean } = {}
+  ): Promise<{ ok: boolean; skipped?: boolean; error?: string; authError?: boolean }> => {
     const now = Date.now();
     const lastAttempt = cooldownRef.current.get(conn.instance_id) ?? 0;
     if (now - lastAttempt < RECONNECT_COOLDOWN_MS) {
       const wait = Math.ceil((RECONNECT_COOLDOWN_MS - (now - lastAttempt)) / 1000);
-      toast.info(`Aguarde ${wait}s antes de tentar novamente.`);
-      return;
+      if (!opts.silent) toast.info(`Aguarde ${wait}s antes de tentar novamente.`);
+      return { ok: false, skipped: true };
     }
     cooldownRef.current.set(conn.instance_id, now);
-    setReconnecting(conn.instance_id);
     try {
       const { data, error } = await supabase.functions.invoke('evolution-api', {
         body: { action: 'connect', instanceName: conn.instance_id },
@@ -97,22 +99,72 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
         const code = typeof data?.code === 'string' ? data.code : null;
         const message = data?.message || 'Erro Evolution API';
         if (code === 'EVOLUTION_AUTH_ERROR') {
-          toast.error(`Sem autorização: ${message}`, { duration: 8000 });
-          return;
+          if (!opts.silent) toast.error(`Sem autorização: ${message}`, { duration: 8000 });
+          return { ok: false, authError: true, error: message };
         }
         throw new Error(message);
       }
-      toast.success(`Reconectando ${conn.instance_id}…`);
-      window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
-      setOpen(false);
+      return { ok: true };
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Erro desconhecido';
       log.error('Reconnect failed', { instance: conn.instance_id, error: msg });
-      toast.error(`Erro: ${msg}`);
-    } finally {
-      setReconnecting(null);
+      return { ok: false, error: msg };
     }
   };
+
+  const handleReconnect = async (conn: ConnectionRow) => {
+    setReconnecting(conn.instance_id);
+    const result = await reconnectInstance(conn);
+    setReconnecting(null);
+    if (result.ok) {
+      toast.success(`Reconectando ${conn.instance_id}…`);
+      window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
+      setOpen(false);
+    } else if (!result.skipped && !result.authError) {
+      toast.error(`Erro: ${result.error ?? 'desconhecido'}`);
+    }
+  };
+
+  const handleReconnectAll = async () => {
+    const targets = connections.filter(c => c.status !== 'connected');
+    if (targets.length === 0) return;
+    setReconnectingAll(true);
+    let success = 0;
+    let skipped = 0;
+    let failed = 0;
+    let authErr = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const conn = targets[i];
+      setReconnecting(conn.instance_id);
+      const r = await reconnectInstance(conn, { silent: true });
+      if (r.ok) success++;
+      else if (r.skipped) skipped++;
+      else if (r.authError) authErr++;
+      else failed++;
+      // Throttle entre chamadas pra não sobrecarregar a edge function
+      if (i < targets.length - 1) await new Promise(res => setTimeout(res, 400));
+    }
+    setReconnecting(null);
+    setReconnectingAll(false);
+
+    const parts: string[] = [];
+    if (success > 0) parts.push(`${success} reconectando`);
+    if (skipped > 0) parts.push(`${skipped} em cooldown`);
+    if (failed > 0) parts.push(`${failed} com erro`);
+    if (authErr > 0) parts.push(`${authErr} sem autorização`);
+    const summary = parts.join(' · ') || 'Nenhuma ação executada';
+
+    if (success > 0 && failed === 0 && authErr === 0) {
+      toast.success(`Reconectando todas: ${summary}`);
+      window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
+      setOpen(false);
+    } else if (success > 0) {
+      toast.warning(`Reconexão parcial: ${summary}`, { duration: 7000 });
+    } else {
+      toast.error(`Falha ao reconectar: ${summary}`, { duration: 7000 });
+    }
+  };
+
 
   if (loading || connections.length === 0) return null;
 
