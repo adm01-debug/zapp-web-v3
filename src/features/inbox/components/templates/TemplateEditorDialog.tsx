@@ -11,13 +11,13 @@ import {
 } from '@/components/ui/select';
 import { Sparkles, Loader2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import { AVAILABLE_VARIABLES, replaceVariables, extractVariables } from '@/features/template-utils';
+import { AVAILABLE_VARIABLES, replaceVariables, extractVariables } from '@/features/inbox/components/template-utils';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
-import { type Template } from '@/features/hooks/useMessageTemplates';
+import { type Template } from '@/features/inbox/hooks/useMessageTemplates';
 
 
 function VariableInserter({ onInsert, className }: { onInsert: (variable: string) => void; className?: string }) {

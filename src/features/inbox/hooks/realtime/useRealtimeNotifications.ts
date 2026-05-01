@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { playNotificationSound, showBrowserNotification, requestNotificationPermission } from '@/utils/notificationSound';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
-import type { ConversationContact, RealtimeMessage, NewMessageNotification } from '@/features/useRealtimeMessages';
+import type { ConversationContact, RealtimeMessage, NewMessageNotification } from '@/features/inbox/hooks/realtime/useRealtimeMessages';
 
 export function useRealtimeNotifications() {
   const [newMessageNotification, setNewMessageNotification] = useState<NewMessageNotification | null>(null);

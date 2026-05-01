@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { ChatSearchBar } from '@/features/inbox/components/ChatSearchBar';
+import { ChatSearchBar } from '@/features/inbox/components/chat/ChatSearchBar';
 import { Message } from '@/types/chat';
 
 // Helper to create test messages

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useAuth } from '@/features/inbox/components/auth';
+import { useAuth } from '@/features/auth';
 import { motion, AnimatePresence } from '@/components/ui/motion';
 import { cn } from '@/lib/utils';
 import { Reply, Forward, Copy, Download } from 'lucide-react';

@@ -59,7 +59,7 @@ vi.mock('@/components/ui/motion', () => ({
   StaggeredItem: ({ children }: any) => <div>{children}</div>,
 }));
 
-import { ChatMessagesArea } from '@/features/inbox/components/ChatMessagesArea';
+import { ChatMessagesArea } from '@/features/inbox/components/chat/ChatMessagesArea';
 
 function makeMsg(id: string, content = 'oi'): Message {
   return {

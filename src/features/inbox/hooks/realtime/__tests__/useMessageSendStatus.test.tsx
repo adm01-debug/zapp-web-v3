@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useMessageSendStatus } from '@/features/useMessageSendStatus';
-import { emitSendStatus, clearSendStatus } from '@/features/sendStatusBus';
+import { useMessageSendStatus } from '@/features/inbox/hooks/realtime/useMessageSendStatus';
+import { emitSendStatus, clearSendStatus } from '@/features/inbox/hooks/realtime/sendStatusBus';
 
 describe('useMessageSendStatus', () => {
   beforeEach(() => {

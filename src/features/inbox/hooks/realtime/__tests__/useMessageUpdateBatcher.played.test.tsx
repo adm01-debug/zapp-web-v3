@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useMessageUpdateBatcher } from '@/features/useMessageUpdateBatcher';
+import { useMessageUpdateBatcher } from '@/features/inbox/hooks/realtime/useMessageUpdateBatcher';
 import type {
   ConversationWithMessages,
   RealtimeMessage,
