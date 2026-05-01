@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Reply, Forward, Copy, MoreVertical, Pin, Star, Trash2, Flag, Clock, CheckCheck, EyeOff, Pencil } from 'lucide-react';
 import { Message } from '@/types/chat';
-import { TextToSpeechButton } from '@/features/inbox/components/chat/TextToSpeechButton';
+import { TextToSpeechButton } from '@/features/inbox/components/TextToSpeechButton';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
