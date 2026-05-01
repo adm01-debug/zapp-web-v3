@@ -45,7 +45,7 @@ export const OmnichannelInbox = lazyWithRetry(() => import('@/components/omnicha
 export const AuditLogDashboard = lazyWithRetry(() => import('@/components/security/AuditLogDashboard').then(m => ({ default: m.AuditLogDashboard })));
 export const AdminTelemetriaPage = lazyWithRetry(() => import('@/pages/AdminTelemetriaPage'));
 export const AdminFailedMessagesPage = lazyWithRetry(() => import('@/pages/AdminFailedMessagesPage'));
-export const AdminFailedAuthMessagesPage = lazyWithRetry(() => import('@/pages/admin/AdminFailedAuthMessagesPage'));
+export const AdminFailedAuthMessagesPage = lazyWithRetry(() => import('@/features/admin/pages/AdminFailedAuthMessagesPage'));
 export const AdminSearchInsightsPage = lazyWithRetry(() => import('@/pages/AdminSearchInsightsPage'));
 export const AdminWebhookEventsPage = lazyWithRetry(() => import('@/pages/AdminWebhookEventsPage'));
 export const AdminEvolutionApiLogsPage = lazyWithRetry(() => import('@/pages/AdminEvolutionApiLogsPage'));
@@ -66,11 +66,11 @@ export const TalkXView = lazyWithRetry(() => import('@/components/talkx/TalkXVie
 export const EvolutionMonitoringDashboard = lazyWithRetry(() => import('@/components/monitoring/EvolutionMonitoringDashboard').then(m => ({ default: m.EvolutionMonitoringDashboard })));
 export const AdminWebhookSecretStatusPage = lazyWithRetry(() => import('@/pages/AdminWebhookSecretStatusPage'));
 export const AdminInstancePausesPage = lazyWithRetry(() => import('@/pages/AdminInstancePausesPage'));
-export const AgentsOperationsPage = lazyWithRetry(() => import('@/pages/inbox/AgentsOperationsPage'));
+export const AgentsOperationsPage = lazyWithRetry(() => import('@/features/inbox/pages/AgentsOperationsPage'));
 export const AdminRealtimeMonitorPage = lazyWithRetry(() => import('@/pages/AdminRealtimeMonitorPage'));
 export const AdminDispatchErrorsHistoryPage = lazyWithRetry(() => import('@/pages/AdminDispatchErrorsHistoryPage'));
-export const AdminInboxSyncStatusPage = lazyWithRetry(() => import('@/pages/admin/AdminInboxSyncStatusPage'));
-export const AdminEvoApiHealthPage = lazyWithRetry(() => import('@/pages/admin/AdminEvoApiHealthPage'));
+export const AdminInboxSyncStatusPage = lazyWithRetry(() => import('@/features/admin/pages/AdminInboxSyncStatusPage'));
+export const AdminEvoApiHealthPage = lazyWithRetry(() => import('@/features/admin/pages/AdminEvoApiHealthPage'));
 export const AchievementsSystemLazy = lazyWithRetry(async () => {
   const m = await import('@/components/gamification/AchievementsSystem');
   return { default: m.AchievementsSystem };
