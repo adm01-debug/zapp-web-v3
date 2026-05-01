@@ -7,3 +7,5 @@ export * from './useDiagnosticsData';
 export * from './useRateLimitLogs';
 export * from './useVersions';
 export * from './useVisibleAgents';
+export * from './gamification';
+export * from './monitoring';
