@@ -18,7 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { BusinessHoursIndicator } from './BusinessHoursIndicator';
 import { OfficialApiConfigDialog } from './OfficialApiConfigDialog';
-import type { WhatsAppConnection } from '@/hooks/useConnectionsManager';
+import type { WhatsAppConnection } from '@/features/connections';
 
 /** Human-friendly status — no jargon. */
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Wifi; bgClass: string }> = {

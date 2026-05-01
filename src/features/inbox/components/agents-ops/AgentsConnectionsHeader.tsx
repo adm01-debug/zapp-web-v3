@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Wifi, WifiOff, AlertTriangle } from 'lucide-react';
-import type { WhatsAppConnection } from '@/hooks/useConnectionsManager';
+import type { WhatsAppConnection } from '@/features/connections';
 
 interface Props {
   connections: WhatsAppConnection[];

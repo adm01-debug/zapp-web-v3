@@ -33,7 +33,7 @@ import { QrTtlBadge } from './QrTtlBadge';
 import { QrAttemptHistory } from './QrAttemptHistory';
 import { RefreshQrButton } from './RefreshQrButton';
 import { IdempotencyMissBanner } from './IdempotencyMissBanner';
-import { useConnectionsManager } from '@/hooks/useConnectionsManager';
+import { useConnectionsManager } from '@/features/connections';
 import { useEvolutionAutoSync } from '@/hooks/useEvolutionAutoSync';
 
 export function ConnectionsView() {
