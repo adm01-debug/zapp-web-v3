@@ -79,6 +79,11 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
         </div>
       )}
 
+      {/* Status das conexões WhatsApp (compacto) */}
+      <div className={cn('flex shrink-0', collapsed ? 'justify-center px-[11px]' : 'px-3', 'pt-1 pb-1.5')}>
+        <ConnectionStatusIndicator collapsed={collapsed} />
+      </div>
+
       {/* Primary Nav */}
       <nav className={cn('flex flex-col gap-0.5', collapsed ? 'items-center px-[11px]' : 'px-2')} aria-label="Menu principal">
         <ul role="list" className={cn('flex flex-col gap-0.5 w-full list-none p-0 m-0', collapsed && 'items-center')}>
