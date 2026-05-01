@@ -1,283 +1,285 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Send, Paperclip, ChevronDown, ChevronUp, Signature, X, Loader2, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Send, Paperclip, X, Loader2, Reply, ReplyAll, Forward, ChevronDown
-} from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useGmail, type EmailMessage } from '@/hooks/useGmail';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-
-import { getLogger } from '@/lib/logger';
-const log = getLogger('EmailChatReplyBar');
+import { gmailSendMessage } from '@/hooks/gmail/gmailApi';
+import { useEmailSignature } from '@/hooks/useEmailSignature';
+import { useEmailDraft } from '@/hooks/useEmailDraft';
+import { useEmailSLA } from '@/hooks/useEmailSLA';
 
 interface EmailChatReplyBarProps {
+  accountId: string;
   threadId: string;
-  lastMessage: EmailMessage | null;
-  accountEmail?: string;
-  mode: 'reply' | 'reply-all' | 'forward' | 'new';
-  onModeChange: (mode: 'reply' | 'reply-all' | 'forward' | 'new') => void;
+  threadGmailId: string;
+  toEmails: string[];
+  subject: string;
   onSent?: () => void;
+  className?: string;
 }
-
-// Convert File to base64 string for Gmail API
-function fileToBase64(file: File): Promise<{ filename: string; mimeType: string; content: string }> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(',')[1];
-      resolve({ filename: file.name, mimeType: file.type || 'application/octet-stream', content: base64 });
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(0)}KB`;
-  return `${(bytes / 1048576).toFixed(1)}MB`;
-}
-
-const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB Gmail limit
 
 export function EmailChatReplyBar({
+  accountId,
   threadId,
-  lastMessage,
-  accountEmail,
-  mode,
-  onModeChange,
+  threadGmailId,
+  toEmails,
+  subject,
   onSent,
+  className,
 }: EmailChatReplyBarProps) {
-  const { sendEmail, replyEmail } = useGmail();
-
-  const [body, setBody] = useState('');
-  const [to, setTo] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [showCcBcc, setShowCcBcc] = useState(false);
+  const [cc, setCc] = useState('');
+  const [bcc, setBcc] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [showSignaturePicker, setShowSignaturePicker] = useState(false);
+  const [selectedSignatureId, setSelectedSignatureId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isSending = sendEmail.isPending || replyEmail.isPending;
+  const { signatures, defaultSignature } = useEmailSignature(accountId);
+  const { draft, update, save: saveDraft, discard } = useEmailDraft(accountId, threadId);
+  const { markReplied } = useEmailSLA(accountId);
 
-  // Resolve recipients based on mode
-  const resolvedTo = (() => {
-    if (mode === 'forward') return to;
-    if (!lastMessage) return '';
-    if (mode === 'reply-all') {
-      // Collect all addresses except self
-      const allAddrs = new Set<string>();
-      if (lastMessage.direction === 'inbound') {
-        allAddrs.add(lastMessage.from_address);
-        lastMessage.to_addresses?.forEach(a => allAddrs.add(a));
-        lastMessage.cc_addresses?.forEach(a => allAddrs.add(a));
-      } else {
-        lastMessage.to_addresses?.forEach(a => allAddrs.add(a));
-        lastMessage.cc_addresses?.forEach(a => allAddrs.add(a));
-      }
-      if (accountEmail) allAddrs.delete(accountEmail);
-      return Array.from(allAddrs).join(', ');
+  // Seleciona assinatura padrão automaticamente
+  useEffect(() => {
+    if (defaultSignature && !selectedSignatureId) {
+      setSelectedSignatureId(defaultSignature.id);
     }
-    return lastMessage.direction === 'inbound' ? lastMessage.from_address : (lastMessage.to_addresses[0] || '');
-  })();
+  }, [defaultSignature, selectedSignatureId]);
 
-  const handleAddFiles = useCallback((files: FileList | null) => {
-    if (!files) return;
-    const newFiles = Array.from(files);
-    const totalSize = [...attachments, ...newFiles].reduce((sum, f) => sum + f.size, 0);
-    if (totalSize > MAX_ATTACHMENT_SIZE) {
-      toast.error('Tamanho total dos anexos excede 25MB');
-      return;
+  const selectedSignature = signatures.find(s => s.id === selectedSignatureId);
+
+  // Sincroniza textarea com draft
+  const bodyHtml = draft.bodyHtml;
+  const setBody = useCallback((html: string) => {
+    update({ bodyHtml: html });
+  }, [update]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    const oversized = files.filter(f => f.size > 25 * 1024 * 1024);
+    if (oversized.length) {
+      toast.error(`${oversized.length} arquivo(s) acima de 25MB ignorados`);
     }
-    setAttachments(prev => [...prev, ...newFiles]);
-  }, [attachments]);
+    setAttachments(prev => [...prev, ...files.filter(f => f.size <= 25 * 1024 * 1024)]);
+    e.target.value = '';
+  };
+
+  const removeAttachment = (idx: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  // Converte File para base64
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        res(result.split(',')[1] ?? '');
+      };
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
 
   const handleSend = async () => {
-    if (!body.trim() && attachments.length === 0) return;
-    const target = resolvedTo || to;
-    if (!target.trim()) {
-      toast.error('Informe o destinatário');
+    const plainText = bodyHtml.replace(/<[^>]*>/g, '').trim();
+    if (!plainText && attachments.length === 0) {
+      toast.error('Escreva uma resposta ou anexe um arquivo');
       return;
     }
 
+    setIsSending(true);
     try {
-      // Convert attachments to base64
-      const base64Attachments = await Promise.all(attachments.map(fileToBase64));
+      // Converte anexos
+      const processedAttachments = await Promise.all(
+        attachments.map(async f => ({
+          name: f.name,
+          mimeType: f.type || 'application/octet-stream',
+          data: await fileToBase64(f),
+        }))
+      );
 
-      if ((mode === 'reply' || mode === 'reply-all') && lastMessage) {
-        const ccAddresses = mode === 'reply-all' && lastMessage
-          ? [...(lastMessage.cc_addresses || [])].filter(a => a !== accountEmail)
-          : undefined;
+      const toList = toEmails.filter(Boolean);
+      const ccList = cc.split(',').map(s => s.trim()).filter(Boolean);
+      const bccList = bcc.split(',').map(s => s.trim()).filter(Boolean);
 
-        await replyEmail.mutateAsync({
-          thread_id: threadId,
-          message_id: lastMessage.gmail_message_id,
-          to: mode === 'reply-all' ? target.split(', ').filter(Boolean) : target,
-          text_body: body,
-          cc: ccAddresses?.length ? ccAddresses : undefined,
-        });
-      } else if (mode === 'forward') {
-        const fwdBody = lastMessage
-          ? `${body}\n\n---------- Mensagem encaminhada ----------\nDe: ${lastMessage.from_name || lastMessage.from_address}\n\n${lastMessage.body_text || lastMessage.snippet}`
-          : body;
-        await sendEmail.mutateAsync({
-          to: target,
-          subject: lastMessage ? `Fwd: ${lastMessage.subject}` : '',
-          text_body: fwdBody,
-          attachments: base64Attachments.length > 0 ? base64Attachments : undefined,
-        });
-      } else {
-        await sendEmail.mutateAsync({
-          to: target,
-          subject: '',
-          text_body: body,
-          attachments: base64Attachments.length > 0 ? base64Attachments : undefined,
-        });
-      }
+      await gmailSendMessage({
+        accountId,
+        to: toList,
+        cc: ccList,
+        bcc: bccList,
+        subject: subject.startsWith('Re:') ? subject : `Re: ${subject}`,
+        bodyHtml,
+        bodyPlain: plainText,
+        threadId: threadGmailId,
+        attachments: processedAttachments,
+        signatureHtml: selectedSignature?.html_content,
+      });
 
-      setBody('');
-      setTo('');
+      // Registra resposta no SLA
+      markReplied(threadGmailId);
+
+      // Descarta rascunho
+      await discard();
+
+      // Reset
       setAttachments([]);
-      onSent?.();
-    } catch (err) { log.error('Unexpected error in EmailChatReplyBar:', err); }
-  };
+      setCc('');
+      setBcc('');
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+      toast.success('Email enviado!');
+      onSent?.();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao enviar';
+      toast.error(msg);
+    } finally {
+      setIsSending(false);
     }
   };
 
-  const modeLabel = {
-    'reply': 'Responder',
-    'reply-all': 'Responder a todos',
-    'forward': 'Encaminhar',
-    'new': 'Nova mensagem',
-  };
-
-  const modeIcon = {
-    'reply': Reply,
-    'reply-all': ReplyAll,
-    'forward': Forward,
-    'new': Send,
-  };
-
-  const ModeIcon = modeIcon[mode];
-
   return (
-    <div className="border-t bg-card/50 p-3 space-y-2">
-      {/* Mode selector + forward destination */}
-      <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 shrink-0">
-              <ModeIcon className="w-3 h-3" />
-              {modeLabel[mode]}
-              <ChevronDown className="w-2.5 h-2.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => onModeChange('reply')}>
-              <Reply className="w-3.5 h-3.5 mr-2" /> Responder
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onModeChange('reply-all')}>
-              <ReplyAll className="w-3.5 h-3.5 mr-2" /> Responder a todos
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onModeChange('forward')}>
-              <Forward className="w-3.5 h-3.5 mr-2" /> Encaminhar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {mode === 'forward' && (
-          <Input
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            placeholder="email@destinatario.com"
-            className="h-7 text-xs flex-1"
-          />
-        )}
-
-        {(mode === 'reply' || mode === 'reply-all') && resolvedTo && (
-          <span className="text-[10px] text-muted-foreground truncate flex-1">
-            para: {resolvedTo}
-          </span>
-        )}
-      </div>
-
-      {/* Input area */}
-      <div className="flex items-end gap-2">
-        <div className="flex-1 relative">
-          <Textarea
-            ref={textareaRef}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={mode === 'forward' ? 'Adicione uma mensagem...' : 'Digite sua resposta...'}
-            className="min-h-[44px] max-h-[200px] text-sm resize-none pr-10"
-            rows={1}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 bottom-1 h-7 w-7"
-            onClick={() => fileRef.current?.click()}
-            aria-label="Anexar arquivo"
+    <div className={cn('border-t bg-card', className)}>
+      <div className="px-4 py-3 space-y-3">
+        {/* Header: Para + CC/BCC toggle */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="shrink-0 font-medium">Para:</span>
+            <span className="truncate">{toEmails.join(', ')}</span>
+          </div>
+          <button
+            className="shrink-0 flex items-center gap-1 hover:text-foreground transition-colors"
+            onClick={() => setShowCcBcc(v => !v)}
           >
-            <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+            {showCcBcc ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            {showCcBcc ? 'Ocultar' : 'Cc/Bcc'}
+          </button>
+        </div>
+
+        {/* CC / BCC */}
+        {showCcBcc && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="w-8 text-xs text-muted-foreground font-medium shrink-0">Cc:</span>
+              <Input
+                value={cc}
+                onChange={e => setCc(e.target.value)}
+                placeholder="email1@ex.com, email2@ex.com"
+                className="h-7 text-xs border-0 bg-muted/30 focus-visible:ring-0"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-8 text-xs text-muted-foreground font-medium shrink-0">Bcc:</span>
+              <Input
+                value={bcc}
+                onChange={e => setBcc(e.target.value)}
+                placeholder="email@exemplo.com"
+                className="h-7 text-xs border-0 bg-muted/30 focus-visible:ring-0"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Textarea */}
+        <Textarea
+          value={bodyHtml.replace(/<[^>]*>/g, '')}
+          onChange={e => setBody(e.target.value)}
+          placeholder="Escreva sua resposta..."
+          className="min-h-[80px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-sm"
+        />
+
+        {/* Assinatura preview */}
+        {selectedSignature && (
+          <div className="border-t pt-2">
+            <p className="text-[10px] text-muted-foreground mb-1">— Assinatura: {selectedSignature.name}</p>
+            <div
+              className="text-xs text-muted-foreground opacity-70 max-h-16 overflow-hidden"
+              dangerouslySetInnerHTML={{ __html: selectedSignature.html_content }}
+            />
+          </div>
+        )}
+
+        {/* Anexos */}
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {attachments.map((file, idx) => (
+              <Badge key={idx} variant="secondary" className="gap-1 text-[11px] pr-1">
+                <span className="max-w-32 truncate">{file.name}</span>
+                <button onClick={() => removeAttachment(idx)} className="ml-1 hover:text-destructive">
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Draft auto-save indicator */}
+        {draft.isDirty && (
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            <span>Rascunho não salvo</span>
+            <button onClick={saveDraft} className="underline hover:text-foreground ml-1">Salvar agora</button>
+          </div>
+        )}
+        {draft.lastSaved && !draft.isDirty && (
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Rascunho salvo {draft.lastSaved.toLocaleTimeString()}
+          </p>
+        )}
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1">
+            {/* Attachment */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => fileInputRef.current?.click()}>
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Anexar arquivo</TooltipContent>
+            </Tooltip>
+            <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
+
+            {/* Signature picker */}
+            {signatures.length > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Select value={selectedSignatureId ?? 'none'} onValueChange={v => setSelectedSignatureId(v === 'none' ? null : v)}>
+                      <SelectTrigger className="h-8 w-8 border-0 bg-transparent p-0 focus:ring-0 [&>svg]:hidden">
+                        <Signature className="h-4 w-4 text-muted-foreground" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sem assinatura</SelectItem>
+                        {signatures.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Assinatura</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+
+          <Button
+            size="sm"
+            className="gap-2 h-8"
+            onClick={handleSend}
+            disabled={isSending}
+          >
+            {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Enviar
           </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              handleAddFiles(e.target.files);
-              e.target.value = '';
-            }}
-          />
         </div>
-
-        <Button
-          size="icon"
-          className="h-10 w-10 rounded-full shrink-0"
-          onClick={handleSend}
-          disabled={(!body.trim() && attachments.length === 0) || isSending || (!resolvedTo && !to.trim())}
-          aria-label="Enviar"
-        >
-          {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-        </Button>
       </div>
-
-      {/* Attachments preview */}
-      {attachments.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {attachments.map((f, i) => (
-            <Badge key={i} variant="secondary" className="text-[10px] gap-1 py-0.5 max-w-[180px]">
-              <Paperclip className="w-2.5 h-2.5 shrink-0" />
-              <span className="truncate">{f.name}</span>
-              <span className="text-muted-foreground shrink-0">({formatFileSize(f.size)})</span>
-              <button
-                onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
-                aria-label={`Remover ${f.name}`}
-                className="ml-0.5 hover:text-destructive"
-              >
-                <X className="w-2.5 h-2.5" />
-              </button>
-            </Badge>
-          ))}
-          <span className="text-[9px] text-muted-foreground self-center">
-            {formatFileSize(attachments.reduce((s, f) => s + f.size, 0))} / 25MB
-          </span>
-        </div>
-      )}
     </div>
   );
 }
