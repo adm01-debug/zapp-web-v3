@@ -10,7 +10,7 @@ import {
   Smartphone, MoreVertical, Trash2, Copy, QrCode, Wifi, WifiOff,
   Star, Clock, Loader2, RefreshCw, History, Link2, Settings, Boxes,
   BatteryCharging, BatteryLow, BatteryMedium, BatteryFull, ShieldCheck, Zap,
-  AlertTriangle, Activity, ArrowUpDown,
+  AlertTriangle, Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +20,7 @@ import { BusinessHoursIndicator } from './BusinessHoursIndicator';
 import { OfficialApiConfigDialog } from './OfficialApiConfigDialog';
 import type { WhatsAppConnection } from '@/hooks/useConnectionsManager';
 
-/** Human-friendly status labels — no technical jargon */
+/** Human-friendly status — no jargon. */
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Wifi; bgClass: string }> = {
   connected: { label: 'Online', color: 'text-emerald-400', icon: Wifi, bgClass: 'bg-emerald-500/10 border-emerald-500/20' },
   disconnected: { label: 'Desconectado', color: 'text-red-400', icon: WifiOff, bgClass: 'bg-red-500/10 border-red-500/20' },
@@ -28,29 +28,14 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
   pending: { label: 'Aguardando QR', color: 'text-amber-400', icon: QrCode, bgClass: 'bg-amber-500/10 border-amber-500/20' },
 };
 
-/** Human-readable health reasons */
-const HEALTH_REASON_LABEL: Record<string, { short: string; long: string; severe: boolean; action: string }> = {
-  phantom_session: {
-    short: 'Precisa reconectar',
-    long: 'O WhatsApp perdeu a conex\u00e3o. Escaneie o QR Code novamente para voltar a receber mensagens.',
-    severe: true,
-    action: 'Reconectar agora',
-  },
-  webhook_silent: {
-    short: 'Sem atividade recente',
-    long: 'Nenhuma mensagem recebida nos \u00faltimos 30 minutos. Pode ser baixo volume ou um problema na conex\u00e3o.',
-    severe: false,
-    action: 'Verificar conex\u00e3o',
-  },
-  stale_session: {
-    short: 'Sess\u00e3o expirada',
-    long: 'Sem mensagens h\u00e1 mais de 6 horas. A conex\u00e3o provavelmente expirou \u2014 reconecte escaneando o QR Code.',
-    severe: true,
-    action: 'Reconectar',
-  },
-  socket_closed: { short: 'Conex\u00e3o perdida', long: 'A conex\u00e3o com o WhatsApp foi interrompida.', severe: true, action: 'Reconectar' },
-  http_error: { short: 'Erro de comunica\u00e7\u00e3o', long: 'Houve um problema na comunica\u00e7\u00e3o com o servidor.', severe: true, action: 'Verificar' },
-  timeout: { short: 'Sem resposta', long: 'O servidor n\u00e3o respondeu a tempo.', severe: true, action: 'Verificar' },
+/** Human-friendly health reason labels. */
+const HEALTH_REASON_LABEL: Record<string, { short: string; long: string; severe: boolean }> = {
+  phantom_session: { short: 'Precisa reconectar', long: 'A sessão perdeu vínculo com o WhatsApp. Escaneie o QR Code novamente.', severe: true },
+  webhook_silent: { short: 'Sem atividade recente', long: 'Nenhuma mensagem recebida nos últimos 30 minutos.', severe: false },
+  stale_session: { short: 'Sessão expirada', long: 'Sem mensagens há mais de 6 horas — reconecte.', severe: true },
+  socket_closed: { short: 'Precisa reconectar', long: 'A conexão com o WhatsApp foi perdida.', severe: true },
+  http_error: { short: 'Erro na conexão', long: 'O servidor não está respondendo corretamente.', severe: true },
+  timeout: { short: 'Sem resposta', long: 'O servidor não respondeu a tempo.', severe: true },
 };
 
 interface ConnectionCardProps {
@@ -75,15 +60,14 @@ export function ConnectionCard({
   onBusinessHours, onQueues, onSettings, onIntegrations, onSyncHistory,
 }: ConnectionCardProps) {
   const status = statusConfig[connection.status] || statusConfig.disconnected;
-  const StatusIcon = status.icon;
   const isOfficial = (connection.api_type ?? 'evolution') === 'official';
   const [officialConfigOpen, setOfficialConfigOpen] = useState(false);
   const [recheckingHealth, setRecheckingHealth] = useState(false);
+  const isConnected = connection.status === 'connected';
 
   const reasonInfo = connection.health_reason ? HEALTH_REASON_LABEL[connection.health_reason] : null;
   const isPhantomLike = reasonInfo?.severe && connection.health_status !== 'healthy';
-  const needsAttention = isPhantomLike || (connection.health_status === 'degraded');
-  const isConnected = connection.status === 'connected' && !isPhantomLike;
+  const needsAction = isPhantomLike || connection.status === 'disconnected';
 
   const handleRecheckNow = async () => {
     if (!connection.instance_id) return;
@@ -93,152 +77,131 @@ export function ConnectionCard({
         body: { instanceName: connection.instance_id },
       });
       if (error) throw error;
-      toast({ title: 'Verifica\u00e7\u00e3o conclu\u00edda', description: 'O status foi atualizado.' });
+      toast({ title: 'Verificação concluída', description: 'O status foi atualizado.' });
     } catch (e: unknown) {
-      toast({
-        title: 'Falha na verifica\u00e7\u00e3o',
-        description: e instanceof Error ? e.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
+      toast({ title: 'Falha na verificação', description: e instanceof Error ? e.message : 'Erro desconhecido', variant: 'destructive' });
     } finally {
       setRecheckingHealth(false);
     }
   };
 
-  // Determine the single primary action for this card
-  const getPrimaryAction = () => {
-    if (!isConnected && !isOfficial) {
-      return {
-        label: 'Reconectar',
-        onClick: () => onShowQrCode(connection),
-        variant: 'default' as const,
-        className: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20',
-        icon: QrCode,
-      };
-    }
-    if (!isConnected && isOfficial && connection.instance_id) {
-      return {
-        label: 'Configurar',
-        onClick: () => onSettings(connection.instance_id!, connection.name),
-        variant: 'outline' as const,
-        className: 'border-primary text-primary hover:bg-primary hover:text-primary-foreground',
-        icon: ShieldCheck,
-      };
-    }
-    if (isConnected) {
-      return {
-        label: 'Gerenciar',
-        onClick: () => connection.instance_id && onSettings(connection.instance_id, connection.name),
-        variant: 'outline' as const,
-        className: 'border-secondary/40 text-muted-foreground hover:bg-secondary/20',
-        icon: Settings,
-      };
-    }
-    return null;
+  const getLastActivity = () => {
+    if (!connection.updated_at) return null;
+    const diff = Date.now() - new Date(connection.updated_at).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'agora';
+    if (mins < 60) return `${mins} min atrás`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h atrás`;
+    return `${Math.floor(hours / 24)}d atrás`;
   };
 
-  const primaryAction = getPrimaryAction();
-
   return (
-    <motion.div whileHover={{ y: -1 }}>
+    <motion.div whileHover={{ y: -2, boxShadow: '0 8px 30px hsl(var(--primary) / 0.08)' }}>
       <Card className={cn(
-        'border transition-all duration-200',
-        isConnected && 'border-emerald-500/20 bg-card shadow-emerald-500/5 shadow-lg',
-        !isConnected && needsAttention && 'border-amber-500/20 bg-card',
-        !isConnected && !needsAttention && 'border-red-500/15 bg-card',
+        'border transition-all overflow-hidden',
+        isConnected && !isPhantomLike
+          ? 'border-emerald-500/20 bg-card shadow-emerald-500/5 shadow-lg'
+          : needsAction
+            ? 'border-red-500/20 bg-card shadow-red-500/5 shadow-lg'
+            : 'border-secondary/20 bg-card',
       )}>
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-3">
-            {/* Left: Status orb + Info */}
-            <div className="flex items-start gap-3 min-w-0 flex-1">
-              {/* Status indicator orb */}
+            {/* Left: Status orb + info */}
+            <div className="flex items-start gap-3 min-w-0">
               <div className="relative mt-0.5 shrink-0">
-                <div className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center',
-                  isConnected ? 'bg-emerald-500/15' : needsAttention ? 'bg-amber-500/15' : 'bg-red-500/15',
-                )}>
-                  <StatusIcon className={cn(
-                    'w-5 h-5',
-                    isConnected ? 'text-emerald-400' : needsAttention ? 'text-amber-400' : 'text-red-400',
-                    connection.status === 'connecting' && 'animate-spin',
-                  )} />
-                </div>
-                {isConnected && (
+                <motion.div
+                  animate={connection.status === 'connecting' ? { rotate: 360 } : {}}
+                  transition={{ duration: 1, repeat: connection.status === 'connecting' ? Infinity : 0, ease: 'linear' }}
+                  className={cn(
+                    'w-11 h-11 rounded-full flex items-center justify-center',
+                    isConnected && !isPhantomLike ? 'bg-emerald-500/15' : needsAction ? 'bg-red-500/15' : 'bg-muted',
+                  )}
+                >
+                  <Smartphone className={cn('w-5 h-5', isConnected && !isPhantomLike ? 'text-emerald-400' : needsAction ? 'text-red-400' : 'text-muted-foreground')} />
+                </motion.div>
+                {isConnected && !isPhantomLike && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-50" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border-2 border-card" />
                   </span>
                 )}
               </div>
 
-              {/* Connection info */}
-              <div className="min-w-0 flex-1">
-                {/* Name + default badge */}
+              <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-foreground truncate">{connection.name}</h3>
+                  <h3 className="font-semibold truncate">{connection.name}</h3>
                   {connection.is_default && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-violet-500/15 text-violet-300 border-violet-500/25">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 shrink-0">
                       <Star className="w-3 h-3 mr-0.5" />Principal
                     </Badge>
                   )}
                 </div>
 
-                {/* Phone + battery */}
                 <div className="flex items-center gap-2 mt-0.5">
                   <p className="text-sm text-muted-foreground">{connection.phone_number}</p>
                   {connection.battery_level != null && (
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
                       {connection.is_plugged ? <BatteryCharging className="w-3.5 h-3.5 text-emerald-400" /> :
-                       connection.battery_level <= 20 ? <BatteryLow className="w-3.5 h-3.5 text-red-400" /> :
+                       connection.battery_level <= 20 ? <BatteryLow className="w-3.5 h-3.5 text-destructive" /> :
                        connection.battery_level <= 50 ? <BatteryMedium className="w-3.5 h-3.5 text-amber-400" /> :
                        <BatteryFull className="w-3.5 h-3.5 text-emerald-400" />}
                       {connection.battery_level}%
                     </span>
                   )}
-                  <BusinessHoursIndicator connectionId={connection.id} />
                 </div>
 
                 {/* Single status line */}
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <Badge variant="outline" className={cn('text-xs gap-1', status.bgClass, status.color)}>
-                    <span className={cn('w-1.5 h-1.5 rounded-full', isConnected ? 'bg-emerald-400' : needsAttention ? 'bg-amber-400' : 'bg-red-400')} />
-                    {needsAttention ? (reasonInfo?.short ?? 'Inst\u00e1vel') : status.label}
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <Badge variant="outline" className={cn('text-[11px] px-2 py-0.5 gap-1.5 font-medium', status.bgClass, status.color)}>
+                    <span className={cn('w-1.5 h-1.5 rounded-full shrink-0',
+                      isConnected && !isPhantomLike ? 'bg-emerald-400' : needsAction ? 'bg-red-400' : 'bg-amber-400'
+                    )} />
+                    {isPhantomLike ? (reasonInfo?.short ?? 'Precisa reconectar') : status.label}
                   </Badge>
 
-                  {isConnected && connection.health_response_ms != null && (
-                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                      <ArrowUpDown className="w-3 h-3" />
-                      {connection.health_response_ms}ms
-                    </span>
+                  {isConnected && !isPhantomLike && getLastActivity() && (
+                    <span className="text-[11px] text-muted-foreground">Atualizado {getLastActivity()}</span>
                   )}
 
-                  {isConnected && connection.owner_jid && (
-                    <span className="text-[11px] text-emerald-500/70">
-                      {connection.owner_jid.split('@')[0]}
-                    </span>
+                  {connection.health_response_ms != null && isConnected && (
+                    <span className="text-[10px] text-muted-foreground">{connection.health_response_ms}ms</span>
                   )}
 
                   {(connection.retry_count ?? 0) > 0 && (
-                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400 bg-amber-500/10">
+                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400">
                       Tentativa {connection.retry_count}/{connection.max_retries || 5}
                     </Badge>
                   )}
+
+                  <BusinessHoursIndicator connectionId={connection.id} />
                 </div>
               </div>
             </div>
 
-            {/* Right: Primary action + menu */}
+            {/* Right: single primary action + menu */}
             <div className="flex items-center gap-2 shrink-0">
-              {primaryAction && (
+              {(connection.status !== 'connected' || isPhantomLike) && !isOfficial && (
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button
-                    variant={primaryAction.variant}
-                    size="sm"
-                    onClick={primaryAction.onClick}
-                    className={primaryAction.className}
-                  >
-                    <primaryAction.icon className="w-4 h-4 mr-1.5" />
-                    {primaryAction.label}
+                  <Button size="sm" onClick={() => onShowQrCode(connection)}
+                    className="bg-whatsapp text-primary-foreground hover:bg-whatsapp/90 shadow-lg shadow-whatsapp/20">
+                    <QrCode className="w-4 h-4 mr-1.5" />Reconectar
+                  </Button>
+                </motion.div>
+              )}
+              {connection.status !== 'connected' && isOfficial && connection.instance_id && (
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button variant="outline" size="sm" onClick={() => onSettings(connection.instance_id!, connection.name)}
+                    className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                    <ShieldCheck className="w-4 h-4 mr-1.5" />Configurar
+                  </Button>
+                </motion.div>
+              )}
+              {connection.status === 'connected' && !isPhantomLike && (
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button variant="outline" size="sm" className="text-muted-foreground" onClick={() => onDisconnect(connection)}>
+                    <WifiOff className="w-4 h-4 mr-1.5" />Desconectar
                   </Button>
                 </motion.div>
               )}
@@ -250,54 +213,35 @@ export function ConnectionCard({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  {/* Group: Connection */}
-                  <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground tracking-wider">Conex\u00e3o</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Conexão</DropdownMenuLabel>
+                  <DropdownMenuItem disabled={recheckingHealth || !connection.instance_id} onClick={handleRecheckNow}>
+                    {recheckingHealth ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Activity className="w-4 h-4 mr-2" />}
+                    Verificar agora
+                  </DropdownMenuItem>
                   {!isOfficial && (
                     <DropdownMenuItem onClick={() => onShowQrCode(connection)}>
                       <QrCode className="w-4 h-4 mr-2" />Gerar QR Code
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem disabled={recheckingHealth || !connection.instance_id} onClick={handleRecheckNow}>
-                    {recheckingHealth ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Activity className="w-4 h-4 mr-2" />}
-                    Verificar conex\u00e3o
-                  </DropdownMenuItem>
-                  {isConnected && (
-                    <DropdownMenuItem onClick={() => onDisconnect(connection)}>
-                      <WifiOff className="w-4 h-4 mr-2" />Desconectar
-                    </DropdownMenuItem>
-                  )}
-
-                  <DropdownMenuSeparator />
-
-                  {/* Group: Configuration */}
-                  <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground tracking-wider">Configura\u00e7\u00e3o</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => onSetDefault(connection.id)}>
                     <Star className="w-4 h-4 mr-2" />Definir como principal
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onBusinessHours(connection.id, connection.name)}>
-                    <Clock className="w-4 h-4 mr-2" />Hor\u00e1rio de atendimento
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onQueues(connection.id, connection.name)}>
-                    <Link2 className="w-4 h-4 mr-2" />Vincular filas
-                  </DropdownMenuItem>
-                  {connection.instance_id && (
-                    <DropdownMenuItem onClick={() => onSettings(connection.instance_id!, connection.name)}>
-                      <Settings className="w-4 h-4 mr-2" />Configura\u00e7\u00f5es
-                    </DropdownMenuItem>
-                  )}
 
                   <DropdownMenuSeparator />
-
-                  {/* Group: Advanced */}
-                  <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground tracking-wider">Avan\u00e7ado</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Configuração</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => onBusinessHours(connection.id, connection.name)}>
+                    <Clock className="w-4 h-4 mr-2" />Horário de Atendimento
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onQueues(connection.id, connection.name)}>
+                    <Link2 className="w-4 h-4 mr-2" />Vincular Filas
+                  </DropdownMenuItem>
                   {connection.instance_id && (
                     <>
-                      <DropdownMenuItem onClick={() => onIntegrations(connection.instance_id!, connection.name)}>
-                        <Boxes className="w-4 h-4 mr-2" />Integra\u00e7\u00f5es (IA/Bots)
+                      <DropdownMenuItem onClick={() => onSettings(connection.instance_id!, connection.name)}>
+                        <Settings className="w-4 h-4 mr-2" />Configurações & Perfil
                       </DropdownMenuItem>
-                      <DropdownMenuItem disabled={syncingHistory === connection.id} onClick={() => onSyncHistory(connection)}>
-                        {syncingHistory === connection.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <History className="w-4 h-4 mr-2" />}
-                        Sincronizar hist\u00f3rico
+                      <DropdownMenuItem onClick={() => onIntegrations(connection.instance_id!, connection.name)}>
+                        <Boxes className="w-4 h-4 mr-2" />Integrações (IA/Bots)
                       </DropdownMenuItem>
                     </>
                   )}
@@ -312,45 +256,43 @@ export function ConnectionCard({
                       <ShieldCheck className="w-4 h-4 mr-2" />Configurar Cloud API
                     </DropdownMenuItem>
                   )}
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Avançado</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => onCopyId(connection.id)}>
                     <Copy className="w-4 h-4 mr-2" />Copiar ID
                   </DropdownMenuItem>
+                  {connection.instance_id && (
+                    <DropdownMenuItem disabled={syncingHistory === connection.id} onClick={() => onSyncHistory(connection)}>
+                      {syncingHistory === connection.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <History className="w-4 h-4 mr-2" />}
+                      Sincronizar Histórico
+                    </DropdownMenuItem>
+                  )}
 
                   <DropdownMenuSeparator />
-
-                  {/* Danger zone */}
                   <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(connection)}>
-                    <Trash2 className="w-4 h-4 mr-2" />Excluir conex\u00e3o
+                    <Trash2 className="w-4 h-4 mr-2" />Excluir conexão
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
 
-          {/* Urgent action banner — contextual, only when needed */}
-          {needsAttention && reasonInfo && (
+          {/* Urgent action banner */}
+          {needsAction && !isOfficial && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3 px-3 py-2 rounded-lg bg-amber-500/8 border border-amber-500/15 flex items-center justify-between gap-2"
+              className="mt-3 px-3 py-2 rounded-lg bg-red-500/8 border border-red-500/15 flex items-center gap-2"
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="text-xs text-amber-200 truncate">{reasonInfo.long}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 shrink-0 h-7"
-                onClick={() => reasonInfo.severe ? onShowQrCode(connection) : handleRecheckNow()}
-              >
-                {reasonInfo.action}
-              </Button>
+              <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+              <span className="text-xs text-red-300">
+                {reasonInfo?.long ?? 'Esta conexão está desconectada. Escaneie o QR Code para reconectar.'}
+              </span>
             </motion.div>
           )}
         </CardContent>
       </Card>
-
       {isOfficial && (
         <OfficialApiConfigDialog
           open={officialConfigOpen}
