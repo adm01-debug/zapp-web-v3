@@ -4,7 +4,7 @@ import { getLogger } from '@/lib/logger';
 const log = getLogger('ProtectedRoute');
 import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { useAuth, useUserRole, useRouteRoles, type AppRole } from '@/features/auth/hooks';
+import { useAuth, useUserRole, useRouteRoles, type AppRole } from '@/features/auth';
 
 import { supabase } from '@/integrations/supabase/client';
 

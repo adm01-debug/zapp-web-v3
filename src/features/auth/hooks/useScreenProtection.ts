@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/features/auth';
 
 const STORAGE_KEY = 'screen-protection-enabled';
 
