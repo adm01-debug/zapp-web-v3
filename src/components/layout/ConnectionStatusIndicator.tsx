@@ -384,8 +384,21 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
             return filtered.map((c) => {
               const isOk = c.status === 'connected';
               const isReconn = reconnecting === c.instance_id;
+              const isSelected = selectedInstance === c.instance_id;
               return (
-                <li key={c.id} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-muted/40">
+                <li
+                  key={c.id}
+                  ref={(el) => {
+                    if (el) itemRefs.current.set(c.instance_id, el);
+                    else itemRefs.current.delete(c.instance_id);
+                  }}
+                  onClick={() => setSelectedInstance(c.instance_id)}
+                  aria-current={isSelected ? 'true' : undefined}
+                  className={cn(
+                    'flex items-center justify-between gap-2 px-3 py-2 cursor-pointer transition-colors',
+                    isSelected ? 'bg-primary/10 border-l-2 border-primary' : 'hover:bg-muted/40 border-l-2 border-transparent'
+                  )}
+                >
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className={cn(
