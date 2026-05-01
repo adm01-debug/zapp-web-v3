@@ -95,19 +95,19 @@ export function ConnectionsView() {
         breadcrumbs={[{ label: 'Configurações' }, { label: 'Conexões' }]}
         actions={
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild><Button className="bg-whatsapp hover:bg-whatsapp-dark text-primary-foreground"><Plus className="w-4 h-4 mr-2" />Nova Conexão</Button></DialogTrigger>
+            <DialogTrigger asChild><Button className="bg-whatsapp hover:bg-whatsapp-dark text-primary-foreground"><Plus className="w-4 h-4 mr-2" />Conectar WhatsApp</Button></DialogTrigger>
             <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle>Adicionar Nova Conexão</DialogTitle><DialogDescription>Crie uma nova instância para conectar ao WhatsApp</DialogDescription></DialogHeader>
+              <DialogHeader><DialogTitle>Conectar WhatsApp</DialogTitle><DialogDescription>Configure os dados da conexão</DialogDescription></DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="space-y-2"><Label>Nome da Conexão</Label><Input placeholder="Ex: WhatsApp Vendas" value={newConnection.name} onChange={(e) => setNewConnection({ ...newConnection, name: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Número do WhatsApp</Label><Input placeholder="+55 11 99999-0000" value={newConnection.phone_number} onChange={(e) => setNewConnection({ ...newConnection, phone_number: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Nome (identificação interna)</Label><Input placeholder="Ex: Vendas, SAC, Financeiro" value={newConnection.name} onChange={(e) => setNewConnection({ ...newConnection, name: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Número do celular</Label><Input placeholder="+55 11 99999-0000" value={newConnection.phone_number} onChange={(e) => setNewConnection({ ...newConnection, phone_number: e.target.value })} /></div>
                 <div className="space-y-2">
-                  <Label>Tipo de API</Label>
+                  <Label>Método de conexão</Label>
                   <Select
                     value={newConnection.api_type}
                     onValueChange={(v) => setNewConnection({ ...newConnection, api_type: v as 'evolution' | 'official' })}
                   >
-                    <SelectTrigger><SelectValue placeholder="Selecione o tipo de API" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Como deseja conectar?" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="evolution">
                         <div className="flex flex-col items-start">
@@ -222,7 +222,7 @@ export function ConnectionsView() {
       {loading ? (
         <div className="flex items-center justify-center py-8 text-muted-foreground"><Loader2 className="w-6 h-6 animate-spin mr-2" />Carregando conexões...</div>
       ) : connections.length === 0 ? (
-        <EmptyState icon={Smartphone} title="Nenhuma conexão configurada" description="Adicione sua primeira conexão WhatsApp para começar a atender seus clientes." illustration="inbox" actionLabel="Adicionar Conexão" onAction={() => setIsAddDialogOpen(true)} />
+        <EmptyState icon={Smartphone} title="Conecte seu WhatsApp" description="Em poucos passos você estará recebendo e respondendo mensagens dos seus clientes." illustration="inbox" actionLabel="Conectar WhatsApp" onAction={() => setIsAddDialogOpen(true)} />
       ) : (
         <StaggeredList className="space-y-4">
           {connections.map((connection) => (
