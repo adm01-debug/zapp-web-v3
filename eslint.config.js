@@ -34,6 +34,28 @@ export default tseslint.config(
       ],
     },
   },
+  // DOMAIN BOUNDARY ENFORCEMENT — Bloqueia importações diretas entre domínios.
+  // Exige que o acesso a componentes/hooks de outra feature seja feito via 
+  // barrel file (`@/features/name`), preservando o encapsulamento interno.
+  {
+    files: ["src/features/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          "patterns": [
+            {
+              // Bloqueia imports profundos de UMA feature de DENTRO de outra feature.
+              // Ex: DENTRO de src/features/inbox, bloqueia src/features/admin/components/X
+              // MAS permite @/features/admin (que aponta para o index.ts).
+              "group": ["@/features/*/**", "src/features/*/**"],
+              "message": "Domain violation: Access other features only through their main entry point (@/features/name). Internal details should remain encapsulated."
+            }
+          ]
+        }
+      ]
+    }
+  },
   // Stricter checks for test files: forbid `any` and force explicit typing
   // on mocks. Tests already run under tsconfig.test.json with `strict: true`.
   {
