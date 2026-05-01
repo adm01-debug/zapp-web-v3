@@ -92,7 +92,6 @@ export const IndexContentConnected = forwardRef<HTMLDivElement>(function IndexCo
 
         <OfflineIndicator />
         <ConnectionToast />
-        <EvolutionDisconnectBanner />
         <DegradedConnectionsBanner onNavigate={setCurrentView} />
 
         <WelcomeModal
