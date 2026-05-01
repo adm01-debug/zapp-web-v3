@@ -94,11 +94,36 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
   const [reconnecting, setReconnecting] = useState<string | null>(null);
   const [reconnectingAll, setReconnectingAll] = useState(false);
   const [open, setOpen] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'connected' | 'disconnected'>('all');
+  const [filter, setFilter] = useState<FilterValue>(() => loadFilter());
+  const [selectedInstance, setSelectedInstance] = useState<string | null>(() => loadSelected());
   const [history, setHistory] = useState<DisconnectEvent[]>(() => loadHistory());
   const cooldownRef = useRef<Map<string, number>>(new Map());
   const prevDisconnectedRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
+  const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
+
+  // Persistir filtro
+  useEffect(() => {
+    try { localStorage.setItem(FILTER_STORAGE_KEY, filter); } catch { /* ignore */ }
+  }, [filter]);
+
+  // Persistir instância selecionada
+  useEffect(() => {
+    try {
+      if (selectedInstance) localStorage.setItem(SELECTED_STORAGE_KEY, selectedInstance);
+      else localStorage.removeItem(SELECTED_STORAGE_KEY);
+    } catch { /* ignore */ }
+  }, [selectedInstance]);
+
+  // Restaurar foco/scroll ao abrir
+  useEffect(() => {
+    if (!open || !selectedInstance) return;
+    const t = setTimeout(() => {
+      const el = itemRefs.current.get(selectedInstance);
+      if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [open, selectedInstance, filter]);
 
   const fetchStatus = async () => {
     const { data, error } = await supabase
