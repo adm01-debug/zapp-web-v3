@@ -23,7 +23,7 @@ const LS_KEY = 'zapp_evolution_config';
 /** Try to read from system_settings table, fallback to localStorage */
 async function loadConfig(): Promise<EvolutionConfig | null> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('system_settings')
       .select('value')
       .eq('key', SETTINGS_KEY)
