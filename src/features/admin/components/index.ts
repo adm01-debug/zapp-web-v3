@@ -1,4 +1,9 @@
 
+export * from './__tests__/AIUsageDashboard.test';
+export * from './alerts/AlertInstanceDetailDialog';
+export * from './instance-pauses/AuthEventTrendChart';
+export * from './instance-pauses/IncidentDetailDialog';
+export * from './telemetry/TelemetryCharts';
 export * from './AIUsageDashboard';
 export * from './AIUsageLogsTab';
 export * from './AIUsageUsersTab';
