@@ -3,7 +3,7 @@ import { useOfflineCache } from '@/hooks/useOfflineCache';
 import { useMessages } from '@/hooks/useMessages';
 import { useRealtimeMessages, ConversationWithMessages, ConversationContact } from '@/hooks/useRealtimeMessages';
 import { useExternalConversations, useExternalMessages } from '@/hooks/useExternalEvolution';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 import { Conversation, Message } from '@/types/chat';

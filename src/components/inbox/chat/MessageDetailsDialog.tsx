@@ -12,7 +12,7 @@ import { Loader2, Copy, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useMessageDetails } from '@/hooks/useMessageDetails';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { MessageAttemptsTimeline } from './MessageAttemptsTimeline';
 import { MessageStatusTimeline } from './MessageStatusTimeline';
 

@@ -12,8 +12,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/features/auth';
+import { useUserRole } from '@/features/auth';
 import { useQueues } from '@/hooks/useQueues';
 import { useAllTicketStates } from '@/hooks/useTicketStatus';
 import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';

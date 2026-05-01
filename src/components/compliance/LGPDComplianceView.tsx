@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Shield, ShieldAlert, Trash2, FileText, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { PrivacyPolicySection } from './PrivacyPolicySection';
 import { WhatsAppComplianceGuide } from './WhatsAppComplianceGuide';
 import { PrivacyAuditTrail } from './PrivacyAuditTrail';

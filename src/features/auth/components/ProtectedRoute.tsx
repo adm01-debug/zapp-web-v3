@@ -4,9 +4,9 @@ import { getLogger } from '@/lib/logger';
 const log = getLogger('ProtectedRoute');
 import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole, type AppRole } from '@/hooks/useUserRole';
-import { useRouteRoles } from '@/hooks/useRouteRoles';
+import { useAuth } from '../hooks';
+import { useUserRole, type AppRole } from '../hooks';
+import { useRouteRoles } from '../hooks';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedRouteProps {

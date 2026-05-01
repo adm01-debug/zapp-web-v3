@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 
 // Mock useAuth
-vi.mock('@/hooks/useAuth', () => ({
+vi.mock('@/features/auth', () => ({
   useAuth: () => ({ profile: { id: 'agent-1', user_id: 'u1' } }),
 }));
 

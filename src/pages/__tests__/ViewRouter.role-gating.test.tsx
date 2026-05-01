@@ -59,7 +59,7 @@ vi.mock('@/components/ui/error-boundary-retry', () => ({
 
 // Central piece under test — useUserRole drives the gate.
 const userRoleMock = vi.fn();
-vi.mock('@/hooks/useUserRole', () => ({
+vi.mock('@/features/auth', () => ({
   useUserRole: () => userRoleMock(),
 }));
 

@@ -15,7 +15,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/hooks/useAuth', () => ({
+vi.mock('@/features/auth', () => ({
   useAuth: () => ({ user: { id: 'u1' } }),
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));

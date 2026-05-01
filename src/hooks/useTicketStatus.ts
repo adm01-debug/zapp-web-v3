@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { toast } from 'sonner';
 import { ticketStore, type TicketState, type TicketStatus } from '@/lib/inbox/ticketStore';
 

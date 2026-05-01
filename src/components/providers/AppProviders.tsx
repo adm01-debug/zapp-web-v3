@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "@/features/auth";
 import { ThemeSync } from "@/hooks/useTheme";
 import { HighContrastProvider } from "@/components/theme/HighContrastToggle";
 import { AccessibleToastProvider } from "@/components/ui/accessible-toast";

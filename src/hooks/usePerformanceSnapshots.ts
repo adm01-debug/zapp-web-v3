@@ -4,7 +4,7 @@ import { getLogger } from '@/lib/logger';
 const log = getLogger('PerformanceSnapshots');
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { toast } from 'sonner';
 
 export interface PerformanceSnapshot {

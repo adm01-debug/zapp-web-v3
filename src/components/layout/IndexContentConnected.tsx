@@ -1,11 +1,11 @@
 import { useState, useEffect, forwardRef } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { useOnboardingChecklist } from '@/hooks/useOnboardingChecklist';
 import { useTranscriptionNotifications } from '@/hooks/useTranscriptionNotifications';
 import { useConnectionAlertsPush } from '@/hooks/useConnectionAlertsPush';
 import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole } from '@/features/auth';
 import { useTour, DEFAULT_ONBOARDING_STEPS } from '@/components/onboarding/OnboardingTour';
 import { useIndexNavigation } from '@/hooks/useIndexNavigation';
 import { useGmailOAuthFlow } from '@/hooks/useGmailOAuthFlow';

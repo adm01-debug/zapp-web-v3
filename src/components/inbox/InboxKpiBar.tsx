@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import { Activity, CheckCircle2, Clock, Inbox } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useAllTicketStates } from '@/hooks/useTicketStatus';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { cn } from '@/lib/utils';
 import type { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
 

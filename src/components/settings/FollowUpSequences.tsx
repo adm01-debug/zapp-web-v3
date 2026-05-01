@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Trash2, Clock, ArrowRight, Zap, MessageSquare } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { FollowUpExecutionsHistory } from './FollowUpExecutionsHistory';
 
 interface Step {

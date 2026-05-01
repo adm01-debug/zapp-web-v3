@@ -9,7 +9,7 @@ vi.mock('@/lib/instrumentedExternal', () => ({
 }));
 
 const profileRef: { current: { role: string } | null } = { current: { role: 'admin' } };
-vi.mock('@/hooks/useAuth', () => ({
+vi.mock('@/features/auth', () => ({
   useAuth: () => ({ profile: profileRef.current }),
 }));
 
