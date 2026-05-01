@@ -235,41 +235,90 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
             </button>
           )}
         </div>
-        <ul className="max-h-72 overflow-auto py-1" role="list">
-          {connections.map((c) => {
-            const isOk = c.status === 'connected';
-            const isReconn = reconnecting === c.instance_id;
+        {/* Filtro segmentado */}
+        <div
+          role="tablist"
+          aria-label="Filtrar conexões por status"
+          className="flex items-center gap-1 px-3 py-1.5 border-b border-border"
+        >
+          {([
+            { key: 'all', label: 'Todas', count: total },
+            { key: 'connected', label: 'Conectadas', count: connected },
+            { key: 'disconnected', label: 'Offline', count: disconnected.length },
+          ] as const).map(({ key, label, count }) => {
+            const active = filter === key;
             return (
-              <li key={c.id} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-muted/40">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span
-                    className={cn(
-                      'w-1.5 h-1.5 rounded-full shrink-0',
-                      isOk ? 'bg-emerald-500' : 'bg-destructive animate-pulse'
-                    )}
-                    aria-hidden="true"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">{c.instance_id}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">
-                      {c.phone_number || (isOk ? 'Online' : 'Desconectada')}
-                    </p>
-                  </div>
-                </div>
-                {!isOk && (
-                  <button
-                    type="button"
-                    onClick={() => handleReconnect(c)}
-                    disabled={isReconn || reconnectingAll}
-                    className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded border border-border hover:bg-muted text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                  >
-                    <RefreshCw className={cn('w-3 h-3', isReconn && 'animate-spin')} />
-                    Reconectar
-                  </button>
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setFilter(key)}
+                className={cn(
+                  'flex-1 inline-flex items-center justify-center gap-1 text-[10px] font-medium px-2 py-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
+                  active
+                    ? 'bg-primary/10 text-primary border border-primary/30'
+                    : 'text-muted-foreground hover:bg-muted/60 border border-transparent'
                 )}
-              </li>
+              >
+                {label}
+                <span className={cn('tabular-nums text-[9px]', active ? 'opacity-100' : 'opacity-70')}>
+                  ({count})
+                </span>
+              </button>
             );
           })}
+        </div>
+
+        <ul className="max-h-72 overflow-auto py-1" role="list">
+          {(() => {
+            const filtered = connections.filter(c => {
+              if (filter === 'connected') return c.status === 'connected';
+              if (filter === 'disconnected') return c.status !== 'connected';
+              return true;
+            });
+            if (filtered.length === 0) {
+              return (
+                <li className="px-3 py-6 text-center text-[11px] text-muted-foreground">
+                  Nenhuma conexão {filter === 'connected' ? 'conectada' : 'desconectada'}.
+                </li>
+              );
+            }
+            return filtered.map((c) => {
+              const isOk = c.status === 'connected';
+              const isReconn = reconnecting === c.instance_id;
+              return (
+                <li key={c.id} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-muted/40">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className={cn(
+                        'w-1.5 h-1.5 rounded-full shrink-0',
+                        isOk ? 'bg-emerald-500' : 'bg-destructive animate-pulse'
+                      )}
+                      aria-hidden="true"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">{c.instance_id}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {c.phone_number || (isOk ? 'Online' : 'Desconectada')}
+                      </p>
+                    </div>
+                  </div>
+                  {!isOk && (
+                    <button
+                      type="button"
+                      onClick={() => handleReconnect(c)}
+                      disabled={isReconn || reconnectingAll}
+                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded border border-border hover:bg-muted text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                    >
+                      <RefreshCw className={cn('w-3 h-3', isReconn && 'animate-spin')} />
+                      Reconectar
+                    </button>
+                  )}
+                </li>
+              );
+            });
+          })()}
         </ul>
       </PopoverContent>
     </Popover>
