@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle, Target, Clock, XCircle, Calendar } from 'lucide-react';
-import { useSLAHistory, HistoryPeriod } from '../hooks';
+import { useSLAHistory, HistoryPeriod } from '@/features/sla/hooks';
 
 import { ExportButton } from '@/components/reports/ExportButton';
 import { ReportData } from '@/utils/exportReport';
