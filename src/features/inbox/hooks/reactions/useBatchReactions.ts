@@ -1,17 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
 import type { MessageReaction } from './types';
 
 /**
  * Hook for batch loading reactions for multiple messages.
+ * 
+ * Performance: uses useMemo for messageIds join key to avoid re-triggering 
+ * on same arrays. Returns a typed Record<string, MessageReaction[]>.
  */
 export function useMessagesReactions(messageIds: string[]) {
   const [reactionsMap, setReactionsMap] = useState<Record<string, MessageReaction[]>>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  const memoizedIds = useMemo(() => messageIds.join(','), [messageIds]);
+
   useEffect(() => {
-    if (messageIds.length === 0) return;
+    if (messageIds.length === 0) {
+      setReactionsMap({});
+      return;
+    }
 
     const fetchReactions = async () => {
       setIsLoading(true);
@@ -23,7 +31,11 @@ export function useMessagesReactions(messageIds: string[]) {
 
         if (error) throw error;
 
-        const grouped = (data || []).reduce((acc, r) => {
+        // Correctly type the return data explicitly as MessageReaction[] 
+        // to resolve any potential 'unknown' issues during reduce
+        const rawData = (data || []) as MessageReaction[];
+
+        const grouped = rawData.reduce((acc, r) => {
           if (!acc[r.message_id]) acc[r.message_id] = [];
           acc[r.message_id].push(r);
           return acc;
@@ -37,8 +49,8 @@ export function useMessagesReactions(messageIds: string[]) {
       }
     };
 
-    fetchReactions();
-  }, [messageIds.join(',')]);
+    void fetchReactions();
+  }, [memoizedIds]);
 
   return { reactionsMap, isLoading };
 }
