@@ -2,11 +2,11 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useScribe, CommitStrategy } from '@elevenlabs/react';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
-import type { VoiceAgentPhase, VoiceAgentAction, UseVoiceAgentOptions, UseVoiceAgentReturn } from './voice/types';
-import { processVoiceTranscript } from './voice/processTranscript';
-import { playTtsAudio, type TtsPlayback } from './voice/playTtsAudio';
-import { logVoiceCommand } from './voice/logVoiceCommand';
-import { withRetry, friendlyErrorMessage } from './voice/retry';
+import type { VoiceAgentPhase, VoiceAgentAction, UseVoiceAgentOptions, UseVoiceAgentReturn } from '@/features/inbox/hooks/voice/types';
+import { processVoiceTranscript } from '@/features/inbox/hooks/voice/processTranscript';
+import { playTtsAudio, type TtsPlayback } from '@/features/inbox/hooks/voice/playTtsAudio';
+import { logVoiceCommand } from '@/features/inbox/hooks/voice/logVoiceCommand';
+import { withRetry, friendlyErrorMessage } from '@/features/inbox/hooks/voice/retry';
 
 const SESSION_START_TIMEOUT_MS = 8000;
 const ERROR_RESET_DELAY_MS = 5000;

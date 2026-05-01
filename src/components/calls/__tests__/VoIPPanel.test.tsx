@@ -22,7 +22,7 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
-vi.mock('@/hooks/useSipClient', () => ({
+vi.mock('@/features/inbox', () => ({
   useSipClient: () => ({
     sipStatus: 'disconnected' as const,
     callStatus: 'idle' as const,

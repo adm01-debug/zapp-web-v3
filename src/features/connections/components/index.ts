@@ -1,1 +1,1 @@
-// Export connection components
+export * from './WhatsAppConnectionStatus';

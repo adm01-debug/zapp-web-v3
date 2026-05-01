@@ -12,7 +12,7 @@ let mockData = {
   refresh: mockRefresh,
 };
 
-vi.mock('@/hooks/useWhatsAppStatus', () => ({
+vi.mock('@/features/inbox', () => ({
   useWhatsAppStatus: () => mockData,
 }));
 

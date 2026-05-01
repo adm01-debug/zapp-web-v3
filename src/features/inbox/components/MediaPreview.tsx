@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getFileCategory, formatFileSize, getFileExtension, WHATSAPP_FILE_TYPES } from '@/utils/whatsappFileTypes';
 import { VideoFullscreen } from './VideoFullscreen';
-import { useMediaRefresh } from '@/hooks/useMediaRefresh';
+import { useMediaRefresh } from '@/features/inbox';
 
 function getFileIcon(fileName: string, mimeType?: string) {
   const extension = getFileExtension(fileName).toLowerCase();

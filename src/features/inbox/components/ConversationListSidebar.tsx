@@ -18,6 +18,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
+import { WhatsAppConnectionStatus } from '@/features/connections';
+
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface ConversationListSidebarProps {
@@ -69,7 +71,10 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
                 aria-label={inbox.isOnline ? 'Mensagens: online' : 'Mensagens: offline'}
               />
               <RealtimeContactsIndicator />
+              <div className="h-3 w-px bg-border/40 mx-0.5" />
+              <WhatsAppConnectionStatus />
             </div>
+
             <div className="flex items-center gap-0.5">
               <Button
                 variant="ghost"

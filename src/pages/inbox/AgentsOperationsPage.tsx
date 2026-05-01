@@ -9,8 +9,8 @@ import { useAgents, type AgentWithStats } from '@/features/admin';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
 import { useAgentPendingCounts } from '@/features/inbox';
 import { useAgentRecentSends } from '@/features/inbox';
-import { AgentsConnectionsHeader } from '@/features/inbox-ops/AgentsConnectionsHeader';
-import { AgentOpsTable } from '@/features/inbox-ops/AgentOpsTable';
+import { AgentsConnectionsHeader } from '@/features/inbox/components/agents-ops/AgentsConnectionsHeader';
+import { AgentOpsTable } from '@/features/inbox/components/agents-ops/AgentOpsTable';
 
 type StatusFilter = 'all' | AgentWithStats['status'];
 
