@@ -31,6 +31,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
   const [connections, setConnections] = useState<ConnectionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [reconnecting, setReconnecting] = useState<string | null>(null);
+  const [reconnectingAll, setReconnectingAll] = useState(false);
   const [open, setOpen] = useState(false);
   const cooldownRef = useRef<Map<string, number>>(new Map());
   const prevDisconnectedRef = useRef<Set<string>>(new Set());
