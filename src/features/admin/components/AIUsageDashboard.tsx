@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Brain, TrendingUp, Users, Zap, Clock, Download, RefreshCw } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { useAIUsageDashboard, FUNCTION_COLORS, FUNCTION_LABELS } from '..';
-import type { TimeFilter } from '..';
+import { useAIUsageDashboard, FUNCTION_COLORS, FUNCTION_LABELS } from '@/features/admin';
+import type { TimeFilter } from '@/features/admin';
 import { AIUsageLogsTab } from './AIUsageLogsTab';
 import { AIUsageUsersTab } from './AIUsageUsersTab';
 

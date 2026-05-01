@@ -7,10 +7,10 @@
 import { useMemo } from 'react';
 import { Activity, CheckCircle2, Clock, Inbox } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { useAllTicketStates } from '..';
+import { useAllTicketStates } from '@/features/inbox';
 import { useAuth } from '@/features/auth';
 import { cn } from '@/lib/utils';
-import type { ConversationWithMessages } from '..';
+import type { ConversationWithMessages } from '@/features/inbox';
 
 interface InboxKpiBarProps {
   conversations: ConversationWithMessages[];
