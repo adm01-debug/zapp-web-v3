@@ -92,17 +92,26 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
     setConnections(rows);
     setLoading(false);
 
-    // Detect new disconnections → single toast per instance
+    // Detect new disconnections → single toast per instance + record history
     const currentDisconnected = new Set(rows.filter(r => r.status !== 'connected').map(r => r.instance_id));
     if (initializedRef.current) {
+      const newlyDown: DisconnectEvent[] = [];
       currentDisconnected.forEach(id => {
         if (!prevDisconnectedRef.current.has(id)) {
+          newlyDown.push({ instance_id: id, at: Date.now() });
           toast.warning(`Conexão "${id}" caiu`, {
             description: 'Mensagens podem não ser entregues. Clique no indicador para reconectar.',
             duration: 6000,
           });
         }
       });
+      if (newlyDown.length > 0) {
+        setHistory(prev => {
+          const next = [...newlyDown, ...prev].slice(0, HISTORY_MAX_ENTRIES);
+          saveHistory(next);
+          return next;
+        });
+      }
     }
     prevDisconnectedRef.current = currentDisconnected;
     initializedRef.current = true;
