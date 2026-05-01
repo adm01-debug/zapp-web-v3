@@ -162,7 +162,7 @@ export function SLAIndicator({
         <span>1ª Resp:</span>
         <span className="font-bold">
           {firstResponseAt 
-            ? (sla.firstResponse.breached ? 'Violado' : 'OK') 
+            ? (sla.firstResponse.breached ? 'Violado' : 'Respondido') 
             : (sla.firstResponse.status === 'breached' ? 'Violado' : formatTimeRemaining(sla.firstResponse.remainingMs))}
         </span>
       </motion.div>
