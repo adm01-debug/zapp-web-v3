@@ -1,8 +1,3 @@
-
-export * from './ale/AlertInstanceDetailDialog';
-export * from './instance-pauses/AuthEventTrendChart';
-export * from './instance-pauses/IncidentDetailDialog';
-export * from './telemetry/TelemetryCha';
 export * from './AIUsageDashboard';
 export * from './AIUsageLogsTab';
 export * from './AIUsageUsersTab';
@@ -18,10 +13,14 @@ export * from './GmailWebhookMonitor';
 export * from './MediaMigrationTool';
 export * from './PlaybooksManager';
 export * from './PublicApiDashboard';
-export * from './QrAttemPanel';
+export * from './QrAttemptsPanel';
 export * from './RetryConfigPanel';
 export * from './SicoobBridgeDashboard';
 export * from './SupervisorCopilot';
 export * from './TrainingMode';
-export * from './VisibilityGraManager';
+export * from './VisibilityGrantsManager';
+export * from './alerts/AlertInstanceDetailDialog';
+export * from './instance-pauses/AuthEventTrendChart';
+export * from './instance-pauses/IncidentDetailDialog';
+export * from './telemetry/TelemetryCharts';
 export * from './useAdminData';
