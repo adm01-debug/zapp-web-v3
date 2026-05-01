@@ -20,3 +20,6 @@ export * from './SupervisorCopilot';
 export * from './TrainingMode';
 export * from './VisibilityGrantsManager';
 export * from './useAdminData';
+export * from './alerts';
+export * from './instance-pauses';
+export * from './telemetry';

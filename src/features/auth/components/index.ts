@@ -7,3 +7,5 @@ export * from './PreviewPreconditionBanner';
 export * from './ProtectedRoute';
 export * from './ReauthDialog';
 export * from './SocialProof';
+export * from './mfa';
+export * from './permissions';
