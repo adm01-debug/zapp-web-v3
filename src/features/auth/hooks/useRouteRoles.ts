@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { type AppRole } from '@/features/auth';
+import { type AppRole } from './useUserRole';
 
 /**
  * Cache values:
