@@ -111,7 +111,7 @@ export function SLAIndicatorForContact({ conversation, compact, className }: SLA
         <span className="inline-flex">
           <SLAIndicator
             firstMessageAt={conversation.createdAt}
-            firstResponseAt={conversation.status === 'resolved' ? conversation.updatedAt : null}
+            firstResponseAt={conversation.lastMessage?.sender === 'agent' ? conversation.lastMessage.timestamp : null}
             resolvedAt={conversation.status === 'resolved' ? conversation.updatedAt : null}
             firstResponseMinutes={applicable?.firstResponseMinutes ?? fallbackFr}
             resolutionMinutes={applicable?.resolutionMinutes ?? fallbackRes}

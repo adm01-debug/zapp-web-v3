@@ -70,7 +70,6 @@ export function SLAIndicator({
   if (resolvedAt && sla.worstStatus === 'ok') return null;
 
   const style = statusStyles[sla.worstStatus];
-  const Icon = style.icon;
 
   const frTotalMs = firstResponseMinutes * 60_000;
   const resTotalMs = resolutionMinutes * 60_000;
@@ -143,54 +142,54 @@ export function SLAIndicator({
 
   return (
     <div role="status" aria-label="Indicadores de SLA" className={cn('flex items-center gap-2', className)}>
-      {!firstResponseAt && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className={cn(
-            'flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border',
-            statusStyles[sla.firstResponse.status].bg,
-            statusStyles[sla.firstResponse.status].text,
-            statusStyles[sla.firstResponse.status].border,
-            sla.firstResponse.status === 'breached' && 'animate-pulse'
-          )}
-        >
-          <SLAProgressRing
-            status={sla.firstResponse.status}
-            percent={getPercent(sla.firstResponse.remainingMs, frTotalMs, sla.firstResponse.breached)}
-            size={22}
-          />
-          <span>1ª Resp:</span>
-          <span className="font-bold">
-            {sla.firstResponse.status === 'breached' ? 'Violado' : formatTimeRemaining(sla.firstResponse.remainingMs)}
-          </span>
-        </motion.div>
-      )}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={cn(
+          'flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border',
+          statusStyles[sla.firstResponse.status].bg,
+          statusStyles[sla.firstResponse.status].text,
+          statusStyles[sla.firstResponse.status].border,
+          sla.firstResponse.status === 'breached' && 'animate-pulse'
+        )}
+      >
+        <SLAProgressRing
+          status={sla.firstResponse.status}
+          percent={!firstResponseAt ? getPercent(sla.firstResponse.remainingMs, frTotalMs, sla.firstResponse.breached) : 100}
+          size={22}
+        />
+        <span>1ª Resp:</span>
+        <span className="font-bold">
+          {firstResponseAt 
+            ? (sla.firstResponse.breached ? 'Violado' : formatTimeRemaining(sla.firstResponse.timeTakenMs || 0)) 
+            : (sla.firstResponse.status === 'breached' ? 'Violado' : formatTimeRemaining(sla.firstResponse.remainingMs))}
+        </span>
+      </motion.div>
 
-      {!resolvedAt && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className={cn(
-            'flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border',
-            statusStyles[sla.resolution.status].bg,
-            statusStyles[sla.resolution.status].text,
-            statusStyles[sla.resolution.status].border,
-            sla.resolution.status === 'breached' && 'animate-pulse'
-          )}
-        >
-          <SLAProgressRing
-            status={sla.resolution.status}
-            percent={getPercent(sla.resolution.remainingMs, resTotalMs, sla.resolution.breached)}
-            size={22}
-          />
-          <span>Resolução:</span>
-          <span className="font-bold">
-            {sla.resolution.status === 'breached' ? 'Violado' : formatTimeRemaining(sla.resolution.remainingMs)}
-          </span>
-        </motion.div>
-      )}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.1 }}
+        className={cn(
+          'flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border',
+          statusStyles[sla.resolution.status].bg,
+          statusStyles[sla.resolution.status].text,
+          statusStyles[sla.resolution.status].border,
+          sla.resolution.status === 'breached' && 'animate-pulse'
+        )}
+      >
+        <SLAProgressRing
+          status={sla.resolution.status}
+          percent={!resolvedAt ? getPercent(sla.resolution.remainingMs, resTotalMs, sla.resolution.breached) : 100}
+          size={22}
+        />
+        <span>Resolução:</span>
+        <span className="font-bold">
+          {resolvedAt 
+            ? (sla.resolution.breached ? 'Violado' : formatTimeRemaining(sla.resolution.timeTakenMs || 0))
+            : (sla.resolution.status === 'breached' ? 'Violado' : formatTimeRemaining(sla.resolution.remainingMs))}
+        </span>
+      </motion.div>
     </div>
   );
 }

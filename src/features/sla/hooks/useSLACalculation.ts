@@ -7,11 +7,13 @@ export interface SLATimerState {
     status: SLAStatus;
     remainingMs: number;
     breached: boolean;
+    timeTakenMs?: number;
   };
   resolution: {
     status: SLAStatus;
     remainingMs: number;
     breached: boolean;
+    timeTakenMs?: number;
   };
   worstStatus: SLAStatus;
 }
@@ -29,11 +31,13 @@ function calculateStatus(
   totalMs: number,
   completed: boolean,
   completedAt?: Date | null,
-  deadline?: Date
-): { status: SLAStatus; remainingMs: number; breached: boolean } {
+  deadline?: Date,
+  startAt?: Date
+): { status: SLAStatus; remainingMs: number; breached: boolean; timeTakenMs?: number } {
   if (completed && completedAt && deadline) {
     const breached = completedAt > deadline;
-    return { status: breached ? 'breached' : 'ok', remainingMs: 0, breached };
+    const timeTakenMs = startAt ? completedAt.getTime() - startAt.getTime() : undefined;
+    return { status: breached ? 'breached' : 'ok', remainingMs: 0, breached, timeTakenMs };
   }
 
   const warningThreshold = totalMs * 0.3;
@@ -56,7 +60,8 @@ function compute(params: UseSLACalculationParams): SLATimerState {
     params.firstResponseMinutes * 60_000,
     !!params.firstResponseAt,
     params.firstResponseAt,
-    frDeadline
+    frDeadline,
+    params.firstMessageAt
   );
 
   const resolution = calculateStatus(
@@ -64,7 +69,8 @@ function compute(params: UseSLACalculationParams): SLATimerState {
     params.resolutionMinutes * 60_000,
     !!params.resolvedAt,
     params.resolvedAt,
-    resDeadline
+    resDeadline,
+    params.firstMessageAt
   );
 
   const worstStatus: SLAStatus =
