@@ -31,11 +31,13 @@ function calculateStatus(
   totalMs: number,
   completed: boolean,
   completedAt?: Date | null,
-  deadline?: Date
-): { status: SLAStatus; remainingMs: number; breached: boolean } {
+  deadline?: Date,
+  startAt?: Date
+): { status: SLAStatus; remainingMs: number; breached: boolean; timeTakenMs?: number } {
   if (completed && completedAt && deadline) {
     const breached = completedAt > deadline;
-    return { status: breached ? 'breached' : 'ok', remainingMs: 0, breached };
+    const timeTakenMs = startAt ? completedAt.getTime() - startAt.getTime() : undefined;
+    return { status: breached ? 'breached' : 'ok', remainingMs: 0, breached, timeTakenMs };
   }
 
   const warningThreshold = totalMs * 0.3;
