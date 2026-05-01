@@ -13,6 +13,7 @@ export interface SLATimerState {
     status: SLAStatus;
     remainingMs: number;
     breached: boolean;
+    timeTakenMs?: number;
   };
   worstStatus: SLAStatus;
 }
