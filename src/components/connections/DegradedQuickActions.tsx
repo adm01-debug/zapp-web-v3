@@ -39,10 +39,10 @@ export function DegradedQuickActions({ connections, onShowQrCode }: Props) {
         body: { connectionId: conn.id, instanceName: conn.instance_id },
       });
       if (error) throw error;
-      toast({ title: 'Status revalidado', description: `Verificação de "${conn.instance_id}" concluída.` });
+      toast({ title: 'Verificação concluída', description: `Verificação de "${conn.name || conn.instance_id}" concluída.` });
     } catch (e: unknown) {
       toast({
-        title: 'Falha ao revalidar',
+        title: 'Falha na verificação',
         description: e instanceof Error ? e.message : 'Erro desconhecido',
         variant: 'destructive',
       });
@@ -58,11 +58,11 @@ export function DegradedQuickActions({ connections, onShowQrCode }: Props) {
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-warning" />
             <h3 className="text-sm font-semibold">
-              Ações rápidas — {degraded.length === 1 ? '1 instância rebaixada' : `${degraded.length} instâncias rebaixadas`}
+              Atenção necessária — {degraded.length === 1 ? '1 conexão instável' : `${degraded.length} conexões instáveis`}
             </h3>
           </div>
           <p className="text-xs text-muted-foreground">
-            Estas instâncias apresentaram desempenho degradado na última verificação. Atue rapidamente para evitar perda de mensagens.
+            Estas instâncias apresentaram instabilidade na última verificação. Recomendamos verificar para evitar perda de mensagens.
           </p>
 
           <ul className="divide-y divide-border/60">
@@ -71,7 +71,7 @@ export function DegradedQuickActions({ connections, onShowQrCode }: Props) {
                 <div className="flex-1 min-w-[180px]">
                   <p className="text-sm font-medium">{conn.name || conn.instance_id}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {conn.instance_id}
+                    {conn.phone_number || conn.instance_id}
                     {conn.health_response_ms != null && <> · {conn.health_response_ms}ms</>}
                   </p>
                 </div>
@@ -95,7 +95,7 @@ export function DegradedQuickActions({ connections, onShowQrCode }: Props) {
                   {revalidating === conn.id
                     ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                     : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
-                  Revalidar agora
+                  Verificar agora
                 </Button>
               </li>
             ))}
