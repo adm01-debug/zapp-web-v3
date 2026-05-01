@@ -8,4 +8,3 @@ export * from './useRouteRoles';
 export * from './useScreenProtection';
 export * from './useSecureProfile';
 export * from './useUserRole';
-

@@ -1,2 +1,2 @@
-export * from './whatsappStatusRepository';
 export * from './messageRepository';
+export * from './whatsappStatusRepository';
