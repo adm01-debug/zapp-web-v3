@@ -19,9 +19,12 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/admin": ["./src/features/admin"],
+      "@/auth": ["./src/features/auth"],
+      "@/connections": ["./src/features/connections"],
+      "@/inbox": ["./src/features/inbox"],
+      "@/sla": ["./src/features/sla"]
     },
     "skipLibCheck": true,
     "strict": false,
