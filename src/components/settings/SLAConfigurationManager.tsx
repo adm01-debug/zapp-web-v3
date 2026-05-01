@@ -15,7 +15,7 @@ import {
 import { Settings2, Plus, Trash2, Clock, Target, AlertTriangle, Edit2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatSLAMinutes } from './sla/sla-utils';
-import { useSLAConfigurations, PRIORITY_CONFIG } from '@/hooks/useSLAConfigurations';
+import { useSLAConfigurations, PRIORITY_CONFIG } from '@/features/sla';
 
 export function SLAConfigurationManager() {
   const {

@@ -15,7 +15,7 @@ import {
   useSLAAlertHistory,
   type SLAAlertHistoryEntry,
   type SLAAlertSeverity,
-} from '@/hooks/useSLAAlertHistory';
+} from '@/features/sla';
 
 type SeverityFilter = 'all' | SLAAlertSeverity;
 

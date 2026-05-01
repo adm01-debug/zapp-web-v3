@@ -1,4 +1,4 @@
-import { SLARuleScope } from '@/hooks/useSLARules';
+import { SLARuleScope } from '@/features/sla';
 import { User, Building2, Briefcase, Tag, LayoutGrid, UserCog } from 'lucide-react';
 
 export const SCOPE_TABS: { value: SLARuleScope; label: string; icon: React.ElementType }[] = [

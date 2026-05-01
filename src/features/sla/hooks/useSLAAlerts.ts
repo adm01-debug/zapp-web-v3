@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useSLAAlertPreferences } from '@/hooks/useSLAAlertPreferences';
+import { useSLAAlertPreferences } from './';
 
 type SLAStatus = 'ok' | 'warning' | 'breached' | 'na';
 type SLAScope = 'current' | 'queue' | 'agent' | 'none';
