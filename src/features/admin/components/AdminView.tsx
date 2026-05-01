@@ -8,7 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PermissionMatrix } from '@/features/auth';
+import AdminQueuesPage from '@/pages/admin/AdminQueuesPage';
 import {
   Shield, Users, Search, Crown, UserCog, User, History, RefreshCw,
   UserPlus, Building, Eye, Loader2, Brain, QrCode, Code,
@@ -30,7 +33,7 @@ const roleColorMap = { dev: 'text-destructive', admin: 'text-warning', superviso
 
 export function AdminView() {
   const { isAdmin, isSupervisor, loading: roleLoading } = useUserRole();
-  const [activeTab, setActiveTab] = useState<'users' | 'audit' | 'crm' | 'playbooks' | 'copilot' | 'training' | 'crisis' | 'qr-history'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'audit' | 'crm' | 'playbooks' | 'copilot' | 'training' | 'crisis' | 'qr-history' | 'queues'>('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -116,7 +119,7 @@ export function AdminView() {
       </motion.div>
 
       <div className="flex gap-2 flex-wrap">
-        {([['users', Users, `Usuários (${users.length})`], ['audit', History, 'Auditoria'], ['qr-history', QrCode, 'Histórico de QR'], ['crm', Building, 'CRM 360°'], ['playbooks', Shield, 'Playbooks'], ['copilot', Brain, 'Copilot IA'], ['training', Users, 'Treinamento'], ['crisis', Shield, 'Sala de Crise']] as const).map(([tab, Icon, label]) => (
+        {([['users', Users, `Usuários (${users.length})`], ['queues', Users, 'Filas'], ['audit', History, 'Auditoria'], ['qr-history', QrCode, 'Histórico de QR'], ['crm', Building, 'CRM 360°'], ['playbooks', Shield, 'Playbooks'], ['copilot', Brain, 'Copilot IA'], ['training', Users, 'Treinamento'], ['crisis', Shield, 'Sala de Crise']] as const).map(([tab, Icon, label]) => (
           <Button key={tab} variant={activeTab === tab ? 'default' : 'outline'} onClick={() => setActiveTab(tab as typeof activeTab)}
             className={activeTab === tab ? 'bg-whatsapp hover:bg-whatsapp-dark' : ''} size="sm">
             <Icon className="w-4 h-4 mr-2" /> {label}
@@ -263,13 +266,37 @@ export function AdminView() {
       {loading ? (
         <div className="flex justify-center py-12"><RefreshCw className="w-8 h-8 animate-spin text-muted-foreground" /></div>
       ) : activeTab === 'users' ? (
-        <AdminUsersTable
-          users={filteredUsers}
-          isAdmin={isAdmin}
-          onRoleChange={handleRoleChange}
-          onToggleActive={handleToggleActive}
-          onEditUser={(user) => { setEditingUser(user); setIsEditDialogOpen(true); }}
-        />
+        <Tabs defaultValue="list" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="list"><Users className="w-4 h-4 mr-2" />Lista de Usuários</TabsTrigger>
+            <TabsTrigger value="permissions"><Shield className="w-4 h-4 mr-2" />Matriz de Permissões</TabsTrigger>
+            <TabsTrigger value="visibility"><Eye className="w-4 h-4 mr-2" />Grants de Visibilidade</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="list">
+            <AdminUsersTable
+              users={filteredUsers}
+              isAdmin={isAdmin}
+              onRoleChange={handleRoleChange}
+              onToggleActive={handleToggleActive}
+              onEditUser={(user) => { setEditingUser(user); setIsEditDialogOpen(true); }}
+            />
+          </TabsContent>
+          
+          <TabsContent value="permissions">
+            <div className="bg-card border rounded-lg p-6">
+              <PermissionMatrix />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="visibility">
+            <VisibilityGrantsManager />
+          </TabsContent>
+        </Tabs>
+      ) : activeTab === 'queues' ? (
+        <div className="space-y-4">
+          <AdminQueuesPage />
+        </div>
       ) : activeTab === 'audit' ? (
         <AdminAuditTable logs={filteredLogs} />
       ) : activeTab === 'crm' ? (
