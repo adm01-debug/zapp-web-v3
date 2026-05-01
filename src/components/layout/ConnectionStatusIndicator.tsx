@@ -9,6 +9,10 @@ import { getLogger } from '@/lib/logger';
 
 const log = getLogger('ConnectionStatusIndicator');
 const RECONNECT_COOLDOWN_MS = 30_000;
+const HISTORY_STORAGE_KEY = 'zappweb:connection-disconnect-history';
+const HISTORY_MAX_ENTRIES = 20;
+const HISTORY_VISIBLE = 5;
+const HISTORY_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
 
 interface ConnectionRow {
   id: string;
@@ -17,9 +21,46 @@ interface ConnectionRow {
   status: string;
 }
 
+interface DisconnectEvent {
+  instance_id: string;
+  at: number; // epoch ms
+}
+
 interface Props {
   collapsed?: boolean;
 }
+
+const loadHistory = (): DisconnectEvent[] => {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as DisconnectEvent[];
+    if (!Array.isArray(parsed)) return [];
+    const cutoff = Date.now() - HISTORY_TTL_MS;
+    return parsed.filter(e => e && typeof e.at === 'number' && e.at >= cutoff);
+  } catch {
+    return [];
+  }
+};
+
+const saveHistory = (events: DisconnectEvent[]) => {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(events.slice(0, HISTORY_MAX_ENTRIES)));
+  } catch {
+    /* ignore quota errors */
+  }
+};
+
+const formatRelative = (ts: number): string => {
+  const diff = Date.now() - ts;
+  const min = Math.floor(diff / 60_000);
+  if (min < 1) return 'agora';
+  if (min < 60) return `há ${min}min`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `há ${hr}h`;
+  const d = Math.floor(hr / 24);
+  return `há ${d}d`;
+};
 
 /**
  * Indicador discreto de status das conexões WhatsApp.
