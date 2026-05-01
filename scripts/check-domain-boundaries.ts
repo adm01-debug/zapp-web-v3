@@ -1,11 +1,11 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
-import { join, relative, sep } from 'path';
+import { join, relative } from 'path';
 
 const SRC_DIR = join(process.cwd(), 'src');
 const FEATURES_DIR = join(SRC_DIR, 'features');
 
-// Padrões de importação profunda que violam as barreiras de domínio
-const DEEP_IMPORT_PATTERN = /from ['"](@\/features\/[^/]+\/[^'"]+|src\/features\/[^/]+\/[^'"]+)['"]/g;
+// Regex mais preciso que termina no fechamento da string de importação
+const DEEP_IMPORT_PATTERN = /from ['"](@\/features\/[^/'"]+\/[^'"]+|src\/features\/[^/'"]+\/[^'"]+)['"]/g;
 
 let totalErrors = 0;
 
@@ -27,7 +27,6 @@ walk(FEATURES_DIR, (filePath) => {
   const content = readFileSync(filePath, 'utf-8');
   const relPath = relative(process.cwd(), filePath);
   
-  // Identifica a feature atual
   const featureMatch = filePath.match(/src\/features\/([^/]+)/);
   if (!featureMatch) return;
   const currentFeature = featureMatch[1];
@@ -35,17 +34,11 @@ walk(FEATURES_DIR, (filePath) => {
   let match;
   while ((match = DEEP_IMPORT_PATTERN.exec(content)) !== null) {
     const importPath = match[1];
-    
-    // Identifica a feature sendo importada
     const importedFeatureMatch = importPath.match(/(?:@\/features\/|src\/features\/)([^/]+)/);
     if (!importedFeatureMatch) continue;
     const importedFeature = importedFeatureMatch[1];
 
-    // Violação: importação profunda de OUTRA feature
-    // MAS: permite importação profunda da PRÓPRIA feature (encapsulamento interno)
     if (currentFeature !== importedFeature) {
-      // Exceção: permite se for importação do index (ponto de entrada)
-      // Ex: '@/features/auth' ou '@/features/auth/index'
       const isEntryPoint = importPath === `@/features/${importedFeature}` || 
                           importPath === `src/features/${importedFeature}` ||
                           importPath === `@/features/${importedFeature}/index` ||
