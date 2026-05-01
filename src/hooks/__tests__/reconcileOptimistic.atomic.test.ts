@@ -13,7 +13,7 @@ import {
   reconcileOptimistic,
   applyReconciliation,
 } from '@/hooks/useExternalEvolution';
-import { playerStateStore } from '@/features/inbox/hooks/realtime/playerStateStore';
+import { playerStateStore } from '@/features/inbox';
 import type { RealtimeMessage } from '@/features/inbox';
 
 const BASE_TIME = new Date('2026-04-27T10:00:00.000Z').getTime();

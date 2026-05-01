@@ -6,7 +6,7 @@ import {
   subscribeAllSendStatus,
   getSendStatus,
   type SendStatusDetail,
-} from '@/features/inbox/hooks/realtime/sendStatusBus';
+} from '@/features/inbox';
 import type {
   MessageStatusDbRow,
   MessageStatusDetail,

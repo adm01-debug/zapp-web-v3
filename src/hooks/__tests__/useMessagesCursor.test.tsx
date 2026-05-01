@@ -41,7 +41,7 @@ vi.mock('@/integrations/supabase/externalClient', () => ({
   },
 }));
 
-import { useMessagesCursor } from '@/features/inbox/hooks/useMessagesCursor';
+import { useMessagesCursor } from '@/features/inbox';
 
 function makeMessage(id: string, createdAtIso: string) {
   return {

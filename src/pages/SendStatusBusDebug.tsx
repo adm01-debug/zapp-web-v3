@@ -17,7 +17,7 @@ import {
   clearSendStatusHistory,
   type SendStatusHistoryEntry,
   type SendUIStatus,
-} from '@/features/inbox/hooks/realtime/sendStatusBus';
+} from '@/features/inbox';
 
 interface MessageGroup {
   messageId: string;

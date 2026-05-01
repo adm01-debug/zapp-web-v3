@@ -38,7 +38,7 @@ vi.mock('@/lib/logger', () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 
-import { useCalls } from '@/features/inbox/hooks/useCalls';
+import { useCalls } from '@/features/inbox';
 
 describe('useCalls', () => {
   beforeEach(() => vi.clearAllMocks());

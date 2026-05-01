@@ -8,7 +8,7 @@ vi.mock('@/lib/instrumentedExternal', () => ({
   timedRpc: (...args: unknown[]) => timedRpcMock(...args),
 }));
 
-import { useMessageDetails } from '@/features/inbox/hooks/useMessageDetails';
+import { useMessageDetails } from '@/features/inbox';
 
 function wrapper(client: QueryClient) {
   return function Wrapper({ children }: { children: React.ReactNode }) {

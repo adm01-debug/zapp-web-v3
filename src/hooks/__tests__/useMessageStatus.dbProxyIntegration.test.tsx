@@ -41,7 +41,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 import { useMessageStatus } from '@/features/inbox';
-import { __resetSendStatusForTest } from '@/features/inbox/hooks/realtime/sendStatusBus';
+import { __resetSendStatusForTest } from '@/features/inbox';
 
 /** Helper: monta a chain `.select().eq().eq().not()` exatamente como o hook usa. */
 function mockSelectChain(rows: ReadonlyArray<unknown>) {

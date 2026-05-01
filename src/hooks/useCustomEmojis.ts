@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CATEGORY_LABELS } from '@/features/inbox/emojiConstants';
+import { CATEGORY_LABELS } from '@/features/inbox';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('useCustomEmojis');

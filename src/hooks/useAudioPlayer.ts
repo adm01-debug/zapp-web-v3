@@ -3,7 +3,7 @@ import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { MediaRefreshKey } from '@/types/mediaRefresh';
-import { audioPlaybackBus } from '@/features/inbox/hooks/realtime/audioPlaybackBus';
+import { audioPlaybackBus } from '@/features/inbox';
 
 interface UseAudioPlayerOptions {
   audioUrl: string;

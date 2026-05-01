@@ -12,7 +12,7 @@ import {
 
 import { MoreVertical, Tag, Archive, CheckCircle, Clock, ArrowRight, ArrowLeft, ExternalLink, XCircle } from 'lucide-react';
 import { openChatPopup } from '@/lib/popupManager';
-import { useContactAvatar } from '@/features/inbox/hooks/realtime/useContactAvatar';
+import { useContactAvatar } from '@/features/inbox';
 
 interface ChatMessage { id: string; content: string; sender: string; timestamp: string; }
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;

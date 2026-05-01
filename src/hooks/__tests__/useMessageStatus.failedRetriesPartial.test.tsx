@@ -37,7 +37,7 @@ import {
   emitSendStatus,
   __resetSendStatusForTest,
   type SendStatusDetail,
-} from '@/features/inbox/hooks/realtime/sendStatusBus';
+} from '@/features/inbox';
 
 // ---------- Fixtures ----------
 

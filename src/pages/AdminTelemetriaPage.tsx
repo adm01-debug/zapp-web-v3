@@ -7,7 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Activity, RefreshCw, Trash2, Download, FileText, CalendarIcon } from "lucide-react";
-import { TelemetryCharts } from "@/features/admin/telemetry/TelemetryCharts";
+import { TelemetryCharts } from "@/features/admin";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 

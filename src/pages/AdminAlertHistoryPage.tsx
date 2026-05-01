@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { AlertInstanceDetailDialog } from '@/features/admin/alerts/AlertInstanceDetailDialog';
+import { AlertInstanceDetailDialog } from '@/features/admin';
 
 interface AlertRow {
   id: string;

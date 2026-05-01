@@ -7,8 +7,8 @@
  *    `retrying` resolveu (sent/failed_retries/failed_auth) — útil quando o
  *    agente fechou a conversa antes do desfecho.
  */
-import { useFailedMessageAlerts } from '@/features/inbox/hooks/realtime/useFailedMessageAlerts';
-import { useRetryResolutionAlerts } from '@/features/inbox/hooks/realtime/useRetryResolutionAlerts';
+import { useFailedMessageAlerts } from '@/features/inbox';
+import { useRetryResolutionAlerts } from '@/features/inbox';
 
 export function FailedMessageAlertsMount(): null {
   useFailedMessageAlerts(true);

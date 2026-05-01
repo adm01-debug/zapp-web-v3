@@ -35,7 +35,7 @@ vi.mock('framer-motion', () => {
 });
 
 // Subcomponents — keep DOM minimal & predictable
-vi.mock('@/features/inbox/media-gallery/MediaCard', () => ({
+vi.mock('@/features/inbox-gallery/MediaCard', () => ({
   MediaCard: ({ item }: { item: { id: string; filename: string } }) =>
     React.createElement(
       'div',
@@ -44,7 +44,7 @@ vi.mock('@/features/inbox/media-gallery/MediaCard', () => ({
     ),
 }));
 
-vi.mock('@/features/inbox/media-gallery/MediaPreviewDialog', () => ({
+vi.mock('@/features/inbox-gallery/MediaPreviewDialog', () => ({
   MediaPreviewDialog: () => null,
 }));
 

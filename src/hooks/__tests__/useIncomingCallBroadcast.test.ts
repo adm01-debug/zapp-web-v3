@@ -34,7 +34,7 @@ vi.mock('@/integrations/supabase/externalClient', () => ({
   },
 }));
 
-import { useIncomingCallBroadcast } from '@/features/inbox/hooks/useIncomingCallBroadcast';
+import { useIncomingCallBroadcast } from '@/features/inbox';
 
 describe('useIncomingCallBroadcast', () => {
   beforeEach(() => {

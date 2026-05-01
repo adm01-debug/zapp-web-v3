@@ -6,7 +6,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 vi.mock('@/lib/logger', () => ({ getLogger: () => ({ warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() }) }));
 
-import { useMediaRefresh } from '@/features/inbox/hooks/useMediaRefresh';
+import { useMediaRefresh } from '@/features/inbox';
 
 describe('useMediaRefresh', () => {
   it('é no-op quando refreshKey é undefined', () => {

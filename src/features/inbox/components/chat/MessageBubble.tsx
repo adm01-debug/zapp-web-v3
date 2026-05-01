@@ -23,7 +23,7 @@ import { MessageStatusInline } from './MessageStatusInline';
 import { MessageReadStatus } from './MessageReadStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { sendMessageToContact } from '@/features/inbox/hooks/realtime/messageSender';
+import { sendMessageToContact } from '@/features/inbox';
 import { Link } from 'react-router-dom';
 import { RefreshCw, ShieldAlert, History } from 'lucide-react';
 import {
@@ -32,7 +32,7 @@ import {
 import { MessageSendHistorySheet } from './MessageSendHistorySheet';
 import { extractMessageType } from '@/adapters/evolutionAdapter';
 import { MessageBubbleUnsupported } from './MessageBubbleUnsupported';
-import { useContactAvatar } from '@/features/inbox/hooks/realtime/useContactAvatar';
+import { useContactAvatar } from '@/features/inbox';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('MessageBubble');

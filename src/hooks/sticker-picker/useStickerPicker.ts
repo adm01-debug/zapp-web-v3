@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getLogger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { type StickerItem, type PendingUpload, CATEGORY_LABELS } from '@/features/inbox/stickers/StickerTypes';
+import { type StickerItem, type PendingUpload, CATEGORY_LABELS } from '@/features/inbox';
 
 const log = getLogger('StickerPicker');
 const RECENT_LIMIT = 8;

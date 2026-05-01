@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from 'react';
-import type { VoiceAgentPhase } from '@/features/inbox/hooks/voice/types';
+import type { VoiceAgentPhase } from '@/features/inbox';
 
 interface PhaseColors {
   primary: string;

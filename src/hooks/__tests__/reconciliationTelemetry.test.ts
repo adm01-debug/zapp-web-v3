@@ -4,7 +4,7 @@ import {
   getReconciliationStats,
   getRecentMatches,
   resetReconciliationStats,
-} from '@/features/inbox/hooks/realtime/reconciliationTelemetry';
+} from '@/features/inbox';
 import type { RealtimeMessage } from '@/features/inbox';
 
 const base: Omit<RealtimeMessage, 'id'> = {

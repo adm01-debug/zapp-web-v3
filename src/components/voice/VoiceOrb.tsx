@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { Mic, Volume2, Loader2, Zap } from 'lucide-react';
-import type { VoiceAgentPhase } from '@/features/inbox/hooks/voice/types';
+import type { VoiceAgentPhase } from '@/features/inbox';
 import { usePhaseColors } from './usePhaseColors';
 
 interface VoiceOrbProps {
