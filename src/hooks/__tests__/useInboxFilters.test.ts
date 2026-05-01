@@ -50,7 +50,7 @@ vi.mock('@/hooks/useUrlFilters', () => {
 });
 
 const mockFailureMetrics = { data: {} as Record<string, string> };
-vi.mock('@/features/inboxuseFailureMetricsBatch', () => ({
+vi.mock('@/features/inbox/useFailureMetricsBatch', () => ({
   useFailureMetricsBatch: () => mockFailureMetrics,
 }));
 

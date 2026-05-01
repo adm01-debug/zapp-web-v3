@@ -7,8 +7,8 @@ import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { Users, Search } from 'lucide-react';
 import { useAgents, type AgentWithStats } from '@/features/admin';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
-import { useAgentPendingCounts } from '@/features/inboxuseAgentPendingCounts';
-import { useAgentRecentSends } from '@/features/inboxuseAgentRecentSends';
+import { useAgentPendingCounts } from '@/features/inbox/useAgentPendingCounts';
+import { useAgentRecentSends } from '@/features/inbox/useAgentRecentSends';
 import { AgentsConnectionsHeader } from '@/features/inbox/agents-ops/AgentsConnectionsHeader';
 import { AgentOpsTable } from '@/features/inbox/agents-ops/AgentOpsTable';
 

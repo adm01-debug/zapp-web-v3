@@ -13,7 +13,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { aggregateByAgent, aggregateByChannel } from '../aggregations';
-import type { FailedMessageRow } from '@/features/adminuseFailedMessages';
+import type { FailedMessageRow } from '@/features/admin/useFailedMessages';
 
 function row(overrides: Partial<FailedMessageRow> & { payload?: Record<string, unknown> }): FailedMessageRow {
   return {

@@ -7,7 +7,7 @@ import { ConversationWithMessages } from '@/features/inbox';
 import { filterByContactType } from '@/features/inbox/ContactTypeFilter';
 import { isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { MainTab, SubTab } from '@/features/inbox/TicketTabs';
-import { useFailureMetricsBatch, type FailureCategory } from '@/features/inboxuseFailureMetricsBatch';
+import { useFailureMetricsBatch, type FailureCategory } from '@/features/inbox/useFailureMetricsBatch';
 import { useAllTicketStates } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
 

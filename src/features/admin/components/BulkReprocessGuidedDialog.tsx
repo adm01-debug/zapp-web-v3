@@ -32,7 +32,7 @@ import { cn } from '@/lib/utils';
 import {
   classifyRootCause, getRootCauseMeta, type RootCause,
 } from '@/lib/failureRootCause';
-import type { FailedMessageRow, FailedMessageStatus } from '@/features/adminuseFailedMessages';
+import type { FailedMessageRow, FailedMessageStatus } from '@/features/admin/useFailedMessages';
 
 interface BulkReprocessGuidedDialogProps {
   open: boolean;

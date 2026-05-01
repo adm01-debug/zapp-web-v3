@@ -30,7 +30,7 @@ import {
   useFailedMessagesStats,
   type FailedMessageRow,
   type FailedMessageStatus,
-} from '@/features/adminuseFailedMessages';
+} from '@/features/admin/useFailedMessages';
 import { useUserRole } from '@/features/auth';
 import { cn } from '@/lib/utils';
 import { RetryConfigPanel } from '@/features/admin/RetryConfigPanel';

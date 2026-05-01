@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { AgentRecentSendsPopover } from './AgentRecentSendsPopover';
 import type { AgentWithStats } from '@/features/admin';
-import type { RecentSend } from '@/features/inboxuseAgentRecentSends';
+import type { RecentSend } from '@/features/inbox/useAgentRecentSends';
 
 interface Props {
   agents: AgentWithStats[];
