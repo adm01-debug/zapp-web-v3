@@ -20,7 +20,7 @@
  *                                   prop on the badge component.
  */
 
-import type { SendUIStatus } from '@/hooks/realtime/sendStatusBus';
+import type { SendUIStatus } from '@/features/inbox/hooks/realtime/sendStatusBus';
 
 /**
  * Union of statuses the UI knows how to render.

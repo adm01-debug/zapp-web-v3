@@ -12,7 +12,7 @@ import { Pin, Gift } from 'lucide-react';
 import { TypingIndicatorCompact } from './TypingIndicator';
 import { useContactTyping } from '@/hooks/useContactTyping';
 import { useInViewport } from '@/hooks/useInViewport';
-import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
+import { useContactAvatar } from '@/features/inbox/hooks/realtime/useContactAvatar';
 
 interface VirtualizedRealtimeListProps {
   conversations: ConversationWithMessages[];

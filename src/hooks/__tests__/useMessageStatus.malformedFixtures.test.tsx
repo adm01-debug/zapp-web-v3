@@ -35,7 +35,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 import { useMessageStatus } from '@/features/inbox';
-import { __resetSendStatusForTest } from '@/hooks/realtime/sendStatusBus';
+import { __resetSendStatusForTest } from '@/features/inbox/hooks/realtime/sendStatusBus';
 
 function mockDbReturning(rows: Array<Record<string, unknown>>) {
   mockFrom.mockReturnValue({

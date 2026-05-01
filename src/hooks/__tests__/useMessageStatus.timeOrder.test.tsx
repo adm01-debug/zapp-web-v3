@@ -29,7 +29,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 import { useMessageStatus } from '@/features/inbox';
-import { emitSendStatus, __resetSendStatusForTest } from '@/hooks/realtime/sendStatusBus';
+import { emitSendStatus, __resetSendStatusForTest } from '@/features/inbox/hooks/realtime/sendStatusBus';
 
 /** Helper: monta o mock do supabase.from('messages').select(...).eq.eq.not */
 function mockDbStatuses(rows: Array<Record<string, unknown>>) {

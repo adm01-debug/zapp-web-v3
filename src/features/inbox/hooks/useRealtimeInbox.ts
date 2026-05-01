@@ -10,7 +10,7 @@ import { Conversation, Message } from '@/types/chat';
 import { toast } from 'sonner';
 import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/features/inbox/chat/loadOlderTypes';
 import { validatePttBlob } from '@/lib/audio/pttLimits';
-import { seedAvatarCache } from '@/hooks/realtime/avatarBatchStore';
+import { seedAvatarCache } from '@/features/inbox/hooks/realtime/avatarBatchStore';
 import { mapToLegacyConversation, mapToLegacyMessages } from '@/adapters/inboxLegacyMapper';
 
 const log = getLogger('useRealtimeInbox');
@@ -238,7 +238,7 @@ export function useRealtimeInbox() {
     if (USE_EXTERNAL_DB) {
       // External path: envio via evolution-api + bolha otimista no cursor.
       // Erros são propagados (sem swallow) para o SendErrorBanner.
-      const { sendExternalText } = await import('@/hooks/realtime/externalMessageSender');
+      const { sendExternalText } = await import('@/features/inbox/hooks/realtime/externalMessageSender');
       const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
       const { optimistic } = await sendExternalText(selectedContactId, content, { contactAvatar: currentAvatar });
       try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
@@ -276,7 +276,7 @@ export function useRealtimeInbox() {
       // ATENÇÃO: erros (upload OU envio) são PROPAGADOS para que o
       // `SendErrorBanner` possa oferecer "Reenviar" mantendo o blob original
       // — repete o upload + envio + cria uma NOVA bolha otimista.
-      const { sendExternalAudio } = await import('@/hooks/realtime/externalMessageSender');
+      const { sendExternalAudio } = await import('@/features/inbox/hooks/realtime/externalMessageSender');
       const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
       try {
         const { optimistic } = await sendExternalAudio(selectedContactId, blob, { contactAvatar: currentAvatar });

@@ -40,7 +40,7 @@ import {
   emitSendStatus,
   clearSendStatus,
   __resetSendStatusForTest,
-} from '@/hooks/realtime/sendStatusBus';
+} from '@/features/inbox/hooks/realtime/sendStatusBus';
 
 function mockDbStatuses(rows: Array<Record<string, unknown>>) {
   mockFrom.mockReturnValue({

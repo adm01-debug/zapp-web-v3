@@ -3,7 +3,7 @@ import { MessageSquare, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
+import { useContactAvatar } from '@/features/inbox/hooks/realtime/useContactAvatar';
 
 interface NewMessageIndicatorProps {
   show: boolean;

@@ -20,7 +20,7 @@ import { BusinessHoursBadge } from '../BusinessHoursBadge';
 import { AnalysisBadges } from '../AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench } from 'lucide-react';
-import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
+import { useContactAvatar } from '@/features/inbox/hooks/realtime/useContactAvatar';
 
 const contactTypeConfig: Record<string, { label: string; icon: typeof Users; color: string }> = {
   cliente: { label: 'Cliente', icon: Users, color: 'bg-info/10 text-info border-info/30' },

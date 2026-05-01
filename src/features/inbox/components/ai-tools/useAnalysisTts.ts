@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { playTtsAudio, type TtsPlayback, type PlayTtsOptions } from '@/hooks/voice/playTtsAudio';
+import { playTtsAudio, type TtsPlayback, type PlayTtsOptions } from '@/features/inbox/hooks/voice/playTtsAudio';
 import { toast } from 'sonner';
 
 export function useAnalysisTts() {

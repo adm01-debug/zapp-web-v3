@@ -18,8 +18,8 @@ import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
 import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
-import { playerStateStore } from '@/hooks/realtime/playerStateStore';
-import { recordMatch } from '@/hooks/realtime/reconciliationTelemetry';
+import { playerStateStore } from '@/features/inbox/hooks/realtime/playerStateStore';
+import { recordMatch } from '@/features/inbox/hooks/realtime/reconciliationTelemetry';
 
 const log = getLogger('useExternalEvolution');
 

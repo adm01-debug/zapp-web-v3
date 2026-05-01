@@ -18,7 +18,7 @@ import { TextToSpeechButton } from './TextToSpeechButton';
 import { Reply, Forward, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { MessageStatusInline } from './chat/MessageStatusInline';
-import { useContactAvatar } from '@/hooks/realtime/useContactAvatar';
+import { useContactAvatar } from '@/features/inbox/hooks/realtime/useContactAvatar';
 
 function formatMessageTime(date: Date): string {
   return format(date, 'HH:mm');

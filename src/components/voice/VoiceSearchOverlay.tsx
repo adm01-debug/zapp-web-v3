@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
-import type { VoiceAgentPhase } from '@/hooks/voice/types';
+import type { VoiceAgentPhase } from '@/features/inbox/hooks/voice/types';
 import { VoiceOrb } from './VoiceOrb';
 import { FloatingParticles } from './FloatingParticles';
 import { AudioFrequencyVisualizer } from './AudioFrequencyVisualizer';
