@@ -4,11 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
-  Wifi, WifiOff, Save, Eye, EyeOff, RefreshCw, CheckCircle2, XCircle,
-  Loader2, ShieldCheck, Server, Key, ExternalLink,
+  Wifi, Save, Eye, EyeOff, RefreshCw, CheckCircle2, XCircle,
+  Loader2, ShieldCheck, Server, Key,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -32,7 +31,6 @@ export function EvolutionApiIntegrationView() {
   const [testMessage, setTestMessage] = useState('');
   const [loaded, setLoaded] = useState(false);
 
-  // Load saved config
   useEffect(() => {
     (async () => {
       try {
@@ -49,7 +47,7 @@ export function EvolutionApiIntegrationView() {
           });
         }
       } catch (err) {
-        console.warn('[evo-config] Failed to load config:', err);
+        console.warn('[evo-config] Failed to load:', err);
       } finally {
         setLoaded(true);
       }
@@ -61,22 +59,16 @@ export function EvolutionApiIntegrationView() {
       toast.error('Preencha a URL e a Chave de API');
       return;
     }
-
     setSaving(true);
     try {
       const { error } = await supabase
         .from('system_settings')
         .upsert(
-          {
-            key: SETTINGS_KEY,
-            value: JSON.stringify(config),
-            updated_at: new Date().toISOString(),
-          },
+          { key: SETTINGS_KEY, value: JSON.stringify(config), updated_at: new Date().toISOString() },
           { onConflict: 'key' }
         );
-
       if (error) throw error;
-      toast.success('Configura\u00e7\u00f5es da Evolution API salvas com sucesso!');
+      toast.success('Configurações da Evolution API salvas!');
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + (err?.message || 'Erro desconhecido'));
     } finally {
@@ -89,29 +81,26 @@ export function EvolutionApiIntegrationView() {
       toast.error('Preencha a URL e a Chave de API antes de testar');
       return;
     }
-
     setTesting(true);
     setTestResult(null);
     setTestMessage('');
-
     try {
       const url = config.evolution_api_url.replace(/\/+$/, '');
       const response = await fetch(`${url}/instance/fetchInstances`, {
         method: 'GET',
         headers: { apikey: config.evolution_api_key },
       });
-
       if (response.ok) {
         const data = await response.json();
         const instances = Array.isArray(data) ? data : [];
         const connected = instances.filter((i: any) => i.connectionStatus === 'open').length;
         setTestResult('success');
-        setTestMessage(`Conex\u00e3o OK! ${instances.length} inst\u00e2ncia(s) encontrada(s), ${connected} online.`);
-        toast.success('Conex\u00e3o com a Evolution API estabelecida!');
+        setTestMessage(`Conexão OK! ${instances.length} instância(s) encontrada(s), ${connected} online.`);
+        toast.success('Conexão com a Evolution API estabelecida!');
       } else if (response.status === 401) {
         setTestResult('error');
-        setTestMessage('Chave de API inv\u00e1lida. Verifique e tente novamente.');
-        toast.error('Chave de API inv\u00e1lida');
+        setTestMessage('Chave de API inválida. Verifique e tente novamente.');
+        toast.error('Chave de API inválida');
       } else {
         setTestResult('error');
         setTestMessage(`Erro HTTP ${response.status}: ${response.statusText}`);
@@ -119,10 +108,10 @@ export function EvolutionApiIntegrationView() {
       }
     } catch (err: any) {
       setTestResult('error');
-      setTestMessage(err?.message?.includes('fetch') 
-        ? 'N\u00e3o foi poss\u00edvel conectar. Verifique se a URL est\u00e1 correta e acess\u00edvel.'
+      setTestMessage(err?.message?.includes('fetch')
+        ? 'Não foi possível conectar. Verifique se a URL está correta e acessível.'
         : err?.message || 'Erro desconhecido');
-      toast.error('Falha na conex\u00e3o');
+      toast.error('Falha na conexão');
     } finally {
       setTesting(false);
     }
@@ -145,26 +134,24 @@ export function EvolutionApiIntegrationView() {
           </div>
           <div>
             <h2 className="font-display text-xl font-bold">Evolution API</h2>
-            <p className="text-sm text-muted-foreground">Configure a conex\u00e3o com sua inst\u00e2ncia Evolution API</p>
+            <p className="text-sm text-muted-foreground">Configure a conexão com sua instância Evolution API</p>
           </div>
         </div>
       </motion.div>
 
-      {/* Main config card */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Server className="w-4 h-4" />
-              Configura\u00e7\u00e3o do Servidor
+              Configuração do Servidor
             </CardTitle>
             <CardDescription>
-              Informe a URL e a chave de API da sua inst\u00e2ncia Evolution API.
-              Essas credenciais s\u00e3o usadas para conectar WhatsApp, gerar QR Codes e enviar mensagens.
+              Informe a URL e a chave de API da sua instância Evolution API.
+              Essas credenciais são usadas para conectar WhatsApp, gerar QR Codes e enviar mensagens.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* URL */}
             <div className="space-y-2">
               <Label htmlFor="evo-url" className="flex items-center gap-1.5">
                 <Server className="w-3.5 h-3.5" />
@@ -181,7 +168,6 @@ export function EvolutionApiIntegrationView() {
               <p className="text-[11px] text-muted-foreground">Exemplo: https://evolution.atomicabr.com.br</p>
             </div>
 
-            {/* API Key */}
             <div className="space-y-2">
               <Label htmlFor="evo-key" className="flex items-center gap-1.5">
                 <Key className="w-3.5 h-3.5" />
@@ -211,11 +197,10 @@ export function EvolutionApiIntegrationView() {
               </p>
             </div>
 
-            {/* Actions */}
             <div className="flex items-center gap-3 pt-2">
               <Button onClick={handleTest} variant="outline" disabled={testing || !config.evolution_api_key}>
                 {testing ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
-                Testar Conex\u00e3o
+                Testar Conexão
               </Button>
               <Button onClick={handleSave} disabled={saving || !config.evolution_api_key}>
                 {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
@@ -223,7 +208,6 @@ export function EvolutionApiIntegrationView() {
               </Button>
             </div>
 
-            {/* Test result */}
             {testResult && (
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
@@ -248,17 +232,16 @@ export function EvolutionApiIntegrationView() {
         </Card>
       </motion.div>
 
-      {/* Info card */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <Card className="border-primary/10 bg-primary/5">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               <div className="space-y-1">
-                <p className="text-sm font-medium">Seguran\u00e7a</p>
+                <p className="text-sm font-medium">Segurança</p>
                 <p className="text-xs text-muted-foreground">
-                  A chave de API \u00e9 armazenada de forma segura no banco de dados e nunca \u00e9 exposta no c\u00f3digo-fonte.
-                  Apenas usu\u00e1rios autenticados com permiss\u00e3o de administrador podem visualizar ou alterar essas configura\u00e7\u00f5es.
+                  A chave de API é armazenada de forma segura no banco de dados e nunca é exposta no código-fonte.
+                  Apenas usuários autenticados com permissão de administrador podem visualizar ou alterar essas configurações.
                 </p>
               </div>
             </div>
