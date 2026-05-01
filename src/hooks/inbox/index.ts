@@ -46,9 +46,8 @@ export * from '../useSpeechToText';
 export * from '../useTextToSpeech';
 export * from '../useMediaUrl';
 export * from '../useMediaRefresh';
-export * from '../useStickerPicker';
+export * from '../useStickerPicker/useStickerPicker';
 export * from '../useCustomEmojis';
-export * from '../useStickerPicker';
 
 // Collaboration
 export * from '../useTeamChat';
@@ -56,3 +55,4 @@ export * from '../useTeamChatDraft';
 export * from '../useTeamChatNotifications';
 export * from '../useTeamProfiles';
 export * from '../useTypingPresence';
+
