@@ -17,7 +17,7 @@ import { describe, it, expect } from 'vitest';
 import {
   FILTER_OPTIONS,
   filterByContactType,
-} from '../..';
+} from '@/features/inbox';
 import type { ConversationWithMessages } from '@/features/inbox';
 import {
   toIndividualJid,
