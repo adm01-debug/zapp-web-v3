@@ -1,144 +1,260 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.87.1";
-import { z } from "https://esm.sh/zod@3.23.8";
-import { handleCors, errorResponse, jsonResponse, Logger, requireEnv } from "../_shared/validation.ts";
-import { ensureValidToken, gmailFetch, syncLabels, syncMessages } from "../_shared/gmail-helpers.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const GmailSyncActionSchema = z.object({
-  action: z.enum(['sync-labels', 'sync-inbox', 'sync-incremental', 'get-thread', 'setup-watch']),
-  account_id: z.string().uuid("account_id must be a valid UUID"),
-  query: z.string().max(500).optional(),
-  maxResults: z.number().int().min(1).max(200).optional(),
-  thread_id: z.string().max(500).optional(),
-  topic_name: z.string().max(500).optional(),
-});
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
-const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
+const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 
 serve(async (req) => {
-  const corsResponse = handleCors(req);
-  if (corsResponse) return corsResponse;
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
-  const log = new Logger("gmail-sync");
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  );
+
+  const json = (data: unknown, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) { log.done(401); return errorResponse("Unauthorized", 401, req); }
+    const body  = await req.json();
+    const { action, accountId } = body;
 
-    const SUPABASE_URL = requireEnv("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+    // Obtém token válido (com auto-refresh)
+    const token = await getValidToken(supabase, accountId);
+    if (!token) return json({ error: 'Token inválido ou conta inexistente' }, 401);
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user } } = await userClient.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+    // ── listThreads ────────────────────────────────────────────────────
+    if (action === 'listThreads' || !action) {
+      const { labelIds = ['INBOX'], q = '', maxResults = 20, pageToken } = body;
 
-    const { data: profile } = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
-    if (!profile) throw new Error("Profile not found");
+      const params = new URLSearchParams({
+        maxResults: String(maxResults),
+        ...(labelIds.length ? { labelIds: labelIds.join(',') } : {}),
+        ...(q ? { q } : {}),
+        ...(pageToken ? { pageToken } : {}),
+      });
 
-    const rawBody = await req.json();
-    const parsed = GmailSyncActionSchema.safeParse(rawBody);
-    if (!parsed.success) {
-      const errors = parsed.error.flatten();
-      const msg = Object.entries(errors.fieldErrors).map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`).join('; ');
-      log.done(400);
-      return errorResponse(msg || "Invalid request", 400, req);
-    }
+      const listRes = await fetch(`${GMAIL_API}/threads?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const listData = await listRes.json();
+      if (listData.error) return json({ error: listData.error.message }, 400);
 
-    const body = parsed.data;
-    log.info("Processing action", { action: body.action, accountId: body.account_id });
-
-    const { data: account } = await supabase
-      .from("gmail_accounts")
-      .select("id, email_address, is_active, sync_status, token_expires_at, history_id, profile_id")
-      .eq("id", body.account_id).eq("profile_id", profile.id).eq("is_active", true).single();
-
-    if (!account) throw new Error("Gmail account not found or inactive");
-
-    const accessToken = await ensureValidToken(supabase, account, log);
-
-    switch (body.action) {
-      case "sync-labels": {
-        await syncLabels(supabase, account.id, accessToken);
-        log.done(200);
-        return jsonResponse({ success: true }, 200, req);
-      }
-
-      case "sync-inbox": {
-        await supabase.from("gmail_accounts").update({ sync_status: "syncing" }).eq("id", account.id);
-        try {
-          const result = await syncMessages(supabase, account.id, accessToken, log, body.query || "in:inbox", body.maxResults || 50);
-          const profileData = await gmailFetch(accessToken, "/profile");
-          await supabase.from("gmail_accounts").update({
-            sync_status: "synced", history_id: profileData.historyId,
-            last_sync_at: new Date().toISOString(), last_error: null,
-          }).eq("id", account.id);
-          log.done(200, { synced: result.synced });
-          return jsonResponse({ success: true, ...result }, 200, req);
-        } catch (err: unknown) {
-          await supabase.from("gmail_accounts").update({
-            sync_status: "error", last_error: err instanceof Error ? err.message : String(err),
-          }).eq("id", account.id);
-          throw err;
-        }
-      }
-
-      case "sync-incremental": {
-        if (!account.history_id) { log.done(400); return errorResponse("No history_id. Run full sync first.", 400, req); }
-        const historyData = await gmailFetch(accessToken, `/history?startHistoryId=${account.history_id}&historyTypes=messageAdded&historyTypes=messageDeleted&historyTypes=labelAdded&historyTypes=labelRemoved`);
-
-        const newMessageIds = new Set<string>();
-        for (const record of historyData.history || []) {
-          for (const added of record.messagesAdded || []) newMessageIds.add(added.message.id);
-        }
-
-        let synced = 0;
-        for (const msgId of newMessageIds) {
-          try { await gmailFetch(accessToken, `/messages/${msgId}?format=full`); synced++; } catch { /* deleted */ }
-        }
-
-        await supabase.from("gmail_accounts").update({
-          history_id: historyData.historyId || account.history_id,
-          last_sync_at: new Date().toISOString(),
-        }).eq("id", account.id);
-
-        log.done(200, { newMessages: newMessageIds.size });
-        return jsonResponse({ success: true, new_messages: newMessageIds.size }, 200, req);
-      }
-
-      case "get-thread": {
-        if (!body.thread_id) throw new Error("Missing thread_id");
-        const threadData = await gmailFetch(accessToken, `/threads/${body.thread_id}?format=full`);
-        log.done(200);
-        return jsonResponse(threadData, 200, req);
-      }
-
-      case "setup-watch": {
-        if (!body.topic_name) throw new Error("Missing topic_name");
-        const response = await fetch(`${GMAIL_API}/watch`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ topicName: body.topic_name, labelIds: ["INBOX"] }),
+      // Para cada thread, busca snippet e persistir no Supabase
+      const threads = [];
+      for (const t of listData.threads ?? []) {
+        const tRes = await fetch(`${GMAIL_API}/threads/${t.id}?format=metadata&metadataHeaders=Subject,From,Date`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        if (!response.ok) throw new Error(`Watch setup failed: ${await response.text()}`);
-        const watchData = await response.json();
-        await supabase.from("gmail_accounts").update({
-          history_id: watchData.historyId,
-          watch_expiration: new Date(parseInt(watchData.expiration)).toISOString(),
-        }).eq("id", account.id);
-        log.done(200);
-        return jsonResponse({ success: true, ...watchData }, 200, req);
+        const tData = await tRes.json();
+        if (tData.error) continue;
+
+        const firstMsg = tData.messages?.[0];
+        const lastMsg  = tData.messages?.[tData.messages.length - 1];
+        const hdrMap   = headerMap(firstMsg?.payload?.headers ?? []);
+        const subject  = hdrMap['subject'] ?? '(sem assunto)';
+        const fromH    = hdrMap['from'] ?? '';
+        const dateH    = lastMsg?.internalDate ? new Date(Number(lastMsg.internalDate)).toISOString() : null;
+        const labelIds = firstMsg?.labelIds ?? [];
+        const snippet  = lastMsg?.snippet ?? '';
+        const unread   = labelIds.includes('UNREAD') ? 1 : 0;
+
+        // Upsert no Supabase
+        const { data: thread } = await supabase
+          .from('gmail_threads')
+          .upsert({
+            account_id:           accountId,
+            thread_id:            t.id,
+            subject,
+            snippet,
+            label_ids:            labelIds,
+            last_message_at:      dateH,
+            unread_count:         unread,
+            message_count:        tData.messages?.length ?? 0,
+            participant_emails:   extractEmails(fromH),
+          }, { onConflict: 'account_id,thread_id' })
+          .select('id')
+          .single();
+
+        threads.push({ id: t.id, subject, snippet, fromHeader: fromH, lastActivity: dateH, unread: unread > 0, dbId: thread?.id });
       }
 
-      default:
-        log.done(400);
-        return errorResponse(`Unknown action: ${body.action}`, 400, req);
+      return json({ threads, nextPageToken: listData.nextPageToken ?? null });
     }
-  } catch (error) {
-    log.error("Gmail Sync error", { error: error instanceof Error ? error.message : String(error) });
-    log.done(500);
-    return errorResponse(error instanceof Error ? error.message : "Internal server error", 500, req);
+
+    // ── syncFull — sincronização completa inicial ──────────────────────
+    if (action === 'syncFull') {
+      const { maxResults = 50, labelIds = ['INBOX'] } = body;
+      const params = new URLSearchParams({
+        maxResults: String(maxResults),
+        ...(labelIds.length ? { labelIds: labelIds.join(',') } : {}),
+      });
+
+      const listRes = await fetch(`${GMAIL_API}/messages?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const listData = await listRes.json();
+      let count = 0;
+
+      for (const m of listData.messages ?? []) {
+        await fetchAndPersistMessage(supabase, token, accountId, m.id);
+        count++;
+      }
+
+      return json({ synced: count, nextPageToken: listData.nextPageToken });
+    }
+
+    // ── syncLabels — sincroniza labels do Gmail ────────────────────────
+    if (action === 'syncLabels') {
+      const lblRes = await fetch(`${GMAIL_API}/labels`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const lblData = await lblRes.json();
+
+      for (const lbl of lblData.labels ?? []) {
+        await supabase.from('gmail_labels').upsert({
+          account_id: accountId,
+          label_id:   lbl.id,
+          name:       lbl.name,
+          type:       lbl.type?.toLowerCase(),
+        }, { onConflict: 'account_id,label_id' });
+      }
+
+      return json({ synced: lblData.labels?.length ?? 0 });
+    }
+
+    return json({ error: `Ação desconhecida: ${action}` }, 400);
+
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[gmail-sync]', msg);
+    return json({ error: msg }, 500);
   }
 });
+
+// ── Helpers ────────────────────────────────────────────────────────────
+
+function headerMap(headers: Array<{name: string; value: string}>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const h of headers) out[h.name.toLowerCase()] = h.value;
+  return out;
+}
+
+function extractEmails(from: string): string[] {
+  const match = from.match(/<(.+?)>/);
+  return [match?.[1] ?? from].filter(Boolean);
+}
+
+async function getValidToken(supabase: ReturnType<typeof createClient>, accountId: string): Promise<string | null> {
+  const { data: acc } = await supabase
+    .from('gmail_accounts')
+    .select('access_token, token_expiry, refresh_token')
+    .eq('id', accountId)
+    .single();
+
+  if (!acc) return null;
+
+  const expiry = new Date(acc.token_expiry).getTime();
+  if (Date.now() < expiry - 5 * 60 * 1000) return acc.access_token;
+
+  // Refresh
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      refresh_token: acc.refresh_token,
+      client_id:     Deno.env.get('GOOGLE_CLIENT_ID')!,
+      client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+      grant_type:    'refresh_token',
+    }),
+  });
+  const tokens = await tokenRes.json();
+  if (tokens.error) { await supabase.from('gmail_accounts').update({ is_active: false }).eq('id', accountId); return null; }
+
+  const newExpiry = new Date(Date.now() + (tokens.expires_in ?? 3600) * 1000).toISOString();
+  await supabase.from('gmail_accounts').update({ access_token: tokens.access_token, token_expiry: newExpiry }).eq('id', accountId);
+  return tokens.access_token;
+}
+
+async function fetchAndPersistMessage(
+  supabase: ReturnType<typeof createClient>,
+  token: string,
+  accountId: string,
+  messageId: string
+): Promise<void> {
+  const msgRes = await fetch(`${GMAIL_API}/messages/${messageId}?format=full`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const msg = await msgRes.json();
+  if (msg.error) return;
+
+  const hdrs     = headerMap(msg.payload?.headers ?? []);
+  const threadId = msg.threadId;
+  const subject  = hdrs['subject'] ?? '(sem assunto)';
+  const fromH    = hdrs['from'] ?? '';
+  const toH      = (hdrs['to'] ?? '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  const ccH      = (hdrs['cc'] ?? '').split(',').map((s: string) => s.trim()).filter(Boolean);
+  const date     = msg.internalDate ? new Date(Number(msg.internalDate)).toISOString() : new Date().toISOString();
+  const snippet  = msg.snippet ?? '';
+  const labelIds = msg.labelIds ?? [];
+  const isRead   = !labelIds.includes('UNREAD');
+  const isSent   = labelIds.includes('SENT');
+
+  const fmatch   = fromH.match(/^(.*?)\s*<(.+?)>$/) ?? [];
+  const fromName = fmatch[1]?.trim() ?? fromH;
+  const fromEmail= fmatch[2] ?? fromH;
+
+  let bodyPlain = '', bodyHtml = '';
+  const walk = (parts: unknown[]): void => {
+    for (const p of parts ?? []) {
+      const part = p as Record<string, unknown>;
+      const data = ((part.body as Record<string,string>)?.data ?? '').replace(/-/g, '+').replace(/_/g, '/');
+      if (part.mimeType === 'text/plain') bodyPlain = atob(data);
+      else if (part.mimeType === 'text/html') bodyHtml = atob(data);
+      if (Array.isArray(part.parts)) walk(part.parts as unknown[]);
+    }
+  };
+  if (msg.payload?.parts) walk(msg.payload.parts);
+  else if (msg.payload?.body?.data) {
+    const data = msg.payload.body.data.replace(/-/g, '+').replace(/_/g, '/');
+    if (msg.payload.mimeType === 'text/html') bodyHtml = atob(data);
+    else bodyPlain = atob(data);
+  }
+
+  const { data: thread } = await supabase.from('gmail_threads').upsert({
+    account_id:          accountId,
+    thread_id:           threadId,
+    subject,
+    snippet,
+    label_ids:           labelIds,
+    last_message_at:     date,
+    unread_count:        isRead ? 0 : 1,
+    participant_emails:  extractEmails(fromH),
+  }, { onConflict: 'account_id,thread_id' }).select('id').single();
+
+  if (!thread) return;
+
+  await supabase.from('gmail_messages').upsert({
+    thread_id_ref:   thread.id,
+    account_id:      accountId,
+    message_id:      messageId,
+    from_email:      fromEmail,
+    from_name:       fromName,
+    to_emails:       toH,
+    cc_emails:       ccH,
+    bcc_emails:      [],
+    subject,
+    body_plain:      bodyPlain.substring(0, 50000),
+    body_html:       bodyHtml.substring(0, 200000),
+    snippet,
+    label_ids:       labelIds,
+    is_read:         isRead,
+    is_sent:         isSent,
+    has_attachments: !!(msg.payload?.parts ?? []).some((p: Record<string, unknown>) => p.filename),
+    internal_date:   date,
+  }, { onConflict: 'account_id,message_id' });
+}
