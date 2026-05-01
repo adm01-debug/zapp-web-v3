@@ -4,8 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { evaluateAutoRefresh } from '@/hooks/connections/qrAutoRefresh';
-import { whatsappConnectionRepository } from '../data-access/whatsappConnectionRepository';
-import { whatsappConnectionService } from '../services/whatsappConnectionService';
+import { whatsappConnectionRepository } from '@/features/connections/data-access/whatsappConnectionRepository';
+import { whatsappConnectionService } from '@/features/connections/services/whatsappConnectionService';
 
 
 export type WhatsAppApiType = 'evolution' | 'official';

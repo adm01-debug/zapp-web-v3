@@ -1,4 +1,4 @@
-import { messageRepository, Message } from '../data-access/messageRepository';
+import { messageRepository, Message } from '@/features/inbox/data-access/messageRepository';
 
 import { getLogger } from '@/lib/logger';
 
