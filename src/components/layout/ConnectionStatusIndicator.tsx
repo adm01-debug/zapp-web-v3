@@ -31,6 +31,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
   const [connections, setConnections] = useState<ConnectionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [reconnecting, setReconnecting] = useState<string | null>(null);
+  const [reconnectingAll, setReconnectingAll] = useState(false);
   const [open, setOpen] = useState(false);
   const cooldownRef = useRef<Map<string, number>>(new Map());
   const prevDisconnectedRef = useRef<Set<string>>(new Set());
@@ -78,16 +79,18 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleReconnect = async (conn: ConnectionRow) => {
+  const reconnectInstance = async (
+    conn: ConnectionRow,
+    opts: { silent?: boolean } = {}
+  ): Promise<{ ok: boolean; skipped?: boolean; error?: string; authError?: boolean }> => {
     const now = Date.now();
     const lastAttempt = cooldownRef.current.get(conn.instance_id) ?? 0;
     if (now - lastAttempt < RECONNECT_COOLDOWN_MS) {
       const wait = Math.ceil((RECONNECT_COOLDOWN_MS - (now - lastAttempt)) / 1000);
-      toast.info(`Aguarde ${wait}s antes de tentar novamente.`);
-      return;
+      if (!opts.silent) toast.info(`Aguarde ${wait}s antes de tentar novamente.`);
+      return { ok: false, skipped: true };
     }
     cooldownRef.current.set(conn.instance_id, now);
-    setReconnecting(conn.instance_id);
     try {
       const { data, error } = await supabase.functions.invoke('evolution-api', {
         body: { action: 'connect', instanceName: conn.instance_id },
@@ -97,22 +100,72 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
         const code = typeof data?.code === 'string' ? data.code : null;
         const message = data?.message || 'Erro Evolution API';
         if (code === 'EVOLUTION_AUTH_ERROR') {
-          toast.error(`Sem autorização: ${message}`, { duration: 8000 });
-          return;
+          if (!opts.silent) toast.error(`Sem autorização: ${message}`, { duration: 8000 });
+          return { ok: false, authError: true, error: message };
         }
         throw new Error(message);
       }
-      toast.success(`Reconectando ${conn.instance_id}…`);
-      window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
-      setOpen(false);
+      return { ok: true };
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Erro desconhecido';
       log.error('Reconnect failed', { instance: conn.instance_id, error: msg });
-      toast.error(`Erro: ${msg}`);
-    } finally {
-      setReconnecting(null);
+      return { ok: false, error: msg };
     }
   };
+
+  const handleReconnect = async (conn: ConnectionRow) => {
+    setReconnecting(conn.instance_id);
+    const result = await reconnectInstance(conn);
+    setReconnecting(null);
+    if (result.ok) {
+      toast.success(`Reconectando ${conn.instance_id}…`);
+      window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
+      setOpen(false);
+    } else if (!result.skipped && !result.authError) {
+      toast.error(`Erro: ${result.error ?? 'desconhecido'}`);
+    }
+  };
+
+  const handleReconnectAll = async () => {
+    const targets = connections.filter(c => c.status !== 'connected');
+    if (targets.length === 0) return;
+    setReconnectingAll(true);
+    let success = 0;
+    let skipped = 0;
+    let failed = 0;
+    let authErr = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const conn = targets[i];
+      setReconnecting(conn.instance_id);
+      const r = await reconnectInstance(conn, { silent: true });
+      if (r.ok) success++;
+      else if (r.skipped) skipped++;
+      else if (r.authError) authErr++;
+      else failed++;
+      // Throttle entre chamadas pra não sobrecarregar a edge function
+      if (i < targets.length - 1) await new Promise(res => setTimeout(res, 400));
+    }
+    setReconnecting(null);
+    setReconnectingAll(false);
+
+    const parts: string[] = [];
+    if (success > 0) parts.push(`${success} reconectando`);
+    if (skipped > 0) parts.push(`${skipped} em cooldown`);
+    if (failed > 0) parts.push(`${failed} com erro`);
+    if (authErr > 0) parts.push(`${authErr} sem autorização`);
+    const summary = parts.join(' · ') || 'Nenhuma ação executada';
+
+    if (success > 0 && failed === 0 && authErr === 0) {
+      toast.success(`Reconectando todas: ${summary}`);
+      window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
+      setOpen(false);
+    } else if (success > 0) {
+      toast.warning(`Reconexão parcial: ${summary}`, { duration: 7000 });
+    } else {
+      toast.error(`Falha ao reconectar: ${summary}`, { duration: 7000 });
+    }
+  };
+
 
   if (loading || connections.length === 0) return null;
 
@@ -161,11 +214,25 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
         </TooltipContent>
       </Tooltip>
       <PopoverContent side="right" align="start" className="w-72 p-0">
-        <div className="px-3 py-2 border-b border-border">
-          <p className="text-xs font-semibold text-foreground">WhatsApp — Conexões</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            {connected} de {total} conectada{total > 1 ? 's' : ''}
-          </p>
+        <div className="px-3 py-2 border-b border-border flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-foreground">WhatsApp — Conexões</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {connected} de {total} conectada{total > 1 ? 's' : ''}
+            </p>
+          </div>
+          {disconnected.length > 1 && (
+            <button
+              type="button"
+              onClick={handleReconnectAll}
+              disabled={reconnectingAll || reconnecting !== null}
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 shrink-0"
+              aria-label={`Reconectar todas as ${disconnected.length} instâncias desconectadas`}
+            >
+              <RefreshCw className={cn('w-3 h-3', reconnectingAll && 'animate-spin')} />
+              Reconectar todas ({disconnected.length})
+            </button>
+          )}
         </div>
         <ul className="max-h-72 overflow-auto py-1" role="list">
           {connections.map((c) => {
@@ -192,7 +259,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
                   <button
                     type="button"
                     onClick={() => handleReconnect(c)}
-                    disabled={isReconn}
+                    disabled={isReconn || reconnectingAll}
                     className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded border border-border hover:bg-muted text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                   >
                     <RefreshCw className={cn('w-3 h-3', isReconn && 'animate-spin')} />
