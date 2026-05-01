@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Check, CheckCheck, Clock, Loader2, Send, AlertCircle, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useMessageSendStatus } from '@/features/..';
+import { useMessageSendStatus } from '@/features/inbox/components/chat/inbox';
 
 type StepKey = 'queued' | 'sent' | 'delivered' | 'read';
 type StepState = 'done' | 'current' | 'pending' | 'failed';

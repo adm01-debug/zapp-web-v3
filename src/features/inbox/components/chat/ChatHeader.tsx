@@ -1,26 +1,26 @@
 import { cn } from '@/lib/utils';
-import { VisionIcon } from '@/features/ai-tools/VisionIcon';
+import { VisionIcon } from '@/features/inbox/components/chat/ai-tools/VisionIcon';
 import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion } from '@/components/ui/motion';
-import { TypingIndicatorCompact } from '@/features/TypingIndicator';
-import { SLAIndicatorForContact } from '@/features/SLAIndicatorForContact';
-import { VoiceSelector } from '@/features/VoiceSelector';
-import { KeyboardShortcutsHelp } from '@/features/KeyboardShortcutsHelp';
-import { QueuePositionNotifier } from '@/features/QueuePositionNotifier';
-import { RealtimeCollaboration } from '@/features/RealtimeCollaboration';
+import { TypingIndicatorCompact } from '@/features/inbox/components/chat/TypingIndicator';
+import { SLAIndicatorForContact } from '@/features/inbox/components/chat/SLAIndicatorForContact';
+import { VoiceSelector } from '@/features/inbox/components/chat/VoiceSelector';
+import { KeyboardShortcutsHelp } from '@/features/inbox/components/chat/KeyboardShortcutsHelp';
+import { QueuePositionNotifier } from '@/features/inbox/components/chat/QueuePositionNotifier';
+import { RealtimeCollaboration } from '@/features/inbox/components/chat/RealtimeCollaboration';
 import { useExternalContact360 } from '@/hooks/useExternalContact360';
 import { useContactIntelligence } from '@/hooks/useContactIntelligence';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { CrmBadges } from './CrmBadges';
-import { BusinessHoursBadge } from '@/features/BusinessHoursBadge';
-import { AnalysisBadges } from '@/features/AnalysisBadges';
+import { BusinessHoursBadge } from '@/features/inbox/components/chat/BusinessHoursBadge';
+import { AnalysisBadges } from '@/features/inbox/components/chat/AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench } from 'lucide-react';
-import { useContactAvatar } from '@/features/..';
+import { useContactAvatar } from '@/features/inbox/components/chat/inbox';
 
 const contactTypeConfig: Record<string, { label: string; icon: typeof Users; color: string }> = {
   cliente: { label: 'Cliente', icon: Users, color: 'bg-info/10 text-info border-info/30' },

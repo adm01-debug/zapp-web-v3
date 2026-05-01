@@ -6,7 +6,7 @@ import { Building, Briefcase, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { EnrichedContactData } from '@/hooks/useContactEnrichedData';
-import { ImagePreview } from '@/features/ImagePreview';
+import { ImagePreview } from '@/features/inbox/components/ImagePreview';
 import { useExternalContact360 } from '@/hooks/useExternalContact360';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import type { Conversation } from '@/types/chat';

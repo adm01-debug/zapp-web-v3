@@ -11,8 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Copy, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { useMessageDetails } from '@/features/..';
-import { useAuth } from '@/features/auth';
+import { useMessageDetails } from '@/features/inbox/components/chat/inbox';
+import { useAuth } from '@/features/inbox/components/chat/auth';
 import { MessageAttemptsTimeline } from './MessageAttemptsTimeline';
 import { MessageStatusTimeline } from './MessageStatusTimeline';
 

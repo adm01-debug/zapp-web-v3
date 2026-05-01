@@ -9,7 +9,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
-import { CRMSyncButton } from '@/features/CRMAutoSync';
+import { CRMSyncButton } from '@/features/inbox/components/CRMAutoSync';
 import type { Conversation } from '@/types/chat';
 
 interface ContactActionButtonsProps {

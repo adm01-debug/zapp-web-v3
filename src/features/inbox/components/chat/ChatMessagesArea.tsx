@@ -9,7 +9,7 @@ import { ChatWatermark } from './ChatWatermark';
 import { cn } from '@/lib/utils';
 import { Message, InteractiveButton } from '@/types/chat';
 import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
-import { TypingIndicator } from '@/features/TypingIndicator';
+import { TypingIndicator } from '@/features/inbox/components/chat/TypingIndicator';
 import { format } from 'date-fns';
 import { formatDateSeparator } from './messageUtils';
 import { MessageBubble } from './MessageBubble';

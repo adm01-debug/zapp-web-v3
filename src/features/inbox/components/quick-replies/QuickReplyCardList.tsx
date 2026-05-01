@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Star, Trash2, Edit2, Copy, Clock, TrendingUp, Sparkles,
 } from 'lucide-react';
-import { QuickReplyTemplate } from '@/features/..';
+import { QuickReplyTemplate } from '@/features/inbox';
 import { cn } from '@/lib/utils';
 
 interface QuickReplyCardListProps {

@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AIUsageDashboard } from '@/features/AIUsageDashboard';
+import { AIUsageDashboard } from '@/features/admin/components/AIUsageDashboard';
 import { BrowserRouter } from 'react-router-dom';
 
 beforeAll(() => {

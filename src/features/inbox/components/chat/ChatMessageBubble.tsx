@@ -5,14 +5,14 @@ import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from '@/components/ui/motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MessageReactions } from '@/features/MessageReactions';
-import { MessageImage } from '@/features/ImagePreview';
-import { DocumentPreview, VideoPreview } from '@/features/MediaPreview';
-import { AudioMessagePlayer } from '@/features/AudioMessagePlayer';
-import { InteractiveMessageDisplay, ButtonResponseBadge } from '@/features/InteractiveMessage';
-import { QuotedMessage } from '@/features/ReplyQuote';
-import { TextToSpeechButton } from '@/features/TextToSpeechButton';
-import { TextWithLinks } from '@/features/LinkPreview';
+import { MessageReactions } from '@/features/inbox/components/chat/MessageReactions';
+import { MessageImage } from '@/features/inbox/components/chat/ImagePreview';
+import { DocumentPreview, VideoPreview } from '@/features/inbox/components/chat/MediaPreview';
+import { AudioMessagePlayer } from '@/features/inbox/components/chat/AudioMessagePlayer';
+import { InteractiveMessageDisplay, ButtonResponseBadge } from '@/features/inbox/components/chat/InteractiveMessage';
+import { QuotedMessage } from '@/features/inbox/components/chat/ReplyQuote';
+import { TextToSpeechButton } from '@/features/inbox/components/chat/TextToSpeechButton';
+import { TextWithLinks } from '@/features/inbox/components/chat/LinkPreview';
 
 // Lazy-load mapbox-heavy LocationMessage component
 const LocationMessageDisplay = lazy(() => import('../LocationMessage').then(m => ({ default: m.LocationMessageDisplay })));

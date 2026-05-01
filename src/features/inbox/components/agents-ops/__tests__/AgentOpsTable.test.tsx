@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AgentOpsTable } from '@/features/AgentOpsTable';
+import { AgentOpsTable } from '@/features/inbox/components/AgentOpsTable';
 
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
 

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MFABackupCodes } from '@/features/MFABackupCodes';
+import { MFABackupCodes } from '@/features/auth/components/MFABackupCodes';
 
 // Mock clipboard
 Object.assign(navigator, {

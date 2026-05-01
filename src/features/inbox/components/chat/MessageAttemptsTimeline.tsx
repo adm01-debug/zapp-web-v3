@@ -11,7 +11,7 @@ import { Loader2, CheckCircle2, AlertTriangle, Clock, RotateCw, XCircle, ShieldO
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useMessageAttempts, type AttemptStatus } from '@/hooks/useMessageAttempts';
-import { useUserRole } from '@/features/auth';
+import { useUserRole } from '@/features/inbox/components/chat/auth';
 
 interface MessageAttemptsTimelineProps {
   messageId: string | null;

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { QuickReplyTemplate, CreateTemplateInput } from '@/features/..';
+import type { QuickReplyTemplate, CreateTemplateInput } from '@/features/inbox';
 
 interface QuickReplyDialogProps {
   open: boolean;

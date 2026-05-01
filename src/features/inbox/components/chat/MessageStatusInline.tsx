@@ -17,10 +17,10 @@ import { memo, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
 import { MessageStatusIcon } from './messageUtils';
-import { useMessageSendStatus } from '@/features/..';
-import { useFailureReason, formatFailureReason } from '@/features/..';
-import { clearSendStatus } from '@/features/..';
-import { useInboxStatusPref } from '@/features/..';
+import { useMessageSendStatus } from '@/features/inbox/components/chat/inbox';
+import { useFailureReason, formatFailureReason } from '@/features/inbox/components/chat/inbox';
+import { clearSendStatus } from '@/features/inbox/components/chat/inbox';
+import { useInboxStatusPref } from '@/features/inbox/components/chat/inbox';
 import { MessageStatusPanel } from './MessageStatusPanel';
 import { MessageStatusTimestamps } from './MessageStatusTimestamps';
 

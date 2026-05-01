@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
-import { MessageStatus } from '@/features/MessageStatus';
+import { MessageStatus } from '@/features/inbox/components/MessageStatus';
 
 /**
  * Garante que mensagens de áudio com status 'played' renderizam o ícone
