@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { SLAHistoryDashboard } from '@/features/slaSLAHistoryDashboard';
+import { SLAHistoryDashboard } from '@/features/sla';
 import { FloatingParticles } from '@/components/dashboard/FloatingParticles';
 import { AuroraBorealis } from '@/components/effects/AuroraBorealis';
 
