@@ -106,7 +106,8 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               <p className="text-[11px] text-muted-foreground truncate">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
             )}
             {conversation.lastMessage && (
-              <div className="mt-0.5">
+              <div className="mt-1 flex flex-col gap-1">
+                <SLAIndicatorForContact conversation={conversation} compact className="w-full justify-start" />
                 <RetryFailureBadge message={conversation.lastMessage} compact />
               </div>
             )}
