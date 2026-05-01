@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { useReactionMutations } from './reactions/useReactionMutations';
 import type { MessageReaction, UseMessageReactionsOptions } from './reactions/types';
 

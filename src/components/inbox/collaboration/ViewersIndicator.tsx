@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Eye, Edit3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 
 interface Viewer {
   id: string;

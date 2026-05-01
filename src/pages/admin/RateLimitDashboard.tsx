@@ -6,7 +6,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useRateLimitLogs } from '@/hooks/useRateLimitLogs';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole } from '@/features/auth';
 import { BlockedIPsPanel } from '@/components/security/BlockedIPsPanel';
 import { IPWhitelistPanel } from '@/components/security/IPWhitelistPanel';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

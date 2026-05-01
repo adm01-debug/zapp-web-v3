@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Plus, Trash2, Lock, Search, Shield } from "lucide-react";
-import { invalidateRouteRolesCache } from "@/hooks/useRouteRoles";
-import type { AppRole } from "@/hooks/useUserRole";
+import { invalidateRouteRolesCache } from "@/features/auth";
+import type { AppRole } from "@/features/auth";
 
 type RoutePermission = {
   path: string;

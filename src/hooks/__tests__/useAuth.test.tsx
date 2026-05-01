@@ -27,7 +27,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { AuthProvider, useAuth } from '@/features/auth';
 
 function wrapper({ children }: { children: React.ReactNode }) {
   return <AuthProvider>{children}</AuthProvider>;

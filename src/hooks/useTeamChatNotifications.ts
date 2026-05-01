@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { getLogger } from '@/lib/logger';

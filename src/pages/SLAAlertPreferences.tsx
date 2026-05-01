@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import {
   useSLAAlertPreferences,
   type SLAAlertPreferences,
-} from '@/hooks/useSLAAlertPreferences';
+} from '@/features/sla';
 
 interface PrefRow {
   key: keyof SLAAlertPreferences;

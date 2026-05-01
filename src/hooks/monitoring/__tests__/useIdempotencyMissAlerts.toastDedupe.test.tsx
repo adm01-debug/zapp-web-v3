@@ -15,7 +15,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/hooks/useUserRole', () => ({
+vi.mock('@/features/auth', () => ({
   // Hook reads `isDev`; we keep `isAdmin` too for any other callsite that
   // still expects the legacy field.
   useUserRole: () => ({ isAdmin: true, isDev: true, loading: false }),

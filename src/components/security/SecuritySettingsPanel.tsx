@@ -17,10 +17,10 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { MFASettings } from '@/components/mfa/MFASettings';
-import { useAuth } from '@/hooks/useAuth';
-import { useMFA } from '@/hooks/useMFA';
-import { useReauthentication } from '@/hooks/useReauthentication';
-import { ReauthDialog } from '@/components/auth/ReauthDialog';
+import { useAuth } from '@/features/auth';
+import { useMFA } from '@/features/auth';
+import { useReauthentication } from '@/features/auth';
+import { ReauthDialog } from '@/features/auth';
 import { toast } from 'sonner';
 
 interface SecuritySettingsPanelProps {

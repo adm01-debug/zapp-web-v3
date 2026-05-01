@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useTicketStatus } from '@/hooks/useTicketStatus';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { cn } from '@/lib/utils';
 import type { TicketStatus } from '@/lib/inbox/ticketStore';
 

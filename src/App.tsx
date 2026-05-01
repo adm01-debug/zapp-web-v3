@@ -33,7 +33,7 @@ function DeferredProviders({ children }: { children?: React.ReactNode }) {
 /** Deferred hooks component — lazy-loaded so hooks don't run until after first paint */
 const DeferredHooks = lazy(() =>
   import('@/hooks/useServiceWorker').then(swMod =>
-    import('@/hooks/useScreenProtection').then(spMod => ({
+    import('@/features/auth').then(spMod => ({
       default: forwardRef(function DeferredHooksInner(_props: Record<string, never>, _ref: React.ForwardedRef<unknown>) {
         swMod.useServiceWorker();
         spMod.useScreenProtection();

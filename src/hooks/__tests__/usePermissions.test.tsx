@@ -15,12 +15,12 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 const mockUseAuth = vi.fn();
-vi.mock('@/hooks/useAuth', () => ({
+vi.mock('@/features/auth', () => ({
   useAuth: () => mockUseAuth(),
   AuthProvider: ({ children }: any) => children,
 }));
 
-import { usePermissions } from '@/hooks/usePermissions';
+import { usePermissions } from '@/features/auth';
 
 function makeSelectChain(data: any[] = [], error: any = null) {
   return {

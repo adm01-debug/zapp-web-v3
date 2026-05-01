@@ -1,5 +1,5 @@
 import { SLAIndicator } from './SLAIndicator';
-import { useApplicableSLA, ApplicableSLA, SLAMatchedLevel } from '@/hooks/useApplicableSLA';
+import { useApplicableSLA, ApplicableSLA, SLAMatchedLevel } from '@/features/sla';
 import { Conversation } from '@/types/chat';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';

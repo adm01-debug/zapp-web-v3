@@ -31,7 +31,7 @@ import {
   type FailedMessageRow,
   type FailedMessageStatus,
 } from '@/hooks/monitoring/useFailedMessages';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole } from '@/features/auth';
 import { cn } from '@/lib/utils';
 import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
 import { BulkReprocessGuidedDialog } from '@/components/admin/BulkReprocessGuidedDialog';

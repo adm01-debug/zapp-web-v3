@@ -1,11 +1,11 @@
 import { forwardRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { TourProvider } from '@/components/onboarding/OnboardingTour';
 import { IndexContentConnected } from '@/components/layout/IndexContentConnected';
-import { useLoginAudit } from '@/hooks/useLoginAudit';
+import { useLoginAudit } from '@/features/auth';
 
 const Index = forwardRef<HTMLDivElement>(function Index(_props, _ref) {
   const navigate = useNavigate();

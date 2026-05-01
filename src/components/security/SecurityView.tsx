@@ -17,7 +17,7 @@ import { RateLimitRealtimeAlerts } from './RateLimitRealtimeAlerts';
 import { RateLimitConfigPanel } from './RateLimitConfigPanel';
 import { AuditLogDashboard } from './AuditLogDashboard';
 import { VirusTotalConfig } from './VirusTotalConfig';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole } from '@/features/auth';
 import { useSecurityPushNotifications } from '@/hooks/useSecurityPushNotifications';
 
 export function SecurityView() {

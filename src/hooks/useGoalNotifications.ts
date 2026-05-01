@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { playNotificationSound, showBrowserNotification } from '@/utils/notificationSounds';
 import { toast } from 'sonner';

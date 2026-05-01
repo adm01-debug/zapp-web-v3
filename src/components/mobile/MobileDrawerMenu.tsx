@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/hooks/useTheme';
-import { useUserRole, type AppRole } from '@/hooks/useUserRole';
+import { useUserRole, type AppRole } from '@/features/auth';
 import { IconButton } from '@/components/ui/icon-button';
 import {
   primaryNav,

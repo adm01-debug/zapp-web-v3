@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useMessageTemplates, type Template } from '@/hooks/useMessageTemplates';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 
 interface MessageTemplatesProps {
   onSelectTemplate: (content: string) => void;

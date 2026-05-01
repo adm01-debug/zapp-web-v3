@@ -18,7 +18,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { queryExternalProxy } from '@/lib/externalProxy';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole } from '@/features/auth';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('useIdempotencyMissAlerts');

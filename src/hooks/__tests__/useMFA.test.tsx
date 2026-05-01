@@ -31,7 +31,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 import { supabase } from '@/integrations/supabase/client';
-import { useMFA } from '@/hooks/useMFA';
+import { useMFA } from '@/features/auth';
 
 describe('useMFA', () => {
   beforeEach(() => {

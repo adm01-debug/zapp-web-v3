@@ -3,7 +3,7 @@ import { getLogger } from '@/lib/logger';
 
 const log = getLogger('TeamFileUploader');
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { Button } from '@/components/ui/button';
 import { Paperclip, Image as ImageIcon, FileText, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';

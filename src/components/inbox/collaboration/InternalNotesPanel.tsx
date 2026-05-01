@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { MentionInput } from './MentionInput';
 
 export function InternalNotesPanel({ contactId }: { contactId: string }) {

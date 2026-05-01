@@ -4,9 +4,9 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useCurrentModule } from '@/hooks/useCurrentModule';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAriaAnnouncer } from '@/hooks/useAriaAnnouncer';
-import { useUserRole, type AppRole } from '@/hooks/useUserRole';
+import { useUserRole, type AppRole } from '@/features/auth';
 import { ErrorBoundaryWithRetry } from '@/components/ui/error-boundary-retry';
-import { NotAuthorizedView } from '@/components/auth/NotAuthorizedView';
+import { NotAuthorizedView } from '@/features/auth';
 
 import * as Views from './lazyViews';
 

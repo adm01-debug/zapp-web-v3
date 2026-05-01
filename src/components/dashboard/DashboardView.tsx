@@ -21,7 +21,7 @@ import { SatisfactionMetrics } from './SatisfactionMetrics';
 import { SentimentTrendChart } from './SentimentTrendChart';
 import { ScheduledReportsManager } from './ScheduledReportsManager';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { useDashboardWidgets, DashboardWidget } from '@/hooks/useDashboardWidgets';
 import { ProgressiveDisclosureDashboard } from './ProgressiveDisclosureDashboard';
 import { DashboardFilters, DashboardFiltersState, getDefaultFilters } from './DashboardFilters';
