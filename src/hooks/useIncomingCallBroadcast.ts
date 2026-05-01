@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/features/auth';
 import { getLogger } from '@/lib/logger';
 import type { IncomingCall } from '@/types/incomingCall';
 
