@@ -1,5 +1,5 @@
 import { Suspense, useCallback, forwardRef, lazy, useState } from 'react';
-import { Target, Mic } from 'lucide-react';
+import { Target, Mic, Maximize2, Minimize2 } from 'lucide-react';
 import { useViewTransition } from '@/hooks/useViewTransition';
 import { cn } from '@/lib/utils';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -14,10 +14,9 @@ import { MobileShell } from '@/components/mobile/MobileShell';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useZenMode } from '@/hooks/useZenMode';
-import { Maximize2, Minimize2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
-import type { VoiceAgentAction } from '@/hooks/voice/types';
+import { useVoiceActionHandler } from '@/hooks/useVoiceActionHandler';
 
 const LazyVoiceOverlay = lazy(() => import('@/components/voice/VoiceSearchOverlayConnected'));
 
@@ -66,39 +65,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
     startTransition(() => setCurrentView(viewId));
   }, [startTransition, setCurrentView]);
 
-  const handleVoiceAction = useCallback((action: VoiceAgentAction) => {
-    switch (action.action) {
-      case 'navigate':
-        if (action.data?.route) {
-          handleViewChange(action.data.route);
-          toast.success(`Navegando para ${action.data.route}`);
-        }
-        break;
-      case 'search':
-        if (action.data?.query) {
-          handleViewChange('contacts');
-          toast.info(`Buscando: "${action.data.query}"`);
-        }
-        break;
-      case 'filter':
-        if (action.data?.filters) {
-          handleViewChange('inbox');
-          toast.info('Filtros aplicados por comando de voz');
-        }
-        break;
-      case 'sort':
-        if (action.data?.sortBy) {
-          toast.info(`Ordenação alterada: ${action.data.sortBy}`);
-        }
-        break;
-      case 'clear':
-        toast.info('Filtros limpos');
-        break;
-      case 'answer':
-        // Verbal response already given via TTS
-        break;
-    }
-  }, [handleViewChange]);
+  const handleVoiceAction = useVoiceActionHandler(handleViewChange);
 
   // Mobile edge-swipe navigation
   useSwipeNavigation({
@@ -110,6 +77,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
     edgeWidth: 20,
     threshold: 60,
   });
+
 
   return (
     <div className="flex h-screen max-h-screen min-h-screen bg-background overflow-hidden relative">
