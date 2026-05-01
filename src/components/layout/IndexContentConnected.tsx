@@ -17,7 +17,6 @@ import { WelcomeModal } from '@/components/onboarding/WelcomeModal';
 import { SLANotificationProvider } from '@/components/notifications/SLANotificationProvider';
 import { GoalNotificationProvider } from '@/components/notifications/GoalNotificationProvider';
 import { OfflineIndicator, ConnectionToast } from '@/components/ui/offline-indicator';
-import { EvolutionDisconnectBanner } from '@/components/alerts/EvolutionDisconnectBanner';
 import { DegradedConnectionsBanner } from '@/components/alerts/DegradedConnectionsBanner';
 
 export const IndexContentConnected = forwardRef<HTMLDivElement>(function IndexContentConnected(_props, _ref) {
