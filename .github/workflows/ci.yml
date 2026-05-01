@@ -63,6 +63,9 @@ jobs:
         run: npx tsc --noEmit
         continue-on-error: false
 
+      - name: 🛡️ Verify Domain Boundaries
+        run: npm run check:domain
+
   # ===========================================
   # JOB 2: Unit Tests
   # ===========================================
