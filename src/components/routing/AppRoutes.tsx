@@ -1,0 +1,124 @@
+import { lazy, Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Sparkles } from "lucide-react";
+import NotFound from "@/pages/NotFound";
+
+// Retry wrapper for lazy imports to handle transient network failures
+function lazyWithRetry(factory: () => Promise<any>, retries = 3): React.LazyExoticComponent<any> {
+  return lazy(() => {
+    let attempt = 0;
+    const load = (): Promise<any> =>
+      factory().catch((err: unknown) => {
+        attempt++;
+        if (attempt < retries) {
+          return new Promise(r => setTimeout(r, 1000 * attempt)).then(load);
+        }
+        throw err;
+      });
+    return load();
+  });
+}
+
+// Lazy-load ALL page routes
+const Index = lazyWithRetry(() => import("@/pages/Index"));
+const Auth = lazyWithRetry(() => import("@/pages/Auth"));
+const ForgotPassword = lazyWithRetry(() => import("@/pages/ForgotPassword"));
+const ResetPassword = lazyWithRetry(() => import("@/pages/ResetPassword"));
+const VerifyEmail = lazyWithRetry(() => import("@/pages/VerifyEmail"));
+const SSOCallback = lazyWithRetry(() => import("@/pages/SSOCallback"));
+const TwoFactorAuth = lazyWithRetry(() => import("@/pages/TwoFactorAuth"));
+const QueueDetails = lazyWithRetry(() => import("@/pages/QueueDetails"));
+const QueuesComparison = lazyWithRetry(() => import("@/pages/QueuesComparison"));
+const SLADashboard = lazyWithRetry(() => import("@/pages/SLADashboard"));
+const SLAHistory = lazyWithRetry(() => import("@/pages/SLAHistory"));
+const SLAAlertPreferences = lazyWithRetry(() => import("@/pages/SLAAlertPreferences"));
+const SLAAlertHistory = lazyWithRetry(() => import("@/pages/SLAAlertHistory"));
+const SendStatusBusDebug = lazyWithRetry(() => import("@/pages/SendStatusBusDebug"));
+const RealtimeFanoutDebug = lazyWithRetry(() => import("@/pages/RealtimeFanoutDebug"));
+const RolesPage = lazyWithRetry(() => import("@/pages/admin/RolesPage"));
+const DepartmentsPage = lazyWithRetry(() => import("@/pages/admin/DepartmentsPage"));
+const RateLimitDashboard = lazyWithRetry(() => import("@/pages/admin/RateLimitDashboard"));
+const HmacSelfTestPage = lazyWithRetry(() => import("@/pages/admin/HmacSelfTestPage"));
+const AdminChannelsPage = lazyWithRetry(() => import("@/pages/admin/AdminChannelsPage"));
+const AdminQueuesPage = lazyWithRetry(() => import("@/pages/admin/AdminQueuesPage"));
+const AdminOperationsPage = lazyWithRetry(() => import("@/pages/admin/AdminOperationsPage"));
+const AdminProvidersPage = lazyWithRetry(() => import("@/pages/admin/AdminProvidersPage"));
+const AdminFailedAuthMessagesPage = lazyWithRetry(() => import("@/pages/admin/AdminFailedAuthMessagesPage"));
+const RoutePermissionsPage = lazyWithRetry(() => import("@/pages/admin/RoutePermissionsPage"));
+const AdminStressTestPage = lazyWithRetry(() => import("@/pages/admin/AdminStressTestPage"));
+const AdminInboxSyncStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminInboxSyncStatusPage"));
+const AdminExternalDbExplorerPage = lazyWithRetry(() => import("@/pages/admin/AdminExternalDbExplorerPage"));
+const AdminEvoApiHealthPage = lazyWithRetry(() => import("@/pages/admin/AdminEvoApiHealthPage"));
+const AdminAutomationsPage = lazyWithRetry(() => import("@/pages/admin/AdminAutomationsPage"));
+const AdminAutomationLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminAutomationLogsPage"));
+const AdminWhatsAppModePage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppModePage"));
+const AdminWhatsAppLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppLogsPage"));
+const Install = lazyWithRetry(() => import("@/pages/Install"));
+const ChatPopup = lazyWithRetry(() => import("@/pages/ChatPopup"));
+
+// Route loading fallback component
+function RouteLoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-screen bg-background" role="status" aria-busy="true" aria-label="Carregando página">
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto animate-pulse">
+          <Sparkles className="w-8 h-8 text-primary" aria-hidden="true" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-32 mx-auto" />
+          <Skeleton className="h-3 w-24 mx-auto" />
+        </div>
+        <span className="sr-only">Carregando página...</span>
+      </div>
+    </div>
+  );
+}
+
+export function AppRoutes() {
+  return (
+    <Suspense fallback={<RouteLoadingFallback />}>
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/auth/callback" element={<SSOCallback />} />
+        <Route path="/2fa" element={<TwoFactorAuth />} />
+        <Route path="/install" element={<Install />} />
+        <Route path="/chat-popup/:contactId" element={<ProtectedRoute><ChatPopup /></ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/queue/:id" element={<ProtectedRoute><QueueDetails /></ProtectedRoute>} />
+        <Route path="/queues/comparison" element={<ProtectedRoute><QueuesComparison /></ProtectedRoute>} />
+        <Route path="/sla" element={<ProtectedRoute><SLADashboard /></ProtectedRoute>} />
+        <Route path="/sla/history" element={<ProtectedRoute><SLAHistory /></ProtectedRoute>} />
+        <Route path="/sla/preferences" element={<ProtectedRoute><SLAAlertPreferences /></ProtectedRoute>} />
+        <Route path="/sla/alerts" element={<ProtectedRoute><SLAAlertHistory /></ProtectedRoute>} />
+        <Route path="/debug/send-status-bus" element={<ProtectedRoute><SendStatusBusDebug /></ProtectedRoute>} />
+        <Route path="/debug/realtime-fanout" element={<ProtectedRoute><RealtimeFanoutDebug /></ProtectedRoute>} />
+        <Route path="/admin/roles" element={<ProtectedRoute requiredRoles={['admin']}><RolesPage /></ProtectedRoute>} />
+        <Route path="/admin/departments" element={<ProtectedRoute requiredRoles={['admin']}><DepartmentsPage /></ProtectedRoute>} />
+        <Route path="/admin/departamentos" element={<ProtectedRoute requiredRoles={['admin']}><DepartmentsPage /></ProtectedRoute>} />
+        <Route path="/admin/rate-limit" element={<ProtectedRoute requiredRoles={['admin']}><RateLimitDashboard /></ProtectedRoute>} />
+        <Route path="/admin/hmac-selftest" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><HmacSelfTestPage /></ProtectedRoute>} />
+        <Route path="/admin/operations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminOperationsPage /></ProtectedRoute>} />
+        <Route path="/admin/channels" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminChannelsPage /></ProtectedRoute>} />
+        <Route path="/admin/queues" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminQueuesPage /></ProtectedRoute>} />
+        <Route path="/admin/providers" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminProvidersPage /></ProtectedRoute>} />
+        <Route path="/admin/failed-auth-messages" element={<ProtectedRoute requiredRoles={['admin']}><AdminFailedAuthMessagesPage /></ProtectedRoute>} />
+        <Route path="/admin/route-permissions" element={<ProtectedRoute requiredRoles={['admin']}><RoutePermissionsPage /></ProtectedRoute>} />
+        <Route path="/admin/stress-test" element={<ProtectedRoute requiredRoles={['admin']}><AdminStressTestPage /></ProtectedRoute>} />
+        <Route path="/admin/inbox-sync-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminInboxSyncStatusPage /></ProtectedRoute>} />
+        <Route path="/admin/external-db-explorer" element={<ProtectedRoute requiredRoles={['admin', 'dev']}><AdminExternalDbExplorerPage /></ProtectedRoute>} />
+        <Route path="/admin/evo-api-health" element={<ProtectedRoute requiredRoles={['admin', 'dev']}><AdminEvoApiHealthPage /></ProtectedRoute>} />
+        <Route path="/admin/automations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationsPage /></ProtectedRoute>} />
+        <Route path="/admin/automations/logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationLogsPage /></ProtectedRoute>} />
+        <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
+        <Route path="/admin/settings/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
+        <Route path="/admin/whatsapp-logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppLogsPage /></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
+  );
+}
