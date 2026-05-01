@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import {
   Phone, PhoneOff, Mic, MicOff, Delete, Wifi, WifiOff, Loader2,
 } from 'lucide-react';
-import type { SipStatus, CallStatus } from '@/hooks/useSipClient';
+import type { SipStatus, CallStatus } from '@/features/inbox';
 
 interface DialPadProps {
   sipStatus: SipStatus;

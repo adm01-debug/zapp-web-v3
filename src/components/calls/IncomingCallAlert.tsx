@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CallDialog } from './CallDialog';
 import { useIncomingCallListener } from '@/hooks/useIncomingCallListener';
-import { useIncomingCallBroadcast } from '@/hooks/useIncomingCallBroadcast';
+import { useIncomingCallBroadcast } from '@/features/inbox';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { cn } from '@/lib/utils';
 

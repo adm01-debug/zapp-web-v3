@@ -15,7 +15,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCalls } from '@/hooks/useCalls';
+import { useCalls } from '@/features/inbox';
 import { logAudit } from '@/lib/audit';
 
 interface CallDialogProps {

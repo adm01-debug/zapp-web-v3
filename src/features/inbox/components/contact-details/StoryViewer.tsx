@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
-import type { WhatsAppStatusMessage } from '@/hooks/useWhatsAppStatus';
+import type { WhatsAppStatusMessage } from '@/features/inbox';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, Image as ImageIcon, Video, ChevronLeft, ChevronRight, X } from 'lucide-react';

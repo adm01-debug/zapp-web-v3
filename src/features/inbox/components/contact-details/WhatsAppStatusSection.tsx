@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useWhatsAppStatus, type WhatsAppStatusMessage } from '@/hooks/useWhatsAppStatus';
+import { useWhatsAppStatus, type WhatsAppStatusMessage } from '@/features/inbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, RefreshCw, Image as ImageIcon, Video, Type, Clock, WifiOff } from 'lucide-react';
