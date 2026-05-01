@@ -11,7 +11,7 @@ import { MessageStatusIcon } from './messageUtils';
 import { MessageStatusPanel } from './MessageStatusPanel';
 import { MessageStatusTimestamps } from './MessageStatusTimestamps';
 import { describeStatus, STAGE_LABEL_UNIFIED } from './messageStatusLanguage';
-import { useInboxStatusPref } from '../..';
+import { useInboxStatusPref } from '@/features/..';
 import type { Message } from '@/types/chat';
 
 interface Props {

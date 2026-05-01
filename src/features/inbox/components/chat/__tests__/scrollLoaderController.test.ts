@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createScrollLoaderController } from '../scrollLoaderController';
+import { createScrollLoaderController } from '@/features/scrollLoaderController';
 
 /**
  * Tests for ChatMessagesArea's scroll-to-top loader controller.

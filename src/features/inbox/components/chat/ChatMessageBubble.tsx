@@ -5,14 +5,14 @@ import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from '@/components/ui/motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MessageReactions } from '../MessageReactions';
-import { MessageImage } from '../ImagePreview';
-import { DocumentPreview, VideoPreview } from '../MediaPreview';
-import { AudioMessagePlayer } from '../AudioMessagePlayer';
-import { InteractiveMessageDisplay, ButtonResponseBadge } from '../InteractiveMessage';
-import { QuotedMessage } from '../ReplyQuote';
-import { TextToSpeechButton } from '../TextToSpeechButton';
-import { TextWithLinks } from '../LinkPreview';
+import { MessageReactions } from '@/features/MessageReactions';
+import { MessageImage } from '@/features/ImagePreview';
+import { DocumentPreview, VideoPreview } from '@/features/MediaPreview';
+import { AudioMessagePlayer } from '@/features/AudioMessagePlayer';
+import { InteractiveMessageDisplay, ButtonResponseBadge } from '@/features/InteractiveMessage';
+import { QuotedMessage } from '@/features/ReplyQuote';
+import { TextToSpeechButton } from '@/features/TextToSpeechButton';
+import { TextWithLinks } from '@/features/LinkPreview';
 
 // Lazy-load mapbox-heavy LocationMessage component
 const LocationMessageDisplay = lazy(() => import('../LocationMessage').then(m => ({ default: m.LocationMessageDisplay })));

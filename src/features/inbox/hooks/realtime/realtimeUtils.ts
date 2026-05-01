@@ -1,4 +1,4 @@
-import { RealtimeMessage, ConversationContact, ConversationWithMessages } from '../..';
+import { RealtimeMessage, ConversationContact, ConversationWithMessages } from '@/features/..';
 
 export function normalizeMessage(message: RealtimeMessage): RealtimeMessage {
   return {

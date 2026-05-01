@@ -48,7 +48,7 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-import { AudioMessagePlayer } from '../AudioMessagePlayer';
+import { AudioMessagePlayer } from '@/features/AudioMessagePlayer';
 
 // ─── Audio Element Mock ──────────────────────────────────
 let mockAudioPlaybackRate = 1;

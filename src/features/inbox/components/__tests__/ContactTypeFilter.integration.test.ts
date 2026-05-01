@@ -18,7 +18,7 @@ import {
   FILTER_OPTIONS,
   filterByContactType,
 } from '../..';
-import type { ConversationWithMessages } from '../..';
+import type { ConversationWithMessages } from '@/features/..';
 import {
   toIndividualJid,
   toGroupJid,

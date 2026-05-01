@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ContactHeaderSection } from '../ContactHeaderSection';
+import { ContactHeaderSection } from '@/features/ContactHeaderSection';
 
 // Minimal mocks
 vi.mock('@/hooks/useExternalContact360', () => ({

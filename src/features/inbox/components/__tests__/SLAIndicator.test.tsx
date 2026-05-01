@@ -9,7 +9,7 @@ vi.mock('framer-motion', () => ({
   },
 }));
 
-import { SLAIndicator } from '../SLAIndicator';
+import { SLAIndicator } from '@/features/SLAIndicator';
 
 describe('SLAIndicator', () => {
   const now = new Date('2026-04-08T12:00:00Z');

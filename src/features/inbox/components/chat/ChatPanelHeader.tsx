@@ -2,9 +2,9 @@ import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { TypingIndicatorCompact } from '../TypingIndicator';
+import { TypingIndicatorCompact } from '@/features/TypingIndicator';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { SLAIndicatorForContact } from '../SLAIndicatorForContact';
+import { SLAIndicatorForContact } from '@/features/SLAIndicatorForContact';
 import { ChatHeaderToolbar } from './ChatHeaderToolbar';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -12,7 +12,7 @@ import {
 
 import { MoreVertical, Tag, Archive, CheckCircle, Clock, ArrowRight, ArrowLeft, ExternalLink, XCircle } from 'lucide-react';
 import { openChatPopup } from '@/lib/popupManager';
-import { useContactAvatar } from '../..';
+import { useContactAvatar } from '@/features/..';
 
 interface ChatMessage { id: string; content: string; sender: string; timestamp: string; }
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;

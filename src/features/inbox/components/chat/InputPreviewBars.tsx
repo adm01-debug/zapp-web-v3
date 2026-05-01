@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Pencil, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ReplyPreview } from '../ReplyQuote';
+import { ReplyPreview } from '@/features/ReplyQuote';
 import { Message } from '@/types/chat';
 
 interface InputPreviewBarsProps {

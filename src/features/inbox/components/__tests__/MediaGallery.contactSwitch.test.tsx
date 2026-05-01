@@ -112,7 +112,7 @@ vi.mock('@/integrations/supabase/client', () => {
 });
 
 // Import AFTER mocks
-import { MediaGallery } from '../MediaGallery';
+import { MediaGallery } from '@/features/MediaGallery';
 
 function renderWithClient(ui: React.ReactElement) {
   const client = new QueryClient({

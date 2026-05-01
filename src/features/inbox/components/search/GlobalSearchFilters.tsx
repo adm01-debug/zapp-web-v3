@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
-import type { ResultType, DateFilter, MediaTypeFilter } from '../useGlobalSearchData';
+import type { ResultType, DateFilter, MediaTypeFilter } from '@/features/useGlobalSearchData';
 
 interface GlobalSearchFiltersProps {
   show: boolean;

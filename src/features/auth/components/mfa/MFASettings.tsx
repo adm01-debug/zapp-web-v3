@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, ShieldCheck, ShieldOff, Trash2, Plus, Loader2, AlertTriangle } from 'lucide-react';
-import { useMFA } from '../..';
+import { useMFA } from '@/features/..';
 import { MFAEnroll } from './MFAEnroll';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

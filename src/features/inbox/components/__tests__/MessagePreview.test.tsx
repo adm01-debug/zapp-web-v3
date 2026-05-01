@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { MessagePreview, useHasFormattableContent } from '../MessagePreview';
+import { MessagePreview, useHasFormattableContent } from '@/features/MessagePreview';
 import { renderHook } from '@testing-library/react';
 
 // ─── Mocks ───────────────────────────────────────────────

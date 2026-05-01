@@ -8,7 +8,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: (...args: any[]) => mockFrom(...args) },
 }));
 
-import { useAgentPendingCounts } from '../useAgentPendingCounts';
+import { useAgentPendingCounts } from '@/features/useAgentPendingCounts';
 
 function wrapper({ children }: any) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });

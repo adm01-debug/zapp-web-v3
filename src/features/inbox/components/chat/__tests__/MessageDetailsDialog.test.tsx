@@ -17,7 +17,7 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-import { MessageDetailsDialog } from '../MessageDetailsDialog';
+import { MessageDetailsDialog } from '@/features/MessageDetailsDialog';
 
 function wrap(ui: React.ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

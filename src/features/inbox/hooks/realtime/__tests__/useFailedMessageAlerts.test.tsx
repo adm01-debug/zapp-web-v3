@@ -23,7 +23,7 @@ vi.mock('@/integrations/supabase/client', () => {
 vi.mock('sonner', () => ({ toast: { error: vi.fn() } }));
 vi.mock('@/lib/logger', () => ({ getLogger: () => ({ warn: vi.fn(), info: vi.fn() }) }));
 
-import { useFailedMessageAlerts } from '../useFailedMessageAlerts';
+import { useFailedMessageAlerts } from '@/features/useFailedMessageAlerts';
 import * as supabaseMock from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 

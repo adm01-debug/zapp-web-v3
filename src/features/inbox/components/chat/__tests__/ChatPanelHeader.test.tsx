@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ChatPanelHeader } from '../ChatPanelHeader';
+import { ChatPanelHeader } from '@/features/ChatPanelHeader';
 import { Conversation } from '@/types/chat';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { BrowserRouter } from 'react-router-dom';
