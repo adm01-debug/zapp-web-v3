@@ -1,24 +1,22 @@
 /**
- * External Supabase Client — FATOR X (tdprnylgyrogbbhgdoik)
+ * External Supabase Client — FATOR X (Self-hosted VPS)
  *
- * Connects to the external CRM/WhatsApp database that holds the full
- * `evolution_*` domain (contacts, messages, conversations, calls, deals).
+ * Connects to the self-hosted Supabase on supabase.atomicabr.com.br
+ * which holds the full `evolution_*` domain (contacts, messages,
+ * conversations, calls, deals, BPM, AI agents).
  *
- * Uses environment variables:
- *   VITE_EXTERNAL_SUPABASE_URL
- *   VITE_EXTERNAL_SUPABASE_ANON_KEY
- *
- * IMPORTANT: When env vars are absent (e.g. in a fresh preview), the inbox
- * falls back to the server-side `external-db-proxy` edge function (which
- * uses service-role secrets). For that reason this module **never throws**
- * on import — consumers must check `isExternalConfigured` before using
- * `externalSupabase` directly, or use `getExternalSupabase()` which now
- * returns `null` instead of throwing.
+ * Priority: env vars > hardcoded self-hosted URL
+ * This ensures it works both in Lovable preview and production.
  */
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const EXTERNAL_SUPABASE_URL = import.meta.env.VITE_EXTERNAL_SUPABASE_URL || '';
-const EXTERNAL_SUPABASE_ANON_KEY = import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY || '';
+// Self-hosted Supabase on VPS AtomicaBR
+const SELF_HOSTED_URL = 'https://supabase.atomicabr.com.br';
+const SELF_HOSTED_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.rvamc0XHuSCYB1glBwOCCxgfd9yxWVYLnhFzg5-7TRk';
+
+// Env vars override hardcoded values (for flexibility)
+const EXTERNAL_SUPABASE_URL = import.meta.env.VITE_EXTERNAL_SUPABASE_URL || SELF_HOSTED_URL;
+const EXTERNAL_SUPABASE_ANON_KEY = import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY || SELF_HOSTED_ANON_KEY;
 
 export const isExternalConfigured = Boolean(EXTERNAL_SUPABASE_URL && EXTERNAL_SUPABASE_ANON_KEY);
 
@@ -39,21 +37,16 @@ export const externalSupabase: SupabaseClient | null = isExternalConfigured
 let warned = false;
 
 /**
- * Returns the external client or `null` if env vars are missing.
- * Consumers MUST handle the null case (typically by routing through
- * the `external-db-proxy` edge function or skipping a realtime subscribe).
- *
- * Historically this used to throw — that crashed the entire inbox at
- * module load when consumers initialized the client at import time.
- * It is now safe to call from any context.
+ * Returns the external client or `null` if configuration is missing.
+ * With hardcoded self-hosted URL, this should always return a valid client.
+ * Consumers MUST still handle the null case for safety.
  */
 export function getExternalSupabase(): SupabaseClient | null {
   if (!externalSupabase && !warned) {
     warned = true;
-    // eslint-disable-next-line no-console
     console.warn(
-      '[externalClient] FATOR X env vars missing — falling back to server-side proxy. ' +
-      'Set VITE_EXTERNAL_SUPABASE_URL and VITE_EXTERNAL_SUPABASE_ANON_KEY to enable direct realtime.',
+      '[externalClient] FATOR X config missing — this should not happen with hardcoded fallback. ' +
+      'Check SELF_HOSTED_URL and SELF_HOSTED_ANON_KEY.',
     );
   }
   return externalSupabase;
