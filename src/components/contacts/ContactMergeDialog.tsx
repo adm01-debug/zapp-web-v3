@@ -1,111 +1,273 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import React, { useState, useCallback } from 'react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogFooter, DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Merge, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { AlertTriangle, Merge, Check, User, GitMerge } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { sanitizeText } from '@/lib/sanitize';
 
-interface Contact {
-  id: string; name: string; surname?: string | null; phone: string;
-  email?: string | null; company?: string | null; job_title?: string | null;
-  contact_type?: string | null; tags?: string[] | null; created_at: string;
+// ── Types ──────────────────────────────────────────────────────────────────
+
+export interface ContactForMerge {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  company: string | null;
+  tags: string[];
+  channel: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  conversation_count?: number;
+  notes?: string | null;
+  lgpd_consent_at?: string | null;
+}
+
+type FieldChoice = 'primary' | 'secondary';
+
+interface FieldResolution {
+  name: FieldChoice;
+  phone: FieldChoice;
+  email: FieldChoice;
+  company: FieldChoice;
+  notes: FieldChoice;
 }
 
 interface ContactMergeDialogProps {
-  open: boolean; onOpenChange: (open: boolean) => void;
-  contacts: Contact[]; onMergeComplete: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  primaryContact: ContactForMerge;
+  secondaryContact: ContactForMerge;
+  onMergeComplete: (survivingId: string) => void;
 }
 
-const FIELDS = [
-  { key: 'name', label: 'Nome' }, { key: 'surname', label: 'Sobrenome' },
-  { key: 'phone', label: 'Telefone' }, { key: 'email', label: 'Email' },
-  { key: 'company', label: 'Empresa' }, { key: 'job_title', label: 'Cargo' },
-  { key: 'contact_type', label: 'Tipo' },
-] as const;
+// ── Sub-components ─────────────────────────────────────────────────────────
 
-type FieldKey = typeof FIELDS[number]['key'];
+function ContactCard({ contact, label, badge }: {
+  contact: ContactForMerge; label: string; badge?: string;
+}) {
+  return (
+    <div className="rounded-lg border bg-card p-4 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
+        {badge && <Badge variant="secondary">{badge}</Badge>}
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          {contact.avatar_url
+            ? <img src={contact.avatar_url} alt={sanitizeText(contact.name)} className="h-10 w-10 rounded-full object-cover" />
+            : <User className="h-5 w-5 text-primary" />}
+        </div>
+        <div>
+          <p className="font-semibold text-sm">{sanitizeText(contact.name)}</p>
+          <p className="text-xs text-muted-foreground">{sanitizeText(contact.phone ?? '—')}</p>
+        </div>
+      </div>
+      <div className="text-xs space-y-1 text-muted-foreground">
+        {[
+          ['Email',     contact.email],
+          ['Empresa',   contact.company],
+          ['Canal',     contact.channel],
+          ['Conversas', String(contact.conversation_count ?? 0)],
+          ['Criado em', new Date(contact.created_at).toLocaleDateString('pt-BR')],
+          ['LGPD',      contact.lgpd_consent_at ? '✅ Consentimento registrado' : '⚠️ Sem consentimento'],
+        ].map(([k, v]) => (
+          <div key={k}><span className="font-medium">{k}:</span> {sanitizeText(v ?? '—')}</div>
+        ))}
+        <div>
+          <span className="font-medium">Tags:</span>{' '}
+          {contact.tags.length > 0 ? contact.tags.map(sanitizeText).join(', ') : '—'}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-export function ContactMergeDialog({ open, onOpenChange, contacts, onMergeComplete }: ContactMergeDialogProps) {
-  const [selections, setSelections] = useState<Record<string, number>>(() => {
-    const init: Record<string, number> = {};
-    FIELDS.forEach(f => {
-      const idx = contacts.findIndex(c => c[f.key as keyof Contact]);
-      init[f.key] = idx >= 0 ? idx : 0;
-    });
-    return init;
+function FieldSelector({ fieldKey, label, primaryValue, secondaryValue, value, onChange }: {
+  fieldKey: string; label: string;
+  primaryValue: string; secondaryValue: string;
+  value: FieldChoice; onChange: (v: FieldChoice) => void;
+}) {
+  if (primaryValue === secondaryValue) return null; // no conflict
+  return (
+    <div className="space-y-2 py-2">
+      <p className="text-sm font-medium flex items-center gap-1">
+        <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+        {label}
+      </p>
+      <RadioGroup value={value} onValueChange={(v) => onChange(v as FieldChoice)} className="flex gap-4 flex-wrap">
+        {([['primary', primaryValue], ['secondary', secondaryValue]] as const).map(([side, val]) => (
+          <div key={side} className="flex items-center gap-2">
+            <RadioGroupItem value={side} id={`${fieldKey}-${side}`} />
+            <Label htmlFor={`${fieldKey}-${side}`} className="text-sm cursor-pointer">
+              {val || <span className="italic text-muted-foreground">vazio</span>}
+            </Label>
+          </div>
+        ))}
+      </RadioGroup>
+    </div>
+  );
+}
+
+// ── Main ───────────────────────────────────────────────────────────────────
+
+export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
+  open, onOpenChange, primaryContact, secondaryContact, onMergeComplete,
+}) => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [resolution, setResolution] = useState<FieldResolution>({
+    name: 'primary', phone: 'primary', email: 'primary',
+    company: 'primary', notes: 'primary',
   });
-  const [merging, setMerging] = useState(false);
 
-  if (contacts.length < 2) return null;
+  const pick = useCallback((field: keyof FieldResolution): string => {
+    const src = resolution[field] === 'primary' ? primaryContact : secondaryContact;
+    return sanitizeText((src as Record<string, unknown>)[field] as string ?? '');
+  }, [resolution, primaryContact, secondaryContact]);
 
   const handleMerge = async () => {
-    setMerging(true);
+    setLoading(true);
     try {
-      const primary = contacts[0];
-      const merged: Record<string, unknown> = {};
-      FIELDS.forEach(f => {
-        const src = contacts[selections[f.key]];
-        const val = src[f.key as keyof Contact];
-        if (val) merged[f.key] = val;
-      });
-      merged.tags = [...new Set(contacts.flatMap(c => c.tags || []))];
+      const mergedTags = [...new Set([...primaryContact.tags, ...secondaryContact.tags])];
 
-      await supabase.from('contacts').update(merged as never).eq('id', primary.id);
-      for (let i = 1; i < contacts.length; i++) {
-        await supabase.from('messages').update({ contact_id: primary.id }).eq('contact_id', contacts[i].id);
-        await supabase.from('contacts').delete().eq('id', contacts[i].id);
-      }
-      toast.success(`Contatos mesclados em "${merged.name}"`);
-      onMergeComplete(); onOpenChange(false);
-    } catch { toast.error('Erro ao mesclar'); }
-    finally { setMerging(false); }
+      // 1. Update primary with resolved fields
+      const { error: e1 } = await supabase
+        .from('contacts')
+        .update({
+          name:    pick('name'),
+          phone:   pick('phone'),
+          email:   pick('email'),
+          company: pick('company'),
+          notes:   pick('notes'),
+          tags:    mergedTags,
+          // Preserve oldest LGPD consent
+          lgpd_consent_at: primaryContact.lgpd_consent_at ?? secondaryContact.lgpd_consent_at,
+          merged_from_id: secondaryContact.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', primaryContact.id);
+      if (e1) throw e1;
+
+      // 2. Re-assign conversations
+      const { error: e2 } = await supabase
+        .from('conversations')
+        .update({ contact_id: primaryContact.id })
+        .eq('contact_id', secondaryContact.id);
+      if (e2) throw e2;
+
+      // 3. Re-assign messages
+      const { error: e3 } = await supabase
+        .from('messages')
+        .update({ contact_id: primaryContact.id })
+        .eq('contact_id', secondaryContact.id);
+      if (e3) throw e3;
+
+      // 4. Soft-delete secondary (never hard-delete — LGPD + audit trail)
+      const { error: e4 } = await supabase
+        .from('contacts')
+        .update({
+          deleted_at:     new Date().toISOString(),
+          deleted_reason: `merged_into:${primaryContact.id}`,
+        })
+        .eq('id', secondaryContact.id);
+      if (e4) throw e4;
+
+      toast({
+        title: '✅ Mesclagem concluída!',
+        description: `"${sanitizeText(secondaryContact.name)}" foi unificado em "${sanitizeText(primaryContact.name)}". Histórico completo preservado.`,
+      });
+      onMergeComplete(primaryContact.id);
+      onOpenChange(false);
+    } catch (err) {
+      console.error('[ContactMergeDialog]', err);
+      toast({ title: 'Erro ao mesclar', description: 'Tente novamente.', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const fields: Array<[keyof FieldResolution, string, keyof ContactForMerge]> = [
+    ['name', 'Nome', 'name'], ['phone', 'Telefone', 'phone'],
+    ['email', 'E-mail', 'email'], ['company', 'Empresa', 'company'],
+    ['notes', 'Notas', 'notes'],
+  ];
+
+  const conflictCount = fields.filter(([, , k]) =>
+    primaryContact[k] !== secondaryContact[k]).length;
+
+  const mergedTags = [...new Set([...primaryContact.tags, ...secondaryContact.tags])];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Merge className="w-5 h-5 text-primary" />Mesclar Contatos</DialogTitle>
-          <DialogDescription>Escolha qual valor manter para cada campo.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <GitMerge className="h-5 w-5 text-primary" />
+            Mesclar Contatos Duplicados
+          </DialogTitle>
+          <DialogDescription>
+            {conflictCount > 0
+              ? `${conflictCount} campo(s) com valores diferentes. Escolha qual manter.`
+              : 'Nenhum conflito de campos. Confirme a mesclagem.'}
+            {' '}O histórico completo de ambos os contatos será preservado.
+          </DialogDescription>
         </DialogHeader>
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-          <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
-          <p className="text-xs text-destructive">Mensagens serão movidas para o contato principal. Ação irreversível.</p>
+
+        <div className="grid grid-cols-2 gap-4">
+          <ContactCard contact={primaryContact} label="Principal" badge="Sobrevive" />
+          <ContactCard contact={secondaryContact} label="Secundário" badge="Será excluído" />
         </div>
-        <div className="space-y-3 max-h-[400px] overflow-y-auto">
-          {FIELDS.map(field => {
-            const values = contacts.map((c, i) => ({ index: i, value: String(c[field.key as keyof Contact] || '') })).filter(v => v.value);
-            if (values.length <= 1) return null;
-            return (
-              <div key={field.key} className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">{field.label}</p>
-                <RadioGroup value={String(selections[field.key])} onValueChange={v => setSelections(s => ({ ...s, [field.key]: parseInt(v) }))} className="flex flex-col gap-1">
-                  {values.map(v => (
-                    <Label key={v.index} htmlFor={`${field.key}-${v.index}`}
-                      className={cn('flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors',
-                        selections[field.key] === v.index ? 'border-primary/50 bg-primary/5' : 'border-transparent hover:bg-muted/50')}>
-                      <RadioGroupItem value={String(v.index)} id={`${field.key}-${v.index}`} />
-                      <span className="text-sm">{v.value}</span>
-                      {v.index === 0 && <Badge variant="secondary" className="text-[10px] h-4">principal</Badge>}
-                    </Label>
-                  ))}
-                </RadioGroup>
-              </div>
-            );
-          })}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleMerge} disabled={merging} className="gap-2">
-            {merging ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-            Mesclar {contacts.length}
+
+        {conflictCount > 0 && (
+          <>
+            <Separator />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Resolver conflitos de campos</p>
+              {fields.map(([field, label, k]) => (
+                <FieldSelector
+                  key={field}
+                  fieldKey={field}
+                  label={label}
+                  primaryValue={sanitizeText(primaryContact[k] as string ?? '')}
+                  secondaryValue={sanitizeText(secondaryContact[k] as string ?? '')}
+                  value={resolution[field]}
+                  onChange={(v) => setResolution((r) => ({ ...r, [field]: v }))}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        {mergedTags.length > 0 && (
+          <div className="rounded-md bg-muted/50 p-3 text-sm">
+            <p className="font-medium mb-2">Tags resultantes (união automática):</p>
+            <div className="flex flex-wrap gap-1">
+              {mergedTags.map((tag) => (
+                <Badge key={tag} variant="outline" className="text-xs">{sanitizeText(tag)}</Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button onClick={handleMerge} disabled={loading} className="gap-2">
+            {loading ? 'Mesclando...' : <><Check className="h-4 w-4" />Confirmar Mesclagem</>}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default ContactMergeDialog;
