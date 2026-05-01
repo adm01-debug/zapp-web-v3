@@ -1,6 +1,10 @@
 import { whatsappConnectionRepository } from '../data-access/whatsappConnectionRepository';
 import { supabase } from '@/integrations/supabase/client';
 
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('whatsappConnectionService');
+
 export const whatsappConnectionService = {
   generateInstanceName(name: string) {
     return name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').slice(0, 30) +
@@ -33,26 +37,51 @@ export const whatsappConnectionService = {
   },
 
   async logQrAttempt(connId: string, instanceId: string, name: string, status: string = 'pending') {
-    const { data: userData } = await supabase.auth.getUser();
-    return whatsappConnectionRepository.logQrAttempt({
-      connection_id: connId,
-      instance_id: instanceId,
-      connection_name: name,
-      status,
-      requested_by: userData.user?.id ?? null,
-    });
+    try {
+      log.debug(`Logging QR attempt for ${instanceId} (${status})`);
+      const { data: userData } = await supabase.auth.getUser();
+      const result = await whatsappConnectionRepository.logQrAttempt({
+        connection_id: connId,
+        instance_id: instanceId,
+        connection_name: name,
+        status,
+        requested_by: userData.user?.id ?? null,
+      });
+      if (result.error) {
+        log.error('Error logging QR attempt:', result.error);
+      }
+      return result;
+    } catch (err) {
+      log.error('Failed to log QR attempt:', err);
+      throw err;
+    }
   },
 
   async requestQrCode(instanceId: string) {
-    const { data, error } = await whatsappConnectionRepository.callEvolutionApi({
-      action: 'connect',
-      instanceName: instanceId
-    });
+    if (!instanceId) throw new Error('ID da instância é obrigatório');
+    
+    try {
+      log.info(`Requesting QR code for instance ${instanceId}`);
+      const { data, error } = await whatsappConnectionRepository.callEvolutionApi({
+        action: 'connect',
+        instanceName: instanceId
+      });
 
-    if (error) throw new Error(error.message || 'Erro ao gerar QR Code');
-    if (data?.error === true) {
-      throw new Error(data.message || 'Erro ao gerar QR Code');
+      if (error) {
+        log.error(`API error requesting QR for ${instanceId}:`, error);
+        throw new Error(error.message || 'Erro ao gerar QR Code na API');
+      }
+      
+      if (data?.error === true) {
+        log.error(`Evolution API returned error for ${instanceId}:`, data);
+        throw new Error(data.message || 'A API do Evolution retornou um erro ao gerar o QR Code');
+      }
+      
+      log.info(`QR code successfully received for ${instanceId}`);
+      return data;
+    } catch (err) {
+      log.error(`Critical failure requesting QR for ${instanceId}:`, err);
+      throw err;
     }
-    return data;
   }
 };
