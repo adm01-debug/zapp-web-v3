@@ -1,28 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { log } from '@/lib/logger';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
+import { messageService } from '../services/messageService';
+import { messageRepository, Message } from '../data-access/messageRepository';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
-export interface Message {
-  id: string;
-  contact_id: string | null;
-  agent_id: string | null;
-  content: string;
-  sender: string;
-  message_type: string;
-  media_url: string | null;
-  is_read: boolean | null;
-  status: 'sent' | 'delivered' | 'read' | 'failed' | null;
-  status_updated_at: string | null;
-  created_at: string;
-  updated_at: string;
-  external_id: string | null;
-  whatsapp_connection_id: string | null;
-  transcription: string | null;
-  transcription_status: string | null;
-  is_deleted: boolean | null;
-}
+export type { Message };
 
 interface UseMessagesOptions {
   contactId: string | null;
@@ -54,36 +37,8 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
       setLoading(true);
       setError(null);
 
-      // Fetch all messages using pagination to bypass the 1000 row default limit
-      type MessageRow = Omit<Message, 'isEdited'>;
-      let allData: MessageRow[] = [];
-      let from = 0;
-      const PAGE_SIZE = 1000;
-      let hasMore = true;
-
-      while (hasMore) {
-        const { data: page, error: fetchError } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('contact_id', contactId)
-          .order('created_at', { ascending: true })
-          .range(from, from + PAGE_SIZE - 1);
-
-        if (fetchError) throw fetchError;
-
-        if (page && page.length > 0) {
-          allData = allData.concat(page as MessageRow[]);
-          from += PAGE_SIZE;
-          hasMore = page.length === PAGE_SIZE;
-        } else {
-          hasMore = false;
-        }
-      }
-
-      const mappedMessages: Message[] = allData.map((m) => ({
-        ...m,
-        isEdited: !!(m as any).is_edited,
-      }));
+      const mappedMessages = await messageService.getAllMessagesForContact(contactId);
+      
       if (mountedRef.current) setMessages(mappedMessages);
     } catch (err) {
       log.error('Error fetching messages:', err);
@@ -154,44 +109,14 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
     logMessagesSubscribe('useMessages', { event: 'UPDATE', table: 'messages', filter: `contact_id=eq.${contactId}` });
     logMessagesSubscribe('useMessages', { event: 'DELETE', table: 'messages', filter: `contact_id=eq.${contactId}` });
 
-    const channel = supabase
-      .channel(`messages:${contactId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `contact_id=eq.${contactId}`,
-        },
-        wrapMessagesHandler('useMessages', handleNewMessage)
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-          filter: `contact_id=eq.${contactId}`,
-        },
-        wrapMessagesHandler('useMessages', handleMessageUpdate)
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'messages',
-          filter: `contact_id=eq.${contactId}`,
-        },
-        wrapMessagesHandler('useMessages', handleMessageDelete)
-      )
-      .subscribe((status) => {
-        log.debug(`Messages realtime subscription (${contactId}):`, status);
-      });
+    const channel = messageRepository.subscribeToMessages(contactId, {
+      onInsert: wrapMessagesHandler('useMessages', handleNewMessage),
+      onUpdate: wrapMessagesHandler('useMessages', handleMessageUpdate),
+      onDelete: wrapMessagesHandler('useMessages', handleMessageDelete),
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      messageRepository.unsubscribe(channel);
     };
   }, [contactId, enabled, handleNewMessage, handleMessageUpdate, handleMessageDelete]);
 
