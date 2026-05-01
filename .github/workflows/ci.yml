@@ -66,6 +66,9 @@ jobs:
       - name: 🛡️ Verify Domain Boundaries
         run: npm run check:domain
 
+      - name: 📦 Validate Barrel Exports
+        run: npm run check:barrels
+
   # ===========================================
   # JOB 2: Unit Tests
   # ===========================================
