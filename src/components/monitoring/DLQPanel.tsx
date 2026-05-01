@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Inbox, RefreshCw, RotateCw, Ban, ChevronDown, ChevronRight, AlertOctagon, Clock, Loader2, ListChecks } from 'lucide-react';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
-import { useFailedMessages, type FailedMessageStatus } from '@/features/admin/useFailedMessages';
+import { useFailedMessages, type FailedMessageStatus } from '@/features/admin';
 import { cn } from '@/lib/utils';
 
 const HOUR_OPTIONS = [

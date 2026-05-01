@@ -1,6 +1,6 @@
 import { NPSDashboard } from '@/components/nps/NPSDashboard';
 import { FollowUpSequences } from '@/components/settings/FollowUpSequences';
-import { QuickRepliesManager } from '@/features/inbox/QuickRepliesManager';
+import { QuickRepliesManager } from '@/features/inbox';
 import { StickerManager } from '@/features/inbox/stickers/StickerManager';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';

@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/tooltip';
 
 const ChatPanel = lazy(() =>
-  import('@/features/inbox/ChatPanel').then((m) => ({ default: m.ChatPanel }))
+  import('@/features/inbox').then((m) => ({ default: m.ChatPanel }))
 );
 
 interface RawMessage {

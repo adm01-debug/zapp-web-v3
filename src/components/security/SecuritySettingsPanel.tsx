@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MFASettings } from '@/features/auth/MFASettings';
+import { MFASettings } from '@/features/auth';
 import { useAuth } from '@/features/auth';
 import { useMFA } from '@/features/auth';
 import { useReauthentication } from '@/features/auth';

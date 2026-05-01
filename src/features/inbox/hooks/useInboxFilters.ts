@@ -2,12 +2,12 @@ import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
-import { InboxFiltersState } from '@/features/inbox/InboxFilters';
+import { InboxFiltersState } from '@/features/inbox';
 import { ConversationWithMessages } from '@/features/inbox';
-import { filterByContactType } from '@/features/inbox/ContactTypeFilter';
+import { filterByContactType } from '@/features/inbox';
 import { isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
-import { MainTab, SubTab } from '@/features/inbox/TicketTabs';
-import { useFailureMetricsBatch, type FailureCategory } from '@/features/inbox/useFailureMetricsBatch';
+import { MainTab, SubTab } from '@/features/inbox';
+import { useFailureMetricsBatch, type FailureCategory } from '@/features/inbox';
 import { useAllTicketStates } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
 

@@ -22,7 +22,7 @@ import {
   Plus, Pencil, Pause, Play, PowerOff, Eraser, MessageSquare,
   Instagram, Send, Mail, Globe, Search, Facebook,
 } from "lucide-react";
-import { EvolutionFallbackStatusCard } from "@/features/admin/EvolutionFallbackStatusCard";
+import { EvolutionFallbackStatusCard } from "@/features/admin";
 import { log } from "@/lib/logger";
 
 const CHANNEL_TYPES = [

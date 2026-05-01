@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Copy, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
-import type { RecentSend } from '@/features/inbox/useAgentRecentSends';
+import type { RecentSend } from '@/features/inbox';
 
 interface Props {
   agentName: string;

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollText, ChevronDown, ChevronRight, RefreshCw, RotateCw, Ban, ListChecks, PlayCircle, History } from 'lucide-react';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
-import { useDlqAuditLog, type DlqAuditEntry } from '@/features/admin/useDlqAuditLog';
+import { useDlqAuditLog, type DlqAuditEntry } from '@/features/admin';
 import { cn } from '@/lib/utils';
 
 const ACTION_META: Record<string, { label: string; tone: 'default' | 'success' | 'warning' | 'destructive'; icon: React.ComponentType<{ className?: string }> }> = {

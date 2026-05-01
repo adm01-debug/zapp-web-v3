@@ -18,7 +18,7 @@ import { WarRoomMetricCard } from './war-room/WarRoomMetricCard';
 import { WarRoomQueueRow } from './war-room/WarRoomQueueRow';
 import { WarRoomAlertRow } from './war-room/WarRoomAlertRow';
 import { WarRoomAgentCard } from './war-room/WarRoomAgentCard';
-import { AgentReassignmentPanel } from '@/features/inbox/AgentReassignmentPanel';
+import { AgentReassignmentPanel } from '@/features/inbox';
 
 interface WarRoomDashboardProps {
   agents?: WarRoomAgent[];
