@@ -1,56 +1,60 @@
-# Destravar o preview — corrigir build TypeScript
+## Problema
 
-## O que está acontecendo
+O banner vermelho gigante fixo no topo (`EvolutionDisconnectBanner`) ocupa toda a largura da tela, empurra o conteúdo para baixo e tem visual agressivo (`bg-destructive`, animação de pulse, ícone grande). Aparece sempre que `whatsapp_connections.status = 'disconnected'`.
 
-O preview abre, mas a tela fica branca. Não é mais o HTTP 412 — agora é o **Vite recusando a compilar** por causa de 5 erros de tipo do Supabase. Sem build, nada renderiza.
+Já existe um componente discreto e elegante para o mesmo dado: `WhatsAppConnectionStatus` (badge pequeno verde/vermelho com contagem `connected/total`), atualmente usado dentro da `ConversationListSidebar` do Inbox.
 
-A causa é a mesma em todos: o cliente Supabase usa um tipo estrito (`RejectExcessProperties`) para `update()` e `insert()`. Passar um objeto genérico (`Record<string, unknown>`, `Record<string, any>`, ou `{ [field]: value }` com chave dinâmica) é tratado como "propriedade não-conhecida da tabela" e bloqueia a compilação. Não é bug do schema — é só uma anotação de tipo faltando.
+## Solução
 
-## Arquivos e correções
+Trocar o banner intrusivo por um **chip discreto no header global**, com Popover de detalhes e ação de reconectar — mantendo a informação acessível sem ser irritante.
 
-```text
-1. src/components/contacts/ContactMergeDialog.tsx (linha 57)
-   merged: Record<string, unknown>   →   merged: Database['public']['Tables']['contacts']['Update']
-   .update(merged)                   →   .update(merged as never)  (alternativa simples)
+### 1. Remover o banner fixo
 
-2. src/components/contacts/ContactMergePanel.tsx (linha 80)
-   mergedData: Record<string, any>   →   tipar como ContactsUpdate
-   .update(mergedData)               →   passa tipado
+- Em `src/components/layout/IndexContentConnected.tsx`:
+  - Remover o import e a renderização de `<EvolutionDisconnectBanner />` (linhas 20 e 96).
+- Marcar `src/components/alerts/EvolutionDisconnectBanner.tsx` como deprecated (manter o arquivo por enquanto, sem uso) ou deletar — preferência: **deletar** para evitar regressão.
 
-3. src/components/contacts/InlineEditCell.tsx (linha 33)
-   .update({ [field]: editValue || null })
-     → .update({ [field]: editValue || null } as Database['public']['Tables']['contacts']['Update'])
+### 2. Criar indicador compacto no header
 
-4. src/components/inbox/contact-details/ContactInfoSection.tsx (linha 107)
-   .update({ [field]: value })
-     → mesmo cast da linha acima
+Novo componente `src/components/layout/ConnectionStatusIndicator.tsx`:
 
-5. src/hooks/useGeoBlocking.ts (linha 71)
-   .from(table).insert({ country_code, country_name, [userField]: user?.id })
-     → o problema é que `table` é union ('allowed_countries' | 'blocked_countries') e o
-       objeto literal não satisfaz nenhum dos dois schemas isoladamente.
-     Solução: separar em dois branches if/else, um por tabela, com objetos
-     literais concretos. Sem cast, código mais legível.
-```
+- Reaproveita a lógica de `EvolutionDisconnectBanner` (query + realtime em `whatsapp_connections`) e a ação `handleReconnect` (com cooldown de 30s e tratamento `EVOLUTION_AUTH_ERROR`).
+- Renderização:
+  - **Tudo OK** → ícone `Wifi` pequeno em `text-emerald-500`, sem destaque (ou nada — opcional).
+  - **1+ desconectada** → botão chip pequeno (`h-7 px-2`) com ícone `WifiOff` âmbar/vermelho sutil + texto curto "wpp2 offline" (ou "2 offline").
+  - Clique abre `Popover` (shadcn) listando as instâncias desconectadas com botão "Reconectar" individual + cooldown.
+- Sem `position: fixed`, sem `motion` de slide, sem ocupar largura inteira. Cores semânticas (`text-destructive`, `bg-destructive/10`), nada de `bg-destructive` chapado.
+- Acessibilidade: `aria-label`, foco visível, `role="status"` com `aria-live="polite"` para mudanças de estado.
 
-## Abordagem
+### 3. Posicionar o indicador no header
 
-Para 1–4 (updates de `contacts` com chaves dinâmicas), o caminho mais limpo é importar o tipo da tabela e tipar o objeto antes do `.update()`:
+- Adicionar `<ConnectionStatusIndicator />` no header global (provavelmente `AppShell` / `AppHeader` — confirmar arquivo durante implementação) ao lado dos demais ícones de status (notificações, sirene, etc.).
+- Manter `WhatsAppConnectionStatus` na sidebar do Inbox como está (já é discreto e contextual).
 
-```ts
-import type { Database } from '@/integrations/supabase/types';
-type ContactsUpdate = Database['public']['Tables']['contacts']['Update'];
+### 4. Notificação inicial (opcional, recomendado)
 
-const merged: ContactsUpdate = {};
-// ...
-await supabase.from('contacts').update(merged).eq('id', primary.id);
-```
+- Quando uma instância transiciona de `connected` → `disconnected`, disparar **um único toast** (sonner, variant `warning`, duração 6s) com botão "Reconectar". Não repetir enquanto o usuário não dispensar; deduplicar por `instance_id`.
+- Isso preserva o "alerta ativo" sem precisar do banner permanente.
 
-Para 5 (insert em tabela union), refatorar pra dois inserts dedicados, um por aba (`whitelist` → `allowed_countries`, `blacklist` → `blocked_countries`). Mais verboso, mas o TS valida cada um corretamente.
+## Detalhes técnicos
+
+- **Cores**: usar tokens semânticos (`text-destructive`, `bg-destructive/10`, `border-destructive/30`) — nunca hardcoded. Para estado "atenção" preferir âmbar (`text-amber-500`) ao vermelho puro.
+- **Tamanho**: chip `h-7`, ícone `w-3.5 h-3.5`, texto `text-xs`. Touch target mínimo 44px garantido via `min-h-11` no wrapper invisível ou padding.
+- **Realtime**: manter o canal Supabase (`whatsapp_connections` UPDATE) já existente; reutilizar lógica.
+- **Logger**: continuar usando `getLogger('EvolutionBanner')` → renomear para `'ConnectionStatusIndicator'`.
+- **Memory**: alinhado com `mem://style/design-system-and-skins` (sem cores hardcoded) e `mem://features/sidebar/quick-access-controls`.
+
+## Arquivos afetados
+
+- ✏️ `src/components/layout/IndexContentConnected.tsx` — remover banner.
+- 🗑️ `src/components/alerts/EvolutionDisconnectBanner.tsx` — deletar.
+- ➕ `src/components/layout/ConnectionStatusIndicator.tsx` — novo chip + popover.
+- ✏️ `AppShell` / header global — montar o novo indicador (arquivo confirmado na implementação).
 
 ## Resultado esperado
 
-- Build passa, preview deixa de ser tela branca.
-- Banner de 412 (já implementado) continua disponível como rede de segurança.
-- Zero mudança de comportamento — só anotações de tipo e refator local em `useGeoBlocking`.
-- Plano de auto-reconexão do `wpp2` (ainda pendente) pode ser retomado em seguida.
+```text
+Antes: [================ BANNER VERMELHO FULL WIDTH ================]
+Depois: [ ZAPP Web ............... 🔔  📞  ⚠ wpp2 offline  👤 ]
+                                          └─ click → popover c/ Reconectar
+```

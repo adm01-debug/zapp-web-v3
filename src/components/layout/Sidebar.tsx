@@ -14,6 +14,7 @@ import { SidebarNavGroup } from './SidebarNavGroup';
 import { AgentProfilePopover } from './AgentProfilePopover';
 import { primaryNav, sidebarGroups, communicationNav, automationNav, salesNav, connectionsNav, analyticsNav, systemNav, advancedNav } from './sidebarNavConfig';
 import { useEvoApiAlertsBadge } from '@/lib/evoApiHealth/useEvoApiAlertsBadge';
+import { ConnectionStatusIndicator } from './ConnectionStatusIndicator';
 
 interface SidebarProps {
   currentView: string;
@@ -77,6 +78,11 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
           </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">Expandir <kbd className="ml-1 px-1 py-0.5 rounded bg-muted text-[10px] font-mono">⌘B</kbd></TooltipContent></Tooltip>
         </div>
       )}
+
+      {/* Status das conexões WhatsApp (compacto) */}
+      <div className={cn('flex shrink-0', collapsed ? 'justify-center px-[11px]' : 'px-3', 'pt-1 pb-1.5')}>
+        <ConnectionStatusIndicator collapsed={collapsed} />
+      </div>
 
       {/* Primary Nav */}
       <nav className={cn('flex flex-col gap-0.5', collapsed ? 'items-center px-[11px]' : 'px-2')} aria-label="Menu principal">
