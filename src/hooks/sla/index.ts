@@ -1,4 +1,4 @@
-export * from '../useSLACalculations';
+export * from '../useSLACalculation';
 export * from '../useSLAConfigurations';
 export * from '../useSLAHistory';
 export * from '../useSLAMetrics';
@@ -8,3 +8,4 @@ export * from '../useSLAAlerts';
 export * from '../useSLAAlertHistory';
 export * from '../useSLAAlertPreferences';
 export * from '../useApplicableSLA';
+
