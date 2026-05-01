@@ -1,0 +1,75 @@
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useNavigationHistory } from '@/hooks/useNavigationHistory';
+import { useGlobalKeyboard } from '@/components/keyboard/GlobalKeyboardProvider';
+import { User } from '@supabase/supabase-js';
+
+export function useIndexNavigation(user: User | null, loading: boolean) {
+  const { 
+    currentView, 
+    navigateTo: rawNavigateTo, 
+    goBack: rawGoBack, 
+    goForward: rawGoForward, 
+    canGoBack, 
+    canGoForward, 
+    breadcrumbTrail 
+  } = useNavigationHistory('inbox');
+  
+  const navDirectionRef = useRef<'forward' | 'back'>('forward');
+  const deepLinkViewHandledRef = useRef(false);
+  const { registerNavigationHandler, unregisterNavigationHandler } = useGlobalKeyboard();
+
+  const setCurrentView = useCallback((viewId: string) => {
+    navDirectionRef.current = 'forward';
+    rawNavigateTo(viewId);
+  }, [rawNavigateTo]);
+
+  const goBack = useCallback(() => {
+    navDirectionRef.current = 'back';
+    rawGoBack();
+  }, [rawGoBack]);
+
+  const goForward = useCallback(() => {
+    navDirectionRef.current = 'forward';
+    rawGoForward();
+  }, [rawGoForward]);
+
+  // Register navigation handler for command palette/shortcuts
+  useEffect(() => {
+    registerNavigationHandler(setCurrentView);
+    return () => unregisterNavigationHandler();
+  }, [registerNavigationHandler, unregisterNavigationHandler, setCurrentView]);
+
+  // Custom event bridge
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const view = (e as CustomEvent<string>).detail;
+      if (typeof view === 'string') setCurrentView(view);
+    };
+    window.addEventListener('navigate-view', handler as EventListener);
+    return () => window.removeEventListener('navigate-view', handler as EventListener);
+  }, [setCurrentView]);
+
+  // Deep-link: ?view=<viewId>
+  useEffect(() => {
+    if (deepLinkViewHandledRef.current || loading || !user) return;
+    const params = new URLSearchParams(window.location.search);
+    const targetView = params.get('view');
+    if (targetView && targetView !== currentView) {
+      deepLinkViewHandledRef.current = true;
+      setCurrentView(targetView);
+    } else if (targetView) {
+      deepLinkViewHandledRef.current = true;
+    }
+  }, [loading, user, currentView, setCurrentView]);
+
+  return {
+    currentView,
+    setCurrentView,
+    goBack,
+    goForward,
+    canGoBack,
+    canGoForward,
+    breadcrumbTrail,
+    navDirectionRef
+  };
+}
