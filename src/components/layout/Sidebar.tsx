@@ -14,6 +14,7 @@ import { SidebarNavGroup } from './SidebarNavGroup';
 import { AgentProfilePopover } from './AgentProfilePopover';
 import { primaryNav, sidebarGroups, communicationNav, automationNav, salesNav, connectionsNav, analyticsNav, systemNav, advancedNav } from './sidebarNavConfig';
 import { useEvoApiAlertsBadge } from '@/lib/evoApiHealth/useEvoApiAlertsBadge';
+import { ConnectionStatusIndicator } from './ConnectionStatusIndicator';
 
 interface SidebarProps {
   currentView: string;
