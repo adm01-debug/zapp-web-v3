@@ -16,6 +16,7 @@ export interface WhatsAppConnection {
   qr_code: string | null;
   is_default: boolean;
   created_at: string;
+  updated_at?: string;
   /** 'evolution' = não-oficial (QR Code via Evolution/Baileys); 'official' = WhatsApp Cloud API (Meta, sem QR). */
   api_type?: string;
   battery_level?: number | null;
@@ -28,6 +29,7 @@ export interface WhatsAppConnection {
   health_reason?: string | null;
   owner_jid?: string | null;
 }
+
 
 /** Origem do TTL do QR atual — útil para diagnóstico (telemetria/UI). */
 export type QrTtlSource = 'detected' | 'default' | 'clamped';
