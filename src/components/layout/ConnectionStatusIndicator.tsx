@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { WifiOff, Wifi, RefreshCw } from 'lucide-react';
+import { WifiOff, Wifi, RefreshCw, History } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,30 @@ import { getLogger } from '@/lib/logger';
 
 const log = getLogger('ConnectionStatusIndicator');
 const RECONNECT_COOLDOWN_MS = 30_000;
+const HISTORY_STORAGE_KEY = 'zappweb:connection-disconnect-history';
+const HISTORY_MAX_ENTRIES = 20;
+const HISTORY_VISIBLE = 5;
+const HISTORY_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
+const FILTER_STORAGE_KEY = 'zappweb:connection-popover-filter';
+const SELECTED_STORAGE_KEY = 'zappweb:connection-popover-selected';
+
+type FilterValue = 'all' | 'connected' | 'disconnected';
+
+const loadFilter = (): FilterValue => {
+  try {
+    const v = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (v === 'connected' || v === 'disconnected' || v === 'all') return v;
+  } catch { /* ignore */ }
+  return 'all';
+};
+
+const loadSelected = (): string | null => {
+  try {
+    return localStorage.getItem(SELECTED_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
 
 interface ConnectionRow {
   id: string;
@@ -17,9 +41,46 @@ interface ConnectionRow {
   status: string;
 }
 
+interface DisconnectEvent {
+  instance_id: string;
+  at: number; // epoch ms
+}
+
 interface Props {
   collapsed?: boolean;
 }
+
+const loadHistory = (): DisconnectEvent[] => {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as DisconnectEvent[];
+    if (!Array.isArray(parsed)) return [];
+    const cutoff = Date.now() - HISTORY_TTL_MS;
+    return parsed.filter(e => e && typeof e.at === 'number' && e.at >= cutoff);
+  } catch {
+    return [];
+  }
+};
+
+const saveHistory = (events: DisconnectEvent[]) => {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(events.slice(0, HISTORY_MAX_ENTRIES)));
+  } catch {
+    /* ignore quota errors */
+  }
+};
+
+const formatRelative = (ts: number): string => {
+  const diff = Date.now() - ts;
+  const min = Math.floor(diff / 60_000);
+  if (min < 1) return 'agora';
+  if (min < 60) return `há ${min}min`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `há ${hr}h`;
+  const d = Math.floor(hr / 24);
+  return `há ${d}d`;
+};
 
 /**
  * Indicador discreto de status das conexões WhatsApp.
@@ -33,10 +94,36 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
   const [reconnecting, setReconnecting] = useState<string | null>(null);
   const [reconnectingAll, setReconnectingAll] = useState(false);
   const [open, setOpen] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'connected' | 'disconnected'>('all');
+  const [filter, setFilter] = useState<FilterValue>(() => loadFilter());
+  const [selectedInstance, setSelectedInstance] = useState<string | null>(() => loadSelected());
+  const [history, setHistory] = useState<DisconnectEvent[]>(() => loadHistory());
   const cooldownRef = useRef<Map<string, number>>(new Map());
   const prevDisconnectedRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
+  const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
+
+  // Persistir filtro
+  useEffect(() => {
+    try { localStorage.setItem(FILTER_STORAGE_KEY, filter); } catch { /* ignore */ }
+  }, [filter]);
+
+  // Persistir instância selecionada
+  useEffect(() => {
+    try {
+      if (selectedInstance) localStorage.setItem(SELECTED_STORAGE_KEY, selectedInstance);
+      else localStorage.removeItem(SELECTED_STORAGE_KEY);
+    } catch { /* ignore */ }
+  }, [selectedInstance]);
+
+  // Restaurar foco/scroll ao abrir
+  useEffect(() => {
+    if (!open || !selectedInstance) return;
+    const t = setTimeout(() => {
+      const el = itemRefs.current.get(selectedInstance);
+      if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [open, selectedInstance, filter]);
 
   const fetchStatus = async () => {
     const { data, error } = await supabase
@@ -50,17 +137,26 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
     setConnections(rows);
     setLoading(false);
 
-    // Detect new disconnections → single toast per instance
+    // Detect new disconnections → single toast per instance + record history
     const currentDisconnected = new Set(rows.filter(r => r.status !== 'connected').map(r => r.instance_id));
     if (initializedRef.current) {
+      const newlyDown: DisconnectEvent[] = [];
       currentDisconnected.forEach(id => {
         if (!prevDisconnectedRef.current.has(id)) {
+          newlyDown.push({ instance_id: id, at: Date.now() });
           toast.warning(`Conexão "${id}" caiu`, {
             description: 'Mensagens podem não ser entregues. Clique no indicador para reconectar.',
             duration: 6000,
           });
         }
       });
+      if (newlyDown.length > 0) {
+        setHistory(prev => {
+          const next = [...newlyDown, ...prev].slice(0, HISTORY_MAX_ENTRIES);
+          saveHistory(next);
+          return next;
+        });
+      }
     }
     prevDisconnectedRef.current = currentDisconnected;
     initializedRef.current = true;
@@ -115,6 +211,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
   };
 
   const handleReconnect = async (conn: ConnectionRow) => {
+    setSelectedInstance(conn.instance_id);
     setReconnecting(conn.instance_id);
     const result = await reconnectInstance(conn);
     setReconnecting(null);
@@ -287,8 +384,21 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
             return filtered.map((c) => {
               const isOk = c.status === 'connected';
               const isReconn = reconnecting === c.instance_id;
+              const isSelected = selectedInstance === c.instance_id;
               return (
-                <li key={c.id} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-muted/40">
+                <li
+                  key={c.id}
+                  ref={(el) => {
+                    if (el) itemRefs.current.set(c.instance_id, el);
+                    else itemRefs.current.delete(c.instance_id);
+                  }}
+                  onClick={() => setSelectedInstance(c.instance_id)}
+                  aria-current={isSelected ? 'true' : undefined}
+                  className={cn(
+                    'flex items-center justify-between gap-2 px-3 py-2 cursor-pointer transition-colors',
+                    isSelected ? 'bg-primary/10 border-l-2 border-primary' : 'hover:bg-muted/40 border-l-2 border-transparent'
+                  )}
+                >
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className={cn(
@@ -320,6 +430,45 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
             });
           })()}
         </ul>
+        {history.length > 0 && (
+          <div className="border-t border-border px-3 py-2">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <History className="w-3 h-3" aria-hidden="true" />
+                Últimas quedas
+              </div>
+              <button
+                type="button"
+                onClick={() => { setHistory([]); saveHistory([]); }}
+                className="text-[10px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded px-1"
+                aria-label="Limpar histórico de quedas"
+              >
+                Limpar
+              </button>
+            </div>
+            <ul className="space-y-0.5" role="list">
+              {history.slice(0, HISTORY_VISIBLE).map((ev, idx) => (
+                <li
+                  key={`${ev.instance_id}-${ev.at}-${idx}`}
+                  className="flex items-center justify-between gap-2 text-[11px]"
+                >
+                  <span className="truncate text-foreground/80">{ev.instance_id}</span>
+                  <span
+                    className="text-[10px] text-muted-foreground tabular-nums shrink-0"
+                    title={new Date(ev.at).toLocaleString()}
+                  >
+                    {formatRelative(ev.at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {history.length > HISTORY_VISIBLE && (
+              <p className="text-[10px] text-muted-foreground mt-1">
+                +{history.length - HISTORY_VISIBLE} eventos anteriores
+              </p>
+            )}
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );
