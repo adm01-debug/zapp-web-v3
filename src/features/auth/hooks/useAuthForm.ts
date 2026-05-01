@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from './;
+import { useAuth } from './useAuth';
 import { useWebAuthn } from '@/hooks/useWebAuthn';
 import { toast } from '@/hooks/use-toast';
 import { z } from 'zod';
