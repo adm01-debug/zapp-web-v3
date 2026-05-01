@@ -1,0 +1,53 @@
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
+
+export interface Profile {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string | null;
+  avatar_url: string | null;
+  role: string;
+  max_chats: number;
+}
+
+export const authService = {
+  async getSession() {
+    return await supabase.auth.getSession();
+  },
+
+  async signIn(email: string, password: string) {
+    return await supabase.auth.signInWithPassword({ email, password });
+  },
+
+  async signUp(email: string, password: string, name: string) {
+    const redirectUrl = `${window.location.origin}/`;
+    return await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: { name }
+      }
+    });
+  },
+
+  async signOut() {
+    return await supabase.auth.signOut();
+  },
+
+  async getProfile(userId: string): Promise<{ data: Profile | null; error: any }> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    return { data: data as Profile | null, error };
+  },
+
+  onAuthStateChange(callback: (event: string, session: Session | null) => void) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(callback);
+    return subscription;
+  }
+};
