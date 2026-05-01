@@ -23,6 +23,7 @@ import { SupervisorCopilot } from './SupervisorCopilot';
 import { TrainingMode } from './TrainingMode';
 import { CrisisRoom } from './CrisisRoom';
 import { QrAttemptsPanel } from './QrAttemptsPanel';
+import { VisibilityGrantsManager } from './VisibilityGrantsManager';
 import { useAdminData, accessLevelConfig, type UserWithRole } from './useAdminData';
 import { AdminUsersTable } from './AdminUsersTable';
 import { AdminAuditTable } from './AdminAuditTable';
