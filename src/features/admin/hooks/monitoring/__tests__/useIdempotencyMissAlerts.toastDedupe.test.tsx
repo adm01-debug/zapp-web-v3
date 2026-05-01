@@ -29,7 +29,7 @@ vi.mock('@/lib/externalProxy', () => ({
 import {
   useIdempotencyMissAlerts,
   __test__,
-} from '../useIdempotencyMissAlerts';
+} from '@/features/admin/hooks/monitoring/useIdempotencyMissAlerts';
 
 const { ALERT_DEDUPE_STORAGE_KEY, ONE_HOUR_MS, buildPersistKey } = __test__;
 

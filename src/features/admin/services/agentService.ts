@@ -1,4 +1,4 @@
-import { agentRepository, AgentProfile } from '../data-access/agentRepository';
+import { agentRepository, AgentProfile } from '@/features/admin/data-access/agentRepository';
 
 export interface AgentWithStats extends AgentProfile {
   activeChats: number;
