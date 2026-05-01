@@ -1,20 +1,9 @@
-import { useState, useEffect, useCallback, useRef, createContext, ReactNode, useContext } from 'react';
+import { useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { authService, Profile } from '../services/authService';
 import { log } from '@/lib/logger';
+import { AuthContext, AuthContextType } from '../context/AuthContext';
 
-export interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  profile: Profile | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
  * Componente central que fornece o estado de autenticação para toda a aplicação.
@@ -113,17 +102,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-/**
- * Hook customizado e centralizado para acessar o estado de autenticação.
- * Garante que a aplicação utilize um ponto de acesso único e consistente.
- */
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }
 
