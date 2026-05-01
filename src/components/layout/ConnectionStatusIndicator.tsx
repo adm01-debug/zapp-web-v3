@@ -371,6 +371,45 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
             });
           })()}
         </ul>
+        {history.length > 0 && (
+          <div className="border-t border-border px-3 py-2">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <History className="w-3 h-3" aria-hidden="true" />
+                Últimas quedas
+              </div>
+              <button
+                type="button"
+                onClick={() => { setHistory([]); saveHistory([]); }}
+                className="text-[10px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded px-1"
+                aria-label="Limpar histórico de quedas"
+              >
+                Limpar
+              </button>
+            </div>
+            <ul className="space-y-0.5" role="list">
+              {history.slice(0, HISTORY_VISIBLE).map((ev, idx) => (
+                <li
+                  key={`${ev.instance_id}-${ev.at}-${idx}`}
+                  className="flex items-center justify-between gap-2 text-[11px]"
+                >
+                  <span className="truncate text-foreground/80">{ev.instance_id}</span>
+                  <span
+                    className="text-[10px] text-muted-foreground tabular-nums shrink-0"
+                    title={new Date(ev.at).toLocaleString()}
+                  >
+                    {formatRelative(ev.at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {history.length > HISTORY_VISIBLE && (
+              <p className="text-[10px] text-muted-foreground mt-1">
+                +{history.length - HISTORY_VISIBLE} eventos anteriores
+              </p>
+            )}
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );
