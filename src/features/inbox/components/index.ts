@@ -202,7 +202,7 @@ export * from './summary/SummaryResult';
 export * from './summary/useSummaryTts';
 export * from './swipeActions';
 export * from './template-utils';
-export { TemplateEditorDialog, VariableInserter, TemplatePreview, type TemplateType } from './templates/TemplateEditorDialog';
+export { TemplateEditorDialog, VariableInserter, TemplatePreview } from './templates/TemplateEditorDialog';
 export * from './useChatMediaSending';
 export * from './useFileUploadLogic';
 export * from './useGlobalSearchData';
