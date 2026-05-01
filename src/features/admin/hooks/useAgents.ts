@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { agentService, AgentWithStats } from '../services/agentService';
-import type { AgentProfile } from '../data-access/agentRepository';
+import { agentService, AgentWithStats } from '@/features/admin/services/agentService';
+import type { AgentProfile } from '@/features/admin/data-access/agentRepository';
+
 
 export type { AgentProfile, AgentWithStats };
 

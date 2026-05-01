@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { log } from '@/lib/logger';
-import { whatsappStatusService } from '../services/whatsappStatusService';
-import type { WhatsAppStatusMessage, WhatsAppPresenceInfo } from '../data-access/whatsappStatusRepository';
+import { whatsappStatusService } from '@/features/inbox/services/whatsappStatusService';
+import type { WhatsAppStatusMessage, WhatsAppPresenceInfo } from '@/features/inbox/data-access/whatsappStatusRepository';
+
 
 export type { WhatsAppStatusMessage, WhatsAppPresenceInfo };
 
