@@ -61,19 +61,27 @@ export default tseslint.config(
       "no-restricted-imports": [
         "error",
         {
-          patterns: [
+          "patterns": [
             {
-              group: [
+              "group": ["**/features/*/**"],
+              "message": "Use direct feature entry points or internal aliases. Avoid deep imports across features."
+            },
+            {
+              "group": ["../../*", "../../../*"],
+              "message": "Use '@/features/...' aliases instead of deep relative paths."
+            },
+            {
+              "group": [
                 "**/evolution-api/**/find*",
                 "**/evolution-api/**/list-messages*",
                 "**/evolution-api/**/find-messages*",
-                "**/evolution-api/**/find-chats*",
+                "**/evolution-api/**/find-chats*"
               ],
-              message:
-                "Inbox lê do FATOR X via queryExternalProxy → external-db-proxy. Não consulte Evolution API para popular UI. Para envio, use externalMessageSender. Veja docs/INBOX_READ_CONTRACT.md",
-            },
-          ],
-        },
+              "message":
+                "Inbox lê do FATOR X via queryExternalProxy → external-db-proxy. Não consulte Evolution API para popular UI. Para envio, use externalMessageSender. Veja docs/INBOX_READ_CONTRACT.md"
+            }
+          ]
+        }
       ],
     },
   },
