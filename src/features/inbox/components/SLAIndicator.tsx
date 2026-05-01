@@ -187,7 +187,9 @@ export function SLAIndicator({
           />
           <span>Resolução:</span>
           <span className="font-bold">
-            {sla.resolution.status === 'breached' ? 'Violado' : formatTimeRemaining(sla.resolution.remainingMs)}
+            {resolvedAt 
+              ? (sla.resolution.breached ? 'Violado' : formatTimeRemaining(sla.resolution.timeTakenMs || 0))
+              : (sla.resolution.status === 'breached' ? 'Violado' : formatTimeRemaining(sla.resolution.remainingMs))}
           </span>
         </motion.div>
       )}
