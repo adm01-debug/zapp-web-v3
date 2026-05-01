@@ -1,2 +1,2 @@
 // Re-export for convenience
-export { useEvolutionAutoSync } from './useEvolutionAutoSync';
+export { useEvolutionAutoSync } from '../useEvolutionAutoSync';
