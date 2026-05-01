@@ -1,5 +1,3 @@
-export * from './gamification';
-export * from './monitoring';
 export * from './useAIStats';
 export * from './useAIUsageDashboard';
 export * from './useAgentGamification';

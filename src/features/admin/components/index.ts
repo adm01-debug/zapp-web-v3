@@ -19,7 +19,4 @@ export * from './SicoobBridgeDashboard';
 export * from './SupervisorCopilot';
 export * from './TrainingMode';
 export * from './VisibilityGrantsManager';
-export * from './alerts';
-export * from './instance-pauses';
-export * from './telemetry';
 export * from './useAdminData';
