@@ -211,6 +211,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
   };
 
   const handleReconnect = async (conn: ConnectionRow) => {
+    setSelectedInstance(conn.instance_id);
     setReconnecting(conn.instance_id);
     const result = await reconnectInstance(conn);
     setReconnecting(null);
