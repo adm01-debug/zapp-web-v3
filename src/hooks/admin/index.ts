@@ -3,7 +3,6 @@ export * from '../useAIStats';
 export * from '../useRateLimitLogs';
 export * from '../useDiagnosticsData';
 export * from '../usePerformance';
-export * from '../usePerformanceOptimizations';
 export * from '../usePerformanceSnapshots';
-export * from '../useSystem';
 export * from '../useVersions';
+
