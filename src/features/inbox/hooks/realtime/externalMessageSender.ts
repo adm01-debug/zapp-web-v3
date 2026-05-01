@@ -15,9 +15,9 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { jidToPhone } from '@/adapters/evolutionAdapter';
-import type { RealtimeMessage } from '../..';
+import type { RealtimeMessage } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
-import { parseEvolutionError } from '../..';
+import { parseEvolutionError } from '@/features/inbox';
 
 const log = getLogger('externalMessageSender');
 const DEFAULT_INSTANCE = 'wpp2';

@@ -4,10 +4,10 @@ import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { motion } from '@/components/ui/motion';
-import { SLAIndicatorForContact } from '../SLAIndicatorForContact';
-import { SentimentEmoji, getSentimentFromScore, type SentimentLevel } from '../SentimentIndicator';
+import { SLAIndicatorForContact } from '@/features/inbox/components/SLAIndicatorForContact';
+import { SentimentEmoji, getSentimentFromScore, type SentimentLevel } from '@/features/inbox/components/SentimentIndicator';
 import { QuickPeek } from '@/components/ui/quick-peek';
-import { TypingIndicatorCompact } from '../TypingIndicator';
+import { TypingIndicatorCompact } from '@/features/inbox/components/TypingIndicator';
 import { useContactTyping } from '@/hooks/useContactTyping';
 import { useInViewport } from '@/hooks/useInViewport';
 import {

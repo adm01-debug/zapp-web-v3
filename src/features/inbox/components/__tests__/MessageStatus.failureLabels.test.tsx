@@ -17,7 +17,7 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MessageStatus } from '../..';
+import { MessageStatus } from '@/features/inbox';
 
 const FAILED_AUTH_BASE = 'Falha de autenticação';
 const FAILED_RETRIES_BASE = 'Falhou após várias tentativas';

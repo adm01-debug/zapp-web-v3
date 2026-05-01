@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { WhatsAppStatusSection } from '../WhatsAppStatusSection';
+import { WhatsAppStatusSection } from '@/features/inbox/components/contact-details/WhatsAppStatusSection';
 
 // Mock useWhatsAppStatus
 const mockRefresh = vi.fn();

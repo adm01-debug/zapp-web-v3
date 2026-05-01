@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { EditContactDialog } from '../EditContactDialog';
+import { EditContactDialog } from '@/features/inbox/components/contact-details/EditContactDialog';
 
 // Mock supabase
 const mockUpdate = vi.fn();

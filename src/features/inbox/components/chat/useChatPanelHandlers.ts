@@ -3,7 +3,7 @@ import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { undoToast } from '@/lib/undoToast';
 import { Message, InteractiveMessage, InteractiveButton, LocationMessage } from '@/types/chat';
-import { SlashCommand } from '../SlashCommands';
+import { SlashCommand } from '@/features/inbox/components/SlashCommands';
 import { ExternalProduct } from '@/hooks/useExternalCatalog';
 import { toast } from '@/hooks/use-toast';
 

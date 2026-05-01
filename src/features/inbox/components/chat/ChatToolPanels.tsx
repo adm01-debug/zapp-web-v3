@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { Radar, GraduationCap, FileText } from 'lucide-react';
-import { ToolPanel } from '../ai-tools/ToolPanel';
-import { VisionIcon } from '../ai-tools/VisionIcon';
+import { ToolPanel } from '@/features/inbox/components/ai-tools/ToolPanel';
+import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 import { Message } from '@/types/chat';
 
 const ConversationSummary = lazy(() => import('../ConversationSummary').then(m => ({ default: m.ConversationSummary })));

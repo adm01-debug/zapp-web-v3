@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { SearchResult } from '../useGlobalSearchData';
+import type { SearchResult } from '@/features/inbox/components/useGlobalSearchData';
 
 function getResultIcon(type: SearchResult['type'], messageType?: string) {
   if (type === 'message' && messageType) {

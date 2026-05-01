@@ -34,7 +34,7 @@ vi.mock('@/lib/logger', () => ({
 import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { useRealtimeContacts } from '../useRealtimeContacts';
+import { useRealtimeContacts } from '@/features/inbox/hooks/realtime/useRealtimeContacts';
 import * as externalClientMod from '@/integrations/supabase/externalClient';
 
 const mocks = (externalClientMod as any).__test as {

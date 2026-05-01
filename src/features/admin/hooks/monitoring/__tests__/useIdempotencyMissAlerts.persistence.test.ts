@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __test__ } from '../useIdempotencyMissAlerts';
+import { __test__ } from '@/features/admin/hooks/monitoring/useIdempotencyMissAlerts';
 
 const {
   ALERT_DEDUPE_STORAGE_KEY,

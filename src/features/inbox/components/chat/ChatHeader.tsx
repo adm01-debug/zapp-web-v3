@@ -1,26 +1,26 @@
 import { cn } from '@/lib/utils';
-import { VisionIcon } from '../ai-tools/VisionIcon';
+import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion } from '@/components/ui/motion';
-import { TypingIndicatorCompact } from '../TypingIndicator';
-import { SLAIndicatorForContact } from '../SLAIndicatorForContact';
-import { VoiceSelector } from '../VoiceSelector';
-import { KeyboardShortcutsHelp } from '../KeyboardShortcutsHelp';
-import { QueuePositionNotifier } from '../QueuePositionNotifier';
-import { RealtimeCollaboration } from '../RealtimeCollaboration';
+import { TypingIndicatorCompact } from '@/features/inbox/components/TypingIndicator';
+import { SLAIndicatorForContact } from '@/features/inbox/components/SLAIndicatorForContact';
+import { VoiceSelector } from '@/features/inbox/components/VoiceSelector';
+import { KeyboardShortcutsHelp } from '@/features/inbox/components/KeyboardShortcutsHelp';
+import { QueuePositionNotifier } from '@/features/inbox/components/QueuePositionNotifier';
+import { RealtimeCollaboration } from '@/features/inbox/components/RealtimeCollaboration';
 import { useExternalContact360 } from '@/hooks/useExternalContact360';
 import { useContactIntelligence } from '@/hooks/useContactIntelligence';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { CrmBadges } from './CrmBadges';
-import { BusinessHoursBadge } from '../BusinessHoursBadge';
-import { AnalysisBadges } from '../AnalysisBadges';
+import { BusinessHoursBadge } from '@/features/inbox/components/BusinessHoursBadge';
+import { AnalysisBadges } from '@/features/inbox/components/AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench } from 'lucide-react';
-import { useContactAvatar } from '../..';
+import { useContactAvatar } from '@/features/inbox';
 
 const contactTypeConfig: Record<string, { label: string; icon: typeof Users; color: string }> = {
   cliente: { label: 'Cliente', icon: Users, color: 'bg-info/10 text-info border-info/30' },
