@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { audioPlaybackBus } from '@/features/inbox';
+import { audioPlaybackBus } from '../..';
 
 describe('audioPlaybackBus — atalho de mute global', () => {
   beforeEach(() => audioPlaybackBus._reset());

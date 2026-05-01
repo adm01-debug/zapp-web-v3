@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import {
   useRealtimeContactsStatus,
   type RealtimeContactsStatus,
-} from '@/features/inbox';
+} from '..';
 
 interface Props {
   className?: string;

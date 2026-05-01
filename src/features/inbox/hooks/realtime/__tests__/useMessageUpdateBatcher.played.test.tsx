@@ -4,7 +4,7 @@ import { useMessageUpdateBatcher } from '../useMessageUpdateBatcher';
 import type {
   ConversationWithMessages,
   RealtimeMessage,
-} from '@/features/inbox';
+} from '../..';
 
 function makeMessage(overrides: Partial<RealtimeMessage> = {}): RealtimeMessage {
   return {

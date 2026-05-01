@@ -9,7 +9,7 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ShieldAlert, AlertOctagon, ServerCrash, WifiOff, HelpCircle, Filter, ChevronDown } from 'lucide-react';
-import type { FailureCategory } from '@/features/inbox';
+import type { FailureCategory } from '..';
 
 interface Option {
   value: FailureCategory | 'all';

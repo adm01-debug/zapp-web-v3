@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useChatSearch } from '@/features/inbox';
+import { useChatSearch } from '../..';
 import { Search, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { ChatSearchFilters } from './ChatSearchFilters';
 import { ChatSearchResultsList } from './ChatSearchResultsList';

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { FUNCTION_COLORS, FUNCTION_LABELS } from '@/features/admin';
+import { FUNCTION_COLORS, FUNCTION_LABELS } from '..';
 
 const LOGS_PER_PAGE = 50;
 

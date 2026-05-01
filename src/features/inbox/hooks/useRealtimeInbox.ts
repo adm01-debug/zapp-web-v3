@@ -1,16 +1,16 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useOfflineCache } from '@/hooks/useOfflineCache';
-import { useMessages } from '@/features/inbox';
-import { useRealtimeMessages, ConversationWithMessages, ConversationContact } from '@/features/inbox';
+import { useMessages } from '..';
+import { useRealtimeMessages, ConversationWithMessages, ConversationContact } from '..';
 import { useExternalConversations, useExternalMessages } from '@/hooks/useExternalEvolution';
 import { useAuth } from '@/features/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 import { Conversation, Message } from '@/types/chat';
 import { toast } from 'sonner';
-import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/features/inbox';
+import type { LoadOlderCallback, CancelLoadOlderCallback } from '..';
 import { validatePttBlob } from '@/lib/audio/pttLimits';
-import { seedAvatarCache } from '@/features/inbox';
+import { seedAvatarCache } from '..';
 import { mapToLegacyConversation, mapToLegacyMessages } from '@/adapters/inboxLegacyMapper';
 
 const log = getLogger('useRealtimeInbox');
@@ -238,7 +238,7 @@ export function useRealtimeInbox() {
     if (USE_EXTERNAL_DB) {
       // External path: envio via evolution-api + bolha otimista no cursor.
       // Erros são propagados (sem swallow) para o SendErrorBanner.
-      const { sendExternalText } = await import('@/features/inbox');
+      const { sendExternalText } = await import('..');
       const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
       const { optimistic } = await sendExternalText(selectedContactId, content, { contactAvatar: currentAvatar });
       try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
@@ -276,7 +276,7 @@ export function useRealtimeInbox() {
       // ATENÇÃO: erros (upload OU envio) são PROPAGADOS para que o
       // `SendErrorBanner` possa oferecer "Reenviar" mantendo o blob original
       // — repete o upload + envio + cria uma NOVA bolha otimista.
-      const { sendExternalAudio } = await import('@/features/inbox');
+      const { sendExternalAudio } = await import('..');
       const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
       try {
         const { optimistic } = await sendExternalAudio(selectedContactId, blob, { contactAvatar: currentAvatar });

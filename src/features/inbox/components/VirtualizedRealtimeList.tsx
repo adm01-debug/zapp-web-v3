@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useMemo, forwardRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ConversationWithMessages } from '@/features/inbox';
+import { ConversationWithMessages } from '..';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,7 +12,7 @@ import { Pin, Gift } from 'lucide-react';
 import { TypingIndicatorCompact } from './TypingIndicator';
 import { useContactTyping } from '@/hooks/useContactTyping';
 import { useInViewport } from '@/hooks/useInViewport';
-import { useContactAvatar } from '@/features/inbox';
+import { useContactAvatar } from '..';
 
 interface VirtualizedRealtimeListProps {
   conversations: ConversationWithMessages[];

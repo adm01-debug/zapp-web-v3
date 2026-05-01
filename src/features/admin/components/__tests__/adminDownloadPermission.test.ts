@@ -39,7 +39,7 @@ vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn(), warning: vi.fn() },
 }));
 
-import { useAdminData, type UserWithRole } from '@/features/admin';
+import { useAdminData, type UserWithRole } from '../..';
 import { renderHook, act } from '@testing-library/react';
 
 describe('useAdminData - can_download no handleSaveUser', () => {

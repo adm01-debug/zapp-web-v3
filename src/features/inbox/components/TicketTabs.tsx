@@ -15,8 +15,8 @@ import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock } from 'l
 import { useAuth } from '@/features/auth';
 import { useUserRole } from '@/features/auth';
 import { useQueues } from '@/hooks/useQueues';
-import { useAllTicketStates } from '@/features/inbox';
-import { ConversationWithMessages } from '@/features/inbox';
+import { useAllTicketStates } from '..';
+import { ConversationWithMessages } from '..';
 
 export type MainTab = 'open' | 'resolved' | 'search';
 export type SubTab = 'attending' | 'waiting';

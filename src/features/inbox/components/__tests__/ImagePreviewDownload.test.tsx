@@ -42,7 +42,7 @@ vi.mock('@/components/ui/tooltip', () => ({
   TooltipContent: ({ children }: React.PropsWithChildren) => React.createElement('div', null, children),
 }));
 
-import { ImagePreview } from '@/features/inbox';
+import { ImagePreview } from '../..';
 
 describe('ImagePreview - Permissão de Download', () => {
   beforeEach(() => {
