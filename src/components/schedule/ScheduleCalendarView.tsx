@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useScheduledMessages, ScheduledMessage } from '@/hooks/useScheduledMessages';
-import { useAgents } from '@/hooks/useAgents';
+import { useAgents } from '@/features/admin';
 
 interface ScheduleCalendarViewProps {
   onSelectMessage?: (message: ScheduledMessage) => void;

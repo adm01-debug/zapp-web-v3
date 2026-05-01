@@ -23,9 +23,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act, within } from '@testing-library/react';
 import { useState, useCallback } from 'react';
-import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
+import type { RealtimeMessage } from '@/features/inbox';
 import { reconcileOptimistic } from '@/hooks/useExternalEvolution';
-import * as externalSender from '@/hooks/realtime/externalMessageSender';
+import * as externalSender from '@/features/inbox';
 
 const REMOTE_JID = '5511999998888@s.whatsapp.net';
 const ITERATIONS = 120;

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useMessages } from '@/hooks/useMessages';
+import { useMessages } from '@/features/inbox';
 import type { Database } from '@/integrations/supabase/types';
 import { Conversation, Message } from '@/types/chat';
 import { log } from '@/lib/logger';
@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/tooltip';
 
 const ChatPanel = lazy(() =>
-  import('@/components/inbox/ChatPanel').then((m) => ({ default: m.ChatPanel }))
+  import('@/features/inbox').then((m) => ({ default: m.ChatPanel }))
 );
 
 interface RawMessage {

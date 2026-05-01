@@ -1,7 +1,7 @@
 import React, { useEffect, useState, createContext, useContext, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { useGlobalKeyboardShortcuts } from '@/hooks/useGlobalKeyboardShortcuts';
-import { audioPlaybackBus } from '@/hooks/realtime/audioPlaybackBus';
+import { audioPlaybackBus } from '@/features/inbox';
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import { CommandPalette } from '@/components/ui/command-palette';
 

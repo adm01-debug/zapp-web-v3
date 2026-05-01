@@ -10,7 +10,7 @@ import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { Activity, RefreshCw, Copy, TrendingUp, TrendingDown, ChevronDown, ChevronRight, AlertTriangle, CheckCircle2, XCircle, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useRetryMetrics, type RetryMetricsFilters } from '@/hooks/monitoring/useRetryMetrics';
+import { useRetryMetrics, type RetryMetricsFilters } from '@/features/admin';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, Legend } from 'recharts';
 import { RetryAlertsConfig } from './RetryAlertsConfig';
 import { RetryAlertsBanner } from './RetryAlertsBanner';

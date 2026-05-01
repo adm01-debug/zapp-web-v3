@@ -3,7 +3,7 @@
  * into the frontend's Message and Conversation types
  */
 import type { EvolutionMessage, DerivedContact } from '@/types/evolutionExternal';
-import type { RealtimeMessage, ConversationContact, ConversationWithMessages } from '@/hooks/useRealtimeMessages';
+import type { RealtimeMessage, ConversationContact, ConversationWithMessages } from '@/features/inbox';
 
 /**
  * Extract phone number from remote_jid (e.g. "5511999990001@s.whatsapp.net" → "5511999990001")

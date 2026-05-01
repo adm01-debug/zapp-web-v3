@@ -1,0 +1,197 @@
+import { useEffect, lazy, Suspense } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { MiniChatPiP } from '@/components/mobile/MiniChatPiP';
+import { NewMessageIndicator } from './NewMessageIndicator';
+import { MessageBatcherIndicator } from './MessageBatcherIndicator';
+import { InboxEmptyChat } from './InboxEmptyChat';
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary';
+import { ConversationListSidebar } from './ConversationListSidebar';
+import { InboxKpiBar } from './InboxKpiBar';
+import { useGlobalSearchShortcut } from '@/hooks/useGlobalSearchShortcut';
+import { useInboxBulkActions } from '..';
+import { useInboxFilters } from '..';
+import { useRealtimeInbox } from '..';
+import { useRealtimeContacts } from '..';
+import { useRealtimeFallbackRefetch } from '..';
+import { WifiOff, RefreshCw, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+const ChatPanel = lazy(() => import('./ChatPanel').then(m => ({ default: m.ChatPanel })));
+const ContactDetails = lazy(() => import('./ContactDetails').then(m => ({ default: m.ContactDetails })));
+const ContactDetailsResponsive = lazy(() => import('./ContactDetailsResponsive').then(m => ({ default: m.ContactDetailsResponsive })));
+const GlobalSearch = lazy(() => import('./GlobalSearch').then(m => ({ default: m.GlobalSearch })));
+const NewConversationModal = lazy(() => import('./NewConversationModal').then(m => ({ default: m.NewConversationModal })));
+
+const ChatFallback = () => (
+  <div className="flex-1 flex items-center justify-center">
+    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+  </div>
+);
+
+interface SearchResult {
+  id: string;
+  type: 'message' | 'contact' | 'transcription' | 'action' | 'crm';
+  title: string;
+  preview: string;
+  timestamp: Date;
+  contactId?: string;
+  contactName?: string;
+  messageType?: string;
+  tags?: string[];
+  action?: () => void;
+  crmPhone?: string;
+}
+
+export function RealtimeInboxView() {
+  const isMobile = useIsMobile();
+  const inbox = useRealtimeInbox();
+  // Realtime sync of evolution_contacts (FATOR X) → React Query caches
+  useRealtimeContacts({ instance: 'wpp2' });
+  // Safety net: periodic + on-reconnect refetch in case the realtime
+  // channel drops temporarily and caches drift from source of truth.
+  useRealtimeFallbackRefetch();
+  const inboxFilters = useInboxFilters({ conversations: inbox.cachedConversations, profileId: inbox.profile?.id });
+  const bulkActions = useInboxBulkActions({ refetch: inbox.refetch, filteredConversations: inboxFilters.filteredConversations });
+  const pullToRefresh = usePullToRefresh({ onRefresh: async () => { await inbox.refetch(); }, disabled: !isMobile || !!inbox.selectedContactId });
+
+  useGlobalSearchShortcut({ onOpen: () => inbox.setGlobalSearchOpen(true) });
+
+  useEffect(() => {
+    if (!inbox.pendingContactId || inbox.loading) return;
+    inboxFilters.setMainTab('search');
+    inboxFilters.setSubTab('attending');
+    inbox.setSelectedContactId(inbox.pendingContactId);
+    inbox.setSelectedContact(inbox.pendingContactId);
+    inbox.markAsRead(inbox.pendingContactId);
+    inbox.setPendingContactId(null);
+  }, [inbox.pendingContactId, inbox.loading, inbox.conversations]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      const isInput = active?.tagName === 'INPUT' || active?.tagName === 'TEXTAREA' || active?.getAttribute('contenteditable') === 'true';
+      if (isInput) return;
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') { e.preventDefault(); bulkActions.selectAll(); }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && bulkActions.selectionMode && bulkActions.selectedIds.size > 0) { e.preventDefault(); bulkActions.bulkArchive(); }
+      if (e.key === 'Escape' && bulkActions.selectionMode) { e.preventDefault(); bulkActions.clearSelection(); }
+      if (e.key === 'r' && bulkActions.selectionMode && bulkActions.selectedIds.size > 0 && !e.ctrlKey && !e.metaKey) { e.preventDefault(); bulkActions.bulkMarkAsRead(); }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [bulkActions]);
+
+  const handleGlobalSearchResult = (result: SearchResult) => {
+    if (!result.contactId) return;
+    inbox.handleSelectConversation(result.contactId);
+    // Para resultados de mensagem, dispara o destaque "Ver no chat".
+    if (result.type === 'message' || result.type === 'transcription') {
+      inbox.setPendingMessageId(result.id);
+    }
+  };
+
+  if (inbox.error) {
+    return (
+      <div className="flex items-center justify-center h-full bg-background">
+        <div className="text-center p-8">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4"><WifiOff className="w-8 h-8 text-destructive" /></div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Erro de conexão</h3>
+          <p className="text-muted-foreground text-sm mb-4">{inbox.error}</p>
+          <Button onClick={inbox.refetch} variant="outline"><RefreshCw className="w-4 h-4 mr-2" />Tentar novamente</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full min-h-0 w-full relative bg-background overflow-hidden">
+      {inbox.globalSearchOpen && (
+        <Suspense fallback={null}><GlobalSearch open={inbox.globalSearchOpen} onOpenChange={inbox.setGlobalSearchOpen} onSelectResult={handleGlobalSearchResult} /></Suspense>
+      )}
+
+      <NewMessageIndicator 
+        show={!!inbox.newMessageNotification} 
+        contactId={inbox.newMessageNotification?.contactId}
+        contactName={inbox.newMessageNotification?.contactName || ''} 
+        contactAvatar={inbox.newMessageNotification?.contactAvatar} 
+        message={inbox.newMessageNotification?.message || ''} 
+        onView={inbox.handleNotificationView} 
+        onDismiss={inbox.dismissNotification} 
+      />
+
+      <MessageBatcherIndicator status={inbox.batcherStatus} />
+
+      {inbox.showNewConversation && (
+        <Suspense fallback={null}>
+          <NewConversationModal open={inbox.showNewConversation} onOpenChange={inbox.setShowNewConversation} onConversationStarted={(contactId) => { inbox.setSelectedContactId(contactId); inbox.refetch(); }} />
+        </Suspense>
+      )}
+
+      <ConversationListSidebar inbox={inbox} inboxFilters={inboxFilters} bulkActions={bulkActions} pullToRefresh={pullToRefresh} />
+
+      <div className={cn('flex-1 flex min-w-0 min-h-0 relative z-10 bg-background h-full overflow-hidden', isMobile && !inbox.selectedContactId && 'hidden')}>
+        {inbox.legacyConversation ? (
+          <Suspense fallback={<ChatFallback />}>
+            <>
+              <div className="flex-1 min-w-0 min-h-0 relative h-full overflow-hidden">
+                {inbox.selectedContactId && inbox.selectedMessagesLoading ? <ChatFallback /> : (
+                  <SectionErrorBoundary sectionName="Chat" className="h-full">
+                    <ChatPanel
+                      key={inbox.legacyConversation.id}
+                      conversation={inbox.legacyConversation}
+                      messages={inbox.legacyMessages}
+                      onSendMessage={inbox.handleSendMessage}
+                      onSendAudio={inbox.handleSendAudio}
+                      onLoadOlder={inbox.loadOlderMessages}
+                      onCancelLoadOlder={inbox.cancelLoadOlderMessages}
+                      loadingOlder={inbox.loadingOlderMessages}
+                      hasMoreOlder={inbox.hasMoreMessages}
+                      showDetails={isMobile ? false : inbox.showDetails}
+                      onToggleDetails={() => inbox.setShowDetails(!inbox.showDetails)}
+                      initialHighlightMessageId={inbox.pendingMessageId}
+                      onHighlightConsumed={() => {
+                        inbox.setPendingMessageId(null);
+                        // Strip the one-shot ?message= param so refresh
+                        // / future navigations don't replay the highlight.
+                        // Keep ?contact= so a refresh still lands on the
+                        // same conversation (deep-link friendly).
+                        try {
+                          const url = new URL(window.location.href);
+                          if (url.searchParams.has('message')) {
+                            url.searchParams.delete('message');
+                            window.history.replaceState(null, '', url.toString());
+                          }
+                        } catch { /* noop */ }
+                      }}
+                      onBack={isMobile ? () => {
+                        if (inbox.legacyConversation) {
+                          inbox.setPipContact({ name: inbox.legacyConversation.contact.name, avatar: inbox.legacyConversation.contact.avatar, lastMessage: inbox.legacyConversation.lastMessage?.content, contactId: inbox.legacyConversation.id });
+                        }
+                        inbox.setSelectedContactId(null);
+                      } : undefined}
+                    />
+                  </SectionErrorBoundary>
+                )}
+              </div>
+              {inbox.showDetails && (
+                <SectionErrorBoundary sectionName="Detalhes do Contato">
+                  <ContactDetailsResponsive key={`details-${inbox.legacyConversation.id}`} conversation={inbox.legacyConversation} onClose={() => inbox.setShowDetails(false)} />
+                </SectionErrorBoundary>
+              )}
+            </>
+          </Suspense>
+        ) : <InboxEmptyChat />}
+      </div>
+
+      {inbox.usingCache && (
+        <div className="absolute top-0 left-0 right-0 z-50 bg-warning/90 text-warning-foreground text-xs text-center py-1.5 font-medium">📡 Modo offline — exibindo dados em cache</div>
+      )}
+
+      {isMobile && inbox.pipContact && !inbox.selectedContactId && (
+        <MiniChatPiP contactName={inbox.pipContact.name} contactAvatar={inbox.pipContact.avatar} lastMessage={inbox.pipContact.lastMessage} isVisible={true}
+          onExpand={() => { inbox.setSelectedContactId(inbox.pipContact!.contactId); inbox.setPipContact(null); }} onDismiss={() => inbox.setPipContact(null)} />
+      )}
+    </div>
+  );
+}

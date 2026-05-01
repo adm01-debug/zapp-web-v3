@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useInboxStatusPref } from '@/hooks/useInboxStatusPref';
+import { useInboxStatusPref } from '@/features/inbox';
 
 export function StatusLabelToggle({ className }: { className?: string }) {
   const { showLabel, toggle } = useInboxStatusPref();

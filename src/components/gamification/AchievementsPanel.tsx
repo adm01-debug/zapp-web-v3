@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useAgentGamification } from '@/hooks/useAgentGamification';
+import { useAgentGamification } from '@/features/admin';
 import { AchievementBadge } from './AchievementBadge';
 import { AchievementsStatsHeader, AchievementsHeaderBadges, isNewAchievement } from './AchievementsStats';
 

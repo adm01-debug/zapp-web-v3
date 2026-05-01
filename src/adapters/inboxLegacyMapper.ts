@@ -1,6 +1,6 @@
 import { Conversation, Message } from '@/types/chat';
-import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
-import { RealtimeMessage } from '@/hooks/useRealtimeMessages';
+import { ConversationWithMessages } from '@/features/inbox';
+import { RealtimeMessage } from '@/features/inbox';
 
 /**
  * Pure transformation functions to map between internal Realtime formats

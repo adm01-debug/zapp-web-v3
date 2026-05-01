@@ -10,7 +10,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 vi.mock('@/lib/logger', () => ({ getLogger: () => ({ warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() }) }));
 vi.mock('sonner', () => ({ toast: { error: (...args: unknown[]) => toastErrorMock(...args) } }));
 
-import { useMediaUrl } from '../useMediaUrl';
+import { useMediaUrl } from '@/features/inbox';
 
 const baseOpts = {
   instanceName: 'wpp2',

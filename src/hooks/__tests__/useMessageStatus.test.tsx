@@ -20,7 +20,7 @@ vi.mock('@/lib/logger', () => ({
   log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 
-import { useMessageStatus } from '@/hooks/useMessageStatus';
+import { useMessageStatus } from '@/features/inbox';
 
 const mockStatuses = [
   { id: 'm1', status: 'sent', status_updated_at: '2024-01-01T10:00:00Z', error_code: null, error_reason: null },

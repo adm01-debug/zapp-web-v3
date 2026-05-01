@@ -76,7 +76,7 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
-import { useSipClient } from '../useSipClient';
+import { useSipClient } from '@/features/inbox';
 import { toast } from 'sonner';
 
 describe('useSipClient', () => {

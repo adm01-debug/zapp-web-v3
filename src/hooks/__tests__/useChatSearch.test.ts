@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useChatSearch } from '../useChatSearch';
+import { useChatSearch } from '@/features/inbox';
 import { Message } from '@/types/chat';
 
 const makeMockMessage = (overrides: Partial<Message> = {}): Message => ({

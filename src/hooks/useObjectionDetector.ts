@@ -1,8 +1,8 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { type ToneKey, getTonePrompt } from '@/components/inbox/ai-tools/ToneSelector';
-import { usePeriodFilter } from '@/components/inbox/ai-tools/PeriodFilterSelector';
+import { type ToneKey, getTonePrompt } from '@/features/inbox-tools/ToneSelector';
+import { usePeriodFilter } from '@/features/inbox-tools/PeriodFilterSelector';
 
 interface Objection {
   objection: string;

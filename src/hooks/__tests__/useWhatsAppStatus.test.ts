@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useWhatsAppStatus } from '../useWhatsAppStatus';
+import { useWhatsAppStatus } from '@/features/inbox';
 
 // Mocks
 const mockMaybeSingle = vi.fn();

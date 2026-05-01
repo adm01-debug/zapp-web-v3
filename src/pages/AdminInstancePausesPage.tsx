@@ -12,8 +12,8 @@ import { Pause, Play, ShieldAlert, RefreshCw, AlertTriangle } from 'lucide-react
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { AuthEventTrendChart } from '@/components/admin/instance-pauses/AuthEventTrendChart';
-import { IncidentDetailDialog, type IncidentPause } from '@/components/admin/instance-pauses/IncidentDetailDialog';
+import { AuthEventTrendChart } from '@/features/admin-pauses/AuthEventTrendChart';
+import { IncidentDetailDialog, type IncidentPause } from '@/features/admin-pauses/IncidentDetailDialog';
 
 type PauseRow = IncidentPause;
 

@@ -11,7 +11,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 // Mock useRealtimeMessages type
-vi.mock('@/hooks/useRealtimeMessages', () => ({}));
+vi.mock('@/features/inbox', () => ({}));
 
 import { useOfflineCache } from '@/hooks/useOfflineCache';
 

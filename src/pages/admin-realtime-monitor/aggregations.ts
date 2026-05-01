@@ -6,7 +6,7 @@
  * tested without React or Supabase.
  */
 
-import type { FailedMessageRow } from '@/hooks/monitoring/useFailedMessages';
+import type { FailedMessageRow } from '@/features/admin';
 
 export interface AgentDispatchAggregate {
   agent: string;
