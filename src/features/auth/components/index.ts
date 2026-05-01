@@ -6,3 +6,8 @@ export * from './HeroBenefits';
 export * from './NotAuthorizedView';
 export * from './PreviewPreconditionBanner';
 export * from './ReauthDialog';
+export * from './mfa/MFAEnroll';
+export * from './mfa/MFASettings';
+export * from './mfa/MFAVerify';
+export * from './mfa/MFABackupCodes';
+export * from './permissions/PermissionMatrix';
