@@ -1,6 +1,6 @@
 export * from '../useConnectionsManager';
 export * from '../useEvolutionApi';
-export * from '../useWhatsAppStatus';
+export * from '@/features/inbox/hooks/useWhatsAppStatus';
 export * from '../useWhatsAppTemplates';
 export * from '../useConnectionAlertsPush';
 export * from '../useConnectionQueues';
