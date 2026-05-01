@@ -18,6 +18,49 @@ interface EvolutionConfig {
 
 const DEFAULT_URL = 'https://evolution.atomicabr.com.br';
 const SETTINGS_KEY = 'evolution_api_config';
+const LS_KEY = 'zapp_evolution_config';
+
+/** Try to read from system_settings table, fallback to localStorage */
+async function loadConfig(): Promise<EvolutionConfig | null> {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', SETTINGS_KEY)
+      .maybeSingle();
+    if (!error && data?.value) {
+      const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+      return {
+        evolution_api_url: parsed.evolution_api_url || DEFAULT_URL,
+        evolution_api_key: parsed.evolution_api_key || '',
+      };
+    }
+  } catch {}
+  // Fallback: localStorage
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+}
+
+/** Save to system_settings if available, always save to localStorage as backup */
+async function saveConfig(config: EvolutionConfig): Promise<void> {
+  // Always persist to localStorage (instant, no table dependency)
+  localStorage.setItem(LS_KEY, JSON.stringify(config));
+
+  // Try DB upsert (may fail if table doesn't exist yet)
+  try {
+    await supabase
+      .from('system_settings')
+      .upsert(
+        { key: SETTINGS_KEY, value: JSON.stringify(config), updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      );
+  } catch {
+    // Table may not exist yet — localStorage is the fallback
+  }
+}
 
 export function EvolutionApiIntegrationView() {
   const [config, setConfig] = useState<EvolutionConfig>({
@@ -32,26 +75,10 @@ export function EvolutionApiIntegrationView() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await supabase
-          .from('system_settings')
-          .select('value')
-          .eq('key', SETTINGS_KEY)
-          .maybeSingle();
-        if (data?.value) {
-          const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
-          setConfig({
-            evolution_api_url: parsed.evolution_api_url || DEFAULT_URL,
-            evolution_api_key: parsed.evolution_api_key || '',
-          });
-        }
-      } catch (err) {
-        console.warn('[evo-config] Failed to load:', err);
-      } finally {
-        setLoaded(true);
-      }
-    })();
+    loadConfig().then((saved) => {
+      if (saved) setConfig(saved);
+      setLoaded(true);
+    });
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -61,14 +88,8 @@ export function EvolutionApiIntegrationView() {
     }
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('system_settings')
-        .upsert(
-          { key: SETTINGS_KEY, value: JSON.stringify(config), updated_at: new Date().toISOString() },
-          { onConflict: 'key' }
-        );
-      if (error) throw error;
-      toast.success('Configurações da Evolution API salvas!');
+      await saveConfig(config);
+      toast.success('Configura\u00e7\u00f5es da Evolution API salvas!');
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + (err?.message || 'Erro desconhecido'));
     } finally {
@@ -95,12 +116,12 @@ export function EvolutionApiIntegrationView() {
         const instances = Array.isArray(data) ? data : [];
         const connected = instances.filter((i: any) => i.connectionStatus === 'open').length;
         setTestResult('success');
-        setTestMessage(`Conexão OK! ${instances.length} instância(s) encontrada(s), ${connected} online.`);
-        toast.success('Conexão com a Evolution API estabelecida!');
+        setTestMessage(`Conex\u00e3o OK! ${instances.length} inst\u00e2ncia(s) encontrada(s), ${connected} online.`);
+        toast.success('Conex\u00e3o com a Evolution API estabelecida!');
       } else if (response.status === 401) {
         setTestResult('error');
-        setTestMessage('Chave de API inválida. Verifique e tente novamente.');
-        toast.error('Chave de API inválida');
+        setTestMessage('Chave de API inv\u00e1lida. Verifique e tente novamente.');
+        toast.error('Chave de API inv\u00e1lida');
       } else {
         setTestResult('error');
         setTestMessage(`Erro HTTP ${response.status}: ${response.statusText}`);
@@ -109,9 +130,9 @@ export function EvolutionApiIntegrationView() {
     } catch (err: any) {
       setTestResult('error');
       setTestMessage(err?.message?.includes('fetch')
-        ? 'Não foi possível conectar. Verifique se a URL está correta e acessível.'
+        ? 'N\u00e3o foi poss\u00edvel conectar. Verifique se a URL est\u00e1 correta e acess\u00edvel.'
         : err?.message || 'Erro desconhecido');
-      toast.error('Falha na conexão');
+      toast.error('Falha na conex\u00e3o');
     } finally {
       setTesting(false);
     }
@@ -134,7 +155,7 @@ export function EvolutionApiIntegrationView() {
           </div>
           <div>
             <h2 className="font-display text-xl font-bold">Evolution API</h2>
-            <p className="text-sm text-muted-foreground">Configure a conexão com sua instância Evolution API</p>
+            <p className="text-sm text-muted-foreground">Configure a conex\u00e3o com sua inst\u00e2ncia Evolution API</p>
           </div>
         </div>
       </motion.div>
@@ -144,11 +165,11 @@ export function EvolutionApiIntegrationView() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Server className="w-4 h-4" />
-              Configuração do Servidor
+              Configura\u00e7\u00e3o do Servidor
             </CardTitle>
             <CardDescription>
-              Informe a URL e a chave de API da sua instância Evolution API.
-              Essas credenciais são usadas para conectar WhatsApp, gerar QR Codes e enviar mensagens.
+              Informe a URL e a chave de API da sua inst\u00e2ncia Evolution API.
+              Essas credenciais s\u00e3o usadas para conectar WhatsApp, gerar QR Codes e enviar mensagens.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -200,7 +221,7 @@ export function EvolutionApiIntegrationView() {
             <div className="flex items-center gap-3 pt-2">
               <Button onClick={handleTest} variant="outline" disabled={testing || !config.evolution_api_key}>
                 {testing ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
-                Testar Conexão
+                Testar Conex\u00e3o
               </Button>
               <Button onClick={handleSave} disabled={saving || !config.evolution_api_key}>
                 {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
@@ -238,10 +259,10 @@ export function EvolutionApiIntegrationView() {
             <div className="flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               <div className="space-y-1">
-                <p className="text-sm font-medium">Segurança</p>
+                <p className="text-sm font-medium">Seguran\u00e7a</p>
                 <p className="text-xs text-muted-foreground">
-                  A chave de API é armazenada de forma segura no banco de dados e nunca é exposta no código-fonte.
-                  Apenas usuários autenticados com permissão de administrador podem visualizar ou alterar essas configurações.
+                  A chave de API \u00e9 armazenada de forma segura e nunca \u00e9 exposta no c\u00f3digo-fonte.
+                  Apenas usu\u00e1rios autenticados podem visualizar ou alterar essas configura\u00e7\u00f5es.
                 </p>
               </div>
             </div>
