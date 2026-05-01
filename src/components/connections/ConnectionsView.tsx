@@ -91,7 +91,7 @@ export function ConnectionsView() {
     <div className="p-6 space-y-6 overflow-y-auto h-full relative bg-background">
       <AuroraBorealis /><FloatingParticles />
       
-      <PageHeader title="Conexões WhatsApp" subtitle="Gerencie múltiplas conexões WhatsApp via Evolution API"
+      <PageHeader title="Conexões WhatsApp" subtitle="Gerencie suas conexões WhatsApp"
         breadcrumbs={[{ label: 'Configurações' }, { label: 'Conexões' }]}
         actions={
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -171,10 +171,10 @@ export function ConnectionsView() {
             {qrCodeDialog.status === 'pending' && (
               <>
                 <div className="text-sm text-muted-foreground space-y-2">
-                  <p>1. Abra o WhatsApp no seu celular</p><p>2. Toque em <strong>Menu</strong> ou <strong>Configurações</strong></p>
-                  <p>3. Toque em <strong>Aparelhos conectados</strong></p><p>4. Toque em <strong>Conectar um aparelho</strong></p><p>5. Aponte seu celular para esta tela</p>
+                  <p>1. Abra o <strong>WhatsApp</strong> no celular deste número</p><p>2. Toque em <strong>Configurações</strong> (⚙️)</p>
+                  <p>3. Toque em <strong>Aparelhos conectados</strong></p><p>4. Toque em <strong>Conectar aparelho</strong></p><p>5. Aponte a câmera para o QR Code acima</p>
                 </div>
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground"><Loader2 className="w-3 h-3 animate-spin" />Aguardando conexão...</div>
+                <div className="flex items-center justify-center gap-2 text-xs text-emerald-400/80"><Loader2 className="w-3 h-3 animate-spin" />Aguardando leitura do QR Code...</div>
                 {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
                 {qrCodeDialog.ttlSeconds != null && qrCodeDialog.ttlSource && (
                   <QrTtlBadge ttlSeconds={qrCodeDialog.ttlSeconds} source={qrCodeDialog.ttlSource} />
