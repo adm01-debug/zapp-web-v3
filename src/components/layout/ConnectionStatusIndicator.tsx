@@ -1,0 +1,209 @@
+import { useEffect, useRef, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { WifiOff, Wifi, RefreshCw } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { getLogger } from '@/lib/logger';
+
+const log = getLogger('ConnectionStatusIndicator');
+const RECONNECT_COOLDOWN_MS = 30_000;
+
+interface ConnectionRow {
+  id: string;
+  instance_id: string;
+  phone_number: string | null;
+  status: string;
+}
+
+interface Props {
+  collapsed?: boolean;
+}
+
+/**
+ * Indicador discreto de status das conexões WhatsApp.
+ * Substitui o antigo banner vermelho fixo no topo da página.
+ * - Verde: tudo conectado
+ * - Âmbar: 1+ desconectada(s) — Popover com lista + ação Reconectar
+ */
+export function ConnectionStatusIndicator({ collapsed = false }: Props) {
+  const [connections, setConnections] = useState<ConnectionRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reconnecting, setReconnecting] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const cooldownRef = useRef<Map<string, number>>(new Map());
+  const prevDisconnectedRef = useRef<Set<string>>(new Set());
+  const initializedRef = useRef(false);
+
+  const fetchStatus = async () => {
+    const { data, error } = await supabase
+      .from('whatsapp_connections')
+      .select('id, instance_id, phone_number, status');
+    if (error) {
+      log.warn('Failed to fetch connections', { error: error.message });
+      return;
+    }
+    const rows = (data ?? []) as ConnectionRow[];
+    setConnections(rows);
+    setLoading(false);
+
+    // Detect new disconnections → single toast per instance
+    const currentDisconnected = new Set(rows.filter(r => r.status !== 'connected').map(r => r.instance_id));
+    if (initializedRef.current) {
+      currentDisconnected.forEach(id => {
+        if (!prevDisconnectedRef.current.has(id)) {
+          toast.warning(`Conexão "${id}" caiu`, {
+            description: 'Mensagens podem não ser entregues. Clique no indicador para reconectar.',
+            duration: 6000,
+          });
+        }
+      });
+    }
+    prevDisconnectedRef.current = currentDisconnected;
+    initializedRef.current = true;
+  };
+
+  useEffect(() => {
+    fetchStatus();
+    const channel = supabase
+      .channel('connection-status-indicator')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'whatsapp_connections' },
+        () => { fetchStatus(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleReconnect = async (conn: ConnectionRow) => {
+    const now = Date.now();
+    const lastAttempt = cooldownRef.current.get(conn.instance_id) ?? 0;
+    if (now - lastAttempt < RECONNECT_COOLDOWN_MS) {
+      const wait = Math.ceil((RECONNECT_COOLDOWN_MS - (now - lastAttempt)) / 1000);
+      toast.info(`Aguarde ${wait}s antes de tentar novamente.`);
+      return;
+    }
+    cooldownRef.current.set(conn.instance_id, now);
+    setReconnecting(conn.instance_id);
+    try {
+      const { data, error } = await supabase.functions.invoke('evolution-api', {
+        body: { action: 'connect', instanceName: conn.instance_id },
+      });
+      if (error) throw new Error(error.message || 'Falha ao invocar evolution-api');
+      if (data?.error === true) {
+        const code = typeof data?.code === 'string' ? data.code : null;
+        const message = data?.message || 'Erro Evolution API';
+        if (code === 'EVOLUTION_AUTH_ERROR') {
+          toast.error(`Sem autorização: ${message}`, { duration: 8000 });
+          return;
+        }
+        throw new Error(message);
+      }
+      toast.success(`Reconectando ${conn.instance_id}…`);
+      window.dispatchEvent(new CustomEvent('navigate-view', { detail: 'connections' }));
+      setOpen(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erro desconhecido';
+      log.error('Reconnect failed', { instance: conn.instance_id, error: msg });
+      toast.error(`Erro: ${msg}`);
+    } finally {
+      setReconnecting(null);
+    }
+  };
+
+  if (loading || connections.length === 0) return null;
+
+  const disconnected = connections.filter(c => c.status !== 'connected');
+  const total = connections.length;
+  const connected = total - disconnected.length;
+  const hasIssue = disconnected.length > 0;
+
+  const triggerLabel = hasIssue
+    ? `${disconnected.length} conexão${disconnected.length > 1 ? 'ões' : ''} offline`
+    : 'Conexões WhatsApp ativas';
+
+  const button = (
+    <button
+      type="button"
+      aria-label={triggerLabel}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
+        collapsed ? 'h-9 w-9 justify-center' : 'h-7 px-2',
+        hasIssue
+          ? 'bg-destructive/10 text-destructive hover:bg-destructive/15 border border-destructive/30'
+          : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15 border border-emerald-500/20'
+      )}
+    >
+      {hasIssue ? (
+        <WifiOff className="w-3.5 h-3.5 shrink-0" />
+      ) : (
+        <Wifi className="w-3.5 h-3.5 shrink-0" />
+      )}
+      {!collapsed && (
+        <span className="text-[11px] font-semibold tabular-nums leading-none">
+          {connected}/{total}
+        </span>
+      )}
+    </button>
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <Tooltip delayDuration={200}>
+        <TooltipTrigger asChild>
+          <PopoverTrigger asChild>{button}</PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8} className="text-xs">
+          {triggerLabel}
+        </TooltipContent>
+      </Tooltip>
+      <PopoverContent side="right" align="start" className="w-72 p-0">
+        <div className="px-3 py-2 border-b border-border">
+          <p className="text-xs font-semibold text-foreground">WhatsApp — Conexões</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {connected} de {total} conectada{total > 1 ? 's' : ''}
+          </p>
+        </div>
+        <ul className="max-h-72 overflow-auto py-1" role="list">
+          {connections.map((c) => {
+            const isOk = c.status === 'connected';
+            const isReconn = reconnecting === c.instance_id;
+            return (
+              <li key={c.id} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-muted/40">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={cn(
+                      'w-1.5 h-1.5 rounded-full shrink-0',
+                      isOk ? 'bg-emerald-500' : 'bg-destructive animate-pulse'
+                    )}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-foreground truncate">{c.instance_id}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {c.phone_number || (isOk ? 'Online' : 'Desconectada')}
+                    </p>
+                  </div>
+                </div>
+                {!isOk && (
+                  <button
+                    type="button"
+                    onClick={() => handleReconnect(c)}
+                    disabled={isReconn}
+                    className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded border border-border hover:bg-muted text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                  >
+                    <RefreshCw className={cn('w-3 h-3', isReconn && 'animate-spin')} />
+                    Reconectar
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  );
+}
