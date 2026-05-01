@@ -13,6 +13,26 @@ const HISTORY_STORAGE_KEY = 'zappweb:connection-disconnect-history';
 const HISTORY_MAX_ENTRIES = 20;
 const HISTORY_VISIBLE = 5;
 const HISTORY_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
+const FILTER_STORAGE_KEY = 'zappweb:connection-popover-filter';
+const SELECTED_STORAGE_KEY = 'zappweb:connection-popover-selected';
+
+type FilterValue = 'all' | 'connected' | 'disconnected';
+
+const loadFilter = (): FilterValue => {
+  try {
+    const v = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (v === 'connected' || v === 'disconnected' || v === 'all') return v;
+  } catch { /* ignore */ }
+  return 'all';
+};
+
+const loadSelected = (): string | null => {
+  try {
+    return localStorage.getItem(SELECTED_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
 
 interface ConnectionRow {
   id: string;
