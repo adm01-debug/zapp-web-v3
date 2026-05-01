@@ -57,6 +57,8 @@ const AdminWhatsAppModePage = lazyWithRetry(() => import("@/pages/admin/AdminWha
 const AdminWhatsAppLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppLogsPage"));
 const Install = lazyWithRetry(() => import("@/pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("@/pages/ChatPopup"));
+const InboxPage = lazyWithRetry(() => import("@/pages/inbox/InboxPage"));
+
 
 // Route loading fallback component
 function RouteLoadingFallback() {
@@ -89,6 +91,8 @@ export function AppRoutes() {
         <Route path="/install" element={<Install />} />
         <Route path="/chat-popup/:contactId" element={<ProtectedRoute><ChatPopup /></ProtectedRoute>} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute><InboxPage /></ProtectedRoute>} />
+
         <Route path="/queue/:id" element={<ProtectedRoute><QueueDetails /></ProtectedRoute>} />
         <Route path="/queues/comparison" element={<ProtectedRoute><QueuesComparison /></ProtectedRoute>} />
         <Route path="/sla" element={<ProtectedRoute><SLADashboard /></ProtectedRoute>} />
