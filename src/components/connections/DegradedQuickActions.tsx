@@ -10,10 +10,12 @@ interface DegradedConnection {
   id: string;
   instance_id?: string | null;
   name?: string | null;
+  phone_number?: string | null;
   health_status?: string | null;
   health_response_ms?: number | null;
   last_health_check?: string | null;
 }
+
 
 interface Props {
   connections: DegradedConnection[];
