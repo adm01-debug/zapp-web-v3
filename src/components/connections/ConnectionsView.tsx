@@ -33,6 +33,7 @@ import { QrAttemptHistory } from './QrAttemptHistory';
 import { RefreshQrButton } from './RefreshQrButton';
 import { IdempotencyMissBanner } from './IdempotencyMissBanner';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
+import { useEvolutionAutoSync } from '@/hooks/useEvolutionAutoSync';
 
 export function ConnectionsView() {
   const {
@@ -43,6 +44,9 @@ export function ConnectionsView() {
     handleAddConnection, handleShowQrCode, handleRefreshQrCode,
     handleCopyId, handleDisconnect, handleSetDefault, handleSetApiType, handleDelete, closeQrDialog,
   } = useConnectionsManager();
+
+  // Auto-sync Evolution instances not yet in whatsapp_connections
+  useEvolutionAutoSync();
 
   const [businessHoursDialog, setBusinessHoursDialog] = useState({ open: false, connectionId: '', connectionName: '' });
   const [queuesDialog, setQueuesDialog] = useState({ open: false, connectionId: '', connectionName: '' });
