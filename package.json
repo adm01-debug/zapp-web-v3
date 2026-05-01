@@ -20,7 +20,8 @@
     "smoke:pre-deploy": "bash scripts/smoke-pre-deploy.sh",
     "perf:budget": "node scripts/check-performance-budget.mjs",
     "perf:budget:baseline": "node scripts/check-performance-budget.mjs --write-baseline",
-    "check:domain": "bun run scripts/check-domain-boundaries.ts"
+    "check:domain": "bun run scripts/check-domain-boundaries.ts",
+    "check:barrels": "bun run scripts/validate-barrels.ts"
   },
   "dependencies": {
     "@axe-core/react": "^4.11.1",
