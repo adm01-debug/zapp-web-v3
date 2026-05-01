@@ -6,7 +6,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAriaAnnouncer } from '@/hooks/useAriaAnnouncer';
 import { useUserRole, type AppRole } from '@/features/auth';
 import { ErrorBoundaryWithRetry } from '@/components/ui/error-boundary-retry';
-import { NotAuthorizedView } from '@/features/authNotAuthorizedView';
+import { NotAuthorizedView } from '@/features/auth';
 
 import * as Views from './lazyViews';
 

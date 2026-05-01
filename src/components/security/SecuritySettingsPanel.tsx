@@ -20,7 +20,7 @@ import { MFASettings } from '@/components/mfa/MFASettings';
 import { useAuth } from '@/features/auth';
 import { useMFA } from '@/features/auth';
 import { useReauthentication } from '@/features/auth';
-import { ReauthDialog } from '@/features/authReauthDialog';
+import { ReauthDialog } from '@/features/auth';
 import { toast } from 'sonner';
 
 interface SecuritySettingsPanelProps {

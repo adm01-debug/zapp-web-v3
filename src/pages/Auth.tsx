@@ -7,11 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Smartphone, Mail, User, ArrowRight, Sparkles, Fingerprint, Loader2, Lock, AlertTriangle } from 'lucide-react';
 import { RippleButton } from '@/components/ui/micro-interactions';
-import { PasswordInput } from '@/features/authPasswordInput';
-import { PasswordStrengthMeter } from '@/features/authPasswordStrengthMeter';
-import { SocialProof } from '@/features/authSocialProof';
-import { HeroBenefits } from '@/features/authHeroBenefits';
-import { useAuthForm } from '@/features/authForm';
+import { PasswordInput } from '@/features/auth';
+import { PasswordStrengthMeter } from '@/features/auth';
+import { SocialProof } from '@/features/auth';
+import { HeroBenefits } from '@/features/auth';
+import { useAuthForm } from '@/features/auth';
 import { Link } from 'react-router-dom';
 
 export default function Auth() {
