@@ -275,6 +275,15 @@ export function useConnectionsManager() {
       return;
     }
     setIsCreating(true);
+
+    // ⛔ Prevent duplicate phone numbers
+    const { isSamePhone } = await import("@/lib/phoneUtils");
+    const duplicate = connections.find((c) => isSamePhone(c.phone_number, newConnection.phone_number));
+    if (duplicate) {
+      toast({ title: "Número já conectado", description: `O número ${newConnection.phone_number} já está vinculado à conexão "${duplicate.name}". Cada número só pode ter uma conexão.`, variant: "destructive" });
+      setIsCreating(false);
+      return;
+    }
     const isOfficial = newConnection.api_type === 'official';
     const instanceName = isOfficial ? `official_${Date.now().toString(36)}` : generateInstanceName(newConnection.name);
     try {
