@@ -5,12 +5,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { Users, Search } from 'lucide-react';
-import { useAgents, type AgentWithStats } from '@/hooks/useAgents';
+import { useAgents, type AgentWithStats } from '@/features/admin';
 import { useConnectionsManager } from '@/hooks/useConnectionsManager';
-import { useAgentPendingCounts } from '@/hooks/inbox/useAgentPendingCounts';
-import { useAgentRecentSends } from '@/hooks/inbox/useAgentRecentSends';
-import { AgentsConnectionsHeader } from '@/components/inbox/agents-ops/AgentsConnectionsHeader';
-import { AgentOpsTable } from '@/components/inbox/agents-ops/AgentOpsTable';
+import { useAgentPendingCounts } from '@/features/inboxuseAgentPendingCounts';
+import { useAgentRecentSends } from '@/features/inboxuseAgentRecentSends';
+import { AgentsConnectionsHeader } from '@/features/inbox/agents-ops/AgentsConnectionsHeader';
+import { AgentOpsTable } from '@/features/inbox/agents-ops/AgentOpsTable';
 
 type StatusFilter = 'all' | AgentWithStats['status'];
 

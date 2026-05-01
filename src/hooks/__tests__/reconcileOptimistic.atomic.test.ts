@@ -14,7 +14,7 @@ import {
   applyReconciliation,
 } from '@/hooks/useExternalEvolution';
 import { playerStateStore } from '@/hooks/realtime/playerStateStore';
-import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
+import type { RealtimeMessage } from '@/features/inbox';
 
 const BASE_TIME = new Date('2026-04-27T10:00:00.000Z').getTime();
 const iso = (offsetMs: number) => new Date(BASE_TIME + offsetMs).toISOString();

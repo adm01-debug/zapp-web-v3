@@ -1,8 +1,8 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ToneKey, getTonePrompt } from '@/components/inbox/ai-tools/ToneSelector';
-import { usePeriodFilter } from '@/components/inbox/ai-tools/PeriodFilterSelector';
+import { ToneKey, getTonePrompt } from '@/features/inbox/ai-tools/ToneSelector';
+import { usePeriodFilter } from '@/features/inbox/ai-tools/PeriodFilterSelector';
 
 interface ChatMessage {
   id: string;

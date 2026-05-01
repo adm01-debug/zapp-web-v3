@@ -4,8 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { AgentRecentSendsPopover } from './AgentRecentSendsPopover';
-import type { AgentWithStats } from '@/hooks/useAgents';
-import type { RecentSend } from '@/hooks/inbox/useAgentRecentSends';
+import type { AgentWithStats } from '@/features/admin';
+import type { RecentSend } from '@/features/inboxuseAgentRecentSends';
 
 interface Props {
   agents: AgentWithStats[];

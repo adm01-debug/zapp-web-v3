@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useChatPanelHandlers } from '@/components/inbox/chat/useChatPanelHandlers';
+import { useChatPanelHandlers } from '@/features/inbox/chat/useChatPanelHandlers';
 
 // Mock dependencies
 vi.mock('@/lib/logger', () => ({

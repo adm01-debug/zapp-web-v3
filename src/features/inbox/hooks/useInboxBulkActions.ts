@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useUndoableAction } from '@/hooks/useUndoableAction';
-import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
+import { ConversationWithMessages } from '@/features/inbox';
 
 interface UseInboxBulkActionsProps {
   refetch: () => void;

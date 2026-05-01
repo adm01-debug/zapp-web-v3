@@ -15,7 +15,7 @@ import {
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useDiagnosticsData, type SystemHealth } from '@/hooks/useDiagnosticsData';
+import { useDiagnosticsData, type SystemHealth } from '@/features/admin';
 
 // ─── Helpers ───
 function StatusDot({ status }: { status: string }) {

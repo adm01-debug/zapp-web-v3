@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAgentReassignment } from '@/hooks/useAgentReassignment';
+import { useAgentReassignment } from '@/features/admin';
 import { UserMinus, Scale, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

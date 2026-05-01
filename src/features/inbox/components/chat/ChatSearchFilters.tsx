@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Search, CalendarDays, X } from 'lucide-react';
-import type { SearchFilter, DatePreset } from '@/hooks/useChatSearch';
+import type { SearchFilter, DatePreset } from '@/features/inbox';
 
 const FILTERS: { key: SearchFilter; label: string; icon: React.ReactNode }[] = [
   { key: 'all', label: 'Todos', icon: <Search className="w-3.5 h-3.5" /> },

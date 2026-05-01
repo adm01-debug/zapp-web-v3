@@ -18,7 +18,7 @@ import {
   buildRetryAlertDedupeKey,
   RETRY_ALERT_COOLDOWN_MS,
 } from '../retryAlerts';
-import { __test__ as missAlerts } from '@/hooks/monitoring/useIdempotencyMissAlerts';
+import { __test__ as missAlerts } from '@/features/adminuseIdempotencyMissAlerts';
 
 const { hourBucket, buildPersistKey, ONE_HOUR_MS } = missAlerts;
 

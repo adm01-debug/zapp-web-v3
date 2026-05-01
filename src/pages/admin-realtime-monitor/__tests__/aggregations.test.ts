@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { aggregateByAgent, aggregateByChannel, extractAgent } from '../aggregations';
-import type { FailedMessageRow } from '@/hooks/monitoring/useFailedMessages';
+import type { FailedMessageRow } from '@/features/adminuseFailedMessages';
 
 function row(overrides: Partial<FailedMessageRow> & { payload?: Record<string, unknown> }): FailedMessageRow {
   return {

@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle, BellRing, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useIdempotencyMissAlerts } from '@/hooks/monitoring/useIdempotencyMissAlerts';
+import { useIdempotencyMissAlerts } from '@/features/adminuseIdempotencyMissAlerts';
 
 function formatCountdown(ms: number): string {
   if (ms <= 0) return '0s';

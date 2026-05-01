@@ -50,7 +50,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-import { useAgents } from '@/hooks/useAgents';
+import { useAgents } from '@/features/admin';
 
 function createWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });

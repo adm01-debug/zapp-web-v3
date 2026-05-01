@@ -4,7 +4,7 @@ import {
   Users, MessageSquare, UsersRound, FileText, ShieldCheck,
   ClipboardList, Handshake, UserCheck, Truck, Wrench, ChevronDown,
 } from 'lucide-react';
-import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
+import { ConversationWithMessages } from '@/features/inbox';
 import { isGroup as isGroupJid } from '@/lib/jid';
 
 // ---------- types & config ----------

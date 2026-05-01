@@ -7,9 +7,9 @@ import { BrowserRouter } from 'react-router-dom';
 
 vi.mock('@/hooks/use-mobile', () => ({ useIsMobile: () => false }));
 vi.mock('@/lib/popupManager', () => ({ openChatPopup: vi.fn() }));
-vi.mock('@/components/inbox/SLAIndicator', () => ({ SLAIndicator: () => null }));
-vi.mock('@/components/inbox/VoiceSelector', () => ({ VoiceSelector: () => null }));
-vi.mock('@/components/inbox/SpeedSelector', () => ({ SpeedSelector: () => null }));
+vi.mock('@/features/inbox/SLAIndicator', () => ({ SLAIndicator: () => null }));
+vi.mock('@/features/inbox/VoiceSelector', () => ({ VoiceSelector: () => null }));
+vi.mock('@/features/inbox/SpeedSelector', () => ({ SpeedSelector: () => null }));
 
 const mockConversation = {
   id: 'conv-1',

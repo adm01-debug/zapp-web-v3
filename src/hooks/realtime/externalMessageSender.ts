@@ -15,7 +15,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import { jidToPhone } from '@/adapters/evolutionAdapter';
-import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
+import type { RealtimeMessage } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
 import { parseEvolutionError } from '@/hooks/realtime/parseEvolutionError';
 

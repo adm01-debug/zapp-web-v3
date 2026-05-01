@@ -17,8 +17,8 @@ import { describe, it, expect } from 'vitest';
 import {
   FILTER_OPTIONS,
   filterByContactType,
-} from '@/components/inbox/ContactTypeFilter';
-import type { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
+} from '@/features/inbox/ContactTypeFilter';
+import type { ConversationWithMessages } from '@/features/inbox';
 import {
   toIndividualJid,
   toGroupJid,

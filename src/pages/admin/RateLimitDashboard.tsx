@@ -5,7 +5,7 @@ import {
   TrendingUp, TrendingDown, Clock, RefreshCw,
   BarChart3
 } from 'lucide-react';
-import { useRateLimitLogs } from '@/hooks/useRateLimitLogs';
+import { useRateLimitLogs } from '@/features/admin';
 import { useUserRole } from '@/features/auth';
 import { BlockedIPsPanel } from '@/components/security/BlockedIPsPanel';
 import { IPWhitelistPanel } from '@/components/security/IPWhitelistPanel';

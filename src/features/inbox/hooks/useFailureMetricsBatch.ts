@@ -11,7 +11,7 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
+import type { ConversationWithMessages } from '@/features/inbox';
 
 export type FailureCategory = 'auth' | 'http_4xx' | 'http_5xx' | 'network' | 'unknown';
 

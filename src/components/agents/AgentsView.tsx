@@ -4,7 +4,7 @@ import { AgentsEmptyState } from '@/components/ui/contextual-empty-states';
 import { InviteAgentDialog } from '@/components/agents/InviteAgentDialog';
 import { ConfigurePermissionsDialog } from '@/components/agents/ConfigurePermissionsDialog';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { useAgents } from '@/hooks/useAgents';
+import { useAgents } from '@/features/admin';
 import { FloatingParticles } from '@/components/dashboard/FloatingParticles';
 import { AuroraBorealis } from '@/components/effects/AuroraBorealis';
 import { Card, CardContent } from '@/components/ui/card';

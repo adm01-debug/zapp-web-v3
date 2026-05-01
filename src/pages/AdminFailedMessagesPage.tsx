@@ -30,11 +30,11 @@ import {
   useFailedMessagesStats,
   type FailedMessageRow,
   type FailedMessageStatus,
-} from '@/hooks/monitoring/useFailedMessages';
+} from '@/features/adminuseFailedMessages';
 import { useUserRole } from '@/features/auth';
 import { cn } from '@/lib/utils';
-import { RetryConfigPanel } from '@/components/admin/RetryConfigPanel';
-import { BulkReprocessGuidedDialog } from '@/components/admin/BulkReprocessGuidedDialog';
+import { RetryConfigPanel } from '@/features/admin/RetryConfigPanel';
+import { BulkReprocessGuidedDialog } from '@/features/admin/BulkReprocessGuidedDialog';
 import { DLQAuditHistory } from '@/components/monitoring/DLQAuditHistory';
 import { toast } from 'sonner';
 import {

@@ -22,7 +22,7 @@ vi.mock('@/features/auth', () => ({
   AuthProvider: ({ children }: any) => children,
 }));
 
-import { useAgentGamification, ACHIEVEMENT_TYPES } from '@/hooks/useAgentGamification';
+import { useAgentGamification, ACHIEVEMENT_TYPES } from '@/features/admin';
 
 function createWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });

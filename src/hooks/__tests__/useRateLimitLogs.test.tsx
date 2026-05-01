@@ -17,7 +17,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-import { useRateLimitLogs } from '@/hooks/useRateLimitLogs';
+import { useRateLimitLogs } from '@/features/admin';
 
 const mockLogs = [
   { id: '1', ip_address: '1.2.3.4', endpoint: '/api/messages', user_id: null, request_count: 50, blocked: false, user_agent: 'Chrome', country: 'BR', city: 'SP', created_at: '2024-01-01' },

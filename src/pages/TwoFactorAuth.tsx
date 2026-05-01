@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Shield, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/features/auth';
 import { useMFA } from '@/features/auth';
-import { MFAVerify } from '@/components/mfa/MFAVerify';
+import { MFAVerify } from '@/features/auth/MFAVerify';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 

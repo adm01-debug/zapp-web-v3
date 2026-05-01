@@ -19,7 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, CheckCircle2, Clock, Circle, UserCheck, UserMinus, UserPlus, Wand2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useTicketStatus } from '@/hooks/useTicketStatus';
+import { useTicketStatus } from '@/features/inbox';
 import type { TicketEvent } from '@/lib/inbox/ticketStore';
 
 interface TicketHistorySheetProps {

@@ -27,8 +27,8 @@ import { format, formatDistanceStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useMessageSendHistory } from '@/hooks/inbox/useMessageSendHistory';
-import { formatFailureReason } from '@/hooks/inbox/useFailureReason';
+import { useMessageSendHistory } from '@/features/inboxuseMessageSendHistory';
+import { formatFailureReason } from '@/features/inboxuseFailureReason';
 import type { Message } from '@/types/chat';
 
 interface Props {

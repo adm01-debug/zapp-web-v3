@@ -17,7 +17,7 @@
  */
 import { RefreshCw, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { useFailureReason, formatFailureReason } from '@/hooks/inbox/useFailureReason';
+import { useFailureReason, formatFailureReason } from '@/features/inboxuseFailureReason';
 import type { Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
 

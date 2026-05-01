@@ -58,7 +58,7 @@ vi.mock('@/lib/logger', () => ({
   }),
 }));
 
-import { useRealtimeMessages } from '@/hooks/useRealtimeMessages';
+import { useRealtimeMessages } from '@/features/inbox';
 
 let seededContacts: any[] = [];
 let recentMessages: any[] = [];

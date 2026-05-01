@@ -18,9 +18,9 @@ import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
 import { MessageStatusIcon } from './messageUtils';
 import { useMessageSendStatus } from '@/hooks/realtime/useMessageSendStatus';
-import { useFailureReason, formatFailureReason } from '@/hooks/inbox/useFailureReason';
+import { useFailureReason, formatFailureReason } from '@/features/inboxuseFailureReason';
 import { clearSendStatus } from '@/hooks/realtime/sendStatusBus';
-import { useInboxStatusPref } from '@/hooks/useInboxStatusPref';
+import { useInboxStatusPref } from '@/features/inbox';
 import { MessageStatusPanel } from './MessageStatusPanel';
 import { MessageStatusTimestamps } from './MessageStatusTimestamps';
 

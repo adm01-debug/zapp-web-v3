@@ -19,7 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAgents } from '@/hooks/useAgents';
+import { useAgents } from '@/features/admin';
 import { useTags } from '@/hooks/useTags';
 
 export interface InboxFiltersState {

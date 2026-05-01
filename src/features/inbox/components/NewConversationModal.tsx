@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, MessageSquarePlus, Send, Loader2, UserPlus, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { useNewConversation } from '@/hooks/useNewConversation';
+import { useNewConversation } from '@/features/inbox';
 
 interface NewConversationModalProps {
   open: boolean;

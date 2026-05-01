@@ -14,7 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ConnectionsHealthBlock } from './admin-realtime-monitor/ConnectionsHealthBlock';
 import { EventsLiveBlock } from './admin-realtime-monitor/EventsLiveBlock';
 import { DispatchErrorsBlock } from './admin-realtime-monitor/DispatchErrorsBlock';
-import { EvolutionFallbackStatusCard } from '@/components/admin/EvolutionFallbackStatusCard';
+import { EvolutionFallbackStatusCard } from '@/features/admin/EvolutionFallbackStatusCard';
 import { useRealtimeMonitor } from '@/hooks/useRealtimeMonitor';
 import { cn } from '@/lib/utils';
 

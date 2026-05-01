@@ -15,7 +15,7 @@ import {
   evolutionToRealtimeMessage,
 } from '@/adapters/evolutionAdapter';
 import type { EvolutionMessage } from '@/types/evolutionExternal';
-import type { RealtimeMessage } from '@/hooks/useRealtimeMessages';
+import type { RealtimeMessage } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
 import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
 import { playerStateStore } from '@/hooks/realtime/playerStateStore';

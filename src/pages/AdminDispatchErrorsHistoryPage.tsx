@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
-import { useDispatchErrorLogs } from '@/hooks/monitoring/useDispatchErrorLogs';
+import { useDispatchErrorLogs } from '@/features/adminuseDispatchErrorLogs';
 
 const RANGE_OPTIONS = [
   { value: '24', label: 'Últimas 24h' },

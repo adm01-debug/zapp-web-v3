@@ -14,7 +14,7 @@ import type {
 } from '@/types/messageStatus';
 
 // Re-export the shared contract so existing call sites
-// (`import { MessageStatusDetail } from '@/hooks/useMessageStatus'`) keep working.
+// (`import { MessageStatusDetail } from '@/features/inbox'`) keep working.
 export type { MessageStatusDbRow, MessageStatusDetail, MessageUIStatus };
 
 const TRANSIENT: MessageUIStatus[] = ['sending', 'retrying'];

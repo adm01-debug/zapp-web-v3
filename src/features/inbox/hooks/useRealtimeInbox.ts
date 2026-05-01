@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useOfflineCache } from '@/hooks/useOfflineCache';
-import { useMessages } from '@/hooks/useMessages';
-import { useRealtimeMessages, ConversationWithMessages, ConversationContact } from '@/hooks/useRealtimeMessages';
+import { useMessages } from '@/features/inbox';
+import { useRealtimeMessages, ConversationWithMessages, ConversationContact } from '@/features/inbox';
 import { useExternalConversations, useExternalMessages } from '@/hooks/useExternalEvolution';
 import { useAuth } from '@/features/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 import { Conversation, Message } from '@/types/chat';
 import { toast } from 'sonner';
-import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/components/inbox/chat/loadOlderTypes';
+import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/features/inbox/chat/loadOlderTypes';
 import { validatePttBlob } from '@/lib/audio/pttLimits';
 import { seedAvatarCache } from '@/hooks/realtime/avatarBatchStore';
 import { mapToLegacyConversation, mapToLegacyMessages } from '@/adapters/inboxLegacyMapper';

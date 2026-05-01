@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/components/ui/context-menu';
-import { MarkdownPreview } from '@/components/inbox/chat/MarkdownPreview';
+import { MarkdownPreview } from '@/features/inbox/chat/MarkdownPreview';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AddMembersDialog } from './AddMembersDialog';
 import { TeamChatHeader } from './TeamChatHeader';

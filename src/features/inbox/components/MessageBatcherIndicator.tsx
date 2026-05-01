@@ -4,7 +4,7 @@ import { Layers, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import type { MessageBatcherStatus } from '@/hooks/useRealtimeMessages';
+import type { MessageBatcherStatus } from '@/features/inbox';
 
 interface MessageBatcherIndicatorProps {
   status: MessageBatcherStatus | null | undefined;

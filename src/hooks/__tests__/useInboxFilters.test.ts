@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useInboxFilters } from '@/hooks/useInboxFilters';
+import { useInboxFilters } from '@/features/inbox';
 
 // Mock dependencies
 vi.mock('@/integrations/supabase/client', () => ({
@@ -50,12 +50,12 @@ vi.mock('@/hooks/useUrlFilters', () => {
 });
 
 const mockFailureMetrics = { data: {} as Record<string, string> };
-vi.mock('@/hooks/inbox/useFailureMetricsBatch', () => ({
+vi.mock('@/features/inboxuseFailureMetricsBatch', () => ({
   useFailureMetricsBatch: () => mockFailureMetrics,
 }));
 
 const mockTicketStates: Record<string, any> = {};
-vi.mock('@/hooks/useTicketStatus', () => ({
+vi.mock('@/features/inbox', () => ({
   useAllTicketStates: () => mockTicketStates,
 }));
 
