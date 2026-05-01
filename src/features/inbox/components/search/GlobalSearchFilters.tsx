@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
-import type { ResultType, DateFilter, MediaTypeFilter } from '@/features/inbox/hooks/useGlobalSearchData';
+import type { ResultType, DateFilter, MediaTypeFilter } from '@/features/inbox/components/useGlobalSearchData';
 
 interface GlobalSearchFiltersProps {
   show: boolean;
