@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { AVAILABLE_VARIABLES, replaceVariables } from './template-utils';
 import { TemplateEditorDialog, VariableInserter, TemplatePreview } from './templates/TemplateEditorDialog';
-import type { Template } from './templates/TemplateEditorDialog';
+import type { Template } from '@/features/inbox/hooks/useMessageTemplates';
 
 // Variable highlighter
 function VariableHighlighter({ text, className }: { text: string; className?: string }) {
