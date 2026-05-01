@@ -1,3 +1,4 @@
+export * from './AuthProvider';
 export * from './HeroBenefits';
 export * from './NotAuthorizedView';
 export * from './PasswordInput';
