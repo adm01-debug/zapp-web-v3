@@ -150,4 +150,4 @@ export function TemplateEditorDialog({ open, onOpenChange, template, onSave }: T
 }
 
 export { VariableInserter, TemplatePreview };
-export type { Template as TemplateType };
+export type { Template };
