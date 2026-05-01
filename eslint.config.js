@@ -48,7 +48,7 @@ export default tseslint.config(
               // Bloqueia imports profundos de UMA feature de DENTRO de outra feature.
               // Ex: DENTRO de src/features/inbox, bloqueia src/features/admin/components/X
               // MAS permite @/features/admin (que aponta para o index.ts).
-              "group": ["@/features/*/**", "src/features/*/**"],
+              "group": ["@/features/*/**", "src/features/*/**", "@/admin/**", "@/auth/**", "@/connections/**", "@/inbox/**", "@/sla/**"],
               "message": "Domain violation: Access other features only through their main entry point (@/features/name). Internal details should remain encapsulated."
             }
           ]
