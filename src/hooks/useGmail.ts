@@ -125,9 +125,12 @@ export function useGmail() {
     });
 
     if (rpcErr) {
+      setLastRequestId(requestId || null);
+      setSchemaStatus({ ok: !rpcErr.message.includes('disponível'), lastChecked: new Date() });
       console.warn(`[useGmail][${requestId}] Falha ao buscar threads:`, rpcErr.message);
       setError(`Erro ao carregar mensagens do Gmail. ${rpcErr.message.includes('disponível') ? 'A funcionalidade está sendo ativada.' : ''}`);
     } else {
+      setSchemaStatus({ ok: true, lastChecked: new Date() });
       const mappedThreads = gmailMappers.threads(Array.isArray(data) ? data : []);
       setThreads(prev => append ? [...prev, ...mappedThreads] : mappedThreads);
       setHasMore(mappedThreads.length === 50);
