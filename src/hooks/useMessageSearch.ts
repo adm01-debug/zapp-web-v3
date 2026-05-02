@@ -10,7 +10,7 @@
  */
 import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useDebouncedValue } from '@/hooks/useDebounce';
 import { dbFrom } from '@/integrations/datasource/db';
 
 interface SearchResult {
@@ -27,7 +27,7 @@ export function useMessageSearch(conversationId: string, workspaceId: string) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const debouncedQuery = useDebounce(query, 300);
+  const debouncedQuery = useDebouncedValue(query, 300);
 
   const search = useCallback(async (searchTerm: string) => {
     if (!searchTerm.trim() || searchTerm.length < 2) {
@@ -62,8 +62,7 @@ export function useMessageSearch(conversationId: string, workspaceId: string) {
     }
   }, [conversationId, workspaceId]);
 
-  // Auto-search on debounced query change
-  useMemo(() => {
+  useEffect(() => {
     if (debouncedQuery) search(debouncedQuery);
     else { setResults([]); setActiveIndex(0); }
   }, [debouncedQuery, search]);
