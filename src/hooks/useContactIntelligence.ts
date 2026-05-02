@@ -98,7 +98,7 @@ export function useContactIntelligence(phone: string | undefined) {
     queryKey: ['contact-intelligence', cleanedPhone],
     queryFn: async () => {
       if (!cleanedPhone || cleanedPhone.length < 8) return null;
-      const { data, error } = await getExternalSupabase().rpc('get_contact_intelligence_by_phone', {
+      const { data, error } = await dbGet(RPC.getContactIntelligenceByPhone, {
         p_phone: cleanedPhone,
       });
       if (error) {
