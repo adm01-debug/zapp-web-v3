@@ -1,161 +1,155 @@
 /**
  * csvUtils.ts — v2.0
- * Safe CSV export utilities with injection prevention (OWASP).
- * RFC4180 compliant, UTF-8 BOM for Excel compatibility.
+ * RFC4180-compliant CSV utilities with CSV injection prevention.
+ * Used by ContactExportDialog for safe data export.
  *
- * CSV Injection Prevention:
- * Cells starting with =, +, -, @, TAB, CR are prefixed with \t
- * to prevent formula injection in spreadsheet applications.
+ * Security: All values escaped against CSV injection (=, +, -, @, TAB, CR)
+ * Encoding: UTF-8 with BOM for Excel compatibility
  */
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// ── CSV Injection Prevention ───────────────────────────────────────────────
 
-export interface ContactExportRow {
-  name:             string;
-  phone:            string;
-  email:            string;
-  company:          string;
-  tags:             string;
-  channel:          string;
-  notes:            string;
-  created_at:       string;
-  last_seen_at:     string;
-  lgpd_consent_at:  string;
-  [key: string]:    string;
-}
-
-export interface CsvColumn<T = Record<string, string>> {
-  key:   keyof T;
-  label: string;
-}
-
-// ── Cell escaping ──────────────────────────────────────────────────────────
+// Characters that can trigger formula execution in spreadsheet apps
+const FORMULA_PREFIXES = /^[=+\-@\t\r]/;
 
 /**
- * Escape a single CSV cell value.
- * - Wraps all values in double quotes (RFC4180)
+ * Escape a single cell value for CSV output.
+ * - Wraps in double quotes
+ * - Neutralizes formula injection prefixes with TAB prefix
  * - Escapes internal double quotes by doubling them
- * - Neutralizes formula injection prefixes (=, +, -, @, TAB, CR)
+ * - Handles null/undefined/number/boolean inputs
  */
 export function escapeCsvCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined) return '""';
 
   const str = String(value);
-  if (!str) return '';
 
-  // Neutralize CSV injection: prefix dangerous characters with TAB
-  const DANGEROUS_CHARS = /^[=+\-@\t\r]/;
-  const escaped = DANGEROUS_CHARS.test(str) ? `\t${str}` : str;
+  // CSV injection neutralization: prefix with TAB to prevent formula execution
+  const safe = FORMULA_PREFIXES.test(str) ? `\t${str}` : str;
 
-  // RFC4180: wrap in quotes, escape internal quotes by doubling
-  return `"${escaped.replace(/"/g, '""')}"`;
+  // RFC4180: wrap in quotes, double any internal quotes
+  return `"${safe.replace(/"/g, '""')}"`;
 }
 
 // ── CSV Builder ────────────────────────────────────────────────────────────
 
+export interface CsvColumn<T = Record<string, unknown>> {
+  key:    keyof T | string;
+  label:  string;
+  format?: (value: unknown, row: T) => string;
+}
+
 /**
  * Build a complete CSV string from rows and column definitions.
- * Includes UTF-8 BOM for Excel compatibility.
+ * - UTF-8 BOM prefix for Excel compatibility
+ * - CRLF line endings (RFC4180)
+ * - All values properly escaped
  */
-export function buildCsvString<T extends Record<string, string>>(
+export function buildCsv<T extends Record<string, unknown>>(
   rows:    T[],
   columns: CsvColumn<T>[]
 ): string {
-  const header = columns.map((c) => escapeCsvCell(c.label)).join(',');
+  // Header row
+  const header = columns.map((col) => escapeCsvCell(col.label)).join(',');
+
+  // Data rows
   const body = rows.map((row) =>
-    columns.map((c) => escapeCsvCell(row[c.key])).join(',')
+    columns.map((col) => {
+      const rawValue = row[col.key as keyof T];
+      const formatted = col.format ? col.format(rawValue, row) : rawValue;
+      return escapeCsvCell(formatted);
+    }).join(',')
   ).join('\r\n');
 
-  // UTF-8 BOM (\uFEFF) ensures Excel opens with correct encoding
+  // UTF-8 BOM + header + CRLF + body
   return '\uFEFF' + header + '\r\n' + body;
 }
 
-// ── Download Trigger ───────────────────────────────────────────────────────
+// ── CSV Download ───────────────────────────────────────────────────────────
 
 /**
- * Trigger browser download of a CSV file.
+ * Trigger a browser download of a CSV file.
+ * @param csvContent The complete CSV string (including BOM)
+ * @param filename Desired filename (e.g., "contacts-2026-01-01.csv")
  */
-export function downloadCsv(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+export function downloadCsvFile(csvContent: string, filename: string): void {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
+  link.href     = url;
+  link.download = filename.endsWith('.csv') ? filename : `${filename}.csv`;
+  link.style.display = 'none';
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  // Cleanup
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+  }, 100);
 }
 
-// ── Contact Export Shorthand ───────────────────────────────────────────────
-
-/** Default column definitions for contact exports */
-const DEFAULT_CONTACT_COLUMNS: CsvColumn<ContactExportRow>[] = [
-  { key: 'name',            label: 'Nome' },
-  { key: 'phone',           label: 'Telefone' },
-  { key: 'email',           label: 'E-mail' },
-  { key: 'company',         label: 'Empresa' },
-  { key: 'tags',            label: 'Tags' },
-  { key: 'channel',         label: 'Canal' },
-  { key: 'notes',           label: 'Notas' },
-  { key: 'created_at',      label: 'Criado em' },
-  { key: 'last_seen_at',    label: 'Último contato' },
-  { key: 'lgpd_consent_at', label: 'Consentimento LGPD' },
-];
+// ── CSV Parser (for import) ───────────────────────────────────────────────
 
 /**
- * Export contacts to CSV and trigger browser download.
+ * Parse a CSV string into rows of key-value pairs.
+ * Handles:
+ * - UTF-8 BOM stripping
+ * - Quoted fields with embedded commas and newlines
+ * - CRLF and LF line endings
+ * - Empty rows are skipped
  */
-export function exportContactsToCsv(
-  rows:     ContactExportRow[],
-  columns?: CsvColumn<ContactExportRow>[],
-  filename?: string
-): void {
-  const cols = columns ?? DEFAULT_CONTACT_COLUMNS;
-  const csv  = buildCsvString(rows, cols);
-  const date = new Date().toISOString().slice(0, 10);
-  downloadCsv(csv, filename ?? `contatos-${date}.csv`);
-}
-
-// ── CSV Parser ─────────────────────────────────────────────────────────────
-
-/**
- * Parse a CSV file (File object) to an array of objects.
- * Uses first row as headers.
- */
-export async function parseCsvFile(file: File): Promise<Array<Record<string, string>>> {
-  const text = await file.text();
-  // Remove UTF-8 BOM if present
-  const clean = text.startsWith('\uFEFF') ? text.slice(1) : text;
-  const lines = clean.split(/\r?\n/).filter((l) => l.trim());
+export function parseCsvString(csvContent: string): Array<Record<string, string>> {
+  // Strip BOM
+  const clean = csvContent.startsWith('\uFEFF') ? csvContent.slice(1) : csvContent;
+  const lines  = clean.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) return [];
 
-  const headers = parseRow(lines[0]);
+  const parseRow = (row: string): string[] => {
+    const cells: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < row.length; i++) {
+      const ch = row[i];
+
+      if (ch === '"') {
+        if (inQuotes && row[i + 1] === '"') {
+          // Escaped double quote
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === ',' && !inQuotes) {
+        cells.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    cells.push(current);
+    return cells;
+  };
+
+  const headers = parseRow(lines[0]).map((h) => h.trim());
+
   return lines.slice(1).map((line) => {
     const cells = parseRow(line);
-    return Object.fromEntries(headers.map((h, i) => [h.trim(), (cells[i] ?? '').trim()]));
+    return Object.fromEntries(
+      headers.map((h, i) => [h, (cells[i] ?? '').trim()])
+    );
   });
 }
 
-/** Parse a single CSV row respecting quoted fields */
-function parseRow(row: string): string[] {
-  const cells: string[] = [];
-  let current = '';
-  let inQuotes = false;
+// ── Filename Generator ────────────────────────────────────────────────────
 
-  for (let i = 0; i < row.length; i++) {
-    const ch = row[i];
-    if (ch === '"') {
-      if (inQuotes && row[i + 1] === '"') { current += '"'; i++; } // escaped quote
-      else inQuotes = !inQuotes;
-    } else if (ch === ',' && !inQuotes) {
-      cells.push(current);
-      current = '';
-    } else {
-      current += ch;
-    }
-  }
-  cells.push(current);
-  return cells;
+/**
+ * Generate a safe CSV filename with date.
+ * @example getCsvFilename('contatos', 'wpp2') → "contatos-wpp2-2026-01-01.csv"
+ */
+export function getCsvFilename(prefix: string, suffix?: string): string {
+  const date = new Date().toISOString().slice(0, 10);
+  const parts = [prefix, suffix, date].filter(Boolean).join('-');
+  // Strip unsafe filename chars
+  return parts.replace(/[^a-zA-Z0-9_\-\.]/g, '_') + '.csv';
 }
