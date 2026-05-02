@@ -49,7 +49,7 @@ export function useEmailAccounts(): UseEmailAccountsReturn {
 
     try {
       const { data, error: dbErr } = await supabase
-        .from('v_email_accounts_unified')
+        .from('v_email_accounts_unified' as any)
         .select('*')
         .order('created_at', { ascending: true });
 

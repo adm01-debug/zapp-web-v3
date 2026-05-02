@@ -24,7 +24,7 @@ export function useEmailSignature(accountId: string | null) {
     if (!accountId) { setSignatures([]); return; }
     setIsLoading(true);
     const { data, error } = await supabase
-      .from('gmail_signatures')
+      .from('gmail_signatures' as any)
       .select('*')
       .eq('account_id', accountId)
       .order('is_default', { ascending: false });
@@ -40,13 +40,13 @@ export function useEmailSignature(accountId: string | null) {
 
     if (sig.id) {
       const { error } = await supabase
-        .from('gmail_signatures')
+        .from('gmail_signatures' as any)
         .update({ name: sig.name, html_content: sig.html_content, is_default: sig.is_default ?? false })
         .eq('id', sig.id);
       if (error) { toast.error('Erro ao salvar assinatura'); return; }
     } else {
       const { error } = await supabase
-        .from('gmail_signatures')
+        .from('gmail_signatures' as any)
         .insert({ account_id: accountId, name: sig.name, html_content: sig.html_content, is_default: sig.is_default ?? false });
       if (error) { toast.error('Erro ao criar assinatura'); return; }
     }
@@ -56,7 +56,7 @@ export function useEmailSignature(accountId: string | null) {
   }, [accountId, load]);
 
   const remove = useCallback(async (id: string) => {
-    const { error } = await supabase.from('gmail_signatures').delete().eq('id', id);
+    const { error } = await (supabase as any).from('gmail_signatures' as any).delete().eq('id', id);
     if (error) { toast.error('Erro ao excluir assinatura'); return; }
     toast.success('Assinatura excluída');
     await load();
@@ -66,12 +66,12 @@ export function useEmailSignature(accountId: string | null) {
     if (!accountId) return;
     // Remove default de todas
     await supabase
-      .from('gmail_signatures')
+      .from('gmail_signatures' as any)
       .update({ is_default: false })
       .eq('account_id', accountId);
     // Define nova
     await supabase
-      .from('gmail_signatures')
+      .from('gmail_signatures' as any)
       .update({ is_default: true })
       .eq('id', id);
     await load();

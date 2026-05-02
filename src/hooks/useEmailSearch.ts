@@ -42,7 +42,7 @@ export function useEmailSearch(accountId: string | null) {
     const ftsQuery = q.trim();
 
     const { data, error: dbErr } = await supabase
-      .from('gmail_threads')
+      .from('gmail_threads' as any)
       .select(`
         id,
         thread_id,

@@ -50,7 +50,7 @@ export function useEmailTemplates() {
     setIsLoading(true);
     try {
       const { data, error: dbErr } = await supabase
-        .from('email_templates')
+        .from('email_templates' as any)
         .select('*')
         .order('use_count', { ascending: false }); // Mais usados primeiro
 
@@ -71,7 +71,7 @@ export function useEmailTemplates() {
     if (!user) return { success: false, error: 'Não autenticado' };
 
     const { data, error: dbErr } = await supabase
-      .from('email_templates')
+      .from('email_templates' as any)
       .insert({
         user_id:   user.id,
         name:      params.name,
@@ -93,7 +93,7 @@ export function useEmailTemplates() {
   // Atualizar template
   const updateTemplate = useCallback(async (id: string, updates: Partial<CreateTemplateParams>) => {
     const { error: dbErr } = await supabase
-      .from('email_templates')
+      .from('email_templates' as any)
       .update(updates)
       .eq('id', id);
 
@@ -105,7 +105,7 @@ export function useEmailTemplates() {
   // Deletar template
   const deleteTemplate = useCallback(async (id: string) => {
     const { error: dbErr } = await supabase
-      .from('email_templates')
+      .from('email_templates' as any)
       .delete()
       .eq('id', id);
 
