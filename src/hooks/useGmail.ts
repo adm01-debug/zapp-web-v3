@@ -16,79 +16,20 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
-const supabase = _supabase as any;
+import { safeClient } from '@/integrations/supabase/safeClient';
 import { type GmailMessage } from './gmail/gmailTypes';
+import { 
+  GmailAccount, 
+  GmailTokenInfo, 
+  GmailThread, 
+  GmailSendParams,
+  GmailLabel,
+  EmailThread,
+  SLAStatus
+} from '@/types/gmail';
 
-// ── Tipos ──────────────────────────────────────────────────────────────────
+const supabase = _supabase as any;
 
-export interface GmailAccount {
-  id:            string;
-  user_id:       string;
-  email:         string;
-  display_name:  string | null;
-  is_active:     boolean;
-  token_expiry:  string | null;
-  watch_expiry:  string | null;
-}
-
-export type GmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
-export type GmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
-export type TokenStatus = GmailTokenStatus; // Alias legado
-
-export interface GmailTokenInfo {
-  account_id:            string;
-  email:                 string;
-  is_active:             boolean;
-  token_status:          GmailTokenStatus;
-  token_expiry:          string | null;
-  watch_status:          GmailWatchStatus;
-  watch_expiry:          string | null;
-  minutes_until_expiry:  number | null;
-}
-
-export interface GmailThread {
-  id:              string;
-  account_id:      string;
-  gmail_thread_id: string;
-  thread_id?:      string;   // Alias legado
-  subject:         string | null;
-  snippet:         string | null;
-  from_email:      string | null;
-  from_name:       string | null;
-  label_ids:       string[];
-  unread_count:    number;
-  message_count:   number;
-  is_starred:      boolean;
-  is_important:    boolean;
-  is_unread?:      boolean;  // Legado
-  sla_status:      'ok' | 'warning' | 'breached' | 'met' | null;
-  assigned_to:     string | null;
-  assigned_agent?: { id: string; name: string } | null; // Legado
-  last_message_at: string | null;
-  first_reply_at:  string | null;
-  created_at:      string;
-  contact?:        any;      // Legado
-  tags?:           string[]; // Legado
-}
-
-export interface GmailSendParams {
-  to:          string | string[];
-  cc?:         string | string[];
-  bcc?:        string | string[];
-  subject:     string;
-  bodyHtml:    string;
-  threadId?:   string;   // Para reply na mesma thread
-  inReplyTo?:  string;   // Message-ID para threading
-  signature?:  boolean;  // Auto-incluir assinatura
-}
-
-type GmailLabel = 'INBOX' | 'SENT' | 'DRAFT' | 'STARRED' | 'IMPORTANT' | 'TRASH' | 'SPAM' | string;
-
-/**
- * Alias semântico — alguns componentes (ex.: `ThreadListItem`) usam o nome
- * `EmailThread`. Mantido como reexport tipado para compatibilidade.
- */
-export type EmailThread = GmailThread;
 
 // ── Hook Principal ─────────────────────────────────────────────────────────
 
