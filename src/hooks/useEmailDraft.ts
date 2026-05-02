@@ -6,7 +6,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
 import { gmailSaveDraft, gmailDeleteDraft } from './gmail/gmailApi';
 
 const AUTO_SAVE_DELAY_MS = 30_000;
@@ -49,10 +50,10 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
       let localId = state.id;
 
       if (localId) {
-        await (supabase as any).from('gmail_drafts' as any).update(payload).eq('id', localId);
+        await supabase.from('gmail_drafts').update(payload).eq('id', localId);
       } else {
         const { data } = await (supabase as any)
-          .from('gmail_drafts' as any)
+          .from('gmail_drafts')
           .insert(payload)
           .select('id')
           .single();
@@ -99,7 +100,7 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     if (draft.id) {
-      await (supabase as any).from('gmail_drafts' as any).delete().eq('id', draft.id);
+      await supabase.from('gmail_drafts').delete().eq('id', draft.id);
     }
     if (accountId && draft.gmail_draft_id) {
       await gmailDeleteDraft(accountId, draft.gmail_draft_id);

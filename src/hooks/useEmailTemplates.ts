@@ -13,7 +13,8 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
 
 export interface EmailTemplate {
   id:         string;
@@ -50,7 +51,7 @@ export function useEmailTemplates() {
     setIsLoading(true);
     try {
       const { data, error: dbErr } = await supabase
-        .from('email_templates' as any)
+        .from('email_templates')
         .select('*')
         .order('use_count', { ascending: false }); // Mais usados primeiro
 
@@ -71,7 +72,7 @@ export function useEmailTemplates() {
     if (!user) return { success: false, error: 'Não autenticado' };
 
     const { data, error: dbErr } = await supabase
-      .from('email_templates' as any)
+      .from('email_templates')
       .insert({
         user_id:   user.id,
         name:      params.name,
@@ -93,7 +94,7 @@ export function useEmailTemplates() {
   // Atualizar template
   const updateTemplate = useCallback(async (id: string, updates: Partial<CreateTemplateParams>) => {
     const { error: dbErr } = await supabase
-      .from('email_templates' as any)
+      .from('email_templates')
       .update(updates)
       .eq('id', id);
 
@@ -105,7 +106,7 @@ export function useEmailTemplates() {
   // Deletar template
   const deleteTemplate = useCallback(async (id: string) => {
     const { error: dbErr } = await supabase
-      .from('email_templates' as any)
+      .from('email_templates')
       .delete()
       .eq('id', id);
 

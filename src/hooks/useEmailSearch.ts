@@ -9,7 +9,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
 import { gmailListThreads } from './gmail/gmailApi';
 
 export interface EmailSearchResult {
@@ -42,7 +43,7 @@ export function useEmailSearch(accountId: string | null) {
     const ftsQuery = q.trim();
 
     const { data, error: dbErr } = await supabase
-      .from('gmail_threads' as any)
+      .from('gmail_threads')
       .select(`
         id,
         thread_id,

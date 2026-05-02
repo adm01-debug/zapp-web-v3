@@ -9,7 +9,8 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
 
 export type SLAStatus = 'ok' | 'warning' | 'breached';
 
@@ -159,7 +160,7 @@ export function useEmailSLA(accountId: string | null, config: Partial<SLAConfig>
       );
 
       // Atualiza no Supabase em background
-      (supabase as any).from('gmail_threads' as any).update({
+      supabase.from('gmail_threads').update({
         first_reply_at: replyAt,
         frt_minutes:    frt,
         sla_status:     'ok',
@@ -199,7 +200,7 @@ export function useEmailSLA(accountId: string | null, config: Partial<SLAConfig>
     if (!accountId) return;
 
     supabase
-      .from('gmail_threads' as any)
+      .from('gmail_threads')
       .select('thread_id, last_message_at, unread_count')
       .eq('account_id', accountId)
       .gt('unread_count', 0)
