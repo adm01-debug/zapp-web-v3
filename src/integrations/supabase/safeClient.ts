@@ -152,17 +152,74 @@ export const safeClient = {
   },
 
   /**
-   * Logger estruturado
+   * Logger estruturado com masking de dados sensíveis
    */
   log(requestId: string, level: 'info' | 'warn' | 'error', message: string, detail?: any) {
     const prefix = `[safeClient][${requestId}]`;
+    const maskedDetail = this.maskSensitiveData(detail);
+    
     if (level === 'error') {
-      console.error(prefix, message, detail || '');
+      console.error(prefix, message, maskedDetail || '');
     } else if (level === 'warn') {
-      console.warn(prefix, message, detail || '');
+      console.warn(prefix, message, maskedDetail || '');
     } else {
-      console.log(prefix, message, detail || '');
+      console.info(prefix, message, maskedDetail || '');
     }
+  },
+
+  /**
+   * Redação de dados sensíveis para logs
+   */
+  maskSensitiveData(data: any): any {
+    if (!data) return data;
+    if (typeof data !== 'object') {
+      if (typeof data === 'string') {
+        // Mascarar tokens e emails se detectados em strings soltas
+        if (data.length > 50 || data.includes('@')) {
+          return this.applyMasking(data);
+        }
+      }
+      return data;
+    }
+
+    const masked = Array.isArray(data) ? [...data] : { ...data };
+    
+    for (const key in masked) {
+      const val = masked[key];
+      const lowerKey = key.toLowerCase();
+      
+      if (
+        lowerKey.includes('token') || 
+        lowerKey.includes('secret') || 
+        lowerKey.includes('password') || 
+        lowerKey.includes('key') ||
+        lowerKey.includes('auth') ||
+        lowerKey.includes('credential')
+      ) {
+        masked[key] = '***MASKED***';
+      } else if (lowerKey.includes('email') && typeof val === 'string') {
+        masked[key] = this.maskEmail(val);
+      } else if (typeof val === 'object') {
+        masked[key] = this.maskSensitiveData(val);
+      }
+    }
+    
+    return masked;
+  },
+
+  maskEmail(email: string): string {
+    if (!email || !email.includes('@')) return email;
+    const [user, domain] = email.split('@');
+    if (user.length <= 2) return `***@${domain}`;
+    return `${user.substring(0, 2)}***@${domain}`;
+  },
+
+  applyMasking(str: string): string {
+    // Regex simples para capturar potenciais tokens OAuth ou JWT
+    if (str.length > 30 && (str.includes('.') || /^[a-zA-Z0-9_-]+$/.test(str))) {
+      return str.substring(0, 5) + '...' + str.substring(str.length - 5);
+    }
+    return str;
   },
 
   /**
