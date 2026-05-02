@@ -34,7 +34,7 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
 
       if (dbErr) throw dbErr;
 
-      const daily = gmailMappers.metrics(dailyData ?? []);
+      const daily = gmailMappers.metrics(Array.isArray(dailyData) ? dailyData : []);
 
       const total_received   = daily.reduce((s, d) => s + (d.threads_received ?? 0), 0);
       const total_replied    = daily.reduce((s, d) => s + (d.threads_replied ?? 0), 0);
@@ -68,7 +68,7 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
          .not('sla_status', 'is', null)
       );
 
-      const allThreads = gmailMappers.threads(threadsData ?? []);
+      const allThreads = gmailMappers.threads(Array.isArray(threadsData) ? threadsData : []);
       setSlaDash({
         ok_count:       allThreads.filter(t => t.sla_status === 'ok').length,
         warning_count:  allThreads.filter(t => t.sla_status === 'warning').length,
