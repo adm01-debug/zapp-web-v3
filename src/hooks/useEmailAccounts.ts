@@ -9,7 +9,8 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
 
 export type EmailProvider = 'gmail' | 'outlook' | 'yahoo' | 'custom';
 
@@ -49,7 +50,7 @@ export function useEmailAccounts(): UseEmailAccountsReturn {
 
     try {
       const { data, error: dbErr } = await supabase
-        .from('v_email_accounts_unified')
+        .from('v_email_accounts_unified' as any)
         .select('*')
         .order('created_at', { ascending: true });
 

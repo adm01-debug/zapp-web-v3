@@ -10,7 +10,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
 import { gmailRefreshToken, gmailRevokeAccount, gmailRegisterWatch } from './gmail/gmailApi';
 import { toast } from 'sonner';
 import { getLogger } from '@/lib/logger';

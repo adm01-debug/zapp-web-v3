@@ -6,7 +6,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
 import { gmailSaveDraft, gmailDeleteDraft } from './gmail/gmailApi';
 
 const AUTO_SAVE_DELAY_MS = 30_000;
@@ -51,12 +52,12 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
       if (localId) {
         await supabase.from('gmail_drafts').update(payload).eq('id', localId);
       } else {
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from('gmail_drafts')
           .insert(payload)
           .select('id')
           .single();
-        localId = data?.id;
+        localId = (data as any)?.id;
       }
 
       // 2. Sincronizar com Gmail API
