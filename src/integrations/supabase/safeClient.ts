@@ -17,7 +17,7 @@ export interface SafeResponse<T> {
  * Cache de recursos validados para evitar chamadas repetidas ao schema
  */
 const CACHE_TTL = 300000; // 5 minutos
-export const resourceCache = new Map<string, { exists: boolean; expires: number }>();
+const resourceCache = new Map<string, { exists: boolean; expires: number }>();
 
 /**
  * safeClient — Wrapper para chamadas Supabase com tratamento de erro e tipagem opcional.
