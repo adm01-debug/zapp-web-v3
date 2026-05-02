@@ -57,7 +57,16 @@ export function normalizeBrazilianPhone(phone: string): string | null {
 
   // DDD + 9-digit number = 11 digits
   if (digits.length === 11) {
-    return `55${digits}`;
+    const possibleDdd = digits.slice(0, 2);
+    // Must be valid DDD AND 3rd digit must be 9 (BR mobile pattern)
+    if (MOBILE_9TH_DIGIT_DDDS.has(possibleDdd) && digits[2] === '9') {
+      return `55${digits}`;
+    }
+    // If starts with valid DDD but not mobile (landline), still add 55
+    if (MOBILE_9TH_DIGIT_DDDS.has(possibleDdd)) {
+      return `55${digits}`;
+    }
+    return digits; // Not a Brazilian DDD — likely international
   }
 
   // DDD + 8-digit number = 10 digits (missing 9th digit)

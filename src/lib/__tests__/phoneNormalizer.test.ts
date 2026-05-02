@@ -38,7 +38,7 @@ describe('phoneNormalizer', () => {
     });
 
     it('returns as-is for non-Brazilian international numbers', () => {
-      expect(normalizeBrazilianPhone('+1 555 1234567')).toBe('15551234567');
+      expect(normalizeBrazilianPhone('+44 20 79460958')).toBe('442079460958');
     });
 
     it('returns null for invalid input', () => {
