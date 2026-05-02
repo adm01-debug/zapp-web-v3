@@ -11,6 +11,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
+import { gmailMappers } from '@/utils/gmailMappers';
+import { GmailAccount } from '@/types/gmail';
 const supabase = _supabase as any;
 import { gmailRefreshToken, gmailRevokeAccount, gmailRegisterWatch } from './gmail/gmailApi';
 import { toast } from 'sonner';
