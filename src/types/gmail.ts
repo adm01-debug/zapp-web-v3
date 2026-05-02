@@ -5,8 +5,9 @@
 
 export type EmailProvider = 'gmail' | 'outlook' | 'yahoo' | 'custom';
 export type GmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
+export type GmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
+export type SLAStatus = 'ok' | 'warning' | 'breached' | 'met';
 export type GmailLabel = 'INBOX' | 'SENT' | 'DRAFTS' | 'STARRED' | 'IMPORTANT' | 'TRASH' | 'SPAM' | string;
-export type EmailThread = GmailThread;
 
 export interface GmailAccount {
   id:            string;
@@ -52,6 +53,8 @@ export interface GmailThread {
   created_at:      string;
 }
 
+export type EmailThread = GmailThread;
+
 export interface GmailDraft {
   id:             string;
   account_id:     string;
@@ -86,7 +89,7 @@ export interface UnifiedEmailAccount {
   created_at:      string;
 }
 
-export interface GmailLabel {
+export interface GmailLabelInfo {
   id:             string;
   account_id:     string;
   gmail_label_id: string;
