@@ -1,38 +1,130 @@
 /**
  * useRetryOperationV2.ts
- * Exponential backoff retry for async form operations.
- * Retries only on network/timeout/rate-limit errors.
- * Schedule: attempt 1→immediate, 2→500ms, 3→2000ms
+ * Exponential backoff retry hook for Supabase operations.
+ * Used by ContactFormModal and other components that need resilient operations.
+ *
+ * Features:
+ * - Configurable max retries and base delay
+ * - Exponential backoff with jitter
+ * - Abort signal support for cleanup
+ * - Error classification (retry vs. no-retry)
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
-export function useRetryOperationV2(maxAttempts = 3, baseDelayMs = 500) {
-  const [loading, setLoading] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-
-  const withRetry = useCallback(async (fn: () => Promise<void>, label = 'Operation'): Promise<void> => {
-    setLoading(true);
-    let lastErr: unknown;
-
-    for (let i = 0; i < maxAttempts; i++) {
-      setAttempt(i + 1);
-      try {
-        await fn();
-        setLoading(false); setAttempt(0); return;
-      } catch (err) {
-        lastErr = err;
-        const retryable = err instanceof Error && (
-          /network|timeout|fetch|econnreset|429|503|502/i.test(err.message)
-        );
-        if (!retryable || i === maxAttempts - 1) { setLoading(false); setAttempt(0); throw err; }
-        console.warn(`[retry] ${label} attempt ${i+1} failed, retrying...`);
-        await new Promise<void>((r) => setTimeout(r, baseDelayMs * Math.pow(2, i)));
-      }
-    }
-    setLoading(false); setAttempt(0); throw lastErr;
-  }, [maxAttempts, baseDelayMs]);
-
-  return { withRetry, loading, attempt };
+export interface RetryOptions {
+  maxRetries?:    number;   // default: 3
+  baseDelayMs?:   number;   // default: 500ms
+  maxDelayMs?:    number;   // default: 5000ms
+  backoffFactor?: number;   // default: 2
+  onRetry?:       (attempt: number, error: Error) => void;
 }
 
-export { useRetryOperationV2 as useRetryOperation };
+export interface RetryState {
+  loading:     boolean;
+  attempt:     number;
+  lastError:   Error | null;
+  isRetrying:  boolean;
+}
+
+// Errors that should NOT be retried (client errors)
+const NON_RETRYABLE_CODES = new Set([
+  'PGRST116',  // Row not found
+  '23505',     // Unique violation
+  '23503',     // Foreign key violation
+  '42501',     // Insufficient privilege (RLS block)
+  'PGRST301',  // JWT expired
+]);
+
+function isRetryable(error: unknown): boolean {
+  if (!error) return false;
+  const e = error as { code?: string; status?: number; message?: string };
+  if (e.code && NON_RETRYABLE_CODES.has(e.code)) return false;
+  // HTTP 4xx client errors — don't retry
+  if (e.status && e.status >= 400 && e.status < 500) return false;
+  return true;
+}
+
+function calculateDelay(attempt: number, baseMs: number, maxMs: number, factor: number): number {
+  const exponential = baseMs * Math.pow(factor, attempt);
+  // Add ±20% jitter to prevent thundering herd
+  const jitter = exponential * 0.2 * (Math.random() * 2 - 1);
+  return Math.min(exponential + jitter, maxMs);
+}
+
+export function useRetryOperationV2(options: RetryOptions = {}) {
+  const {
+    maxRetries    = 3,
+    baseDelayMs   = 500,
+    maxDelayMs    = 5_000,
+    backoffFactor = 2,
+    onRetry,
+  } = options;
+
+  const [state, setState] = useState<RetryState>({
+    loading: false, attempt: 0, lastError: null, isRetrying: false,
+  });
+
+  const abortRef = useRef<AbortController | null>(null);
+
+  const execute = useCallback(async <T>(
+    operation:   () => Promise<T>,
+    operationName = 'operation'
+  ): Promise<T> => {
+    // Abort any previous in-flight operation
+    abortRef.current?.abort();
+    const abort = new AbortController();
+    abortRef.current = abort;
+
+    setState({ loading: true, attempt: 0, lastError: null, isRetrying: false });
+
+    let lastErr: Error = new Error('Unknown error');
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      if (abort.signal.aborted) break;
+
+      try {
+        if (attempt > 0) {
+          setState((prev) => ({ ...prev, isRetrying: true, attempt }));
+          const delay = calculateDelay(attempt - 1, baseDelayMs, maxDelayMs, backoffFactor);
+          await new Promise<void>((res) => setTimeout(res, delay));
+          onRetry?.(attempt, lastErr);
+        }
+
+        const result = await operation();
+        setState({ loading: false, attempt, lastError: null, isRetrying: false });
+        return result;
+
+      } catch (err) {
+        lastErr = err instanceof Error ? err : new Error(String(err));
+
+        // Don't retry non-retryable errors
+        if (!isRetryable(err)) {
+          setState({ loading: false, attempt, lastError: lastErr, isRetrying: false });
+          throw lastErr;
+        }
+
+        // On last attempt, give up
+        if (attempt === maxRetries) {
+          setState({ loading: false, attempt, lastError: lastErr, isRetrying: false });
+          throw lastErr;
+        }
+
+        // Log for debugging (dev only)
+        if (import.meta.env.DEV) {
+          console.warn(`[useRetryOperationV2] ${operationName} failed (attempt ${attempt + 1}/${maxRetries + 1}):`, lastErr.message);
+        }
+      }
+    }
+
+    throw lastErr;
+  }, [maxRetries, baseDelayMs, maxDelayMs, backoffFactor, onRetry]);
+
+  const cancel = useCallback(() => {
+    abortRef.current?.abort();
+    setState({ loading: false, attempt: 0, lastError: null, isRetrying: false });
+  }, []);
+
+  return { ...state, execute, cancel };
+}
+
+export default useRetryOperationV2;
