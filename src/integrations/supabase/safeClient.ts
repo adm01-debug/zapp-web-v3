@@ -59,11 +59,9 @@ export const safeClient = {
     params?: Record<string, any>
   ): Promise<SafeResponse<T>> {
     try {
-      // Nota: Em produção, poderíamos adicionar uma validação de cache/schema aqui
       const { data, error } = await supabase.rpc(name, params);
       if (error) return { data: null, error: this.formatError(error) };
       
-      // Fallback para quando o retorno vem em formato inesperado (boolean/undefined)
       if (data === undefined) return { data: null, error: null };
       
       return { data: data as T, error: null };
@@ -74,11 +72,27 @@ export const safeClient = {
   },
 
   /**
+   * Verifica se um RPC ou Tabela existe no schema público
+   */
+  async validateResource(name: string, type: 'function' | 'table' = 'table'): Promise<boolean> {
+    try {
+      if (type === 'table') {
+        const { error } = await supabase.from(name).select('count', { count: 'exact', head: true }).limit(0);
+        return !error || !error.message.includes('does not exist');
+      } else {
+        const { error } = await supabase.rpc(name).limit(0);
+        return !error || !error.message.includes('function') || !error.message.includes('does not exist');
+      }
+    } catch {
+      return false;
+    }
+  },
+
+  /**
    * Helper para formatar erros do Supabase/Postgrest
    */
   formatError(error: PostgrestError | any): Error {
     if (error.message) {
-      // Se for erro de coluna/tabela inexistente, damos uma mensagem mais amigável
       if (error.message.includes('does not exist')) {
         return new Error(`Recurso de banco de dados indisponível: ${error.message}`);
       }
