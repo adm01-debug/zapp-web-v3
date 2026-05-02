@@ -8,7 +8,7 @@
  * - Navigate between matches (prev/next)
  * - Debounced search input
  */
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { dbFrom } from '@/integrations/datasource/db';
