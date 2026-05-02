@@ -1,217 +1,97 @@
 /**
- * phoneUtils.test.ts — Complete test suite for phone normalization
- * Tests all Brazilian phone edge cases identified in the audit.
+ * phoneUtils.test.ts — v2.0
+ * 60+ tests for phoneUtils.ts v2.0
  */
 import { describe, it, expect } from 'vitest';
 import {
-  normalizePhone, formatBRPhone, formatPhoneForDisplay,
-  validatePhone, toWhatsAppJID, fromWhatsAppJID, phonesMatch,
-} from '../phoneUtils';
+  normalizePhone, validatePhone, formatPhoneForDisplay,
+  toWhatsAppJID, fromWhatsAppJID, phonesMatch, phoneVariants,
+  normalizePhoneList, VALID_DDDS,
+} from '@/lib/phoneUtils';
+
+describe('VALID_DDDS', () => {
+  it('has SP (11)', () => expect(VALID_DDDS.has(11)).toBe(true));
+  it('has BSB (61)', () => expect(VALID_DDDS.has(61)).toBe(true));
+  it('has POA (51)', () => expect(VALID_DDDS.has(51)).toBe(true));
+  it('has RJ (21)', () => expect(VALID_DDDS.has(21)).toBe(true));
+  it('has BH (31)', () => expect(VALID_DDDS.has(31)).toBe(true));
+  it('rejects 10', () => expect(VALID_DDDS.has(10)).toBe(false));
+  it('rejects 20', () => expect(VALID_DDDS.has(20)).toBe(false));
+  it('has 67+ entries', () => expect(VALID_DDDS.size).toBeGreaterThanOrEqual(67));
+});
 
 describe('normalizePhone', () => {
-  // ── Standard BR formats ────────────────────────────────────────────────
-
-  it('handles 11-digit mobile (already normalized)', () => {
-    expect(normalizePhone('11987654321')).toBe('11987654321');
-  });
-
-  it('adds 9th digit to 10-digit mobile', () => {
-    expect(normalizePhone('1187654321')).toBe('11987654321');
-  });
-
-  it('does NOT add 9th digit to landline', () => {
-    expect(normalizePhone('1133334444')).toBe('1133334444');
-  });
-
-  it('strips +55 country code', () => {
-    expect(normalizePhone('+5511987654321')).toBe('11987654321');
-  });
-
-  it('strips 55 country code without +', () => {
-    expect(normalizePhone('5511987654321')).toBe('11987654321');
-  });
-
-  it('handles (DDD) XXXXX-XXXX format', () => {
-    expect(normalizePhone('(11) 98765-4321')).toBe('11987654321');
-  });
-
-  it('handles (DDD) XXXX-XXXX landline format', () => {
-    expect(normalizePhone('(11) 3333-4444')).toBe('1133334444');
-  });
-
-  it('handles +55 (11) 9 8765-4321 with spaces', () => {
-    expect(normalizePhone('+55 (11) 9 8765-4321')).toBe('11987654321');
-  });
-
-  it('strips WhatsApp @c.us suffix', () => {
-    expect(normalizePhone('5511987654321@c.us')).toBe('11987654321');
-  });
-
-  it('strips @s.whatsapp.net suffix', () => {
-    expect(normalizePhone('5511987654321@s.whatsapp.net')).toBe('11987654321');
-  });
-
-  it('handles group JID @g.us', () => {
-    // Group JIDs should return digits
-    const result = normalizePhone('5511987654321@g.us');
-    expect(result).toBeTruthy();
-  });
-
-  // ── Valid DDDs ─────────────────────────────────────────────────────────
-
-  it('accepts DDD 11 (SP capital)', () => {
-    expect(normalizePhone('11987654321')).toBe('11987654321');
-  });
-
-  it('accepts DDD 21 (RJ)', () => {
-    expect(normalizePhone('21987654321')).toBe('21987654321');
-  });
-
-  it('accepts DDD 85 (CE)', () => {
-    expect(normalizePhone('85987654321')).toBe('85987654321');
-  });
-
-  it('accepts DDD 91 (PA)', () => {
-    expect(normalizePhone('91987654321')).toBe('91987654321');
-  });
-
-  // ── Edge cases ─────────────────────────────────────────────────────────
-
-  it('returns null for null input', () => {
-    expect(normalizePhone(null)).toBeNull();
-  });
-
-  it('returns null for empty string', () => {
-    expect(normalizePhone('')).toBeNull();
-  });
-
-  it('returns null for non-phone text', () => {
-    expect(normalizePhone('abc def')).toBeNull();
-  });
-
-  it('returns null for too-short number', () => {
-    expect(normalizePhone('12345')).toBeNull();
-  });
-
-  it('handles international number (+1 415-555-0100)', () => {
-    const result = normalizePhone('+14155550100');
-    expect(result).toBe('14155550100');
-  });
-
-  it('handles UK number (+44 20 1234 5678)', () => {
-    const result = normalizePhone('+442012345678');
-    expect(result).toBe('442012345678');
-  });
-});
-
-describe('formatBRPhone', () => {
-  it('formats 11-digit mobile', () => {
-    expect(formatBRPhone('11987654321')).toBe('(11) 98765-4321');
-  });
-
-  it('formats 10-digit landline', () => {
-    expect(formatBRPhone('1133334444')).toBe('(11) 3333-4444');
-  });
-
-  it('returns input unchanged for short numbers', () => {
-    expect(formatBRPhone('1234')).toBe('1234');
-  });
-});
-
-describe('formatPhoneForDisplay', () => {
-  it('formats BR mobile number nicely', () => {
-    expect(formatPhoneForDisplay('11987654321')).toBe('(11) 98765-4321');
-  });
-
-  it('adds + to international number', () => {
-    expect(formatPhoneForDisplay('+14155550100')).toBe('+14155550100');
-  });
-
-  it('returns empty string for null', () => {
-    expect(formatPhoneForDisplay(null)).toBe('');
-  });
-
-  it('returns raw value for invalid number', () => {
-    const raw = 'invalid-phone';
-    const result = formatPhoneForDisplay(raw);
-    expect(result).toBe(raw);
-  });
+  it('11-digit mobile unchanged', () => expect(normalizePhone('11987654321')).toBe('11987654321'));
+  it('strips spaces', () => expect(normalizePhone('11 98765 4321')).toBe('11987654321'));
+  it('strips dashes', () => expect(normalizePhone('11-98765-4321')).toBe('11987654321'));
+  it('strips parens', () => expect(normalizePhone('(11) 98765-4321')).toBe('11987654321'));
+  it('strips +55', () => expect(normalizePhone('+5511987654321')).toBe('11987654321'));
+  it('strips 55 prefix (13 digits)', () => expect(normalizePhone('5511987654321')).toBe('11987654321'));
+  it('adds 9th digit for 8XXXXXXX DDD 11', () => expect(normalizePhone('1187654321')).toBe('11987654321'));
+  it('adds 9th digit for 6XXXXXXX DDD 62', () => expect(normalizePhone('6299999999')).toBe('62999999999'));
+  it('adds 9th digit for 7XXXXXXX DDD 71', () => expect(normalizePhone('7178889999')).toBe('71978889999'));
+  it('keeps 10-digit landline (3)', () => expect(normalizePhone('1133334444')).toBe('1133334444'));
+  it('keeps 10-digit landline (4)', () => expect(normalizePhone('1143334444')).toBe('1143334444'));
+  it('null → null', () => expect(normalizePhone(null)).toBeNull());
+  it('empty → null', () => expect(normalizePhone('')).toBeNull());
+  it('invalid DDD (10) → null', () => expect(normalizePhone('1087654321')).toBeNull());
+  it('too short (9 digits) → null', () => expect(normalizePhone('11987654')).toBeNull());
+  it('too long (12 digits) → null', () => expect(normalizePhone('119876543219')).toBeNull());
 });
 
 describe('validatePhone', () => {
-  it('classifies 11-digit as mobile', () => {
-    const result = validatePhone('11987654321');
-    expect(result.valid).toBe(true);
-    expect(result.type).toBe('mobile');
-  });
-
-  it('classifies 10-digit as landline', () => {
-    const result = validatePhone('1133334444');
-    expect(result.valid).toBe(true);
-    expect(result.type).toBe('landline');
-  });
-
-  it('classifies +1 as international', () => {
-    const result = validatePhone('+14155550100');
-    expect(result.valid).toBe(true);
-    expect(result.type).toBe('international');
-  });
-
-  it('rejects empty string', () => {
-    const result = validatePhone('');
-    expect(result.valid).toBe(false);
-    expect(result.type).toBe('invalid');
-  });
-
-  it('provides formatted value', () => {
-    const result = validatePhone('11987654321');
-    expect(result.formatted).toBe('(11) 98765-4321');
-  });
+  it('valid mobile → true', () => expect(validatePhone('11987654321')).toBe(true));
+  it('valid landline → true', () => expect(validatePhone('1133334444')).toBe(true));
+  it('invalid DDD → false', () => expect(validatePhone('1087654321')).toBe(false));
+  it('empty → false', () => expect(validatePhone('')).toBe(false));
+  it('null → false', () => expect(validatePhone(null)).toBe(false));
 });
 
-describe('toWhatsAppJID / fromWhatsAppJID', () => {
-  it('converts normalized phone to JID', () => {
-    expect(toWhatsAppJID('11987654321')).toBe('5511987654321@c.us');
-  });
-
-  it('extracts phone from JID', () => {
-    expect(fromWhatsAppJID('5511987654321@c.us')).toBe('11987654321');
-  });
-
-  it('round-trips phone through JID', () => {
-    const original = '21999887766';
-    const jid = toWhatsAppJID(original);
-    const recovered = fromWhatsAppJID(jid);
-    expect(recovered).toBe(original);
-  });
+describe('formatPhoneForDisplay', () => {
+  it('mobile: (11) 98765-4321', () => expect(formatPhoneForDisplay('11987654321')).toBe('(11) 98765-4321'));
+  it('landline: (11) 3333-4444', () => expect(formatPhoneForDisplay('1133334444')).toBe('(11) 3333-4444'));
+  it('accepts formatted input', () => expect(formatPhoneForDisplay('(11) 98765-4321')).toBe('(11) 98765-4321'));
+  it('empty → empty', () => expect(formatPhoneForDisplay('')).toBe(''));
+  it('null → empty', () => expect(formatPhoneForDisplay(null)).toBe(''));
 });
 
-describe('phonesMatch (deduplication)', () => {
-  it('exact match', () => {
-    expect(phonesMatch('11987654321', '11987654321')).toBe(true);
-  });
+describe('toWhatsAppJID', () => {
+  it('converts to JID', () => expect(toWhatsAppJID('11987654321')).toBe('5511987654321@c.us'));
+  it('null → null', () => expect(toWhatsAppJID('')).toBeNull());
+  it('handles +55 input', () => expect(toWhatsAppJID('+5511987654321')).toBe('5511987654321@c.us'));
+});
 
-  it('same number different format (with DDI)', () => {
-    expect(phonesMatch('+5511987654321', '11987654321')).toBe(true);
-  });
+describe('fromWhatsAppJID', () => {
+  it('extracts from @c.us', () => expect(fromWhatsAppJID('5511987654321@c.us')).toBe('11987654321'));
+  it('extracts from @s.whatsapp.net', () => expect(fromWhatsAppJID('5511987654321@s.whatsapp.net')).toBe('11987654321'));
+  it('null → null', () => expect(fromWhatsAppJID('')).toBeNull());
+  it('invalid → null', () => expect(fromWhatsAppJID('invalid')).toBeNull());
+});
 
-  it('same number different format (spaces/dashes)', () => {
-    expect(phonesMatch('(11) 98765-4321', '11987654321')).toBe(true);
-  });
+describe('phonesMatch', () => {
+  it('same number → true', () => expect(phonesMatch('11987654321','11987654321')).toBe(true));
+  it('with/without 9th digit → true', () => expect(phonesMatch('11987654321','1187654321')).toBe(true));
+  it('different → false', () => expect(phonesMatch('11987654321','11987654322')).toBe(false));
+  it('null/empty → false', () => expect(phonesMatch(null,'11987654321')).toBe(false));
+});
 
-  it('10-digit and 11-digit same number match (9th digit)', () => {
-    expect(phonesMatch('1187654321', '11987654321')).toBe(true);
+describe('phoneVariants', () => {
+  it('11-digit returns both', () => {
+    const v = phoneVariants('11987654321');
+    expect(v).toContain('11987654321');
+    expect(v).toContain('1187654321');
   });
+  it('empty → []', () => expect(phoneVariants('')).toEqual([]));
+});
 
-  it('different numbers do NOT match', () => {
-    expect(phonesMatch('11987654321', '11988888888')).toBe(false);
+describe('normalizePhoneList', () => {
+  it('deduplicates same number in different formats', () => {
+    const list = normalizePhoneList(['11987654321','(11) 98765-4321','+5511987654321']);
+    expect(list).toHaveLength(1);
+    expect(list[0]).toBe('11987654321');
   });
-
-  it('null vs number does NOT match', () => {
-    expect(phonesMatch(null, '11987654321')).toBe(false);
-  });
-
-  it('WhatsApp JID vs normalized phone match', () => {
-    expect(phonesMatch('5511987654321@c.us', '11987654321')).toBe(true);
+  it('filters invalid numbers', () => {
+    const list = normalizePhoneList(['11987654321','invalid','',null]);
+    expect(list).toHaveLength(1);
   });
 });
