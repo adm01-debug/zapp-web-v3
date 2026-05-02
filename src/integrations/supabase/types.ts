@@ -4954,6 +4954,60 @@ export type Database = {
         }
         Relationships: []
       }
+      gmail_health_summary: {
+        Row: {
+          failure_count_60m: number | null
+          id: string
+          last_validation: string | null
+          metadata: Json | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          failure_count_60m?: number | null
+          id?: string
+          last_validation?: string | null
+          metadata?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          failure_count_60m?: number | null
+          id?: string
+          last_validation?: string | null
+          metadata?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gmail_revalidation_jobs: {
+        Row: {
+          completed_at: string | null
+          id: string
+          requested_at: string | null
+          requested_by: string | null
+          result: Json | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          result?: Json | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          result?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       goals_configurations: {
         Row: {
           created_at: string
@@ -11942,6 +11996,10 @@ export type Database = {
       rpc_unlink_channel_queue: {
         Args: { p_channel_id: string; p_queue_id: string }
         Returns: boolean
+      }
+      rpc_update_gmail_health_state: {
+        Args: { p_failure_count: number; p_metadata?: Json; p_status: string }
+        Returns: undefined
       }
       rpc_upsert_service_channel: {
         Args: {

@@ -124,7 +124,9 @@ export default function AdminGmailStatusPage() {
           <CardContent>
             <div className="text-2xl font-bold">{getStatusLabel(health?.status)}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Baseado em telemetria em tempo real.
+              {(health as any)?.source === 'edge_shared_storage' 
+                ? 'Telemetria persistida via Cloud Edge.' 
+                : 'Telemetria em tempo real (client-side).'}
             </p>
           </CardContent>
         </Card>
