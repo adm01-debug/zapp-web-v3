@@ -112,7 +112,7 @@ export function useGmailOAuthFlow(): UseGmailOAuthFlowReturn {
       );
       setTokenStatus(prev => ({ ...prev, [accountId]: 'valid' }));
 
-      log.info(`Token refreshed for account ${accountId}, expires at ${result.token_expiry}`);
+      log.info(`Token refreshed for account ${accountId}, expires at ${(result as any).token_expiry}`);
     } catch (err) {
       log.error(`Falha ao refreshar token para conta ${accountId}`, err);
       setTokenStatus(prev => ({ ...prev, [accountId]: 'expired' }));
@@ -158,7 +158,7 @@ export function useGmailOAuthFlow(): UseGmailOAuthFlowReturn {
               : a
           )
         );
-        log.info(`Pub/Sub watch renovado para ${accountId}, expira em ${result.expiration}`);
+        log.info(`Pub/Sub watch renovado para ${accountId}, expira em ${(result as any).expiration}`);
       } catch (err) {
         log.warn(`Não foi possível renovar watch para ${accountId}`, err);
       }
