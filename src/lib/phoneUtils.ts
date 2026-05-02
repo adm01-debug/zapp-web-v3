@@ -160,6 +160,12 @@ export function phonesMatch(a: unknown, b: unknown): boolean {
   return false;
 }
 
+/**
+ * Alias semântico de `phonesMatch` — mantido para compatibilidade com
+ * consumidores legados (ex.: useEvolutionAutoSync). Prefira `phonesMatch`.
+ */
+export const isSamePhone = phonesMatch;
+
 // ── Batch utilities ───────────────────────────────────────────────────────
 
 /**

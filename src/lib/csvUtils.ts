@@ -153,3 +153,44 @@ export function getCsvFilename(prefix: string, suffix?: string): string {
   // Strip unsafe filename chars
   return parts.replace(/[^a-zA-Z0-9_\-\.]/g, '_') + '.csv';
 }
+
+// ── Compat wrappers ──────────────────────────────────────────────────────
+// Mantidos para componentes legados que esperam APIs por File / argumentos
+// invertidos. Em código novo, prefira `parseCsvString` e `downloadCsvFile`.
+
+/**
+ * Lê um File (CSV) e devolve uma matriz crua `string[][]` (linhas × células,
+ * incluindo o cabeçalho na primeira posição). Mantida nesse formato para
+ * compatibilidade com `ContactImportDialog.parseRows`.
+ */
+export async function parseCsvFile(file: File): Promise<string[][]> {
+  const raw   = await file.text();
+  const clean = raw.startsWith('\uFEFF') ? raw.slice(1) : raw;
+  const lines = clean.split(/\r?\n/).filter((l) => l.trim().length > 0);
+
+  const parseRow = (row: string): string[] => {
+    const cells: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < row.length; i++) {
+      const ch = row[i];
+      if (ch === '"') {
+        if (inQuotes && row[i + 1] === '"') { current += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (ch === ',' && !inQuotes) { cells.push(current); current = ''; }
+      else current += ch;
+    }
+    cells.push(current);
+    return cells.map((c) => c.trim());
+  };
+
+  return lines.map(parseRow);
+}
+
+/**
+ * Wrapper com argumentos (filename, content) — assinatura usada por
+ * ContactImportDialog. Internamente delega para `downloadCsvFile`.
+ */
+export function downloadCsv(filename: string, csvContent: string): void {
+  downloadCsvFile(csvContent, filename);
+}
