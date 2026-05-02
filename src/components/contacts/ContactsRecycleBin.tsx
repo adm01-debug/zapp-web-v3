@@ -12,10 +12,10 @@ import {
   Trash2, RotateCcw, AlertTriangle, Clock, Search, User, RefreshCw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
-import { useAuth } from '@/hooks/useAuth';
-import { dbFrom } from '@/integrations/datasource/db';
+import { useAuth } from '@/features/auth';
+import { dbFrom, dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -126,8 +126,10 @@ export const ContactsRecycleBin: React.FC<ContactsRecycleBinProps> = ({ workspac
     }
     setRestoring(contact.id);
     try {
-      const { error } = await supabase.rpc('restore_contact', { p_contact_id: contact.id });
+      const { data, error } = await dbRpc(RPC.restoreContact, { p_contact_id: contact.id });
       if (error) throw error;
+      const result = (data ?? {}) as Record<string, unknown>;
+      if (result?.error) throw new Error(String(result.error));
 
       setContacts((prev) => prev.filter((c) => c.id !== contact.id));
       toast({
