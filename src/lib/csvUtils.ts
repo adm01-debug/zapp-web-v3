@@ -1,224 +1,161 @@
 /**
- * csvUtils.ts
- * Safe CSV export/import utilities.
+ * csvUtils.ts — v2.0
+ * Safe CSV export utilities with injection prevention (OWASP).
+ * RFC4180 compliant, UTF-8 BOM for Excel compatibility.
  *
- * SECURITY: Prevents CSV Injection (Formula Injection) attacks.
- * Attackers insert formulas like =cmd|'/c calc'!A0 that Excel/Sheets execute.
- * We prefix dangerous characters with a TAB character to neutralize them.
- *
- * OWASP: https://owasp.org/www-community/attacks/CSV_Injection
+ * CSV Injection Prevention:
+ * Cells starting with =, +, -, @, TAB, CR are prefixed with \t
+ * to prevent formula injection in spreadsheet applications.
  */
 
-// ── Injection prevention ───────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────
 
-/** Characters that trigger formula execution in spreadsheet apps */
-const DANGEROUS_PREFIXES = ['=', '+', '-', '@', '\t', '\r'];
+export interface ContactExportRow {
+  name:             string;
+  phone:            string;
+  email:            string;
+  company:          string;
+  tags:             string;
+  channel:          string;
+  notes:            string;
+  created_at:       string;
+  last_seen_at:     string;
+  lgpd_consent_at:  string;
+  [key: string]:    string;
+}
+
+export interface CsvColumn<T = Record<string, string>> {
+  key:   keyof T;
+  label: string;
+}
+
+// ── Cell escaping ──────────────────────────────────────────────────────────
 
 /**
- * Sanitize a single CSV cell value.
- * - Wraps in double-quotes
- * - Escapes internal double-quotes
- * - Prefixes dangerous formula starters with a tab to neutralize them
+ * Escape a single CSV cell value.
+ * - Wraps all values in double quotes (RFC4180)
+ * - Escapes internal double quotes by doubling them
+ * - Neutralizes formula injection prefixes (=, +, -, @, TAB, CR)
  */
 export function escapeCsvCell(value: unknown): string {
   if (value === null || value === undefined) return '';
 
-  let str = String(value).trim();
+  const str = String(value);
+  if (!str) return '';
 
-  // Neutralize formula injection: prefix with tab if starts with dangerous char
-  if (DANGEROUS_PREFIXES.some((c) => str.startsWith(c))) {
-    str = `\t${str}`;
-  }
+  // Neutralize CSV injection: prefix dangerous characters with TAB
+  const DANGEROUS_CHARS = /^[=+\-@\t\r]/;
+  const escaped = DANGEROUS_CHARS.test(str) ? `\t${str}` : str;
 
-  // Escape double-quotes by doubling them (RFC 4180)
-  str = str.replace(/"/g, '""');
-
-  // Always quote the cell to handle commas and newlines safely
-  return `"${str}"`;
+  // RFC4180: wrap in quotes, escape internal quotes by doubling
+  return `"${escaped.replace(/"/g, '""')}"`;
 }
 
+// ── CSV Builder ────────────────────────────────────────────────────────────
+
 /**
- * Build a CSV string from an array of row objects.
- * @param rows     Array of data rows
- * @param columns  Column definitions: key = object property, label = header text
+ * Build a complete CSV string from rows and column definitions.
+ * Includes UTF-8 BOM for Excel compatibility.
  */
-export function buildCsvString<T extends Record<string, unknown>>(
-  rows: T[],
-  columns: Array<{ key: keyof T; label: string }>
+export function buildCsvString<T extends Record<string, string>>(
+  rows:    T[],
+  columns: CsvColumn<T>[]
 ): string {
   const header = columns.map((c) => escapeCsvCell(c.label)).join(',');
-  const body = rows
-    .map((row) => columns.map((c) => escapeCsvCell(row[c.key])).join(','))
-    .join('\n');
+  const body = rows.map((row) =>
+    columns.map((c) => escapeCsvCell(row[c.key])).join(',')
+  ).join('\r\n');
 
-  return `${header}\n${body}`;
+  // UTF-8 BOM (\uFEFF) ensures Excel opens with correct encoding
+  return '\uFEFF' + header + '\r\n' + body;
 }
 
-/**
- * Trigger a browser download of a CSV file.
- * Adds BOM (U+FEFF) so Excel correctly reads UTF-8 with accents.
- */
-export function downloadCsv(filename: string, csvContent: string): void {
-  const BOM = '\uFEFF';
-  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
+// ── Download Trigger ───────────────────────────────────────────────────────
 
+/**
+ * Trigger browser download of a CSV file.
+ */
+export function downloadCsv(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = url;
+  link.setAttribute('href', url);
   link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
-
-  // Cleanup
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
 
-/**
- * Export contacts to a safe CSV file.
- */
-export interface ContactExportRow {
-  name: string;
-  phone: string;
-  email: string;
-  company: string;
-  tags: string;
-  channel: string;
-  notes: string;
-  created_at: string;
-  last_seen_at: string;
-}
+// ── Contact Export Shorthand ───────────────────────────────────────────────
 
-export function exportContactsToCsv(contacts: ContactExportRow[]): void {
-  const columns: Array<{ key: keyof ContactExportRow; label: string }> = [
-    { key: 'name', label: 'Nome' },
-    { key: 'phone', label: 'Telefone' },
-    { key: 'email', label: 'E-mail' },
-    { key: 'company', label: 'Empresa' },
-    { key: 'tags', label: 'Tags' },
-    { key: 'channel', label: 'Canal' },
-    { key: 'notes', label: 'Notas' },
-    { key: 'created_at', label: 'Criado em' },
-    { key: 'last_seen_at', label: 'Último contato' },
-  ];
-
-  const csv = buildCsvString(contacts, columns);
-  const filename = `contatos_${new Date().toISOString().split('T')[0]}.csv`;
-  downloadCsv(filename, csv);
-}
-
-// ── CSV Parsing ────────────────────────────────────────────────────────────
+/** Default column definitions for contact exports */
+const DEFAULT_CONTACT_COLUMNS: CsvColumn<ContactExportRow>[] = [
+  { key: 'name',            label: 'Nome' },
+  { key: 'phone',           label: 'Telefone' },
+  { key: 'email',           label: 'E-mail' },
+  { key: 'company',         label: 'Empresa' },
+  { key: 'tags',            label: 'Tags' },
+  { key: 'channel',         label: 'Canal' },
+  { key: 'notes',           label: 'Notas' },
+  { key: 'created_at',      label: 'Criado em' },
+  { key: 'last_seen_at',    label: 'Último contato' },
+  { key: 'lgpd_consent_at', label: 'Consentimento LGPD' },
+];
 
 /**
- * Detect encoding issues in a CSV string (e.g., Windows-1252 garbled as UTF-8).
- * Returns true if the string appears to have encoding issues.
+ * Export contacts to CSV and trigger browser download.
  */
-export function hasEncodingIssues(str: string): boolean {
-  // Common Windows-1252 → UTF-8 garbled sequences
-  const garbledPatterns = /[\uFFFD\u00C3\u00A3\u00C3\u00A7]/;
-  return garbledPatterns.test(str) && str.includes('\u00C3');
+export function exportContactsToCsv(
+  rows:     ContactExportRow[],
+  columns?: CsvColumn<ContactExportRow>[],
+  filename?: string
+): void {
+  const cols = columns ?? DEFAULT_CONTACT_COLUMNS;
+  const csv  = buildCsvString(rows, cols);
+  const date = new Date().toISOString().slice(0, 10);
+  downloadCsv(csv, filename ?? `contatos-${date}.csv`);
 }
 
+// ── CSV Parser ─────────────────────────────────────────────────────────────
+
 /**
- * Parse a CSV file with robust handling of:
- * - UTF-8 with BOM
- * - Windows-1252 encoding (attempts detection)
- * - Quoted fields with embedded commas and newlines
- * - Empty rows
+ * Parse a CSV file (File object) to an array of objects.
+ * Uses first row as headers.
  */
-export async function parseCsvFile(file: File): Promise<string[][]> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+export async function parseCsvFile(file: File): Promise<Array<Record<string, string>>> {
+  const text = await file.text();
+  // Remove UTF-8 BOM if present
+  const clean = text.startsWith('\uFEFF') ? text.slice(1) : text;
+  const lines = clean.split(/\r?\n/).filter((l) => l.trim());
+  if (lines.length < 2) return [];
 
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (!text) {
-        reject(new Error('Arquivo vazio ou inválido'));
-        return;
-      }
-
-      // Strip BOM if present
-      const content = text.startsWith('\uFEFF') ? text.slice(1) : text;
-
-      // Warn about encoding issues but continue
-      if (hasEncodingIssues(content)) {
-        console.warn('[csvUtils] Possível problema de encoding detectado no arquivo CSV.');
-      }
-
-      try {
-        const rows = parseRawCsv(content);
-        resolve(rows);
-      } catch (err) {
-        reject(new Error(`Erro ao processar CSV: ${String(err)}`));
-      }
-    };
-
-    reader.onerror = () => reject(new Error('Falha ao ler o arquivo'));
-
-    // Try UTF-8 first
-    reader.readAsText(file, 'UTF-8');
+  const headers = parseRow(lines[0]);
+  return lines.slice(1).map((line) => {
+    const cells = parseRow(line);
+    return Object.fromEntries(headers.map((h, i) => [h.trim(), (cells[i] ?? '').trim()]));
   });
 }
 
-/**
- * RFC 4180-compliant CSV parser.
- * Handles quoted fields, embedded commas, and embedded newlines.
- */
-function parseRawCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = '';
-  let insideQuotes = false;
-  let i = 0;
+/** Parse a single CSV row respecting quoted fields */
+function parseRow(row: string): string[] {
+  const cells: string[] = [];
+  let current = '';
+  let inQuotes = false;
 
-  while (i < text.length) {
-    const ch = text[i];
-    const next = text[i + 1];
-
-    if (insideQuotes) {
-      if (ch === '"' && next === '"') {
-        // Escaped quote
-        field += '"';
-        i += 2;
-      } else if (ch === '"') {
-        insideQuotes = false;
-        i++;
-      } else {
-        field += ch;
-        i++;
-      }
+  for (let i = 0; i < row.length; i++) {
+    const ch = row[i];
+    if (ch === '"') {
+      if (inQuotes && row[i + 1] === '"') { current += '"'; i++; } // escaped quote
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      cells.push(current);
+      current = '';
     } else {
-      if (ch === '"') {
-        insideQuotes = true;
-        i++;
-      } else if (ch === ',') {
-        row.push(field.trim());
-        field = '';
-        i++;
-      } else if (ch === '\n' || (ch === '\r' && next === '\n')) {
-        row.push(field.trim());
-        field = '';
-        if (row.some((v) => v !== '')) {
-          rows.push(row);
-        }
-        row = [];
-        i += ch === '\r' ? 2 : 1;
-      } else if (ch === '\r') {
-        i++;
-      } else {
-        field += ch;
-        i++;
-      }
+      current += ch;
     }
   }
-
-  // Last field/row
-  if (field || row.length > 0) {
-    row.push(field.trim());
-    if (row.some((v) => v !== '')) {
-      rows.push(row);
-    }
-  }
-
-  return rows;
+  cells.push(current);
+  return cells;
 }
