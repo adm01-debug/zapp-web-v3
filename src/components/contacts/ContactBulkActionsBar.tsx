@@ -15,7 +15,8 @@ import {
   X, Download, Trash2, Tag, UserCheck, TrendingUp,
   RefreshCw, CheckSquare, ChevronDown,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { useToast } from '@/hooks/use-toast';
 
 interface Props {
@@ -55,7 +56,7 @@ export const ContactBulkActionsBar: React.FC<Props> = ({
 
   const updateLeadStatus = (status: string) =>
     withLoading('status', async () => {
-      const { error } = await supabase.rpc('bulk_update_lead_status', {
+      const { error } = await dbRpc(RPC.bulkUpdateLeadStatus, {
         p_contact_ids: selectedIds, p_status: status,
       });
       if (error) throw error;
@@ -68,7 +69,7 @@ export const ContactBulkActionsBar: React.FC<Props> = ({
     const tag = tagInput.trim();
     if (!tag) return;
     withLoading('tag', async () => {
-      const { error } = await supabase.rpc('bulk_add_tag', {
+      const { error } = await dbRpc(RPC.bulkAddTag, {
         p_contact_ids: selectedIds, p_tag: tag,
       });
       if (error) throw error;

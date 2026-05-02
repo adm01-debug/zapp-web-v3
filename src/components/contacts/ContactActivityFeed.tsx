@@ -5,9 +5,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, FileText, Shield, RotateCcw, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
-import { dbFrom } from '@/integrations/datasource/db';
+import { dbFrom, dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 interface Activity { id: string; type: string; label: string; detail?: string; timestamp: string; }
 
@@ -41,7 +41,7 @@ export const ContactActivityFeed: React.FC<{ contactId: string; maxItems?: numbe
       const all: Activity[] = [];
 
       // Conversations
-      const { data: convs } = await supabase.rpc('get_contact_conversations', { p_contact_id: contactId, p_limit: 30 });
+      const { data: convs } = await dbList(RPC.getContactConversations, { p_contact_id: contactId, p_limit: 30 });
       for (const c of (convs ?? []) as Record<string, unknown>[]) {
         if (c.first_message_at) all.push({ id: `conv-open-${c.id}`, type: 'conversation_open', label: 'Conversa iniciada', detail: c.assigned_to ? `Atendente: ${sanitizeText(String(c.assigned_to))}` : undefined, timestamp: String(c.first_message_at) });
         if (c.status === 'closed' && c.last_message_at) all.push({ id: `conv-closed-${c.id}`, type: 'conversation_closed', label: 'Conversa encerrada', detail: `${c.message_count ?? 0} msgs`, timestamp: String(c.last_message_at) });
