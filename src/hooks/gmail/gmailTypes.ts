@@ -1,203 +1,236 @@
 /**
- * gmailTypes.ts — Tipos compartilhados do módulo Gmail / Email Chat
+ * gmailTypes.ts — Tipos TypeScript completos para o módulo Gmail
  *
- * Centraliza todos os tipos usados por hooks e componentes do Email Chat.
- * Extendido pela auditoria de 2026-05-02 para cobrir todos os gaps identificados.
+ * Zero uso de `as any`.
+ * Alinhado com o schema do banco (gmail_accounts, gmail_threads, gmail_messages, etc.)
  */
 
-// ── Contas ────────────────────────────────────────────────────────────
+// ── Conta Gmail ────────────────────────────────────────────────────────────
 
 export interface GmailAccount {
-  id: string;
-  user_id: string;
-  email: string;
+  id:           string;
+  user_id:      string;
+  email:        string;
   display_name: string | null;
-  picture_url: string | null;
-  access_token: string;
-  refresh_token: string;
-  token_expiry: string;           // ISO 8601
-  scope: string | null;
-  is_active: boolean;
-  watch_expiry: string | null;    // Pub/Sub watch expiration
-  watch_resource: string | null;
-  history_id: string | null;
-  created_at: string;
-  updated_at: string;
+  is_active:    boolean;
+  token_expiry: string | null;
+  watch_expiry: string | null;
+  created_at:   string;
+  updated_at:   string;
 }
 
-// ── Threads ───────────────────────────────────────────────────────────
+export type GmailTokenStatus  = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
+export type GmailWatchStatus  = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
+export type GmailSLAStatus    = 'ok' | 'warning' | 'breached' | 'met' | null;
+
+export interface GmailTokenInfo {
+  account_id:           string;
+  email:                string;
+  is_active:            boolean;
+  token_status:         GmailTokenStatus;
+  token_expiry:         string | null;
+  watch_status:         GmailWatchStatus;
+  watch_expiry:         string | null;
+  minutes_until_expiry: number | null;
+}
+
+// ── Thread ─────────────────────────────────────────────────────────────────
 
 export interface GmailThread {
-  id: string;
-  account_id: string;
-  thread_id: string;
-  subject: string | null;
-  snippet: string | null;
-  participant_emails: string[];
-  label_ids: string[];
-  unread_count: number;
-  message_count: number;
-  last_message_at: string | null;
-  is_starred: boolean;
-  is_important: boolean;
-  created_at: string;
-  updated_at: string;
-
-  // Joins opcionais
-  messages?: GmailMessage[];
-  labels?: GmailLabel[];
+  id:               string;
+  account_id:       string;
+  gmail_thread_id:  string;
+  subject:          string | null;
+  snippet:          string | null;
+  from_email:       string | null;
+  from_name:        string | null;
+  label_ids:        string[];
+  unread_count:     number;
+  message_count:    number;
+  is_starred:       boolean;
+  is_important:     boolean;
+  sla_status:       GmailSLAStatus;
+  assigned_to:      string | null;
+  last_message_at:  string | null;
+  first_reply_at:   string | null;
+  created_at:       string;
+  updated_at:       string;
 }
 
-// ── Mensagens ─────────────────────────────────────────────────────────
+export interface GmailThreadFilters {
+  accountId?:   string;
+  label?:       GmailLabelId;
+  query?:       string;
+  isUnread?:    boolean;
+  isStarred?:   boolean;
+  slaStatus?:   GmailSLAStatus;
+  assignedTo?:  string | null;
+  limit?:       number;
+  offset?:      number;
+}
+
+// ── Mensagem ───────────────────────────────────────────────────────────────
 
 export interface GmailMessage {
-  id: string;
-  thread_id_ref: string;
-  account_id: string;
-  message_id: string;
-  from_email: string | null;
-  from_name: string | null;
-  to_emails: string[];
-  cc_emails: string[];
-  bcc_emails: string[];
-  subject: string | null;
-  body_plain: string | null;
-  body_html: string | null;
-  snippet: string | null;
-  label_ids: string[];
-  is_read: boolean;
-  is_sent: boolean;
-  is_draft: boolean;
+  id:              string;
+  thread_id:       string;
+  gmail_msg_id:    string;
+  from_email:      string | null;
+  from_name:       string | null;
+  to_emails:       string[] | null;
+  cc_emails:       string[] | null;
+  subject:         string | null;
+  snippet:         string | null;
+  body_html:       string | null;
+  body_text:       string | null;
+  is_read:         boolean;
+  date:            string | null;
   has_attachments: boolean;
-  internal_date: string | null;
-  created_at: string;
-
-  // Joins opcionais
-  attachments?: GmailAttachment[];
+  in_reply_to:     string | null;
+  references:      string[] | null;
+  created_at:      string;
 }
 
-// ── Anexos ────────────────────────────────────────────────────────────
+// ── Anexo ─────────────────────────────────────────────────────────────────
 
 export interface GmailAttachment {
-  id: string;
-  message_id_ref: string;
-  account_id: string;
-  attachment_id: string;
-  filename: string;
-  mime_type: string | null;
-  size_bytes: number | null;
-  storage_url: string | null;
-  downloaded: boolean;
-  created_at: string;
+  id:             string;
+  message_id:     string;
+  gmail_att_id:   string;
+  filename:       string;
+  mime_type:      string;
+  size:           number;
+  storage_url:    string | null;
+  created_at:     string;
 }
 
-// ── Rascunhos ─────────────────────────────────────────────────────────
+// ── Rascunho ──────────────────────────────────────────────────────────────
 
 export interface GmailDraft {
-  id: string;
-  account_id: string;
-  thread_id_ref: string | null;
+  id:          string;
+  account_id:  string;
   gmail_draft_id: string | null;
-  to_emails: string[];
-  cc_emails: string[];
-  bcc_emails: string[];
-  subject: string | null;
-  body_html: string | null;
-  last_saved_at: string;
-  created_at: string;
+  to_emails:   string[];
+  cc_emails:   string[];
+  subject:     string | null;
+  body_html:   string | null;
+  thread_id:   string | null;
+  auto_saved:  boolean;
+  created_at:  string;
+  updated_at:  string;
 }
 
-// ── Assinaturas ───────────────────────────────────────────────────────
+// ── Label ─────────────────────────────────────────────────────────────────
 
-export interface GmailSignature {
-  id: string;
-  account_id: string;
-  name: string;
-  html_content: string;
-  is_default: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-// ── Labels ────────────────────────────────────────────────────────────
+export type GmailLabelId = 'INBOX' | 'SENT' | 'DRAFTS' | 'STARRED' | 'IMPORTANT' | 'TRASH' | 'SPAM' | string;
 
 export interface GmailLabel {
-  id: string;
-  account_id: string;
-  label_id: string;
-  name: string;
-  type: 'system' | 'user' | null;
-  color_bg: string | null;
-  color_fg: string | null;
-  messages_total: number;
-  messages_unread: number;
+  id:             string;
+  account_id:     string;
+  gmail_label_id: GmailLabelId;
+  name:           string;
+  type:           'system' | 'user';
+  color:          string | null;
+  thread_count?:  number;
+  unread_count?:  number;
+  created_at:     string;
 }
 
-// ── Busca ─────────────────────────────────────────────────────────────
+// ── Assinatura ────────────────────────────────────────────────────────────
 
-export interface GmailSearchResult {
-  threadId: string;
-  subject: string;
-  snippet: string;
-  from: string;
-  date: string;
-  unread: boolean;
-  source: 'local' | 'remote';
+export interface GmailSignature {
+  id:           string;
+  account_id:   string;
+  name:         string;
+  html_content: string;
+  is_default:   boolean;
+  created_at:   string;
+  updated_at:   string;
 }
 
-// ── OAuth ─────────────────────────────────────────────────────────────
+// ── Envio ─────────────────────────────────────────────────────────────────
 
-export type TokenStatus = 'loading' | 'valid' | 'expiring' | 'expired' | 'disconnected';
-
-export interface OAuthCallbackPayload {
-  type: 'gmail-oauth-success';
-  email: string;
-  accountId: string;
+export interface GmailSendParams {
+  to:          string | string[];
+  cc?:         string | string[];
+  bcc?:        string | string[];
+  subject:     string;
+  bodyHtml:    string;
+  threadId?:   string;
+  inReplyTo?:  string;
+  references?: string[];
+  attachments?: GmailSendAttachment[];
+  signature?:  boolean;
 }
 
-// ── SLA ──────────────────────────────────────────────────────────────
-
-export type SLAStatus = 'ok' | 'warning' | 'breached';
-
-export interface EmailSLAConfig {
-  threshold_minutes: number;
-  warning_threshold_pct: number;
-  business_hours_only: boolean;
+export interface GmailSendAttachment {
+  name:        string;
+  mimeType:    string;
+  base64Data:  string;
+  size:        number;
 }
 
-// ── Envio ─────────────────────────────────────────────────────────────
-
-export interface ComposedEmail {
-  to: string[];
-  cc: string[];
-  bcc: string[];
-  subject: string;
-  bodyHtml: string;
-  bodyPlain?: string;
-  attachments?: ComposedAttachment[];
-  signatureId?: string;
-  replyToThreadId?: string;
+export interface GmailSendResult {
+  success:    boolean;
+  messageId?: string;
+  threadId?:  string;
+  error?:     string;
 }
 
-export interface ComposedAttachment {
-  name: string;
-  mimeType: string;
-  data: string;         // base64
-  sizeBytes: number;
+// ── Métricas diárias ─────────────────────────────────────────────────────
+
+export interface GmailDailyMetrics {
+  id:                      string;
+  account_id:              string;
+  date:                    string;
+  threads_received:        number;
+  threads_replied:         number;
+  avg_first_reply_minutes: number | null;
+  sla_met_count:           number;
+  sla_breached_count:      number;
+  created_at:              string;
+  updated_at:              string;
 }
 
-// ── Paginação ─────────────────────────────────────────────────────────
+// ── Pub/Sub webhook payload ───────────────────────────────────────────────
 
-export interface PaginatedResult<T> {
-  items: T[];
-  nextPageToken: string | null;
-  total: number;
+export interface GmailPubSubMessage {
+  emailAddress:  string;
+  historyId:     string;
 }
 
-// ── Realtime events ───────────────────────────────────────────────────
+export interface GmailHistoryEvent {
+  id:              string;
+  messages?:       Array<{ id: string; threadId: string }>;
+  messagesAdded?:  Array<{ message: { id: string; threadId: string; labelIds: string[] } }>;
+  labelsAdded?:    Array<{ message: { id: string; threadId: string }; labelIds: string[] }>;
+  labelsRemoved?:  Array<{ message: { id: string; threadId: string }; labelIds: string[] }>;
+}
 
-export type GmailRealtimeEvent =
-  | { type: 'new_message'; threadId: string; messageId: string }
-  | { type: 'thread_updated'; threadId: string }
-  | { type: 'token_expired'; accountId: string }
-  | { type: 'sync_complete'; accountId: string; count: number };
+// ── Type guards ──────────────────────────────────────────────────────────
+
+export function isGmailThread(obj: unknown): obj is GmailThread {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'gmail_thread_id' in obj &&
+    'account_id' in obj
+  );
+}
+
+export function isGmailMessage(obj: unknown): obj is GmailMessage {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'gmail_msg_id' in obj &&
+    'thread_id' in obj
+  );
+}
+
+export function isGmailTokenExpired(tokenInfo: GmailTokenInfo): boolean {
+  return tokenInfo.token_status === 'expired';
+}
+
+export function isGmailWatchExpired(tokenInfo: GmailTokenInfo): boolean {
+  return tokenInfo.watch_status === 'expired';
+}
