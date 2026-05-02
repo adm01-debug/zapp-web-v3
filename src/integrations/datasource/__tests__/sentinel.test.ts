@@ -4,7 +4,7 @@ import { validateEntityAccess, validateRpcAccess } from '../sentinel';
 describe('Datasource Sentinel', () => {
   it('should throw error when evolution_* table is accessed via lovable client in dev', () => {
     // Force DEV mode for test
-    vi.stubEnv('DEV', 'true');
+    vi.stubEnv('DEV', true as any);
     
     expect(() => validateEntityAccess('evolution_messages', 'lovable')).toThrow(
       /SECURITY VIOLATION/
@@ -14,7 +14,7 @@ describe('Datasource Sentinel', () => {
   });
 
   it('should NOT throw when evolution_* table is accessed via external client', () => {
-    vi.stubEnv('DEV', 'true');
+    vi.stubEnv('DEV', true as any);
     
     expect(() => validateEntityAccess('evolution_messages', 'external')).not.toThrow();
     
@@ -22,7 +22,7 @@ describe('Datasource Sentinel', () => {
   });
 
   it('should throw error when evolution RPC is called via lovable client', () => {
-    vi.stubEnv('DEV', 'true');
+    vi.stubEnv('DEV', true as any);
     
     expect(() => validateRpcAccess('rpc_list_messages_lite', 'lovable')).toThrow(
       /SECURITY VIOLATION/
@@ -32,7 +32,7 @@ describe('Datasource Sentinel', () => {
   });
 
   it('should NOT throw when lovable table is accessed via lovable client', () => {
-    vi.stubEnv('DEV', 'true');
+    vi.stubEnv('DEV', true as any);
     
     expect(() => validateEntityAccess('profiles', 'lovable')).not.toThrow();
     
