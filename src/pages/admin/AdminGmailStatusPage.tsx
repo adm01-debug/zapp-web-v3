@@ -1,52 +1,146 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle2, Clock, ShieldCheck, Database } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { 
+  AlertCircle, CheckCircle2, Clock, ShieldCheck, Database, 
+  Search, RefreshCcw, AlertTriangle, ChevronLeft, ChevronRight,
+  Filter
+} from 'lucide-react';
 import { useGmail } from '@/hooks/useGmail';
+import { gmailHealthService, GmailHealthInfo, GmailFailure } from '@/services/gmailHealthService';
+import { toast } from 'sonner';
 
 export default function AdminGmailStatusPage() {
   const { accounts, schemaStatus, lastRequestId } = useGmail();
+  const [health, setHealth] = useState<GmailHealthInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    requestId: '',
+    resource: '',
+    operation: '',
+    page: 1
+  });
+  const [failuresData, setFailuresData] = useState<{ items: GmailFailure[], total: number }>({ items: [], total: 0 });
 
-  const getStatusIcon = (ok: boolean) => {
-    return ok ? (
-      <CheckCircle2 className="w-5 h-5 text-green-500" />
-    ) : (
-      <AlertCircle className="w-5 h-5 text-destructive" />
-    );
+  const loadHealth = async () => {
+    setLoading(true);
+    try {
+      const data = await gmailHealthService.getHealthStatus();
+      setHealth(data);
+      
+      const failures = gmailHealthService.getFailures({
+        requestId: filters.requestId || undefined,
+        resource: filters.resource || undefined,
+        operation: filters.operation || undefined,
+        page: filters.page,
+        pageSize: 5
+      });
+      setFailuresData(failures);
+    } catch (error) {
+      toast.error('Erro ao carregar dados de saúde do Gmail');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadHealth();
+  }, [filters]);
+
+  const handleRevalidate = async () => {
+    toast.promise(gmailHealthService.forceRevalidation(), {
+      loading: 'Revalidando recursos...',
+      success: 'Recursos revalidados com sucesso!',
+      error: 'Erro ao revalidar recursos'
+    });
+    setTimeout(loadHealth, 1000);
+  };
+
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case 'healthy': return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+      case 'degraded': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+      case 'error': return <AlertCircle className="w-5 h-5 text-destructive" />;
+      default: return <Clock className="w-5 h-5 text-muted-foreground" />;
+    }
+  };
+
+  const getStatusLabel = (status?: string) => {
+    switch (status) {
+      case 'healthy': return 'Operacional';
+      case 'degraded': return 'Degradado';
+      case 'error': return 'Crítico';
+      default: return 'Desconhecido';
+    }
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Status do Gmail</h1>
-        <p className="text-muted-foreground">Monitoramento de integridade do schema e conexões Gmail.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">Status do Gmail</h1>
+          <p className="text-muted-foreground">Monitoramento de integridade do schema e conexões Gmail.</p>
+        </div>
+        <Button onClick={handleRevalidate} variant="outline" className="gap-2">
+          <RefreshCcw className="w-4 h-4" />
+          Forçar Revalidação
+        </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {health?.status && health.status !== 'healthy' && (
+        <Alert variant={health.status === 'error' ? 'destructive' : 'default'} className={health.status === 'degraded' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : ''}>
+          {health.status === 'error' ? <AlertCircle className="h-4 h-4" /> : <AlertTriangle className="h-4 h-4" />}
+          <AlertTitle>Status do Gmail: {getStatusLabel(health.status)}</AlertTitle>
+          <AlertDescription>
+            Foram detectadas {health.recentFailures.length} falhas recentes. 
+            Verifique os logs abaixo usando o Request ID para depuração.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Saúde do Schema</CardTitle>
-            {getStatusIcon(schemaStatus.ok)}
+            <CardTitle className="text-sm font-medium">Saúde Geral</CardTitle>
+            {getStatusIcon(health?.status)}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{schemaStatus.ok ? 'Operacional' : 'Erro de Schema'}</div>
+            <div className="text-2xl font-bold">{getStatusLabel(health?.status)}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {schemaStatus.ok 
-                ? 'Tabelas e RPCs gmail_* validadas.' 
-                : 'Alguns recursos do Gmail estão ausentes no banco.'}
+              Baseado em telemetria em tempo real.
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Cache TTL</CardTitle>
+            <CardTitle className="text-sm font-medium">Última Validação</CardTitle>
             <Clock className="w-5 h-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5 Minutos</div>
+            <div className="text-2xl font-bold">
+              {health?.lastValidation ? new Date(health.lastValidation).toLocaleTimeString() : '--:--'}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Última validação: {schemaStatus.lastChecked ? schemaStatus.lastChecked.toLocaleTimeString() : 'Nunca'}
+              Próxima expiração cache: {health?.cacheExpiration ? new Date(health.cacheExpiration).toLocaleTimeString() : 'N/A'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Eficiência Cache</CardTitle>
+            <ShieldCheck className="w-5 h-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {health?.stats ? Math.round((health.stats.cacheHits / (health.stats.totalCalls || 1)) * 100) : 0}%
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {health?.stats?.cacheHits || 0} hits de {health?.stats?.totalCalls || 0} chamadas.
             </p>
           </CardContent>
         </Card>
@@ -59,83 +153,116 @@ export default function AdminGmailStatusPage() {
           <CardContent>
             <div className="text-2xl font-bold">{accounts.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Conexões sincronizadas via Edge Functions.
+              {accounts.filter(a => a.is_active).length} operacionais.
             </p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5" />
-            Logs de Segurança e Telemetria
+            <AlertCircle className="w-5 h-5" />
+            Histórico de Falhas Operacionais
           </CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="font-mono">Total: {failuresData.total}</Badge>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-muted/50 border border-border">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold">Último Request ID (Operacional)</span>
-                <Badge variant="outline" className="font-mono">{lastRequestId || 'Nenhum recente'}</Badge>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 p-3 rounded-lg border border-border">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Request ID..." 
+                  className="pl-9"
+                  value={filters.requestId}
+                  onChange={(e) => setFilters(prev => ({ ...prev, requestId: e.target.value, page: 1 }))}
+                />
               </div>
-              <p className="text-sm text-muted-foreground">
-                Este ID pode ser usado por desenvolvedores para rastrear falhas específicas no console com dados mascarados.
-              </p>
+              <div className="relative">
+                <Filter className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Recurso (gmail_...)" 
+                  className="pl-9"
+                  value={filters.resource}
+                  onChange={(e) => setFilters(prev => ({ ...prev, resource: e.target.value, page: 1 }))}
+                />
+              </div>
+              <div className="relative">
+                <Database className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Operação (from/rpc)" 
+                  className="pl-9"
+                  value={filters.operation}
+                  onChange={(e) => setFilters(prev => ({ ...prev, operation: e.target.value, page: 1 }))}
+                />
+              </div>
             </div>
 
-            {!schemaStatus.ok && (
-              <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
-                <div className="flex items-center gap-2 mb-1">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="font-semibold text-sm">Falha detectada no Schema</span>
-                </div>
-                <p className="text-xs">
-                  O `safeClient` detectou que tabelas `gmail_*` ou RPCs necessárias não existem no schema público. 
-                  Verifique se as migrations foram aplicadas corretamente.
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Contas Gmail Conectadas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-4 py-2 text-left font-medium">E-mail</th>
-                  <th className="px-4 py-2 text-left font-medium">Status</th>
-                  <th className="px-4 py-2 text-left font-medium">Expiração Token</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {accounts.length > 0 ? accounts.map(acc => (
-                  <tr key={acc.id}>
-                    <td className="px-4 py-2">{acc.email}</td>
-                    <td className="px-4 py-2">
-                      <Badge variant={acc.is_active ? "default" : "secondary"}>
-                        {acc.is_active ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-2 text-muted-foreground">
-                      {acc.token_expiry ? new Date(acc.token_expiry).toLocaleString() : 'N/A'}
-                    </td>
-                  </tr>
-                )) : (
+            <div className="rounded-md border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50">
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
-                      Nenhuma conta Gmail configurada.
-                    </td>
+                    <th className="px-4 py-2 text-left font-medium">Request ID</th>
+                    <th className="px-4 py-2 text-left font-medium">Recurso</th>
+                    <th className="px-4 py-2 text-left font-medium">Erro</th>
+                    <th className="px-4 py-2 text-left font-medium">Horário</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y">
+                  {failuresData.items.length > 0 ? failuresData.items.map((failure, idx) => (
+                    <tr key={`${failure.requestId}-${idx}`} className="hover:bg-muted/30">
+                      <td className="px-4 py-2"><Badge variant="outline" className="font-mono">{failure.requestId}</Badge></td>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{failure.resource}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase">{failure.operation}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 text-destructive max-w-[300px] truncate" title={failure.error}>
+                        {failure.error}
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        {new Date(failure.timestamp).toLocaleTimeString()}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground italic">
+                        Nenhuma falha encontrada com os filtros atuais.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Mostrando {failuresData.items.length} de {failuresData.total} registros
+              </p>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={filters.page === 1}
+                  onClick={() => setFilters(prev => ({ ...prev, page: prev.page - 1 }))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm">Página {filters.page}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={filters.page * 5 >= failuresData.total}
+                  onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
