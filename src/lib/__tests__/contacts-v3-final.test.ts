@@ -39,12 +39,12 @@ describe('truncateText', () => {
 
 describe('sanitizeContactFields — evolution_contacts schema', () => {
   it('sanitizes full_name', () => {
-    const c = sanitizeContactFields({ full_name: '<script>XSS</script>João', phone_number: '11987654321' });
+    const c = sanitizeContactFields({ full_name: '<script>XSS</script>João', phone_number: '11987654321' } as any);
     expect(c.full_name).not.toContain('<script>');
     expect(c.full_name).toContain('João');
   });
   it('sanitizes push_name', () => {
-    const c = sanitizeContactFields({ push_name: '<img src=x onerror=hack>', phone_number: '11987654321' });
+    const c = sanitizeContactFields({ push_name: '<img src=x onerror=hack>', phone_number: '11987654321' } as any);
     expect(c.push_name).not.toContain('<img');
   });
   it('keeps notes HTML (bold/italic)', () => {
@@ -53,17 +53,17 @@ describe('sanitizeContactFields — evolution_contacts schema', () => {
     expect(c.notes).not.toContain('<script>');
   });
   it('strips company HTML', () => {
-    const c = sanitizeContactFields({ full_name: 'Test', company: '<b>ACME</b>' });
+    const c = sanitizeContactFields({ full_name: 'Test', company: '<b>ACME</b>' } as any);
     expect(c.company).not.toContain('<b>');
   });
   it('sanitizes tags array', () => {
-    const c = sanitizeContactFields({ full_name: 'Test', tags: ['<script>evil</script>', 'vip', ''] });
+    const c = sanitizeContactFields({ full_name: 'Test', tags: ['<script>evil</script>', 'vip', ''] } as any);
     expect(c.tags).not.toContain('<script>evil</script>');
     expect(c.tags).toContain('vip');
     expect(c.tags.filter((t: string) => t === '')).toHaveLength(0);
   });
   it('handles missing fields', () => {
-    const c = sanitizeContactFields({ full_name: 'Test' });
+    const c = sanitizeContactFields({ full_name: 'Test' } as any);
     expect(c.full_name).toBe('Test');
     expect(c.phone_number).toBeUndefined();
   });
