@@ -163,7 +163,6 @@ export const safeClient = {
       let exists = false;
       if (type === 'table') {
         const { error } = await (supabase.from(name) as any).select('count', { count: 'exact', head: true }).limit(0);
-        
         exists = !error || !error.message || !error.message.toLowerCase().includes('does not exist');
       } else {
         const { error } = await (supabase as any).rpc(name).limit(0);
@@ -176,9 +175,37 @@ export const safeClient = {
       }
       
       resourceCache.set(cacheKey, { exists, expires: Date.now() + CACHE_TTL });
+      
+      // Sincronizar estado de saúde com o banco para que o Edge possa ver
+      this.syncHealthState();
+      
       return exists;
     } catch {
       return false;
+    }
+  },
+
+  /**
+   * Sincroniza o estado de saúde local (in-memory) com a tabela compartilhada no banco
+   */
+  async syncHealthState() {
+    const telemetry = this.getTelemetry();
+    let status: 'healthy' | 'degraded' | 'error' = 'healthy';
+    if (telemetry.recentFailures.length > 10) status = 'error';
+    else if (telemetry.recentFailures.length > 0) status = 'degraded';
+
+    try {
+      await (supabase as any).rpc('rpc_update_gmail_health_state', {
+        p_status: status,
+        p_failure_count: telemetry.recentFailures.length,
+        p_metadata: {
+          total_calls: telemetry.stats.totalCalls,
+          cache_hits: telemetry.stats.cacheHits,
+          last_validation: lastValidation?.toISOString()
+        }
+      });
+    } catch (err) {
+      console.warn('[safeClient] Erro ao sincronizar estado de saúde', err);
     }
   },
 
