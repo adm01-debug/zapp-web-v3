@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { dbFrom, dbChannel, dbClient, dbTable } from '@/integrations/datasource/db';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 export interface Message {
