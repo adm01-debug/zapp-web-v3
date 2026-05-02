@@ -19,6 +19,16 @@ export interface SafeResponse<T> {
 const CACHE_TTL = 300000; // 5 minutos
 const resourceCache = new Map<string, { exists: boolean; expires: number }>();
 
+// Telemetria interna
+let lastValidation: Date | null = null;
+const recentFailures: any[] = [];
+const MAX_FAILURES = 50;
+const stats = {
+  totalCalls: 0,
+  failedCalls: 0,
+  cacheHits: 0
+};
+
 /**
  * safeClient — Wrapper para chamadas Supabase com tratamento de erro e tipagem opcional.
  * Resolve problemas de tabelas não tipadas e schemas externos.
@@ -32,12 +42,14 @@ export const safeClient = {
     queryBuilder: (query: any) => any
   ): Promise<SafeResponse<T[]>> {
     const requestId = Math.random().toString(36).substring(7);
+    stats.totalCalls++;
     try {
       // Validação automática para tabelas gmail_*
       if (table.startsWith('gmail_')) {
         const exists = await this.validateResource(table, 'table');
         if (!exists) {
-          this.log(requestId, 'warn', `Tabela ${table} não encontrada no schema.`);
+          this.log(requestId, 'warn', `Tabela ${table} não encontrada no schema.`, { table });
+          this.recordFailure(requestId, 'from', table, `Tabela ${table} não encontrada`);
           return { data: [] as T[], error: new Error(`Tabela ${table} não disponível`), requestId };
         }
       }
@@ -45,12 +57,16 @@ export const safeClient = {
       const { data, error } = await queryBuilder(supabase.from(table) as any);
       if (error) {
         this.log(requestId, 'error', `Erro na query from ${table}`, error);
+        this.recordFailure(requestId, 'from', table, error.message || 'Erro desconhecido');
+        stats.failedCalls++;
         return { data: [] as T[], error: this.formatError(error), requestId };
       }
       
       return { data: (Array.isArray(data) ? data : []) as T[], error: null, requestId };
     } catch (err) {
       this.log(requestId, 'error', `Erro crítico ao consultar tabela ${table}`, err);
+      this.recordFailure(requestId, 'from', table, err instanceof Error ? err.message : String(err));
+      stats.failedCalls++;
       return { data: [] as T[], error: err instanceof Error ? err : new Error(String(err)), requestId };
     }
   },
@@ -63,11 +79,13 @@ export const safeClient = {
     queryBuilder: (query: any) => any
   ): Promise<SafeResponse<T>> {
     const requestId = Math.random().toString(36).substring(7);
+    stats.totalCalls++;
     try {
       if (table.startsWith('gmail_')) {
         const exists = await this.validateResource(table, 'table');
         if (!exists) {
-          this.log(requestId, 'warn', `Tabela ${table} não encontrada para single()`);
+          this.log(requestId, 'warn', `Tabela ${table} não encontrada para single()`, { table });
+          this.recordFailure(requestId, 'single', table, `Tabela ${table} não encontrada`);
           return { data: null, error: new Error(`Tabela ${table} não disponível`), requestId };
         }
       }
@@ -75,11 +93,15 @@ export const safeClient = {
       const { data, error } = await queryBuilder(supabase.from(table) as any).single();
       if (error) {
         this.log(requestId, 'error', `Erro single query ${table}`, error);
+        this.recordFailure(requestId, 'single', table, error.message || 'Erro desconhecido');
+        stats.failedCalls++;
         return { data: null, error: this.formatError(error), requestId };
       }
       return { data: data as T, error: null, requestId };
     } catch (err) {
       this.log(requestId, 'error', `Erro crítico single ${table}`, err);
+      this.recordFailure(requestId, 'single', table, err instanceof Error ? err.message : String(err));
+      stats.failedCalls++;
       return { data: null, error: err instanceof Error ? err : new Error(String(err)), requestId };
     }
   },
@@ -92,12 +114,14 @@ export const safeClient = {
     params?: Record<string, any>
   ): Promise<SafeResponse<T>> {
     const requestId = Math.random().toString(36).substring(7);
+    stats.totalCalls++;
     try {
       // Validação automática para RPCs rpc_gmail_*
       if (name.startsWith('rpc_gmail_')) {
         const exists = await this.validateResource(name, 'function');
         if (!exists) {
-          this.log(requestId, 'warn', `RPC ${name} não encontrada no schema.`);
+          this.log(requestId, 'warn', `RPC ${name} não encontrada no schema.`, { function: name });
+          this.recordFailure(requestId, 'rpc', name, `Função ${name} não encontrada`);
           return { data: null, error: new Error(`Função ${name} não disponível`), requestId };
         }
       }
@@ -105,6 +129,8 @@ export const safeClient = {
       const { data, error } = await (supabase as any).rpc(name, params);
       if (error) {
         this.log(requestId, 'error', `Erro ao executar RPC ${name}`, error);
+        this.recordFailure(requestId, 'rpc', name, error.message || 'Erro desconhecido');
+        stats.failedCalls++;
         return { data: null, error: this.formatError(error), requestId };
       }
       
@@ -113,6 +139,8 @@ export const safeClient = {
       return { data: data as T, error: null, requestId };
     } catch (err) {
       this.log(requestId, 'error', `Erro crítico RPC ${name}`, err);
+      this.recordFailure(requestId, 'rpc', name, err instanceof Error ? err.message : String(err));
+      stats.failedCalls++;
       return { data: null, error: err instanceof Error ? err : new Error(String(err)), requestId };
     }
   },
@@ -125,8 +153,11 @@ export const safeClient = {
     const cached = resourceCache.get(cacheKey);
     
     if (cached && cached.expires > Date.now()) {
+      stats.cacheHits++;
       return cached.exists;
     }
+
+    lastValidation = new Date();
 
     try {
       let exists = false;
@@ -220,6 +251,61 @@ export const safeClient = {
       return str.substring(0, 5) + '...' + str.substring(str.length - 5);
     }
     return str;
+  },
+
+  /**
+   * Registra uma falha na telemetria
+   */
+  recordFailure(requestId: string, operation: string, resource: string, error: string) {
+    recentFailures.unshift({
+      requestId,
+      operation,
+      resource,
+      error,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (recentFailures.length > MAX_FAILURES) {
+      recentFailures.pop();
+    }
+  },
+
+  /**
+   * Retorna telemetria (usado pelo health service)
+   */
+  getTelemetry() {
+    return {
+      lastValidation,
+      recentFailures: [...recentFailures],
+      stats: { ...stats }
+    };
+  },
+
+  /**
+   * Retorna info do cache
+   */
+  getCacheInfo() {
+    const values = Array.from(resourceCache.values());
+    const expiration = values.length > 0 ? Math.max(...values.map(v => v.expires)) : null;
+    return {
+      expiration,
+      size: resourceCache.size
+    };
+  },
+
+  /**
+   * Limpa o cache para prefixos específicos
+   */
+  clearCache(prefix?: string) {
+    if (!prefix) {
+      resourceCache.clear();
+      return;
+    }
+    for (const key of resourceCache.keys()) {
+      if (key.includes(prefix)) {
+        resourceCache.delete(key);
+      }
+    }
   },
 
   /**
