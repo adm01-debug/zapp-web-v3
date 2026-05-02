@@ -31,6 +31,9 @@ import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import { useChatPanelHandlers } from './chat/useChatPanelHandlers';
 import { useSearchParams } from 'react-router-dom';
+import { useTransferConversation } from '@/features/inbox/hooks/useTransferConversation';
+import { useScheduledMediaUpload } from '@/features/inbox/hooks/useScheduledMediaUpload';
+import { useSafeInteractiveMessage } from '@/features/inbox/hooks/useSafeInteractiveMessage';
 
 const WhisperMode = lazy(() => import('./WhisperMode').then(m => ({ default: m.WhisperMode })));
 const NextBestActionEngine = lazy(() => import('./NextBestActionEngine').then(m => ({ default: m.NextBestActionEngine })));
@@ -174,7 +177,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const { isContactTyping, typingUsers, handleTypingStart, handleTypingStop } = useTypingPresence({
     conversationId: conversation.id,
     remoteJid: conversation.contact.id,
-    currentUserId: 'agent',
+    currentUserId: conversation.assignedTo?.id || 'agent',
     currentUserName: conversation.assignedTo?.name || 'Agente',
   });
   const { quickReplies: dbQuickReplies, incrementUseCount } = useQuickReplies();
@@ -193,7 +196,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const handlers = useChatPanelHandlers({
     conversationId: conversation.id, contactId: conversation.contact.id, contactPhone: conversation.contact.phone,
     instanceName, onSendMessage, editMessageApi: editMessage, applySignature,
-    handleTypingStart, handleTypingStop, openDialog: openDialog as any, closeDialog: closeDialog as any, handleSetActiveTool,
+    handleTypingStart, handleTypingStop, openDialog: openDialog as (key: string) => void, closeDialog: closeDialog as (key: string) => void, handleSetActiveTool,
   });
 
   useEffect(() => { initResolve(); }, [conversation.contact.id]);
@@ -202,7 +205,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   useAutomations({
     remoteJid: conversation.contact.id,
     instanceName,
-    assignedTo: null,
+    assignedTo: conversation.assignedTo?.id ?? null,
   });
   const lastMsgIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -346,9 +349,10 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     handlers.setInputValue(reply.content); closeDialog('quickReplies'); incrementUseCount(reply.id);
   };
 
-  const handleTransfer = (type: 'agent' | 'queue', targetId: string, message?: string) => {
-    toast({ title: 'Chat transferido!', description: type === 'agent' ? 'O chat foi transferido para outro atendente.' : 'O chat foi transferido para outra fila.' });
-  };
+  const { transferConversation: handleTransfer } = useTransferConversation({
+    contactId: conversation.contact.id,
+    whatsappConnectionId,
+  });
 
   const handleScheduleMessage = async (message: string, scheduledAt: Date, attachment?: File) => {
     try {
@@ -357,8 +361,11 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
       if (attachment) {
         const fileName = `scheduled_${Date.now()}_${attachment.name}`;
         const { error: uploadError } = await supabase.storage.from('whatsapp-media').upload(fileName, attachment);
+        if (uploadError) {
+          toast({ title: 'Erro no upload', description: `Falha ao anexar: ${uploadError.message}`, variant: 'destructive' });
+        }
         if (!uploadError) {
-          const { data: signedData } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 3600);
+          const { data: signedData } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 604800); // 7 days for scheduled messages
           mediaUrl = signedData?.signedUrl;
           messageType = attachment.type.startsWith('audio') ? 'audio' : attachment.type.startsWith('image') ? 'image' : attachment.type.startsWith('video') ? 'video' : 'document';
         }
@@ -510,8 +517,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           onOpenLocationPicker={() => openDialog('locationPicker')} onSendProduct={handlers.handleSendProduct} onSendSticker={handleSendSticker}
           onSendAudioMeme={handleSendAudioMeme} onSendCustomEmoji={handleSendCustomEmoji}
           signatureEnabled={signatureEnabled} signatureName={agentName} onToggleSignature={toggleSignature}
-          onPollSent={async (poll) => { await supabase.from('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📊 *Enquete:* ${poll.name}\n${poll.options.map((o, i) => `${i + 1}. ${o}`).join('\n')}`, message_type: 'text', sender: 'agent', status: 'sent' }); }}
-          onContactSent={async (contactName) => { await supabase.from('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📇 Cartão de contato: ${contactName}`, message_type: 'text', sender: 'agent', status: 'sent' }); }}
+          onPollSent={async (poll) => { await supabase.from('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📊 *Enquete:* ${poll.name}\n${poll.options.map((o, i) => `${i + 1}. ${o}`).join('\n')}`, message_type: 'text', sender: 'agent', status: 'sending' }); }}
+          onContactSent={async (contactName) => { await supabase.from('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📇 Cartão de contato: ${contactName}`, message_type: 'text', sender: 'agent', status: 'sending' }); }}
           onOpenCatalog={() => openDialog('catalogDirect')} onSelectSuggestion={(text) => handlers.setInputValue(text)} onSelectTemplate={(text) => handlers.setInputValue(text)}
           fileUploaderRef={fileUploaderRef} inputRef={handlers.inputRef} />
 
