@@ -31,7 +31,8 @@ import ContactsErrorBoundary from './ContactsErrorBoundary';
 import { ContactsPageSkeleton } from './ContactSkeletonLoader';
 import { ContactFormV3 } from './ContactFormV3';
 import { type ContactListItem } from './useContactsPagination';
-import { sanitizeHtml } from '@/lib/sanitize';
+import { sanitizeHtml, sanitizeText } from '@/lib/sanitize';
+import { useToast } from '@/hooks/use-toast';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

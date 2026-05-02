@@ -43,12 +43,12 @@ export function useContactStats(): UseContactStatsReturn {
     setError(null);
 
     try {
-      const { data, error: rpcErr } = await supabase.rpc('rpc_contact_stats');
+      const { data, error: rpcErr } = await (supabase as any).rpc('rpc_contact_stats');
 
       if (rpcErr) throw new Error(rpcErr.message);
 
       // Supabase retorna o JSONB como objeto direto
-      const statsData = data as ContactStatsData;
+      const statsData = data as unknown as ContactStatsData;
       setStats(statsData);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
