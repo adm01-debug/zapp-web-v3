@@ -1393,6 +1393,94 @@ export type Database = {
           updated_by?: string | null
         }
       }
+      automation_executions: {
+        Row: {
+          id: string
+          automation_id: string | null
+          rule_id: string | null
+          contact_id: string | null
+          trigger_event: string | null
+          status: string | null
+          result: Json | null
+          error_message: string | null
+          executed_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          automation_id?: string | null
+          rule_id?: string | null
+          contact_id?: string | null
+          trigger_event?: string | null
+          status?: string | null
+          result?: Json | null
+          error_message?: string | null
+          executed_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          automation_id?: string | null
+          rule_id?: string | null
+          contact_id?: string | null
+          trigger_event?: string | null
+          status?: string | null
+          result?: Json | null
+          error_message?: string | null
+          executed_at?: string | null
+          created_at?: string | null
+        }
+      }
+      automation_rules: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          trigger_type: string
+          trigger_config: Json | null
+          conditions: Json | null
+          actions: Json | null
+          is_active: boolean | null
+          priority: number | null
+          execution_count: number | null
+          last_executed_at: string | null
+          created_by: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          trigger_type: string
+          trigger_config?: Json | null
+          conditions?: Json | null
+          actions?: Json | null
+          is_active?: boolean | null
+          priority?: number | null
+          execution_count?: number | null
+          last_executed_at?: string | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          trigger_type?: string
+          trigger_config?: Json | null
+          conditions?: Json | null
+          actions?: Json | null
+          is_active?: boolean | null
+          priority?: number | null
+          execution_count?: number | null
+          last_executed_at?: string | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
       automations: {
         Row: {
           actions: Json
@@ -3599,6 +3687,29 @@ export type Database = {
           whatsapp_connection_id?: string | null
         }
       }
+      channel_queues: {
+        Row: {
+          id: string
+          channel_id: string
+          queue_id: string
+          is_default: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          channel_id: string
+          queue_id: string
+          is_default?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          channel_id?: string
+          queue_id?: string
+          is_default?: boolean | null
+          created_at?: string | null
+        }
+      }
       channel_routing_rules: {
         Row: {
           channel_connection_id: string | null
@@ -3861,6 +3972,38 @@ export type Database = {
           name?: string
           description?: string | null
           metadata?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      connection_alert_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          connection_id: string | null
+          alert_type: string
+          is_enabled: boolean | null
+          channels: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          connection_id?: string | null
+          alert_type: string
+          is_enabled?: boolean | null
+          channels?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          connection_id?: string | null
+          alert_type?: string
+          is_enabled?: boolean | null
+          channels?: Json | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -4972,6 +5115,44 @@ export type Database = {
           last_message_at?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      dispatch_error_logs: {
+        Row: {
+          id: string
+          message_id: string | null
+          contact_id: string | null
+          instance_name: string | null
+          error_code: string | null
+          error_message: string | null
+          http_status: number | null
+          payload: Json | null
+          retry_count: number | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          message_id?: string | null
+          contact_id?: string | null
+          instance_name?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          http_status?: number | null
+          payload?: Json | null
+          retry_count?: number | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          message_id?: string | null
+          contact_id?: string | null
+          instance_name?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          http_status?: number | null
+          payload?: Json | null
+          retry_count?: number | null
+          created_at?: string | null
         }
       }
       documents: {
@@ -14134,6 +14315,35 @@ export type Database = {
           updated_at?: string | null
         }
       }
+      login_attempts: {
+        Row: {
+          id: string
+          email: string
+          ip_address: string | null
+          user_agent: string | null
+          success: boolean | null
+          failure_reason: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          ip_address?: string | null
+          user_agent?: string | null
+          success?: boolean | null
+          failure_reason?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          success?: boolean | null
+          failure_reason?: string | null
+          created_at?: string | null
+        }
+      }
       mcp_servers: {
         Row: {
           id: string
@@ -15376,6 +15586,53 @@ export type Database = {
           updated_at?: string | null
         }
       }
+      provider_message_log: {
+        Row: {
+          id: string
+          provider: string
+          instance_name: string | null
+          direction: string
+          remote_jid: string | null
+          message_id: string | null
+          status: string | null
+          http_status: number | null
+          request_body: Json | null
+          response_body: Json | null
+          duration_ms: number | null
+          error_message: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          provider: string
+          instance_name?: string | null
+          direction: string
+          remote_jid?: string | null
+          message_id?: string | null
+          status?: string | null
+          http_status?: number | null
+          request_body?: Json | null
+          response_body?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          provider?: string
+          instance_name?: string | null
+          direction?: string
+          remote_jid?: string | null
+          message_id?: string | null
+          status?: string | null
+          http_status?: number | null
+          request_body?: Json | null
+          response_body?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          created_at?: string | null
+        }
+      }
       qr_attempts: {
         Row: {
           connected_at: string | null
@@ -15418,6 +15675,38 @@ export type Database = {
           requested_by?: string | null
           status?: string
           updated_at?: string | null
+        }
+      }
+      query_telemetry: {
+        Row: {
+          id: string
+          query_hash: string | null
+          query_text: string | null
+          execution_time_ms: number | null
+          rows_affected: number | null
+          user_id: string | null
+          source: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          query_hash?: string | null
+          query_text?: string | null
+          execution_time_ms?: number | null
+          rows_affected?: number | null
+          user_id?: string | null
+          source?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          query_hash?: string | null
+          query_text?: string | null
+          execution_time_ms?: number | null
+          rows_affected?: number | null
+          user_id?: string | null
+          source?: string | null
+          created_at?: string | null
         }
       }
       queue_goals: {
@@ -16381,6 +16670,35 @@ export type Database = {
           user_agent?: string | null
           details?: Json | null
           created_at?: string | null
+        }
+      }
+      service_channels: {
+        Row: {
+          id: string
+          name: string
+          channel_type: string
+          config: Json | null
+          is_active: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          channel_type: string
+          config?: Json | null
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          channel_type?: string
+          config?: Json | null
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
         }
       }
       session_traces: {
@@ -17987,6 +18305,35 @@ export type Database = {
           acknowledged?: boolean | null
         }
       }
+      whatsapp_cloud_webhook_pings: {
+        Row: {
+          id: string
+          instance_name: string | null
+          challenge: string | null
+          verify_token: string | null
+          status: string | null
+          ip_address: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          instance_name?: string | null
+          challenge?: string | null
+          verify_token?: string | null
+          status?: string | null
+          ip_address?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          instance_name?: string | null
+          challenge?: string | null
+          verify_token?: string | null
+          status?: string | null
+          ip_address?: string | null
+          created_at?: string | null
+        }
+      }
       whatsapp_connection_queues: {
         Row: {
           created_at: string | null
@@ -19454,6 +19801,25 @@ export type Database = {
           contact_name: string | null
         }
       }
+      vw_recent_media_gallery: {
+        Row: {
+          id: string | null
+          message_id: string | null
+          media_type: string | null
+          public_url: string | null
+          media_mimetype: string | null
+          media_filename: string | null
+          media_size: number | null
+          caption: string | null
+          from_me: boolean | null
+          remote_jid: string | null
+          instance_name: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          storage_provider: string | null
+        }
+      }
       vw_resumo_mes: {
         Row: {
           periodo: string | null
@@ -19510,47 +19876,9 @@ export type Database = {
           priority_order: number | null
         }
       }
-      vw_recent_media_gallery: {
-        Row: {
-          id: string | null
-          message_id: string | null
-          media_type: string | null
-          public_url: string | null
-          media_mimetype: string | null
-          media_filename: string | null
-          media_size: number | null
-          caption: string | null
-          from_me: boolean | null
-          remote_jid: string | null
-          instance_name: string | null
-          contact_name: string | null
-          contact_phone: string | null
-          created_at: string | null
-          storage_provider: string | null
-        }
-      }
     }
     Functions: {}
     Enums: {}
     CompositeTypes: {}
   }
-}
-
-// View: vw_recent_media_gallery (added during re-audit sync)
-export interface VwRecentMediaGalleryRow {
-  id: string | null
-  message_id: string | null
-  media_type: string | null
-  public_url: string | null
-  media_mimetype: string | null
-  media_filename: string | null
-  media_size: number | null
-  caption: string | null
-  from_me: boolean | null
-  remote_jid: string | null
-  instance_name: string | null
-  contact_name: string | null
-  contact_phone: string | null
-  created_at: string | null
-  storage_provider: string | null
 }
