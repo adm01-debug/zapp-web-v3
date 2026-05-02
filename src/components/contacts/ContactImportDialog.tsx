@@ -1,186 +1,325 @@
-import { useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+/**
+ * ContactImportDialog.tsx — v3.0
+ * CSV import using contacts-import Edge Function.
+ * Supports up to 50,000 contacts with progress reporting.
+ */
+import React, { useState, useRef, useCallback } from 'react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import {
+  Upload, FileText, CheckCircle2, XCircle, AlertTriangle, Loader2, Download,
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { parseCsvFile, downloadCsv } from '@/lib/csvUtils';
+
+// ── Types ──────────────────────────────────────────────────────────────────
+
+interface ImportResult {
+  total:       number;
+  inserted:    number;
+  updated:     number;
+  skipped:     number;
+  errors:      Array<{ row: number; reason: string }>;
+  duration_ms: number;
+}
 
 interface ContactImportDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open:             boolean;
+  onOpenChange:     (v: boolean) => void;
+  workspaceId:      string;
   onImportComplete: () => void;
 }
 
-interface ParsedRow { [key: string]: string; }
+// ── Column mapping ─────────────────────────────────────────────────────────
 
-const FIELD_OPTIONS = [
-  { value: '_skip', label: '⏭ Ignorar' },
-  { value: 'name', label: 'Nome' },
-  { value: 'surname', label: 'Sobrenome' },
-  { value: 'nickname', label: 'Apelido' },
-  { value: 'phone', label: 'Telefone *' },
-  { value: 'email', label: 'Email' },
-  { value: 'company', label: 'Empresa' },
-  { value: 'job_title', label: 'Cargo' },
-  { value: 'contact_type', label: 'Tipo' },
-  { value: 'notes', label: 'Notas' },
-];
-
-const AUTO_MAP: Record<string, string> = {
-  nome: 'name', name: 'name', sobrenome: 'surname', surname: 'surname',
-  apelido: 'nickname', nickname: 'nickname',
-  telefone: 'phone', phone: 'phone', celular: 'phone', whatsapp: 'phone',
-  email: 'email', 'e-mail': 'email',
-  empresa: 'company', company: 'company',
-  cargo: 'job_title', tipo: 'contact_type', notas: 'notes',
+const EXPECTED_COLUMNS = ['name', 'phone', 'email', 'company', 'tags', 'notes'];
+const COLUMN_ALIASES: Record<string, string> = {
+  nome: 'name', telefone: 'phone', celular: 'phone', 'e-mail': 'email',
+  empresa: 'company', etiquetas: 'tags', notas: 'notes', observacoes: 'notes',
 };
 
-function parseCSV(text: string) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) return { headers: [] as string[], rows: [] as ParsedRow[] };
-  const parseLine = (line: string) => {
-    const result: string[] = []; let current = ''; let inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { if (inQ && line[i+1] === '"') { current += '"'; i++; } else inQ = !inQ; }
-      else if ((ch === ',' || ch === ';') && !inQ) { result.push(current.trim()); current = ''; }
-      else current += ch;
-    }
-    result.push(current.trim()); return result;
-  };
-  const headers = parseLine(lines[0]);
-  const rows = lines.slice(1).map(line => {
-    const vals = parseLine(line); const row: ParsedRow = {};
-    headers.forEach((h, i) => { row[h] = vals[i] || ''; }); return row;
-  });
-  return { headers, rows };
+function mapHeader(header: string): string {
+  const lower = header.toLowerCase().trim();
+  return COLUMN_ALIASES[lower] ?? lower;
 }
 
-export function ContactImportDialog({ open, onOpenChange, onImportComplete }: ContactImportDialogProps) {
-  const [step, setStep] = useState<'upload'|'preview'|'importing'|'done'>('upload');
-  const [headers, setHeaders] = useState<string[]>([]);
-  const [rows, setRows] = useState<ParsedRow[]>([]);
-  const [mapping, setMapping] = useState<Record<string, string>>({});
-  const [duplicates, setDuplicates] = useState<number[]>([]);
-  const [result, setResult] = useState({ success: 0, failed: 0 });
+function parseRows(rawRows: string[][]): Array<Record<string, string>> {
+  if (rawRows.length < 2) return [];
+  const headers = rawRows[0].map(mapHeader);
+  return rawRows.slice(1).map((row) => {
+    const obj: Record<string, string> = {};
+    headers.forEach((h, i) => { if (h) obj[h] = row[i] ?? ''; });
+    return obj;
+  });
+}
+
+// ── Component ──────────────────────────────────────────────────────────────
+
+export const ContactImportDialog: React.FC<ContactImportDialogProps> = ({
+  open, onOpenChange, workspaceId, onImportComplete,
+}) => {
+  const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const reset = () => { setStep('upload'); setHeaders([]); setRows([]); setMapping({}); setDuplicates([]); };
+  const [file,      setFile]      = useState<File | null>(null);
+  const [preview,   setPreview]   = useState<Array<Record<string, string>>>([]);
+  const [loading,   setLoading]   = useState(false);
+  const [progress,  setProgress]  = useState(0);
+  const [result,    setResult]    = useState<ImportResult | null>(null);
+  const [error,     setError]     = useState<string | null>(null);
 
-  const handleFile = useCallback(async (file: File) => {
-    const { headers: h, rows: r } = parseCSV((await file.text()).replace(/^\uFEFF/, ''));
-    if (!h.length || !r.length) { toast.error('Arquivo vazio'); return; }
-    const m: Record<string, string> = {};
-    h.forEach(col => { m[col] = AUTO_MAP[col.toLowerCase().trim()] || '_skip'; });
-    setHeaders(h); setRows(r); setMapping(m);
-    const phoneCol = Object.entries(m).find(([,v]) => v === 'phone')?.[0];
-    if (phoneCol) {
-      const phones = r.map(row => row[phoneCol]?.replace(/\D/g, ''));
-      const { data } = await supabase.from('contacts').select('phone').in('phone', phones.filter(Boolean));
-      const existing = new Set((data||[]).map(e => e.phone.replace(/\D/g, '')));
-      setDuplicates(r.map((row, i) => existing.has(row[phoneCol]?.replace(/\D/g, '')) ? i : -1).filter(i => i >= 0));
+  const handleFileSelect = useCallback(async (f: File) => {
+    setFile(f); setResult(null); setError(null);
+    try {
+      const rawRows = await parseCsvFile(f);
+      const rows = parseRows(rawRows);
+      setPreview(rows.slice(0, 3));
+    } catch (err) {
+      setError(`Erro ao ler CSV: ${String(err)}`);
     }
-    setStep('preview');
   }, []);
 
-  const handleImport = async () => {
-    const phoneCol = Object.entries(mapping).find(([,v]) => v === 'phone')?.[0];
-    const nameCol = Object.entries(mapping).find(([,v]) => v === 'name')?.[0];
-    if (!phoneCol || !nameCol) { toast.error('Mapeie Nome e Telefone'); return; }
-    setStep('importing'); let s = 0, f = 0;
-    for (const [i, row] of rows.entries()) {
-      if (duplicates.includes(i)) continue;
-      const c: Record<string, string> = {};
-      Object.entries(mapping).forEach(([h, field]) => { if (field !== '_skip' && row[h]) c[field] = row[h]; });
-      if (!c.phone || !c.name) { f++; continue; }
-      const { error } = await supabase.from('contacts').insert({
-        name: c.name, phone: c.phone.replace(/\D/g, ''), surname: c.surname || null,
-        nickname: c.nickname || null, email: c.email || null, company: c.company || null,
-        job_title: c.job_title || null, contact_type: c.contact_type || 'cliente', notes: c.notes || null,
-      });
-      if (error) f++; else s++;
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const dropped = e.dataTransfer.files[0];
+    if (dropped?.name.endsWith('.csv') || dropped?.type === 'text/csv') {
+      handleFileSelect(dropped);
     }
-    setResult({ success: s, failed: f }); setStep('done'); if (s > 0) onImportComplete();
+  }, [handleFileSelect]);
+
+  const handleImport = async () => {
+    if (!file) return;
+    setLoading(true); setProgress(10); setResult(null); setError(null);
+
+    try {
+      const rawRows = await parseCsvFile(file);
+      const rows    = parseRows(rawRows);
+
+      if (rows.length === 0) {
+        setError('Nenhuma linha válida encontrada no CSV.');
+        return;
+      }
+      if (rows.length > 50_000) {
+        setError(`Máximo 50.000 contatos por importação. Este arquivo tem ${rows.length.toLocaleString('pt-BR')}.`);
+        return;
+      }
+
+      setProgress(30);
+
+      const { data, error: fnError } = await supabase.functions.invoke('contacts-import', {
+        body: { rows },
+      });
+
+      setProgress(90);
+
+      if (fnError) throw fnError;
+
+      const res = data as ImportResult;
+      setResult(res);
+      setProgress(100);
+
+      toast({
+        title: '✅ Importação concluída!',
+        description: `${res.inserted} criados · ${res.updated} atualizados · ${res.skipped} ignorados`,
+        duration: 5_000,
+      });
+
+      if (res.inserted > 0 || res.updated > 0) {
+        setTimeout(() => { onImportComplete(); onOpenChange(false); }, 2_000);
+      }
+    } catch (err) {
+      setError(`Erro na importação: ${String(err)}`);
+      setProgress(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadTemplate = () => {
+    const csv = `nome,telefone,email,empresa,tags,notas
+João Silva,(11) 98765-4321,joao@exemplo.com,Empresa ABC,"cliente,vip",Cliente desde 2024
+Maria Santos,(21) 99876-5432,maria@exemplo.com,XYZ Ltda,fornecedor,
+`;
+    downloadCsv('template_importacao_contatos.csv', csv);
+  };
+
+  const reset = () => {
+    setFile(null); setPreview([]); setResult(null); setError(null); setProgress(0);
+    if (fileRef.current) fileRef.current.value = '';
   };
 
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) reset(); onOpenChange(v); }}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><FileSpreadsheet className="w-5 h-5 text-primary" />Importar Contatos</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5 text-primary" />
+            Importar Contatos
+          </DialogTitle>
           <DialogDescription>
-            {step === 'upload' ? 'Envie um arquivo CSV' : step === 'preview' ? 'Revise e confirme' : step === 'importing' ? 'Importando...' : 'Concluído'}
+            Suporte a CSV com até 50.000 contatos. Duplicatas (mesmo telefone ou e-mail) são
+            atualizadas automaticamente.
           </DialogDescription>
         </DialogHeader>
-        <AnimatePresence mode="wait">
-          {step === 'upload' && (
-            <motion.div key="up" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }} onDragOver={e => e.preventDefault()} onClick={() => fileRef.current?.click()}
-                className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-12 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                <Upload className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                <p className="text-sm font-medium">Arraste um CSV ou clique para selecionar</p>
-              </div>
-              <input ref={fileRef} type="file" accept=".csv,.txt" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
-            </motion.div>
+
+        <div className="space-y-4">
+          {/* Drop zone */}
+          {!file && !result && (
+            <div
+              onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()}
+              onClick={() => fileRef.current?.click()}
+              className="border-2 border-dashed border-muted rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+            >
+              <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+              <p className="font-medium text-sm">Arraste um arquivo CSV ou clique para selecionar</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Colunas: nome, telefone, email, empresa, tags, notas
+              </p>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+              />
+            </div>
           )}
-          {step === 'preview' && (
-            <motion.div key="pv" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col gap-4 overflow-hidden">
-              <div className="flex items-center gap-3 text-xs">
-                <Badge variant="secondary">{rows.length} linhas</Badge>
-                {duplicates.length > 0 && <Badge variant="destructive">{duplicates.length} duplicados</Badge>}
+
+          {/* File selected */}
+          {file && !result && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/20">
+                <FileText className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{file.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(file.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+                {!loading && (
+                  <button type="button" onClick={reset} className="text-muted-foreground hover:text-foreground text-xs">
+                    Trocar
+                  </button>
+                )}
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {headers.map(h => (
-                  <div key={h} className="flex items-center gap-2">
-                    <span className="text-xs truncate w-24 text-muted-foreground">{h}</span><span className="text-muted-foreground">→</span>
-                    <Select value={mapping[h]} onValueChange={v => setMapping(m => ({ ...m, [h]: v }))}>
-                      <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
-                      <SelectContent>{FIELD_OPTIONS.map(o => <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>)}</SelectContent>
-                    </Select>
+
+              {/* Preview */}
+              {preview.length > 0 && (
+                <div className="rounded-md border overflow-hidden">
+                  <div className="text-xs font-medium p-2 bg-muted/30 border-b">
+                    Prévia (primeiras {preview.length} linhas)
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="text-xs w-full">
+                      <thead>
+                        <tr className="border-b">
+                          {EXPECTED_COLUMNS.map((c) => (
+                            <th key={c} className="px-2 py-1 text-left text-muted-foreground font-medium">{c}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {preview.map((row, i) => (
+                          <tr key={i} className="border-b last:border-0">
+                            {EXPECTED_COLUMNS.map((c) => (
+                              <td key={c} className="px-2 py-1 truncate max-w-[120px]">{row[c] ?? ''}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Progress */}
+              {loading && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Importando...</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <Progress value={progress} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <Alert variant="destructive">
+              <XCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs">{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Result */}
+          {result && (
+            <div className="rounded-lg border p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <span className="font-semibold text-sm">Importação concluída!</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {[
+                  { label: 'Criados', value: result.inserted, color: 'text-green-600' },
+                  { label: 'Atualizados', value: result.updated, color: 'text-blue-600' },
+                  { label: 'Ignorados', value: result.skipped, color: 'text-amber-600' },
+                ].map(({ label, value, color }) => (
+                  <div key={label} className="rounded-md border p-2">
+                    <p className={`text-xl font-bold ${color}`}>{value.toLocaleString('pt-BR')}</p>
+                    <p className="text-xs text-muted-foreground">{label}</p>
                   </div>
                 ))}
               </div>
-              <ScrollArea className="h-40 rounded-lg border">
-                <table className="w-full text-xs">
-                  <thead><tr className="border-b bg-muted/50"><th className="p-2 text-left w-8">#</th>
-                    {headers.filter(h => mapping[h] !== '_skip').map(h => <th key={h} className="p-2 text-left">{mapping[h]}</th>)}
-                  </tr></thead>
-                  <tbody>{rows.slice(0, 5).map((row, i) => (
-                    <tr key={i} className={cn('border-b', duplicates.includes(i) && 'bg-destructive/5 line-through opacity-50')}>
-                      <td className="p-2 text-muted-foreground">{i+1}</td>
-                      {headers.filter(h => mapping[h] !== '_skip').map(h => <td key={h} className="p-2 truncate max-w-[120px]">{row[h]}</td>)}
-                    </tr>
-                  ))}</tbody>
-                </table>
-              </ScrollArea>
-              <DialogFooter>
-                <Button variant="outline" onClick={reset}>Voltar</Button>
-                <Button onClick={handleImport}><CheckCircle2 className="w-4 h-4 mr-2" />Importar {rows.length - duplicates.length}</Button>
-              </DialogFooter>
-            </motion.div>
+              {result.errors.length > 0 && (
+                <details className="text-xs">
+                  <summary className="cursor-pointer flex items-center gap-1 text-amber-700">
+                    <AlertTriangle className="h-3 w-3" />
+                    {result.errors.length} erro{result.errors.length !== 1 ? 's' : ''} (clique para ver)
+                  </summary>
+                  <div className="mt-2 max-h-32 overflow-y-auto space-y-1">
+                    {result.errors.slice(0, 20).map((e) => (
+                      <div key={e.row} className="text-muted-foreground">
+                        Linha {e.row}: {e.reason}
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Duração: {(result.duration_ms / 1000).toFixed(1)}s
+              </p>
+            </div>
           )}
-          {step === 'importing' && (
-            <motion.div key="imp" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-16">
-              <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" /><p className="text-sm font-medium">Importando...</p>
-            </motion.div>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="ghost" size="sm" onClick={downloadTemplate} className="gap-1 mr-auto">
+            <Download className="h-3.5 w-3.5" />
+            Baixar template
+          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            {result ? 'Fechar' : 'Cancelar'}
+          </Button>
+          {!result && (
+            <Button onClick={handleImport} disabled={!file || loading} className="gap-2">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {loading ? 'Importando...' : 'Importar'}
+            </Button>
           )}
-          {step === 'done' && (
-            <motion.div key="done" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center py-12 gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center"><CheckCircle2 className="w-8 h-8 text-primary" /></div>
-              <p className="text-lg font-bold">{result.success} importados</p>
-              {result.failed > 0 && <p className="text-sm text-destructive">{result.failed} falharam</p>}
-              <Button onClick={() => { reset(); onOpenChange(false); }}>Fechar</Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default ContactImportDialog;
