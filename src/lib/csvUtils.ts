@@ -153,3 +153,23 @@ export function getCsvFilename(prefix: string, suffix?: string): string {
   // Strip unsafe filename chars
   return parts.replace(/[^a-zA-Z0-9_\-\.]/g, '_') + '.csv';
 }
+
+// ── Compat wrappers ──────────────────────────────────────────────────────
+// Mantidos para componentes legados que esperam APIs por File / argumentos
+// invertidos. Em código novo, prefira `parseCsvString` e `downloadCsvFile`.
+
+/**
+ * Lê um File (CSV) e devolve linhas tipadas.
+ */
+export async function parseCsvFile(file: File): Promise<Array<Record<string, string>>> {
+  const text = await file.text();
+  return parseCsvString(text);
+}
+
+/**
+ * Wrapper com argumentos (filename, content) — assinatura usada por
+ * ContactImportDialog. Internamente delega para `downloadCsvFile`.
+ */
+export function downloadCsv(filename: string, csvContent: string): void {
+  downloadCsvFile(csvContent, filename);
+}
