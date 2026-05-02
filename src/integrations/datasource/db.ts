@@ -24,6 +24,7 @@ import { ENTITY_MAP, type LogicalEntity } from './registry';
 import { recordQueryEvent, classifySeverity } from '@/lib/clientTelemetry';
 import { generateCorrelationId } from '@/lib/correlationId';
 import type { RpcDefinition, DatasourceClient } from './rpcCatalog';
+import { validateEntityAccess, validateRpcAccess } from './sentinel';
 
 export function dbClient(entity: LogicalEntity): SupabaseClient {
   const mapping = ENTITY_MAP[entity];
@@ -42,7 +43,9 @@ export function dbTable(entity: LogicalEntity): string {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function dbFrom(entity: LogicalEntity): any {
-  return dbClient(entity).from(dbTable(entity));
+  const mapping = ENTITY_MAP[entity];
+  validateEntityAccess(mapping.table, mapping.client);
+  return (dbClient(entity) as any).from(dbTable(entity));
 }
 
 export function dbChannel(entity: LogicalEntity, name: string): RealtimeChannel {
@@ -85,6 +88,7 @@ export async function dbRpc<P extends object, R>(
   def: RpcDefinition<P, R>,
   params: P,
 ): Promise<DbRpcResult<R>> {
+  validateRpcAccess(def.name, def.client);
   const client = rpcClient(def.client);
   const merged = { ...(def.defaults ?? {}), ...params };
   const startedAt = performance.now();
@@ -153,4 +157,3 @@ export const dbInsert = <P extends object, R>(
   def: RpcDefinition<P, R>,
   params: P,
 ): Promise<DbRpcResult<R>> => dbRpc<P, R>(def, params);
-
