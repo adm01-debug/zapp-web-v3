@@ -39,7 +39,7 @@ async function resolveConnection(contactConnectionId: string | null) {
   let connection: { instance_id: string | null; status: string | null } | null = null;
 
   if (resolvedConnectionId) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('whatsapp_connections')
       .select('instance_id, status')
       .eq('id', resolvedConnectionId)

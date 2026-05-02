@@ -66,7 +66,7 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
     fallbackDurationMs: number,
   ) {
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData , error } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return;
       await supabase.from('hmac_selftest_audit').insert({
@@ -95,12 +95,12 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
   async function syncAlert(instanceName: string | null, payload: SelfTestResult) {
     const source = `hmac-selftest:${instanceName ?? 'selftest'}`;
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData , error } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return;
 
       // Busca alerta ativo (não resolvido) para este source
-      const { data: existing } = await supabase
+      const { data: existing , error } = await supabase
         .from('warroom_alerts')
         .select('id')
         .eq('source', source)

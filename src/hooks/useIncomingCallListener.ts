@@ -37,7 +37,7 @@ export function useIncomingCallListener() {
           let contactPhone = '';
 
           if (call.contact_id) {
-            const { data: contact } = await supabase
+            const { data: contact , error } = await supabase
               .from('contacts')
               .select('name, phone')
               .eq('id', call.contact_id as string)

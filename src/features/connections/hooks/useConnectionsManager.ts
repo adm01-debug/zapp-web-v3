@@ -369,7 +369,7 @@ export function useConnectionsManager() {
   ): Promise<string | null> => {
     if (!conn.instance_id) return null;
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData , error } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from('qr_attempts')
         .insert({

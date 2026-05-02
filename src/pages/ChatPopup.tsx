@@ -73,7 +73,7 @@ export default function ChatPopup() {
   useEffect(() => {
     if (!contactId) return;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('contacts')
         .select('*')
         .eq('id', contactId)
@@ -137,7 +137,7 @@ export default function ChatPopup() {
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = await supabase.storage
+        const { data: urlData , error } = await supabase.storage
           .from('whatsapp-media')
           .getPublicUrl(fileName);
 

@@ -48,7 +48,7 @@ export function MetaCAPIView() {
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('meta_capi_events')
       .select('*')
       .order('event_time', { ascending: false })
@@ -62,7 +62,7 @@ export function MetaCAPIView() {
   // Load config from global_settings
   useEffect(() => {
     const loadConfig = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('global_settings')
         .select('key, value')
         .in('key', ['meta_pixel_id', 'meta_capi_auto_track']);
@@ -78,7 +78,7 @@ export function MetaCAPIView() {
 
   const saveConfig = async () => {
     const upsert = async (key: string, value: string) => {
-      const { data: existing } = await supabase.from('global_settings').select('id').eq('key', key).maybeSingle();
+      const { data: existing , error } = await supabase.from('global_settings').select('id').eq('key', key).maybeSingle();
       if (existing) {
         await supabase.from('global_settings').update({ value }).eq('key', key);
       } else {

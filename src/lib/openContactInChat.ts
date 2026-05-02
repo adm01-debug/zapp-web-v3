@@ -54,7 +54,7 @@ async function resolveContactId(opts: OpenContactInChatOptions): Promise<string 
   if (opts.contactId) return opts.contactId;
   const phone = opts.phone ?? jidToPhone(opts.remoteJid);
   if (!phone) return null;
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('contacts')
     .select('id')
     .eq('phone', phone)

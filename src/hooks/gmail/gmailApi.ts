@@ -244,3 +244,49 @@ export function buildMimeMessage(params: {
     .replace(/\//g, '_')
     .replace(/=+$/, '');
 }
+
+/**
+ * Refreshes the Gmail OAuth token for an account.
+ * Calls the gmail-token-refresh Edge Function.
+ */
+export async function gmailRefreshToken(accountId: string): Promise<GmailApiResponse<{ access_token: string }>> {
+  try {
+    const { data, error } = await supabase.functions.invoke('gmail-token-refresh', {
+      body: { accountId },
+    });
+    if (error) return { data: null, error: { message: error.message, status: 500 } };
+    return { data: data as { access_token: string }, error: null };
+  } catch (err) {
+    return { data: null, error: { message: err instanceof Error ? err.message : 'Unknown error', status: 500 } };
+  }
+}
+
+/**
+ * Revokes Gmail OAuth access for an account.
+ */
+export async function gmailRevokeAccount(accountId: string): Promise<GmailApiResponse<void>> {
+  try {
+    const { error } = await supabase.functions.invoke('gmail-token-refresh', {
+      body: { accountId, action: 'revoke' },
+    });
+    if (error) return { data: null, error: { message: error.message, status: 500 } };
+    return { data: undefined, error: null };
+  } catch (err) {
+    return { data: null, error: { message: err instanceof Error ? err.message : 'Unknown error', status: 500 } };
+  }
+}
+
+/**
+ * Registers a Gmail push notification watch for an account.
+ */
+export async function gmailRegisterWatch(accountId: string): Promise<GmailApiResponse<{ expiration: string }>> {
+  try {
+    const { data, error } = await supabase.functions.invoke('gmail-token-refresh', {
+      body: { accountId, action: 'watch' },
+    });
+    if (error) return { data: null, error: { message: error.message, status: 500 } };
+    return { data: data as { expiration: string }, error: null };
+  } catch (err) {
+    return { data: null, error: { message: err instanceof Error ? err.message : 'Unknown error', status: 500 } };
+  }
+}

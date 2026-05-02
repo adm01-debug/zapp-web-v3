@@ -57,7 +57,7 @@ export function SLARuleFormDialog({ open, onOpenChange, scope, editingRule }: SL
   const { data: companies = [] } = useQuery({
     queryKey: ['sla-scope-companies'],
     queryFn: async () => {
-      const { data } = await supabase.from('contacts').select('company').not('company', 'is', null);
+      const { data, error } = await supabase.from('contacts').select('company').not('company', 'is', null);
       return [...new Set((data || []).map(d => d.company).filter(Boolean))] as string[];
     },
     enabled: open && scope === 'company',
@@ -66,7 +66,7 @@ export function SLARuleFormDialog({ open, onOpenChange, scope, editingRule }: SL
   const { data: jobTitles = [] } = useQuery({
     queryKey: ['sla-scope-jobtitles'],
     queryFn: async () => {
-      const { data } = await supabase.from('contacts').select('job_title').not('job_title', 'is', null);
+      const { data, error } = await supabase.from('contacts').select('job_title').not('job_title', 'is', null);
       return [...new Set((data || []).map(d => d.job_title).filter(Boolean))] as string[];
     },
     enabled: open && scope === 'job_title',
@@ -75,7 +75,7 @@ export function SLARuleFormDialog({ open, onOpenChange, scope, editingRule }: SL
   const { data: queues = [] } = useQuery({
     queryKey: ['sla-scope-queues'],
     queryFn: async () => {
-      const { data } = await supabase.from('queues').select('id, name');
+      const { data, error } = await supabase.from('queues').select('id, name');
       return data || [];
     },
     enabled: open && scope === 'queue',
@@ -84,7 +84,7 @@ export function SLARuleFormDialog({ open, onOpenChange, scope, editingRule }: SL
   const { data: agents = [] } = useQuery({
     queryKey: ['sla-scope-agents'],
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('id, name').eq('is_active', true);
+      const { data, error } = await supabase.from('profiles').select('id, name').eq('is_active', true);
       return data || [];
     },
     enabled: open && scope === 'agent',
@@ -93,7 +93,7 @@ export function SLARuleFormDialog({ open, onOpenChange, scope, editingRule }: SL
   const { data: contacts = [] } = useQuery({
     queryKey: ['sla-scope-contacts', contactSearch],
     queryFn: async () => {
-      const { data } = await supabase.from('contacts').select('id, name, phone')
+      const { data, error } = await supabase.from('contacts').select('id, name, phone')
         .or(`name.ilike.%${contactSearch}%,phone.ilike.%${contactSearch}%`)
         .limit(20);
       return data || [];

@@ -53,7 +53,7 @@ export function ConversationTasksPanel({ contactId, profileId }: ConversationTas
 
   const loadTasks = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('conversation_tasks')
       .select('*')
       .eq('contact_id', contactId)

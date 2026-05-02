@@ -57,7 +57,7 @@ export function useNPSSurveys() {
     survey_type?: string;
   }) => {
     try {
-      const { data: profile } = await supabase
+      const { data: profile , error } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')

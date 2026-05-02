@@ -67,7 +67,7 @@ export function PlaybooksManager() {
 
   const loadPlaybooks = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('playbooks')
       .select('*')
       .order('category', { ascending: true });

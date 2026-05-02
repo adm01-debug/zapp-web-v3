@@ -58,7 +58,7 @@ export function useConversationAnalyses(contactId: string | null) {
       let profileId = null;
       
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profile , error } = await supabase
           .from('profiles')
           .select('id')
           .eq('user_id', user.id)

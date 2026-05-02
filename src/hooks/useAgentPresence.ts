@@ -72,7 +72,7 @@ export function useAgentPresence({
 
   // Load all agents' presence
   const loadPresence = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('agent_presence')
       .select('*')
       .eq('workspace_id', workspaceId)

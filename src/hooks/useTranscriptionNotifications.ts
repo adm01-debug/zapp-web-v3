@@ -63,7 +63,7 @@ export function useTranscriptionNotifications(options: TranscriptionNotification
             // Get contact name
             let contactName = 'Contato';
             if (newData.contact_id) {
-              const { data: contact } = await supabase
+              const { data: contact , error } = await supabase
                 .from('contacts')
                 .select('name')
                 .eq('id', newData.contact_id)

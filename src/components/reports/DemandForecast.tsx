@@ -22,7 +22,7 @@ export function DemandForecast() {
     setLoading(true);
     const since = subDays(new Date(), 28);
 
-    const { data: messages } = await supabase
+    const { data: messages , error } = await supabase
       .from('messages')
       .select('created_at')
       .gte('created_at', since.toISOString())

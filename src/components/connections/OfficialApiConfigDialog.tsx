@@ -46,7 +46,7 @@ export function OfficialApiConfigDialog({
     setLoading(true);
     (async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('whatsapp_official_credentials')
           .select('phone_number_id, waba_id, business_account_id, access_token, app_secret, verify_token, graph_api_version')
           .eq('connection_id', connectionId)
@@ -70,7 +70,7 @@ export function OfficialApiConfigDialog({
       return;
     }
     setSaving(true);
-    const { data: u } = await supabase.auth.getUser();
+    const { data: u , error } = await supabase.auth.getUser();
     const { error } = await supabase
       .from('whatsapp_official_credentials')
       .upsert({

@@ -120,7 +120,7 @@ export function GmailThreadView({
   const loadMessages = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('gmail_messages')
         .select('*')
         .eq('thread_id', thread.id)

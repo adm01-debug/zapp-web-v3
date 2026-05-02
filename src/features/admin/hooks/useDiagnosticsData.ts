@@ -60,7 +60,7 @@ export function useDiagnosticsData() {
   const [errorLogs, setErrorLogs] = useState<ErrorLog[]>([]);
 
   const fetchConnections = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('whatsapp_connections')
       .select('*')
       .order('created_at', { ascending: false });
@@ -86,7 +86,7 @@ export function useDiagnosticsData() {
       supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'sending'),
     ]);
 
-    const { data: failures } = await supabase
+    const { data: failures , error } = await supabase
       .from('messages')
       .select('id, content, status, created_at, contact_id')
       .eq('sender', 'agent')
@@ -99,7 +99,7 @@ export function useDiagnosticsData() {
       for (const f of failures) {
         let contactName = 'Desconhecido';
         if (f.contact_id) {
-          const { data: contact } = await supabase
+          const { data: contact , error } = await supabase
             .from('contacts')
             .select('name')
             .eq('id', f.contact_id)
@@ -167,7 +167,7 @@ export function useDiagnosticsData() {
   const fetchErrorLogs = async () => {
     const logs: ErrorLog[] = [];
 
-    const { data: failedMsgs } = await supabase
+    const { data: failedMsgs , error } = await supabase
       .from('messages')
       .select('id, content, created_at, contact_id')
       .eq('status', 'failed')
@@ -187,7 +187,7 @@ export function useDiagnosticsData() {
       }
     }
 
-    const { data: disconnected } = await supabase
+    const { data: disconnected , error } = await supabase
       .from('whatsapp_connections')
       .select('id, instance_id, status, updated_at')
       .neq('status', 'connected');

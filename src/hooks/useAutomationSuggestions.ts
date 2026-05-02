@@ -30,7 +30,7 @@ export function useAutomationSuggestions(remoteJid: string | null) {
       return;
     }
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("automation_executions")
       .select(
         "id, rule_id, suggestion_text, recommended_tag, kb_sources, status, created_at, instance_name, remote_jid, automation_rules(name)",

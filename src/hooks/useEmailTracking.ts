@@ -268,7 +268,7 @@ export function useEmailTracking() {
 
   // ── Buscar eventos de abertura de um email ─────────────────────────────
   const getOpenEvents = useCallback(async (trackingId: string): Promise<TrackingEvent[]> => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('email_tracking_events')
       .select('*')
       .eq('tracking_id', trackingId)
@@ -278,7 +278,7 @@ export function useEmailTracking() {
 
   // ── Buscar links rastreados de um email ────────────────────────────────
   const getTrackedLinks = useCallback(async (trackingId: string): Promise<TrackedLink[]> => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('email_tracked_links')
       .select('*')
       .eq('tracking_id', trackingId)

@@ -99,7 +99,7 @@ export function useInboxBulkActions({ refetch, filteredConversations }: UseInbox
     setBulkLoading(true);
     const contactIds = Array.from(selectedIds);
 
-    const { data: originalContacts } = await supabase
+    const { data: originalContacts , error } = await supabase
       .from('contacts')
       .select('id, assigned_to')
       .in('id', contactIds);

@@ -31,7 +31,7 @@ export function PublicApiDashboard() {
     setLoading(true);
     try {
       // Load API token from global_settings
-      const { data: setting } = await supabase
+      const { data: setting , error } = await supabase
         .from('global_settings')
         .select('value')
         .eq('key', 'api_token')
@@ -40,7 +40,7 @@ export function PublicApiDashboard() {
       if (setting?.value) setApiToken(setting.value as string);
 
       // Load recent API usage logs from audit_logs
-      const { data: auditLogs } = await supabase
+      const { data: auditLogs , error } = await supabase
         .from('audit_logs')
         .select('id, action, created_at, details, entity_type')
         .eq('entity_type', 'public_api')

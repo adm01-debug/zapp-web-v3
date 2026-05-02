@@ -38,7 +38,7 @@ export function CampaignABTesting({ campaignId }: CampaignABTestingProps) {
 
   const loadVariants = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('campaign_ab_variants')
       .select('*')
       .eq('campaign_id', campaignId)

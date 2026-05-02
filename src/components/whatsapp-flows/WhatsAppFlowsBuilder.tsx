@@ -61,7 +61,7 @@ export function WhatsAppFlowsBuilder() {
 
   const fetchFlows = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from('whatsapp_flows').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('whatsapp_flows').select('*').order('created_at', { ascending: false });
     if (data) {
       setFlows(data.map((f) => ({
         ...f,

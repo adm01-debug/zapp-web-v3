@@ -365,7 +365,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           toast({ title: 'Erro no upload', description: `Falha ao anexar: ${uploadError.message}`, variant: 'destructive' });
         }
         if (!uploadError) {
-          const { data: signedData } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 604800); // 7 days for scheduled messages
+          const { data: signedData , error } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 604800); // 7 days for scheduled messages
           mediaUrl = signedData?.signedUrl;
           messageType = attachment.type.startsWith('audio') ? 'audio' : attachment.type.startsWith('image') ? 'image' : attachment.type.startsWith('video') ? 'video' : 'document';
         }

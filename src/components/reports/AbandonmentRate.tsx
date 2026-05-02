@@ -19,7 +19,7 @@ export function AbandonmentRate() {
     since.setDate(since.getDate() - parseInt(period));
 
     // Get contacts that sent messages in the period
-    const { data: contactMessages } = await supabase
+    const { data: contactMessages , error } = await supabase
       .from('messages')
       .select('contact_id, sender')
       .gte('created_at', since.toISOString())

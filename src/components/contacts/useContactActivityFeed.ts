@@ -86,7 +86,7 @@ export function useContactActivityFeed({
       const items: ActivityItem[] = [];
 
       // 1. Audit log (contact changes)
-      const { data: auditData } = await supabase
+      const { data: auditData , error } = await supabase
         .from('contact_audit_log')
         .select('id,action,changed_at,changed_by,new_values,profiles:changed_by(full_name)')
         .eq('contact_id', contactId)
@@ -113,7 +113,7 @@ export function useContactActivityFeed({
       }
 
       // 2. Conversations
-      const { data: convData } = await supabase
+      const { data: convData , error } = await supabase
         .from('conversations')
         .select('id,status,channel,created_at,closed_at')
         .eq('contact_id', contactId)

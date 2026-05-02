@@ -84,7 +84,7 @@ export function useTalkX() {
 
   const createCampaign = useMutation({
     mutationFn: async (campaign: CampaignPayload) => {
-      const { data: profile } = await supabase
+      const { data: profile , error } = await supabase
         .from('profiles')
         .select('id')
         .single();

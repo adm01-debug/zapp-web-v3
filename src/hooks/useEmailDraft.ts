@@ -51,7 +51,7 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
       if (localId) {
         await supabase.from('gmail_drafts').update(payload).eq('id', localId);
       } else {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('gmail_drafts')
           .insert(payload)
           .select('id')

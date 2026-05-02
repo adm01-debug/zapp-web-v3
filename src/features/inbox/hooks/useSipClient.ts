@@ -42,7 +42,7 @@ export function useSipClient() {
   const findContactByPhone = useCallback(async (phone: string): Promise<string | null> => {
     try {
       const n = phone.replace(/[\s\-\(\)]/g, '');
-      const { data } = await supabase.from('contacts').select('id').or(`phone.eq.${n},phone.eq.+${n},phone.ilike.%${n.slice(-8)}%`).limit(1).maybeSingle();
+      const { data, error } = await supabase.from('contacts').select('id').or(`phone.eq.${n},phone.eq.+${n},phone.ilike.%${n.slice(-8)}%`).limit(1).maybeSingle();
       return data?.id || null;
     } catch { return null; }
   }, []);
@@ -52,7 +52,7 @@ export function useSipClient() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
-      const { data } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle();
+      const { data, error } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle();
       if (data?.id) profileIdRef.current = data.id;
       return data?.id || null;
     } catch { return null; }

@@ -28,7 +28,7 @@ export function ConversationHeatmap() {
     const since = new Date();
     since.setDate(since.getDate() - parseInt(period));
 
-    const { data: messages } = await supabase
+    const { data: messages , error } = await supabase
       .from('messages')
       .select('created_at')
       .gte('created_at', since.toISOString())

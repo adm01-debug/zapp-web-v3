@@ -36,7 +36,7 @@ export function SicoobBridgeDashboard() {
     setLoading(true);
     try {
       // Load Sicoob contact mappings
-      const { data: mappingData } = await supabase
+      const { data: mappingData , error } = await supabase
         .from('sicoob_contact_mapping')
         .select('*')
         .order('created_at', { ascending: false })
@@ -47,7 +47,7 @@ export function SicoobBridgeDashboard() {
       // Load recent messages from Sicoob contacts
       const contactIds = (mappingData || []).map((m: SicoobMapping) => m.contact_id);
       if (contactIds.length > 0) {
-        const { data: msgData } = await supabase
+        const { data: msgData , error } = await supabase
           .from('messages')
           .select('id, content, sender, created_at, contact_id, status')
           .in('contact_id', contactIds.slice(0, 20))

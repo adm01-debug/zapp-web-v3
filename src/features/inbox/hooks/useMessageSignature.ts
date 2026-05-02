@@ -23,7 +23,7 @@ export function useMessageSignature() {
     const fetchName = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !mountedRef.current) return;
-      const { data: profile } = await supabase
+      const { data: profile , error } = await supabase
         .from('profiles')
         .select('name, job_title')
         .eq('user_id', user.id)

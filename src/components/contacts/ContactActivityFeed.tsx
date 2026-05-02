@@ -40,14 +40,14 @@ export const ContactActivityFeed: React.FC<{ contactId: string; maxItems?: numbe
       const all: Activity[] = [];
 
       // Conversations
-      const { data: convs } = await supabase.rpc('get_contact_conversations', { p_contact_id: contactId, p_limit: 30 });
+      const { data: convs , error } = await supabase.rpc('get_contact_conversations', { p_contact_id: contactId, p_limit: 30 });
       for (const c of (convs ?? []) as Record<string, unknown>[]) {
         if (c.first_message_at) all.push({ id: `conv-open-${c.id}`, type: 'conversation_open', label: 'Conversa iniciada', detail: c.assigned_to ? `Atendente: ${sanitizeText(String(c.assigned_to))}` : undefined, timestamp: String(c.first_message_at) });
         if (c.status === 'closed' && c.last_message_at) all.push({ id: `conv-closed-${c.id}`, type: 'conversation_closed', label: 'Conversa encerrada', detail: `${c.message_count ?? 0} msgs`, timestamp: String(c.last_message_at) });
       }
 
       // Audit log
-      const { data: audit } = await supabase.from('contact_audit_log').select('id,action,field_name,changed_at').eq('contact_id', contactId).order('changed_at', { ascending: false }).limit(30);
+      const { data: audit , error } = await supabase.from('contact_audit_log').select('id,action,field_name,changed_at').eq('contact_id', contactId).order('changed_at', { ascending: false }).limit(30);
       for (const e of (audit ?? []) as Record<string, unknown>[]) {
         const field = String(e.field_name ?? ''); const action = String(e.action ?? '');
         if (action === 'INSERT') { all.push({ id: `a-${e.id}`, type: 'edit', label: 'Contato criado', timestamp: String(e.changed_at) }); }

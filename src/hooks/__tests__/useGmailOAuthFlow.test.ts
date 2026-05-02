@@ -233,7 +233,7 @@ describe('useGmailOAuthFlow — scopes necessários', () => {
   });
 
   it('redirect_uri deve ser a URL do Supabase Edge Function', () => {
-    const projectUrl = 'https://allrjhkpuscmgbsnmjlv.supabase.co';
+    const projectUrl = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:8000';
     const expectedRedirect = `${projectUrl}/functions/v1/gmail-oauth`;
     expect(expectedRedirect).toContain('/functions/v1/gmail-oauth');
   });

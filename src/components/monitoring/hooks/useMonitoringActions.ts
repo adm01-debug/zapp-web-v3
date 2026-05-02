@@ -46,7 +46,7 @@ export function useMonitoringActions(fetchData: () => Promise<void>) {
       const latency = Math.round(performance.now() - start);
       if (error) throw error;
       await new Promise(r => setTimeout(r, 1000));
-      const { data: msg } = await supabase.from('messages').select('id').eq('external_id', testId).maybeSingle();
+      const { data: msg , error } = await supabase.from('messages').select('id').eq('external_id', testId).maybeSingle();
       if (msg) await supabase.from('messages').delete().eq('id', msg.id);
       setWebhookTest({
         status: msg ? 'success' : 'error',

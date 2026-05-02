@@ -52,7 +52,7 @@ export function useAutomations({
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("automation_rules")
         .select("id,name,trigger_type,trigger_config,actions,is_active,priority")
         .eq("is_active", true)
@@ -184,7 +184,7 @@ export function useAutomations({
         if (!matched) continue;
 
         // Registra execução respeitando cooldown (RPC)
-        const { data: execId } = await supabase.rpc(
+        const { data: execId , error } = await supabase.rpc(
           "rpc_register_automation_execution",
           {
             p_rule_id: rule.id,
@@ -258,7 +258,7 @@ export function useAutomations({
 
             // Auto envio
             if (actions.auto_send) {
-              const { data: exec } = await supabase
+              const { data: exec , error } = await supabase
                 .from("automation_executions")
                 .select("suggestion_text")
                 .eq("id", execId)

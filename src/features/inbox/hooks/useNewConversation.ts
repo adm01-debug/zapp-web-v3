@@ -45,7 +45,7 @@ export function useNewConversation(
     if (!searchQuery.trim() || mode !== 'search') { setContacts([]); return; }
     const timeout = setTimeout(async () => {
       setIsLoading(true);
-      const { data } = await supabase.from('contacts')
+      const { data, error } = await supabase.from('contacts')
         .select('id, name, phone, avatar_url')
         .or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)
         .limit(10);

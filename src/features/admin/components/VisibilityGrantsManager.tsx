@@ -40,7 +40,7 @@ export function VisibilityGrantsManager() {
     const specialAgentUserIds: string[] = [];
 
     // Fetch all profiles
-    const { data: profiles } = await supabase
+    const { data: profiles , error } = await supabase
       .from('profiles')
       .select('id, user_id, name, email')
       .order('name');
@@ -51,7 +51,7 @@ export function VisibilityGrantsManager() {
     }
 
     // Fetch existing grants
-    const { data: grantsData } = await supabase
+    const { data: grantsData , error } = await supabase
       .from('agent_visibility_grants')
       .select('id, agent_id, can_see_agent_id');
 
@@ -84,7 +84,7 @@ export function VisibilityGrantsManager() {
     const { data: { user } } = await supabase.auth.getUser();
     let grantedBy: string | undefined;
     if (user) {
-      const { data: profile } = await supabase
+      const { data: profile , error } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)

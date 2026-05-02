@@ -115,7 +115,7 @@ export function useEmailTemplates() {
 
   // Buscar template por shortcut (ex: "/obrigado")
   const getByShortcut = useCallback(async (shortcut: string): Promise<EmailTemplate | null> => {
-    const { data } = await supabase.rpc('rpc_email_template_by_shortcut', { p_shortcut: shortcut });
+    const { data, error } = await supabase.rpc('rpc_email_template_by_shortcut', { p_shortcut: shortcut });
     return data as EmailTemplate | null;
   }, []);
 

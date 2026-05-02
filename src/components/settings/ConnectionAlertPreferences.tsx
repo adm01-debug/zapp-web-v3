@@ -31,9 +31,9 @@ export function ConnectionAlertPreferences() {
 
   useEffect(() => {
     (async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth , error } = await supabase.auth.getUser();
       if (!auth.user) return setLoading(false);
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("connection_alert_preferences")
         .select("push_enabled, email_enabled, alert_on_degraded, alert_on_disconnected")
         .eq("user_id", auth.user.id)
@@ -56,7 +56,7 @@ export function ConnectionAlertPreferences() {
 
   const save = async () => {
     setSaving(true);
-    const { data: auth } = await supabase.auth.getUser();
+    const { data: auth , error } = await supabase.auth.getUser();
     if (!auth.user) {
       setSaving(false);
       return;

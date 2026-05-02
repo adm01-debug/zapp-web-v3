@@ -107,7 +107,7 @@ export function useTeamChatNotifications(activeConversationId: string | null) {
         if (!document.hidden && activeIdRef.current === msg.conversation_id) return;
 
         // Check if user is a member of this conversation
-        const { data: membership } = await supabase
+        const { data: membership , error } = await supabase
           .from('team_conversation_members')
           .select('id, is_muted')
           .eq('conversation_id', msg.conversation_id)
@@ -127,7 +127,7 @@ export function useTeamChatNotifications(activeConversationId: string | null) {
           // Fetch sender name
           let senderName = 'Colega';
           try {
-            const { data } = await supabase
+            const { data, error } = await supabase
               .from('profiles')
               .select('name')
               .eq('id', msg.sender_id)

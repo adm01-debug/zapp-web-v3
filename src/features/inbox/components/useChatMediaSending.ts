@@ -2,13 +2,19 @@ import { useState, useRef, useCallback } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizeMediaUrl } from '@/utils/normalizeMediaUrl';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { newRequestId } from '@/lib/withRequestId';
 
 /**
  * Encapsulates WhatsApp instance resolution and media-message sending
  * (stickers, custom emojis, audio memes) to keep ChatPanel lean.
+ *
+ * FIXES APPLIED (Audit 02/05/2026):
+ * - BUG 2: Removed contactPhone! non-null assertion, added safe guard
+ * - FALHA 5: Added error handling + retry to fire-and-forget status update
+ * - FALHA 6: Added error handling to auto-save sticker
+ * - FALHA 9: Changed from 'contacts' to 'evolution_contacts' table
  */
 export function useChatMediaSending(contactId: string, contactPhone: string | undefined) {
   const [instanceName, setInstanceName] = useState('');
@@ -17,22 +23,76 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
 
   const { sendStickerMessage } = useEvolutionApi();
 
+  /** Safely extract digits from phone, returns empty string if undefined */
+  const getSafePhone = useCallback((): string => {
+    if (!contactPhone) return '';
+    return contactPhone.replace(/\D/g, '');
+  }, [contactPhone]);
+
+  /** Update message status with error logging and 1 retry */
+  const updateMessageStatus = useCallback(async (
+    messageId: string,
+    status: string,
+    externalId?: string | null
+  ) => {
+    const payload: Record<string, unknown> = { status };
+    if (externalId) payload.external_id = externalId;
+
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .update(payload)
+        .eq('id', messageId);
+
+      if (error) {
+        log.error(`[updateMessageStatus] First attempt failed for ${messageId}:`, error.message);
+        // Retry once
+        const { error: retryError } = await supabase
+          .from('messages')
+          .update(payload)
+          .eq('id', messageId);
+        if (retryError) {
+          log.error(`[updateMessageStatus] Retry failed for ${messageId}:`, retryError.message);
+        }
+      }
+    } catch (err) {
+      log.error(`[updateMessageStatus] Exception for ${messageId}:`, err);
+    }
+  }, []);
+
   const resolveInstance = useCallback(async (): Promise<string> => {
     if (instanceName) return instanceName;
 
     try {
-      const { data: contact } = await supabase
-        .from('contacts')
+      // FALHA 9 FIX: Try evolution_contacts first, fallback to contacts
+      let connectionId: string | null = null;
+
+      const { data: evoContact , error } = await supabase
+        .from('evolution_contacts')
         .select('whatsapp_connection_id')
         .eq('id', contactId)
         .maybeSingle();
 
-      if (contact?.whatsapp_connection_id) {
-        setWhatsappConnectionId(contact.whatsapp_connection_id);
-        const { data: conn } = await supabase
+      if (evoContact?.whatsapp_connection_id) {
+        connectionId = evoContact.whatsapp_connection_id;
+      } else {
+        // Fallback to contacts table
+        const { data: contact , error } = await supabase
+          .from('contacts')
+          .select('whatsapp_connection_id')
+          .eq('id', contactId)
+          .maybeSingle();
+        if (contact?.whatsapp_connection_id) {
+          connectionId = contact.whatsapp_connection_id;
+        }
+      }
+
+      if (connectionId) {
+        setWhatsappConnectionId(connectionId);
+        const { data: conn , error } = await supabase
           .from('whatsapp_connections')
           .select('instance_id')
-          .eq('id', contact.whatsapp_connection_id)
+          .eq('id', connectionId)
           .maybeSingle();
         if (conn?.instance_id) {
           setInstanceName(conn.instance_id);
@@ -40,7 +100,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         }
       }
 
-      const { data: fallbackConn } = await supabase
+      const { data: fallbackConn , error } = await supabase
         .from('whatsapp_connections')
         .select('instance_id')
         .eq('status', 'connected')
@@ -67,7 +127,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
   const ensureInstance = useCallback(async (): Promise<string | null> => {
     const resolved = instanceName || await resolveInstance();
     if (!resolved || !contactPhone) {
-      toast({ title: 'Erro', description: 'Conexão WhatsApp não disponível.' });
+      toast.error('Conexão WhatsApp não disponível.');
       return null;
     }
     return resolved;
@@ -77,9 +137,15 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     const inst = await ensureInstance();
     if (!inst) return;
 
+    // BUG 2 FIX: Safe phone extraction instead of non-null assertion
+    const phone = getSafePhone();
+    if (!phone) {
+      toast.error('Telefone do contato não disponível.');
+      return;
+    }
+
     try {
-      const phone = contactPhone!.replace(/\D/g, '');
-      const { data: dbData } = await supabase.from('messages').insert({
+      const { data: dbData , error } = await supabase.from('messages').insert({
         contact_id: contactId,
         whatsapp_connection_id: whatsappConnectionId,
         content: '[Sticker]',
@@ -96,44 +162,66 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         const result = await sendStickerMessage(inst, phone, stickerUrl);
         externalId = result?.key?.id || null;
       } catch (err: unknown) {
-        if (messageId) await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
-        toast({ title: 'Erro ao enviar figurinha', description: err instanceof Error ? err.message : 'Falha na API', variant: 'destructive' });
+        if (messageId) await updateMessageStatus(messageId, 'failed');
+        toast.error(err instanceof Error ? err.message : 'Erro ao enviar figurinha');
         return;
       }
 
       if (!externalId) {
-        if (messageId) await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
-        toast({ title: 'Erro ao enviar figurinha', description: 'Falha na API', variant: 'destructive' });
+        if (messageId) await updateMessageStatus(messageId, 'failed');
+        toast.error('Erro ao enviar figurinha: falha na API');
         return;
       }
 
+      // FALHA 5 FIX: Proper error handling on status update
       if (messageId) {
-        supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId).then(() => {});
+        await updateMessageStatus(messageId, 'sent', externalId);
       }
 
-      // Auto-save sticker
-      supabase.from('stickers').select('id').eq('image_url', stickerUrl).maybeSingle().then(async ({ data: existing }) => {
+      // FALHA 6 FIX: Auto-save with error handling
+      try {
+        const { data: existing , error } = await supabase
+          .from('stickers')
+          .select('id')
+          .eq('image_url', stickerUrl)
+          .maybeSingle();
+
         if (!existing) {
           const { data: { user } } = await supabase.auth.getUser();
-          await supabase.from('stickers').insert({
+          const { error: saveError } = await supabase.from('stickers').insert({
             name: `Enviada ${new Date().toLocaleDateString('pt-BR')}`,
-            image_url: stickerUrl, category: 'enviadas', is_favorite: false, use_count: 1, uploaded_by: user?.id || null,
+            image_url: stickerUrl,
+            category: 'enviadas',
+            is_favorite: false,
+            use_count: 1,
+            uploaded_by: user?.id || null,
           });
+          if (saveError) {
+            log.error('[auto-save sticker] Failed:', saveError.message);
+          }
         }
-      });
+      } catch (err) {
+        log.error('[auto-save sticker] Exception:', err);
+      }
 
-      toast({ title: 'Figurinha enviada!' });
+      toast.success('Figurinha enviada!');
     } catch {
-      toast({ title: 'Erro ao enviar figurinha', variant: 'destructive' });
+      toast.error('Erro ao enviar figurinha');
     }
-  }, [ensureInstance, contactId, contactPhone, whatsappConnectionId, sendStickerMessage]);
+  }, [ensureInstance, contactId, contactPhone, whatsappConnectionId, sendStickerMessage, getSafePhone, updateMessageStatus]);
 
   const handleSendCustomEmoji = useCallback(async (emojiUrl: string) => {
     const inst = await ensureInstance();
     if (!inst) return;
 
+    // BUG 2 FIX
+    const phone = getSafePhone();
+    if (!phone) {
+      toast.error('Telefone do contato não disponível.');
+      return;
+    }
+
     try {
-      const phone = contactPhone!.replace(/\D/g, '');
       const isUrl = emojiUrl.startsWith('http');
       const trace = newRequestId('emoji');
 
@@ -153,26 +241,32 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
       const externalId = apiResult?.data?.key?.id || null;
 
       if (apiResult?.error || !externalId) {
-        if (messageId) await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
-        toast({ title: 'Erro ao enviar emoji', description: 'Falha na API', variant: 'destructive' });
+        if (messageId) await updateMessageStatus(messageId, 'failed');
+        toast.error('Erro ao enviar emoji');
         return;
       }
 
       if (messageId) {
-        supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId).then(() => {});
+        await updateMessageStatus(messageId, 'sent', externalId);
       }
-      toast({ title: 'Emoji enviado!' });
+      toast.success('Emoji enviado!');
     } catch {
-      toast({ title: 'Erro ao enviar emoji', variant: 'destructive' });
+      toast.error('Erro ao enviar emoji');
     }
-  }, [ensureInstance, contactId, contactPhone, whatsappConnectionId]);
+  }, [ensureInstance, contactId, contactPhone, whatsappConnectionId, getSafePhone, updateMessageStatus]);
 
   const handleSendAudioMeme = useCallback(async (audioUrl: string) => {
     const inst = await ensureInstance();
     if (!inst) return;
 
+    // BUG 2 FIX
+    const phone = getSafePhone();
+    if (!phone) {
+      toast.error('Telefone do contato não disponível.');
+      return;
+    }
+
     try {
-      const phone = contactPhone!.replace(/\D/g, '');
       const normalizedAudioUrl = normalizeMediaUrl(audioUrl);
       const trace = newRequestId('audio');
 
@@ -192,20 +286,20 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
       const messageId = dbResult?.data?.id;
 
       if (apiResult?.error || !apiResult?.data?.key?.id) {
-        if (messageId) await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
-        toast({ title: 'Erro ao enviar áudio meme', description: 'Falha na API', variant: 'destructive' });
+        if (messageId) await updateMessageStatus(messageId, 'failed');
+        toast.error('Erro ao enviar áudio meme');
         return;
       }
 
       const externalId = apiResult.data.key.id;
       if (messageId) {
-        supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId).then(() => {});
+        await updateMessageStatus(messageId, 'sent', externalId);
       }
-      toast({ title: '🔊 Áudio meme enviado!' });
+      toast.success('🔊 Áudio meme enviado!');
     } catch {
-      toast({ title: 'Erro ao enviar áudio meme', variant: 'destructive' });
+      toast.error('Erro ao enviar áudio meme');
     }
-  }, [ensureInstance, contactId, contactPhone, whatsappConnectionId]);
+  }, [ensureInstance, contactId, contactPhone, whatsappConnectionId, getSafePhone, updateMessageStatus]);
 
   return {
     instanceName,

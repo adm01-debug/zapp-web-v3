@@ -73,7 +73,7 @@ export function useRealtimeDashboard() {
       ]);
 
       // Get active conversations (contacts with messages in last hour)
-      const { data: activeContacts } = await supabase
+      const { data: activeContacts , error } = await supabase
         .from('messages')
         .select('contact_id')
         .gte('created_at', hourAgo.toISOString())

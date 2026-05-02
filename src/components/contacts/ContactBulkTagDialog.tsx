@@ -54,7 +54,7 @@ export function ContactBulkTagDialog({
     if (selectedTags.size === 0) return;
     setSaving(true);
     try {
-      const { data: contacts } = await supabase
+      const { data: contacts , error } = await supabase
         .from('contacts')
         .select('id, tags')
         .in('id', contactIds);

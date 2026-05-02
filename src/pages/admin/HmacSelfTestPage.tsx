@@ -79,7 +79,7 @@ export default function HmacSelfTestPage() {
 
   async function logAudit(payload: SelfTestResult, fallbackMs: number) {
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData , error } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return;
       await supabase.from('hmac_selftest_audit').insert({
@@ -98,10 +98,10 @@ export default function HmacSelfTestPage() {
   async function syncAlert(payload: SelfTestResult) {
     const source = `hmac-selftest:${instance}`;
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData , error } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return;
-      const { data: existing } = await supabase
+      const { data: existing , error } = await supabase
         .from('warroom_alerts')
         .select('id')
         .eq('source', source)

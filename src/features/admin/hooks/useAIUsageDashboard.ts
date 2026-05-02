@@ -78,7 +78,7 @@ export function useAIUsageDashboard() {
   const { data: profiles = [] } = useQuery({
     queryKey: ['profiles-for-usage'],
     queryFn: async () => {
-      const { data } = await supabase.from('profiles').select('id, user_id, name, email, avatar_url');
+      const { data, error } = await supabase.from('profiles').select('id, user_id, name, email, avatar_url');
       return (data || []) as ProfileInfo[];
     },
   });

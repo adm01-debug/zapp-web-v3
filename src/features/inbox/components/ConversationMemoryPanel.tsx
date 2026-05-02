@@ -45,7 +45,7 @@ export function ConversationMemoryPanel({ contactId, profileId }: ConversationMe
 
   const loadMemory = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('conversation_memory')
       .select('*')
       .eq('contact_id', contactId)

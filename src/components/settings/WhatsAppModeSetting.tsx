@@ -36,7 +36,7 @@ export function WhatsAppModeSetting() {
 
   const loadProfile = useCallback(async () => {
     // deno-lint-ignore no-explicit-any
-    const { data } = await supabase.rpc("rpc_get_active_integration_profile" as any);
+    const { data, error } = await supabase.rpc("rpc_get_active_integration_profile" as any);
     if (data) setProfile(data as IntegrationProfile);
   }, []);
 

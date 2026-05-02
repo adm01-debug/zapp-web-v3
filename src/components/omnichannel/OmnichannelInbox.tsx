@@ -52,7 +52,7 @@ export function OmnichannelInbox() {
   }, []);
 
   const loadConnections = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('channel_connections_safe')
       .select('*')
       .eq('is_active', true);

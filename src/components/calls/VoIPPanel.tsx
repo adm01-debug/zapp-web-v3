@@ -72,7 +72,7 @@ export function VoIPPanel() {
   };
 
   const handleSipConnect = async () => {
-    const { data } = await supabase.functions.invoke('get-sip-password');
+    const { data, error } = await supabase.functions.invoke('get-sip-password');
     const password = data?.password;
     if (!password) {
       toast.error('Senha SIP não configurada. Adicione o segredo SIP_PASSWORD.');

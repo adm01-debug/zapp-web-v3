@@ -44,7 +44,7 @@ export function NextBestActionEngine({ contactId, contactName }: NextBestActionP
     const suggestedActions: NextAction[] = [];
 
     // Check last message time
-    const { data: lastMsg } = await supabase
+    const { data: lastMsg , error } = await supabase
       .from('messages')
       .select('created_at, sender')
       .eq('contact_id', contactId)
@@ -94,7 +94,7 @@ export function NextBestActionEngine({ contactId, contactName }: NextBestActionP
     }
 
     // Check SLA
-    const { data: slaData } = await supabase
+    const { data: slaData , error } = await supabase
       .from('conversation_sla')
       .select('first_response_breached, resolution_breached')
       .eq('contact_id', contactId)
@@ -111,7 +111,7 @@ export function NextBestActionEngine({ contactId, contactName }: NextBestActionP
     }
 
     // Check memory for pending items
-    const { data: memory } = await supabase
+    const { data: memory , error } = await supabase
       .from('conversation_memory')
       .select('pending_items, promises_made')
       .eq('contact_id', contactId)

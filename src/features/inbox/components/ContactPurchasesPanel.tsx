@@ -47,7 +47,7 @@ export function ContactPurchasesPanel({ contactId, profileId }: ContactPurchases
 
   const loadPurchases = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('contact_purchases')
       .select('*')
       .eq('contact_id', contactId)

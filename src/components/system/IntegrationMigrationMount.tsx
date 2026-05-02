@@ -20,7 +20,7 @@ export function IntegrationMigrationMount() {
 
     (async () => {
       try {
-        const { data: session } = await supabase.auth.getSession();
+        const { data: session , error } = await supabase.auth.getSession();
         if (!session?.session) return; // só roda se usuário autenticado
         // deno-lint-ignore no-explicit-any
         const { data, error } = await supabase.rpc("rpc_migrate_whatsapp_integration" as any);

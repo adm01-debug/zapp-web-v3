@@ -35,7 +35,7 @@ export function ContactNotes({ contactId, className }: ContactNotesProps) {
   const [showInput, setShowInput] = useState(false);
 
   const fetchNotes = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('contact_notes')
       .select('id, content, created_at, author_id')
       .eq('contact_id', contactId)
@@ -45,7 +45,7 @@ export function ContactNotes({ contactId, className }: ContactNotesProps) {
     if (data) {
       // Fetch author names
       const authorIds = [...new Set(data.map(n => n.author_id))];
-      const { data: profiles } = await supabase
+      const { data: profiles , error } = await supabase
         .from('profiles')
         .select('id, name')
         .in('id', authorIds);
@@ -66,7 +66,7 @@ export function ContactNotes({ contactId, className }: ContactNotesProps) {
     if (!newNote.trim()) return;
     setAdding(true);
     try {
-      const { data: profile } = await supabase
+      const { data: profile , error } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')

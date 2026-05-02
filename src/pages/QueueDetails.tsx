@@ -53,7 +53,7 @@ export default function QueueDetails() {
           const { count } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('contact_id', contact.id);
           const { data: lastMessage } = await supabase.from('messages').select('created_at').eq('contact_id', contact.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
           let assignedAgent = null;
-          if (contact.assigned_to) { const { data } = await supabase.from('profiles').select('name, avatar_url').eq('id', contact.assigned_to).maybeSingle(); assignedAgent = data; }
+          if (contact.assigned_to) { const { data, error } = await supabase.from('profiles').select('name, avatar_url').eq('id', contact.assigned_to).maybeSingle(); assignedAgent = data; }
           return { ...contact, messages_count: count || 0, last_message_at: lastMessage?.created_at || null, assigned_agent: assignedAgent };
         })
       );

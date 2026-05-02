@@ -38,7 +38,7 @@ export function RateLimitRealtimeAlerts() {
   useEffect(() => {
     // Fetch recent unresolved alerts
     const fetchAlerts = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('security_alerts')
         .select('*')
         .eq('is_resolved', false)

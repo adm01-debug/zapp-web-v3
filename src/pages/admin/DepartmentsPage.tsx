@@ -85,7 +85,7 @@ export default function DepartmentsPage() {
     const ids = (data ?? []).map((d) => d.id);
     let counts: Record<string, number> = {};
     if (ids.length) {
-      const { data: profilesByDept } = await supabase
+      const { data: profilesByDept , error } = await supabase
         .from('profiles')
         .select('department_id')
         .in('department_id', ids);

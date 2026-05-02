@@ -30,13 +30,13 @@ export function useGeoBlocking() {
 
   const fetchData = async () => {
     try {
-      const { data: settingsData } = await supabase.from('geo_blocking_settings').select('*').limit(1).single();
+      const { data: settingsData , error } = await supabase.from('geo_blocking_settings').select('*').limit(1).single();
       if (settingsData) setSettings(settingsData as GeoSettings);
 
-      const { data: allowedData } = await supabase.from('allowed_countries').select('*').order('created_at', { ascending: false });
+      const { data: allowedData , error } = await supabase.from('allowed_countries').select('*').order('created_at', { ascending: false });
       setAllowedCountries(allowedData || []);
 
-      const { data: blockedData } = await supabase.from('blocked_countries').select('*').order('created_at', { ascending: false });
+      const { data: blockedData , error } = await supabase.from('blocked_countries').select('*').order('created_at', { ascending: false });
       setBlockedCountries(blockedData || []);
     } catch (error) {
       log.error('Error fetching geo data:', error);

@@ -27,7 +27,7 @@ export function AgentPerformancePanel() {
   const { data: agents = [], isLoading } = useQuery({
     queryKey: ['agent-performance-ranking'],
     queryFn: async () => {
-      const { data: stats } = await supabase
+      const { data: stats , error } = await supabase
         .from('agent_stats')
         .select('profile_id, xp, level, current_streak, best_streak, messages_sent, conversations_resolved, avg_response_time_seconds, customer_satisfaction_score')
         .order('xp', { ascending: false });
@@ -35,7 +35,7 @@ export function AgentPerformancePanel() {
       if (!stats) return [];
 
       const profileIds = stats.map(s => s.profile_id);
-      const { data: profiles } = await supabase
+      const { data: profiles , error } = await supabase
         .from('profiles')
         .select('id, name, avatar_url')
         .in('id', profileIds);

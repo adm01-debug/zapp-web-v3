@@ -34,7 +34,7 @@ class ExternalDbProxyClient {
     }
 
     try {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
       const token = data.session?.access_token;
       
       if (token) {

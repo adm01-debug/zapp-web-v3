@@ -53,7 +53,7 @@ export function useInstanceRetryConfig(instanceName: string = GLOBAL): UseInstan
 
       if (instanceName !== GLOBAL) {
         const keys = RETRY_CONFIG_FIELDS.map((f) => settingKeyFor(f, instanceName));
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('global_settings')
           .select('key')
           .in('key', keys);

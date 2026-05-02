@@ -27,7 +27,7 @@ export function useGamificationMutations(profileId: string | undefined, currentS
     mutationFn: async ({ type, name, description, xpReward }: { type: string; name: string; description?: string; xpReward: number }) => {
       if (!profileId) throw new Error('No profile ID');
 
-      const { data: existing } = await supabase
+      const { data: existing , error } = await supabase
         .from('agent_achievements')
         .select('id')
         .eq('profile_id', profileId)

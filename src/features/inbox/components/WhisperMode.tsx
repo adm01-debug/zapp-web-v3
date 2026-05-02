@@ -36,7 +36,7 @@ export function WhisperMode({ contactId, targetAgentId, className }: WhisperMode
   const { data: whispers = [] } = useQuery({
     queryKey: ['whispers', contactId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('whisper_messages')
         .select('id, content, sender_id, is_read, created_at')
         .eq('contact_id', contactId)
@@ -47,7 +47,7 @@ export function WhisperMode({ contactId, targetAgentId, className }: WhisperMode
 
       // Get sender names
       const senderIds = [...new Set(data.map(w => w.sender_id))];
-      const { data: profiles } = await supabase
+      const { data: profiles , error } = await supabase
         .from('profiles')
         .select('id, name')
         .in('id', senderIds);

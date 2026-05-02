@@ -45,7 +45,7 @@ export function useScheduledMediaUpload() {
 
       // Use 7-day TTL (604800s) instead of 1-hour to support messages
       // scheduled days in advance.
-      const { data: signedData } = await supabase.storage
+      const { data: signedData , error } = await supabase.storage
         .from('whatsapp-media')
         .createSignedUrl(fileName, 604800);
 

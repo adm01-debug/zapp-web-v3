@@ -83,7 +83,7 @@ export function useGmailLabels(accountId: string | null) {
   const getLabelCount = useCallback(async (labelId: string): Promise<{ thread_count: number; unread_count: number }> => {
     if (!accountId) return { thread_count: 0, unread_count: 0 };
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('gmail_threads')
       .select('id, unread_count')
       .eq('account_id', accountId)

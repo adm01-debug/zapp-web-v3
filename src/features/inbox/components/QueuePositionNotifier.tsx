@@ -13,7 +13,7 @@ export function QueuePositionNotifier({ contactId, className }: QueuePositionNot
   const { data: position } = useQuery({
     queryKey: ['queue-position', contactId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('queue_positions')
         .select('position, estimated_wait_minutes, queue_id')
         .eq('contact_id', contactId)
@@ -24,7 +24,7 @@ export function QueuePositionNotifier({ contactId, className }: QueuePositionNot
       if (!data) return null;
 
       // Get queue name
-      const { data: queue } = await supabase
+      const { data: queue , error } = await supabase
         .from('queues')
         .select('name, color')
         .eq('id', data.queue_id)

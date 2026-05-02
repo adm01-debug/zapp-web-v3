@@ -32,7 +32,7 @@ export function GmailWebhookMonitor() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: gmailAccounts } = await supabase
+      const { data: gmailAccounts , error } = await supabase
         .rpc('get_own_gmail_accounts');
 
       setAccounts((gmailAccounts || []).map(a => ({ ...a, history_id: null })) as GmailAccount[]);

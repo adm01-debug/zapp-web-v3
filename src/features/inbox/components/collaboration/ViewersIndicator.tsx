@@ -48,7 +48,7 @@ export function useConversationViewers(contactId: string) {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          const { data: profile } = await supabase
+          const { data: profile , error } = await supabase
             .from('profiles')
             .select('name, avatar_url')
             .eq('user_id', user.id)

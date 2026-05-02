@@ -58,7 +58,7 @@ export function useCampaignEditor(campaign: TalkXCampaign | null, onClose: () =>
   const { data: connections } = useQuery({
     queryKey: ['wa-connections-talkx'],
     queryFn: async () => {
-      const { data } = await supabase.from('whatsapp_connections')
+      const { data, error } = await supabase.from('whatsapp_connections')
         .select('id, name, phone_number, status').eq('status', 'connected');
       return data || [];
     },
@@ -67,7 +67,7 @@ export function useCampaignEditor(campaign: TalkXCampaign | null, onClose: () =>
   const { data: contacts } = useQuery({
     queryKey: ['contacts-talkx'],
     queryFn: async () => {
-      const { data } = await supabase.from('contacts')
+      const { data, error } = await supabase.from('contacts')
         .select('id, name, nickname, phone, company, avatar_url, tags')
         .not('phone', 'is', null).order('name');
       return data || [];

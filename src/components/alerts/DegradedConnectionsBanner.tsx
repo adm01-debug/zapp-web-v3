@@ -29,7 +29,7 @@ export function DegradedConnectionsBanner({ onNavigate, recentWindowMs = 10 * 60
 
   const fetchDegraded = useCallback(async () => {
     const since = new Date(Date.now() - recentWindowMs).toISOString();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('whatsapp_connections')
       .select('id, instance_id, health_status, health_response_ms, last_health_check, degraded_at')
       .eq('health_status', 'degraded')
