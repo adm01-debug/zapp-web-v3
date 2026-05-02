@@ -21,6 +21,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface BlacklistEntry {
   id: string;
@@ -67,8 +68,7 @@ export function TalkXBlacklist() {
   const { data: availableContacts = [] } = useQuery({
     queryKey: ['contacts-for-blacklist'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('contacts')
+      const { data } = await dbFrom('contacts')
         .select('id, name, phone, company')
         .not('phone', 'is', null)
         .order('name');

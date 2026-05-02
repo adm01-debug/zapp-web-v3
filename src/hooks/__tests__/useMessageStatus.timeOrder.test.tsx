@@ -30,8 +30,9 @@ vi.mock('@/lib/logger', () => ({
 
 import { useMessageStatus } from '@/features/inbox';
 import { emitSendStatus, __resetSendStatusForTest } from '@/features/inbox';
+import { dbFrom } from '@/integrations/datasource/db';
 
-/** Helper: monta o mock do supabase.from('messages').select(...).eq.eq.not */
+/** Helper: monta o mock do dbFrom('messages').select(...).eq.eq.not */
 function mockDbStatuses(rows: Array<Record<string, unknown>>) {
   mockFrom.mockReturnValue({
     select: vi.fn().mockReturnValue({

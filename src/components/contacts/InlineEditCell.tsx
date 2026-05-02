@@ -4,6 +4,7 @@ import { Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface InlineEditCellProps {
   contactId: string;
@@ -28,8 +29,7 @@ export function InlineEditCell({ contactId, field, value, onUpdate }: InlineEdit
   const save = async () => {
     if (editValue === value) { setEditing(false); return; }
     setSaving(true);
-    const { error } = await supabase
-      .from('contacts')
+    const { error } = await dbFrom('contacts')
       .update({ [field]: editValue || null } as never)
       .eq('id', contactId);
 

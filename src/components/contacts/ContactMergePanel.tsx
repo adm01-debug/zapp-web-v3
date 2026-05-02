@@ -17,6 +17,7 @@ import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Contact } from './types';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactMergePanelProps {
   open: boolean;
@@ -75,16 +76,14 @@ export function ContactMergePanel({ open, onOpenChange, contacts, onMergeComplet
       mergedData.tags = allTags;
 
       // Update primary with merged data
-      const { error: updateError } = await supabase
-        .from('contacts')
+      const { error: updateError } = await dbFrom('contacts')
         .update(mergedData as never)
         .eq('id', primary.id);
 
       if (updateError) throw updateError;
 
       // Move messages from secondary to primary
-      await supabase
-        .from('messages')
+      await dbFrom('messages')
         .update({ contact_id: primary.id })
         .eq('contact_id', secondary.id);
 
@@ -95,7 +94,7 @@ export function ContactMergePanel({ open, onOpenChange, contacts, onMergeComplet
         .eq('contact_id', secondary.id);
 
       // Delete secondary
-      await supabase.from('contacts').delete().eq('id', secondary.id);
+      await dbFrom('contacts').delete().eq('id', secondary.id);
 
       toast.success('Contatos mesclados com sucesso!');
       onMergeComplete();

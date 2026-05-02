@@ -5,6 +5,7 @@
  */
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const avatarCache = new Map<string, string | null>();
 const FETCH_COOLDOWN_MS = 60_000 * 30; // 30 min between refetches
@@ -55,8 +56,7 @@ export function useContactAvatarFetch({
 
       // Persist to contact record if we got a URL
       if (avatarUrl) {
-        await supabase
-          .from('contacts')
+        await dbFrom('contacts')
           .update({ avatar_url: avatarUrl })
           .eq('id', contactId)
           .eq('workspace_id', workspaceId);

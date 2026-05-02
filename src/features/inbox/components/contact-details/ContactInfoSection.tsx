@@ -7,6 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { EnrichedContactData } from '@/hooks/useContactEnrichedData';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactInfoSectionProps {
   contact: {
@@ -104,7 +105,7 @@ export function ContactInfoSection({ contact, enrichedData }: ContactInfoSection
   };
 
   const updateContact = useCallback(async (field: string, value: string) => {
-    const { error } = await supabase.from('contacts').update({ [field]: value } as never).eq('id', contact.id);
+    const { error } = await dbFrom('contacts').update({ [field]: value } as never).eq('id', contact.id);
     if (error) throw error;
   }, [contact.id]);
 

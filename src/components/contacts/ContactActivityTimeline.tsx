@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface TimelineEvent {
   id: string;
@@ -57,8 +58,7 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
       });
 
       // Fetch messages
-      const { data: messages } = await supabase
-        .from('messages')
+      const { data: messages } = await dbFrom('messages')
         .select('id, content, sender, created_at')
         .eq('contact_id', contactId)
         .order('created_at', { ascending: false })

@@ -6,6 +6,7 @@ import { Message, InteractiveMessage, InteractiveButton, LocationMessage } from 
 import { SlashCommand } from '@/features/inbox/components/SlashCommands';
 import { ExternalProduct } from '@/hooks/useExternalCatalog';
 import { toast } from '@/hooks/use-toast';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface UseChatPanelHandlersOptions {
   conversationId: string;
@@ -90,7 +91,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
         if (instanceName && externalId && contactJid) {
           await editMessageApi(instanceName, { number: contactJid, messageId: externalId, text: currentInput.trim() });
         }
-        await supabase.from('messages').update({ content: currentInput.trim(), updated_at: new Date().toISOString() }).eq('id', currentEditing.id);
+        await dbFrom('messages').update({ content: currentInput.trim(), updated_at: new Date().toISOString() }).eq('id', currentEditing.id);
         toast({ title: '✏️ Mensagem editada', description: 'A mensagem foi atualizada com sucesso.' });
       } catch (err) {
         log.error('Failed to edit message:', err);

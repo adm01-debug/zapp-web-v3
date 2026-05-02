@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle, FileText, Shield, RotateCcw, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface Activity { id: string; type: string; label: string; detail?: string; timestamp: string; }
 
@@ -47,7 +48,7 @@ export const ContactActivityFeed: React.FC<{ contactId: string; maxItems?: numbe
       }
 
       // Audit log
-      const { data: audit } = await supabase.from('contact_audit_log').select('id,action,field_name,changed_at').eq('contact_id', contactId).order('changed_at', { ascending: false }).limit(30);
+      const { data: audit } = await dbFrom('audit_log').select('id,action,field_name,changed_at').eq('contact_id', contactId).order('changed_at', { ascending: false }).limit(30);
       for (const e of (audit ?? []) as Record<string, unknown>[]) {
         const field = String(e.field_name ?? ''); const action = String(e.action ?? '');
         if (action === 'INSERT') { all.push({ id: `a-${e.id}`, type: 'edit', label: 'Contato criado', timestamp: String(e.changed_at) }); }

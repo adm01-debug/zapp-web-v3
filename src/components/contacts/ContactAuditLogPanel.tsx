@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Shield, Clock, User, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -85,8 +86,7 @@ export const ContactAuditLogPanel: React.FC<ContactAuditLogPanelProps> = ({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('contact_audit_log')
+      const { data, error } = await dbFrom('audit_log')
         .select('id, action, changed_at, changed_by, old_values, new_values, reason')
         .eq('contact_id', contactId)
         .order('changed_at', { ascending: false })

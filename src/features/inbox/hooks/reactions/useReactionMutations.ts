@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { log } from '@/lib/logger';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ReactionMutationOptions {
   instanceName?: string;
@@ -20,8 +21,7 @@ export function useReactionMutations(
   const { sendReaction } = useEvolutionApi();
 
   const resolveMessageContactId = async () => {
-    const { data, error } = await supabase
-      .from('messages')
+    const { data, error } = await dbFrom('messages')
       .select('contact_id')
       .eq('id', messageId)
       .maybeSingle();

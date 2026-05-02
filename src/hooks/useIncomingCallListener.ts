@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/features/auth';
 import { log } from '@/lib/logger';
 import type { IncomingCall } from '@/types/incomingCall';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export type { IncomingCall } from '@/types/incomingCall';
 
@@ -37,8 +38,7 @@ export function useIncomingCallListener() {
           let contactPhone = '';
 
           if (call.contact_id) {
-            const { data: contact } = await supabase
-              .from('contacts')
+            const { data: contact } = await dbFrom('contacts')
               .select('name, phone')
               .eq('id', call.contact_id as string)
               .single();

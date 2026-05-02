@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { WebhookTestResult, WebhookConfig, DiagnosticResult } from './types';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export function useMonitoringActions(fetchData: () => Promise<void>) {
   const [refreshing, setRefreshing] = useState(false);
@@ -46,8 +47,8 @@ export function useMonitoringActions(fetchData: () => Promise<void>) {
       const latency = Math.round(performance.now() - start);
       if (error) throw error;
       await new Promise(r => setTimeout(r, 1000));
-      const { data: msg } = await supabase.from('messages').select('id').eq('external_id', testId).maybeSingle();
-      if (msg) await supabase.from('messages').delete().eq('id', msg.id);
+      const { data: msg } = await dbFrom('messages').select('id').eq('external_id', testId).maybeSingle();
+      if (msg) await dbFrom('messages').delete().eq('id', msg.id);
       setWebhookTest({
         status: msg ? 'success' : 'error',
         message: msg ? `Webhook processou e persistiu em ${latency}ms` : 'Webhook respondeu OK mas mensagem não foi persistida',

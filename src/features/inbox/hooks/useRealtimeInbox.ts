@@ -12,6 +12,7 @@ import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/features/inbo
 import { validatePttBlob } from '@/lib/audio/pttLimits';
 import { seedAvatarCache } from '@/features/inbox';
 import { mapToLegacyConversation, mapToLegacyMessages } from '@/adapters/inboxLegacyMapper';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const log = getLogger('useRealtimeInbox');
 
@@ -178,8 +179,7 @@ export function useRealtimeInbox() {
     if (USE_EXTERNAL_DB) { setSelectedContactFallback(null); return; }
     let cancelled = false;
     const loadSelectedContact = async () => {
-      const { data, error } = await supabase
-        .from('contacts')
+      const { data, error } = await dbFrom('contacts')
         .select('*')
         .eq('id', selectedContactId)
         .maybeSingle();

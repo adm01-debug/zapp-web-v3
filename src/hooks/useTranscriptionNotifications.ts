@@ -4,6 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { playNotificationSound, showBrowserNotification, requestNotificationPermission } from '@/utils/notificationSound';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
+import { dbFrom, dbTable } from '@/integrations/datasource/db';
 
 interface TranscriptionNotificationOptions {
   enabled?: boolean;
@@ -31,7 +32,7 @@ export function useTranscriptionNotifications(options: TranscriptionNotification
   useEffect(() => {
     if (!enabled || !settings.transcriptionNotificationEnabled) return;
 
-    logMessagesSubscribe('useTranscriptionNotifications', { event: 'UPDATE', table: 'messages' });
+    logMessagesSubscribe('useTranscriptionNotifications', { event: 'UPDATE', table: dbTable('messages') });
     const channel = supabase
       .channel('transcription-notifications')
       .on(
@@ -39,7 +40,7 @@ export function useTranscriptionNotifications(options: TranscriptionNotification
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'messages',
+          table: dbTable('messages'),
         },
         wrapMessagesHandler<{ new: Record<string, unknown>; old?: Record<string, unknown> }>('useTranscriptionNotifications', async (payload) => {
           const newData = payload.new as { id: string; transcription_status?: string; transcription?: string; contact_id?: string };
@@ -63,8 +64,7 @@ export function useTranscriptionNotifications(options: TranscriptionNotification
             // Get contact name
             let contactName = 'Contato';
             if (newData.contact_id) {
-              const { data: contact } = await supabase
-                .from('contacts')
+              const { data: contact } = await dbFrom('contacts')
                 .select('name')
                 .eq('id', newData.contact_id)
                 .single();

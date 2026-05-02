@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ConversationSummary {
   id: string;
@@ -43,8 +44,7 @@ export const ContactConversationHistory: React.FC<ContactConversationHistoryProp
     const load = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('conversations')
+        const { data, error } = await dbFrom('conversations')
           .select('id, channel, status, last_message_preview, last_message_at, message_count, assigned_agent_name')
           .eq('contact_id', contactId)
           .eq('workspace_id', workspaceId)

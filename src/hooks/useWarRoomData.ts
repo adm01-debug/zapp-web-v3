@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface WarRoomAgent {
   id: string;
@@ -48,8 +49,7 @@ export function useWarRoomData() {
         .from('agent_stats')
         .select('profile_id, messages_sent, conversations_resolved, avg_response_time_seconds, customer_satisfaction_score');
 
-      const { data: contacts } = await supabase
-        .from('contacts')
+      const { data: contacts } = await dbFrom('contacts')
         .select('assigned_to');
 
       const contactCounts = (contacts || []).reduce((acc, c) => {
@@ -87,8 +87,7 @@ export function useWarRoomData() {
         .eq('is_active', true);
       if (error) throw error;
 
-      const { data: contacts } = await supabase
-        .from('contacts')
+      const { data: contacts } = await dbFrom('contacts')
         .select('queue_id, assigned_to');
 
       const { data: slaData } = await supabase

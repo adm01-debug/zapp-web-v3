@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export type PeriodOption = 7 | 14 | 30;
 
@@ -98,12 +99,10 @@ export function useAIStats(selectedPeriod: PeriodOption) {
         positive: data.positive, negative: data.negative, neutral: data.neutral,
       }));
 
-      const { count: currentTranscriptions } = await supabase
-        .from('messages').select('*', { count: 'exact', head: true })
+      const { count: currentTranscriptions } = await dbFrom('messages').select('*', { count: 'exact', head: true })
         .not('transcription', 'is', null).gte('created_at', periodStart.toISOString());
 
-      const { count: prevTranscriptions } = await supabase
-        .from('messages').select('*', { count: 'exact', head: true })
+      const { count: prevTranscriptions } = await dbFrom('messages').select('*', { count: 'exact', head: true })
         .not('transcription', 'is', null)
         .gte('created_at', previousPeriodStart.toISOString()).lt('created_at', periodStart.toISOString());
 

@@ -7,6 +7,7 @@ import { Radio, MessageSquare, ArrowUp, Wifi, WifiOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface TimelineEvent {
   id: string;
@@ -38,8 +39,7 @@ export function MonitoringEventTimeline() {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
       const [msgRes, healthRes] = await Promise.all([
-        supabase
-          .from('messages')
+        dbFrom('messages')
           .select('id, sender, content, created_at, contact_id')
           .gte('created_at', oneHourAgo)
           .order('created_at', { ascending: false })

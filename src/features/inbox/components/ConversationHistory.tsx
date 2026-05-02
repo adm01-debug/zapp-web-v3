@@ -25,6 +25,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { format, formatDistanceToNow, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ConversationHistoryItem {
   id: string;
@@ -88,8 +89,7 @@ export function ConversationHistory({ contactId, contactPhone, onSelectConversat
         : null;
 
       // Fetch messages grouped by date to simulate conversation sessions
-      let query = supabase
-        .from('messages')
+      let query = dbFrom('messages')
         .select('id, content, created_at, sender')
         .eq('contact_id', contactId)
         .order('created_at', { ascending: false })

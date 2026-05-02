@@ -4,6 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { getLogger } from '@/lib/logger';
 import { newRequestId } from '@/lib/withRequestId';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const log = getLogger('useSendProduct');
 
@@ -28,8 +29,7 @@ export function useContactSearch(step: 'configure' | 'selectContact') {
     }
     const timeout = setTimeout(async () => {
       setSearchingContacts(true);
-      const { data } = await supabase
-        .from('contacts')
+      const { data } = await dbFrom('contacts')
         .select('id, name, phone, avatar_url')
         .or(`name.ilike.%${contactSearch}%,phone.ilike.%${contactSearch}%`)
         .limit(15);
@@ -43,8 +43,7 @@ export function useContactSearch(step: 'configure' | 'selectContact') {
   useEffect(() => {
     if (step !== 'selectContact') return;
     setSearchingContacts(true);
-    supabase
-      .from('contacts')
+    dbFrom('contacts')
       .select('id, name, phone, avatar_url')
       .order('updated_at', { ascending: false })
       .limit(15)
@@ -88,7 +87,7 @@ export function useSendToContact(onSuccess: () => void) {
       // Send images
       for (const imgUrl of imageUrls) {
         const trace = newRequestId('catalog-img');
-        const { data: dbResult } = await supabase.from('messages').insert({
+        const { data: dbResult } = await dbFrom('messages').insert({
           contact_id: contact.id,
           content: imgUrl,
           sender: 'agent',
@@ -112,7 +111,7 @@ export function useSendToContact(onSuccess: () => void) {
 
         const externalId = extractEvolutionMessageId(apiResult);
         if (dbResult?.id && externalId) {
-          await supabase.from('messages')
+          await dbFrom('messages')
             .update({ external_id: externalId, status: 'sent' })
             .eq('id', dbResult.id);
         }
@@ -120,7 +119,7 @@ export function useSendToContact(onSuccess: () => void) {
 
       // Send text
       const textTrace = newRequestId('catalog-text');
-      const { data: textDbResult } = await supabase.from('messages').insert({
+      const { data: textDbResult } = await dbFrom('messages').insert({
         contact_id: contact.id,
         content: message,
         sender: 'agent',
@@ -142,7 +141,7 @@ export function useSendToContact(onSuccess: () => void) {
 
       const textExternalId = extractEvolutionMessageId(textApiResult);
       if (textDbResult?.id && textExternalId) {
-        await supabase.from('messages')
+        await dbFrom('messages')
           .update({ external_id: textExternalId, status: 'sent' })
           .eq('id', textDbResult.id);
       }

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Send, Loader2, MessageSquare, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface InsightResult {
   question: string;
@@ -37,7 +38,7 @@ export function SupervisorCopilot() {
       const [queueData, agentData, messageData] = await Promise.all([
         supabase.from('queues').select('id, name').limit(20),
         supabase.from('profiles').select('id, name, role, is_active').eq('is_active', true).limit(50),
-        supabase.from('messages').select('id', { count: 'exact', head: true })
+        dbFrom('messages').select('id', { count: 'exact', head: true })
           .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
       ]);
 

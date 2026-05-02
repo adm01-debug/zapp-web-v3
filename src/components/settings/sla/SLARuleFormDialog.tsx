@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Search, Loader2, Bell, FileText } from 'lucide-react';
 import { CONTACT_TYPES, SCOPE_LABELS } from './sla-utils';
 import { cn } from '@/lib/utils';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface SLARuleFormDialogProps {
   open: boolean;
@@ -57,7 +58,7 @@ export function SLARuleFormDialog({ open, onOpenChange, scope, editingRule }: SL
   const { data: companies = [] } = useQuery({
     queryKey: ['sla-scope-companies'],
     queryFn: async () => {
-      const { data } = await supabase.from('contacts').select('company').not('company', 'is', null);
+      const { data } = await dbFrom('contacts').select('company').not('company', 'is', null);
       return [...new Set((data || []).map(d => d.company).filter(Boolean))] as string[];
     },
     enabled: open && scope === 'company',
@@ -66,7 +67,7 @@ export function SLARuleFormDialog({ open, onOpenChange, scope, editingRule }: SL
   const { data: jobTitles = [] } = useQuery({
     queryKey: ['sla-scope-jobtitles'],
     queryFn: async () => {
-      const { data } = await supabase.from('contacts').select('job_title').not('job_title', 'is', null);
+      const { data } = await dbFrom('contacts').select('job_title').not('job_title', 'is', null);
       return [...new Set((data || []).map(d => d.job_title).filter(Boolean))] as string[];
     },
     enabled: open && scope === 'job_title',
@@ -93,7 +94,7 @@ export function SLARuleFormDialog({ open, onOpenChange, scope, editingRule }: SL
   const { data: contacts = [] } = useQuery({
     queryKey: ['sla-scope-contacts', contactSearch],
     queryFn: async () => {
-      const { data } = await supabase.from('contacts').select('id, name, phone')
+      const { data } = await dbFrom('contacts').select('id, name, phone')
         .or(`name.ilike.%${contactSearch}%,phone.ilike.%${contactSearch}%`)
         .limit(20);
       return data || [];

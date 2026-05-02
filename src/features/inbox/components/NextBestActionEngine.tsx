@@ -16,6 +16,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface NextAction {
   type: string;
@@ -44,8 +45,7 @@ export function NextBestActionEngine({ contactId, contactName }: NextBestActionP
     const suggestedActions: NextAction[] = [];
 
     // Check last message time
-    const { data: lastMsg } = await supabase
-      .from('messages')
+    const { data: lastMsg } = await dbFrom('messages')
       .select('created_at, sender')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: false })

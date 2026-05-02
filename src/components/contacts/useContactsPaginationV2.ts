@@ -6,6 +6,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface ContactListItem {
   id: string; name: string; phone: string | null; email: string | null;
@@ -32,7 +33,7 @@ export function useContactsPaginationV2(workspaceId: string) {
   const cursorRef = useRef<string | null>(null);
 
   const buildQuery = useCallback((f: ContactPaginationFilters) => {
-    let q = supabase.from('contacts')
+    let q = dbFrom('contacts')
       .select('id,name,phone,email,company,tags,channel,avatar_url,created_at,last_seen_at,version', { count: 'exact' })
       .eq('workspace_id', workspaceId).is('deleted_at', null).limit(PAGE_SIZE);
     if (f.search?.trim()) q = q.or(`name.ilike.%${f.search.trim()}%,phone.ilike.%${f.search.trim()}%,email.ilike.%${f.search.trim()}%`);

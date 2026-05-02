@@ -9,6 +9,7 @@ import { log } from '@/lib/logger';
 type ContactRow = Database['public']['Tables']['contacts']['Row'];
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { dbFrom } from '@/integrations/datasource/db';
 import {
   Minus,
   Maximize2,
@@ -73,8 +74,7 @@ export default function ChatPopup() {
   useEffect(() => {
     if (!contactId) return;
     (async () => {
-      const { data } = await supabase
-        .from('contacts')
+      const { data } = await dbFrom('contacts')
         .select('*')
         .eq('id', contactId)
         .single();
@@ -116,7 +116,7 @@ export default function ChatPopup() {
   const handleSendMessage = useCallback(
     async (content: string) => {
       if (!contactId) return;
-      await supabase.from('messages').insert({
+      await dbFrom('messages').insert({
         contact_id: contactId,
         content,
         sender: 'agent',
@@ -141,7 +141,7 @@ export default function ChatPopup() {
           .from('whatsapp-media')
           .getPublicUrl(fileName);
 
-        await supabase.from('messages').insert({
+        await dbFrom('messages').insert({
           contact_id: contactId,
           content: '🎵 Mensagem de áudio',
           sender: 'agent',

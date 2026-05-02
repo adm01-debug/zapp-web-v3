@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface WhatsAppStatusMessage {
   id: string;
@@ -52,8 +53,7 @@ export interface ContactConnectionInfo {
 
 export const whatsappStatusRepository = {
   async getContact(phone: string) {
-    return supabase
-      .from('contacts')
+    return dbFrom('contacts')
       .select('name, whatsapp_connection_id')
       .eq('phone', phone)
       .maybeSingle();

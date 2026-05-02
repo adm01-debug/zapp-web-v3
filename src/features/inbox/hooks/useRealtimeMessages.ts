@@ -11,6 +11,7 @@ import {
 import { useRealtimeNotifications } from './realtime/useRealtimeNotifications';
 import { useMessageUpdateBatcher, type MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
+import { dbFrom, dbTable } from '@/integrations/datasource/db';
 export type { MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 
 const log = getLogger('RealtimeMessages');
@@ -111,7 +112,7 @@ export function useRealtimeMessages() {
     if (uniqueIds.length === 0) return [] as ConversationContact[];
     const fetchedContacts: ConversationContact[] = [];
     for (const idsChunk of chunkArray(uniqueIds, CONTACT_FETCH_CHUNK_SIZE)) {
-      const { data, error: contactsError } = await supabase.from('contacts').select('*').in('id', idsChunk);
+      const { data, error: contactsError } = await dbFrom('contacts').select('*').in('id', idsChunk);
       if (contactsError) throw contactsError;
       fetchedContacts.push(...((data ?? []) as ConversationContact[]));
     }
@@ -182,9 +183,9 @@ export function useRealtimeMessages() {
     try {
       setLoading(true);
       setError(null);
-      const { data: seededContacts, error: contactsError } = await supabase.from('contacts').select('*').order('updated_at', { ascending: false }).limit(SEEDED_CONTACT_LIMIT);
+      const { data: seededContacts, error: contactsError } = await dbFrom('contacts').select('*').order('updated_at', { ascending: false }).limit(SEEDED_CONTACT_LIMIT);
       if (contactsError) throw contactsError;
-      const { data: recentMessages, error: messagesError } = await supabase.from('messages').select('*').order('created_at', { ascending: false }).limit(RECENT_MESSAGES_LIMIT);
+      const { data: recentMessages, error: messagesError } = await dbFrom('messages').select('*').order('created_at', { ascending: false }).limit(RECENT_MESSAGES_LIMIT);
       if (messagesError) throw messagesError;
 
       const normalizedMessages = ((recentMessages ?? []) as RealtimeMessage[]).map(normalizeMessage);
@@ -201,12 +202,12 @@ export function useRealtimeMessages() {
 
   useEffect(() => {
     fetchConversations();
-    logMessagesSubscribe('useRealtimeMessages', { event: 'INSERT', table: 'messages' });
-    logMessagesSubscribe('useRealtimeMessages', { event: 'UPDATE', table: 'messages' });
+    logMessagesSubscribe('useRealtimeMessages', { event: 'INSERT', table: dbTable('messages') });
+    logMessagesSubscribe('useRealtimeMessages', { event: 'UPDATE', table: dbTable('messages') });
     const channel = supabase.channel('messages-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: dbTable('messages') },
         wrapMessagesHandler('useRealtimeMessages', handleNewMessage))
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' },
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: dbTable('messages') },
         wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate))
       .subscribe((status) => { log.debug('Subscription status', { status }); });
     return () => { supabase.removeChannel(channel); };
@@ -217,7 +218,7 @@ export function useRealtimeMessages() {
   };
 
   const markAsRead = async (contactId: string) => {
-    const { error } = await supabase.from('messages').update({ is_read: true }).eq('contact_id', contactId).eq('sender', 'contact').eq('is_read', false);
+    const { error } = await dbFrom('messages').update({ is_read: true }).eq('contact_id', contactId).eq('sender', 'contact').eq('is_read', false);
     if (error) log.error('Error marking messages as read:', error);
     commitConversations((prev) =>
       prev.map((c) => c.contact.id === contactId

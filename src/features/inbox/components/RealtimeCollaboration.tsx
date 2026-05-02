@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { ViewersIndicator } from './collaboration/ViewersIndicator';
 import { InternalNotesPanel } from './collaboration/InternalNotesPanel';
 import { HandoffDialog } from './collaboration/HandoffDialog';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface RealtimeCollaborationProps {
   contactId: string;
@@ -16,7 +17,7 @@ export function RealtimeCollaboration({ contactId, className }: RealtimeCollabor
   const [handoffOpen, setHandoffOpen] = useState(false);
 
   const handleHandoff = async (agentId: string, comment: string) => {
-    await supabase.from('contacts').update({ assigned_to: agentId }).eq('id', contactId);
+    await dbFrom('contacts').update({ assigned_to: agentId }).eq('id', contactId);
     if (comment) {
       const { data: profile } = await supabase
         .from('profiles').select('id')

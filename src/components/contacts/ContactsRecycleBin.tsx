@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import { useAuth } from '@/hooks/useAuth';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -68,8 +69,7 @@ export const ContactsRecycleBin: React.FC<ContactsRecycleBinProps> = ({ workspac
   const loadDeletedContacts = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('contacts')
+      const { data, error } = await dbFrom('contacts')
         .select('id, name, phone, email, company, deleted_at, deleted_reason, deleted_by')
         .eq('workspace_id', workspaceId)
         .not('deleted_at', 'is', null)

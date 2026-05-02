@@ -10,6 +10,7 @@ import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface LGPDSyncEvent {
   contact_id: string;
@@ -33,8 +34,7 @@ export function useLGPDWebhookSync({
   const handleSyncEvent = useCallback(async (event: LGPDSyncEvent) => {
     switch (event.event_type) {
       case 'opt_out': {
-        const { error } = await supabase
-          .from('contacts')
+        const { error } = await dbFrom('contacts')
           .update({
             lgpd_opt_out_at: event.timestamp,
             lgpd_marketing_consent: false,
@@ -49,8 +49,7 @@ export function useLGPDWebhookSync({
         break;
       }
       case 'opt_in': {
-        const { error } = await supabase
-          .from('contacts')
+        const { error } = await dbFrom('contacts')
           .update({
             lgpd_consent_at: event.timestamp,
             lgpd_consent_channel: event.channel,

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { log } from '@/lib/logger';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface UseTransferConversationOptions {
   contactId: string;
@@ -36,8 +37,7 @@ export function useTransferConversation({ contactId, whatsappConnectionId }: Use
           updateData.assigned_to = null;
         }
 
-        const { error } = await supabase
-          .from('contacts')
+        const { error } = await dbFrom('contacts')
           .update(updateData)
           .eq('id', contactId);
 
@@ -50,7 +50,7 @@ export function useTransferConversation({ contactId, whatsappConnectionId }: Use
             ? '🔄 Chat transferido para outro atendente.'
             : '🔄 Chat transferido para outra fila.';
 
-        await supabase.from('messages').insert({
+        await dbFrom('messages').insert({
           contact_id: contactId,
           whatsapp_connection_id: whatsappConnectionId ?? null,
           content: transferNote,
