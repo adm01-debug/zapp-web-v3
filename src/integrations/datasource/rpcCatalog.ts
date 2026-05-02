@@ -227,6 +227,28 @@ export const RPC = {
     name: 'rpc_global_search',
     client: 'external',
   }),
+
+  // ── CRM 360 / Search avançado ────────────────────────────────────────────
+  searchContactsAdvanced: def<SearchContactsAdvancedParams, unknown>({
+    name: 'search_contacts_advanced',
+    client: 'external',
+  }),
+  getContact360ByPhone: def<GetContact360Params, unknown>({
+    name: 'get_contact_360_by_phone',
+    client: 'external',
+  }),
+  getContactIntelligenceByPhone: def<GetContactIntelligenceParams, unknown>({
+    name: 'get_contact_intelligence_by_phone',
+    client: 'external',
+  }),
+  getCompaniesByPhonesBatch: def<GetCompaniesByPhonesBatchParams, unknown>({
+    name: 'get_companies_by_phones_batch',
+    client: 'external',
+  }),
+  syncInteractionFromZapp: def<SyncInteractionParams, unknown>({
+    name: 'sync_interaction_from_zapp',
+    client: 'external',
+  }),
 } as const;
 
 export type RpcKey = keyof typeof RPC;
