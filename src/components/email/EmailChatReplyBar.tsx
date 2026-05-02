@@ -117,7 +117,7 @@ export function EmailChatReplyBar({
         bodyHtml,
         bodyPlain: plainText,
         threadId: threadGmailId,
-        attachments: processedAttachments,
+        attachments: processedAttachments as any,
         signatureHtml: selectedSignature?.html_content,
       });
 
