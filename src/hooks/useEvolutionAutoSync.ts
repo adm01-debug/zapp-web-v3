@@ -52,7 +52,7 @@ export function useEvolutionAutoSync(onSynced?: () => void) {
           const phone = inst.instance?.number ||
             inst.instance?.ownerJid?.replace('@s.whatsapp.net', '') || '';
           if (phone && knownPhones.some((kp) => isSamePhone(kp, phone))) {
-            console.log(`[evo-sync] Skipping ${inst.instance.instanceName} — phone ${phone} already connected via another instance`);
+            // console.log(`[evo-sync] Skipping ${inst.instance.instanceName} — phone ${phone} already connected via another instance`);
             return false;
           }
           return true;
@@ -85,7 +85,7 @@ export function useEvolutionAutoSync(onSynced?: () => void) {
           if (error) {
             console.warn(`[evo-sync] Failed to sync ${inst.instance.instanceName}:`, error.message);
           } else {
-            console.log(`[evo-sync] \u2705 Synced: ${inst.instance.instanceName} (${name})`);
+            // console.log(`[evo-sync] Synced: ${inst.instance.instanceName} (${name})`);
           }
         }
 
