@@ -61,6 +61,8 @@ export function useGmail() {
   const [isSyncing, setIsSyncing]             = useState(false);
   const [isSending, setIsSending]             = useState(false);
   const [error, setError]                     = useState<string | null>(null);
+  const [lastRequestId, setLastRequestId]     = useState<string | null>(null);
+  const [schemaStatus, setSchemaStatus]       = useState<{ ok: boolean; lastChecked: Date | null }>({ ok: true, lastChecked: null });
   const [nextPageToken, setNextPageToken]     = useState<string | null>(null);
   const [hasMore, setHasMore]                 = useState(false);
 
@@ -78,9 +80,12 @@ export function useGmail() {
     );
 
     if (dbErr) {
+      setLastRequestId(requestId || null);
+      setSchemaStatus({ ok: !dbErr.message.includes('disponível'), lastChecked: new Date() });
       console.warn(`[useGmail][${requestId}] Falha ao carregar contas:`, dbErr.message);
       setError(`Não foi possível carregar as contas Gmail. ${dbErr.message.includes('disponível') ? 'O recurso ainda está sendo configurado.' : ''}`);
     } else {
+      setSchemaStatus({ ok: true, lastChecked: new Date() });
       const accs = gmailMappers.accounts(Array.isArray(data) ? data : []);
       setAccounts(accs);
       if (accs.length > 0 && !activeAccountId) {
@@ -92,7 +97,7 @@ export function useGmail() {
 
   // ── Verificar status dos tokens ─────────────────────────────────────────
   const checkTokenStatus = useCallback(async () => {
-    const { data, error: rpcErr } = await safeClient.rpc('rpc_gmail_token_status');
+    const { data, error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_token_status');
     if (!rpcErr && data) {
       const tokenInfos = gmailMappers.tokenInfos(Array.isArray(data) ? data : []);
       setTokenStatus(tokenInfos);
@@ -120,9 +125,12 @@ export function useGmail() {
     });
 
     if (rpcErr) {
+      setLastRequestId(requestId || null);
+      setSchemaStatus({ ok: !rpcErr.message.includes('disponível'), lastChecked: new Date() });
       console.warn(`[useGmail][${requestId}] Falha ao buscar threads:`, rpcErr.message);
       setError(`Erro ao carregar mensagens do Gmail. ${rpcErr.message.includes('disponível') ? 'A funcionalidade está sendo ativada.' : ''}`);
     } else {
+      setSchemaStatus({ ok: true, lastChecked: new Date() });
       const mappedThreads = gmailMappers.threads(Array.isArray(data) ? data : []);
       setThreads(prev => append ? [...prev, ...mappedThreads] : mappedThreads);
       setHasMore(mappedThreads.length === 50);
@@ -140,7 +148,8 @@ export function useGmail() {
     );
 
     if (dbErr) {
-      console.error('Erro ao carregar mensagens:', dbErr);
+      const rid = (dbErr as any).requestId || 'N/A';
+      console.error(`[useGmail][${rid}] Erro ao carregar mensagens:`, dbErr);
     } else {
       setMessages(Array.isArray(data) ? data : []);
     }
@@ -261,7 +270,7 @@ export function useGmail() {
 
   // ── Marcar thread como lida/não lida ───────────────────────────────────
   const markAsRead = useCallback(async (threadId: string, read = true) => {
-    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_mark_thread_read', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_mark_thread_read', {
       p_thread_id: threadId,
       p_read:      read,
     });
@@ -275,7 +284,7 @@ export function useGmail() {
 
   // ── Star/Unstar thread ──────────────────────────────────────────────────
   const starThread = useCallback(async (threadId: string, starred = true) => {
-    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_star_thread', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_star_thread', {
       p_thread_id: threadId,
       p_starred:   starred,
     });
@@ -289,7 +298,7 @@ export function useGmail() {
 
   // ── Archive thread ──────────────────────────────────────────────────────
   const archiveThread = useCallback(async (threadId: string) => {
-    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_archive_thread', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_archive_thread', {
       p_thread_id: threadId,
       p_archived:  true,
     });
@@ -302,7 +311,7 @@ export function useGmail() {
 
   // ── Assign thread a agente ──────────────────────────────────────────────
   const assignThread = useCallback(async (threadId: string, agentId: string | null) => {
-    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_assign_thread', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_assign_thread', {
       p_thread_id: threadId,
       p_agent_id:  agentId,
     });
@@ -311,15 +320,17 @@ export function useGmail() {
       setThreads(prev => prev.map(t =>
         t.id === threadId ? { ...t, assigned_to: agentId } : t
       ));
+    } else {
+      console.warn(`[useGmail][${requestId}] Falha ao atribuir thread:`, rpcErr.message);
     }
   }, []);
 
   // ── Desconectar conta ───────────────────────────────────────────────────
   const disconnect = useCallback(async (accountId: string) => {
-    await (supabase as any)
-      .from('gmail_accounts')
-      .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('id', accountId);
+    const { requestId, error: dbErr } = await safeClient.from('gmail_accounts', (q) =>
+      q.update({ is_active: false, updated_at: new Date().toISOString() })
+       .eq('id', accountId)
+    );
 
     setAccounts(prev => prev.filter(a => a.id !== accountId));
     if (activeAccountId === accountId) {
@@ -458,6 +469,8 @@ export function useGmail() {
     isSending,
     hasMore,
     error,
+    lastRequestId,
+    schemaStatus,
     nextPageToken,
     // Contadores
     unreadCount,
