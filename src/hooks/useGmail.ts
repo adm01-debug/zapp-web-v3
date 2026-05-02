@@ -32,6 +32,7 @@ export interface GmailAccount {
 
 export type GmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
 export type GmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
+export type TokenStatus = GmailTokenStatus; // Alias legado
 
 export interface GmailTokenInfo {
   account_id:            string;
@@ -61,6 +62,7 @@ export interface GmailThread {
   is_unread?:      boolean;  // Legado
   sla_status:      'ok' | 'warning' | 'breached' | 'met' | null;
   assigned_to:     string | null;
+  assigned_agent?: { id: string; name: string } | null; // Legado
   last_message_at: string | null;
   first_reply_at:  string | null;
   created_at:      string;
