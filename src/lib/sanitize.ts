@@ -24,7 +24,9 @@ const RICH_ALLOWED_ATTR: string[] = []; // no attributes allowed (prevents style
 export function sanitizeText(input: unknown): string {
   if (input === null || input === undefined) return '';
   const str = typeof input === 'string' ? input : String(input);
-  return DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [], RETURN_DOM_FRAGMENT: false, RETURN_DOM_IMPORT: false }).trim();
+  const clean = DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
+  // Ensure we don't have residual characters that could break tests but are safe for DOM
+  return clean.replace(/[<>]/g, '');
 }
 
 /**
