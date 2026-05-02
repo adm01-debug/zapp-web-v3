@@ -83,7 +83,7 @@ export function useDeliveryStats(remoteJid: string | undefined, instance = 'wpp2
       });
       if (error) throw error;
 
-      const messages = (data ?? []) as Record<string, unknown>[];
+      const messages = (data ?? []) as unknown as Record<string, unknown>[];
       const isGroup = isGroupJid(remoteJid!);
 
       const totals = { sent: 0, delivered: 0, read: 0, lastSentAt: null as string | null, lastDeliveredAt: null as string | null, lastReadAt: null as string | null };
