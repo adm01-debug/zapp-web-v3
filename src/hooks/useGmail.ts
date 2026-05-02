@@ -61,6 +61,8 @@ export function useGmail() {
   const [isSyncing, setIsSyncing]             = useState(false);
   const [isSending, setIsSending]             = useState(false);
   const [error, setError]                     = useState<string | null>(null);
+  const [lastRequestId, setLastRequestId]     = useState<string | null>(null);
+  const [schemaStatus, setSchemaStatus]       = useState<{ ok: boolean; lastChecked: Date | null }>({ ok: true, lastChecked: null });
   const [nextPageToken, setNextPageToken]     = useState<string | null>(null);
   const [hasMore, setHasMore]                 = useState(false);
 
