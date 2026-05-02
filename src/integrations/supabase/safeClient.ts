@@ -134,13 +134,13 @@ export const safeClient = {
         const { error } = await (supabase.from(name) as any).select('count', { count: 'exact', head: true }).limit(0);
         
         // Em testes, tratamos qualquer erro de timeout ou rede como "sucesso" se não for explicitamente "does not exist"
-        exists = !error || !error.message.toLowerCase().includes('does not exist');
+        exists = !error || (error.message && !error.message.toLowerCase().includes('does not exist'));
       } else {
         const { error } = await (supabase as any).rpc(name).limit(0);
         if (!error) {
           exists = true;
         } else {
-          const msg = error.message.toLowerCase();
+          const msg = error.message ? error.message.toLowerCase() : '';
           exists = !msg.includes('does not exist') && !msg.includes('não existe');
         }
       }
