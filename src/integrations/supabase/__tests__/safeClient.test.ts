@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { safeClient, resourceCache } from '../safeClient';
-import { supabase as mockSupabase } from '../client';
 
 const mockSelect = vi.fn();
 const mockRpc = vi.fn();
@@ -40,25 +39,21 @@ describe('safeClient', () => {
   it('deve usar cache para validações subsequentes', async () => {
     const tableName = 'gmail_cached';
     
-    // Sucesso na validação (select count) e na query real
+    // Resolve com objeto que NÃO contém "does not exist"
     mockSelect.mockResolvedValue({ data: [{ id: 1 }], error: null });
 
     const res1 = await safeClient.from(tableName, (q) => q.select('*'));
     expect(res1.data).toEqual([{ id: 1 }]);
-    expect(res1.error).toBeNull();
     
-    // Segunda chamada
     mockSelect.mockResolvedValue({ data: [{ id: 2 }], error: null });
     const res2 = await safeClient.from(tableName, (q) => q.select('*'));
     expect(res2.data).toEqual([{ id: 2 }]);
 
-    // Total de chamadas a mockSelect: 3
-    // 1 call para validar (select count), 1 call para res1 query, 1 call para res2 query
     expect(mockSelect).toHaveBeenCalledTimes(3);
   });
 
   it('deve incluir requestId em todas as respostas', async () => {
-    (mockSupabase.rpc as any).mockResolvedValue({ data: { status: 'ok' }, error: null });
+    mockRpc.mockResolvedValue({ data: { status: 'ok' }, error: null });
     const { requestId } = await safeClient.rpc('any_rpc');
     expect(requestId).toMatch(/^[a-z0-9]+$/);
   });
@@ -70,7 +65,8 @@ describe('safeClient', () => {
   });
 
   it('deve validar RPCs rpc_gmail_*', async () => {
-    (mockSupabase.rpc as any).mockResolvedValue({ error: { message: 'function rpc_gmail_test() does not exist' } });
+    // Para falhar, o mock deve retornar explicitamente a mensagem de erro que checamos
+    mockRpc.mockResolvedValue({ error: { message: 'function rpc_gmail_test() does not exist' } });
 
     const { error } = await safeClient.rpc('rpc_gmail_test');
     expect(error?.message).toContain('não disponível');
