@@ -283,3 +283,99 @@ export function buildMimeMessage(params: {
     .replace(/\//g, '_')
     .replace(/=+$/, '');
 }
+
+// ── Wrappers de compatibilidade (assinatura por objeto) ───────────────────
+// Mantidos para os componentes de e-mail que esperam APIs por objeto.
+// Internamente delegam para as funções existentes ou para a edge `gmail-send`.
+
+export async function gmailMarkRead(params: {
+  accountId:  string;
+  messageIds: string[];
+  read:       boolean;
+}): Promise<GmailApiResponse<{ success: boolean }>> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: {
+      action:     'markRead',
+      accountId:  params.accountId,
+      messageIds: params.messageIds,
+      read:       params.read,
+    },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data, error: null };
+}
+
+export async function gmailTrashMessage(params: {
+  accountId: string;
+  messageId: string;
+}): Promise<GmailApiResponse<{ success: boolean }>> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: {
+      action:    'trashMessage',
+      accountId: params.accountId,
+      messageId: params.messageId,
+    },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data, error: null };
+}
+
+export async function gmailModifyLabels(params: {
+  accountId:     string;
+  messageId?:    string;
+  threadId?:     string;
+  addLabels?:    string[];
+  removeLabels?: string[];
+}): Promise<GmailApiResponse<{ success: boolean }>> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: {
+      action:         'modifyLabels',
+      accountId:      params.accountId,
+      messageId:      params.messageId,
+      threadId:       params.threadId,
+      addLabelIds:    params.addLabels    ?? [],
+      removeLabelIds: params.removeLabels ?? [],
+    },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data, error: null };
+}
+
+export interface GmailSendAttachment {
+  filename: string;
+  mimeType: string;
+  data:     string;
+}
+
+export async function gmailSendMessage(params: {
+  accountId:    string;
+  to:           string[];
+  cc?:          string[];
+  bcc?:         string[];
+  subject:      string;
+  bodyHtml?:    string;
+  bodyPlain?:   string;
+  threadId?:    string | null;
+  inReplyTo?:   string;
+  references?:  string;
+  attachments?: GmailSendAttachment[];
+}): Promise<GmailApiResponse<{ messageId: string; threadId: string }>> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: {
+      action:      'sendMessage',
+      accountId:   params.accountId,
+      to:          params.to,
+      cc:          params.cc        ?? [],
+      bcc:         params.bcc       ?? [],
+      subject:     params.subject,
+      bodyHtml:    params.bodyHtml  ?? '',
+      bodyPlain:   params.bodyPlain ?? '',
+      threadId:    params.threadId  ?? null,
+      inReplyTo:   params.inReplyTo,
+      references:  params.references,
+      attachments: params.attachments ?? [],
+    },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data, error: null };
+}
