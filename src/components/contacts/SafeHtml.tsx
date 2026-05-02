@@ -35,7 +35,6 @@ export const SafeHtml: React.FC<SafeHtmlProps> = ({
       ALLOWED_TAGS: SAFE_TAGS,
       ALLOWED_ATTR: SAFE_ATTRS,
       FORBID_ATTR:  BLOCKED_ATTRS,
-      FORBID_SCRIPTS: true,
     });
     // Force safe link attributes
     return clean.replace(/<a /gi, '<a target="_blank" rel="noopener noreferrer" ');
