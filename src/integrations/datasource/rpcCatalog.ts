@@ -114,6 +114,35 @@ interface DeleteContactParams {
   p_performed_by: string;
 }
 
+interface FindDuplicateContactsParams {
+  p_workspace_id: string;
+  p_limit?: number;
+}
+
+interface MergeContactsParams {
+  p_primary_id: string;
+  p_secondary_id: string;
+  p_merged_fields?: Record<string, unknown>;
+}
+
+interface BulkAutoMergeDuplicatesParams {
+  p_instance_name: string;
+  p_limit?: number;
+}
+
+interface GrantLgpdConsentParams {
+  p_contact_id: string;
+  p_channel: string;
+  p_marketing_consent?: boolean;
+  p_data_sharing?: boolean;
+  p_profiling?: boolean;
+}
+
+interface RevokeLgpdConsentParams {
+  p_contact_id: string;
+  p_reason?: string;
+}
+
 interface DashboardHomeParams {
   p_instance?: string;
   p_assigned_to?: string | null;
@@ -277,12 +306,21 @@ export const RPC = {
     name: 'bulk_add_tag',
     client: 'external',
   }),
-  findDuplicateContacts: def<{ p_workspace_id: string }, Array<{
+  findDuplicateContacts: def<FindDuplicateContactsParams, Array<{
     phone_normalized: string;
     contact_ids:      string[];
     contact_names:    string[];
+    contact_count?:   number;
   }>>({
     name: 'find_duplicate_contacts',
+    client: 'external',
+  }),
+  mergeContacts: def<MergeContactsParams, Record<string, unknown>>({
+    name: 'merge_contacts',
+    client: 'external',
+  }),
+  bulkAutoMergeDuplicates: def<BulkAutoMergeDuplicatesParams, Record<string, unknown>>({
+    name: 'bulk_auto_merge_duplicates',
     client: 'external',
   }),
   updateContactVersioned: def<{
@@ -301,8 +339,16 @@ export const RPC = {
     name: 'get_contact_stats',
     client: 'external',
   }),
-  getLgpdComplianceStats: def<{ p_instance_name: string }, Record<string, unknown>>({
+  getLgpdComplianceStats: def<{ p_instance_name: string } | { p_workspace_id: string }, Record<string, unknown>>({
     name: 'get_lgpd_compliance_stats',
+    client: 'external',
+  }),
+  grantLgpdConsent: def<GrantLgpdConsentParams, Record<string, unknown> | boolean>({
+    name: 'grant_lgpd_consent',
+    client: 'external',
+  }),
+  revokeLgpdConsent: def<RevokeLgpdConsentParams, Record<string, unknown> | boolean>({
+    name: 'revoke_lgpd_consent',
     client: 'external',
   }),
   getDuplicateReport: def<{ p_instance_name: string }, Record<string, unknown>>({
