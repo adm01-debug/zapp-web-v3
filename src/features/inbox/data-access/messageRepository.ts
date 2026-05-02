@@ -23,8 +23,7 @@ export interface Message {
 
 export const messageRepository = {
   async fetchMessagesByContact(contactId: string, from = 0, limit = 1000) {
-    return supabase
-      .from('messages')
+    return dbFrom('messages')
       .select('*')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: true })
@@ -36,14 +35,14 @@ export const messageRepository = {
     onUpdate: (payload: RealtimePostgresChangesPayload<Message>) => void;
     onDelete: (payload: RealtimePostgresChangesPayload<Message>) => void;
   }) {
-    const channel = supabase
-      .channel(`messages:${contactId}`)
+    const table = dbTable('messages');
+    const channel = dbChannel('messages', `messages:${contactId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
+          table,
           filter: `contact_id=eq.${contactId}`,
         },
         callbacks.onInsert
@@ -53,7 +52,7 @@ export const messageRepository = {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'messages',
+          table,
           filter: `contact_id=eq.${contactId}`,
         },
         callbacks.onUpdate
@@ -63,7 +62,7 @@ export const messageRepository = {
         {
           event: 'DELETE',
           schema: 'public',
-          table: 'messages',
+          table,
           filter: `contact_id=eq.${contactId}`,
         },
         callbacks.onDelete
@@ -74,6 +73,6 @@ export const messageRepository = {
   },
 
   unsubscribe(channel: any) {
-    supabase.removeChannel(channel);
+    dbClient('messages').removeChannel(channel);
   }
 };
