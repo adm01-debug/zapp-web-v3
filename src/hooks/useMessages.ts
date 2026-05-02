@@ -80,7 +80,7 @@ export function useMessages(remoteJid: string | null) {
         p_offset:     0,
       });
       if (error) throw error;
-      const items = (data ?? []).map(mapRow);
+      const items = ((data ?? []) as any[]).map(mapRow);
       // FATOR X RPCs return oldest first? Usually messages are ordered DESC in lists, 
       // but inbox needs oldest at top for scroll-to-bottom. 
       // rpc_list_messages_lite uses ORDER BY created_at DESC for pagination consistency.
@@ -110,7 +110,7 @@ export function useMessages(remoteJid: string | null) {
         p_offset:     offsetRef.current,
       });
       if (error) throw error;
-      const newItems = (data ?? []).map(mapRow);
+      const newItems = ((data ?? []) as any[]).map(mapRow);
       // Prepended because they are older (reversed for UI)
       const reversed = [...newItems].reverse();
       setMessages((prev) => [...reversed, ...prev]);
@@ -169,7 +169,7 @@ export function useMessages(remoteJid: string | null) {
   }, [toast]);
 
   const markFollowUpDone = useCallback(async (id: string) => {
-    const { error } = await supabase.rpc('mark_follow_up_done', { p_message_id: id });
+    const { error } = await (supabase as any).rpc('mark_follow_up_done', { p_message_id: id });
     if (error) throw error;
     setMessages((prev) => prev.map((m) => m.id === id ? { ...m, follow_up_done: true } : m));
   }, []);
