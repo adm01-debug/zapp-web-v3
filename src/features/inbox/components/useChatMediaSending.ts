@@ -9,6 +9,12 @@ import { newRequestId } from '@/lib/withRequestId';
 /**
  * Encapsulates WhatsApp instance resolution and media-message sending
  * (stickers, custom emojis, audio memes) to keep ChatPanel lean.
+ *
+ * FIXES APPLIED:
+ * - BUG 1: contactPhone! non-null assertion → safe guard
+ * - FALHA 5: fire-and-forget status update → proper error handling
+ * - FALHA 6: fire-and-forget auto-save → error logging
+ * - FALHA 9: 'contacts' table → 'evolution_contacts' (matches real schema)
  */
 export function useChatMediaSending(contactId: string, contactPhone: string | undefined) {
   const [instanceName, setInstanceName] = useState('');
@@ -21,25 +27,19 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     if (instanceName) return instanceName;
 
     try {
+      // FIX FALHA 9: Use 'evolution_contacts' instead of 'contacts'
       const { data: contact } = await supabase
-        .from('contacts')
-        .select('whatsapp_connection_id')
+        .from('evolution_contacts')
+        .select('instance_name')
         .eq('id', contactId)
         .maybeSingle();
 
-      if (contact?.whatsapp_connection_id) {
-        setWhatsappConnectionId(contact.whatsapp_connection_id);
-        const { data: conn } = await supabase
-          .from('whatsapp_connections')
-          .select('instance_id')
-          .eq('id', contact.whatsapp_connection_id)
-          .maybeSingle();
-        if (conn?.instance_id) {
-          setInstanceName(conn.instance_id);
-          return conn.instance_id;
-        }
+      if (contact?.instance_name) {
+        setInstanceName(contact.instance_name);
+        return contact.instance_name;
       }
 
+      // Fallback: try whatsapp_connections table
       const { data: fallbackConn } = await supabase
         .from('whatsapp_connections')
         .select('instance_id')
@@ -77,9 +77,19 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     const inst = await ensureInstance();
     if (!inst) return;
 
+    // FIX BUG 1: Safe phone extraction (no more non-null assertion crash)
+    if (!contactPhone) {
+      toast({ title: 'Erro', description: 'Telefone do contato não disponível.', variant: 'destructive' });
+      return;
+    }
+    const phone = contactPhone.replace(/\D/g, '');
+    if (!phone || phone.length < 10) {
+      toast({ title: 'Erro', description: 'Número de telefone inválido.', variant: 'destructive' });
+      return;
+    }
+
     try {
-      const phone = contactPhone!.replace(/\D/g, '');
-      const { data: dbData } = await supabase.from('messages').insert({
+      const { data: dbData, error: dbError } = await supabase.from('messages').insert({
         contact_id: contactId,
         whatsapp_connection_id: whatsappConnectionId,
         content: '[Sticker]',
@@ -89,6 +99,10 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         status: 'sending',
       }).select('id').single();
 
+      if (dbError) {
+        log.error('[Sticker] DB insert failed:', dbError);
+      }
+
       const messageId = dbData?.id;
       let externalId: string | null = null;
 
@@ -96,31 +110,63 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         const result = await sendStickerMessage(inst, phone, stickerUrl);
         externalId = result?.key?.id || null;
       } catch (err: unknown) {
-        if (messageId) await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
-        toast({ title: 'Erro ao enviar figurinha', description: err instanceof Error ? err.message : 'Falha na API', variant: 'destructive' });
+        if (messageId) {
+          await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
+        }
+        toast({
+          title: 'Erro ao enviar figurinha',
+          description: err instanceof Error ? err.message : 'Falha na API',
+          variant: 'destructive',
+        });
         return;
       }
 
       if (!externalId) {
-        if (messageId) await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
+        if (messageId) {
+          await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
+        }
         toast({ title: 'Erro ao enviar figurinha', description: 'Falha na API', variant: 'destructive' });
         return;
       }
 
+      // FIX FALHA 5: Proper error handling instead of fire-and-forget .then(() => {})
       if (messageId) {
-        supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId).then(() => {});
+        const { error: updateError } = await supabase
+          .from('messages')
+          .update({ external_id: externalId, status: 'sent' })
+          .eq('id', messageId);
+
+        if (updateError) {
+          log.error('[Sticker] Failed to update message status to sent:', updateError);
+        }
       }
 
-      // Auto-save sticker
-      supabase.from('stickers').select('id').eq('image_url', stickerUrl).maybeSingle().then(async ({ data: existing }) => {
+      // FIX FALHA 6: Auto-save with error handling instead of fire-and-forget
+      try {
+        const { data: existing } = await supabase
+          .from('stickers')
+          .select('id')
+          .eq('image_url', stickerUrl)
+          .maybeSingle();
+
         if (!existing) {
           const { data: { user } } = await supabase.auth.getUser();
-          await supabase.from('stickers').insert({
+          const { error: saveError } = await supabase.from('stickers').insert({
             name: `Enviada ${new Date().toLocaleDateString('pt-BR')}`,
-            image_url: stickerUrl, category: 'enviadas', is_favorite: false, use_count: 1, uploaded_by: user?.id || null,
+            image_url: stickerUrl,
+            category: 'enviadas',
+            is_favorite: false,
+            use_count: 1,
+            uploaded_by: user?.id || null,
           });
+
+          if (saveError) {
+            log.error('[Sticker] Auto-save sticker failed:', saveError);
+          }
         }
-      });
+      } catch (autoSaveErr) {
+        log.error('[Sticker] Auto-save unexpected error:', autoSaveErr);
+      }
 
       toast({ title: 'Figurinha enviada!' });
     } catch {
@@ -132,8 +178,14 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     const inst = await ensureInstance();
     if (!inst) return;
 
+    // FIX BUG 1: Safe phone check
+    if (!contactPhone) {
+      toast({ title: 'Erro', description: 'Telefone do contato não disponível.', variant: 'destructive' });
+      return;
+    }
+    const phone = contactPhone.replace(/\D/g, '');
+
     try {
-      const phone = contactPhone!.replace(/\D/g, '');
       const isUrl = emojiUrl.startsWith('http');
       const trace = newRequestId('emoji');
 
@@ -158,8 +210,10 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         return;
       }
 
+      // FIX: proper await instead of fire-and-forget
       if (messageId) {
-        supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId).then(() => {});
+        const { error: updateErr } = await supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId);
+        if (updateErr) log.error('[Emoji] Status update failed:', updateErr);
       }
       toast({ title: 'Emoji enviado!' });
     } catch {
@@ -171,8 +225,14 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     const inst = await ensureInstance();
     if (!inst) return;
 
+    // FIX BUG 1: Safe phone check
+    if (!contactPhone) {
+      toast({ title: 'Erro', description: 'Telefone do contato não disponível.', variant: 'destructive' });
+      return;
+    }
+    const phone = contactPhone.replace(/\D/g, '');
+
     try {
-      const phone = contactPhone!.replace(/\D/g, '');
       const normalizedAudioUrl = normalizeMediaUrl(audioUrl);
       const trace = newRequestId('audio');
 
@@ -198,8 +258,10 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
       }
 
       const externalId = apiResult.data.key.id;
+      // FIX: proper await instead of fire-and-forget
       if (messageId) {
-        supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId).then(() => {});
+        const { error: updateErr } = await supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId);
+        if (updateErr) log.error('[AudioMeme] Status update failed:', updateErr);
       }
       toast({ title: '🔊 Áudio meme enviado!' });
     } catch {
