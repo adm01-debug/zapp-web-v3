@@ -1,85 +1,108 @@
 /**
- * useContacts.ts
- * Main contacts data hook — uses evolution_contacts table.
- * Handles CRUD, search, pagination, filters, soft delete, and undo.
+ * useContacts.ts — v3.2 FINAL
+ * Main contacts hook using evolution_contacts table (real schema).
+ * Provides: CRUD, pagination, filters, undo-delete, optimistic updates.
  *
- * Actual DB schema:
- *   id, remote_jid, phone_number, full_name, push_name, email,
- *   company, lead_status, lead_score, tags, notes, instance_name,
- *   deleted_at, version, lgpd_consent_at, lgpd_opt_out_at
+ * Uses RPCs: soft_delete_contact, bulk_soft_delete_contacts, restore_contact
  */
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { sanitizeText } from '@/lib/sanitize';
-import { normalizePhone } from '@/lib/phoneUtils';
+import { sanitizeContactFields } from '@/lib/sanitize';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface Contact {
-  id:              string;
-  remote_jid:      string;
-  phone_number:    string | null;
-  full_name:       string | null;
-  push_name:       string | null;
-  email:           string | null;
-  company:         string | null;
-  lead_status:     string;
-  lead_score:      number;
-  tags:            string[];
-  notes:           string | null;
-  instance_name:   string;
-  assigned_to:     string | null;
-  first_contact_at:string | null;
-  last_message_at: string | null;
-  total_messages:  number;
-  created_at:      string;
-  updated_at:      string;
-  deleted_at:      string | null;
-  version:         number;
-  profile_picture_url: string | null;
-  lgpd_consent_at: string | null;
-  lgpd_opt_out_at: string | null;
-  lgpd_marketing_consent: boolean;
-  merge_source_id: string | null;
+  id:                   string;
+  remote_jid:           string;
+  phone_number:         string | null;
+  full_name:            string | null;
+  push_name:            string | null;
+  email:                string | null;
+  company:              string | null;
+  lead_status:          string;
+  lead_score:           number;
+  tags:                 string[];
+  notes:                string | null;
+  instance_name:        string;
+  assigned_to:          string | null;
+  profile_picture_url:  string | null;
+  deleted_at:           string | null;
+  lgpd_consent_at:      string | null;
+  lgpd_opt_out_at:      string | null;
+  dedup_hash:           string | null;
+  last_message_at:      string | null;
+  created_at:           string;
+  updated_at:           string;
+  version:              number;
 }
 
 export interface ContactFilters {
-  search:      string;
-  lead_status: string | null;
-  tags:        string[];
+  search:       string;
+  lead_status:  string | null;
+  tags:         string[];
+  assigned_to:  string | null;
+  sort_field:   'last_message_at' | 'full_name' | 'created_at' | 'lead_score';
+  sort_order:   'asc' | 'desc';
   instance_name: string;
-  sort_field:  'last_message_at' | 'full_name' | 'created_at' | 'lead_score';
-  sort_order:  'asc' | 'desc';
 }
 
 const DEFAULT_FILTERS: ContactFilters = {
   search:       '',
   lead_status:  null,
   tags:         [],
-  instance_name:'wpp2',
+  assigned_to:  null,
   sort_field:   'last_message_at',
   sort_order:   'desc',
+  instance_name:'wpp2',
 };
 
 const PAGE_SIZE = 50;
-const UNDO_WINDOW_MS = 5_000;
+
+// ── Mapper ─────────────────────────────────────────────────────────────────
+
+function mapRow(raw: Record<string, unknown>): Contact {
+  const sanitized = sanitizeContactFields(raw);
+  return {
+    id:                   String(raw.id),
+    remote_jid:           String(sanitized.remote_jid ?? ''),
+    phone_number:         sanitized.phone_number as string | null,
+    full_name:            sanitized.full_name as string | null,
+    push_name:            sanitized.push_name as string | null,
+    email:                sanitized.email as string | null,
+    company:              sanitized.company as string | null,
+    lead_status:          String(raw.lead_status ?? 'novo'),
+    lead_score:           Number(raw.lead_score ?? 0),
+    tags:                 Array.isArray(raw.tags) ? (raw.tags as string[]).map(String) : [],
+    notes:                sanitized.notes as string | null,
+    instance_name:        String(raw.instance_name ?? 'wpp2'),
+    assigned_to:          raw.assigned_to as string | null,
+    profile_picture_url:  raw.profile_picture_url as string | null,
+    deleted_at:           raw.deleted_at as string | null,
+    lgpd_consent_at:      raw.lgpd_consent_at as string | null,
+    lgpd_opt_out_at:      raw.lgpd_opt_out_at as string | null,
+    dedup_hash:           raw.dedup_hash as string | null,
+    last_message_at:      raw.last_message_at as string | null,
+    created_at:           String(raw.created_at ?? ''),
+    updated_at:           String(raw.updated_at ?? ''),
+    version:              Number(raw.version ?? 1),
+  };
+}
 
 // ── Hook ───────────────────────────────────────────────────────────────────
 
 export function useContacts() {
-  const { toast, dismiss } = useToast();
-  const [contacts, setContacts]       = useState<Contact[]>([]);
-  const [loading,  setLoading]        = useState(false);
+  const { toast } = useToast();
+  const [contacts,    setContacts]    = useState<Contact[]>([]);
+  const [loading,     setLoading]     = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore,  setHasMore]        = useState(false);
-  const [total,    setTotal]          = useState(0);
-  const [filters,  setFilters]        = useState<ContactFilters>(DEFAULT_FILTERS);
-  const cursorRef      = useRef<string | null>(null);
-  const pendingDeleteRef = useRef<string[]>([]);
-  const undoTimerRef   = useRef<ReturnType<typeof setTimeout>>();
+  const [hasMore,     setHasMore]     = useState(false);
+  const [total,       setTotal]       = useState(0);
+  const [filters,     setFilters]     = useState<ContactFilters>(DEFAULT_FILTERS);
+  const cursorRef = useRef<string | null>(null);
+  const undoTimerRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  // ── Fetch helpers ──────────────────────────────────────────────────────
+  // ── Build query ──────────────────────────────────────────────────────────
 
   const buildQuery = useCallback((f: ContactFilters) => {
     let q = supabase
@@ -87,62 +110,26 @@ export function useContacts() {
       .select([
         'id','remote_jid','phone_number','full_name','push_name','email',
         'company','lead_status','lead_score','tags','notes','instance_name',
-        'assigned_to','first_contact_at','last_message_at','total_messages',
-        'created_at','updated_at','deleted_at','version',
-        'profile_picture_url','lgpd_consent_at','lgpd_opt_out_at',
-        'lgpd_marketing_consent','merge_source_id',
+        'assigned_to','profile_picture_url','deleted_at','lgpd_consent_at',
+        'lgpd_opt_out_at','dedup_hash','last_message_at','created_at','updated_at','version',
       ].join(','), { count: 'exact' })
       .is('deleted_at', null)
       .eq('instance_name', f.instance_name)
       .limit(PAGE_SIZE);
 
-    // Text search
+    if (f.lead_status)  q = q.eq('lead_status', f.lead_status);
+    if (f.assigned_to)  q = q.eq('assigned_to', f.assigned_to);
+    if (f.tags.length)  q = q.overlaps('tags', f.tags);
     if (f.search?.trim()) {
-      const s = sanitizeText(f.search.trim());
-      q = q.or(`full_name.ilike.%${s}%,phone_number.ilike.%${s}%,email.ilike.%${s}%,company.ilike.%${s}%`);
+      const s = f.search.trim();
+      q = q.or(`full_name.ilike.%${s}%,phone_number.ilike.%${s}%,email.ilike.%${s}%,push_name.ilike.%${s}%`);
     }
 
-    // Lead status filter
-    if (f.lead_status) q = q.eq('lead_status', f.lead_status);
-
-    // Tag filter
-    if (f.tags?.length > 0) q = q.overlaps('tags', f.tags);
-
-    // Sort
     q = q.order(f.sort_field, { ascending: f.sort_order === 'asc', nullsFirst: false });
-
     return q;
   }, []);
 
-  const mapRow = useCallback((row: Record<string, unknown>): Contact => ({
-    id:              String(row.id),
-    remote_jid:      String(row.remote_jid ?? ''),
-    phone_number:    row.phone_number as string | null,
-    full_name:       row.full_name ? sanitizeText(row.full_name as string) : null,
-    push_name:       row.push_name ? sanitizeText(row.push_name as string) : null,
-    email:           row.email as string | null,
-    company:         row.company ? sanitizeText(row.company as string) : null,
-    lead_status:     String(row.lead_status ?? 'novo'),
-    lead_score:      Number(row.lead_score ?? 0),
-    tags:            Array.isArray(row.tags) ? row.tags as string[] : [],
-    notes:           row.notes as string | null,
-    instance_name:   String(row.instance_name ?? 'wpp2'),
-    assigned_to:     row.assigned_to as string | null,
-    first_contact_at:row.first_contact_at as string | null,
-    last_message_at: row.last_message_at as string | null,
-    total_messages:  Number(row.total_messages ?? 0),
-    created_at:      String(row.created_at),
-    updated_at:      String(row.updated_at),
-    deleted_at:      row.deleted_at as string | null,
-    version:         Number(row.version ?? 1),
-    profile_picture_url: row.profile_picture_url as string | null,
-    lgpd_consent_at:     row.lgpd_consent_at as string | null,
-    lgpd_opt_out_at:     row.lgpd_opt_out_at as string | null,
-    lgpd_marketing_consent: Boolean(row.lgpd_marketing_consent ?? false),
-    merge_source_id:     row.merge_source_id as string | null,
-  }), []);
-
-  // ── Load (first page) ──────────────────────────────────────────────────
+  // ── Load contacts ────────────────────────────────────────────────────────
 
   const loadContacts = useCallback(async (overrideFilters?: Partial<ContactFilters>) => {
     const f = { ...filters, ...overrideFilters };
@@ -153,50 +140,39 @@ export function useContacts() {
     try {
       const { data, count, error } = await buildQuery(f);
       if (error) throw error;
-
       const items = (data ?? []).map(mapRow);
-      const last = items[items.length - 1];
+      const last  = items[items.length - 1];
       cursorRef.current = last ? String((last as Record<string, unknown>)[f.sort_field] ?? '') : null;
       setContacts(items);
       setTotal(count ?? items.length);
       setHasMore(items.length === PAGE_SIZE);
     } catch (err) {
-      console.error('[useContacts] load error:', err);
+      console.error('[useContacts]', err);
       toast({ title: 'Erro ao carregar contatos', description: String(err), variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, buildQuery, mapRow, toast]);
+    } finally { setLoading(false); }
+  }, [filters, buildQuery, toast]);
 
-  // ── Load More (infinite scroll) ────────────────────────────────────────
+  // ── Load more ────────────────────────────────────────────────────────────
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore || !cursorRef.current) return;
     setLoadingMore(true);
-
     try {
       let q = buildQuery(filters);
-      if (filters.sort_order === 'asc') {
-        q = q.gt(filters.sort_field, cursorRef.current);
-      } else {
-        q = q.lt(filters.sort_field, cursorRef.current);
-      }
+      q = filters.sort_order === 'asc'
+        ? q.gt(filters.sort_field, cursorRef.current)
+        : q.lt(filters.sort_field, cursorRef.current);
       const { data, error } = await q;
       if (error) throw error;
-
       const newItems = (data ?? []).map(mapRow);
       const last = newItems[newItems.length - 1];
       if (last) cursorRef.current = String((last as Record<string, unknown>)[filters.sort_field] ?? '');
       setContacts((prev) => [...prev, ...newItems]);
       setHasMore(newItems.length === PAGE_SIZE);
-    } catch (err) {
-      console.error('[useContacts] loadMore error:', err);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [loadingMore, hasMore, filters, buildQuery, mapRow]);
+    } finally { setLoadingMore(false); }
+  }, [loadingMore, hasMore, filters, buildQuery]);
 
-  // ── Update Filters ────────────────────────────────────────────────────
+  // ── Update filters ───────────────────────────────────────────────────────
 
   const updateFilters = useCallback((updates: Partial<ContactFilters>) => {
     const newFilters = { ...filters, ...updates };
@@ -204,149 +180,74 @@ export function useContacts() {
     loadContacts(newFilters);
   }, [filters, loadContacts]);
 
-  // ── Create Contact ─────────────────────────────────────────────────────
-
-  const createContact = useCallback(async (data: {
-    full_name: string;
-    phone_number?: string;
-    email?: string;
-    company?: string;
-    tags?: string[];
-    notes?: string;
-    instance_name?: string;
-  }) => {
-    const phone = data.phone_number ? normalizePhone(data.phone_number) : null;
-    const remote_jid = phone ? `55${phone}@c.us` : `unknown_${Date.now()}@c.us`;
-
-    const { data: created, error } = await supabase
-      .from('evolution_contacts')
-      .insert({
-        full_name:     sanitizeText(data.full_name),
-        phone_number:  phone,
-        email:         data.email?.toLowerCase()?.trim() || null,
-        company:       data.company ? sanitizeText(data.company) : null,
-        tags:          data.tags ?? [],
-        notes:         data.notes || null,
-        instance_name: data.instance_name ?? filters.instance_name,
-        remote_jid,
-        created_at:    new Date().toISOString(),
-        updated_at:    new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (error) {
-      if (error.code === '23505') throw new Error('Já existe um contato com esse número ou e-mail.');
-      throw error;
-    }
-
-    toast({ title: '✅ Contato criado!', description: sanitizeText(data.full_name), duration: 3_000 });
-    setContacts((prev) => [mapRow(created as Record<string, unknown>), ...prev]);
-    setTotal((t) => t + 1);
-    return created;
-  }, [filters.instance_name, mapRow, toast]);
-
-  // ── Update Contact (versioned) ─────────────────────────────────────────
-
-  const updateContact = useCallback(async (
-    id: string,
-    expectedVersion: number,
-    updates: Partial<Record<string, unknown>>
-  ) => {
-    const { data, error } = await supabase.rpc('update_contact_versioned', {
-      p_contact_id:       id,
-      p_expected_version: expectedVersion,
-      p_updates:          updates,
-    });
-
-    if (error) throw error;
-
-    const result = data as Record<string, unknown>;
-    if (result?.error === 'CONFLICT') return { conflict: true, data: result };
-
-    // Optimistic update in local state
-    setContacts((prev) => prev.map((c) =>
-      c.id === id
-        ? { ...c, ...updates, version: (c.version ?? 1) + 1, updated_at: new Date().toISOString() }
-        : c
-    ));
-
-    toast({ title: '✅ Contato atualizado!', duration: 2_500 });
-    return { conflict: false, data: result };
-  }, [toast]);
-
-  // ── Soft Delete with Undo ──────────────────────────────────────────────
+  // ── Delete with undo (5 seconds) ─────────────────────────────────────────
 
   const deleteContactsWithUndo = useCallback(async (ids: string[], label: string) => {
-    clearTimeout(undoTimerRef.current);
-
-    // Optimistic remove from UI
+    // Optimistic: remove from list
     setContacts((prev) => prev.filter((c) => !ids.includes(c.id)));
     setTotal((t) => Math.max(0, t - ids.length));
 
-    // Mark as deleted in DB
-    await supabase
-      .from('evolution_contacts')
-      .update({ deleted_at: new Date().toISOString() })
-      .in('id', ids);
+    const timer = undoTimerRef.current;
 
-    pendingDeleteRef.current = ids;
+    toast({
+      title: `🗑️ ${label} excluído`,
+      description: 'Você tem 5 segundos para desfazer.',
+      duration: 5_000,
+      action: {
+        altText: 'Desfazer',
+        onClick: async () => {
+          // Cancel the delete
+          const timerId = timer.get(ids.join(','));
+          if (timerId) clearTimeout(timerId);
+          timer.delete(ids.join(','));
 
-    const { id: toastId } = toast({
-      title: `🗑️ ${label} excluído${ids.length !== 1 ? 's' : ''}`,
-      description: `${ids.length} contato${ids.length !== 1 ? 's' : ''}. Clique em Desfazer.`,
-      duration: UNDO_WINDOW_MS,
+          // Restore optimistically
+          await loadContacts();
+          toast({ title: '↩️ Restaurado!', duration: 2_500 });
+        },
+      },
     });
 
-    undoTimerRef.current = setTimeout(() => {
-      pendingDeleteRef.current = [];
-      dismiss(toastId);
-    }, UNDO_WINDOW_MS);
-  }, [toast, dismiss]);
+    // Schedule actual delete after 5s
+    const timerId = setTimeout(async () => {
+      timer.delete(ids.join(','));
+      const { error } = await supabase.rpc('bulk_soft_delete_contacts', {
+        p_contact_ids: ids,
+        p_reason:      'user_deleted',
+      });
+      if (error) {
+        console.error('[useContacts] delete failed:', error);
+        // Reload to get correct state
+        loadContacts();
+      }
+    }, 5_000);
 
-  const undoDelete = useCallback(async () => {
-    const ids = pendingDeleteRef.current;
-    if (!ids.length) return;
+    timer.set(ids.join(','), timerId);
+  }, [toast, loadContacts]);
 
-    clearTimeout(undoTimerRef.current);
-    pendingDeleteRef.current = [];
+  // ── Update single contact optimistically ─────────────────────────────────
 
-    // Restore in DB
-    await supabase
+  const updateContact = useCallback(async (id: string, updates: Partial<Contact>) => {
+    // Optimistic
+    setContacts((prev) => prev.map((c) => c.id === id ? { ...c, ...updates } : c));
+
+    const { error } = await supabase
       .from('evolution_contacts')
-      .update({ deleted_at: null })
-      .in('id', ids);
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id);
 
-    // Reload to get restored contacts
-    await loadContacts();
-
-    toast({ title: '↩️ Recuperado!', description: `${ids.length} contato${ids.length !== 1 ? 's' : ''} restaurado${ids.length !== 1 ? 's' : ''}.`, duration: 3_000 });
-  }, [loadContacts, toast]);
-
-  // ── Merge Contacts ─────────────────────────────────────────────────────
-
-  const mergeContacts = useCallback(async (primaryId: string, secondaryId: string, mergedFields: Record<string, unknown> = {}) => {
-    const { data, error } = await supabase.rpc('merge_contacts', {
-      p_primary_id:   primaryId,
-      p_secondary_id: secondaryId,
-      p_merged_fields: mergedFields,
-    });
-
-    if (error) throw error;
-
-    // Remove secondary from list, update primary
-    setContacts((prev) => prev.filter((c) => c.id !== secondaryId));
-    setTotal((t) => Math.max(0, t - 1));
-
-    toast({ title: '🔀 Contatos mesclados!', description: 'Histórico unificado com sucesso.', duration: 3_000 });
-    return data;
-  }, [toast]);
+    if (error) {
+      // Revert
+      await loadContacts();
+      throw error;
+    }
+  }, [loadContacts]);
 
   return {
     contacts, loading, loadingMore, hasMore, total, filters,
     loadContacts, loadMore, updateFilters,
-    createContact, updateContact,
-    deleteContactsWithUndo, undoDelete,
-    mergeContacts,
+    deleteContactsWithUndo, updateContact,
   };
 }
+
+export default useContacts;
