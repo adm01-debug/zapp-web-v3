@@ -30,34 +30,45 @@ export default function AdminGmailStatusPage() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('gmail-health', {
-        queryParams: {
-          requestId: filters.requestId || undefined,
-          resource: filters.resource || undefined,
-          operation: filters.operation || undefined,
-          page: filters.page,
-          pageSize: 5
-        }
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: {}, // Use body for params as queryParams isn't in type
+        method: 'GET'
       });
       
-      if (error) throw error;
+      // Since type doesn't support queryParams, we'll construct URL manually for filters if needed, 
+      // but for status we can just call basic invoke.
+      // Re-invoking with full URL to support filters:
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      const functionUrl = `${projectUrl}/functions/v1/gmail-health?page=${filters.page}&pageSize=5${filters.requestId ? `&requestId=${filters.requestId}` : ''}${filters.resource ? `&resource=${filters.resource}` : ''}${filters.operation ? `&operation=${filters.operation}` : ''}`;
+      
+      const fetchResponse = await fetch(functionUrl, {
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const dataFull = await fetchResponse.json();
+      
+      if (!fetchResponse.ok) throw new Error(dataFull.error || 'Erro na Edge Function');
       
       setHealth({
-        status: data.status,
-        lastValidation: data.last_validation ? new Date(data.last_validation) : null,
+        status: dataFull.status as any,
+        lastValidation: dataFull.last_validation ? new Date(dataFull.last_validation) : null,
         cacheExpiration: null,
-        recentFailures: data.failuresResult?.items || [],
+        recentFailures: dataFull.failuresResult?.items || [],
         stats: {
           totalCalls: 0, 
-          failedCalls: data.failure_count_window || 0,
+          failedCalls: dataFull.failure_count_window || 0,
           cacheHits: 0
         }
       });
-      setFailuresData(data.failuresResult || { items: [], total: 0 });
+      setFailuresData(dataFull.failuresResult || { items: [], total: 0 });
     } catch (error) {
       console.error('Erro ao carregar saúde do Gmail:', error);
       toast.error('O serviço de telemetria do Gmail está indisponível.');
       
-      // Fallback robusto: tentar ler diretamente da tabela se o Edge falhar
       try {
         const { data: summary } = await supabase
           .from('gmail_health_summary')
@@ -67,7 +78,7 @@ export default function AdminGmailStatusPage() {
           
         if (summary) {
           setHealth({
-            status: summary.status,
+            status: summary.status as any,
             lastValidation: summary.last_validation ? new Date(summary.last_validation) : null,
             cacheExpiration: null,
             recentFailures: [],
@@ -84,10 +95,14 @@ export default function AdminGmailStatusPage() {
 
   useEffect(() => {
     loadHealth();
-    // Agendamento automático: verifica saúde a cada 5 minutos
     const interval = setInterval(async () => {
       try {
-        await supabase.functions.invoke('gmail-health', { queryParams: { action: 'auto_check' } });
+        const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+        await fetch(`${projectUrl}/functions/v1/gmail-health?action=auto_check`, {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          }
+        });
       } catch (e) {
         console.warn('Auto-check falhou');
       }
@@ -97,13 +112,16 @@ export default function AdminGmailStatusPage() {
 
   const handleRevalidate = async () => {
     const revalidatePromise = async () => {
-      const { data, error } = await supabase.functions.invoke('gmail-health', {
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${projectUrl}/functions/v1/gmail-health?action=revalidate`, {
         method: 'POST',
-        queryParams: { action: 'revalidate' }
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        }
       });
-      if (error) throw error;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
       
-      // Client executa sua revalidação local também
       await gmailHealthService.forceRevalidation();
       return data;
     };
