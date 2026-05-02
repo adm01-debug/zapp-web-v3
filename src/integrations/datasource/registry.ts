@@ -32,6 +32,7 @@ export type LogicalEntity =
   | 'conversations'
   | 'audit_log'
   | 'calls'
+  | 'deleted_contacts'
   | 'profiles'
   | 'user_roles'
   | 'queues'
@@ -51,6 +52,7 @@ export const ENTITY_MAP = {
   conversations:        { client: 'external', table: 'evolution_conversations' },
   audit_log:            { client: 'external', table: 'evolution_audit_log' },
   calls:                { client: 'external', table: 'evolution_calls' },
+  deleted_contacts:     { client: 'external', table: 'v_deleted_contacts' },
 
   // ── Lovable Cloud ───────────────────────────────────────────────────────
   profiles:             { client: 'lovable',  table: 'profiles' },

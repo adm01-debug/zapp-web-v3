@@ -36,6 +36,10 @@ export interface Contact {
   created_at:           string;
   updated_at:           string;
   version:              number;
+  // Optional aggregates / metadata returned by some FATOR X RPCs / views.
+  total_messages?:      number | null;
+  first_contact_at?:    string | null;
+  merge_source_id?:     string | null;
 }
 
 export interface ContactFilters {
