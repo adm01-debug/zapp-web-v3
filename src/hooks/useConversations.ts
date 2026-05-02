@@ -7,7 +7,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeText } from '@/lib/sanitize';
-import { dbFrom, dbTable } from '@/integrations/datasource/db';
+import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ export function useConversations() {
   const [hasMore,       setHasMore]       = useState(false);
   const [total,         setTotal]         = useState(0);
   const [filters,       setFilters]       = useState<ConversationFilters>(DEFAULT_FILTERS);
-  const cursorRef = useRef<string | null>(null);
+  const offsetRef = useRef(0);
   const searchDebounce = useRef<ReturnType<typeof setTimeout>>();
 
   const buildQuery = useCallback((f: ConversationFilters) => {
@@ -151,20 +152,23 @@ export function useConversations() {
   // ── Load More ─────────────────────────────────────────────────────────
 
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore || !cursorRef.current) return;
+    if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      let q = buildQuery(filters);
-      q = filters.sort_order === 'asc' ? q.gt(filters.sort_field, cursorRef.current!) : q.lt(filters.sort_field, cursorRef.current!);
-      const { data, error } = await q;
+      const { data, error } = await dbList(RPC.listConversations, {
+        p_instance: filters.instance_name,
+        p_status: filters.status === 'all' ? null : filters.status,
+        p_assigned_to: filters.assigned_to,
+        p_limit: PAGE_SIZE,
+        p_offset: offsetRef.current,
+      });
       if (error) throw error;
       const newItems = (data ?? []).map(mapRow);
-      const last = newItems[newItems.length - 1];
-      if (last) cursorRef.current = String((last as Record<string, unknown>)[filters.sort_field] ?? '');
       setConversations((prev) => [...prev, ...newItems]);
       setHasMore(newItems.length === PAGE_SIZE);
+      offsetRef.current += newItems.length;
     } finally { setLoadingMore(false); }
-  }, [loadingMore, hasMore, filters, buildQuery]);
+  }, [loadingMore, hasMore, filters]);
 
   // ── Update Filters ────────────────────────────────────────────────────
 

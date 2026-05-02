@@ -75,6 +75,7 @@ interface ListConversationsParams {
   p_status?: string | null;
   p_assigned_to?: string | null;
   p_limit?: number;
+  p_offset?: number;
 }
 
 interface ListCallsParams {
