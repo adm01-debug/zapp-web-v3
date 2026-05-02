@@ -64,7 +64,7 @@ describe('useEmailSearch — busca básica', () => {
     const { result } = renderHook(() => useEmailSearch('acc-1'));
 
     act(() => {
-      result.current.setQuery('proposta');
+      (result.current as any).setQuery('proposta');
     });
 
     expect(mockRpc).not.toHaveBeenCalled();
@@ -84,7 +84,7 @@ describe('useEmailSearch — busca básica', () => {
     const { result } = renderHook(() => useEmailSearch('acc-1'));
 
     act(() => {
-      result.current.setQuery('proposta');
+      (result.current as any).setQuery('proposta');
       vi.advanceTimersByTime(300);
     });
 
@@ -101,7 +101,7 @@ describe('useEmailSearch — busca básica', () => {
     const { result } = renderHook(() => useEmailSearch('acc-1'));
 
     act(() => {
-      result.current.setQuery('xyz-sem-resultado-123');
+      (result.current as any).setQuery('xyz-sem-resultado-123');
       vi.advanceTimersByTime(300);
     });
 
@@ -114,7 +114,7 @@ describe('useEmailSearch — busca básica', () => {
     const { result } = renderHook(() => useEmailSearch('acc-1'));
 
     act(() => {
-      result.current.setQuery('a');
+      (result.current as any).setQuery('a');
       vi.advanceTimersByTime(400);
     });
 
@@ -132,14 +132,14 @@ describe('useEmailSearch — paginação', () => {
     const { result } = renderHook(() => useEmailSearch('acc-1'));
 
     act(() => {
-      result.current.setQuery('proposta');
+      (result.current as any).setQuery('proposta');
       vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => expect(result.current.results).toHaveLength(2));
 
     await act(async () => {
-      await result.current.loadMore();
+      await (result.current as any).loadMore();
     });
 
     expect(mockRpc).toHaveBeenCalledWith('rpc_gmail_search_threads', expect.objectContaining({
@@ -158,14 +158,14 @@ describe('useEmailSearch — reset', () => {
     const { result } = renderHook(() => useEmailSearch('acc-1'));
 
     act(() => {
-      result.current.setQuery('proposta');
+      (result.current as any).setQuery('proposta');
       vi.advanceTimersByTime(300);
     });
 
     await waitFor(() => expect(result.current.results).toHaveLength(2));
 
     act(() => {
-      result.current.reset();
+      (result.current as any).reset();
     });
 
     expect(result.current.query).toBe('');
@@ -183,7 +183,7 @@ describe('useEmailSearch — busca por label', () => {
     const { result } = renderHook(() => useEmailSearch('acc-1', 'STARRED'));
 
     act(() => {
-      result.current.setQuery('proposta');
+      (result.current as any).setQuery('proposta');
       vi.advanceTimersByTime(300);
     });
 
@@ -202,7 +202,7 @@ describe('useEmailSearch — sem conta ativa', () => {
     const { result } = renderHook(() => useEmailSearch(null));
 
     act(() => {
-      result.current.setQuery('proposta');
+      (result.current as any).setQuery('proposta');
       vi.advanceTimersByTime(400);
     });
 
