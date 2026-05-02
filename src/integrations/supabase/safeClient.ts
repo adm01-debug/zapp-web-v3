@@ -254,19 +254,36 @@ export const safeClient = {
   },
 
   /**
-   * Registra uma falha na telemetria
+   * Registra uma falha na telemetria e opcionalmente no banco
    */
-  recordFailure(requestId: string, operation: string, resource: string, error: string) {
-    recentFailures.unshift({
+  async recordFailure(requestId: string, operation: string, resource: string, error: string) {
+    const failure = {
       requestId,
       operation,
       resource,
       error,
       timestamp: new Date().toISOString()
-    });
+    };
+    
+    recentFailures.unshift(failure);
     
     if (recentFailures.length > MAX_FAILURES) {
       recentFailures.pop();
+    }
+
+    // Persistir falha no banco para monitoramento assíncrono
+    try {
+      await supabase.rpc('rpc_log_gmail_health', {
+        p_status: 'error',
+        p_operation: operation,
+        p_resource: resource,
+        p_request_id: requestId,
+        p_error_message: error,
+        p_is_failure: true
+      });
+    } catch (dbErr) {
+      // Ignorar erros de persistência para não travar a operação principal
+      console.warn('[safeClient] Falha ao persistir log de saúde', dbErr);
     }
   },
 
