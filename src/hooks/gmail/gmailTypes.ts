@@ -15,8 +15,10 @@ export interface GmailAccount {
   is_active:    boolean;
   token_expiry: string | null;
   watch_expiry: string | null;
-  created_at:   string;
-  updated_at:   string;
+  created_at?:  string;
+  updated_at?:  string;
+  /** @deprecated Foto de perfil legada. */
+  picture_url?: string | null;
 }
 
 export type GmailTokenStatus  = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
@@ -56,9 +58,13 @@ export interface GmailThread {
   last_message_at:  string | null;
   first_reply_at:   string | null;
   created_at:       string;
-  updated_at:       string;
+  updated_at?:      string;
   /** @deprecated Lista de e-mails dos participantes (legado). */
   participant_emails?: string[];
+  /** @deprecated Flag legada. */
+  is_unread?:       boolean;
+  /** @deprecated Contato vinculado (legado). */
+  contact?:         { id?: string; name?: string | null; phone?: string | null } | null;
 }
 
 export interface GmailThreadFilters {
