@@ -43,18 +43,22 @@ describe('safeClient', () => {
   });
 
   it('deve usar cache para validações subsequentes', async () => {
-    // Mock para a primeira validação (sucesso)
+    // 1. Mock para validação (limit 0) -> sucesso
     mockSelect.mockResolvedValueOnce({ error: null }); 
-    // Mock para a query real
+    // 2. Mock para a query real (da primeira chamada)
     mockSelect.mockResolvedValueOnce({ data: [{ id: 1 }], error: null });
 
-    await safeClient.from('gmail_cached', (q) => q.select('*'));
+    const res1 = await safeClient.from('gmail_cached', (q) => q.select('*'));
+    expect(res1.data).toEqual([{ id: 1 }]);
     
-    // Segunda chamada não deve chamar o "select count" de validação
+    // 3. Mock para a query real (da segunda chamada)
+    // A validação NÃO deve ser chamada novamente
     mockSelect.mockResolvedValueOnce({ data: [{ id: 2 }], error: null });
-    await safeClient.from('gmail_cached', (q) => q.select('*'));
+    const res2 = await safeClient.from('gmail_cached', (q) => q.select('*'));
+    expect(res2.data).toEqual([{ id: 2 }]);
 
-    // Deve ter chamado select 3 vezes: 1 para validação, 2 para as queries reais
+    // Total de chamadas a mockSelect: 3
+    // (1 para validação resourceCache, 1 para res1, 1 para res2)
     expect(mockSelect).toHaveBeenCalledTimes(3);
   });
 
@@ -65,6 +69,7 @@ describe('safeClient', () => {
   });
 
   it('deve lidar com retornos malformados (não array em from)', async () => {
+    // some_table não começa com gmail_, então pula validação
     mockSelect.mockResolvedValueOnce({ data: { not: 'an_array' }, error: null });
     const { data } = await safeClient.from('some_table', (q) => q.select('*'));
     expect(data).toEqual([]);
