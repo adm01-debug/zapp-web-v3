@@ -29,7 +29,7 @@ export default function AdminGmailStatusPage() {
   const loadHealth = async () => {
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any).functions.invoke('gmail-health', {
+      const { data, error } = await supabase.functions.invoke('gmail-health', {
         queryParams: {
           requestId: filters.requestId || undefined,
           resource: filters.resource || undefined,
@@ -44,17 +44,39 @@ export default function AdminGmailStatusPage() {
       setHealth({
         status: data.status,
         lastValidation: data.last_validation ? new Date(data.last_validation) : null,
-        cacheExpiration: null, // Edge não sabe do cache local
-        recentFailures: data.failuresResult.items,
+        cacheExpiration: null,
+        recentFailures: data.failuresResult?.items || [],
         stats: {
           totalCalls: 0, 
-          failedCalls: data.failure_count_window,
+          failedCalls: data.failure_count_window || 0,
           cacheHits: 0
         }
       });
-      setFailuresData(data.failuresResult);
+      setFailuresData(data.failuresResult || { items: [], total: 0 });
     } catch (error) {
-      toast.error('Erro ao carregar dados de saúde do Gmail');
+      console.error('Erro ao carregar saúde do Gmail:', error);
+      toast.error('O serviço de telemetria do Gmail está indisponível.');
+      
+      // Fallback robusto: tentar ler diretamente da tabela se o Edge falhar
+      try {
+        const { data: summary } = await supabase
+          .from('gmail_health_summary')
+          .select('*')
+          .eq('id', 'current')
+          .maybeSingle();
+          
+        if (summary) {
+          setHealth({
+            status: summary.status,
+            lastValidation: summary.last_validation ? new Date(summary.last_validation) : null,
+            cacheExpiration: null,
+            recentFailures: [],
+            stats: { totalCalls: 0, failedCalls: summary.failure_count_60m, cacheHits: 0 }
+          });
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback falhou:', fallbackErr);
+      }
     } finally {
       setLoading(false);
     }
@@ -62,15 +84,37 @@ export default function AdminGmailStatusPage() {
 
   useEffect(() => {
     loadHealth();
+    // Agendamento automático: verifica saúde a cada 5 minutos
+    const interval = setInterval(async () => {
+      try {
+        await supabase.functions.invoke('gmail-health', { queryParams: { action: 'auto_check' } });
+      } catch (e) {
+        console.warn('Auto-check falhou');
+      }
+    }, 300000);
+    return () => clearInterval(interval);
   }, [filters]);
 
   const handleRevalidate = async () => {
-    toast.promise(gmailHealthService.forceRevalidation(), {
-      loading: 'Revalidando recursos...',
-      success: 'Recursos revalidados com sucesso!',
-      error: 'Erro ao revalidar recursos'
+    const revalidatePromise = async () => {
+      const { data, error } = await supabase.functions.invoke('gmail-health', {
+        method: 'POST',
+        queryParams: { action: 'revalidate' }
+      });
+      if (error) throw error;
+      
+      // Client executa sua revalidação local também
+      await gmailHealthService.forceRevalidation();
+      return data;
+    };
+
+    toast.promise(revalidatePromise(), {
+      loading: 'Agendando revalidação no backend...',
+      success: 'Revalidação agendada com sucesso!',
+      error: 'Erro ao solicitar revalidação'
     });
-    setTimeout(loadHealth, 1000);
+    
+    setTimeout(loadHealth, 2000);
   };
 
   const getStatusIcon = (status?: string) => {
