@@ -46,7 +46,11 @@ export const LGPDConsentManager: React.FC<Props> = ({ contact, onUpdated, readon
       const r = (typeof data === 'boolean' ? {} : ((data ?? {}) as Record<string, unknown>));
       if (r?.error) throw new Error(String(r.error));
       toast({ title: '✅ Consentimento registrado!', duration: 3000 });
-      onUpdated?.({ lgpd_consent_at: r.granted_at as string, lgpd_opt_out_at: null, lgpd_marketing_consent: marketing });
+      onUpdated?.({
+        lgpd_consent_at: (r.granted_at as string | undefined) ?? new Date().toISOString(),
+        lgpd_opt_out_at: null,
+        lgpd_marketing_consent: marketing,
+      });
     } catch (err) { toast({ title: 'Erro', description: String(err), variant: 'destructive' }); }
     finally { setLoading(null); }
   };
