@@ -59,7 +59,7 @@ export function useGmailOAuthFlow(): UseGmailOAuthFlowReturn {
       return;
     }
 
-    setAccounts((data ?? []) as GmailAccount[]);
+    setAccounts(gmailMappers.accounts(data ?? []));
     setIsLoading(false);
   }, []);
 
