@@ -1,0 +1,173 @@
+/**
+ * useMessages.ts
+ * Messages hook using evolution_messages table (real schema).
+ * Loads conversation messages, supports follow-up, star, important.
+ */
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { sanitizeText } from '@/lib/sanitize';
+import { useToast } from '@/hooks/use-toast';
+
+// ── Types ──────────────────────────────────────────────────────────────────
+
+export interface Message {
+  id:               string;
+  message_id:       string;
+  remote_jid:       string;
+  from_me:          boolean;
+  message_type:     string;
+  content:          string | null;
+  media_url:        string | null;
+  media_mimetype:   string | null;
+  quoted_message_id:string | null;
+  is_starred:       boolean;
+  is_important:     boolean;
+  category:         string | null;
+  sentiment:        string | null;
+  tags:             string[];
+  notes:            string | null;
+  follow_up_at:     string | null;
+  follow_up_done:   boolean;
+  contact_id:       string | null;
+  created_at:       string;
+}
+
+// ── Hook ───────────────────────────────────────────────────────────────────
+
+export function useMessages(remoteJid: string | null) {
+  const { toast } = useToast();
+  const [messages,    setMessages]    = useState<Message[]>([]);
+  const [loading,     setLoading]     = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore,     setHasMore]     = useState(false);
+  const PAGE_SIZE = 50;
+  const offsetRef = useRef(0);
+
+  const mapRow = (row: Record<string, unknown>): Message => ({
+    id:                String(row.id ?? ''),
+    message_id:        String(row.message_id ?? ''),
+    remote_jid:        String(row.remote_jid ?? ''),
+    from_me:           Boolean(row.from_me ?? false),
+    message_type:      String(row.message_type ?? 'text'),
+    content:           row.content ? sanitizeText(row.content as string) : null,
+    media_url:         row.media_url as string | null,
+    media_mimetype:    row.media_mimetype as string | null,
+    quoted_message_id: row.quoted_message_id as string | null,
+    is_starred:        Boolean(row.is_starred ?? false),
+    is_important:      Boolean(row.is_important ?? false),
+    category:          row.category as string | null,
+    sentiment:         row.sentiment as string | null,
+    tags:              Array.isArray(row.tags) ? row.tags as string[] : [],
+    notes:             row.notes ? sanitizeText(row.notes as string) : null,
+    follow_up_at:      row.follow_up_at as string | null,
+    follow_up_done:    Boolean(row.follow_up_done ?? false),
+    contact_id:        row.contact_id as string | null,
+    created_at:        String(row.created_at ?? ''),
+  });
+
+  // ── Load ──────────────────────────────────────────────────────────────
+
+  const loadMessages = useCallback(async (jid: string) => {
+    setLoading(true);
+    setMessages([]);
+    offsetRef.current = 0;
+    try {
+      const { data, error } = await supabase.rpc('get_conversation_messages', {
+        p_remote_jid: jid,
+        p_limit:      PAGE_SIZE,
+        p_offset:     0,
+      });
+      if (error) throw error;
+      const items = (data ?? []).map(mapRow);
+      setMessages(items);
+      setHasMore(items.length === PAGE_SIZE);
+      offsetRef.current = items.length;
+    } catch (err) {
+      console.error('[useMessages]', err);
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (remoteJid) loadMessages(remoteJid);
+  }, [remoteJid, loadMessages]);
+
+  // ── Load more (older messages) ────────────────────────────────────────
+
+  const loadMore = useCallback(async () => {
+    if (!remoteJid || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const { data, error } = await supabase.rpc('get_conversation_messages', {
+        p_remote_jid: remoteJid,
+        p_limit:      PAGE_SIZE,
+        p_offset:     offsetRef.current,
+      });
+      if (error) throw error;
+      const newItems = (data ?? []).map(mapRow);
+      setMessages((prev) => [...newItems, ...prev]); // prepend older messages
+      setHasMore(newItems.length === PAGE_SIZE);
+      offsetRef.current += newItems.length;
+    } finally { setLoadingMore(false); }
+  }, [remoteJid, loadingMore, hasMore]);
+
+  // ── Realtime new messages ─────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!remoteJid) return;
+    const channel = supabase
+      .channel(`messages:${remoteJid}`)
+      .on('postgres_changes', {
+        event:  'INSERT',
+        schema: 'public',
+        table:  'evolution_messages',
+        filter: `remote_jid=eq.${remoteJid}`,
+      }, (payload) => {
+        const newMsg = mapRow(payload.new as Record<string, unknown>);
+        setMessages((prev) => [...prev, newMsg]);
+      })
+      .on('postgres_changes', {
+        event:  'UPDATE',
+        schema: 'public',
+        table:  'evolution_messages',
+        filter: `remote_jid=eq.${remoteJid}`,
+      }, (payload) => {
+        setMessages((prev) => prev.map((m) =>
+          m.id === payload.new.id ? mapRow(payload.new as Record<string, unknown>) : m
+        ));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [remoteJid]);
+
+  // ── Actions ───────────────────────────────────────────────────────────
+
+  const toggleStar = useCallback(async (id: string, current: boolean) => {
+    await supabase.from('evolution_messages').update({ is_starred: !current }).eq('id', id);
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_starred: !current } : m));
+  }, []);
+
+  const toggleImportant = useCallback(async (id: string, current: boolean) => {
+    await supabase.from('evolution_messages').update({ is_important: !current }).eq('id', id);
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_important: !current } : m));
+  }, []);
+
+  const scheduleFollowUp = useCallback(async (id: string, followUpAt: string) => {
+    await supabase.from('evolution_messages')
+      .update({ follow_up_at: followUpAt, follow_up_done: false })
+      .eq('id', id);
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, follow_up_at: followUpAt } : m));
+    toast({ title: '⏰ Follow-up agendado!', duration: 2_500 });
+  }, [toast]);
+
+  const markFollowUpDone = useCallback(async (id: string) => {
+    const { error } = await supabase.rpc('mark_follow_up_done', { p_message_id: id });
+    if (error) throw error;
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, follow_up_done: true } : m));
+  }, []);
+
+  return {
+    messages, loading, loadingMore, hasMore,
+    loadMessages, loadMore,
+    toggleStar, toggleImportant, scheduleFollowUp, markFollowUpDone,
+  };
+}
