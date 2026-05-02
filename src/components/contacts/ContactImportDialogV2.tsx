@@ -73,7 +73,7 @@ export const ContactImportDialogV2: React.FC<Props> = ({ open, onOpenChange, ins
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado.');
       const iv = setInterval(() => setProgress((p) => Math.min(p + 3, 90)), 300);
-      const resp = await fetch(`${(supabase as Record<string, unknown>).supabaseUrl ?? ''}/functions/v1/contacts-import`, {
+      const resp = await fetch(`${(supabase as unknown as { supabaseUrl?: string }).supabaseUrl ?? ''}/functions/v1/contacts-import`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ rows: rows.map((r) => ({ ...r, channel: r.channel ?? 'import' })), workspace_id: instanceName }),
