@@ -37,7 +37,34 @@ export const gmailHealthService = {
    * Retorna o estado consolidado da saúde do Gmail
    */
   async getHealthStatus(): Promise<GmailHealthInfo> {
-    // Pegar métricas do safeClient
+    // Tentar buscar sumário do banco primeiro
+    try {
+      const { data: summary, error } = await safeClient.rpc('rpc_get_gmail_health_summary');
+      if (!error && summary) {
+        const telemetry = (safeClient as any).getTelemetry?.() || {
+          lastValidation: null,
+          recentFailures: [],
+          stats: { totalCalls: 0, failedCalls: 0, cacheHits: 0 }
+        };
+
+        const cacheInfo = (safeClient as any).getCacheInfo?.() || {
+          expiration: null,
+          size: 0
+        };
+
+        return {
+          status: summary.status as any,
+          lastValidation: summary.last_validation ? new Date(summary.last_validation) : telemetry.lastValidation,
+          cacheExpiration: cacheInfo.expiration,
+          recentFailures: telemetry.recentFailures,
+          stats: telemetry.stats
+        };
+      }
+    } catch (err) {
+      console.warn('[gmailHealthService] Erro ao buscar sumário do banco, usando fallback local', err);
+    }
+
+    // Fallback para métricas locais do safeClient
     const telemetry = (safeClient as any).getTelemetry?.() || {
       lastValidation: null,
       recentFailures: [],
@@ -51,7 +78,7 @@ export const gmailHealthService = {
 
     let status: 'healthy' | 'degraded' | 'error' = 'healthy';
     
-    // Thresholds: > 10 failures in last 50 calls or any error in last 5 mins
+    // Thresholds: > 10 failures in last 50 calls
     const recentFailureCount = telemetry.recentFailures.length;
     if (recentFailureCount > 10) {
       status = 'error';

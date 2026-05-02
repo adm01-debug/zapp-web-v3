@@ -1,70 +1,98 @@
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
 
-// NOTE: Gmail health telemetry (cache TTL, recent failures, schema validation)
-// is tracked in-memory inside the browser via `gmailHealthService` and
-// `safeClient`. Edge functions run in an isolated Deno runtime and cannot
-// share that in-memory state, so this endpoint exposes a minimal contract
-// that the Status screen can call as a connectivity probe / placeholder.
-// The real-time data continues to come from the client-side service.
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
-interface HealthResponse {
-  status: "healthy" | "degraded" | "error" | "unknown";
-  source: "edge";
-  timestamp: string;
-  message: string;
-  failuresResult: {
-    items: never[];
-    total: number;
-    page: number;
-    pageSize: number;
-  };
-}
+/**
+ * Edge Function para monitoramento centralizado da saúde do Gmail.
+ * Este endpoint retorna o status consolidado, métricas e histórico de falhas persistidos no banco.
+ */
 
-Deno.serve((req: Request) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
+
+    // Ação: Revalidar (apenas limpa o que for persistido se houver lógica no banco, 
+    // mas o cache real reside no client).
+    if (req.method === "POST" && action === "revalidate") {
+      // No banco, poderíamos deletar logs antigos ou marcar como resolvidos
+      await supabase
+        .from("gmail_health_logs")
+        .update({ status: "resolved" })
+        .eq("status", "error");
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Buscar sumário de saúde usando RPC persistido
+    const { data: summary, error: summaryError } = await supabase.rpc(
+      "rpc_get_gmail_health_summary",
+      { p_window_minutes: 60 },
+    );
+
+    if (summaryError) throw summaryError;
+
+    // Buscar histórico de falhas persistido
+    const requestId = url.searchParams.get("requestId");
+    const operation = url.searchParams.get("operation");
+    const resource = url.searchParams.get("resource");
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const pageSize = parseInt(url.searchParams.get("pageSize") || "10", 10);
 
-    if (req.method === "POST" && action === "revalidate") {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message:
-            "Revalidação deve ser executada via gmailHealthService no client.",
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let query = supabase
+      .from("gmail_health_logs")
+      .select("*", { count: "exact" })
+      .eq("is_failure", true)
+      .order("timestamp", { ascending: false });
+
+    if (requestId) query = query.ilike("request_id", `%${requestId}%`);
+    if (operation) query = query.eq("operation", operation);
+    if (resource) query = query.ilike("resource", `%${resource}%`);
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data: failures, count: total, error: listError } = await query.range(
+      from,
+      to,
+    );
+
+    if (listError) throw listError;
+
+    return new Response(
+      JSON.stringify({
+        ...summary,
+        source: "edge_api",
+        timestamp: new Date().toISOString(),
+        failuresResult: {
+          items: failures || [],
+          total: total || 0,
+          page,
+          pageSize,
         },
-      );
-    }
-
-    const body: HealthResponse = {
-      status: "unknown",
-      source: "edge",
-      timestamp: new Date().toISOString(),
-      message:
-        "Telemetria detalhada disponível via gmailHealthService no client.",
-      failuresResult: {
-        items: [],
-        total: 0,
-        page,
-        pageSize,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
-    };
-
-    return new Response(JSON.stringify(body), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    );
   } catch (error) {
+    console.error("[gmail-health] Erro crítico:", error);
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : "Unknown error",
+        status: "error",
       }),
       {
         status: 500,
@@ -73,3 +101,4 @@ Deno.serve((req: Request) => {
     );
   }
 });
+

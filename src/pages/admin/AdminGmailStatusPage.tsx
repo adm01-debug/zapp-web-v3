@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useGmail } from '@/hooks/useGmail';
 import { gmailHealthService, GmailHealthInfo, GmailFailure } from '@/services/gmailHealthService';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function AdminGmailStatusPage() {
@@ -28,17 +29,30 @@ export default function AdminGmailStatusPage() {
   const loadHealth = async () => {
     setLoading(true);
     try {
-      const data = await gmailHealthService.getHealthStatus();
-      setHealth(data);
-      
-      const failures = gmailHealthService.getFailures({
-        requestId: filters.requestId || undefined,
-        resource: filters.resource || undefined,
-        operation: filters.operation || undefined,
-        page: filters.page,
-        pageSize: 5
+      const { data, error } = await (supabase as any).functions.invoke('gmail-health', {
+        queryParams: {
+          requestId: filters.requestId || undefined,
+          resource: filters.resource || undefined,
+          operation: filters.operation || undefined,
+          page: filters.page,
+          pageSize: 5
+        }
       });
-      setFailuresData(failures);
+      
+      if (error) throw error;
+      
+      setHealth({
+        status: data.status,
+        lastValidation: data.last_validation ? new Date(data.last_validation) : null,
+        cacheExpiration: null, // Edge não sabe do cache local
+        recentFailures: data.failuresResult.items,
+        stats: {
+          totalCalls: 0, 
+          failedCalls: data.failure_count_window,
+          cacheHits: 0
+        }
+      });
+      setFailuresData(data.failuresResult);
     } catch (error) {
       toast.error('Erro ao carregar dados de saúde do Gmail');
     } finally {
