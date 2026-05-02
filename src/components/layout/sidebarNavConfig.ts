@@ -157,6 +157,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'inbox-sync-status', icon: Activity, label: 'Status do Inbox', requiredRoles: ['supervisor'] },
   { id: 'evo-api-health', icon: HeartPulse, label: 'Evo API Health', requiredRoles: ['admin'] },
   { id: 'gmail-status', icon: Mail, label: 'Status Gmail', requiredRoles: ['admin'] },
+  { id: 'gmail-audit', icon: ScrollText, label: 'Auditoria Gmail', requiredRoles: ['admin'] },
 ] as const;
 
 // ── Backward-compat re-exports ────────────────────────────
