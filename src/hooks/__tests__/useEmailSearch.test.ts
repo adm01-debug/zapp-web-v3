@@ -180,7 +180,7 @@ describe('useEmailSearch — busca por label', () => {
   });
 
   it('deve filtrar por label STARRED', async () => {
-    const { result } = renderHook(() => useEmailSearch('acc-1', 'STARRED'));
+    const { result } = renderHook(() => (useEmailSearch as any)('acc-1', 'STARRED'));
 
     act(() => {
       (result.current as any).setQuery('proposta');

@@ -56,7 +56,7 @@ export function useAgentPresence({
   const updateStatus = useCallback(async (status: AgentPresenceStatus) => {
     if (!user) return;
     setMyStatus(status);
-    await supabase
+    await (supabase as any)
       .from('agent_presence')
       .upsert({
         agent_id: user.id,
@@ -72,7 +72,7 @@ export function useAgentPresence({
 
   // Load all agents' presence
   const loadPresence = useCallback(async () => {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from('agent_presence')
       .select('*')
       .eq('workspace_id', workspaceId)
