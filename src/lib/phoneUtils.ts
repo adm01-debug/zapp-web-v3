@@ -251,3 +251,8 @@ export function phoneVariants(phone: unknown): string[] {
 }
 
 export const formatBRPhone = formatPhoneForDisplay;
+
+export function isWhatsAppJID(value: unknown): boolean {
+  if (!value) return false;
+  return /^\d+@(c\.us|s\.whatsapp\.net|g\.us)$/.test(String(value));
+}
