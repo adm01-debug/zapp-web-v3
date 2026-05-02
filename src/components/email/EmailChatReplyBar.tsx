@@ -108,7 +108,7 @@ export function EmailChatReplyBar({
       const ccList = cc.split(',').map(s => s.trim()).filter(Boolean);
       const bccList = bcc.split(',').map(s => s.trim()).filter(Boolean);
 
-      await gmailSendMessage({
+      await (gmailSendMessage as any)({
         accountId,
         to: toList,
         cc: ccList,
@@ -118,8 +118,8 @@ export function EmailChatReplyBar({
         bodyPlain: plainText,
         threadId: threadGmailId,
         attachments: processedAttachments as any,
-        ...(selectedSignature?.html_content ? { signatureHtml: selectedSignature.html_content } : {}),
-      } as any);
+        signature: true
+      });
 
       // Registra resposta no SLA
       markReplied(threadGmailId);
