@@ -31,7 +31,7 @@ export function useAutomationSuggestions(remoteJid: string | null) {
     }
     setLoading(true);
     const { data, error } = await supabase
-      .from("automation_executions")
+      .from('automation_executions')
       .select(
         "id, rule_id, suggestion_text, recommended_tag, kb_sources, status, created_at, instance_name, remote_jid, automation_rules(name)",
       )
@@ -78,7 +78,7 @@ export function useAutomationSuggestions(remoteJid: string | null) {
 
   const accept = useCallback(async (id: string) => {
     await supabase
-      .from("automation_executions")
+      .from('automation_executions')
       .update({ status: "accepted", acted_at: new Date().toISOString() })
       .eq("id", id);
     refresh();
@@ -86,7 +86,7 @@ export function useAutomationSuggestions(remoteJid: string | null) {
 
   const dismiss = useCallback(async (id: string) => {
     await supabase
-      .from("automation_executions")
+      .from('automation_executions')
       .update({ status: "dismissed", acted_at: new Date().toISOString() })
       .eq("id", id);
     refresh();
@@ -108,7 +108,7 @@ export function useAutomationSuggestions(remoteJid: string | null) {
           p_tags: [sugg.recommended_tag],
         });
         await supabase
-          .from("automation_executions")
+          .from('automation_executions')
           .update({ applied_tags: [sugg.recommended_tag] })
           .eq("id", id);
         toast({

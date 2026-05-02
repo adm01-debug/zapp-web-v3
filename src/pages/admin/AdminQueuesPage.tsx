@@ -69,13 +69,13 @@ export default function AdminQueuesPage() {
   const load = async () => {
     setLoading(true);
     const [q, m, s, p, d, c, cq] = await Promise.all([
-      supabase.from("queues").select("*").order("priority", { ascending: false }),
-      supabase.from("queue_members").select("id,queue_id,profile_id,profile:profiles(id,name,avatar_url)"),
-      supabase.from("queue_skill_requirements").select("*"),
-      supabase.from("profiles").select("id,name,avatar_url").eq("is_active", true).order("name"),
-      supabase.from("departments").select("id,name").order("name"),
-      supabase.from("service_channels").select("id,name,channel_type,default_queue_id").neq("status", "archived").order("name"),
-      supabase.from("channel_queues").select("*"),
+      supabase.from('queues').select("*").order("priority", { ascending: false }),
+      supabase.from('queue_members').select("id,queue_id,profile_id,profile:profiles(id,name,avatar_url)"),
+      supabase.from('queue_skill_requirements').select("*"),
+      supabase.from('profiles').select("id,name,avatar_url").eq("is_active", true).order("name"),
+      supabase.from('departments').select("id,name").order("name"),
+      supabase.from('service_channels').select("id,name,channel_type,default_queue_id").neq("status", "archived").order("name"),
+      supabase.from('channel_queues').select("*"),
     ]);
     setQueues((q.data ?? []) as Queue[]);
     setMembers((m.data ?? []) as unknown as QueueMember[]);
@@ -109,8 +109,8 @@ export default function AdminQueuesPage() {
       overflow_queue_id: editing.overflow_queue_id ?? null,
     };
     const { error } = editing.id
-      ? await supabase.from("queues").update(payload).eq("id", editing.id)
-      : await supabase.from("queues").insert(payload as never);
+      ? await supabase.from('queues').update(payload).eq("id", editing.id)
+      : await supabase.from('queues').insert(payload as never);
     if (error) {
       toast({ title: "Erro ao salvar fila", description: error.message, variant: "destructive" });
       return;
@@ -122,7 +122,7 @@ export default function AdminQueuesPage() {
 
   const remove = async (id: string) => {
     if (!confirm("Excluir esta fila? Membros, regras e vínculos serão removidos.")) return;
-    const { error } = await supabase.from("queues").delete().eq("id", id);
+    const { error } = await supabase.from('queues').delete().eq("id", id);
     if (error) {
       toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
       return;
@@ -146,7 +146,7 @@ export default function AdminQueuesPage() {
 
   const addMember = async () => {
     if (!memberDialog || !newMemberId) return;
-    const { error } = await supabase.from("queue_members").insert({
+    const { error } = await supabase.from('queue_members').insert({
       queue_id: memberDialog.id, profile_id: newMemberId,
     } as never);
     if (error) {
@@ -158,13 +158,13 @@ export default function AdminQueuesPage() {
   };
 
   const removeMember = async (id: string) => {
-    await supabase.from("queue_members").delete().eq("id", id);
+    await supabase.from('queue_members').delete().eq("id", id);
     load();
   };
 
   const addSkill = async () => {
     if (!memberDialog || !newSkill.name.trim()) return;
-    const { error } = await supabase.from("queue_skill_requirements").insert({
+    const { error } = await supabase.from('queue_skill_requirements').insert({
       queue_id: memberDialog.id, skill_name: newSkill.name.trim(), min_level: newSkill.level,
     } as never);
     if (error) {
@@ -176,7 +176,7 @@ export default function AdminQueuesPage() {
   };
 
   const removeSkill = async (id: string) => {
-    await supabase.from("queue_skill_requirements").delete().eq("id", id);
+    await supabase.from('queue_skill_requirements').delete().eq("id", id);
     load();
   };
 

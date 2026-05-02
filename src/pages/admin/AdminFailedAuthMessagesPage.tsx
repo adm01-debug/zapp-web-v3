@@ -37,7 +37,7 @@ export default function AdminFailedAuthMessagesPage() {
   const load = async () => {
     setLoading(true);
     let query = supabase
-      .from("login_attempts")
+      .from('login_attempts')
       .select("*")
       .order("last_attempt_at", { ascending: false })
       .limit(500);

@@ -50,7 +50,7 @@ export default function RoutePermissionsPage() {
   async function load() {
     setLoading(true);
     const { data, error } = await supabase
-      .from("route_permissions")
+      .from('route_permissions')
       .select("path, allowed_roles, description, is_system, updated_at")
       .order("path", { ascending: true });
     if (error) {
@@ -97,7 +97,7 @@ export default function RoutePermissionsPage() {
     setSavingPath(path);
     const next = getRolesFor(path);
     const { error } = await supabase
-      .from("route_permissions")
+      .from('route_permissions')
       .update({ allowed_roles: next })
       .eq("path", path);
     setSavingPath(null);
@@ -111,7 +111,7 @@ export default function RoutePermissionsPage() {
   }
 
   async function deleteRow(path: string) {
-    const { error } = await supabase.from("route_permissions").delete().eq("path", path);
+    const { error } = await supabase.from('route_permissions').delete().eq("path", path);
     if (error) {
       toast({ title: "Erro ao remover", description: error.message, variant: "destructive" });
       return;
@@ -127,7 +127,7 @@ export default function RoutePermissionsPage() {
       toast({ title: "Path inválido", description: "Use um caminho começando com /", variant: "destructive" });
       return;
     }
-    const { error } = await supabase.from("route_permissions").insert({
+    const { error } = await supabase.from('route_permissions').insert({
       path,
       allowed_roles: newRoles,
       description: newDesc.trim() || null,

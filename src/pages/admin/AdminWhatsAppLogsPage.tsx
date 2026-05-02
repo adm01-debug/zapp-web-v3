@@ -94,7 +94,7 @@ function useWhatsAppLogs(mode: ModeFilter, search: string) {
       try {
         // Envios
         let sendQ = supabase
-          .from("provider_message_log")
+          .from('provider_message_log')
           .select("id,provider,instance_name,direction,remote_jid,delivery_status,http_status,error_code,error_message,received_at,delivered_at")
           .order("received_at", { ascending: false })
           .limit(150);
@@ -104,14 +104,14 @@ function useWhatsAppLogs(mode: ModeFilter, search: string) {
 
         // Webhooks Cloud (sempre busca; filtramos no client por modo)
         const pingQ = supabase
-          .from("whatsapp_cloud_webhook_pings")
+          .from('whatsapp_cloud_webhook_pings')
           .select("id,kind,meta,created_at")
           .order("created_at", { ascending: false })
           .limit(150);
 
         // Erros
         let errQ = supabase
-          .from("dispatch_error_logs")
+          .from('dispatch_error_logs')
           .select("id,instance_name,channel_type,remote_jid,error_code,error_message,http_status,retry_count,occurred_at")
           .order("occurred_at", { ascending: false })
           .limit(150);

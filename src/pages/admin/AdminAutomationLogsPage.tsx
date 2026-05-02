@@ -92,7 +92,7 @@ export default function AdminAutomationLogsPage() {
   const load = async () => {
     setLoading(true);
     let q = supabase
-      .from("automation_executions")
+      .from('automation_executions')
       .select("*")
       .order("created_at", { ascending: false })
       .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
@@ -119,7 +119,7 @@ export default function AdminAutomationLogsPage() {
 
   useEffect(() => {
     supabase
-      .from("automation_rules")
+      .from('automation_rules')
       .select("id,name")
       .order("name")
       .then(({ data }) => setRules((data ?? []) as RuleLite[]));

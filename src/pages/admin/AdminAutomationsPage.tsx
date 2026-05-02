@@ -112,11 +112,11 @@ export default function AdminAutomationsPage() {
     setLoading(true);
     const [{ data: rulesData, error }, { data: chs }, { data: deps }] = await Promise.all([
       supabase
-        .from("automation_rules")
+        .from('automation_rules')
         .select("*")
         .order("priority", { ascending: true }),
-      supabase.from("service_channels").select("id,name").order("name"),
-      supabase.from("departments").select("id,name").order("name"),
+      supabase.from('service_channels').select("id,name").order("name"),
+      supabase.from('departments').select("id,name").order("name"),
     ]);
     if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
     setRules((rulesData ?? []) as Rule[]);
@@ -184,8 +184,8 @@ export default function AdminAutomationsPage() {
       department_id: editing.department_id || null,
     };
     const op = editing.id
-      ? supabase.from("automation_rules").update(payload).eq("id", editing.id)
-      : supabase.from("automation_rules").insert(payload);
+      ? supabase.from('automation_rules').update(payload).eq("id", editing.id)
+      : supabase.from('automation_rules').insert(payload);
     const { error } = await op;
     if (error) {
       toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
@@ -199,7 +199,7 @@ export default function AdminAutomationsPage() {
 
   const remove = async (id: string) => {
     if (!confirm("Remover esta regra?")) return;
-    const { error } = await supabase.from("automation_rules").delete().eq("id", id);
+    const { error } = await supabase.from('automation_rules').delete().eq("id", id);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return;
@@ -209,7 +209,7 @@ export default function AdminAutomationsPage() {
 
   const toggleActive = async (r: Rule) => {
     await supabase
-      .from("automation_rules")
+      .from('automation_rules')
       .update({ is_active: !r.is_active })
       .eq("id", r.id);
     load();
@@ -217,7 +217,7 @@ export default function AdminAutomationsPage() {
 
   const adjustPriority = async (r: Rule, delta: number) => {
     await supabase
-      .from("automation_rules")
+      .from('automation_rules')
       .update({ priority: Math.max(1, r.priority + delta) })
       .eq("id", r.id);
     load();

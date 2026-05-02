@@ -93,7 +93,7 @@ function AuditPanel() {
   const load = async () => {
     setLoading(true);
     let q = supabase
-      .from("audit_logs")
+      .from('audit_logs')
       .select("id,user_id,action,entity_type,entity_id,created_at,details")
       .order("created_at", { ascending: false })
       .limit(100);
@@ -208,7 +208,7 @@ function PmlPanel() {
   const load = async () => {
     setLoading(true);
     let q = supabase
-      .from("provider_message_log")
+      .from('provider_message_log')
       .select(
         "id,provider,instance_name,direction,remote_jid,delivery_status,http_status,error_message,received_at",
       )

@@ -110,8 +110,8 @@ export default function AdminChannelsPage() {
             p_search: search.trim() || null,
           },
         ),
-        supabase.from("queues").select("id,name,color").order("name"),
-        supabase.from("whatsapp_connections").select("id,name,phone_number").order("name"),
+        supabase.from('queues').select("id,name,color").order("name"),
+        supabase.from('whatsapp_connections').select("id,name,phone_number").order("name"),
       ]);
       if (chRes.error) throw new Error(chRes.error.message);
       setChannels((chRes.data ?? []) as ServiceChannel[]);

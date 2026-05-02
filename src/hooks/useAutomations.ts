@@ -53,7 +53,7 @@ export function useAutomations({
     let cancelled = false;
     const load = async () => {
       const { data, error } = await supabase
-        .from("automation_rules")
+        .from('automation_rules')
         .select("id,name,trigger_type,trigger_config,actions,is_active,priority")
         .eq("is_active", true)
         .order("priority", { ascending: true });
@@ -220,7 +220,7 @@ export function useAutomations({
               p_tags: allTags,
             } as any);
             await supabase
-              .from("automation_executions")
+              .from('automation_executions')
               .update({
                 applied_tags: allTags,
                 trigger_payload: {
@@ -259,7 +259,7 @@ export function useAutomations({
             // Auto envio
             if (actions.auto_send) {
               const { data: exec , error } = await supabase
-                .from("automation_executions")
+                .from('automation_executions')
                 .select("suggestion_text")
                 .eq("id", execId)
                 .maybeSingle();
@@ -271,7 +271,7 @@ export function useAutomations({
                   p_message_type: "text",
                 } as any);
                 await supabase
-                  .from("automation_executions")
+                  .from('automation_executions')
                   .update({ status: "executed", acted_at: new Date().toISOString() })
                   .eq("id", execId);
               }
