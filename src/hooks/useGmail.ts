@@ -80,7 +80,7 @@ export function useGmail() {
     if (dbErr) {
       setError(dbErr.message);
     } else {
-      const accs = gmailMappers.accounts(data ?? []);
+      const accs = gmailMappers.accounts(Array.isArray(data) ? data : []);
       setAccounts(accs);
       if (accs.length > 0 && !activeAccountId) {
         setActiveAccountId(accs[0].id);
@@ -93,7 +93,7 @@ export function useGmail() {
   const checkTokenStatus = useCallback(async () => {
     const { data, error: rpcErr } = await safeClient.rpc('rpc_gmail_token_status');
     if (!rpcErr && data) {
-      const tokenInfos = gmailMappers.tokenInfos(data);
+      const tokenInfos = gmailMappers.tokenInfos(Array.isArray(data) ? data : []);
       setTokenStatus(tokenInfos);
       
       const statusMap: Record<string, string> = {};
@@ -121,7 +121,7 @@ export function useGmail() {
     if (rpcErr) {
       setError(rpcErr.message);
     } else {
-      const mappedThreads = gmailMappers.threads(data ?? []);
+      const mappedThreads = gmailMappers.threads(Array.isArray(data) ? data : []);
       setThreads(prev => append ? [...prev, ...mappedThreads] : mappedThreads);
       setHasMore(mappedThreads.length === 50);
     }
@@ -131,7 +131,7 @@ export function useGmail() {
   // ── Carregar mensagens de uma thread ────────────────────────────────────
   const loadMessages = useCallback(async (threadId: string) => {
     setIsLoadingMessages(true);
-    const { data, error: dbErr } = await safeClient.from<GmailMessage>('gmail_messages', (q) =>
+    const { data, error: dbErr } = await safeClient.from('gmail_messages', (q) =>
       q.select('*')
        .eq('thread_id', threadId)
        .order('date', { ascending: true })
@@ -140,7 +140,7 @@ export function useGmail() {
     if (dbErr) {
       console.error('Erro ao carregar mensagens:', dbErr);
     } else {
-      setMessages(data ?? []);
+      setMessages(Array.isArray(data) ? data : []);
     }
     setIsLoadingMessages(false);
   }, []);
@@ -170,7 +170,7 @@ export function useGmail() {
     setIsSyncing(true);
     setError(null);
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('gmail-sync', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-sync', {
         body: { action: 'syncInbox', accountId: id, maxResults: 100 },
       });
 
@@ -195,7 +195,7 @@ export function useGmail() {
     if (!id) return;
 
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('gmail-oauth', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-oauth', {
         body: { action: 'refreshToken', accountId: id },
       });
 
@@ -217,7 +217,7 @@ export function useGmail() {
     if (!id) return;
 
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('gmail-webhook', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-webhook', {
         body: { action: 'renewWatch', accountId: id },
       });
 
@@ -235,7 +235,7 @@ export function useGmail() {
 
     setIsSending(true);
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('gmail-send', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-send', {
         body: {
           action: 'send',
           accountId: activeAccountId,
@@ -259,7 +259,7 @@ export function useGmail() {
 
   // ── Marcar thread como lida/não lida ───────────────────────────────────
   const markAsRead = useCallback(async (threadId: string, read = true) => {
-    const { error: rpcErr } = await supabase.rpc('rpc_gmail_mark_thread_read', {
+    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_mark_thread_read', {
       p_thread_id: threadId,
       p_read:      read,
     });
@@ -273,7 +273,7 @@ export function useGmail() {
 
   // ── Star/Unstar thread ──────────────────────────────────────────────────
   const starThread = useCallback(async (threadId: string, starred = true) => {
-    const { error: rpcErr } = await supabase.rpc('rpc_gmail_star_thread', {
+    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_star_thread', {
       p_thread_id: threadId,
       p_starred:   starred,
     });
@@ -287,7 +287,7 @@ export function useGmail() {
 
   // ── Archive thread ──────────────────────────────────────────────────────
   const archiveThread = useCallback(async (threadId: string) => {
-    const { error: rpcErr } = await supabase.rpc('rpc_gmail_archive_thread', {
+    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_archive_thread', {
       p_thread_id: threadId,
       p_archived:  true,
     });
@@ -300,7 +300,7 @@ export function useGmail() {
 
   // ── Assign thread a agente ──────────────────────────────────────────────
   const assignThread = useCallback(async (threadId: string, agentId: string | null) => {
-    const { error: rpcErr } = await supabase.rpc('rpc_gmail_assign_thread', {
+    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_assign_thread', {
       p_thread_id: threadId,
       p_agent_id:  agentId,
     });
@@ -314,7 +314,7 @@ export function useGmail() {
 
   // ── Desconectar conta ───────────────────────────────────────────────────
   const disconnect = useCallback(async (accountId: string) => {
-    await supabase
+    await (supabase as any)
       .from('gmail_accounts')
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', accountId);
@@ -330,7 +330,7 @@ export function useGmail() {
   const startOAuth = useCallback(async () => {
     setError(null);
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('gmail-oauth', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-oauth', {
         body: { action: 'getAuthUrl' },
       });
 
@@ -353,10 +353,10 @@ export function useGmail() {
         const { code } = event.data;
         if (!code) return;
 
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await (supabase as any).auth.getUser();
         if (!user) return;
 
-        const { data: exchangeData, error: exchangeErr } = await supabase.functions.invoke('gmail-oauth', {
+        const { data: exchangeData, error: exchangeErr } = await (supabase as any).functions.invoke('gmail-oauth', {
           body: { action: 'exchangeCode', code, userId: user.id },
         });
 
@@ -380,7 +380,7 @@ export function useGmail() {
   useEffect(() => {
     if (!activeAccountId) return;
 
-    const channel = supabase
+    const channel = (supabase as any)
       .channel(`gmail-threads-${activeAccountId}`)
       .on('postgres_changes', {
         event:  '*',
@@ -402,7 +402,7 @@ export function useGmail() {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { (supabase as any).removeChannel(channel); };
   }, [activeAccountId]);
 
   // ── Token check automático (a cada 5 minutos) ───────────────────────────
