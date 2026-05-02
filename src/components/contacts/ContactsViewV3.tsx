@@ -3,7 +3,7 @@
  * Main contacts management page — fully integrated v3.0.
  * Uses server-side pagination, advanced filters, and all new panels.
  */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -46,8 +46,8 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
 
   // Server-side pagination + filters
   const {
-    contacts, loading, loadingMore, hasMore, total,
-    filters, loadContacts, loadMore, updateFilters,
+    contacts, loading, loadingMore, total,
+    filters, loadContacts, updateFilters,
   } = useContactsPagination(workspaceId);
 
   // Undo-aware bulk delete
@@ -61,16 +61,6 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
 
   // Load on mount
   useEffect(() => { loadContacts(); }, [loadContacts]);
-
-  // Infinite scroll sentinel
-  const handleScrollToBottom = useCallback(() => {
-    if (!loadingMore && hasMore) loadMore();
-  }, [loadingMore, hasMore, loadMore]);
-
-  const handleBulkDelete = () => {
-    if (selectedIds.length === 0) return;
-    softDeleteWithUndo(selectedIds, `${selectedIds.length} contato${selectedIds.length !== 1 ? 's' : ''}`);
-  };
 
   const handleContactSaved = () => {
     setCreateOpen(false);
