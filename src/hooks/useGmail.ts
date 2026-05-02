@@ -139,7 +139,15 @@ export function useGmail() {
     try {
       const { data, error: rpcErr } = await supabase.rpc('rpc_gmail_token_status');
       if (!rpcErr && data) {
-        setTokenStatus(data as GmailTokenInfo[]);
+        const statuses = data as GmailTokenInfo[];
+        setTokenStatus(statuses);
+        
+        // Compatibilidade para componentes que esperam Record<string, TokenStatus>
+        const statusMap: Record<string, string> = {};
+        statuses.forEach(s => {
+          statusMap[s.account_id] = s.token_status;
+        });
+        (setTokenStatus as any).asMap = statusMap;
       }
     } catch {
       // Silencia erro de token check — não é crítico
