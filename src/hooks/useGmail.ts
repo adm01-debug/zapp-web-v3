@@ -18,11 +18,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
 import { type GmailMessage } from './gmail/gmailTypes';
-import { 
-  GmailAccount, 
-  GmailTokenInfo, 
-  GmailThread, 
-  GmailSendParams,
+
 export type { 
   GmailAccount, 
   GmailTokenInfo, 
@@ -35,16 +31,17 @@ export type {
 
 export type GmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
 export type GmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
-export type TokenStatus = GmailTokenStatus; // Alias legado
+export type TokenStatus = GmailTokenStatus;
 
+const supabase = _supabase as any;
 
 // ── Hook Principal ─────────────────────────────────────────────────────────
 
 export function useGmail() {
-  const [accounts, setAccounts]               = useState<GmailAccount[]>([]);
-  const [tokenStatus, setTokenStatus]         = useState<GmailTokenInfo[]>([]);
-  const [threads, setThreads]                 = useState<GmailThread[]>([]);
-  const [selectedThread, setSelectedThread]   = useState<GmailThread | null>(null);
+  const [accounts, setAccounts]               = useState<any[]>([]);
+  const [tokenStatus, setTokenStatus]         = useState<any[]>([]);
+  const [threads, setThreads]                 = useState<any[]>([]);
+  const [selectedThread, setSelectedThread]   = useState<any | null>(null);
   const [messages, setMessages]               = useState<GmailMessage[]>([]);
   const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const [activeLabel, setActiveLabel]         = useState<GmailLabel>('INBOX');
