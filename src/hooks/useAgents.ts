@@ -89,7 +89,7 @@ export function useAgents(workspaceId?: string) {
   const loadAgents = useCallback(async () => {
     setLoading(true);
     try {
-      let q = supabase
+      let q: any = (supabase as any)
         .from('agents')
         .select('id,user_id,name,mission,persona,avatar_emoji,model,status,version,config,tags,is_template,template_category,workspace_id,created_at,updated_at')
         .not('status', 'in', '("deprecated","archived")')
@@ -99,7 +99,7 @@ export function useAgents(workspaceId?: string) {
 
       const { data, error } = await q;
       if (error) throw error;
-      setAgents((data ?? []).map(mapRow));
+      setAgents((data ?? []).map((r: any) => mapRow(r)));
     } catch (err) {
       console.error('[useAgents]', err);
     } finally { setLoading(false); }
