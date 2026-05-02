@@ -379,3 +379,65 @@ export async function gmailSendMessage(params: {
   if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
   return { data, error: null };
 }
+
+// ── Wrappers de rascunho / listagem ──────────────────────────────────────
+// Compat APIs por objeto usadas por `useEmailDraft` e `useEmailSearch`.
+
+export async function gmailSaveDraft(params: {
+  accountId: string;
+  draftId?:  string | null;
+  to:        string[];
+  cc?:       string[];
+  subject:   string;
+  bodyHtml:  string;
+  threadId?: string | null;
+}): Promise<{ draftId?: string }> {
+  const action = params.draftId ? 'updateDraft' : 'createDraft';
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: {
+      action,
+      accountId: params.accountId,
+      draftId:   params.draftId ?? undefined,
+      to:        params.to,
+      cc:        params.cc       ?? [],
+      subject:   params.subject,
+      bodyHtml:  params.bodyHtml,
+      threadId:  params.threadId ?? undefined,
+    },
+  });
+  if (error) throw new Error(error.message);
+  return (data as { draftId?: string }) ?? {};
+}
+
+export async function gmailDeleteDraft(
+  accountId: string,
+  draftId:   string,
+): Promise<{ success: boolean }> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: { action: 'deleteDraft', accountId, draftId },
+  });
+  if (error) throw new Error(error.message);
+  return (data as { success: boolean }) ?? { success: false };
+}
+
+export async function gmailListThreads(params: {
+  accountId:   string;
+  q?:          string;
+  maxResults?: number;
+  pageToken?:  string;
+  labelIds?:   string[];
+}): Promise<{ threads: unknown[]; nextPageToken?: string }> {
+  const { data, error } = await supabase.functions.invoke('gmail-sync', {
+    body: {
+      action:     'listThreads',
+      accountId:  params.accountId,
+      q:          params.q          ?? '',
+      maxResults: params.maxResults ?? 25,
+      pageToken:  params.pageToken,
+      labelIds:   params.labelIds   ?? [],
+    },
+  });
+  if (error) throw new Error(error.message);
+  const d = (data as { threads?: unknown[]; nextPageToken?: string }) ?? {};
+  return { threads: d.threads ?? [], nextPageToken: d.nextPageToken };
+}
