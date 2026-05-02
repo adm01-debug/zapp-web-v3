@@ -12,7 +12,8 @@ import {
   Shield, CheckCircle2, XCircle, AlertTriangle, RefreshCw,
   TrendingUp, Users, UserCheck, UserX,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -41,11 +42,11 @@ export const LGPDComplianceDashboard: React.FC<LGPDComplianceDashboardProps> = (
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_lgpd_compliance_stats', {
+      const { data, error } = await dbRpc(RPC.getLgpdComplianceStats, {
         p_workspace_id: workspaceId,
       });
       if (error) throw error;
-      setStats(data as ComplianceStats);
+      setStats((data ?? null) as unknown as ComplianceStats | null);
     } catch (err) {
       console.error('[LGPDComplianceDashboard]', err);
     } finally {
