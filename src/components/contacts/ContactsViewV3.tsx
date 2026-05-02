@@ -3,7 +3,7 @@
  * Main contacts management page — fully integrated v3.0.
  * Uses server-side pagination, advanced filters, and all new panels.
  */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,6 @@ import { ContactFormV3 } from './ContactFormV3';
 import { BulkActionsBar } from './BulkActionsBar';
 import { ContactsTable } from './ContactsTable';
 import { ContactEmptyState } from './ContactEmptyState';
-import { sanitizeText } from '@/lib/sanitize';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -47,8 +46,8 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
 
   // Server-side pagination + filters
   const {
-    contacts, loading, loadingMore, hasMore, total,
-    filters, loadContacts, loadMore, updateFilters,
+    contacts, loading, loadingMore, total,
+    filters, loadContacts, updateFilters,
   } = useContactsPagination(workspaceId);
 
   // Undo-aware bulk delete
@@ -62,16 +61,6 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
 
   // Load on mount
   useEffect(() => { loadContacts(); }, [loadContacts]);
-
-  // Infinite scroll sentinel
-  const handleScrollToBottom = useCallback(() => {
-    if (!loadingMore && hasMore) loadMore();
-  }, [loadingMore, hasMore, loadMore]);
-
-  const handleBulkDelete = () => {
-    if (selectedIds.length === 0) return;
-    softDeleteWithUndo(selectedIds, `${selectedIds.length} contato${selectedIds.length !== 1 ? 's' : ''}`);
-  };
 
   const handleContactSaved = () => {
     setCreateOpen(false);
@@ -147,10 +136,10 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
             <div className="px-4 py-2 bg-primary/5 border-b shrink-0">
               <BulkActionsBar
                 selectedIds={selectedIds}
+                workspaceId={workspaceId}
                 onClearSelection={clearSelection}
                 onSelectAll={selectAll}
-                onDelete={handleBulkDelete}
-                onExport={() => setExportOpen(true)}
+                onDeleted={() => loadContacts()}
                 totalCount={contacts.length}
               />
             </div>
@@ -166,16 +155,28 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
                 </div>
               </div>
             ) : contacts.length === 0 ? (
-              <ContactEmptyState onCreateContact={() => setCreateOpen(true)} />
+              <ContactEmptyState type="no-contacts" onAddContact={() => setCreateOpen(true)} />
             ) : (
               <ContactsTable
-                contacts={contacts}
+                contacts={contacts.map((contact) => ({
+                  id: contact.id,
+                  name: contact.name,
+                  surname: null,
+                  nickname: null,
+                  phone: contact.phone ?? '',
+                  email: contact.email,
+                  avatar_url: contact.avatar_url,
+                  company: contact.company,
+                  job_title: null,
+                  tags: contact.tags,
+                  contact_type: null,
+                  created_at: contact.created_at,
+                }))}
                 selectedIds={selectedIds}
-                onToggleSelect={toggleSelect}
-                onSelectAll={selectAll}
-                onClearSelection={clearSelection}
-                onEdit={(id) => setEditContactId(id)}
-                onScrollBottom={handleScrollToBottom}
+                onSelectIds={setSelectedIds}
+                onOpenChat={() => {}}
+                onEdit={(contact) => setEditContactId(contact.id)}
+                onDelete={(contact) => softDeleteWithUndo([contact.id], contact.name)}
               />
             )}
 
@@ -248,11 +249,7 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
         open={exportOpen}
         onOpenChange={setExportOpen}
         workspaceId={workspaceId}
-        activeFilters={{
-          search: filters.search,
-          tags:   filters.tags,
-          channel: filters.channel,
-        }}
+        activeFilters={filters}
         selectedIds={selectedIds.length > 0 ? selectedIds : undefined}
       />
     </div>

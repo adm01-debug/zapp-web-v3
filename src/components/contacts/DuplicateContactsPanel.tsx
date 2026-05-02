@@ -12,7 +12,8 @@ import {
   AlertTriangle, GitMerge, RefreshCw, CheckCircle2, Users, Zap, AlertOctagon,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatPhoneForDisplay } from '@/lib/phoneUtils';
 
@@ -51,15 +52,15 @@ export const DuplicateContactsPanel: React.FC<Props> = ({
     setLoading(true); setDone(false);
     try {
       const [groupsRes, reportRes] = await Promise.all([
-        supabase.rpc('find_duplicate_contacts', { p_instance_name: instanceName, p_limit: 100 }),
-        supabase.rpc('get_duplicate_report', { p_instance_name: instanceName }),
+        dbRpc(RPC.findDuplicateContacts, { p_workspace_id: instanceName, p_limit: 100 }),
+        dbRpc(RPC.getDuplicateReport, { p_instance_name: instanceName }),
       ]);
 
       if (groupsRes.error) throw groupsRes.error;
       if (reportRes.error) throw reportRes.error;
 
-      setGroups((groupsRes.data ?? []) as DuplicateGroup[]);
-      setReport(reportRes.data as DuplicateReport);
+      setGroups((groupsRes.data ?? []) as unknown as DuplicateGroup[]);
+      setReport((reportRes.data ?? null) as unknown as DuplicateReport | null);
       setDone(true);
     } catch (err) {
       console.error('[DuplicateContactsPanel]', err);
@@ -74,8 +75,8 @@ export const DuplicateContactsPanel: React.FC<Props> = ({
     if (group.contact_ids.length < 2) return;
     setMerging(group.phone_normalized);
     try {
-      const { data, error } = await supabase.rpc('merge_contacts', {
-        p_primary_id:   group.contact_ids[0],
+      const { data, error } = await dbRpc(RPC.mergeContacts, {
+        p_primary_id: group.contact_ids[0],
         p_secondary_id: group.contact_ids[1],
         p_merged_fields: {},
       });
@@ -95,14 +96,12 @@ export const DuplicateContactsPanel: React.FC<Props> = ({
 
   // ── Auto-merge all ──
   const autoMergeAll = async () => {
-    if (!confirm(`Isso irá mesclar automaticamente ${report?.total_duplicate_groups ?? groups.length} grupos de duplicatas. O contato mais antigo será mantido. Continuar?`)) return;
-
     setAutoMerging(true); setAutoProgress(0);
 
     const progressInterval = setInterval(() => setAutoProgress((p) => Math.min(p + 5, 90)), 500);
 
     try {
-      const { data, error } = await supabase.rpc('bulk_auto_merge_duplicates', {
+      const { data, error } = await dbRpc(RPC.bulkAutoMergeDuplicates, {
         p_instance_name: instanceName,
         p_limit: 1000,
       });

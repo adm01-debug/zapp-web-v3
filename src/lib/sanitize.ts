@@ -38,7 +38,6 @@ export function sanitizeHtml(html: unknown): string {
   return DOMPurify.sanitize(str, {
     ALLOWED_TAGS:  RICH_ALLOWED_TAGS,
     ALLOWED_ATTR:  RICH_ALLOWED_ATTR,
-    FORBID_SCRIPTS:true,
     FORBID_ATTR:   ['onerror','onload','onclick','onmouseover','onfocus','onblur','onchange','onsubmit','style','href','src'],
   }).trim();
 }
