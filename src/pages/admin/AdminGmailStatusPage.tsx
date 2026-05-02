@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useGmail } from '@/hooks/useGmail';
 import { gmailHealthService, GmailHealthInfo, GmailFailure } from '@/services/gmailHealthService';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function AdminGmailStatusPage() {
