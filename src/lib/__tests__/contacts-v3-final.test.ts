@@ -48,7 +48,7 @@ describe('sanitizeContactFields — evolution_contacts schema', () => {
     expect(c.push_name).not.toContain('<img');
   });
   it('keeps notes HTML (bold/italic)', () => {
-    const c = sanitizeContactFields({ full_name: 'Test', notes: '<b>VIP</b><script>hack</script>' });
+    const c = sanitizeContactFields({ full_name: 'Test', notes: '<b>VIP</b><script>hack</script>' } as any);
     expect(c.notes).toContain('<b>VIP</b>');
     expect(c.notes).not.toContain('<script>');
   });
