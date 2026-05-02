@@ -5,8 +5,8 @@
 
 export type EmailProvider = 'gmail' | 'outlook' | 'yahoo' | 'custom';
 export type GmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
-export type GmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
-export type SLAStatus = 'ok' | 'warning' | 'breached' | 'met';
+export type GmailLabel = 'INBOX' | 'SENT' | 'DRAFTS' | 'STARRED' | 'IMPORTANT' | 'TRASH' | 'SPAM' | string;
+export type EmailThread = GmailThread;
 
 export interface GmailAccount {
   id:            string;
