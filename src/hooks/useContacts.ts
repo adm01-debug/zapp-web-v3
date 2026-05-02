@@ -219,25 +219,30 @@ export function useContacts() {
       title: `🗑️ ${label} excluído`,
       description: 'Você tem 5 segundos para desfazer.',
       duration: 5_000,
-      action: {
-        altText: 'Desfazer',
-        onClick: async () => {
-          // Cancel the delete
-          const timerId = timer.get(ids.join(','));
-          if (timerId) clearTimeout(timerId);
-          timer.delete(ids.join(','));
+      action: (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={async () => {
+            // Cancel the delete
+            const timerId = timer.get(ids.join(','));
+            if (timerId) clearTimeout(timerId);
+            timer.delete(ids.join(','));
 
-          // Restore optimistically
-          await loadContacts();
-          toast({ title: '↩️ Restaurado!', duration: 2_500 });
-        },
-      },
+            // Restore optimistically
+            await loadContacts();
+            toast({ title: '↩️ Restaurado!', duration: 2_500 });
+          }}
+        >
+          Desfazer
+        </Button>
+      ) as any,
     });
 
     // Schedule actual delete after 5s
     const timerId = setTimeout(async () => {
       timer.delete(ids.join(','));
-      const { error } = await supabase.rpc('bulk_soft_delete_contacts', {
+      const { error } = await (supabase as any).rpc('bulk_soft_delete_contacts', {
         p_contact_ids: ids,
         p_reason:      'user_deleted',
       });
