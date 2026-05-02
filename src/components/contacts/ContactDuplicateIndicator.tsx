@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Copy, GitMerge, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface DuplicateCandidate {
   id: string;
@@ -40,8 +41,7 @@ export const ContactDuplicateIndicator: React.FC<ContactDuplicateIndicatorProps>
       if (!contactPhone && !contactEmail) return;
       setIsLoading(true);
       try {
-        let query = supabase
-          .from('contacts')
+        let query = dbFrom('contacts')
           .select('id, name, phone, email, channel')
           .eq('workspace_id', workspaceId)
           .neq('id', contactId)

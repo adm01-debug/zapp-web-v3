@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useUndoableAction } from '@/hooks/useUndoableAction';
 import { ConversationWithMessages } from '@/features/inbox';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface UseInboxBulkActionsProps {
   refetch: () => void;
@@ -52,8 +53,7 @@ export function useInboxBulkActions({ refetch, filteredConversations }: UseInbox
     setBulkLoading(true);
     try {
       const contactIds = Array.from(selectedIds);
-      const { error } = await supabase
-        .from('messages')
+      const { error } = await dbFrom('messages')
         .update({ is_read: true })
         .in('contact_id', contactIds)
         .eq('is_read', false);
@@ -79,8 +79,7 @@ export function useInboxBulkActions({ refetch, filteredConversations }: UseInbox
       } else {
         updateData.queue_id = targetId;
       }
-      const { error } = await supabase
-        .from('contacts')
+      const { error } = await dbFrom('contacts')
         .update(updateData)
         .in('id', contactIds);
       if (error) throw error;
@@ -99,8 +98,7 @@ export function useInboxBulkActions({ refetch, filteredConversations }: UseInbox
     setBulkLoading(true);
     const contactIds = Array.from(selectedIds);
 
-    const { data: originalContacts } = await supabase
-      .from('contacts')
+    const { data: originalContacts } = await dbFrom('contacts')
       .select('id, assigned_to')
       .in('id', contactIds);
 
@@ -109,8 +107,7 @@ export function useInboxBulkActions({ refetch, filteredConversations }: UseInbox
         successMessage: `${contactIds.length} contato(s) arquivado(s)`,
         undoMessage: 'Arquivamento desfeito',
         action: async () => {
-          const { error } = await supabase
-            .from('contacts')
+          const { error } = await dbFrom('contacts')
             .update({ assigned_to: null })
             .in('id', contactIds);
           if (error) throw error;
@@ -120,8 +117,7 @@ export function useInboxBulkActions({ refetch, filteredConversations }: UseInbox
         undoAction: async () => {
           if (originalContacts) {
             for (const contact of originalContacts) {
-              await supabase
-                .from('contacts')
+              await dbFrom('contacts')
                 .update({ assigned_to: contact.assigned_to })
                 .eq('id', contact.id);
             }

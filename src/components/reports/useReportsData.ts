@@ -5,6 +5,7 @@ import { useAgents } from '@/features/admin';
 import { useTags } from '@/hooks/useTags';
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export function useReportsData() {
   const [period, setPeriod] = useState('30');
@@ -35,8 +36,7 @@ export function useReportsData() {
   const { data: messagesData, isLoading: loadingMessages } = useQuery({
     queryKey: ['reports-messages', period, selectedAgent],
     queryFn: async () => {
-      let query = supabase
-        .from('messages')
+      let query = dbFrom('messages')
         .select('id, created_at, sender, agent_id, contact_id, is_read')
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString());
@@ -50,8 +50,7 @@ export function useReportsData() {
   const { data: previousMessagesData, isLoading: loadingPreviousMessages } = useQuery({
     queryKey: ['reports-messages-previous', period, selectedAgent],
     queryFn: async () => {
-      let query = supabase
-        .from('messages')
+      let query = dbFrom('messages')
         .select('id, created_at, sender, agent_id, contact_id, is_read')
         .gte('created_at', previousDateRange.from.toISOString())
         .lte('created_at', previousDateRange.to.toISOString());
@@ -66,8 +65,7 @@ export function useReportsData() {
   const { data: contactsData, isLoading: loadingContacts } = useQuery({
     queryKey: ['reports-contacts', period, selectedAgent, selectedTag],
     queryFn: async () => {
-      let query = supabase
-        .from('contacts')
+      let query = dbFrom('contacts')
         .select('id, created_at, assigned_to, tags, contact_type')
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString());
@@ -81,8 +79,7 @@ export function useReportsData() {
   const { data: previousContactsData, isLoading: loadingPreviousContacts } = useQuery({
     queryKey: ['reports-contacts-previous', period, selectedAgent, selectedTag],
     queryFn: async () => {
-      let query = supabase
-        .from('contacts')
+      let query = dbFrom('contacts')
         .select('id, created_at, assigned_to, tags, contact_type')
         .gte('created_at', previousDateRange.from.toISOString())
         .lte('created_at', previousDateRange.to.toISOString());

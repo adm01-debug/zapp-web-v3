@@ -11,6 +11,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeForSearch } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface SearchResult {
   id:           string;
@@ -98,8 +99,7 @@ export function useContactSearch(options: ContactSearchOptions = {}) {
 
         if (error) {
           // Fallback: direct ilike search
-          const { data: fallback } = await supabase
-            .from('evolution_contacts')
+          const { data: fallback } = await dbFrom('contacts')
             .select('id,remote_jid,phone_number,full_name,push_name,email,company,lead_status,lead_score,tags')
             .is('deleted_at', null)
             .eq('instance_name', instanceName)

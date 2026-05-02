@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Tags, Brain, RefreshCw, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export function AIAutoTagsConfig() {
   const queryClient = useQueryClient();
@@ -40,8 +41,7 @@ export function AIAutoTagsConfig() {
   const retagMutation = useMutation({
     mutationFn: async () => {
       // Get recent contacts with messages
-      const { data: contacts } = await supabase
-        .from('contacts')
+      const { data: contacts } = await dbFrom('contacts')
         .select('id')
         .order('updated_at', { ascending: false })
         .limit(20);

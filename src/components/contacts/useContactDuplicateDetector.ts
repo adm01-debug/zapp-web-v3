@@ -8,6 +8,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -78,8 +79,7 @@ export function useContactDuplicateDetector({
       try {
         // Check by normalized phone
         if (normalizedPhone && normalizedPhone.length >= 8) {
-          const { data: phoneMatches } = await supabase
-            .from('contacts')
+          const { data: phoneMatches } = await dbFrom('contacts')
             .select('id, name, phone, email, avatar_url')
             .eq('workspace_id', workspaceId)
             .is('deleted_at', null)
@@ -102,8 +102,7 @@ export function useContactDuplicateDetector({
 
         // Check by email
         if (normalizedEmail && normalizedEmail.includes('@')) {
-          const { data: emailMatches } = await supabase
-            .from('contacts')
+          const { data: emailMatches } = await dbFrom('contacts')
             .select('id, name, phone, email, avatar_url')
             .eq('workspace_id', workspaceId)
             .eq('email', normalizedEmail)

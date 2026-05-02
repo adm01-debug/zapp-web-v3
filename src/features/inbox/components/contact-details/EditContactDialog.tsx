@@ -28,6 +28,7 @@ import { ContactPhoneManager, PhoneEntry } from '@/components/contacts/ContactPh
 import { ContactConsentManager, ConsentData } from '@/components/contacts/ContactConsentManager';
 import { AuditLogPanel } from '@/components/contacts/AuditLogPanel';
 import { ConflictResolutionDialog, ConflictInfo } from '@/components/contacts/ConflictResolutionDialog';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -122,8 +123,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
       await withRetry(async () => {
         if (force) {
           // Force update ignoring version (admin override)
-          const { error } = await supabase
-            .from('contacts')
+          const { error } = await dbFrom('contacts')
             .update({ ...data, updated_at: new Date().toISOString() })
             .eq('id', contact.id);
           if (error) throw error;

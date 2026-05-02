@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface RecentSend {
   idem_key: string;
@@ -50,8 +51,7 @@ export function useAgentRecentSends() {
       }
 
       const ids = Array.from(new Set(parsed.map((p) => p.message_id)));
-      const { data: msgs, error: msgsErr } = await supabase
-        .from('messages')
+      const { data: msgs, error: msgsErr } = await dbFrom('messages')
         .select('id, agent_id')
         .in('id', ids);
       if (msgsErr) throw msgsErr;

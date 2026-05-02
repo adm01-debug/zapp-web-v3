@@ -31,6 +31,7 @@ import { DeliveryStatsPanel } from '@/features/inbox/components/DeliveryStatsPan
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { log } from '@/lib/logger';
 import type { EnrichedContactData, AIConversationTag, SLAInfo } from '@/hooks/useContactEnrichedData';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 12 },
@@ -170,8 +171,7 @@ function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; on
   const { data: count, isLoading } = useQuery({
     queryKey: ['shared-media-count', contactId],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from('messages')
+      const { count, error } = await dbFrom('messages')
         .select('id', { count: 'exact', head: true })
         .eq('contact_id', contactId)
         .not('media_url', 'is', null);
@@ -203,8 +203,7 @@ function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; on
       queryClient.prefetchQuery({
         queryKey: ['media-gallery-preview', contactId, PAGE_SIZE],
         queryFn: async () => {
-          const { data, error } = await supabase
-            .from('messages')
+          const { data, error } = await dbFrom('messages')
             .select('id, media_url, message_type, content, created_at')
             .eq('contact_id', contactId)
             .not('media_url', 'is', null)

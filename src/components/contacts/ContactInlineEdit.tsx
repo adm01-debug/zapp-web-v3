@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { sanitizeText } from '@/lib/sanitize';
 import { invalidateContactCache } from '@/hooks/useContactRealtime';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactInlineEditProps {
   contactId: string;
@@ -52,8 +53,7 @@ export const ContactInlineEdit: React.FC<ContactInlineEditProps> = ({
     setIsSaving(true);
     setError(null);
     try {
-      const { error: updateError } = await supabase
-        .from('contacts')
+      const { error: updateError } = await dbFrom('contacts')
         .update({ [field]: trimmed || null })
         .eq('id', contactId);
       if (updateError) throw updateError;

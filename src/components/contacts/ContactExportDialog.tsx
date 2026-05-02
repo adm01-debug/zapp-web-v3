@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatPhoneForDisplay } from '@/lib/phoneUtils';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Column definitions (evolution_contacts schema) ────────────────────────
 
@@ -88,8 +89,7 @@ export const ContactExportDialog: React.FC<Props> = ({
   const handleExport = async () => {
     setLoading(true);
     try {
-      let q = supabase
-        .from('evolution_contacts')
+      let q = dbFrom('contacts')
         .select([
           'full_name','push_name','phone_number','email','company','tags',
           'lead_status','lead_score','instance_name','last_message_at',

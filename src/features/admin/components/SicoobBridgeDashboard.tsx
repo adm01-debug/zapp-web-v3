@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface SicoobMapping {
   id: string;
@@ -47,8 +48,7 @@ export function SicoobBridgeDashboard() {
       // Load recent messages from Sicoob contacts
       const contactIds = (mappingData || []).map((m: SicoobMapping) => m.contact_id);
       if (contactIds.length > 0) {
-        const { data: msgData } = await supabase
-          .from('messages')
+        const { data: msgData } = await dbFrom('messages')
           .select('id, content, sender, created_at, contact_id, status')
           .in('contact_id', contactIds.slice(0, 20))
           .order('created_at', { ascending: false })

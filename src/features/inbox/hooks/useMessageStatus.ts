@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
+import { dbFrom, dbTable } from '@/integrations/datasource/db';
 import {
   subscribeAllSendStatus,
   getSendStatus,
@@ -34,8 +35,7 @@ export const useMessageStatus = (contactId?: string) => {
     const fetchInitialStatuses = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('messages')
+        const { data, error } = await dbFrom('messages')
           .select('id, status, status_updated_at, error_code, error_reason')
           .eq('contact_id', contactId)
           .eq('sender', 'agent')
@@ -75,7 +75,7 @@ export const useMessageStatus = (contactId?: string) => {
   useEffect(() => {
     if (!contactId) return;
 
-    logMessagesSubscribe('useMessageStatus', { event: 'UPDATE', table: 'messages', filter: `contact_id=eq.${contactId}` });
+    logMessagesSubscribe('useMessageStatus', { event: 'UPDATE', table: dbTable('messages'), filter: `contact_id=eq.${contactId}` });
     const channel = supabase
       .channel(`message-status-${contactId}`)
       .on(
@@ -83,7 +83,7 @@ export const useMessageStatus = (contactId?: string) => {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'messages',
+          table: dbTable('messages'),
           filter: `contact_id=eq.${contactId}`,
         },
         wrapMessagesHandler<{ new: Record<string, unknown>; old?: Record<string, unknown> }>('useMessageStatus', (payload) => {

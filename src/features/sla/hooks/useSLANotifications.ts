@@ -5,6 +5,7 @@ import { useAuth } from '@/features/auth';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { playNotificationSound, showBrowserNotification } from '@/utils/notificationSounds';
 import { getLogger } from '@/lib/logger';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const log = getLogger('SLANotifications');
 
@@ -33,8 +34,7 @@ export const useSLANotifications = () => {
       contactId: string
     ) => {
       // Fetch contact info
-      const { data: contact } = await supabase
-        .from('contacts')
+      const { data: contact } = await dbFrom('contacts')
         .select('name, phone')
         .eq('id', contactId)
         .maybeSingle();

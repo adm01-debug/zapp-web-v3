@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface AgentProfile {
   id: string;
@@ -32,8 +33,7 @@ export const agentRepository = {
   },
 
   async fetchActiveChatsCounts() {
-    return supabase
-      .from('contacts')
+    return dbFrom('contacts')
       .select('assigned_to')
       .not('assigned_to', 'is', null);
   },

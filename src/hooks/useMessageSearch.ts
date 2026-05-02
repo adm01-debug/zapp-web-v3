@@ -11,6 +11,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface SearchResult {
   id: string;
@@ -37,8 +38,7 @@ export function useMessageSearch(conversationId: string, workspaceId: string) {
 
     setIsSearching(true);
     try {
-      const { data, error } = await supabase
-        .from('messages')
+      const { data, error } = await dbFrom('messages')
         .select('id, content, sender_name, sender_type, created_at')
         .eq('conversation_id', conversationId)
         .eq('workspace_id', workspaceId)

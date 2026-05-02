@@ -12,6 +12,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -84,8 +85,7 @@ export function useContactsPagination(workspaceId: string) {
           data = (searchData ?? []).map(sanitizeRow);
         } else {
           // Standard query with filters
-          let query = supabase
-            .from('contacts')
+          let query = dbFrom('contacts')
             .select('id, name, phone, email, company, tags, channel, avatar_url, last_seen_at, created_at', { count: 'exact' })
             .eq('workspace_id', workspaceId)
             .is('deleted_at', null)
@@ -141,8 +141,7 @@ export function useContactsPagination(workspaceId: string) {
         if (error) throw error;
         data = (searchData ?? []).map(sanitizeRow);
       } else {
-        let query = supabase
-          .from('contacts')
+        let query = dbFrom('contacts')
           .select('id, name, phone, email, company, tags, channel, avatar_url, last_seen_at, created_at')
           .eq('workspace_id', workspaceId)
           .is('deleted_at', null)

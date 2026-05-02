@@ -10,6 +10,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { dbFrom, dbTable } from '@/integrations/datasource/db';
 
 export interface RealtimeContactData {
   id: string;
@@ -96,8 +97,7 @@ export function useContactRealtime({
     setError(null);
 
     try {
-      const { data, error: fetchError } = await supabase
-        .from('contacts')
+      const { data, error: fetchError } = await dbFrom('contacts')
         .select('*')
         .eq('id', id)
         .eq('workspace_id', workspaceId)
@@ -159,7 +159,7 @@ export function useContactRealtime({
         {
           event: '*',
           schema: 'public',
-          table: 'contacts',
+          table: dbTable('contacts'),
           filter: `id=eq.${contactId}`,
         },
         (payload) => {

@@ -9,6 +9,7 @@ import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeContactFields } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -105,8 +106,7 @@ export function useContacts() {
   // ── Build query ──────────────────────────────────────────────────────────
 
   const buildQuery = useCallback((f: ContactFilters) => {
-    let q = supabase
-      .from('evolution_contacts')
+    let q = dbFrom('contacts')
       .select([
         'id','remote_jid','phone_number','full_name','push_name','email',
         'company','lead_status','lead_score','tags','notes','instance_name',
@@ -231,8 +231,7 @@ export function useContacts() {
     // Optimistic
     setContacts((prev) => prev.map((c) => c.id === id ? { ...c, ...updates } : c));
 
-    const { error } = await supabase
-      .from('evolution_contacts')
+    const { error } = await dbFrom('contacts')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id);
 

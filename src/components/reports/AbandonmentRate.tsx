@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserX, MessageSquare, Clock, TrendingDown } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export function AbandonmentRate() {
   const [data, setData] = useState({ total: 0, abandoned: 0, responded: 0 });
@@ -19,8 +20,7 @@ export function AbandonmentRate() {
     since.setDate(since.getDate() - parseInt(period));
 
     // Get contacts that sent messages in the period
-    const { data: contactMessages } = await supabase
-      .from('messages')
+    const { data: contactMessages } = await dbFrom('messages')
       .select('contact_id, sender')
       .gte('created_at', since.toISOString())
       .limit(1000);
