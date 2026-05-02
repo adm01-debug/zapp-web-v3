@@ -16,6 +16,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { type GmailMessage } from './gmail/gmailTypes';
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -88,13 +89,18 @@ export function useGmail() {
   const [accounts, setAccounts]               = useState<GmailAccount[]>([]);
   const [tokenStatus, setTokenStatus]         = useState<GmailTokenInfo[]>([]);
   const [threads, setThreads]                 = useState<GmailThread[]>([]);
+  const [selectedThread, setSelectedThread]   = useState<GmailThread | null>(null);
+  const [messages, setMessages]               = useState<GmailMessage[]>([]);
   const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const [activeLabel, setActiveLabel]         = useState<GmailLabel>('INBOX');
   const [isLoading, setIsLoading]             = useState(true);
+  const [isLoadingThreads, setIsLoadingThreads] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSyncing, setIsSyncing]             = useState(false);
   const [isSending, setIsSending]             = useState(false);
   const [error, setError]                     = useState<string | null>(null);
   const [nextPageToken, setNextPageToken]     = useState<string | null>(null);
+  const [hasMore, setHasMore]                 = useState(false);
 
   const tokenCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -141,6 +147,7 @@ export function useGmail() {
     const id = accountId ?? activeAccountId;
     if (!id) return;
 
+    setIsLoadingThreads(true);
     try {
       const { data, error: rpcErr } = await supabase.rpc('rpc_gmail_search_threads', {
         p_account_id: id,
@@ -153,10 +160,52 @@ export function useGmail() {
       if (rpcErr) throw new Error(rpcErr.message);
       const newThreads = (data ?? []) as GmailThread[];
       setThreads(prev => append ? [...prev, ...newThreads] : newThreads);
+      setHasMore(newThreads.length === 50);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsLoadingThreads(false);
     }
   }, [activeAccountId, threads.length]);
+
+  // ── Carregar mensagens de uma thread ────────────────────────────────────
+  const loadMessages = useCallback(async (threadId: string) => {
+    setIsLoadingMessages(true);
+    try {
+      const { data, error: dbErr } = await supabase
+        .from('gmail_messages')
+        .select('*')
+        .eq('thread_id', threadId)
+        .order('date', { ascending: true });
+
+      if (dbErr) throw dbErr;
+      setMessages(data as GmailMessage[]);
+    } catch (err) {
+      console.error('Erro ao carregar mensagens:', err);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  }, []);
+
+  // ── Selecionar thread ────────────────────────────────────────────────────
+  const selectThread = useCallback(async (thread: GmailThread | null) => {
+    setSelectedThread(thread);
+    if (thread) {
+      await loadMessages(thread.id);
+      if (thread.unread_count > 0) {
+        // markAsRead(thread.id, true); // Opcional: auto mark as read
+      }
+    } else {
+      setMessages([]);
+    }
+  }, [loadMessages]);
+
+  // ── Carregar mais threads (Paginação) ───────────────────────────────────
+  const loadMore = useCallback(async () => {
+    if (hasMore && !isLoadingThreads) {
+      await loadThreads(activeAccountId || undefined, activeLabel, true);
+    }
+  }, [hasMore, isLoadingThreads, activeAccountId, activeLabel, loadThreads]);
 
   // ── Sincronizar inbox via gmail-sync ────────────────────────────────────
   const syncNow = useCallback(async (accountId?: string) => {
@@ -439,13 +488,18 @@ export function useGmail() {
     accounts,
     tokenStatus,
     threads,
+    selectedThread,
+    messages,
     activeAccountId,
     activeAccount,
     activeLabel,
     activeTokenInfo,
     isLoading,
+    isLoadingThreads,
+    isLoadingMessages,
     isSyncing,
     isSending,
+    hasMore,
     error,
     nextPageToken,
     // Contadores
@@ -456,21 +510,19 @@ export function useGmail() {
     // Ações de configuração
     setActiveAccountId,
     setActiveLabel,
+    selectThread,
+    loadMore,
     // Ações de conta
     startOAuth,
     disconnect,
+    syncNow,
     refreshToken,
     renewWatch,
-    // Ações de sincronização
-    syncNow,
-    loadAccounts,
-    loadMore: () => loadThreads(undefined, activeLabel, true),
     // Ações de thread
+    sendEmail,
     markAsRead,
     starThread,
     archiveThread,
     assignThread,
-    // Envio
-    sendEmail,
   };
 }
