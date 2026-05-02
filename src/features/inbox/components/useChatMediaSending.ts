@@ -10,11 +10,17 @@ import { newRequestId } from '@/lib/withRequestId';
  * Encapsulates WhatsApp instance resolution and media-message sending
  * (stickers, custom emojis, audio memes) to keep ChatPanel lean.
  *
+ * Architecture note:
+ * - This code connects to Supabase CLOUD (allrjhkpuscmgbsnmjlv)
+ * - Tables: contacts, messages, whatsapp_connections, stickers
+ * - The VPS PostgreSQL (evolution_contacts, evolution_messages) is a
+ *   SEPARATE database used by Evolution API directly
+ *
  * FIXES APPLIED:
  * - BUG 1: contactPhone! non-null assertion → safe guard
  * - FALHA 5: fire-and-forget status update → proper error handling
  * - FALHA 6: fire-and-forget auto-save → error logging
- * - FALHA 9: 'contacts' table → 'evolution_contacts' (matches real schema)
+ * - REGRESSION FIX: reverted evolution_contacts → contacts (Supabase Cloud schema)
  */
 export function useChatMediaSending(contactId: string, contactPhone: string | undefined) {
   const [instanceName, setInstanceName] = useState('');
@@ -27,19 +33,27 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     if (instanceName) return instanceName;
 
     try {
-      // FIX FALHA 9: Use 'evolution_contacts' instead of 'contacts'
+      // Query Supabase Cloud 'contacts' table (NOT evolution_contacts which is VPS-only)
       const { data: contact } = await supabase
-        .from('evolution_contacts')
-        .select('instance_name')
+        .from('contacts')
+        .select('whatsapp_connection_id')
         .eq('id', contactId)
         .maybeSingle();
 
-      if (contact?.instance_name) {
-        setInstanceName(contact.instance_name);
-        return contact.instance_name;
+      if (contact?.whatsapp_connection_id) {
+        setWhatsappConnectionId(contact.whatsapp_connection_id);
+        const { data: conn } = await supabase
+          .from('whatsapp_connections')
+          .select('instance_id')
+          .eq('id', contact.whatsapp_connection_id)
+          .maybeSingle();
+        if (conn?.instance_id) {
+          setInstanceName(conn.instance_id);
+          return conn.instance_id;
+        }
       }
 
-      // Fallback: try whatsapp_connections table
+      // Fallback: first connected instance
       const { data: fallbackConn } = await supabase
         .from('whatsapp_connections')
         .select('instance_id')
