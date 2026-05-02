@@ -12,7 +12,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield, CheckCircle2, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { type Contact } from '@/hooks/useContacts';
 
 interface Props { contact: Contact; onUpdated?: (u: Partial<Contact>) => void; readonly?: boolean; }
@@ -37,12 +38,12 @@ export const LGPDConsentManager: React.FC<Props> = ({ contact, onUpdated, readon
   const grant = async () => {
     setLoading('grant');
     try {
-      const { data, error } = await supabase.rpc('grant_lgpd_consent', {
+      const { data, error } = await dbRpc(RPC.grantLgpdConsent, {
         p_contact_id: contact.id, p_channel: channel,
         p_marketing_consent: marketing, p_data_sharing: dataShare, p_profiling: profiling,
       });
       if (error) throw error;
-      const r = data as Record<string, unknown>;
+      const r = (typeof data === 'boolean' ? {} : ((data ?? {}) as Record<string, unknown>));
       if (r?.error) throw new Error(String(r.error));
       toast({ title: '✅ Consentimento registrado!', duration: 3000 });
       onUpdated?.({ lgpd_consent_at: r.granted_at as string, lgpd_opt_out_at: null, lgpd_marketing_consent: marketing });
@@ -53,9 +54,9 @@ export const LGPDConsentManager: React.FC<Props> = ({ contact, onUpdated, readon
   const revoke = async () => {
     setLoading('revoke');
     try {
-      const { data, error } = await supabase.rpc('revoke_lgpd_consent', { p_contact_id: contact.id, p_reason: 'user_request' });
+      const { data, error } = await dbRpc(RPC.revokeLgpdConsent, { p_contact_id: contact.id, p_reason: 'user_request' });
       if (error) throw error;
-      const r = data as Record<string, unknown>;
+      const r = (typeof data === 'boolean' ? {} : ((data ?? {}) as Record<string, unknown>));
       if (r?.error) throw new Error(String(r.error));
       toast({ title: '📋 Opt-out registrado!', duration: 3000 });
       onUpdated?.({ lgpd_opt_out_at: r.opted_out_at as string, lgpd_marketing_consent: false });
