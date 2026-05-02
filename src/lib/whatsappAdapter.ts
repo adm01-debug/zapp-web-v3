@@ -440,8 +440,13 @@ export async function markAsRead(params: MarkAsReadParams) {
 // ----- Webhooks de entrada --------------------------------------------------
 
 function projectFunctionsBase(): string {
+  // Use self-hosted URL if available, fallback to Cloud
   // deno-lint-ignore no-explicit-any
-  const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID ?? "";
+  const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL ?? '';
+  if (supabaseUrl && !supabaseUrl.includes('.supabase.co')) {
+    return supabaseUrl.replace(//$/, '') + '/functions/v1';
+  }
+  const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID ?? '';
   return `https://${projectId}.supabase.co/functions/v1`;
 }
 

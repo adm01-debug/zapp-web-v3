@@ -22,6 +22,8 @@ export const CSP_SOURCES = {
     'https://*.wa.me',
   ],
   connect: [
+    'https://*.atomicabr.com.br',
+    'wss://*.atomicabr.com.br',
     "'self'",
     SUPABASE_URL,
     `${SUPABASE_URL.replace('https://', 'wss://')}/realtime/v1`,
