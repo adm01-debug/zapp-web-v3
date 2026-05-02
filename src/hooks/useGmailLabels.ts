@@ -29,14 +29,14 @@ export function useGmailLabels(accountId: string | null) {
 
     setIsLoading(true);
     setError(null);
-    const { data, error: dbErr } = await safeClient.from<GmailLabel>('gmail_labels', (q) =>
+    const { data, error: dbErr } = await safeClient.from('gmail_labels', (q) =>
       q.select('*').eq('account_id', accountId).order('name', { ascending: true })
     );
 
     if (dbErr) {
       setError(dbErr.message);
     } else {
-      setLabels(data ?? []);
+      setLabels(gmailMappers.labels(data ?? []));
     }
     setIsLoading(false);
   }, [accountId]);
