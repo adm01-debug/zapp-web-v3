@@ -2,7 +2,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { GmailLabelInfo } from '@/types/gmail';
+import { GmailLabelInfo as GmailLabel } from '@/types/gmail';
+
+export type { GmailLabel };
 
 const supabase = _supabase as any;
 
