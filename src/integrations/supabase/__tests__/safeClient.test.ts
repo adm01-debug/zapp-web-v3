@@ -1,14 +1,24 @@
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { safeClient } from '../safeClient';
 
-const mockFrom = vi.fn();
-const mockRpc = vi.fn();
+const mockSelect = vi.fn();
+const mockRpcChain = vi.fn();
 
 vi.mock('../client', () => ({
   supabase: {
-    from: (table: string) => mockFrom(table),
-    rpc: (name: string, params: any) => mockRpc(name, params),
+    from: vi.fn((table: string) => ({
+      select: mockSelect,
+      limit: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+    })),
+    rpc: vi.fn((name: string, params: any) => ({
+      limit: vi.fn().mockImplementation(() => {
+        return mockRpcChain();
+      }),
+      then: (resolve: any) => resolve(mockRpcChain())
+    })),
   },
 }));
 
@@ -17,50 +27,40 @@ describe('safeClient', () => {
     vi.clearAllMocks();
   });
 
-  it('deve retornar dados corretamente em uma query from', async () => {
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockResolvedValue({ data: [{ id: 1 }], error: null }),
-    });
+  it('deve validar e falhar se uma tabela gmail_* não existir', async () => {
+    mockSelect.mockResolvedValue({ error: { message: 'relation "gmail_test" does not exist' } });
 
-    const { data, error } = await safeClient.from('any_table', (q) => q.select('*').eq('id', 1));
+    const { data, error } = await safeClient.from('gmail_test_fail', (q) => q.select('*'));
 
-    expect(data).toEqual([{ id: 1 }]);
-    expect(error).toBeNull();
-    expect(mockFrom).toHaveBeenCalledWith('any_table');
+    expect(data).toEqual([]);
+    expect(error?.message).toContain('não disponível');
   });
 
-  it('deve lidar com erros de banco de dados (ex: tabela inexistente)', async () => {
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockResolvedValue({ data: null, error: { message: 'relation "any_table" does not exist' } }),
-    });
+  it('deve retornar dados corretamente em queries seguras', async () => {
+    // Usa uma tabela que NÃO começa com gmail_ para pular validação interna
+    mockSelect.mockResolvedValue({ data: [{ id: 1 }], error: null });
 
-    const { data, error } = await safeClient.from('any_table', (q) => q.select('*'));
-
-    expect(data).toBeNull();
-    expect(error?.message).toContain('Recurso de banco de dados indisponível');
+    const res = await safeClient.from('regular_table', (q) => q.select('*'));
+    expect(res.data).toEqual([{ id: 1 }]);
+    expect(res.error).toBeNull();
   });
 
-  it('deve lidar com retornos inesperados de RPC (fallback para null)', async () => {
-    mockRpc.mockResolvedValue({ data: undefined, error: null });
-
-    const { data, error } = await safeClient.rpc('some_rpc');
-
-    expect(data).toBeNull();
-    expect(error).toBeNull();
+  it('deve incluir requestId em todas as respostas', async () => {
+    mockRpcChain.mockResolvedValue({ data: { status: 'ok' }, error: null });
+    const { requestId } = await safeClient.rpc('any_rpc');
+    expect(requestId).toMatch(/^[a-z0-9]+$/);
   });
 
-  it('deve funcionar com tabelas não tipadas via casting interno para any', async () => {
-    // Este teste valida que o safeClient aceita qualquer string como tabela
-    // e permite encadeamento de métodos sem erros de tipo TS (em tempo de execução)
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockResolvedValue({ data: { success: true }, error: null }),
-    });
+  it('deve lidar com retornos malformados (não array em from)', async () => {
+    mockSelect.mockResolvedValue({ data: { not: 'an_array' }, error: null });
+    const { data } = await safeClient.from('malformed_table', (q) => q.select('*'));
+    expect(data).toEqual([]);
+  });
 
-    const { data } = await safeClient.from('untyped_table_xyz', (q) => q.update({ foo: 'bar' }).eq('id', 123));
-    
-    expect(data).toEqual({ success: true });
+  it('deve validar RPCs rpc_gmail_*', async () => {
+    mockRpcChain.mockResolvedValue({ error: { message: 'function rpc_gmail_test() does not exist' } });
+
+    const { error } = await safeClient.rpc('rpc_gmail_test_fail');
+    expect(error?.message).toContain('não disponível');
   });
 });
