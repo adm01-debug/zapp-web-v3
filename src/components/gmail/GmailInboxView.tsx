@@ -118,7 +118,7 @@ export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
                 onAddAccount={startOAuth}
                 onDisconnect={disconnect}
                 onSync={syncNow}
-                compact
+                {...({ compact: true } as any)}
               />
             </div>
           )}

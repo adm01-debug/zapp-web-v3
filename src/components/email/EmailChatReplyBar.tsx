@@ -118,8 +118,8 @@ export function EmailChatReplyBar({
         bodyPlain: plainText,
         threadId: threadGmailId,
         attachments: processedAttachments as any,
-        signatureHtml: selectedSignature?.html_content,
-      });
+        ...(selectedSignature?.html_content ? { signatureHtml: selectedSignature.html_content } : {}),
+      } as any);
 
       // Registra resposta no SLA
       markReplied(threadGmailId);

@@ -223,9 +223,9 @@ export function useGlobalSearchData(open: boolean) {
     }
   }, [addToHistory, allTags]);
 
-  const debouncedSearch = useDebounce((query: string) => {
-    performSearch(query, activeTypes, dateFilter, selectedTags, mediaTypeFilter);
-  }, 300);
+  const debouncedSearch = useDebounce(((...args: unknown[]) => {
+    performSearch(args[0] as string, activeTypes, dateFilter, selectedTags, mediaTypeFilter);
+  }) as (...args: unknown[]) => unknown, 300);
 
   const handleSearch = useCallback((query: string) => {
     setSearch(query);
