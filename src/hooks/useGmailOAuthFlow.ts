@@ -27,15 +27,6 @@ const CHECK_INTERVAL_MS = 60 * 1000;
 
 export type TokenStatus = 'loading' | 'valid' | 'expiring' | 'expired' | 'disconnected';
 
-export interface GmailAccount {
-  id: string;
-  email: string;
-  display_name: string | null;
-  picture_url: string | null;
-  token_expiry: string;
-  is_active: boolean;
-  watch_expiry: string | null;
-}
 
 interface UseGmailOAuthFlowReturn {
   accounts: GmailAccount[];
