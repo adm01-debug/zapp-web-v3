@@ -327,10 +327,10 @@ export function useGmail() {
 
   // ── Desconectar conta ───────────────────────────────────────────────────
   const disconnect = useCallback(async (accountId: string) => {
-    await (supabase as any)
-      .from('gmail_accounts')
-      .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('id', accountId);
+    const { requestId, error: dbErr } = await safeClient.from('gmail_accounts', (q) =>
+      q.update({ is_active: false, updated_at: new Date().toISOString() })
+       .eq('id', accountId)
+    );
 
     setAccounts(prev => prev.filter(a => a.id !== accountId));
     if (activeAccountId === accountId) {
