@@ -162,7 +162,7 @@ export default function AdminGmailStatusPage() {
         </div>
         <div className="flex gap-2">
           <Button onClick={() => window.location.hash = '#admin/gmail-audit'} variant="outline" className="gap-2">
-            <History className="w-4 h-4" />
+            <HistoryIcon className="w-4 h-4" />
             Ver Auditoria
           </Button>
           <Button onClick={handleRevalidate} variant="outline" className="gap-2">
