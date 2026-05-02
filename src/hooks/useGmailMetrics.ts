@@ -25,7 +25,7 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
     try {
       const sinceDate = new Date(Date.now() - days * 86400_000).toISOString().split('T')[0];
 
-      const { data: dailyData, error: dbErr } = await safeClient.from<GmailDayMetric>('gmail_daily_metrics', (q) =>
+      const { data: dailyData, error: dbErr } = await safeClient.from('gmail_daily_metrics', (q) =>
         q.select('date, threads_received, threads_replied, avg_first_reply_minutes, sla_met_count, sla_breached_count')
          .eq('account_id', accountId)
          .gte('date', sinceDate)
@@ -34,7 +34,7 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
 
       if (dbErr) throw dbErr;
 
-      const daily = (dailyData ?? []) as GmailDayMetric[];
+      const daily = gmailMappers.metrics(dailyData ?? []);
 
       const total_received   = daily.reduce((s, d) => s + (d.threads_received ?? 0), 0);
       const total_replied    = daily.reduce((s, d) => s + (d.threads_replied ?? 0), 0);
