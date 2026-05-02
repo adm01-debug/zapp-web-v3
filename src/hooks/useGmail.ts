@@ -48,6 +48,7 @@ export interface GmailThread {
   id:              string;
   account_id:      string;
   gmail_thread_id: string;
+  thread_id?:      string;   // Alias legado
   subject:         string | null;
   snippet:         string | null;
   from_email:      string | null;
@@ -57,11 +58,14 @@ export interface GmailThread {
   message_count:   number;
   is_starred:      boolean;
   is_important:    boolean;
-  sla_status:      'ok' | 'warning' | 'breached' | null;
+  is_unread?:      boolean;  // Legado
+  sla_status:      'ok' | 'warning' | 'breached' | 'met' | null;
   assigned_to:     string | null;
   last_message_at: string | null;
   first_reply_at:  string | null;
   created_at:      string;
+  contact?:        any;      // Legado
+  tags?:           string[]; // Legado
 }
 
 export interface GmailSendParams {
@@ -158,7 +162,11 @@ export function useGmail() {
       });
 
       if (rpcErr) throw new Error(rpcErr.message);
-      const newThreads = (data ?? []) as GmailThread[];
+      const newThreads = (data ?? []).map((t: any) => ({
+        ...t,
+        thread_id: t.gmail_thread_id,
+        is_unread: t.unread_count > 0
+      })) as GmailThread[];
       setThreads(prev => append ? [...prev, ...newThreads] : newThreads);
       setHasMore(newThreads.length === 50);
     } catch (err) {
@@ -435,10 +443,11 @@ export function useGmail() {
         filter: `account_id=eq.${activeAccountId}`,
       }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setThreads(prev => [payload.new as GmailThread, ...prev]);
+          const nt = { ...(payload.new as GmailThread), thread_id: (payload.new as any).gmail_thread_id, is_unread: (payload.new as any).unread_count > 0 };
+          setThreads(prev => [nt, ...prev]);
         } else if (payload.eventType === 'UPDATE') {
           setThreads(prev => prev.map(t => t.id === (payload.new as GmailThread).id
-            ? { ...t, ...(payload.new as GmailThread) }
+            ? { ...t, ...(payload.new as GmailThread), thread_id: (payload.new as any).gmail_thread_id, is_unread: (payload.new as any).unread_count > 0 }
             : t
           ));
         } else if (payload.eventType === 'DELETE') {
