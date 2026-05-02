@@ -54,7 +54,7 @@ interface EditContactDialogProps {
   open:          boolean;
   onOpenChange:  (v: boolean) => void;
   contact:       ContactData;
-  onSaved:       (updated: ContactData) => void;
+  onSaved?:      (updated: ContactData) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
