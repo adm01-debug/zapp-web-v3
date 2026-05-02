@@ -298,7 +298,7 @@ export function useGmail() {
 
   // ── Archive thread ──────────────────────────────────────────────────────
   const archiveThread = useCallback(async (threadId: string) => {
-    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_archive_thread', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_archive_thread', {
       p_thread_id: threadId,
       p_archived:  true,
     });
