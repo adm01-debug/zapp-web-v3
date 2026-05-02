@@ -73,8 +73,8 @@ export function sanitizeContactFields<T extends Record<string, unknown>>(contact
   }
 
   // Sanitize tags array
-  if (Array.isArray(result.tags)) {
-    result.tags = (result.tags as string[]).map(sanitizeText).filter(Boolean) as T['tags'];
+  if (Array.isArray((result as any).tags)) {
+    (result as any).tags = ((result as any).tags as string[]).map(sanitizeText).filter(Boolean);
   }
 
   return result;
