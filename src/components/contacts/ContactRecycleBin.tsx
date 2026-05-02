@@ -1,0 +1,227 @@
+/**
+ * ContactRecycleBin.tsx
+ * View and restore soft-deleted contacts within 30-day recovery window.
+ * Only visible to admins, supervisors, and managers.
+ */
+import React, { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Trash2, RotateCcw, RefreshCw, Search, Clock, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { sanitizeText } from '@/lib/sanitize';
+import { formatPhoneForDisplay } from '@/lib/phoneUtils';
+
+// ── Types ──────────────────────────────────────────────────────────────────
+
+interface DeletedContact {
+  id:             string;
+  name:           string;
+  phone:          string | null;
+  email:          string | null;
+  company:        string | null;
+  deleted_at:     string;
+  deleted_reason: string | null;
+  days_remaining: number;
+}
+
+interface ContactRecycleBinProps {
+  workspaceId: string;
+  onRestored?: (contactId: string) => void;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function daysUntilPurge(deletedAt: string): number {
+  const deleted = new Date(deletedAt);
+  const purgeAt = new Date(deleted.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const diff    = purgeAt.getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / (24 * 60 * 60 * 1000)));
+}
+
+function formatDeletedReason(reason: string | null): string {
+  if (!reason) return 'Exclusão manual';
+  if (reason.startsWith('merged_into:')) return '🔀 Mesclado com outro contato';
+  if (reason === 'bulk_deletion') return '🗑️ Exclusão em massa';
+  if (reason === 'manual_deletion') return '🗑️ Exclusão manual';
+  if (reason === 'lgpd_erasure') return '⚖️ Solicitação LGPD';
+  return sanitizeText(reason);
+}
+
+// ── Component ──────────────────────────────────────────────────────────────
+
+export const ContactRecycleBin: React.FC<ContactRecycleBinProps> = ({
+  workspaceId, onRestored,
+}) => {
+  const { toast } = useToast();
+  const [contacts,  setContacts]  = useState<DeletedContact[]>([]);
+  const [loading,   setLoading]   = useState(false);
+  const [restoring, setRestoring] = useState<string | null>(null);
+  const [search,    setSearch]    = useState('');
+
+  const loadDeleted = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('id, name, phone, email, company, deleted_at, deleted_reason')
+        .eq('workspace_id', workspaceId)
+        .not('deleted_at', 'is', null)
+        .gte('deleted_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .order('deleted_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      const enriched: DeletedContact[] = (data ?? []).map((c) => ({
+        ...c,
+        name:    sanitizeText(c.name),
+        phone:   c.phone ? sanitizeText(c.phone) : null,
+        email:   c.email ? sanitizeText(c.email) : null,
+        company: c.company ? sanitizeText(c.company) : null,
+        days_remaining: daysUntilPurge(c.deleted_at),
+      }));
+
+      setContacts(enriched);
+    } catch (err) {
+      console.error('[ContactRecycleBin]', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [workspaceId]);
+
+  useEffect(() => { loadDeleted(); }, [loadDeleted]);
+
+  const restore = async (contactId: string, contactName: string) => {
+    setRestoring(contactId);
+    try {
+      const { error } = await supabase.rpc('restore_contact', { p_contact_id: contactId });
+      if (error) throw error;
+
+      setContacts((prev) => prev.filter((c) => c.id !== contactId));
+      toast({
+        title: '↩️ Contato restaurado!',
+        description: `"${contactName}" está ativo novamente.`,
+        duration: 4_000,
+      });
+      onRestored?.(contactId);
+    } catch (err) {
+      console.error('[ContactRecycleBin] restore error:', err);
+      toast({
+        title: 'Erro ao restaurar',
+        description: String(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setRestoring(null);
+    }
+  };
+
+  const filtered = contacts.filter((c) =>
+    !search ||
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    (c.phone ?? '').includes(search) ||
+    (c.email ?? '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Trash2 className="h-4 w-4 text-destructive" />
+          <span className="font-semibold text-sm">Lixeira</span>
+          {contacts.length > 0 && (
+            <Badge variant="outline" className="text-xs">{contacts.length} contato{contacts.length !== 1 ? 's' : ''}</Badge>
+          )}
+        </div>
+        <Button variant="outline" size="sm" onClick={loadDeleted} disabled={loading} className="gap-1">
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+          Atualizar
+        </Button>
+      </div>
+
+      <Alert className="border-amber-200 bg-amber-50">
+        <Clock className="h-4 w-4 text-amber-600" />
+        <AlertDescription className="text-xs text-amber-700">
+          Contatos excluídos são mantidos por <strong>30 dias</strong> e então removidos permanentemente.
+          Apenas gerentes podem restaurar.
+        </AlertDescription>
+      </Alert>
+
+      {/* Search */}
+      {contacts.length > 3 && (
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar na lixeira..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && contacts.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <Trash2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
+          <p className="text-sm">Lixeira vazia</p>
+          <p className="text-xs">Nenhum contato excluído nos últimos 30 dias.</p>
+        </div>
+      )}
+
+      {/* Deleted contacts list */}
+      <div className="space-y-2 max-h-96 overflow-y-auto">
+        {filtered.map((contact) => (
+          <div
+            key={contact.id}
+            className={`rounded-lg border p-3 flex items-start justify-between gap-2 ${
+              contact.days_remaining <= 3 ? 'border-red-200 bg-red-50' : 'bg-muted/20'
+            }`}
+          >
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-medium text-sm">{contact.name}</p>
+                {contact.days_remaining <= 3 && (
+                  <Badge variant="destructive" className="text-xs gap-1">
+                    <AlertTriangle className="h-2.5 w-2.5" />
+                    Expira em {contact.days_remaining}d
+                  </Badge>
+                )}
+                {contact.days_remaining > 3 && (
+                  <Badge variant="outline" className="text-xs">
+                    <Clock className="h-2.5 w-2.5 mr-1" />
+                    {contact.days_remaining} dias restantes
+                  </Badge>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                {contact.phone && <p>{formatPhoneForDisplay(contact.phone)}</p>}
+                {contact.email && <p>{contact.email}</p>}
+                <p>{formatDeletedReason(contact.deleted_reason)}</p>
+                <p>Excluído em: {new Date(contact.deleted_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => restore(contact.id, contact.name)}
+              disabled={restoring === contact.id}
+              className="shrink-0 gap-1"
+            >
+              {restoring === contact.id
+                ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                : <RotateCcw className="h-3.5 w-3.5" />}
+              Restaurar
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ContactRecycleBin;
