@@ -59,8 +59,8 @@ export function useOptimisticMessages() {
         quoted_message_id: params.replyToId || null,
       };
 
-      pendingRef.current.set(tempId, optimistic);
-      return optimistic;
+      pendingRef.current.set(tempId, optimistic as unknown as OptimisticMessage);
+      return optimistic as unknown as OptimisticMessage;
     },
     [],
   );
