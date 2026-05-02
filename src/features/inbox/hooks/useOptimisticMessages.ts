@@ -20,10 +20,12 @@ import { Message } from '@/types/chat';
 
 let optimisticCounter = 0;
 
-export interface OptimisticMessage extends Omit<Message, 'timestamp'> { contact_id?: string; [key: string]: unknown }
+export interface OptimisticMessage extends Omit<Message, 'timestamp'> {
   /** Marks this as an optimistic message that hasn't been confirmed by the server */
   _optimistic: true;
   timestamp: Date;
+  contact_id?: string;
+  [key: string]: unknown;
 }
 
 export function useOptimisticMessages() {
