@@ -181,7 +181,7 @@ export default function AdminChannelsPage() {
         kind === "purge"
           ? { p_id: channel.id }
           : { p_id: channel.id, p_reason: actionReason.trim() || null };
-      const { error } = await (supabase.rpc as never as (n: string, a: Record<string, unknown>) => Promise<{ error: { message: string } | null }>)(rpcName, args);
+      const { error: res7104Err } = await (supabase.rpc as never as (n: string, a: Record<string, unknown>) => Promise<{ error: { message: string } | null }>)(rpcName, args);
       if (error) throw new Error(error.message);
       toast({
         title:
@@ -199,7 +199,7 @@ export default function AdminChannelsPage() {
 
   const reactivate = async (channel: ServiceChannel) => {
     try {
-      const { error } = await (supabase.rpc as never as (n: string, a: Record<string, unknown>) => Promise<{ error: { message: string } | null }>)(
+      const { error: res7742Err } = await (supabase.rpc as never as (n: string, a: Record<string, unknown>) => Promise<{ error: { message: string } | null }>)(
         "rpc_reactivate_service_channel",
         { p_id: channel.id },
       );

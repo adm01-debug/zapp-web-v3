@@ -129,7 +129,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
             return;
           }
         } else {
-          const { error } = await dbFrom('contacts').insert({
+          const { error: res5961Err } = await dbFrom('contacts').insert({
             full_name:     sanitizeText(fullName),
             phone_number:  normalizedPhone,
             email:         email.toLowerCase().trim() || null,

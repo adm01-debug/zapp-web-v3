@@ -68,7 +68,7 @@ export function useCampaignEditor(campaign: TalkXCampaign | null, onClose: () =>
   const { data: contacts } = useQuery({
     queryKey: ['contacts-talkx'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contacts')
+      const { data, error: res3783Err } = await supabase.from('contacts')
         .select('id, name, nickname, phone, company, avatar_url, tags')
         .not('phone', 'is', null).order('name');
       return data || [];

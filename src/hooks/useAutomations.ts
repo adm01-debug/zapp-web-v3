@@ -184,7 +184,7 @@ export function useAutomations({
         if (!matched) continue;
 
         // Registra execução respeitando cooldown (RPC)
-        const { data: execId , error } = await supabase.rpc(
+        const { data: execId , error: execIdErr } = await supabase.rpc(
           "rpc_register_automation_execution",
           {
             p_rule_id: rule.id,
@@ -258,7 +258,7 @@ export function useAutomations({
 
             // Auto envio
             if (actions.auto_send) {
-              const { data: exec , error } = await supabase
+              const { data: exec , error: execErr } = await supabase
                 .from('automation_executions')
                 .select("suggestion_text")
                 .eq("id", execId)

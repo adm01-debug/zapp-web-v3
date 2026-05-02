@@ -81,7 +81,7 @@ export function IPWhitelistPanel() {
     }
 
     setUpdating(true);
-    const { error } = await supabase
+    const { error: res2396Err } = await supabase
       .from('ip_whitelist')
       .insert({
         ip_address: newIP,
@@ -108,7 +108,7 @@ export function IPWhitelistPanel() {
     if (!ipToRemove) return;
 
     setUpdating(true);
-    const { error } = await supabase
+    const { error: res3028Err } = await supabase
       .from('ip_whitelist')
       .delete()
       .eq('id', ipToRemove.id);

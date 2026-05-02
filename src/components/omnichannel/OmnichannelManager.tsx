@@ -61,13 +61,13 @@ export function OmnichannelManager() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data: profile , error } = await supabase
+      const { data: profile , error: profileErr } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      const { error } = await supabase.from('channel_connections').insert([{
+      const { error: res69Err } = await supabase.from('channel_connections').insert([{
         name: channel.name,
         channel_type: channel.channel_type as Database["public"]["Enums"]["channel_type"],
         created_by: profile?.id,
@@ -86,7 +86,7 @@ export function OmnichannelManager() {
 
   const deleteChannel = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('channel_connections').delete().eq('id', id);
+      const { error: res3743Err } = await supabase.from('channel_connections').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {

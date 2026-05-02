@@ -42,7 +42,7 @@ export async function upsertRecord<T extends Record<string, unknown>>(
   record: Record<string, Json>,
   conflictColumns: string[] = ['id'],
 ): Promise<T | null> {
-  const { data, error } = await (supabase as any)
+  const { data, error: res1196Err } = await (supabase as any)
     .from(table)
     .upsert(record, { onConflict: conflictColumns.join(',') })
     .select()
@@ -70,7 +70,7 @@ export async function batchInsert(
 
   for (let i = 0; i < records.length; i += chunkSize) {
     const chunk = records.slice(i, i + chunkSize);
-    const { error } = await (supabase as any).from(table).insert(chunk);
+    const { error: res1927Err } = await (supabase as any).from(table).insert(chunk);
 
     if (error) {
       log.error(`[DB] Batch insert chunk ${Math.floor(i / chunkSize)} failed:`, error);
@@ -103,7 +103,7 @@ export async function countRows(
     }
   }
 
-  const { count, error } = await query;
+  const { count, error: res2778Err } = await query;
   if (error) {
     log.error(`[DB] Count failed for ${table}:`, error);
     return 0;

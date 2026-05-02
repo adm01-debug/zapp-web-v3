@@ -35,7 +35,7 @@ export function useAutomations() {
 
   const createMutation = useMutation({
     mutationFn: async (automation: Partial<AutomationRow>) => {
-      const { data, error } = await supabase
+      const { data, error: res1133Err } = await supabase
         .from('automations')
         .insert({
           name: automation.name || 'Nova Automação',
@@ -57,7 +57,7 @@ export function useAutomations() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<AutomationRow> & { id: string }) => {
-      const { error } = await supabase
+      const { error: res2087Err } = await supabase
         .from('automations')
         .update(updates as unknown as Database['public']['Tables']['automations']['Update'])
         .eq('id', id);
@@ -69,7 +69,7 @@ export function useAutomations() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('automations').delete().eq('id', id);
+      const { error: res2585Err } = await supabase.from('automations').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['automations'] }); toast.success('Automação removida!'); },

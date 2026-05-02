@@ -135,7 +135,7 @@ export default function AdminQueuesPage() {
     const args = q.status === "paused"
       ? { p_queue_id: q.id }
       : { p_queue_id: q.id, p_reason: prompt("Motivo da pausa (opcional)") || null };
-    const { error } = await supabase.rpc(fn as never, args as never);
+    const { error: res6009Err } = await supabase.rpc(fn as never, args as never);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return;
@@ -146,7 +146,7 @@ export default function AdminQueuesPage() {
 
   const addMember = async () => {
     if (!memberDialog || !newMemberId) return;
-    const { error } = await supabase.from('queue_members').insert({
+    const { error: res6379Err } = await supabase.from('queue_members').insert({
       queue_id: memberDialog.id, profile_id: newMemberId,
     } as never);
     if (error) {
@@ -164,7 +164,7 @@ export default function AdminQueuesPage() {
 
   const addSkill = async () => {
     if (!memberDialog || !newSkill.name.trim()) return;
-    const { error } = await supabase.from('queue_skill_requirements').insert({
+    const { error: res6903Err } = await supabase.from('queue_skill_requirements').insert({
       queue_id: memberDialog.id, skill_name: newSkill.name.trim(), min_level: newSkill.level,
     } as never);
     if (error) {
@@ -182,7 +182,7 @@ export default function AdminQueuesPage() {
 
   const linkChannel = async () => {
     if (!memberDialog || !newChannelId) return;
-    const { error } = await supabase.rpc("rpc_link_channel_queue" as never, {
+    const { error: res7496Err } = await supabase.rpc("rpc_link_channel_queue" as never, {
       p_channel_id: newChannelId, p_queue_id: memberDialog.id, p_priority: 0, p_is_active: true,
     } as never);
     if (error) {
@@ -195,7 +195,7 @@ export default function AdminQueuesPage() {
 
   const unlinkChannel = async (channelId: string) => {
     if (!memberDialog) return;
-    const { error } = await supabase.rpc("rpc_unlink_channel_queue" as never, {
+    const { error: res7938Err } = await supabase.rpc("rpc_unlink_channel_queue" as never, {
       p_channel_id: channelId, p_queue_id: memberDialog.id,
     } as never);
     if (error) {

@@ -122,7 +122,7 @@ export function ChurnPredictionDashboard() {
   const runAIAnalysis = async () => {
     setAnalyzing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-churn-analysis', {
+      const { data, error: res4349Err } = await supabase.functions.invoke('ai-churn-analysis', {
         body: { contactIds: risks.slice(0, 20).map(r => r.contactId) }
       });
       if (error) throw error;

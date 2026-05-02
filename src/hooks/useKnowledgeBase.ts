@@ -54,7 +54,7 @@ export function useKnowledgeBase() {
       if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return false; }
       toast({ title: 'Artigo atualizado!' });
     } else {
-      const { error } = await supabase.from('knowledge_base_articles').insert(payload);
+      const { error: res2076Err } = await supabase.from('knowledge_base_articles').insert(payload);
       if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return false; }
       toast({ title: 'Artigo criado!' });
     }
@@ -72,7 +72,7 @@ export function useKnowledgeBase() {
     const fileName = `kb/${Date.now()}_${file.name}`;
     const { error: uploadError } = await supabase.storage.from('whatsapp-media').upload(fileName, file);
     if (uploadError) { toast({ title: 'Erro no upload', description: uploadError.message, variant: 'destructive' }); return; }
-    const { data: signedData , error } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 86400);
+    const { data: signedData , error: signedDataErr } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 86400);
     await supabase.from('knowledge_base_files').insert({ file_name: file.name, file_url: signedData?.signedUrl || '', file_type: file.type, file_size: file.size });
     toast({ title: 'Arquivo enviado!', description: file.name });
     fetchData();

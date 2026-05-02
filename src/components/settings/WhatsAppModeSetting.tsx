@@ -59,7 +59,7 @@ export function WhatsAppModeSetting() {
     setMigrating(true);
     try {
       // deno-lint-ignore no-explicit-any
-      const { error } = await supabase.rpc("rpc_migrate_whatsapp_integration" as any);
+      const { error: res2070Err } = await supabase.rpc("rpc_migrate_whatsapp_integration" as any);
       if (error) throw error;
       invalidateWhatsAppModeCache();
       await refresh();
@@ -78,7 +78,7 @@ export function WhatsAppModeSetting() {
     setMode(next); // optimistic
     try {
       // deno-lint-ignore no-explicit-any
-      const { error } = await supabase.rpc("rpc_set_whatsapp_mode" as any, {
+      const { error: res2718Err } = await supabase.rpc("rpc_set_whatsapp_mode" as any, {
         p_mode: next,
       });
       if (error) throw error;

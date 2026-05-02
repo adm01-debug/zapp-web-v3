@@ -84,7 +84,7 @@ export function VoIPPanel() {
   const { data: calls = [], isLoading } = useQuery({
     queryKey: ['calls-history'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: res3005Err } = await supabase
         .from('calls')
         .select('*')
         .order('started_at', { ascending: false })

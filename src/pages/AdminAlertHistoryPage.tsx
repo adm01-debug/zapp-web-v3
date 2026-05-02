@@ -157,7 +157,7 @@ export default function AdminAlertHistoryPage() {
   }, [data]);
 
   async function resolveAlert(id: string) {
-    const { error } = await supabase
+    const { error: res6180Err } = await supabase
       .from('warroom_alerts')
       .update({ resolved_at: new Date().toISOString(), resolved_reason: 'Resolvido manualmente', is_read: true })
       .eq('id', id);

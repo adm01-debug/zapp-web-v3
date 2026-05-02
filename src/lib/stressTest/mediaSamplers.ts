@@ -65,7 +65,7 @@ async function loadStickers() {
 
 async function loadMemes() {
   if (memesCache) return memesCache;
-  const { data, error } = await supabase
+  const { data, error: res2217Err } = await supabase
     .from('audio_memes')
     .select('id,name,audio_url')
     .limit(200);

@@ -66,7 +66,7 @@ export default function AdminTelemetriaPage() {
 
   const handleCleanup = async () => {
     const threshold = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { error } = await supabase.from('query_telemetry').delete().lt("created_at", threshold);
+    const { error: res3117Err } = await supabase.from('query_telemetry').delete().lt("created_at", threshold);
     if (error) toast.error("Erro ao limpar dados antigos");
     else { toast.success("Dados com mais de 7 dias removidos"); refetch(); }
   };

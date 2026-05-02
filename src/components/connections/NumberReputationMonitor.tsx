@@ -38,7 +38,7 @@ export function NumberReputationMonitor() {
   const loadData = async () => {
     setLoading(true);
     const { data: reps , error } = await supabase.from('number_reputation').select('*');
-    const { data: connections , error } = await supabase.from('whatsapp_connections').select('id, instance_id, phone_number');
+    const { data: connections , error: connectionsErr } = await supabase.from('whatsapp_connections').select('id, instance_id, phone_number');
     if (reps && connections) {
       setReputations(reps.map(r => ({
         ...r,

@@ -34,7 +34,7 @@ export const useContactsQuery = (filters: DashboardFilters) =>
       if (filters.agentId) query = query.eq('assigned_to', filters.agentId);
       if (filters.dateRange?.from) query = query.gte('updated_at', filters.dateRange.from.toISOString());
       if (filters.dateRange?.to) query = query.lte('updated_at', filters.dateRange.to.toISOString());
-      const { data, error } = await query;
+      const { data, error: res1657Err } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -52,7 +52,7 @@ export const useMessagesQuery = (filters: DashboardFilters) =>
       if (filters.dateRange?.from) query = query.gte('created_at', filters.dateRange.from.toISOString());
       if (filters.dateRange?.to) query = query.lte('created_at', filters.dateRange.to.toISOString());
       if (filters.agentId) query = query.eq('agent_id', filters.agentId);
-      const { data, error } = await query;
+      const { data, error: res2576Err } = await query;
       if (error) throw error;
       if (filters.queueId && data) {
         return data.filter((msg) => {
@@ -69,7 +69,7 @@ export const useQueuesQuery = () =>
   useQuery({
     queryKey: ['dashboard-queues'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: res3070Err } = await supabase
         .from('queues')
         .select(`id, name, color, queue_members (profile_id, is_active, profiles (id, is_active))`)
         .eq('is_active', true);
@@ -83,7 +83,7 @@ export const useContactsPerQueueQuery = () =>
   useQuery({
     queryKey: ['dashboard-contacts-per-queue'],
     queryFn: async () => {
-      const { data, error } = await dbFrom('contacts')
+      const { data, error: res3502Err } = await dbFrom('contacts')
         .select('id, queue_id, assigned_to', { count: 'exact' });
       if (error) throw error;
       const queueCounts: Record<string, number> = {};
@@ -101,7 +101,7 @@ export const useSlaQuery = () =>
   useQuery({
     queryKey: ['dashboard-sla'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: res4074Err } = await supabase
         .from('conversation_sla')
         .select('first_message_at, first_response_at')
         .not('first_response_at', 'is', null)

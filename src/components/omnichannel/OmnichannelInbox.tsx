@@ -64,7 +64,7 @@ export function OmnichannelInbox() {
   const loadUnifiedInbox = async () => {
     setLoading(true);
     try {
-      const { data: contacts, error } = await dbFrom('contacts')
+      const { data: contacts, error: contactsErr } = await dbFrom('contacts')
         .select('id, name, phone, channel_type, updated_at, assigned_to')
         .order('updated_at', { ascending: false })
         .limit(200);

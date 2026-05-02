@@ -199,7 +199,7 @@ export default function AdminAutomationsPage() {
 
   const remove = async (id: string) => {
     if (!confirm("Remover esta regra?")) return;
-    const { error } = await supabase.from('automation_rules').delete().eq("id", id);
+    const { error: res5940Err } = await supabase.from('automation_rules').delete().eq("id", id);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return;

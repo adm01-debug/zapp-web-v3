@@ -52,7 +52,7 @@ export const useCalls = () => {
     try {
       const profileId = await getProfileId();
       
-      const { data, error } = await supabase
+      const { data, error: res1556Err } = await supabase
         .from('calls')
         .insert({
           contact_id: params.contactId || null,
@@ -84,7 +84,7 @@ export const useCalls = () => {
   // Answer the call
   const answerCall = useCallback(async (callId: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
+      const { error: res2406Err } = await supabase
         .from('calls')
         .update({
           status: 'answered',
@@ -103,7 +103,7 @@ export const useCalls = () => {
   // End the call
   const endCall = useCallback(async (callId: string, durationSeconds: number): Promise<boolean> => {
     try {
-      const { error } = await supabase
+      const { error: res2890Err } = await supabase
         .from('calls')
         .update({
           status: 'ended',
@@ -130,7 +130,7 @@ export const useCalls = () => {
   // Mark call as missed
   const missCall = useCallback(async (callId: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
+      const { error: res3570Err } = await supabase
         .from('calls')
         .update({
           status: 'missed',
@@ -151,7 +151,7 @@ export const useCalls = () => {
   // Add notes to a call
   const addCallNotes = useCallback(async (callId: string, notes: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
+      const { error: res4096Err } = await supabase
         .from('calls')
         .update({ notes })
         .eq('id', callId);
@@ -167,7 +167,7 @@ export const useCalls = () => {
   // Get call history for a contact
   const getContactCalls = useCallback(async (contactId: string): Promise<Call[]> => {
     try {
-      const { data, error } = await supabase
+      const { data, error: res4505Err } = await supabase
         .from('calls')
         .select('*')
         .eq('contact_id', contactId)

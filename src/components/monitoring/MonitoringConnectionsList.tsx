@@ -55,7 +55,7 @@ export function MonitoringConnectionsList({ connections, webhookTest, onCheckWeb
   const reconnectInstance = useCallback(async (instanceId: string) => {
     setReconnecting(prev => ({ ...prev, [instanceId]: true }));
     try {
-      const { error } = await supabase.functions.invoke('evolution-api', {
+      const { error: res2534Err } = await supabase.functions.invoke('evolution-api', {
         body: { action: 'restart-instance', instanceName: instanceId },
       });
       if (error) throw error;

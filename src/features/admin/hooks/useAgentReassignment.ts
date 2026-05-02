@@ -28,7 +28,7 @@ export function useAgentReassignment() {
 
   const reassignOverloaded = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('reassign_overloaded_agents');
+      const { data, error: res985Err } = await supabase.rpc('reassign_overloaded_agents');
       if (error) throw error;
       return data as number;
     },

@@ -56,7 +56,7 @@ export function useScheduledMessages(contactId?: string) {
         .eq('user_id', user?.id)
         .maybeSingle();
 
-      const { data: msg, error } = await supabase
+      const { data: msg, error: msgErr } = await supabase
         .from('scheduled_messages')
         .insert({
           contact_id: data.contactId,
@@ -84,7 +84,7 @@ export function useScheduledMessages(contactId?: string) {
 
   const cancelMutation = useMutation({
     mutationFn: async (messageId: string) => {
-      const { error } = await supabase
+      const { error: res2566Err } = await supabase
         .from('scheduled_messages')
         .update({ status: 'cancelled' })
         .eq('id', messageId);

@@ -121,7 +121,7 @@ export function useContactUndo(options: UseContactUndoOptions = {}) {
   const hardDelete = useCallback(
     async (contactId: string, contactName: string) => {
       try {
-        const { error } = await (supabase as any).rpc('soft_delete_contact', {
+        const { error: res4011Err } = await (supabase as any).rpc('soft_delete_contact', {
           p_contact_id: contactId,
           p_reason: 'manual_deletion',
         });

@@ -104,7 +104,7 @@ export function useMessages(remoteJid: string | null) {
     if (!remoteJid || loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      const { data, error } = await dbList(RPC.listMessagesLite, {
+      const { data, error: res4215Err } = await dbList(RPC.listMessagesLite, {
         p_remote_jid: remoteJid,
         p_limit:      PAGE_SIZE,
         p_offset:     offsetRef.current,
@@ -169,7 +169,7 @@ export function useMessages(remoteJid: string | null) {
   }, [toast]);
 
   const markFollowUpDone = useCallback(async (id: string) => {
-    const { error } = await (supabase as any).rpc('mark_follow_up_done', { p_message_id: id });
+    const { error: res6816Err } = await (supabase as any).rpc('mark_follow_up_done', { p_message_id: id });
     if (error) throw error;
     setMessages((prev) => prev.map((m) => m.id === id ? { ...m, follow_up_done: true } : m));
   }, []);

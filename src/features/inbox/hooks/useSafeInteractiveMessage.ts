@@ -84,7 +84,7 @@ export function useSafeInteractiveMessage({
       }
 
       try {
-        const { error } = await dbFrom('messages').insert({
+        const { error: res3032Err } = await dbFrom('messages').insert({
           contact_id: contactId,
           whatsapp_connection_id: whatsappConnectionId,
           content: `📇 Cartão de contato: ${contactName}`,

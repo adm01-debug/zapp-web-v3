@@ -44,7 +44,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
 
       // Check WhatsApp connection
       try {
-        const { data: connections , error } = await supabase
+        const { data: connections , error: connectionsErr } = await supabase
           .from('whatsapp_connections')
           .select('id')
           .eq('status', 'connected')
@@ -55,7 +55,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
       }
 
       // Check user settings
-      const { data: settings , error } = await supabase
+      const { data: settings , error: settingsErr } = await supabase
         .from('user_settings')
         .select('business_hours_enabled, browser_notifications_enabled, sound_enabled, theme')
         .eq('user_id', user.id)
@@ -68,7 +68,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
       }
 
       // Check templates
-      const { data: templates , error } = await supabase
+      const { data: templates , error: templatesErr } = await supabase
         .from('message_templates')
         .select('id')
         .eq('user_id', user.id)

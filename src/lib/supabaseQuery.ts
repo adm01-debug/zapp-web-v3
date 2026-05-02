@@ -52,7 +52,7 @@ export async function safeQueryOrNull<T>(
   query: PromiseLike<{ data: T | null; error: PostgrestError | null }>,
   context?: string
 ): Promise<T | null> {
-  const { data, error } = await query;
+  const { data, error: res1543Err } = await query;
   if (error) {
     if (error.code === 'PGRST116') return null; // not found
     console.error(\`[Supabase] \${context || 'query'} failed:\`, error);

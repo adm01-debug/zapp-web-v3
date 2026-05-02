@@ -71,7 +71,7 @@ export function useNewConversation(
         const cleanedNewPhone = newPhone.trim().replace(/\D/g, '');
         const { data: existing } = await dbFrom('contacts').select('id, name').eq('phone', cleanedNewPhone).maybeSingle();
         if (existing) { toast.error(`Já existe um contato com este número: ${existing.name}`); setIsSending(false); return; }
-        const { data: newContact, error } = await dbFrom('contacts').insert({
+        const { data: newContact, error: newContactErr } = await dbFrom('contacts').insert({
           name: newName.trim() || cleanedNewPhone, phone: cleanedNewPhone,
           whatsapp_connection_id: selectedConnection || null,
         }).select('id').single();

@@ -132,7 +132,7 @@ export function useQueues() {
 
   const updateQueue = async (id: string, updates: Partial<Queue>) => {
     try {
-      const { error } = await supabase
+      const { error: res3634Err } = await supabase
         .from('queues')
         .update(updates)
         .eq('id', id);
@@ -158,7 +158,7 @@ export function useQueues() {
 
   const deleteQueue = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error: res4228Err } = await supabase
         .from('queues')
         .delete()
         .eq('id', id);
@@ -184,7 +184,7 @@ export function useQueues() {
 
   const addMember = async (queueId: string, profileId: string) => {
     try {
-      const { error } = await supabase
+      const { error: res4829Err } = await supabase
         .from('queue_members')
         .insert({
           queue_id: queueId,
@@ -212,7 +212,7 @@ export function useQueues() {
 
   const removeMember = async (queueId: string, profileId: string) => {
     try {
-      const { error } = await supabase
+      const { error: res5506Err } = await supabase
         .from('queue_members')
         .delete()
         .eq('queue_id', queueId)
@@ -239,7 +239,7 @@ export function useQueues() {
 
   const assignContactToQueue = async (contactId: string, queueId: string | null) => {
     try {
-      const { error } = await dbFrom('contacts')
+      const { error: res6191Err } = await dbFrom('contacts')
         .update({ queue_id: queueId, assigned_to: null })
         .eq('id', contactId);
 

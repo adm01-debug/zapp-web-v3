@@ -68,7 +68,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
       // FALHA 9 FIX: Try evolution_contacts first, fallback to contacts
       let connectionId: string | null = null;
 
-      const { data: evoContact , error } = await supabase
+      const { data: evoContact , error: evoContactErr } = await supabase
         .from('evolution_contacts')
         .select('whatsapp_connection_id')
         .eq('id', contactId)
@@ -78,7 +78,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         connectionId = evoContact.whatsapp_connection_id;
       } else {
         // Fallback to contacts table
-        const { data: contact , error } = await supabase
+        const { data: contact , error: contactErr } = await supabase
           .from('contacts')
           .select('whatsapp_connection_id')
           .eq('id', contactId)
@@ -90,7 +90,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
 
       if (connectionId) {
         setWhatsappConnectionId(connectionId);
-        const { data: conn , error } = await supabase
+        const { data: conn , error: connErr } = await supabase
           .from('whatsapp_connections')
           .select('instance_id')
           .eq('id', connectionId)
@@ -101,7 +101,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         }
       }
 
-      const { data: fallbackConn , error } = await supabase
+      const { data: fallbackConn , error: fallbackConnErr } = await supabase
         .from('whatsapp_connections')
         .select('instance_id')
         .eq('status', 'connected')
@@ -146,7 +146,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     }
 
     try {
-      const { data: dbData , error } = await supabase.from('messages').insert({
+      const { data: dbData , error: dbDataErr } = await supabase.from('messages').insert({
         contact_id: contactId,
         whatsapp_connection_id: whatsappConnectionId,
         content: '[Sticker]',
@@ -185,7 +185,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
 
       // FALHA 6 FIX: Auto-save with error handling
       try {
-        const { data: existing , error } = await supabase
+        const { data: existing , error: existingErr } = await supabase
           .from('stickers')
           .select('id')
           .eq('image_url', stickerUrl)

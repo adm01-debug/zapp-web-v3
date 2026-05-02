@@ -98,7 +98,7 @@ export function useContactsPagination(workspaceId: string) {
             query = query.eq('channel', f.channel);
           }
 
-          const { data: rawData, count, error } = await query;
+          const { data: rawData, count, error: rawDataErr } = await query;
           if (error) throw error;
           data = (rawData ?? []).map(sanitizeRow);
           if (count !== null) setTotal(count);
@@ -131,7 +131,7 @@ export function useContactsPagination(workspaceId: string) {
       let data: ContactListItem[] = [];
 
       if (filters.search.trim()) {
-        const { data: searchData, error } = await (supabase as any).rpc('search_contacts', {
+        const { data: searchData, error: searchDataErr } = await (supabase as any).rpc('search_contacts', {
           search_term: filters.search.trim(),
           page_size:   PAGE_SIZE,
           page_offset: offset,
@@ -149,7 +149,7 @@ export function useContactsPagination(workspaceId: string) {
         if (filters.tags.length > 0) query = query.overlaps('tags', filters.tags);
         if (filters.channel)         query = query.eq('channel', filters.channel);
 
-        const { data: rawData, error } = await query;
+        const { data: rawData, error: rawDataErr } = await query;
         if (error) throw error;
         data = (rawData ?? []).map(sanitizeRow);
       }

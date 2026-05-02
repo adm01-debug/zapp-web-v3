@@ -45,7 +45,7 @@ export function ContactNotes({ contactId, className }: ContactNotesProps) {
     if (data) {
       // Fetch author names
       const authorIds = [...new Set(data.map(n => n.author_id))];
-      const { data: profiles , error } = await supabase
+      const { data: profiles , error: profilesErr } = await supabase
         .from('profiles')
         .select('id, name')
         .in('id', authorIds);
@@ -66,7 +66,7 @@ export function ContactNotes({ contactId, className }: ContactNotesProps) {
     if (!newNote.trim()) return;
     setAdding(true);
     try {
-      const { data: profile , error } = await supabase
+      const { data: profile , error: profileErr } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
@@ -74,7 +74,7 @@ export function ContactNotes({ contactId, className }: ContactNotesProps) {
 
       if (!profile) throw new Error('Perfil não encontrado');
 
-      const { error } = await supabase
+      const { error: res76Err } = await supabase
         .from('contact_notes')
         .insert({
           contact_id: contactId,
@@ -95,7 +95,7 @@ export function ContactNotes({ contactId, className }: ContactNotesProps) {
   };
 
   const handleDelete = async (noteId: string) => {
-    const { error } = await supabase
+    const { error: res2916Err } = await supabase
       .from('contact_notes')
       .delete()
       .eq('id', noteId);

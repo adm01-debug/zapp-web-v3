@@ -129,7 +129,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
           if (error) throw error;
         } else {
           // Use versioned update to detect concurrent edits
-          const { data: result, error } = await (supabase as any).rpc('update_contact_versioned', {
+          const { data: result, error: resultErr } = await (supabase as any).rpc('update_contact_versioned', {
             p_contact_id:       contact.id,
             p_expected_version: contact.version,
             p_updates:          data,

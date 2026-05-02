@@ -148,7 +148,7 @@ export function HmacAuditHistoryPanel({ instance: initialInstance = null, limit 
   const { data: instanceOptions } = useQuery({
     queryKey: ['hmac-selftest-audit-instances', range],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: res5477Err } = await supabase
         .from('hmac_selftest_audit')
         .select('instance')
         .gte('created_at', since)

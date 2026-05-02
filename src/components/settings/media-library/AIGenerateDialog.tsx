@@ -44,7 +44,7 @@ export function AIGenerateDialog({ open, onOpenChange, onSaved }: { open: boolea
       const { data: urlData } = supabase.storage.from('audio-memes').getPublicUrl(storagePath);
       const { data: { user } } = await supabase.auth.getUser();
       let aiCategory = 'outros';
-      try { const { data: classifyData , error } = await supabase.functions.invoke('classify-audio-meme', { body: { audio_url: urlData.publicUrl, file_name: genPrompt } }); if (classifyData?.category) aiCategory = classifyData.category; } catch (err) { log.error('Unexpected error in AIGenerateDialog:', err); }
+      try { const { data: classifyData , error: classifyDataErr } = await supabase.functions.invoke('classify-audio-meme', { body: { audio_url: urlData.publicUrl, file_name: genPrompt } }); if (classifyData?.category) aiCategory = classifyData.category; } catch (err) { log.error('Unexpected error in AIGenerateDialog:', err); }
       const { error: insertError } = await supabase.from('audio_memes').insert({ name: genPrompt.substring(0, 80), audio_url: urlData.publicUrl, category: aiCategory, is_favorite: false, use_count: 0, uploaded_by: user?.id || null });
       if (insertError) throw insertError;
       toast.success(`Áudio salvo como "${aiCategory}"`); onOpenChange(false); setGenPrompt(''); setGenPreviewUrl(null); onSaved();

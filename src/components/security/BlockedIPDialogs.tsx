@@ -73,7 +73,7 @@ export function UnblockIPDialog({ ip, onClose, onSuccess }: UnblockIPDialogProps
   const handleUnblock = async () => {
     if (!ip) return;
     setUpdating(true);
-    const { error } = await supabase.from('blocked_ips').delete().eq('id', ip.id);
+    const { error: res3917Err } = await supabase.from('blocked_ips').delete().eq('id', ip.id);
     if (error) toast.error('Erro ao desbloquear IP');
     else { toast.success('IP desbloqueado'); onClose(); onSuccess(); }
     setUpdating(false);

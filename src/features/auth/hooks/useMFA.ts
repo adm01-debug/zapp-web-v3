@@ -45,7 +45,7 @@ export function useMFA() {
   const enrollTOTP = useCallback(async (friendlyName?: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.mfa.enroll({
+      const { data, error: res1167Err } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
         friendlyName: friendlyName || 'Authenticator App',
       });
@@ -71,7 +71,7 @@ export function useMFA() {
 
       if (challengeError) throw challengeError;
 
-      const { data, error } = await supabase.auth.mfa.verify({
+      const { data, error: res1913Err } = await supabase.auth.mfa.verify({
         factorId,
         challengeId: challengeData.id,
         code,
@@ -95,7 +95,7 @@ export function useMFA() {
   const unenroll = useCallback(async (factorId: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.mfa.unenroll({ factorId });
+      const { error: res2535Err } = await supabase.auth.mfa.unenroll({ factorId });
 
       if (error) throw error;
 
@@ -112,7 +112,7 @@ export function useMFA() {
 
   const getAssuranceLevel = useCallback(async () => {
     try {
-      const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data, error: res3007Err } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       
       if (error) throw error;
       

@@ -81,7 +81,7 @@ export function useWarRoomData() {
   const { data: queues = [] } = useQuery({
     queryKey: ['warroom-queues'],
     queryFn: async () => {
-      const { data: dbQueues, error } = await supabase
+      const { data: dbQueues, error: dbQueuesErr } = await supabase
         .from('queues')
         .select('id, name, color, is_active')
         .eq('is_active', true);

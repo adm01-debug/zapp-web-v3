@@ -90,7 +90,7 @@ export function useWarRoomAlerts(soundEnabled = true) {
   // SLA breach monitor - checks every 30s and creates alerts
   useEffect(() => {
     const checkSLABreaches = async () => {
-      const { data: breaches , error } = await supabase
+      const { data: breaches , error: breachesErr } = await supabase
         .from('conversation_sla')
         .select('id, contact_id, first_response_breached, resolution_breached')
         .or('first_response_breached.eq.true,resolution_breached.eq.true');

@@ -95,7 +95,7 @@ export function NextBestActionEngine({ contactId, contactName }: NextBestActionP
     }
 
     // Check SLA
-    const { data: slaData , error } = await supabase
+    const { data: slaData , error: slaDataErr } = await supabase
       .from('conversation_sla')
       .select('first_response_breached, resolution_breached')
       .eq('contact_id', contactId)
@@ -112,7 +112,7 @@ export function NextBestActionEngine({ contactId, contactName }: NextBestActionP
     }
 
     // Check memory for pending items
-    const { data: memory , error } = await supabase
+    const { data: memory , error: memoryErr } = await supabase
       .from('conversation_memory')
       .select('pending_items, promises_made')
       .eq('contact_id', contactId)

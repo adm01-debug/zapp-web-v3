@@ -114,7 +114,7 @@ export function useContactActivityFeed({
       }
 
       // 2. Conversations
-      const { data: convData , error } = await supabase
+      const { data: convData , error: convDataErr } = await supabase
         .from('conversations')
         .select('id,status,channel,created_at,closed_at')
         .eq('contact_id', contactId)

@@ -22,7 +22,7 @@ export function usePersonalStickers() {
     queryKey: ['personal-stickers', profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await supabase.from('stickers').select('*').eq('owner_id', profile.id).order('created_at', { ascending: false });
+      const { data, error: res901Err } = await supabase.from('stickers').select('*').eq('owner_id', profile.id).order('created_at', { ascending: false });
       if (error) throw error;
       return (data || []) as StickerItem[];
     },
@@ -57,7 +57,7 @@ export function usePersonalStickers() {
 
   const toggleFavorite = useMutation({
     mutationFn: async (sticker: StickerItem) => {
-      const { error } = await supabase.from('stickers').update({ is_favorite: !sticker.is_favorite }).eq('id', sticker.id);
+      const { error: res2981Err } = await supabase.from('stickers').update({ is_favorite: !sticker.is_favorite }).eq('id', sticker.id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['personal-stickers'] }),
@@ -69,7 +69,7 @@ export function usePersonalStickers() {
       const storagePrefix = '/storage/v1/object/public/stickers/';
       const idx = url.indexOf(storagePrefix);
       if (idx !== -1) { await supabase.storage.from('stickers').remove([url.substring(idx + storagePrefix.length)]); }
-      const { error } = await supabase.from('stickers').delete().eq('id', sticker.id);
+      const { error: res3595Err } = await supabase.from('stickers').delete().eq('id', sticker.id);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['personal-stickers'] }); toast.success('Figurinha removida'); },

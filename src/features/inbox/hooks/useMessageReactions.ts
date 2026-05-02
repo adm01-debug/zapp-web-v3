@@ -54,7 +54,7 @@ export function useMessageReactions(messageId: string, options?: UseMessageReact
   const { data: reactions = [], isLoading, refetch } = useQuery({
     queryKey: ['message-reactions', messageId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: res2089Err } = await supabase
         .from('message_reactions')
         .select('*')
         .eq('message_id', messageId);
@@ -63,7 +63,7 @@ export function useMessageReactions(messageId: string, options?: UseMessageReact
       const userIds = data?.filter(r => r.user_id).map(r => r.user_id) || [];
       let usersMap = new Map<string, string>();
       if (userIds.length > 0) {
-        const { data: users , error } = await supabase
+        const { data: users , error: usersErr } = await supabase
           .from('profiles')
           .select('id, name')
           .in('id', userIds);

@@ -41,7 +41,7 @@ export function AIAutoTagsConfig() {
   const retagMutation = useMutation({
     mutationFn: async () => {
       // Get recent contacts with messages
-      const { data: contacts , error } = await supabase
+      const { data: contacts , error: contactsErr } = await supabase
         .from('contacts')
         .select('id')
         .order('updated_at', { ascending: false })

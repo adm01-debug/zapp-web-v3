@@ -67,7 +67,7 @@ export function SalesPipelineView() {
     if (!formTitle.trim()) return;
     const payload = { title: formTitle, value: parseFloat(formValue) || 0, stage_id: formStageId || null, contact_id: formContactId || null, assigned_to: formAssignedTo || null, priority: formPriority, expected_close_date: formCloseDate || null, notes: formNotes || null };
     if (editingDeal) { const { error } = await supabase.from('sales_deals').update(payload).eq('id', editingDeal.id); if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; } toast({ title: 'Deal atualizado!' }); }
-    else { const { error } = await supabase.from('sales_deals').insert(payload); if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; } toast({ title: 'Deal criado!' }); }
+    else { const { error: res4620Err } = await supabase.from('sales_deals').insert(payload); if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; } toast({ title: 'Deal criado!' }); }
     setShowDealDialog(false); fetchData();
   };
 

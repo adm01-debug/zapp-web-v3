@@ -100,7 +100,7 @@ export function useInstanceRetryConfig(instanceName: string = GLOBAL): UseInstan
       }));
       if (rows.length === 0) return;
 
-      const { error } = await supabase
+      const { error: res3623Err } = await supabase
         .from('global_settings')
         .upsert(rows, { onConflict: 'key' });
       if (error) throw error;
@@ -123,7 +123,7 @@ export function useInstanceRetryConfig(instanceName: string = GLOBAL): UseInstan
     setIsSaving(true);
     try {
       const keys = RETRY_CONFIG_FIELDS.map((f) => settingKeyFor(f, instanceName));
-      const { error } = await supabase.from('global_settings').delete().in('key', keys);
+      const { error: res4436Err } = await supabase.from('global_settings').delete().in('key', keys);
       if (error) throw error;
       invalidateRetryConfigCache(instanceName);
       await load();
@@ -141,7 +141,7 @@ export function useInstanceRetryConfig(instanceName: string = GLOBAL): UseInstan
     setIsSaving(true);
     try {
       const keys = RETRY_CONFIG_FIELDS.map((f) => settingKeyFor(f));
-      const { error } = await supabase.from('global_settings').delete().in('key', keys);
+      const { error: res5096Err } = await supabase.from('global_settings').delete().in('key', keys);
       if (error) throw error;
       invalidateRetryConfigCache();
       await load();

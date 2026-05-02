@@ -131,7 +131,7 @@ export function useMediaLibrary(type: MediaType) {
   const handleToggleFavorite = async (item: MediaItem) => {
     const newValue = !item.is_favorite;
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_favorite: newValue } : i));
-    const { error } = await supabase.from(type).update({ is_favorite: newValue }).eq('id', item.id);
+    const { error: res5205Err } = await supabase.from(type).update({ is_favorite: newValue }).eq('id', item.id);
     if (error) { setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_favorite: !newValue } : i)); toast.error('Erro ao atualizar favorito'); }
   };
 
@@ -146,7 +146,7 @@ export function useMediaLibrary(type: MediaType) {
     if (toDelete.length === 0) return;
     for (const item of toDelete) { await deleteStorageFile(type === 'audio_memes' ? item.audio_url : item.image_url); }
     const ids = [...selected];
-    const { error } = await supabase.from(type).delete().in('id', ids);
+    const { error: res5974Err } = await supabase.from(type).delete().in('id', ids);
     if (error) { toast.error('Erro ao excluir itens'); return; }
     setItems(prev => prev.filter(i => !selected.has(i.id)));
     setSelected(new Set());
@@ -158,7 +158,7 @@ export function useMediaLibrary(type: MediaType) {
     if (ids.length === 0) return;
     const oldItems = items.filter(i => selected.has(i.id)).map(i => ({ id: i.id, category: i.category }));
     setItems(prev => prev.map(i => selected.has(i.id) ? { ...i, category: newCategory } : i));
-    const { error } = await supabase.from(type).update({ category: newCategory }).in('id', ids);
+    const { error: res6593Err } = await supabase.from(type).update({ category: newCategory }).in('id', ids);
     if (error) { setItems(prev => prev.map(i => { const old = oldItems.find(o => o.id === i.id); return old ? { ...i, category: old.category } : i; })); toast.error('Erro ao alterar categorias'); return; }
     toast.success(`${ids.length} itens movidos para "${newCategory}"`);
   };
@@ -172,9 +172,9 @@ export function useMediaLibrary(type: MediaType) {
     for (const item of toReclassify) {
       try {
         const body = type === 'audio_memes' ? { audio_url: item.audio_url || '', file_name: item.name || '' } : { image_url: item.image_url || '' };
-        const { data, error } = await supabase.functions.invoke(fnName, { body });
+        const { data, error: res7520Err } = await supabase.functions.invoke(fnName, { body });
         if (data?.category && data.category !== item.category) {
-          const { error } = await supabase.from(type).update({ category: data.category }).eq('id', item.id);
+          const { error: res176Err } = await supabase.from(type).update({ category: data.category }).eq('id', item.id);
           if (!error) { setItems(prev => prev.map(i => i.id === item.id ? { ...i, category: data.category } : i)); updated++; }
           else errors++;
         }
@@ -189,7 +189,7 @@ export function useMediaLibrary(type: MediaType) {
   const handleSingleCategoryChange = async (item: MediaItem, newCategory: string) => {
     const oldCategory = item.category;
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, category: newCategory } : i));
-    const { error } = await supabase.from(type).update({ category: newCategory }).eq('id', item.id);
+    const { error: res8423Err } = await supabase.from(type).update({ category: newCategory }).eq('id', item.id);
     if (error) { setItems(prev => prev.map(i => i.id === item.id ? { ...i, category: oldCategory } : i)); toast.error('Erro ao alterar categoria'); }
   };
 
@@ -198,7 +198,7 @@ export function useMediaLibrary(type: MediaType) {
     if (!trimmed) { toast.error('O nome não pode ser vazio'); return; }
     const oldName = item.name;
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, name: trimmed } : i));
-    const { error } = await supabase.from(type).update({ name: trimmed }).eq('id', item.id);
+    const { error: res8957Err } = await supabase.from(type).update({ name: trimmed }).eq('id', item.id);
     if (error) { setItems(prev => prev.map(i => i.id === item.id ? { ...i, name: oldName } : i)); toast.error('Erro ao renomear'); return; }
     setEditingId(null);
     toast.success('Nome atualizado');
@@ -206,7 +206,7 @@ export function useMediaLibrary(type: MediaType) {
 
   const handleDelete = async (item: MediaItem) => {
     await deleteStorageFile(type === 'audio_memes' ? item.audio_url : item.image_url);
-    const { error } = await supabase.from(type).delete().eq('id', item.id);
+    const { error: res9398Err } = await supabase.from(type).delete().eq('id', item.id);
     if (error) { toast.error('Erro ao excluir item'); return; }
     setItems(prev => prev.filter(i => i.id !== item.id));
     toast.success('Item excluído');

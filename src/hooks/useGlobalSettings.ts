@@ -42,7 +42,7 @@ export function useGlobalSettings() {
 
   const updateSetting = useCallback(async (key: string, value: string) => {
     try {
-      const { error } = await supabase
+      const { error: res1210Err } = await supabase
         .from('global_settings')
         .update({ value })
         .eq('key', key);
@@ -56,7 +56,7 @@ export function useGlobalSettings() {
 
   const addSetting = useCallback(async (key: string, value: string, description?: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error: res1658Err } = await supabase
         .from('global_settings')
         .upsert({ key, value, description }, { onConflict: 'key' })
         .select()

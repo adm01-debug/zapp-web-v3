@@ -57,13 +57,13 @@ export function useNPSSurveys() {
     survey_type?: string;
   }) => {
     try {
-      const { data: profile , error } = await supabase
+      const { data: profile , error: profileErr } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
         .single();
 
-      const { error } = await supabase
+      const { error: res65Err } = await supabase
         .from('nps_surveys')
         .insert({
           contact_id: data.contact_id,

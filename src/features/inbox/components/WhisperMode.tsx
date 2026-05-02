@@ -47,7 +47,7 @@ export function WhisperMode({ contactId, targetAgentId, className }: WhisperMode
 
       // Get sender names
       const senderIds = [...new Set(data.map(w => w.sender_id))];
-      const { data: profiles , error } = await supabase
+      const { data: profiles , error: profilesErr } = await supabase
         .from('profiles')
         .select('id, name')
         .in('id', senderIds);

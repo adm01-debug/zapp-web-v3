@@ -73,7 +73,7 @@ export function useEvolutionAutoSync(onSynced?: () => void) {
           const status =
             inst.instance?.status === 'open' ? 'connected' : 'disconnected';
 
-          const { error } = await supabase.from('whatsapp_connections').insert({
+          const { error: res2897Err } = await supabase.from('whatsapp_connections').insert({
             name,
             phone_number: phone,
             instance_id: inst.instance.instanceName,

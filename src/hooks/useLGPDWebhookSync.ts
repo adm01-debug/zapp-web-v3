@@ -49,7 +49,7 @@ export function useLGPDWebhookSync({
         break;
       }
       case 'opt_in': {
-        const { error } = await dbFrom('contacts')
+        const { error: res1700Err } = await dbFrom('contacts')
           .update({
             lgpd_consent_at: event.timestamp,
             lgpd_consent_channel: event.channel,

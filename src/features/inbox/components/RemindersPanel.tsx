@@ -66,7 +66,7 @@ export function RemindersPanel({ contactId, profileId }: RemindersPanelProps) {
       default: remindAt = addHours(now, 1);
     }
 
-    const { error } = await supabase
+    const { error: res2169Err } = await supabase
       .from('reminders')
       .insert({
         contact_id: contactId,

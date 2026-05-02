@@ -31,7 +31,7 @@ export function useConversationActions() {
   }, []);
 
   const loadPinned = useCallback(async (pid: string) => {
-    const { data, error } = await supabase
+    const { data, error: res1180Err } = await supabase
       .from('pinned_conversations')
       .select('contact_id')
       .eq('pinned_by', pid);
@@ -41,7 +41,7 @@ export function useConversationActions() {
   const loadFavorites = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user || !mountedRef.current) return;
-    const { data, error } = await supabase
+    const { data, error: res1575Err } = await supabase
       .from('favorite_contacts')
       .select('contact_id')
       .eq('user_id', user.id);
@@ -49,7 +49,7 @@ export function useConversationActions() {
   }, []);
 
   const loadSnoozed = useCallback(async (pid: string) => {
-    const { data, error } = await supabase
+    const { data, error: res1889Err } = await supabase
       .from('conversation_snoozes')
       .select('contact_id')
       .eq('snoozed_by', pid)
@@ -71,7 +71,7 @@ export function useConversationActions() {
 
   const pinConversation = useCallback(async (contactId: string) => {
     if (!profileId) return;
-    const { error } = await supabase
+    const { error: res2527Err } = await supabase
       .from('pinned_conversations')
       .insert({ contact_id: contactId, pinned_by: profileId, position: 0 });
     if (!error) {
@@ -82,7 +82,7 @@ export function useConversationActions() {
 
   const unpinConversation = useCallback(async (contactId: string) => {
     if (!profileId) return;
-    const { error } = await supabase
+    const { error: res2919Err } = await supabase
       .from('pinned_conversations')
       .delete()
       .eq('contact_id', contactId)
@@ -96,7 +96,7 @@ export function useConversationActions() {
   const favoriteContact = useCallback(async (contactId: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { error } = await supabase
+    const { error: res3409Err } = await supabase
       .from('favorite_contacts')
       .insert({ contact_id: contactId, user_id: user.id });
     if (!error) {
@@ -108,7 +108,7 @@ export function useConversationActions() {
   const unfavoriteContact = useCallback(async (contactId: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { error } = await supabase
+    const { error: res3834Err } = await supabase
       .from('favorite_contacts')
       .delete()
       .eq('contact_id', contactId)
@@ -137,7 +137,7 @@ export function useConversationActions() {
       .eq('contact_id', contactId)
       .eq('snoozed_by', profileId);
 
-    const { error } = await supabase
+    const { error: res4829Err } = await supabase
       .from('conversation_snoozes')
       .insert({
         contact_id: contactId,

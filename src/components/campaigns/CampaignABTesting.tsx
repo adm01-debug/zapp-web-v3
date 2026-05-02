@@ -50,7 +50,7 @@ export function CampaignABTesting({ campaignId }: CampaignABTestingProps) {
   const addVariant = async () => {
     if (!newContent.trim()) return;
     const name = newName || String.fromCharCode(65 + variants.length);
-    const { error } = await supabase.from('campaign_ab_variants').insert({
+    const { error: res1781Err } = await supabase.from('campaign_ab_variants').insert({
       campaign_id: campaignId,
       variant_name: name,
       message_content: newContent.trim(),

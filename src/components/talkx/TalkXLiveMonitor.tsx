@@ -62,7 +62,7 @@ export function TalkXLiveMonitor({ campaignId }: Props) {
   }, [campaignId]);
 
   const handleExportCSV = async () => {
-    const { data: recipients , error } = await supabase
+    const { data: recipients , error: recipientsErr } = await supabase
       .from('talkx_recipients')
       .select('*, contacts:contact_id(name, nickname, phone, company)')
       .eq('campaign_id', campaignId)

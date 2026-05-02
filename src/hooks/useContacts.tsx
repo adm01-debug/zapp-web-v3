@@ -189,7 +189,7 @@ export function useContacts() {
       q = filters.sort_order === 'asc'
         ? q.gt(filters.sort_field, cursorRef.current)
         : q.lt(filters.sort_field, cursorRef.current);
-      const { data, error } = await q;
+      const { data, error: res8222Err } = await q;
       if (error) throw error;
       const newItems = (data ?? []).map(mapRow);
       const last = newItems[newItems.length - 1];
@@ -243,7 +243,7 @@ export function useContacts() {
     // Schedule actual delete after 5s
     const timerId = setTimeout(async () => {
       timer.delete(ids.join(','));
-      const { error } = await (supabase as any).rpc('bulk_soft_delete_contacts', {
+      const { error: res10113Err } = await (supabase as any).rpc('bulk_soft_delete_contacts', {
         p_contact_ids: ids,
         p_reason:      'user_deleted',
       });
@@ -263,7 +263,7 @@ export function useContacts() {
     // Optimistic
     setContacts((prev) => prev.map((c) => c.id === id ? { ...c, ...updates } : c));
 
-    const { error } = await dbFrom('contacts')
+    const { error: res10778Err } = await dbFrom('contacts')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id);
 

@@ -104,7 +104,7 @@ export function useGoalsDashboard() {
     queryKey: ['goals-messages', period, profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await dbFrom('messages').select('id, sender, created_at')
+      const { data, error: res3863Err } = await dbFrom('messages').select('id, sender, created_at')
         .eq('agent_id', profile.id).gte('created_at', dateRange.from.toISOString()).lte('created_at', dateRange.to.toISOString());
       if (error) throw error;
       return data || [];
@@ -116,7 +116,7 @@ export function useGoalsDashboard() {
     queryKey: ['goals-contacts', period, profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await dbFrom('contacts').select('id, created_at')
+      const { data, error: res4368Err } = await dbFrom('contacts').select('id, created_at')
         .eq('assigned_to', profile.id).gte('created_at', dateRange.from.toISOString()).lte('created_at', dateRange.to.toISOString());
       if (error) throw error;
       return data || [];
@@ -128,7 +128,7 @@ export function useGoalsDashboard() {
     queryKey: ['goals-analyses', period, profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await supabase.from('conversation_analyses').select('id, status, created_at')
+      const { data, error: res4868Err } = await supabase.from('conversation_analyses').select('id, status, created_at')
         .eq('analyzed_by', profile.id).gte('created_at', dateRange.from.toISOString()).lte('created_at', dateRange.to.toISOString());
       if (error) throw error;
       return data || [];
@@ -140,7 +140,7 @@ export function useGoalsDashboard() {
     queryKey: ['goals-config', profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await supabase.from('goals_configurations').select('*').eq('profile_id', profile.id);
+      const { data, error: res5357Err } = await supabase.from('goals_configurations').select('*').eq('profile_id', profile.id);
       if (error) throw error;
       return data || [];
     },

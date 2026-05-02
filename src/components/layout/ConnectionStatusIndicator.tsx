@@ -189,7 +189,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
     }
     cooldownRef.current.set(conn.instance_id, now);
     try {
-      const { data, error } = await supabase.functions.invoke('evolution-api', {
+      const { data, error: res6680Err } = await supabase.functions.invoke('evolution-api', {
         body: { action: 'connect', instanceName: conn.instance_id },
       });
       if (error) throw new Error(error.message || 'Falha ao invocar evolution-api');

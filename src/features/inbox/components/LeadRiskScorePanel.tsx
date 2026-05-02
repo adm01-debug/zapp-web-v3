@@ -53,7 +53,7 @@ export function LeadRiskScorePanel({ contactId }: LeadRiskScorePanelProps) {
 
   const save = async () => {
     setSaving(true);
-    const { error } = await dbFrom('contacts')
+    const { error: res1948Err } = await dbFrom('contacts')
       .update({
         lead_score: leadScore,
         risk_score: riskScore,

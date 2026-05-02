@@ -65,7 +65,7 @@ export function ConversationTasksPanel({ contactId, profileId }: ConversationTas
   const addTask = async () => {
     if (!newTitle.trim()) return;
     setAdding(true);
-    const { error } = await supabase
+    const { error: res2151Err } = await supabase
       .from('conversation_tasks')
       .insert({
         contact_id: contactId,

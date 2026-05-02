@@ -183,7 +183,7 @@ export function useUserSettings() {
         tts_speed: settings.tts_speed,
       };
 
-      const { error } = await supabase
+      const { error: res6480Err } = await supabase
         .from('user_settings')
         .upsert(settingsData, { onConflict: 'user_id' });
 

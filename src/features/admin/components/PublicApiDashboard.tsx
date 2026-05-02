@@ -40,7 +40,7 @@ export function PublicApiDashboard() {
       if (setting?.value) setApiToken(setting.value as string);
 
       // Load recent API usage logs from audit_logs
-      const { data: auditLogs , error } = await supabase
+      const { data: auditLogs , error: auditLogsErr } = await supabase
         .from('audit_logs')
         .select('id, action, created_at, details, entity_type')
         .eq('entity_type', 'public_api')
@@ -68,7 +68,7 @@ export function PublicApiDashboard() {
     if (!newToken) return;
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error: res2366Err } = await supabase
         .from('global_settings')
         .upsert({ key: 'api_token', value: newToken, updated_at: new Date().toISOString() }, { onConflict: 'key' });
       if (error) throw error;

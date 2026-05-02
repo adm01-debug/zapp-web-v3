@@ -53,23 +53,6 @@ function validateStickerRow(row: unknown): row is StickerItem {
   return typeof r.id === 'string' && typeof r.image_url === 'string';
 }
 
-/** Safely extract storage path from URL, stripping query params */
-function extractStoragePath(imageUrl: string, bucket: string): string | null {
-  try {
-    const url = new URL(imageUrl);
-    const marker = `/${bucket}/`;
-    const idx = url.pathname.indexOf(marker);
-    if (idx === -1) return null;
-    return decodeURIComponent(url.pathname.substring(idx + marker.length));
-  } catch {
-    // Fallback: split-based approach
-    const marker = `/${bucket}/`;
-    if (!imageUrl.includes(marker)) return null;
-    const raw = imageUrl.split(marker)[1];
-    if (!raw) return null;
-    return raw.split('?')[0];
-  }
-}
 
 export function useStickerPicker(onSendSticker: (url: string) => void) {
   const [open, setOpen] = useState(false);
@@ -242,7 +225,7 @@ export function useStickerPicker(onSendSticker: (url: string) => void) {
     setOpen(false);
 
     // FALHA 7 FIX: Error handling on use_count update
-    const { error } = await supabase
+    const { error: res8967Err } = await supabase
       .from('stickers')
       .update({ use_count: (sticker.use_count || 0) + 1 })
       .eq('id', sticker.id);

@@ -21,7 +21,7 @@ export function useContactAssignment(contactId: string) {
 
   const assignQueue = useCallback(async (queueId: string | null) => {
     try {
-      const { error } = await dbFrom('contacts')
+      const { error: res816Err } = await dbFrom('contacts')
         .update({ queue_id: queueId })
         .eq('id', contactId);
 

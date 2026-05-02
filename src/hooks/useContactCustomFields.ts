@@ -41,7 +41,7 @@ export function useContactCustomFields(contactId: string | undefined) {
   const addField = useCallback(async (fieldName: string, fieldValue: string, fieldType = 'text') => {
     if (!contactId) return;
     try {
-      const { error } = await supabase
+      const { error: res1238Err } = await supabase
         .from('contact_custom_fields')
         .upsert({
           contact_id: contactId,
@@ -59,7 +59,7 @@ export function useContactCustomFields(contactId: string | undefined) {
 
   const removeField = useCallback(async (fieldId: string) => {
     try {
-      const { error } = await supabase
+      const { error: res1738Err } = await supabase
         .from('contact_custom_fields')
         .delete()
         .eq('id', fieldId);

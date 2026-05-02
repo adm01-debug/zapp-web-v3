@@ -60,7 +60,7 @@ export function useQueueSlaPanel(filters: QueueSlaFilters) {
     queueId: string,
     patch: Partial<Pick<QueueSlaRow, 'sla_priority' | 'routing_weight' | 'auto_rebalance_enabled'>>,
   ) => {
-    const { error } = await supabase.from('queues').update(patch as any).eq('id', queueId);
+    const { error: res1897Err } = await supabase.from('queues').update(patch as any).eq('id', queueId);
     if (error) {
       toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' });
       return false;
@@ -71,7 +71,7 @@ export function useQueueSlaPanel(filters: QueueSlaFilters) {
   };
 
   const triggerRebalance = async (limit = 50) => {
-    const { data, error } = await supabase.functions.invoke('queue-rebalance', {
+    const { data, error: res2332Err } = await supabase.functions.invoke('queue-rebalance', {
       body: { limit, source: 'panel' },
     });
     if (error) {

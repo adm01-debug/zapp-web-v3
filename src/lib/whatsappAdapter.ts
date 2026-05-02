@@ -90,7 +90,7 @@ async function checkCloudCredentials(): Promise<{ ok: boolean; missing: string[]
     return { ok: cloudCredsCache.ok, missing: cloudCredsCache.missing };
   }
   try {
-    const { data, error } = await supabase.functions.invoke("whatsapp-cloud-secrets-status");
+    const { data, error: res3354Err } = await supabase.functions.invoke("whatsapp-cloud-secrets-status");
     if (error) throw error;
     const list = (data as CloudSecretsStatus)?.secrets ?? [];
     const byName = new Map(list.map((s) => [s.name, s.configured]));
@@ -228,7 +228,7 @@ function jidToPhone(remoteJid: string): string {
 }
 
 async function invokeCloud(body: Record<string, unknown>) {
-  const { data, error } = await supabase.functions.invoke(
+  const { data, error: res7097Err } = await supabase.functions.invoke(
     "whatsapp-cloud-send",
     { body },
   );
@@ -241,7 +241,7 @@ async function invokeCloud(body: Record<string, unknown>) {
 }
 
 async function invokeEvolution(action: string, body: Record<string, unknown>) {
-  const { data, error } = await supabase.functions.invoke("evolution-api", {
+  const { data, error: res7496Err } = await supabase.functions.invoke("evolution-api", {
     body: { action, ...body },
   });
   if (error) throw error;
@@ -444,7 +444,7 @@ function projectFunctionsBase(): string {
   // deno-lint-ignore no-explicit-any
   const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL ?? '';
   if (supabaseUrl && !supabaseUrl.includes('.supabase.co')) {
-    return supabaseUrl.replace(//$/, '') + '/functions/v1';
+    return supabaseUrl.replace(/\/$/, "") + '/functions/v1';
   }
   const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID ?? '';
   return `https://${projectId}.supabase.co/functions/v1`;

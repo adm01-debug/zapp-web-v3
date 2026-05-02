@@ -58,7 +58,7 @@ export function ContactPurchasesPanel({ contactId, profileId }: ContactPurchases
 
   const addPurchase = async () => {
     if (!title.trim()) return;
-    const { error } = await supabase.from('contact_purchases').insert({
+    const { error: res2203Err } = await supabase.from('contact_purchases').insert({
       contact_id: contactId,
       title: title.trim(),
       amount: amount ? parseFloat(amount) : null,

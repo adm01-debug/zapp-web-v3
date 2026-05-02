@@ -33,7 +33,7 @@ export function ConnectionAlertPreferences() {
     (async () => {
       const { data: auth , error } = await supabase.auth.getUser();
       if (!auth.user) return setLoading(false);
-      const { data, error } = await supabase
+      const { data, error: res35Err } = await supabase
         .from('connection_alert_preferences')
         .select("push_enabled, email_enabled, alert_on_degraded, alert_on_disconnected")
         .eq("user_id", auth.user.id)
@@ -56,12 +56,12 @@ export function ConnectionAlertPreferences() {
 
   const save = async () => {
     setSaving(true);
-    const { data: auth , error } = await supabase.auth.getUser();
+    const { data: auth , error: authErr } = await supabase.auth.getUser();
     if (!auth.user) {
       setSaving(false);
       return;
     }
-    const { error } = await supabase
+    const { error: res63Err } = await supabase
       .from('connection_alert_preferences')
       .upsert({ user_id: auth.user.id, ...prefs }, { onConflict: "user_id" });
     setSaving(false);

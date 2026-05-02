@@ -32,7 +32,7 @@ export function useDeleteTeamMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
-      const { error } = await supabase.from('team_messages').delete().eq('id', messageId);
+      const { error: res1590Err } = await supabase.from('team_messages').delete().eq('id', messageId);
       if (error) throw error;
       return { conversationId };
     },
@@ -48,7 +48,7 @@ export function useEditTeamMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ messageId, content, conversationId }: { messageId: string; content: string; conversationId: string }) => {
-      const { error } = await supabase.from('team_messages').update({ content, is_edited: true, updated_at: new Date().toISOString() }).eq('id', messageId);
+      const { error: res2288Err } = await supabase.from('team_messages').update({ content, is_edited: true, updated_at: new Date().toISOString() }).eq('id', messageId);
       if (error) throw error;
       return { conversationId };
     },
@@ -79,7 +79,7 @@ export function useCreateTeamConversation() {
         }
       }
 
-      const { data: conv, error } = await supabase.from('team_conversations').insert({ type, name: name || null, created_by: profile.id }).select().single();
+      const { data: conv, error: convErr } = await supabase.from('team_conversations').insert({ type, name: name || null, created_by: profile.id }).select().single();
       if (error) throw error;
       const allMembers = [profile.id, ...memberIds.filter(id => id !== profile.id)];
       const { error: memError } = await supabase.from('team_conversation_members').insert(allMembers.map(pid => ({ conversation_id: conv.id, profile_id: pid })));
@@ -97,7 +97,7 @@ export function useToggleMuteConversation() {
   return useMutation({
     mutationFn: async ({ conversationId, muted }: { conversationId: string; muted: boolean }) => {
       if (!profile) throw new Error('Not authenticated');
-      const { error } = await supabase.from('team_conversation_members').update({ is_muted: muted }).eq('conversation_id', conversationId).eq('profile_id', profile.id);
+      const { error: res4785Err } = await supabase.from('team_conversation_members').update({ is_muted: muted }).eq('conversation_id', conversationId).eq('profile_id', profile.id);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['team-conversations'] }); },

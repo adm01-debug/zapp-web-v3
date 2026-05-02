@@ -68,7 +68,7 @@ export function PaymentLinksView() {
     // Generate a simple payment URL (in production would integrate with Stripe/payment provider)
     const paymentUrl = `${window.location.origin}/pay/${crypto.randomUUID().slice(0, 8)}`;
 
-    const { error } = await supabase.from('payment_links').insert({
+    const { error: res2663Err } = await supabase.from('payment_links').insert({
       title: formTitle,
       description: formDescription || null,
       amount,

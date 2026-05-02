@@ -62,7 +62,7 @@ export function MetaCAPIView() {
   // Load config from global_settings
   useEffect(() => {
     const loadConfig = async () => {
-      const { data, error } = await supabase
+      const { data, error: res2564Err } = await supabase
         .from('global_settings')
         .select('key, value')
         .in('key', ['meta_pixel_id', 'meta_capi_auto_track']);
@@ -78,7 +78,7 @@ export function MetaCAPIView() {
 
   const saveConfig = async () => {
     const upsert = async (key: string, value: string) => {
-      const { data: existing , error } = await supabase.from('global_settings').select('id').eq('key', key).maybeSingle();
+      const { data: existing , error: existingErr } = await supabase.from('global_settings').select('id').eq('key', key).maybeSingle();
       if (existing) {
         await supabase.from('global_settings').update({ value }).eq('key', key);
       } else {
@@ -92,7 +92,7 @@ export function MetaCAPIView() {
   };
 
   const sendTestEvent = async (eventName: string) => {
-    const { error } = await supabase.from('meta_capi_events').insert({
+    const { error: res3704Err } = await supabase.from('meta_capi_events').insert({
       event_name: eventName,
       pixel_id: pixelId || null,
       action_source: 'chat',

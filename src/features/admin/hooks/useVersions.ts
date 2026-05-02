@@ -38,7 +38,7 @@ export function useVersions(entityType: string, entityId: string) {
       const version = versions.find(v => v.id === versionId);
       if (!version) throw new Error('Versão não encontrada');
       
-      const { error } = await fromTable(entityType)
+      const { error: res1276Err } = await fromTable(entityType)
         .update(version.data)
         .eq('id', entityId);
       if (error) throw error;

@@ -104,7 +104,7 @@ export function useSentimentAlerts() {
 
   const getRecentAlerts = useCallback(async (limit = 10) => {
     try {
-      const { data, error } = await supabase
+      const { data, error: res3774Err } = await supabase
         .from('audit_logs')
         .select('*')
         .eq('action', 'sentiment_alert')

@@ -60,7 +60,7 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
     if (!content) return;
     setSaving(true);
     try {
-      const { data, error } = await dbRpc(RPC.addContactNote, {
+      const { data, error: res2587Err } = await dbRpc(RPC.addContactNote, {
         p_contact_id: contactId,
         p_content:    sanitizeHtml(content),
         p_note_type:  noteType,

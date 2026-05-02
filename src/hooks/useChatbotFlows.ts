@@ -72,7 +72,7 @@ export function useChatbotFlows() {
           edges: JSON.stringify(flow.edges ?? []),
           variables: JSON.stringify(flow.variables ?? {}),
         };
-      const { data, error } = await supabase
+      const { data, error: res2262Err } = await supabase
         .from('chatbot_flows')
         .insert(insertData as unknown as ChatbotFlowInsert)
         .select()
@@ -94,7 +94,7 @@ export function useChatbotFlows() {
       if (updates.edges) payload.edges = JSON.stringify(updates.edges);
       if (updates.variables) payload.variables = JSON.stringify(updates.variables);
 
-      const { data, error } = await supabase
+      const { data, error: res3127Err } = await supabase
         .from('chatbot_flows')
         .update(payload as unknown as ChatbotFlowUpdate)
         .eq('id', id)
@@ -112,7 +112,7 @@ export function useChatbotFlows() {
 
   const deleteFlow = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error: res3665Err } = await supabase
         .from('chatbot_flows')
         .delete()
         .eq('id', id);
@@ -127,7 +127,7 @@ export function useChatbotFlows() {
 
   const toggleFlow = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase
+      const { error: res4144Err } = await supabase
         .from('chatbot_flows')
         .update({ is_active })
         .eq('id', id);

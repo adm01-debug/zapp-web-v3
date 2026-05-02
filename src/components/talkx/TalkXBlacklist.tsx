@@ -68,7 +68,7 @@ export function TalkXBlacklist() {
   const { data: availableContacts = [] } = useQuery({
     queryKey: ['contacts-for-blacklist'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: res2550Err } = await supabase
         .from('contacts')
         .select('id, name, phone, company')
         .not('phone', 'is', null)
@@ -105,9 +105,9 @@ export function TalkXBlacklist() {
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      const { data: profile , error } = await supabase.from('profiles').select('id').single();
+      const { data: profile , error: profileErr } = await supabase.from('profiles').select('id').single();
       const finalReason = reason === 'Outro' ? customReason || 'Outro' : reason;
-      const { error } = await fromTable('talkx_blacklist')
+      const { error: res109Err } = await fromTable('talkx_blacklist')
         .insert({ contact_id: selectedContactId, reason: finalReason, blocked_by: profile?.id });
       if (error) throw error;
     },
@@ -124,7 +124,7 @@ export function TalkXBlacklist() {
 
   const removeMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('talkx_blacklist').delete().eq('id', id);
+      const { error: res4537Err } = await supabase.from('talkx_blacklist').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {

@@ -35,7 +35,7 @@ export function usePermissions() {
   }, []);
 
   const fetchRolePermissions = useCallback(async () => {
-    const { data, error } = await supabase
+    const { data, error: res1072Err } = await supabase
       .from('role_permissions')
       .select(`
         role,
@@ -63,7 +63,7 @@ export function usePermissions() {
     if (!user) return [];
 
     // Get user's roles first
-    const { data: userRoles , error } = await supabase
+    const { data: userRoles , error: userRolesErr } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id);
@@ -76,7 +76,7 @@ export function usePermissions() {
     const roles = userRoles.map(r => r.role);
 
     // Get permissions for those roles
-    const { data: perms , error } = await supabase
+    const { data: perms , error: permsErr } = await supabase
       .from('role_permissions')
       .select('permissions(name)')
       .in('role', roles);
@@ -96,7 +96,7 @@ export function usePermissions() {
   /** Server-side permission check via SECURITY DEFINER RPC */
   const checkPermissionServer = useCallback(async (permissionName: string): Promise<boolean> => {
     if (!user) return false;
-    const { data, error } = await supabase.rpc('user_has_permission', {
+    const { data, error: res2732Err } = await supabase.rpc('user_has_permission', {
       _user_id: user.id,
       _permission_name: permissionName,
     });
@@ -117,7 +117,7 @@ export function usePermissions() {
   }, [userPermissions]);
 
   const addPermissionToRole = useCallback(async (role: 'dev' | 'admin' | 'supervisor' | 'agent', permissionId: string) => {
-    const { error } = await supabase
+    const { error: res3568Err } = await supabase
       .from('role_permissions')
       .insert({ role, permission_id: permissionId });
 
@@ -128,7 +128,7 @@ export function usePermissions() {
   }, [fetchRolePermissions]);
 
   const removePermissionFromRole = useCallback(async (role: 'dev' | 'admin' | 'supervisor' | 'agent', permissionId: string) => {
-    const { error } = await supabase
+    const { error: res3931Err } = await supabase
       .from('role_permissions')
       .delete()
       .eq('role', role)

@@ -94,11 +94,11 @@ export function useScheduledReports() {
       };
 
       if (editingReport.id) {
-        const { error } = await supabase.from('scheduled_reports').update(reportData).eq('id', editingReport.id);
+        const { error: res3589Err } = await supabase.from('scheduled_reports').update(reportData).eq('id', editingReport.id);
         if (error) throw error;
         toast.success('Relatório atualizado!');
       } else {
-        const { error } = await supabase.from('scheduled_reports').insert(reportData);
+        const { error: res3798Err } = await supabase.from('scheduled_reports').insert(reportData);
         if (error) throw error;
         toast.success('Relatório agendado!');
       }
@@ -116,7 +116,7 @@ export function useScheduledReports() {
 
   const handleDelete = useCallback(async (id: string) => {
     try {
-      const { error } = await supabase.from('scheduled_reports').delete().eq('id', id);
+      const { error: res4376Err } = await supabase.from('scheduled_reports').delete().eq('id', id);
       if (error) throw error;
       toast.success('Relatório removido!');
       fetchReports();
@@ -128,7 +128,7 @@ export function useScheduledReports() {
 
   const toggleActive = useCallback(async (id: string, isActive: boolean) => {
     try {
-      const { error } = await supabase.from('scheduled_reports').update({ is_active: isActive }).eq('id', id);
+      const { error: res4793Err } = await supabase.from('scheduled_reports').update({ is_active: isActive }).eq('id', id);
       if (error) throw error;
       fetchReports();
     } catch (err) {
@@ -139,7 +139,7 @@ export function useScheduledReports() {
   const handleSendNow = useCallback(async (report: ScheduledReport) => {
     try {
       toast.info('Enviando relatório...');
-      const { error } = await supabase.functions.invoke('send-scheduled-report', { body: { reportId: report.id } });
+      const { error: res5179Err } = await supabase.functions.invoke('send-scheduled-report', { body: { reportId: report.id } });
       if (error) throw error;
       toast.success('Relatório enviado!');
       fetchReports();

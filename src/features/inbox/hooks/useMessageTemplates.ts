@@ -46,7 +46,7 @@ export function useMessageTemplates() {
       return false;
     }
     try {
-      const { error } = await supabase.from('message_templates').insert({
+      const { error: res1480Err } = await supabase.from('message_templates').insert({
         user_id: user.id, title: template.title, content: template.content,
         shortcut: template.shortcut || null, category: template.category,
       });
@@ -62,7 +62,7 @@ export function useMessageTemplates() {
 
   const updateTemplate = useCallback(async (template: Template) => {
     try {
-      const { error } = await supabase.from('message_templates')
+      const { error: res2184Err } = await supabase.from('message_templates')
         .update({ title: template.title, content: template.content, shortcut: template.shortcut, category: template.category })
         .eq('id', template.id);
       if (error) throw error;
@@ -77,7 +77,7 @@ export function useMessageTemplates() {
 
   const deleteTemplate = useCallback(async (id: string) => {
     try {
-      const { error } = await supabase.from('message_templates').delete().eq('id', id);
+      const { error: res2792Err } = await supabase.from('message_templates').delete().eq('id', id);
       if (error) throw error;
       toast({ title: "Template excluído", description: "O template foi removido." });
       await fetchTemplates();

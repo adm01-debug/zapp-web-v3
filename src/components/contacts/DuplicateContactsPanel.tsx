@@ -101,7 +101,7 @@ export const DuplicateContactsPanel: React.FC<Props> = ({
     const progressInterval = setInterval(() => setAutoProgress((p) => Math.min(p + 5, 90)), 500);
 
     try {
-      const { data, error } = await dbRpc(RPC.bulkAutoMergeDuplicates, {
+      const { data, error: res4055Err } = await dbRpc(RPC.bulkAutoMergeDuplicates, {
         p_instance_name: instanceName,
         p_limit: 1000,
       });

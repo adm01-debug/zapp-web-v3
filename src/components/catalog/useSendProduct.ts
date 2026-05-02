@@ -77,7 +77,7 @@ export function useSendToContact(onSuccess: () => void) {
   ) => {
     setIsSending(true);
     try {
-      const { data: connections , error } = await supabase
+      const { data: connections , error: connectionsErr } = await supabase
         .from('whatsapp_connections')
         .select('id, name')
         .eq('status', 'connected')
@@ -88,7 +88,7 @@ export function useSendToContact(onSuccess: () => void) {
       // Send images
       for (const imgUrl of imageUrls) {
         const trace = newRequestId('catalog-img');
-        const { data: dbResult , error } = await supabase.from('messages').insert({
+        const { data: dbResult , error: dbResultErr } = await supabase.from('messages').insert({
           contact_id: contact.id,
           content: imgUrl,
           sender: 'agent',
@@ -98,7 +98,7 @@ export function useSendToContact(onSuccess: () => void) {
           request_id: trace.requestId,
         }).select('id').single();
 
-        const { data: apiResult , error } = await supabase.functions.invoke('evolution-api', {
+        const { data: apiResult , error: apiResultErr } = await supabase.functions.invoke('evolution-api', {
           body: {
             action: 'send-media',
             instanceName: connection?.name || 'wpp2',
@@ -120,7 +120,7 @@ export function useSendToContact(onSuccess: () => void) {
 
       // Send text
       const textTrace = newRequestId('catalog-text');
-      const { data: textDbResult , error } = await supabase.from('messages').insert({
+      const { data: textDbResult , error: textDbResultErr } = await supabase.from('messages').insert({
         contact_id: contact.id,
         content: message,
         sender: 'agent',
@@ -130,7 +130,7 @@ export function useSendToContact(onSuccess: () => void) {
         request_id: textTrace.requestId,
       }).select('id').single();
 
-      const { data: textApiResult , error } = await supabase.functions.invoke('evolution-api', {
+      const { data: textApiResult , error: textApiResultErr } = await supabase.functions.invoke('evolution-api', {
         body: {
           action: 'send-text',
           instanceName: connection?.name || 'wpp2',

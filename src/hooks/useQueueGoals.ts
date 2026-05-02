@@ -68,14 +68,14 @@ export function useQueueGoals() {
       const existingGoal = goals[queueId];
 
       if (existingGoal) {
-        const { error } = await supabase
+        const { error: res1800Err } = await supabase
           .from('queue_goals')
           .update(goalData)
           .eq('queue_id', queueId);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error: res1984Err } = await supabase
           .from('queue_goals')
           .insert({
             queue_id: queueId,

@@ -35,7 +35,7 @@ export function AgentPerformancePanel() {
       if (!stats) return [];
 
       const profileIds = stats.map(s => s.profile_id);
-      const { data: profiles , error } = await supabase
+      const { data: profiles , error: profilesErr } = await supabase
         .from('profiles')
         .select('id, name, avatar_url')
         .in('id', profileIds);

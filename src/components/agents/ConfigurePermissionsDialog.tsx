@@ -33,7 +33,7 @@ export function ConfigurePermissionsDialog({ open, onOpenChange }: ConfigurePerm
   const { data: permissions = [] } = useQuery({
     queryKey: ['permissions-list'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: res1067Err } = await supabase
         .from('permissions')
         .select('id, name, description, category');
       if (error) throw error;
@@ -45,7 +45,7 @@ export function ConfigurePermissionsDialog({ open, onOpenChange }: ConfigurePerm
   const { data: profiles = [] } = useQuery({
     queryKey: ['profiles-for-permissions'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: res1397Err } = await supabase
         .from('profiles')
         .select('id, name, email, role')
         .order('name');

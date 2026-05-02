@@ -44,7 +44,7 @@ export function useContactNotes(contactId: string) {
   const { data: notes = [], isLoading, error, refetch } = useQuery({
     queryKey: ['contact-notes', contactId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: res1283Err } = await supabase
         .from('contact_notes')
         .select(`
           id,
@@ -81,7 +81,7 @@ export function useContactNotes(contactId: string) {
     mutationFn: async (content: string) => {
       if (!profile?.id) throw new Error('Perfil não encontrado');
 
-      const { data, error } = await supabase
+      const { data, error: res2307Err } = await supabase
         .from('contact_notes')
         .insert({
           contact_id: contactId,
@@ -114,7 +114,7 @@ export function useContactNotes(contactId: string) {
   // Delete note mutation
   const deleteNoteMutation = useMutation({
     mutationFn: async (noteId: string) => {
-      const { error } = await supabase
+      const { error: res3166Err } = await supabase
         .from('contact_notes')
         .delete()
         .eq('id', noteId);

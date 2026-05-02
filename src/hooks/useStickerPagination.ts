@@ -119,7 +119,7 @@ export function useStickerPagination() {
         state.items.length + PAGE_SIZE - 1
       );
 
-      const { data, error } = await query;
+      const { data, error: res3424Err } = await query;
 
       if (error) {
         log.error('[StickerPagination] Load more error:', error);

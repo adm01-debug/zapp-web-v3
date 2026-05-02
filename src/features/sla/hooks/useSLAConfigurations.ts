@@ -53,13 +53,13 @@ export function useSLAConfigurations() {
   const saveMutation = useMutation({
     mutationFn: async (values: SLAForm & { id?: string }) => {
       if (values.id) {
-        const { error } = await supabase.from('sla_configurations').update({
+        const { error: res1799Err } = await supabase.from('sla_configurations').update({
           name: values.name, first_response_minutes: values.first_response_minutes,
           resolution_minutes: values.resolution_minutes, priority: values.priority, is_default: values.is_default,
         }).eq('id', values.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('sla_configurations').insert({
+        const { error: res2154Err } = await supabase.from('sla_configurations').insert({
           name: values.name, first_response_minutes: values.first_response_minutes,
           resolution_minutes: values.resolution_minutes, priority: values.priority, is_default: values.is_default,
         });
@@ -78,7 +78,7 @@ export function useSLAConfigurations() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from('sla_configurations').update({ is_active }).eq('id', id);
+      const { error: res2924Err } = await supabase.from('sla_configurations').update({ is_active }).eq('id', id);
       if (error) throw error;
     },
     onMutate: async ({ id, is_active }) => {
@@ -97,7 +97,7 @@ export function useSLAConfigurations() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('sla_configurations').delete().eq('id', id);
+      const { error: res3778Err } = await supabase.from('sla_configurations').delete().eq('id', id);
       if (error) throw error;
     },
     onMutate: async (id: string) => {

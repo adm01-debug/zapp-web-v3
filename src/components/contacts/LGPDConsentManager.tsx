@@ -58,7 +58,7 @@ export const LGPDConsentManager: React.FC<Props> = ({ contact, onUpdated, readon
   const revoke = async () => {
     setLoading('revoke');
     try {
-      const { data, error } = await dbRpc(RPC.revokeLgpdConsent, { p_contact_id: contact.id, p_reason: 'user_request' });
+      const { data, error: res2783Err } = await dbRpc(RPC.revokeLgpdConsent, { p_contact_id: contact.id, p_reason: 'user_request' });
       if (error) throw error;
       const r = (typeof data === 'boolean' ? {} : ((data ?? {}) as Record<string, unknown>));
       if (r?.error) throw new Error(String(r.error));

@@ -142,7 +142,7 @@ export function useDeviceDetection() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error: res4170Err } = await supabase
         .from('user_sessions')
         .select('*')
         .eq('is_active', true)
@@ -158,7 +158,7 @@ export function useDeviceDetection() {
   // Trust a device
   const trustDevice = useCallback(async (deviceId: string) => {
     try {
-      const { error } = await supabase
+      const { error: res4607Err } = await supabase
         .from('user_devices')
         .update({ is_trusted: true })
         .eq('id', deviceId);
@@ -180,7 +180,7 @@ export function useDeviceDetection() {
         .eq('device_id', deviceId);
 
       // Then remove the device
-      const { error } = await supabase
+      const { error: res5243Err } = await supabase
         .from('user_devices')
         .delete()
         .eq('id', deviceId);
@@ -196,7 +196,7 @@ export function useDeviceDetection() {
   // End a session
   const endSession = useCallback(async (sessionId: string) => {
     try {
-      const { error } = await supabase
+      const { error: res5656Err } = await supabase
         .from('user_sessions')
         .update({ is_active: false, ended_at: new Date().toISOString() })
         .eq('id', sessionId);
@@ -213,7 +213,7 @@ export function useDeviceDetection() {
     if (!currentDeviceId) return;
 
     try {
-      const { error } = await supabase
+      const { error: res6120Err } = await supabase
         .from('user_sessions')
         .update({ is_active: false, ended_at: new Date().toISOString() })
         .neq('device_id', currentDeviceId)

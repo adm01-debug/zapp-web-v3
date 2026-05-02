@@ -97,7 +97,7 @@ skipIfNoLive("RLS — anon bloqueado em endpoints críticos do multiatendimento"
     const RPCS = ["rpc_get_whatsapp_mode", "is_admin_or_supervisor", "has_role"];
     for (const rpc of RPCS) {
       // deno-lint-ignore no-explicit-any
-      const { data, error } = await (anon.rpc as any)(rpc, {});
+      const { data, error: res3893Err } = await (anon.rpc as any)(rpc, {});
       // O comportamento esperado é erro (função não-pública/JWT required) OU
       // retorno seguro nulo/false. Nenhum vazamento de role/admin para anon.
       if (!error) {

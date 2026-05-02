@@ -74,7 +74,7 @@ export function ChatbotL1Config() {
       };
 
       if (flow?.id) {
-        const { error } = await supabase.from('chatbot_flows').update({
+        const { error: res2759Err } = await supabase.from('chatbot_flows').update({
           name,
           is_active: isActive,
           variables,
@@ -82,7 +82,7 @@ export function ChatbotL1Config() {
         }).eq('id', flow.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('chatbot_flows').insert({
+        const { error: res3024Err } = await supabase.from('chatbot_flows').insert({
           name,
           is_active: isActive,
           trigger_type: 'ai_l1',
@@ -231,7 +231,7 @@ export function ChatbotL1Config() {
               variant="outline"
               onClick={async () => {
                 try {
-                  const { data, error } = await supabase.functions.invoke('chatbot-l1', {
+                  const { data, error: res9106Err } = await supabase.functions.invoke('chatbot-l1', {
                     body: { contactId: 'test', message: 'Olá, teste de conexão', connectionId: 'test' },
                   });
                   if (error) throw error;

@@ -120,9 +120,9 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
     try {
       const buckets = ['whatsapp-media', 'audio-messages'];
       for (const bucket of buckets) {
-        const { data: files , error } = await supabase.storage.from(bucket).list('', { search: messageId, limit: 5 });
+        const { data: files , error: filesErr } = await supabase.storage.from(bucket).list('', { search: messageId, limit: 5 });
         if (files && files.length > 0) {
-          const { data, error } = await supabase.storage.from(bucket).createSignedUrl(files[0].name, 3600);
+          const { data, error: res124Err } = await supabase.storage.from(bucket).createSignedUrl(files[0].name, 3600);
           if (data?.signedUrl) return data.signedUrl;
         }
       }
@@ -132,7 +132,7 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
     // expired WhatsApp media as long as we have the original message key).
     if (refreshKey && urlExpired) {
       try {
-        const { data, error } = await supabase.functions.invoke('evolution-api/get-media-base64', {
+        const { data, error: res5514Err } = await supabase.functions.invoke('evolution-api/get-media-base64', {
           method: 'POST',
           body: {
             instanceName: refreshKey.instanceName,

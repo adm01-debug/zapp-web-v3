@@ -33,10 +33,10 @@ export function useGeoBlocking() {
       const { data: settingsData , error } = await supabase.from('geo_blocking_settings').select('*').limit(1).single();
       if (settingsData) setSettings(settingsData as GeoSettings);
 
-      const { data: allowedData , error } = await supabase.from('allowed_countries').select('*').order('created_at', { ascending: false });
+      const { data: allowedData , error: allowedDataErr } = await supabase.from('allowed_countries').select('*').order('created_at', { ascending: false });
       setAllowedCountries(allowedData || []);
 
-      const { data: blockedData , error } = await supabase.from('blocked_countries').select('*').order('created_at', { ascending: false });
+      const { data: blockedData , error: blockedDataErr } = await supabase.from('blocked_countries').select('*').order('created_at', { ascending: false });
       setBlockedCountries(blockedData || []);
     } catch (error) {
       log.error('Error fetching geo data:', error);
@@ -52,7 +52,7 @@ export function useGeoBlocking() {
     if (!settings) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from('geo_blocking_settings').update({ mode, updated_by: user?.id, updated_at: new Date().toISOString() }).eq('id', settings.id);
+      const { error: res2083Err } = await supabase.from('geo_blocking_settings').update({ mode, updated_by: user?.id, updated_at: new Date().toISOString() }).eq('id', settings.id);
       if (error) throw error;
       setSettings({ ...settings, mode });
       const modeLabels = { disabled: 'Desativado', whitelist: 'Whitelist (apenas permitidos)', blacklist: 'Blacklist (bloqueados)' };
@@ -87,7 +87,7 @@ export function useGeoBlocking() {
     if (!countryToRemove) return;
     try {
       const table = activeTab === 'whitelist' ? 'allowed_countries' : 'blocked_countries';
-      const { error } = await supabase.from(table).delete().eq('id', countryToRemove.id);
+      const { error: res3759Err } = await supabase.from(table).delete().eq('id', countryToRemove.id);
       if (error) throw error;
       toast.success(`${countryToRemove.country_name} removido`);
       setCountryToRemove(null);

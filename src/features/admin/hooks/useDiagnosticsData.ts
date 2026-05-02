@@ -87,7 +87,7 @@ export function useDiagnosticsData() {
       dbFrom('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'sending'),
     ]);
 
-    const { data: failures , error } = await supabase
+    const { data: failures , error: failuresErr } = await supabase
       .from('messages')
       .select('id, content, status, created_at, contact_id')
       .eq('sender', 'agent')
@@ -100,7 +100,7 @@ export function useDiagnosticsData() {
       for (const f of failures) {
         let contactName = 'Desconhecido';
         if (f.contact_id) {
-          const { data: contact , error } = await supabase
+          const { data: contact , error: contactErr } = await supabase
             .from('contacts')
             .select('name')
             .eq('id', f.contact_id)
@@ -146,7 +146,7 @@ export function useDiagnosticsData() {
 
     let edgeFunctionsStatus: 'healthy' | 'degraded' | 'down' = 'healthy';
     try {
-      const { error } = await supabase.functions.invoke('connection-health-check');
+      const { error: res5314Err } = await supabase.functions.invoke('connection-health-check');
       if (error) edgeFunctionsStatus = 'degraded';
     } catch {
       edgeFunctionsStatus = 'degraded';
@@ -168,7 +168,7 @@ export function useDiagnosticsData() {
   const fetchErrorLogs = async () => {
     const logs: ErrorLog[] = [];
 
-    const { data: failedMsgs , error } = await supabase
+    const { data: failedMsgs , error: failedMsgsErr } = await supabase
       .from('messages')
       .select('id, content, created_at, contact_id')
       .eq('status', 'failed')
@@ -188,7 +188,7 @@ export function useDiagnosticsData() {
       }
     }
 
-    const { data: disconnected , error } = await supabase
+    const { data: disconnected , error: disconnectedErr } = await supabase
       .from('whatsapp_connections')
       .select('id, instance_id, status, updated_at')
       .neq('status', 'connected');

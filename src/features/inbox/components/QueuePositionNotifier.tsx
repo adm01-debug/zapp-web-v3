@@ -24,7 +24,7 @@ export function QueuePositionNotifier({ contactId, className }: QueuePositionNot
       if (!data) return null;
 
       // Get queue name
-      const { data: queue , error } = await supabase
+      const { data: queue , error: queueErr } = await supabase
         .from('queues')
         .select('name, color')
         .eq('id', data.queue_id)

@@ -85,7 +85,7 @@ export default function DepartmentsPage() {
     const ids = (data ?? []).map((d) => d.id);
     let counts: Record<string, number> = {};
     if (ids.length) {
-      const { data: profilesByDept , error } = await supabase
+      const { data: profilesByDept , error: profilesByDeptErr } = await supabase
         .from('profiles')
         .select('department_id')
         .in('department_id', ids);
@@ -172,7 +172,7 @@ export default function DepartmentsPage() {
   const handleDelete = async () => {
     if (!toDelete) return;
     setSaving(true);
-    const { error } = await supabase.from('departments').delete().eq('id', toDelete.id);
+    const { error: res4588Err } = await supabase.from('departments').delete().eq('id', toDelete.id);
     setSaving(false);
 
     if (error) {

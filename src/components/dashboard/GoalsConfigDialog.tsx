@@ -79,7 +79,7 @@ export function GoalsConfigDialog({ open, onOpenChange }: GoalsConfigDialogProps
     queryKey: ['goals-config', profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await supabase
+      const { data, error: res2866Err } = await supabase
         .from('goals_configurations')
         .select('*')
         .eq('profile_id', profile.id);
@@ -120,7 +120,7 @@ export function GoalsConfigDialog({ open, onOpenChange }: GoalsConfigDialogProps
       for (const goal of goalsToSave) {
         if (goal.id) {
           // Update existing
-          const { error } = await supabase
+          const { error: res4146Err } = await supabase
             .from('goals_configurations')
             .update({
               daily_target: goal.daily_target,
@@ -132,7 +132,7 @@ export function GoalsConfigDialog({ open, onOpenChange }: GoalsConfigDialogProps
           if (error) throw error;
         } else {
           // Insert new
-          const { error } = await supabase
+          const { error: res4563Err } = await supabase
             .from('goals_configurations')
             .insert({
               profile_id: profile.id,

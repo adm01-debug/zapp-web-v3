@@ -98,7 +98,7 @@ export function useCustomEmojis(open: boolean) {
 
   const handleConfirmUpload = useCallback(async (pending: PendingEmojiUpload) => {
     const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('custom_emojis').insert({
+    const { error: res3381Err } = await supabase.from('custom_emojis').insert({
       name: pending.name, image_url: pending.imageUrl,
       category: pending.selectedCategory, is_favorite: false,
       use_count: 0, uploaded_by: user?.id || null,
