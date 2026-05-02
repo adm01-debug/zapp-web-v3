@@ -195,6 +195,7 @@ export const safeClient = {
     else if (telemetry.recentFailures.length > 0) status = 'degraded';
 
     try {
+      // Usar a flag SECURITY DEFINER via RPC para atualizar o estado sem depender de RLS complexo no insert direto
       await (supabase as any).rpc('rpc_update_gmail_health_state', {
         p_status: status,
         p_failure_count: telemetry.recentFailures.length,

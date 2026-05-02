@@ -55,6 +55,8 @@ const AdminAutomationsPage = lazyWithRetry(() => import("@/pages/admin/AdminAuto
 const AdminAutomationLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminAutomationLogsPage"));
 const AdminWhatsAppModePage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppModePage"));
 const AdminWhatsAppLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppLogsPage"));
+const AdminGmailStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailStatusPage"));
+const AdminGmailAuditPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailAuditPage"));
 const Install = lazyWithRetry(() => import("@/pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("@/pages/ChatPopup"));
 const InboxPage = lazyWithRetry(() => import("@/pages/inbox/InboxPage"));
@@ -121,6 +123,8 @@ export function AppRoutes() {
         <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
         <Route path="/admin/settings/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
         <Route path="/admin/whatsapp-logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppLogsPage /></ProtectedRoute>} />
+        <Route path="/admin/gmail-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailStatusPage /></ProtectedRoute>} />
+        <Route path="/admin/gmail-audit" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailAuditPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
