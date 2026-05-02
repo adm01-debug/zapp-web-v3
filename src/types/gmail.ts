@@ -51,6 +51,8 @@ export interface GmailThread {
   last_message_at: string | null;
   first_reply_at:  string | null;
   created_at:      string;
+  contact?:        any;
+  tags?:           string[];
 }
 
 export type EmailThread = GmailThread;
