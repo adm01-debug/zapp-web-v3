@@ -7,6 +7,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import { useToast } from '@/hooks/use-toast';
+import { dbFrom, dbTable } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -119,7 +120,7 @@ export function useMessages(remoteJid: string | null) {
       .on('postgres_changes', {
         event:  'INSERT',
         schema: 'public',
-        table:  'evolution_messages',
+        table: dbTable('messages'),
         filter: `remote_jid=eq.${remoteJid}`,
       }, (payload) => {
         const newMsg = mapRow(payload.new as Record<string, unknown>);
@@ -128,7 +129,7 @@ export function useMessages(remoteJid: string | null) {
       .on('postgres_changes', {
         event:  'UPDATE',
         schema: 'public',
-        table:  'evolution_messages',
+        table: dbTable('messages'),
         filter: `remote_jid=eq.${remoteJid}`,
       }, (payload) => {
         setMessages((prev) => prev.map((m) =>
@@ -142,17 +143,17 @@ export function useMessages(remoteJid: string | null) {
   // ── Actions ───────────────────────────────────────────────────────────
 
   const toggleStar = useCallback(async (id: string, current: boolean) => {
-    await supabase.from('evolution_messages').update({ is_starred: !current }).eq('id', id);
+    await dbFrom('messages').update({ is_starred: !current }).eq('id', id);
     setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_starred: !current } : m));
   }, []);
 
   const toggleImportant = useCallback(async (id: string, current: boolean) => {
-    await supabase.from('evolution_messages').update({ is_important: !current }).eq('id', id);
+    await dbFrom('messages').update({ is_important: !current }).eq('id', id);
     setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_important: !current } : m));
   }, []);
 
   const scheduleFollowUp = useCallback(async (id: string, followUpAt: string) => {
-    await supabase.from('evolution_messages')
+    await dbFrom('messages')
       .update({ follow_up_at: followUpAt, follow_up_done: false })
       .eq('id', id);
     setMessages((prev) => prev.map((m) => m.id === id ? { ...m, follow_up_at: followUpAt } : m));

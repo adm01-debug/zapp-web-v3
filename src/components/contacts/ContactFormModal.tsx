@@ -19,6 +19,7 @@ import { normalizePhone, validatePhone, formatPhoneForDisplay } from '@/lib/phon
 import { useRetryOperation } from '@/hooks/useRetryOperation';
 import { useDuplicateDetector } from '@/components/contacts/useDuplicateDetector';
 import { type Contact } from '@/hooks/useContacts';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactFormModalProps {
   instanceName: string;
@@ -128,7 +129,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
             return;
           }
         } else {
-          const { error } = await supabase.from('evolution_contacts').insert({
+          const { error } = await dbFrom('contacts').insert({
             full_name:     sanitizeText(fullName),
             phone_number:  normalizedPhone,
             email:         email.toLowerCase().trim() || null,

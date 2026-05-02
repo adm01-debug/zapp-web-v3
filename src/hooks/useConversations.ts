@@ -7,6 +7,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom, dbTable } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -77,8 +78,7 @@ export function useConversations() {
   const searchDebounce = useRef<ReturnType<typeof setTimeout>>();
 
   const buildQuery = useCallback((f: ConversationFilters) => {
-    let q = supabase
-      .from('evolution_conversations')
+    let q = dbFrom('conversations')
       .select([
         'id','contact_id','remote_jid','status','assigned_to','department',
         'subject','priority','labels','message_count','unread_count',
@@ -200,7 +200,7 @@ export function useConversations() {
   }, [filters.status, toast]);
 
   const markAsRead = useCallback(async (id: string) => {
-    await supabase.from('evolution_conversations').update({ unread_count: 0, updated_at: new Date().toISOString() }).eq('id', id);
+    await dbFrom('conversations').update({ unread_count: 0, updated_at: new Date().toISOString() }).eq('id', id);
     setConversations((prev) => prev.map((c) => c.id === id ? { ...c, unread_count: 0 } : c));
   }, []);
 
@@ -210,7 +210,7 @@ export function useConversations() {
     const channel = supabase
       .channel(`conversations:${filters.instance_name}`)
       .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'evolution_conversations',
+        event: '*', schema: 'public', table: dbTable('conversations'),
         filter: `instance_name=eq.${filters.instance_name}`,
       }, (payload) => {
         if (payload.eventType === 'INSERT') {
