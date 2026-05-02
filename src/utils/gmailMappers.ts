@@ -96,6 +96,23 @@ export const gmailMappers = {
   }),
 
   /**
+   * Mapeia uma linha da view 'v_email_accounts_unified'
+   */
+  unifiedAccount: (data: any): UnifiedEmailAccount => ({
+    account_id:      data.account_id,
+    user_id:         data.user_id,
+    email:           data.email,
+    display_name:    data.display_name || '',
+    provider:        data.provider || 'custom',
+    auth_method:     data.auth_method || 'password',
+    is_active:       data.is_active ?? true,
+    token_expired:   data.token_expired ?? false,
+    unread_threads:  data.unread_threads || 0,
+    sla_breached:    data.sla_breached || 0,
+    created_at:      data.created_at,
+  }),
+
+  /**
    * Helpers para arrays
    */
   accounts: (data: any[]): GmailAccount[] => (data || []).map(gmailMappers.account),
@@ -103,4 +120,5 @@ export const gmailMappers = {
   threads: (data: any[]): GmailThread[] => (data || []).map(gmailMappers.thread),
   metrics: (data: any[]): GmailDayMetric[] => (data || []).map(gmailMappers.metric),
   labels: (data: any[]): GmailLabelInfo[] => (data || []).map(gmailMappers.label),
+  unifiedAccounts: (data: any[]): UnifiedEmailAccount[] => (data || []).map(gmailMappers.unifiedAccount),
 };
