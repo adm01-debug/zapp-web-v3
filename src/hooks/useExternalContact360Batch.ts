@@ -10,7 +10,9 @@
  * Returns a Map<phone, CRMBatchResult> for O(1) lookup per conversation item.
  */
 import { useQuery } from '@tanstack/react-query';
-import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { log } from '@/lib/logger';
 
 export interface CRMBatchResult {
@@ -39,7 +41,7 @@ export function useExternalContact360Batch(phones: string[]) {
     queryFn: async () => {
       if (cleanedPhones.length === 0) return new Map();
 
-      const { data, error } = await getExternalSupabase().rpc('get_companies_by_phones_batch', {
+      const { data, error } = await dbRpc(RPC.getCompaniesByPhonesBatch, {
         p_phones: cleanedPhones,
       });
 

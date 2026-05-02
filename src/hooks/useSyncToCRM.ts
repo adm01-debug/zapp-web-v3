@@ -44,7 +44,7 @@ export function useSyncToCRM() {
     mutationFn: async (params) => {
       if (!isExternalConfigured) return null;
 
-      const { data, error } = await getExternalSupabase().rpc('sync_interaction_from_zapp', {
+      const { data, error } = await dbRpc(RPC.syncInteractionFromZapp, {
         p_phone: params.phone,
         p_channel: params.channel || 'whatsapp',
         p_direction: params.direction || 'inbound',

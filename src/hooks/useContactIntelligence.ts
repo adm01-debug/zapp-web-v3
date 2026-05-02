@@ -6,7 +6,9 @@
  * best times, churn risk, DISC tips, and last interactions.
  */
 import { useQuery } from '@tanstack/react-query';
-import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { dbGet } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { log } from '@/lib/logger';
 
 export interface ContactBriefing {
