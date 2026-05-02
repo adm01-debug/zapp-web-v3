@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  History, User, Activity, Clock, Shield, 
+  History as HistoryIcon, User, Activity, Clock, Shield, 
   ExternalLink, Search, Filter, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
