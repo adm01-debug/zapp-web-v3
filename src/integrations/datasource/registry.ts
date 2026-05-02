@@ -14,6 +14,16 @@
  *  1. Adicione o nome em `LogicalEntity`.
  *  2. Mapeie em `ENTITY_MAP` para `{ client, table }`.
  *  3. Use `dbFrom('nova-entidade')` no código — nunca `supabase.from(...)` direto.
+ *
+ * Quando usar cada caminho:
+ *  - `dbFrom` / `dbChannel` / `dbTable` (este arquivo + db.ts)
+ *      → entidades **lovable** (profiles, queues, whatsapp_connections)
+ *      → realtime (postgres_changes) em qualquer entidade, inclusive evolution_*
+ *
+ *  - `dbRpc` / `dbList` / `dbGet` / `dbInsert` (db.ts + rpcCatalog.ts)
+ *      → TODA leitura/escrita de domínio em FATOR X (contacts, messages,
+ *        conversations, calls, audit_log). RLS bloqueia SELECT direto, então
+ *        a única forma correta é via RPC SECURITY DEFINER.
  */
 
 export type LogicalEntity =

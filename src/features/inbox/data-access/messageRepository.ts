@@ -1,4 +1,5 @@
-import { dbFrom, dbChannel, dbClient, dbTable } from '@/integrations/datasource/db';
+import { dbFrom, dbChannel, dbClient, dbTable, dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 export interface Message {
@@ -28,6 +29,19 @@ export const messageRepository = {
       .eq('contact_id', contactId)
       .order('created_at', { ascending: true })
       .range(from, from + limit - 1);
+  },
+
+  /**
+   * Lista mensagens via RPC SECURITY DEFINER (caminho recomendado para FATOR X).
+   * Use em vez de `fetchMessagesByContact` quando tiver o `remote_jid` —
+   * bypassa RLS e respeita a regra do projeto (toda leitura de evolution_* via RPC).
+   */
+  async listByContactJid(remoteJid: string, limit = 1000, offset = 0) {
+    return dbList(RPC.listMessagesLite, {
+      p_remote_jid: remoteJid,
+      p_limit: limit,
+      p_offset: offset,
+    });
   },
 
   subscribeToMessages(contactId: string, callbacks: {
