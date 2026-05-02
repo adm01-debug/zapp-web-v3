@@ -76,6 +76,12 @@ export interface GmailSendParams {
 
 type GmailLabel = 'INBOX' | 'SENT' | 'DRAFT' | 'STARRED' | 'IMPORTANT' | 'TRASH' | 'SPAM' | string;
 
+/**
+ * Alias semântico — alguns componentes (ex.: `ThreadListItem`) usam o nome
+ * `EmailThread`. Mantido como reexport tipado para compatibilidade.
+ */
+export type EmailThread = GmailThread;
+
 // ── Hook Principal ─────────────────────────────────────────────────────────
 
 export function useGmail() {

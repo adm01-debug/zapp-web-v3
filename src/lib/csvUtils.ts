@@ -164,8 +164,7 @@ export function getCsvFilename(prefix: string, suffix?: string): string {
  * compatibilidade com `ContactImportDialog.parseRows`.
  */
 export async function parseCsvFile(file: File): Promise<string[][]> {
-  const text  = file.startsWith ? '' : await file.text();
-  const raw   = text || (await file.text());
+  const raw   = await file.text();
   const clean = raw.startsWith('\uFEFF') ? raw.slice(1) : raw;
   const lines = clean.split(/\r?\n/).filter((l) => l.trim().length > 0);
 
