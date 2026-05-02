@@ -6,8 +6,10 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // Fallback Supabase credentials when Lovable integration is disconnected
 // These are safe to expose (anon/publishable keys are public by design)
-const SUPABASE_FALLBACK_URL = 'https://allrjhkpuscmgbsnmjlv.supabase.co';
-const SUPABASE_FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsbHJqaGtwdXNjbWdic25tamx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NDc3NDQsImV4cCI6MjA4MTMyMzc0NH0.7S2yN87sjm22J9DXC7Njo7UaXQ2tHk6XMJheNVqHA74';
+// REMOVED: Hardcoded URL - use .env.local instead
+const SUPABASE_FALLBACK_URL = process.env.VITE_SUPABASE_URL || '';
+// REMOVED: Hardcoded key - use .env.local instead
+const SUPABASE_FALLBACK_KEY = process.env.VITE_SUPABASE_ANON_KEY || '';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
