@@ -124,6 +124,39 @@ interface GlobalSearchParams {
   p_limit?: number;
 }
 
+// ── CRM 360 / Search avançado (RPCs auxiliares do CRM externo) ──────────────
+
+export interface SearchContactsAdvancedParams {
+  p_search?: string | null;
+  p_vendedor?: string | null;
+  p_ramo?: string | null;
+  p_rfm_segment?: string | null;
+  p_estado?: string | null;
+  p_cliente_ativado?: boolean | null;
+  p_ja_comprou?: boolean | null;
+  p_sort_by?: string;
+  p_page?: number;
+  p_page_size?: number;
+}
+
+interface GetContact360Params { p_phone: string; }
+interface GetContactIntelligenceParams { p_phone: string; }
+interface GetCompaniesByPhonesBatchParams { p_phones: string[]; }
+
+interface SyncInteractionParams {
+  p_phone: string;
+  p_channel?: string;
+  p_direction?: string;
+  p_assunto?: string | null;
+  p_resumo?: string | null;
+  p_conteudo?: string | null;
+  p_sentiment?: string;
+  p_message_count?: number;
+  p_duration_seconds?: number | null;
+  p_agent_name?: string | null;
+  p_zapp_conversation_id?: string | null;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Catalog
 // ─────────────────────────────────────────────────────────────────────────────
