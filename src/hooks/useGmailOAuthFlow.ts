@@ -106,7 +106,7 @@ export function useGmailOAuthFlow(): UseGmailOAuthFlowReturn {
       setAccounts(prev =>
         prev.map(a =>
           a.id === accountId
-            ? { ...a, token_expiry: result.token_expiry }
+            ? { ...a, token_expiry: (result as any).token_expiry }
             : a
         )
       );
@@ -154,7 +154,7 @@ export function useGmailOAuthFlow(): UseGmailOAuthFlowReturn {
         setAccounts(prev =>
           prev.map(a =>
             a.id === accountId
-              ? { ...a, watch_expiry: result.expiration }
+              ? { ...a, watch_expiry: (result as any).expiration }
               : a
           )
         );

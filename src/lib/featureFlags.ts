@@ -63,7 +63,7 @@ export function isFeatureEnabled(flag: FeatureFlag): boolean {
  */
 export async function loadFeatureFlags(): Promise<void> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('app_settings')
       .select('key, value')
       .like('key', 'feature_%');

@@ -23,7 +23,7 @@ describe('normalizePhoneBR', () => {
   });
 
   it('adds 9th digit to 10-digit mobile numbers', () => {
-    expect(normalizePhoneBR('1199887766')).toBe('+55119999887766').length;
+    expect(normalizePhoneBR('1199887766')).toBe('+55119999887766');
     // 10 digits with mobile prefix -> adds 9
     const result = normalizePhoneBR('1198877665');
     expect(result).toMatch(/^\+55/);

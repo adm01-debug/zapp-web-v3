@@ -28,7 +28,7 @@ export const useContactsQuery = (filters: DashboardFilters) =>
     queryKey: ['dashboard-contacts', filters.queueId, filters.agentId, filters.dateRange?.from?.toISOString(), filters.dateRange?.to?.toISOString()],
     queryFn: async () => {
       let query = dbFrom('contacts')
-        .select('id, name, phone, avatar_url, queue_id, assigned_to, created_at, updated_at')
+        .select('id, name, phone, avatar_url, queue_id, assigned_to, created_at, updated_at', { count: 'exact' })
         .order('updated_at', { ascending: false });
       if (filters.queueId) query = query.eq('queue_id', filters.queueId);
       if (filters.agentId) query = query.eq('assigned_to', filters.agentId);
@@ -46,7 +46,7 @@ export const useMessagesQuery = (filters: DashboardFilters) =>
     queryKey: ['dashboard-messages', filters.dateRange?.from?.toISOString(), filters.dateRange?.to?.toISOString(), filters.agentId],
     queryFn: async () => {
       let query = dbFrom('messages')
-        .select(`id, contact_id, content, sender, created_at, is_read, agent_id, contacts (id, name, phone, avatar_url, queue_id)`)
+        .select(`id, contact_id, content, sender, created_at, is_read, agent_id, contacts (id, name, phone, avatar_url, queue_id)`, { count: 'exact' })
         .order('created_at', { ascending: false })
         .limit(100);
       if (filters.dateRange?.from) query = query.gte('created_at', filters.dateRange.from.toISOString());
@@ -84,7 +84,7 @@ export const useContactsPerQueueQuery = () =>
     queryKey: ['dashboard-contacts-per-queue'],
     queryFn: async () => {
       const { data, error } = await dbFrom('contacts')
-        .select('id, queue_id, assigned_to');
+        .select('id, queue_id, assigned_to', { count: 'exact' });
       if (error) throw error;
       const queueCounts: Record<string, number> = {};
       data?.forEach(contact => {
