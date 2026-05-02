@@ -160,10 +160,16 @@ export default function AdminGmailStatusPage() {
           <h1 className="text-3xl font-bold tracking-tight">Status do Gmail</h1>
           <p className="text-muted-foreground">Monitoramento de integridade do schema e conexões Gmail.</p>
         </div>
-        <Button onClick={handleRevalidate} variant="outline" className="gap-2">
-          <RefreshCcw className="w-4 h-4" />
-          Forçar Revalidação
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => window.location.hash = '#admin/gmail-audit'} variant="outline" className="gap-2">
+            <History className="w-4 h-4" />
+            Ver Auditoria
+          </Button>
+          <Button onClick={handleRevalidate} variant="outline" className="gap-2">
+            <RefreshCcw className="w-4 h-4" />
+            Forçar Revalidação
+          </Button>
+        </div>
       </div>
 
       {health?.status && health.status !== 'healthy' && (
