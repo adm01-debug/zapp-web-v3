@@ -88,8 +88,29 @@ export function normalizePhone(raw: unknown): string | null {
 /**
  * Returns true if the phone is a valid normalized BR number (10 or 11 digits, valid DDD).
  */
-export function validatePhone(phone: unknown): boolean {
-  return normalizePhone(phone) !== null;
+export function validatePhone(phone: unknown): boolean | PhoneValidationDetailed {
+  const raw = phone === null || phone === undefined ? '' : String(phone).trim();
+  if (raw === '') return { valid: false, error: 'Telefone vazio.' };
+
+  const digitsOnly = raw.replace(/\D/g, '');
+  if (digitsOnly.length > 11 && !/^55/.test(digitsOnly)) {
+    return {
+      valid: true,
+      normalized: digitsOnly,
+      formatted: raw,
+      type: 'international',
+    };
+  }
+
+  const normalized = normalizePhone(phone);
+  if (!normalized) return false;
+
+  return {
+    valid: true,
+    normalized,
+    formatted: formatPhoneForDisplay(normalized),
+    type: normalized.length === 11 ? 'mobile' : 'landline',
+  };
 }
 
 /**
@@ -228,3 +249,5 @@ export function phoneVariants(phone: unknown): string[] {
 
   return [...new Set(variants)];
 }
+
+export const formatBRPhone = formatPhoneForDisplay;
