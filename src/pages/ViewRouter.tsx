@@ -121,6 +121,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<any
   'dispatch-errors-history': Views.AdminDispatchErrorsHistoryPage,
   'inbox-sync-status': Views.AdminInboxSyncStatusPage,
   'evo-api-health': Views.AdminEvoApiHealthPage,
+  'gmail-status': Views.AdminGmailStatusPage,
 };
 
 // Views that need custom props
