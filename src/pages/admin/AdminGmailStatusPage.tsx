@@ -29,32 +29,65 @@ export default function AdminGmailStatusPage() {
   const loadHealth = async () => {
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any).functions.invoke('gmail-health', {
-        queryParams: {
-          requestId: filters.requestId || undefined,
-          resource: filters.resource || undefined,
-          operation: filters.operation || undefined,
-          page: filters.page,
-          pageSize: 5
-        }
+      const { data, error } = await supabase.functions.invoke('gmail-health', {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: {}, // Use body for params as queryParams isn't in type
+        method: 'GET'
       });
       
-      if (error) throw error;
+      // Since type doesn't support queryParams, we'll construct URL manually for filters if needed, 
+      // but for status we can just call basic invoke.
+      // Re-invoking with full URL to support filters:
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      const functionUrl = `${projectUrl}/functions/v1/gmail-health?page=${filters.page}&pageSize=5${filters.requestId ? `&requestId=${filters.requestId}` : ''}${filters.resource ? `&resource=${filters.resource}` : ''}${filters.operation ? `&operation=${filters.operation}` : ''}`;
+      
+      const fetchResponse = await fetch(functionUrl, {
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const dataFull = await fetchResponse.json();
+      
+      if (!fetchResponse.ok) throw new Error(dataFull.error || 'Erro na Edge Function');
       
       setHealth({
-        status: data.status,
-        lastValidation: data.last_validation ? new Date(data.last_validation) : null,
-        cacheExpiration: null, // Edge não sabe do cache local
-        recentFailures: data.failuresResult.items,
+        status: dataFull.status as any,
+        lastValidation: dataFull.last_validation ? new Date(dataFull.last_validation) : null,
+        cacheExpiration: null,
+        recentFailures: dataFull.failuresResult?.items || [],
         stats: {
           totalCalls: 0, 
-          failedCalls: data.failure_count_window,
+          failedCalls: dataFull.failure_count_window || 0,
           cacheHits: 0
         }
       });
-      setFailuresData(data.failuresResult);
+      setFailuresData(dataFull.failuresResult || { items: [], total: 0 });
     } catch (error) {
-      toast.error('Erro ao carregar dados de saúde do Gmail');
+      console.error('Erro ao carregar saúde do Gmail:', error);
+      toast.error('O serviço de telemetria do Gmail está indisponível.');
+      
+      try {
+        const { data: summary } = await supabase
+          .from('gmail_health_summary')
+          .select('*')
+          .eq('id', 'current')
+          .maybeSingle();
+          
+        if (summary) {
+          setHealth({
+            status: summary.status as any,
+            lastValidation: summary.last_validation ? new Date(summary.last_validation) : null,
+            cacheExpiration: null,
+            recentFailures: [],
+            stats: { totalCalls: 0, failedCalls: summary.failure_count_60m, cacheHits: 0 }
+          });
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback falhou:', fallbackErr);
+      }
     } finally {
       setLoading(false);
     }
@@ -62,15 +95,44 @@ export default function AdminGmailStatusPage() {
 
   useEffect(() => {
     loadHealth();
+    const interval = setInterval(async () => {
+      try {
+        const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+        await fetch(`${projectUrl}/functions/v1/gmail-health?action=auto_check`, {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          }
+        });
+      } catch (e) {
+        console.warn('Auto-check falhou');
+      }
+    }, 300000);
+    return () => clearInterval(interval);
   }, [filters]);
 
   const handleRevalidate = async () => {
-    toast.promise(gmailHealthService.forceRevalidation(), {
-      loading: 'Revalidando recursos...',
-      success: 'Recursos revalidados com sucesso!',
-      error: 'Erro ao revalidar recursos'
+    const revalidatePromise = async () => {
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${projectUrl}/functions/v1/gmail-health?action=revalidate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      await gmailHealthService.forceRevalidation();
+      return data;
+    };
+
+    toast.promise(revalidatePromise(), {
+      loading: 'Agendando revalidação no backend...',
+      success: 'Revalidação agendada com sucesso!',
+      error: 'Erro ao solicitar revalidação'
     });
-    setTimeout(loadHealth, 1000);
+    
+    setTimeout(loadHealth, 2000);
   };
 
   const getStatusIcon = (status?: string) => {

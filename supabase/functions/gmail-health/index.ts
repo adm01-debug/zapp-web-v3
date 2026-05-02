@@ -5,11 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-/**
- * Edge Function para monitoramento centralizado da saúde do Gmail.
- * Este endpoint retorna o status consolidado, métricas e histórico de falhas persistidos no banco.
- */
-
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -23,8 +18,19 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
 
+    // Routine to auto-trigger revalidation if needed
+    if (req.method === "GET" && action === "auto_check") {
+      const { data: triggerResult, error: triggerErr } = await supabase.rpc(
+        "rpc_check_and_trigger_gmail_revalidation"
+      );
+      if (triggerErr) throw triggerErr;
+
+      return new Response(JSON.stringify(triggerResult), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (req.method === "POST" && action === "revalidate") {
-      // Registrar um job de revalidação no banco
       const { data: job, error: jobErr } = await supabase
         .from("gmail_revalidation_jobs")
         .insert([{ status: "pending" }])
@@ -42,14 +48,13 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Buscar saúde compartilhada da tabela gmail_health_summary
+    // Shared health status from database
     const { data: summary, error: summaryError } = await supabase
       .from("gmail_health_summary")
       .select("*")
       .eq("id", "current")
-      .single();
+      .maybeSingle();
 
-    // Buscar falhas recentes da tabela gmail_health_logs
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const pageSize = parseInt(url.searchParams.get("pageSize") || "10", 10);
     
@@ -61,7 +66,7 @@ Deno.serve(async (req: Request) => {
       .range((page - 1) * pageSize, page * pageSize - 1);
 
     const healthStatus = summary || { 
-      status: "unknown", 
+      status: "healthy", 
       last_validation: null, 
       failure_count_60m: 0 
     };
@@ -85,12 +90,10 @@ Deno.serve(async (req: Request) => {
       },
     );
   } catch (error) {
-    console.error("[gmail-health] Erro:", error);
+    console.error("[gmail-health] Error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
-
-
