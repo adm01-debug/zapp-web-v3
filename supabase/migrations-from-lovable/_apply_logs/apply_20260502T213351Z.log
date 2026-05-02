@@ -1,0 +1,1639 @@
+=== SNAPSHOT BEFORE ===
+tables_public:448
+views_public:65
+functions_public:494
+enums_public:10
+storage_buckets:7
+rls_enabled:442
+extensions:12
+
+=== APPLYING 00_setup.sql ===
+psql:00_setup.sql:6: NOTICE:  extension "pgcrypto" already exists, skipping
+psql:00_setup.sql:7: NOTICE:  extension "pg_trgm" already exists, skipping
+
+=== APPLYING 01_new_tables.sql ===
+ set_config 
+------------
+ 
+(1 row)
+
+psql:01_new_tables.sql:63: ERROR:  relation "instance_processing_pauses" already exists
+psql:01_new_tables.sql:119: ERROR:  relation "contact_export_log" already exists
+psql:01_new_tables.sql:175: ERROR:  relation "contacts" already exists
+psql:01_new_tables.sql:182: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:189: ERROR:  column "contact_type" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:196: ERROR:  column "phone_numbers" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:203: ERROR:  column "version" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:210: ERROR:  column "lgpd_consent_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:217: ERROR:  column "lgpd_consent_channel" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:224: ERROR:  column "lgpd_opt_out_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:231: ERROR:  column "lgpd_marketing_consent" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:238: ERROR:  column "lgpd_data_sharing" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:245: ERROR:  column "lgpd_profiling" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:252: ERROR:  column "deleted_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:259: ERROR:  column "deleted_by" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:266: ERROR:  column "merged_from_id" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:426: ERROR:  relation "evolution_fallback_events" already exists
+psql:01_new_tables.sql:493: ERROR:  relation "instance_auth_events" already exists
+psql:01_new_tables.sql:534: ERROR:  relation "messages" already exists
+psql:01_new_tables.sql:536: ERROR:  ALTER action REPLICA IDENTITY cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:543: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:550: ERROR:  column "retry_attempt" of relation "public.messages" does not exist
+psql:01_new_tables.sql:557: ERROR:  column "retry_total" of relation "public.messages" does not exist
+psql:01_new_tables.sql:586: ERROR:  relation "nps_invitations" already exists
+psql:01_new_tables.sql:675: ERROR:  relation "proxy_alerts" already exists
+psql:01_new_tables.sql:694: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:715: ERROR:  relation "proxy_metrics" already exists
+psql:01_new_tables.sql:734: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:823: ERROR:  relation "webauthn_challenges" already exists
+psql:01_new_tables.sql:840: ERROR:  relation "webhook_audit_log" already exists
+psql:01_new_tables.sql:859: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:891: ERROR:  relation "webhook_events_processed" already exists
+psql:01_new_tables.sql:898: ERROR:  must be owner of table webhook_events_processed
+psql:01_new_tables.sql:919: ERROR:  must be owner of table proxy_alerts
+psql:01_new_tables.sql:926: ERROR:  must be owner of table proxy_metrics
+psql:01_new_tables.sql:933: ERROR:  must be owner of table webhook_audit_log
+psql:01_new_tables.sql:949: ERROR:  must be owner of table contact_export_log
+psql:01_new_tables.sql:957: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:965: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:973: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1053: ERROR:  must be owner of table evolution_fallback_events
+psql:01_new_tables.sql:1085: ERROR:  must be owner of table instance_auth_events
+psql:01_new_tables.sql:1093: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:1109: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1125: ERROR:  must be owner of table nps_invitations
+psql:01_new_tables.sql:1173: ERROR:  must be owner of table proxy_alerts
+psql:01_new_tables.sql:1181: ERROR:  must be owner of table proxy_metrics
+psql:01_new_tables.sql:1253: ERROR:  must be owner of table webauthn_challenges
+psql:01_new_tables.sql:1261: ERROR:  must be owner of table webhook_audit_log
+psql:01_new_tables.sql:1277: ERROR:  must be owner of table webhook_events_processed
+psql:01_new_tables.sql:1292: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1299: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1306: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1313: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1320: ERROR:  column "deleted_at" does not exist
+LINE 1: ...N public.contacts USING btree (deleted_at) WHERE (deleted_at...
+                                                             ^
+psql:01_new_tables.sql:1327: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1334: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1341: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1348: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1355: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1362: ERROR:  column "deleted_at" does not exist
+LINE 1: ...N public.contacts USING btree (deleted_at) WHERE (deleted_at...
+                                                             ^
+psql:01_new_tables.sql:1369: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1376: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1383: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1390: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1397: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1453: ERROR:  must be owner of table evolution_fallback_events
+psql:01_new_tables.sql:1460: ERROR:  must be owner of table evolution_fallback_events
+psql:01_new_tables.sql:1467: ERROR:  must be owner of table evolution_fallback_events
+psql:01_new_tables.sql:1495: ERROR:  must be owner of table instance_auth_events
+psql:01_new_tables.sql:1502: ERROR:  must be owner of table instance_auth_events
+psql:01_new_tables.sql:1509: ERROR:  must be owner of table instance_auth_events
+psql:01_new_tables.sql:1516: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:1523: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:1530: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:1544: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1551: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1558: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1565: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1572: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1579: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1586: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1593: ERROR:  column "request_id" does not exist
+LINE 1: ...N public.messages USING btree (request_id) WHERE (request_id...
+                                                             ^
+psql:01_new_tables.sql:1607: ERROR:  must be owner of table nps_invitations
+psql:01_new_tables.sql:1614: ERROR:  must be owner of table nps_invitations
+psql:01_new_tables.sql:1698: ERROR:  must be owner of table proxy_alerts
+psql:01_new_tables.sql:1705: ERROR:  must be owner of table proxy_alerts
+psql:01_new_tables.sql:1712: ERROR:  must be owner of table proxy_metrics
+psql:01_new_tables.sql:1719: ERROR:  must be owner of table proxy_metrics
+psql:01_new_tables.sql:1726: ERROR:  must be owner of table proxy_metrics
+psql:01_new_tables.sql:1817: ERROR:  must be owner of table webauthn_challenges
+psql:01_new_tables.sql:1859: ERROR:  must be owner of table webhook_audit_log
+psql:01_new_tables.sql:1866: ERROR:  must be owner of table webhook_audit_log
+psql:01_new_tables.sql:1873: ERROR:  must be owner of table webhook_audit_log
+psql:01_new_tables.sql:1880: ERROR:  must be owner of table webhook_events_processed
+psql:01_new_tables.sql:1894: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1901: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1908: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1915: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1922: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1929: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1936: ERROR:  function public.tg_integration_profiles_updated() does not exist
+psql:01_new_tables.sql:1950: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1957: ERROR:  function public.fn_log_route_switchover() does not exist
+psql:01_new_tables.sql:1964: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1985: ERROR:  "messages" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1992: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:2006: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:2013: ERROR:  "messages" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:2068: ERROR:  must be owner of table contact_export_log
+psql:01_new_tables.sql:2076: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2084: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2092: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2100: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2108: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2116: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2124: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2180: ERROR:  referenced relation "messages" is not a table
+psql:01_new_tables.sql:2204: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:2212: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:2220: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2228: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2236: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2244: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2252: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2268: ERROR:  must be owner of table nps_invitations
+psql:01_new_tables.sql:2276: ERROR:  must be owner of table nps_invitations
+psql:01_new_tables.sql:2356: ERROR:  referenced relation "contacts" is not a table
+psql:01_new_tables.sql:2371: ERROR:  must be owner of table evolution_fallback_events
+psql:01_new_tables.sql:2378: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2385: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2392: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2399: ERROR:  must be owner of table nps_invitations
+psql:01_new_tables.sql:2406: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2413: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2420: ERROR:  must be owner of table nps_invitations
+psql:01_new_tables.sql:2427: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2434: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2441: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2448: ERROR:  must be owner of table proxy_alerts
+psql:01_new_tables.sql:2455: ERROR:  must be owner of table proxy_metrics
+psql:01_new_tables.sql:2462: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2469: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2476: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2483: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2490: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2500: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2542: ERROR:  must be owner of table nps_invitations
+psql:01_new_tables.sql:2549: ERROR:  function public.is_admin_or_supervisor() does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2556: ERROR:  must be owner of table webauthn_challenges
+psql:01_new_tables.sql:2563: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2570: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2577: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2584: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2593: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2614: ERROR:  must be owner of table webauthn_challenges
+psql:01_new_tables.sql:2629: ERROR:  column gmail_accounts.profile_id does not exist
+psql:01_new_tables.sql:2645: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2654: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2681: ERROR:  column gmail_accounts.profile_id does not exist
+psql:01_new_tables.sql:2688: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2695: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2702: ERROR:  must be owner of table webhook_audit_log
+psql:01_new_tables.sql:2715: ERROR:  must be owner of table contact_export_log
+psql:01_new_tables.sql:2721: ERROR:  ALTER action ENABLE ROW SECURITY cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2727: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:2734: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:2779: ERROR:  column ga.profile_id does not exist
+psql:01_new_tables.sql:2793: ERROR:  column ga.profile_id does not exist
+psql:01_new_tables.sql:2822: ERROR:  column ga.profile_id does not exist
+psql:01_new_tables.sql:2834: ERROR:  column ga.profile_id does not exist
+psql:01_new_tables.sql:2841: ERROR:  must be owner of table evolution_fallback_events
+psql:01_new_tables.sql:2847: ERROR:  must be owner of table contact_export_log
+psql:01_new_tables.sql:2858: ERROR:  must be owner of table contact_export_log
+psql:01_new_tables.sql:2883: ERROR:  must be owner of table instance_auth_events
+psql:01_new_tables.sql:2890: ERROR:  must be owner of table instance_auth_events
+psql:01_new_tables.sql:2896: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:2908: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:2915: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:2922: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:2929: ERROR:  must be owner of table instance_processing_pauses
+psql:01_new_tables.sql:2936: ERROR:  ALTER action ENABLE ROW SECURITY cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2944: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2957: ERROR:  must be owner of table nps_invitations
+psql:01_new_tables.sql:2963: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2976: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2983: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2990: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3040: ERROR:  must be owner of table proxy_alerts
+psql:01_new_tables.sql:3046: ERROR:  must be owner of table proxy_metrics
+psql:01_new_tables.sql:3058: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3065: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3072: ERROR:  must be owner of table webhook_audit_log
+psql:01_new_tables.sql:3079: ERROR:  must be owner of table webhook_events_processed
+psql:01_new_tables.sql:3092: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3099: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3106: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3135: ERROR:  must be owner of table webauthn_challenges
+psql:01_new_tables.sql:3141: ERROR:  must be owner of table webhook_audit_log
+psql:01_new_tables.sql:3153: ERROR:  must be owner of table webhook_events_processed
+
+=== APPLYING 03_functions.sql (as supabase_admin) ===
+psql:03_functions.sql:273: ERROR:  function public.is_manager_or_above(uuid) does not exist
+LINE 8:     public.is_manager_or_above(_user_id)
+            ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:03_functions.sql:303: ERROR:  function public.is_manager_or_above(uuid) does not exist
+LINE 8:     public.is_manager_or_above(_user_id)
+            ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:03_functions.sql:576: ERROR:  cannot change return type of existing function
+DETAIL:  Row type defined by OUT parameters is different.
+HINT:  Use DROP FUNCTION contacts_count_by_type() first.
+psql:03_functions.sql:1175: ERROR:  operator does not exist: uuid = text
+LINE 9:   WHERE phone_number_id = p_phone_number_id
+                                ^
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+psql:03_functions.sql:1189: ERROR:  column la.attempt_count does not exist
+LINE 7:   SELECT la.attempt_count, la.locked_until
+                 ^
+psql:03_functions.sql:1203: ERROR:  return type mismatch in function declared to return password_reset_requests
+DETAIL:  Final statement returns uuid instead of timestamp with time zone at column 1.
+CONTEXT:  SQL function "get_own_reset_requests"
+psql:03_functions.sql:1226: ERROR:  column p.access_level does not exist
+LINE 7:   SELECT p.role, p.access_level, p.permissions
+                         ^
+psql:03_functions.sql:1242: ERROR:  column prr.reset_token does not exist
+LINE 10:     (prr.reset_token IS NOT NULL) AS has_token,
+              ^
+psql:03_functions.sql:1252: ERROR:  return type mismatch in function declared to return app_role[]
+DETAIL:  Actual return type is text.
+CONTEXT:  SQL function "get_route_roles"
+psql:03_functions.sql:1265: ERROR:  cannot change return type of existing function
+HINT:  Use DROP FUNCTION get_team_profiles() first.
+psql:03_functions.sql:1278: ERROR:  column p.department_id does not exist
+LINE 7:   SELECT p.department_id
+                 ^
+HINT:  Perhaps you meant to reference the column "p.department".
+psql:03_functions.sql:1297: ERROR:  column ur.role does not exist
+LINE 15:       WHERE ur.user_id = _user_id AND ur.role = 'special_age...
+                                               ^
+HINT:  Perhaps you meant to reference the column "p.role".
+psql:03_functions.sql:1342: ERROR:  column "role" does not exist
+LINE 9:     WHERE user_id = _user_id AND role = _role
+                                         ^
+psql:03_functions.sql:1402: ERROR:  column "role" does not exist
+LINE 10:       AND role IN ('dev', 'admin', 'manager', 'supervisor')
+                   ^
+psql:03_functions.sql:1433: ERROR:  operator does not exist: uuid = character varying
+LINE 9:     JOIN public.profiles p ON p.id = c.assigned_to
+                                           ^
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+psql:03_functions.sql:1499: ERROR:  column "paused_until" does not exist
+LINE 11:       AND paused_until > now()
+                   ^
+psql:03_functions.sql:1540: ERROR:  column "role" does not exist
+LINE 10:       AND role IN ('dev', 'admin', 'manager')
+                   ^
+psql:03_functions.sql:2948: ERROR:  column sc.default_queue_id does not exist
+LINE 14:          ON q.id = cq.queue_id OR q.id = sc.default_queue_id
+                                                  ^
+psql:03_functions.sql:3019: ERROR:  column "department_id" does not exist
+LINE 7:   WITH q AS (SELECT department_id, max_per_queue_per_agent F...
+                            ^
+psql:03_functions.sql:4569: ERROR:  function ts_rank(text, tsquery) does not exist
+LINE 9:     ts_rank(a.search_vector, websearch_to_tsquery('portugues...
+            ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:03_functions.sql:4900: ERROR:  column rp.role does not exist
+LINE 10:     JOIN public.role_permissions rp ON rp.role = ur.role
+                                                ^
+
+=== APPLYING 04_views.sql ===
+ set_config 
+------------
+ 
+(1 row)
+
+psql:04_views.sql:42: ERROR:  relation "channel_connections_safe" already exists
+psql:04_views.sql:78: ERROR:  column profiles.is_active does not exist
+LINE 6:     profiles.is_active,
+            ^
+psql:04_views.sql:136: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+LINE 8:             WHEN public.has_role(auth.uid(), 'admin'::public...
+                         ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+=== APPLYING 05_storage.sql ===
+
+=== APPLYING 01_new_tables.sql (supabase_admin) ===
+ set_config 
+------------
+ 
+(1 row)
+
+psql:01_new_tables.sql:43: ERROR:  relation "sticky_assignments" already exists
+psql:01_new_tables.sql:63: ERROR:  relation "instance_processing_pauses" already exists
+psql:01_new_tables.sql:85: ERROR:  relation "integration_profiles" already exists
+psql:01_new_tables.sql:104: ERROR:  relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:119: ERROR:  relation "contact_export_log" already exists
+psql:01_new_tables.sql:175: ERROR:  relation "contacts" already exists
+psql:01_new_tables.sql:182: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:189: ERROR:  column "contact_type" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:196: ERROR:  column "phone_numbers" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:203: ERROR:  column "version" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:210: ERROR:  column "lgpd_consent_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:217: ERROR:  column "lgpd_consent_channel" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:224: ERROR:  column "lgpd_opt_out_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:231: ERROR:  column "lgpd_marketing_consent" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:238: ERROR:  column "lgpd_data_sharing" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:245: ERROR:  column "lgpd_profiling" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:252: ERROR:  column "deleted_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:259: ERROR:  column "deleted_by" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:266: ERROR:  column "merged_from_id" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:285: ERROR:  relation "conversation_participants" already exists
+psql:01_new_tables.sql:308: ERROR:  relation "conversation_threads" already exists
+psql:01_new_tables.sql:326: ERROR:  relation "crisis_room_alerts" already exists
+psql:01_new_tables.sql:342: ERROR:  relation "email_attachments" already exists
+psql:01_new_tables.sql:367: ERROR:  relation "email_labels" already exists
+psql:01_new_tables.sql:400: ERROR:  relation "email_messages" already exists
+psql:01_new_tables.sql:426: ERROR:  relation "evolution_fallback_events" already exists
+psql:01_new_tables.sql:441: ERROR:  relation "file_scan_logs" already exists
+psql:01_new_tables.sql:459: ERROR:  relation "gmail_attachments" already exists
+psql:01_new_tables.sql:476: ERROR:  relation "gmail_health_logs" already exists
+psql:01_new_tables.sql:493: ERROR:  relation "instance_auth_events" already exists
+psql:01_new_tables.sql:534: ERROR:  relation "messages" already exists
+psql:01_new_tables.sql:536: ERROR:  ALTER action REPLICA IDENTITY cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:543: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:550: ERROR:  column "retry_attempt" of relation "public.messages" does not exist
+psql:01_new_tables.sql:557: ERROR:  column "retry_total" of relation "public.messages" does not exist
+psql:01_new_tables.sql:571: ERROR:  relation "mfa_sessions" already exists
+psql:01_new_tables.sql:586: ERROR:  relation "nps_invitations" already exists
+psql:01_new_tables.sql:608: ERROR:  relation "outbox_events" already exists
+psql:01_new_tables.sql:622: ERROR:  relation "pii_access_log" already exists
+psql:01_new_tables.sql:640: ERROR:  relation "provider_session_logs" already exists
+psql:01_new_tables.sql:658: ERROR:  relation "provider_sessions" already exists
+psql:01_new_tables.sql:675: ERROR:  relation "proxy_alerts" already exists
+psql:01_new_tables.sql:687: ERROR:  relation "proxy_alerts_id_seq" already exists
+psql:01_new_tables.sql:694: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:715: ERROR:  relation "proxy_metrics" already exists
+psql:01_new_tables.sql:727: ERROR:  relation "proxy_metrics_id_seq" already exists
+psql:01_new_tables.sql:734: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:760: ERROR:  relation "reprocess_jobs" already exists
+psql:01_new_tables.sql:776: ERROR:  relation "scheduled_job_log" already exists
+psql:01_new_tables.sql:791: ERROR:  relation "user_service_accounts" already exists
+psql:01_new_tables.sql:808: ERROR:  relation "voice_command_logs" already exists
+psql:01_new_tables.sql:823: ERROR:  relation "webauthn_challenges" already exists
+psql:01_new_tables.sql:840: ERROR:  relation "webhook_audit_log" already exists
+psql:01_new_tables.sql:852: ERROR:  relation "webhook_audit_log_id_seq" already exists
+psql:01_new_tables.sql:859: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:872: ERROR:  relation "webhook_event_dedup" already exists
+psql:01_new_tables.sql:891: ERROR:  relation "webhook_events_processed" already exists
+psql:01_new_tables.sql:912: ERROR:  relation "webhook_rate_limits" already exists
+psql:01_new_tables.sql:919: ERROR:  column "id" is of type uuid but default expression is of type bigint
+HINT:  You will need to rewrite or cast the expression.
+psql:01_new_tables.sql:926: ERROR:  column "id" is of type uuid but default expression is of type bigint
+HINT:  You will need to rewrite or cast the expression.
+psql:01_new_tables.sql:933: ERROR:  column "id" is of type uuid but default expression is of type bigint
+HINT:  You will need to rewrite or cast the expression.
+psql:01_new_tables.sql:941: ERROR:  multiple primary keys for table "channel_provider_routes" are not allowed
+psql:01_new_tables.sql:949: ERROR:  multiple primary keys for table "contact_export_log" are not allowed
+psql:01_new_tables.sql:957: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:965: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:973: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:981: ERROR:  multiple primary keys for table "conversation_participants" are not allowed
+psql:01_new_tables.sql:989: ERROR:  relation "conversation_threads_external_contact_id_instance_name_chan_key" already exists
+psql:01_new_tables.sql:997: ERROR:  multiple primary keys for table "conversation_threads" are not allowed
+psql:01_new_tables.sql:1005: ERROR:  multiple primary keys for table "crisis_room_alerts" are not allowed
+psql:01_new_tables.sql:1013: ERROR:  multiple primary keys for table "email_attachments" are not allowed
+psql:01_new_tables.sql:1021: ERROR:  relation "email_labels_gmail_account_id_gmail_label_id_key" already exists
+psql:01_new_tables.sql:1029: ERROR:  multiple primary keys for table "email_labels" are not allowed
+psql:01_new_tables.sql:1037: ERROR:  relation "email_messages_gmail_message_id_key" already exists
+psql:01_new_tables.sql:1045: ERROR:  multiple primary keys for table "email_messages" are not allowed
+psql:01_new_tables.sql:1053: ERROR:  multiple primary keys for table "evolution_fallback_events" are not allowed
+psql:01_new_tables.sql:1061: ERROR:  multiple primary keys for table "file_scan_logs" are not allowed
+psql:01_new_tables.sql:1069: ERROR:  multiple primary keys for table "gmail_attachments" are not allowed
+psql:01_new_tables.sql:1077: ERROR:  multiple primary keys for table "gmail_health_logs" are not allowed
+psql:01_new_tables.sql:1085: ERROR:  multiple primary keys for table "instance_auth_events" are not allowed
+psql:01_new_tables.sql:1093: ERROR:  multiple primary keys for table "instance_processing_pauses" are not allowed
+psql:01_new_tables.sql:1101: ERROR:  multiple primary keys for table "integration_profiles" are not allowed
+psql:01_new_tables.sql:1109: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1117: ERROR:  multiple primary keys for table "mfa_sessions" are not allowed
+psql:01_new_tables.sql:1125: ERROR:  multiple primary keys for table "nps_invitations" are not allowed
+psql:01_new_tables.sql:1133: ERROR:  relation "outbox_events_idempotency_key_key" already exists
+psql:01_new_tables.sql:1141: ERROR:  multiple primary keys for table "outbox_events" are not allowed
+psql:01_new_tables.sql:1149: ERROR:  multiple primary keys for table "pii_access_log" are not allowed
+psql:01_new_tables.sql:1157: ERROR:  multiple primary keys for table "provider_session_logs" are not allowed
+psql:01_new_tables.sql:1165: ERROR:  multiple primary keys for table "provider_sessions" are not allowed
+psql:01_new_tables.sql:1173: ERROR:  multiple primary keys for table "proxy_alerts" are not allowed
+psql:01_new_tables.sql:1181: ERROR:  multiple primary keys for table "proxy_metrics" are not allowed
+psql:01_new_tables.sql:1189: ERROR:  relation "reprocess_jobs_idempotency_key_key" already exists
+psql:01_new_tables.sql:1197: ERROR:  multiple primary keys for table "reprocess_jobs" are not allowed
+psql:01_new_tables.sql:1205: ERROR:  multiple primary keys for table "scheduled_job_log" are not allowed
+psql:01_new_tables.sql:1213: ERROR:  relation "sticky_assignments_contact_id_key" already exists
+psql:01_new_tables.sql:1221: ERROR:  multiple primary keys for table "sticky_assignments" are not allowed
+psql:01_new_tables.sql:1229: ERROR:  multiple primary keys for table "user_service_accounts" are not allowed
+psql:01_new_tables.sql:1237: ERROR:  relation "user_service_accounts_user_id_service_type_key" already exists
+psql:01_new_tables.sql:1245: ERROR:  multiple primary keys for table "voice_command_logs" are not allowed
+psql:01_new_tables.sql:1253: ERROR:  multiple primary keys for table "webauthn_challenges" are not allowed
+psql:01_new_tables.sql:1261: ERROR:  multiple primary keys for table "webhook_audit_log" are not allowed
+psql:01_new_tables.sql:1269: ERROR:  multiple primary keys for table "webhook_event_dedup" are not allowed
+psql:01_new_tables.sql:1277: ERROR:  multiple primary keys for table "webhook_events_processed" are not allowed
+psql:01_new_tables.sql:1285: ERROR:  multiple primary keys for table "webhook_rate_limits" are not allowed
+psql:01_new_tables.sql:1292: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1299: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1306: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1313: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1320: ERROR:  column "deleted_at" does not exist
+LINE 1: ...N public.contacts USING btree (deleted_at) WHERE (deleted_at...
+                                                             ^
+psql:01_new_tables.sql:1327: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1334: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1341: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1348: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1355: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1362: ERROR:  column "deleted_at" does not exist
+LINE 1: ...N public.contacts USING btree (deleted_at) WHERE (deleted_at...
+                                                             ^
+psql:01_new_tables.sql:1369: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1376: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1383: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1390: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1397: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1404: ERROR:  relation "idx_email_attachments_message" already exists
+psql:01_new_tables.sql:1411: ERROR:  relation "idx_email_labels_account" already exists
+psql:01_new_tables.sql:1418: ERROR:  relation "idx_email_messages_account" already exists
+psql:01_new_tables.sql:1425: ERROR:  relation "idx_email_messages_date" already exists
+psql:01_new_tables.sql:1432: ERROR:  relation "idx_email_messages_from" already exists
+psql:01_new_tables.sql:1439: ERROR:  relation "idx_email_messages_gmail_id" already exists
+psql:01_new_tables.sql:1446: ERROR:  relation "idx_email_messages_thread" already exists
+psql:01_new_tables.sql:1453: ERROR:  column "action" does not exist
+psql:01_new_tables.sql:1460: ERROR:  column "instance" does not exist
+psql:01_new_tables.sql:1467: ERROR:  column "ts" does not exist
+psql:01_new_tables.sql:1474: ERROR:  relation "idx_gmail_attachments_msg" already exists
+psql:01_new_tables.sql:1481: ERROR:  relation "idx_gmail_health_logs_request_id" already exists
+psql:01_new_tables.sql:1488: ERROR:  relation "idx_gmail_health_logs_timestamp" already exists
+psql:01_new_tables.sql:1509: ERROR:  column "reason" does not exist
+psql:01_new_tables.sql:1516: ERROR:  column "paused_until" does not exist
+psql:01_new_tables.sql:1523: ERROR:  column "investigated_at" does not exist
+psql:01_new_tables.sql:1530: ERROR:  column "paused_until" does not exist
+psql:01_new_tables.sql:1537: ERROR:  relation "idx_job_log_name_started" already exists
+psql:01_new_tables.sql:1544: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1551: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1558: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1565: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1572: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1579: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1586: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1593: ERROR:  column "request_id" does not exist
+LINE 1: ...N public.messages USING btree (request_id) WHERE (request_id...
+                                                             ^
+psql:01_new_tables.sql:1600: ERROR:  relation "idx_mfa_sessions_user" already exists
+psql:01_new_tables.sql:1614: ERROR:  column "responded" does not exist
+psql:01_new_tables.sql:1621: ERROR:  relation "idx_outbox_aggregate" already exists
+psql:01_new_tables.sql:1628: ERROR:  relation "idx_outbox_event_type" already exists
+psql:01_new_tables.sql:1635: ERROR:  relation "idx_outbox_pending" already exists
+psql:01_new_tables.sql:1642: ERROR:  relation "idx_participants_active" already exists
+psql:01_new_tables.sql:1649: ERROR:  relation "idx_participants_profile" already exists
+psql:01_new_tables.sql:1656: ERROR:  relation "idx_participants_thread" already exists
+psql:01_new_tables.sql:1663: ERROR:  relation "idx_pii_access_log_user" already exists
+psql:01_new_tables.sql:1670: ERROR:  relation "idx_provider_session_logs_provider" already exists
+psql:01_new_tables.sql:1677: ERROR:  relation "idx_provider_session_logs_session" already exists
+psql:01_new_tables.sql:1684: ERROR:  relation "idx_provider_sessions_channel" already exists
+psql:01_new_tables.sql:1691: ERROR:  relation "idx_provider_sessions_open" already exists
+psql:01_new_tables.sql:1698: ERROR:  column "kind" does not exist
+psql:01_new_tables.sql:1705: ERROR:  column "ts" does not exist
+psql:01_new_tables.sql:1712: ERROR:  column "status" does not exist
+psql:01_new_tables.sql:1719: ERROR:  column "target" does not exist
+psql:01_new_tables.sql:1726: ERROR:  column "ts" does not exist
+psql:01_new_tables.sql:1733: ERROR:  relation "idx_rate_limits_instance_window" already exists
+psql:01_new_tables.sql:1740: ERROR:  relation "idx_rj_requested_by" already exists
+psql:01_new_tables.sql:1747: ERROR:  relation "idx_rj_status_sched" already exists
+psql:01_new_tables.sql:1754: ERROR:  relation "idx_rj_target" already exists
+psql:01_new_tables.sql:1761: ERROR:  relation "idx_sticky_agent" already exists
+psql:01_new_tables.sql:1768: ERROR:  relation "idx_sticky_contact" already exists
+psql:01_new_tables.sql:1775: ERROR:  relation "idx_sticky_expires" already exists
+psql:01_new_tables.sql:1782: ERROR:  relation "idx_threads_contact" already exists
+psql:01_new_tables.sql:1789: ERROR:  relation "idx_threads_instance_channel" already exists
+psql:01_new_tables.sql:1796: ERROR:  relation "idx_threads_status_lastev" already exists
+psql:01_new_tables.sql:1803: ERROR:  relation "idx_voice_command_logs_created_at" already exists
+psql:01_new_tables.sql:1810: ERROR:  relation "idx_voice_command_logs_user_id" already exists
+psql:01_new_tables.sql:1824: ERROR:  relation "idx_webhook_event_dedup_instance" already exists
+psql:01_new_tables.sql:1831: ERROR:  relation "idx_webhook_event_dedup_received_at" already exists
+psql:01_new_tables.sql:1838: ERROR:  relation "integration_profiles_one_active" already exists
+psql:01_new_tables.sql:1845: ERROR:  relation "uniq_route_channel" already exists
+psql:01_new_tables.sql:1852: ERROR:  relation "uniq_route_wpp" already exists
+psql:01_new_tables.sql:1859: ERROR:  column "instance" does not exist
+psql:01_new_tables.sql:1866: ERROR:  column "received_at" does not exist
+psql:01_new_tables.sql:1873: ERROR:  column "status" does not exist
+LINE 1: ...lic.webhook_audit_log USING btree (status) WHERE (status = A...
+                                                             ^
+psql:01_new_tables.sql:1887: ERROR:  trigger "channel_provider_routes_updated_at" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:1894: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1901: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1908: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1915: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1922: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1929: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1943: ERROR:  trigger "trg_ipp_updated_at" for relation "instance_processing_pauses" already exists
+psql:01_new_tables.sql:1950: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1964: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1971: ERROR:  trigger "trg_outbox_updated" for relation "outbox_events" already exists
+psql:01_new_tables.sql:1978: ERROR:  trigger "trg_rj_updated" for relation "reprocess_jobs" already exists
+psql:01_new_tables.sql:1985: ERROR:  "messages" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1992: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1999: ERROR:  trigger "trg_threads_updated" for relation "conversation_threads" already exists
+psql:01_new_tables.sql:2006: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:2013: ERROR:  "messages" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:2020: ERROR:  trigger "update_user_service_accounts_updated_at" for relation "user_service_accounts" already exists
+psql:01_new_tables.sql:2028: ERROR:  constraint "channel_provider_routes_channel_connection_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2036: ERROR:  constraint "channel_provider_routes_current_provider_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2044: ERROR:  constraint "channel_provider_routes_fallback_provider_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2052: ERROR:  constraint "channel_provider_routes_primary_provider_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2060: ERROR:  constraint "channel_provider_routes_whatsapp_connection_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2068: ERROR:  column "exported_by" referenced in foreign key constraint does not exist
+psql:01_new_tables.sql:2076: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2084: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2092: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2100: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2108: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2116: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2124: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2132: ERROR:  constraint "conversation_participants_thread_id_fkey" for relation "conversation_participants" already exists
+psql:01_new_tables.sql:2140: ERROR:  constraint "crisis_room_alerts_acknowledged_by_fkey" for relation "crisis_room_alerts" already exists
+psql:01_new_tables.sql:2148: ERROR:  constraint "email_attachments_email_message_id_fkey" for relation "email_attachments" already exists
+psql:01_new_tables.sql:2156: ERROR:  constraint "email_labels_gmail_account_id_fkey" for relation "email_labels" already exists
+psql:01_new_tables.sql:2164: ERROR:  constraint "email_messages_gmail_account_id_fkey" for relation "email_messages" already exists
+psql:01_new_tables.sql:2172: ERROR:  constraint "email_messages_thread_id_fkey" for relation "email_messages" already exists
+psql:01_new_tables.sql:2180: ERROR:  referenced relation "messages" is not a table
+psql:01_new_tables.sql:2188: ERROR:  constraint "gmail_attachments_account_id_fkey" for relation "gmail_attachments" already exists
+psql:01_new_tables.sql:2196: ERROR:  constraint "gmail_attachments_message_id_ref_fkey" for relation "gmail_attachments" already exists
+psql:01_new_tables.sql:2204: ERROR:  column "investigated_by" referenced in foreign key constraint does not exist
+psql:01_new_tables.sql:2220: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2228: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2236: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2244: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2252: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2260: ERROR:  constraint "mfa_sessions_user_id_fkey" for relation "mfa_sessions" already exists
+psql:01_new_tables.sql:2268: ERROR:  referenced relation "contacts" is not a table
+psql:01_new_tables.sql:2276: ERROR:  column "response_id" referenced in foreign key constraint does not exist
+psql:01_new_tables.sql:2284: ERROR:  constraint "pii_access_log_accessed_by_fkey" for relation "pii_access_log" already exists
+psql:01_new_tables.sql:2292: ERROR:  constraint "provider_session_logs_provider_id_fkey" for relation "provider_session_logs" already exists
+psql:01_new_tables.sql:2300: ERROR:  constraint "provider_session_logs_session_id_fkey" for relation "provider_session_logs" already exists
+psql:01_new_tables.sql:2308: ERROR:  constraint "provider_sessions_channel_connection_id_fkey" for relation "provider_sessions" already exists
+psql:01_new_tables.sql:2316: ERROR:  constraint "provider_sessions_provider_id_fkey" for relation "provider_sessions" already exists
+psql:01_new_tables.sql:2324: ERROR:  constraint "provider_sessions_whatsapp_connection_id_fkey" for relation "provider_sessions" already exists
+psql:01_new_tables.sql:2332: ERROR:  constraint "reprocess_jobs_requested_by_fkey" for relation "reprocess_jobs" already exists
+psql:01_new_tables.sql:2340: ERROR:  constraint "sticky_assignments_agent_profile_id_fkey" for relation "sticky_assignments" already exists
+psql:01_new_tables.sql:2348: ERROR:  constraint "sticky_assignments_channel_connection_id_fkey" for relation "sticky_assignments" already exists
+psql:01_new_tables.sql:2356: ERROR:  referenced relation "contacts" is not a table
+psql:01_new_tables.sql:2364: ERROR:  constraint "sticky_assignments_queue_id_fkey" for relation "sticky_assignments" already exists
+psql:01_new_tables.sql:2371: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2378: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2385: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2392: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2399: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2406: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2413: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2420: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2427: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2434: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2441: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2448: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2455: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2462: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2469: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2476: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2483: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2490: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2500: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2507: ERROR:  policy "Authenticated can view crisis alerts" for table "crisis_room_alerts" already exists
+psql:01_new_tables.sql:2514: ERROR:  policy "Authenticated read provider logs" for table "provider_session_logs" already exists
+psql:01_new_tables.sql:2521: ERROR:  policy "Authenticated read routes" for table "channel_provider_routes" already exists
+psql:01_new_tables.sql:2528: ERROR:  policy "Authenticated read sessions" for table "provider_sessions" already exists
+psql:01_new_tables.sql:2535: ERROR:  policy "Authenticated users can insert gmail health logs" for table "gmail_health_logs" already exists
+psql:01_new_tables.sql:2563: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2570: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2577: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2584: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2593: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2600: ERROR:  policy "Users can insert own voice logs" for table "voice_command_logs" already exists
+psql:01_new_tables.sql:2607: ERROR:  policy "Users can manage own MFA sessions" for table "mfa_sessions" already exists
+psql:01_new_tables.sql:2629: ERROR:  column gmail_accounts.profile_id does not exist
+psql:01_new_tables.sql:2636: ERROR:  policy "Users can read own voice logs" for table "voice_command_logs" already exists
+psql:01_new_tables.sql:2645: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2654: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2661: ERROR:  policy "Users can view own service accounts" for table "user_service_accounts" already exists
+psql:01_new_tables.sql:2668: ERROR:  policy "Users can view scan logs" for table "file_scan_logs" already exists
+psql:01_new_tables.sql:2681: ERROR:  column gmail_accounts.profile_id does not exist
+psql:01_new_tables.sql:2688: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2695: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2721: ERROR:  ALTER action ENABLE ROW SECURITY cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2727: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:2734: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:2779: ERROR:  column ga.profile_id does not exist
+psql:01_new_tables.sql:2793: ERROR:  column ga.profile_id does not exist
+psql:01_new_tables.sql:2822: ERROR:  column ga.profile_id does not exist
+psql:01_new_tables.sql:2834: ERROR:  column ga.profile_id does not exist
+psql:01_new_tables.sql:2847: ERROR:  column "exported_by" does not exist
+psql:01_new_tables.sql:2858: ERROR:  column "workspace_id" does not exist
+psql:01_new_tables.sql:2883: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2908: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2915: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2922: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2929: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2936: ERROR:  ALTER action ENABLE ROW SECURITY cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2944: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2963: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2976: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2983: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2990: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2999: ERROR:  policy "participants_select_self" for table "conversation_participants" already exists
+psql:01_new_tables.sql:3012: ERROR:  policy "pii_access_log_insert" for table "pii_access_log" already exists
+psql:01_new_tables.sql:3021: ERROR:  policy "pii_access_log_select_managers" for table "pii_access_log" already exists
+psql:01_new_tables.sql:3058: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3065: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3092: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3099: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3106: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3116: ERROR:  policy "threads_select_participant" for table "conversation_threads" already exists
+
+=== APPLYING 02_alter_tables.sql (supabase_admin) ===
+
+=== SNAPSHOT AFTER ===
+tables_public:471
+views_public:68
+functions_public:641
+enums_public:17
+storage_buckets:9
+rls_enabled:464
+extensions:13
+
+=== APPLYING 01_new_tables.sql (PASS 2) ===
+ set_config 
+------------
+ 
+(1 row)
+
+psql:01_new_tables.sql:43: ERROR:  relation "sticky_assignments" already exists
+psql:01_new_tables.sql:63: ERROR:  relation "instance_processing_pauses" already exists
+psql:01_new_tables.sql:85: ERROR:  relation "integration_profiles" already exists
+psql:01_new_tables.sql:104: ERROR:  relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:119: ERROR:  relation "contact_export_log" already exists
+psql:01_new_tables.sql:175: ERROR:  relation "contacts" already exists
+psql:01_new_tables.sql:182: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:189: ERROR:  column "contact_type" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:196: ERROR:  column "phone_numbers" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:203: ERROR:  column "version" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:210: ERROR:  column "lgpd_consent_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:217: ERROR:  column "lgpd_consent_channel" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:224: ERROR:  column "lgpd_opt_out_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:231: ERROR:  column "lgpd_marketing_consent" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:238: ERROR:  column "lgpd_data_sharing" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:245: ERROR:  column "lgpd_profiling" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:252: ERROR:  column "deleted_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:259: ERROR:  column "deleted_by" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:266: ERROR:  column "merged_from_id" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:285: ERROR:  relation "conversation_participants" already exists
+psql:01_new_tables.sql:308: ERROR:  relation "conversation_threads" already exists
+psql:01_new_tables.sql:326: ERROR:  relation "crisis_room_alerts" already exists
+psql:01_new_tables.sql:342: ERROR:  relation "email_attachments" already exists
+psql:01_new_tables.sql:367: ERROR:  relation "email_labels" already exists
+psql:01_new_tables.sql:400: ERROR:  relation "email_messages" already exists
+psql:01_new_tables.sql:426: ERROR:  relation "evolution_fallback_events" already exists
+psql:01_new_tables.sql:441: ERROR:  relation "file_scan_logs" already exists
+psql:01_new_tables.sql:459: ERROR:  relation "gmail_attachments" already exists
+psql:01_new_tables.sql:476: ERROR:  relation "gmail_health_logs" already exists
+psql:01_new_tables.sql:493: ERROR:  relation "instance_auth_events" already exists
+psql:01_new_tables.sql:534: ERROR:  relation "messages" already exists
+psql:01_new_tables.sql:536: ERROR:  ALTER action REPLICA IDENTITY cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:543: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:550: ERROR:  column "retry_attempt" of relation "public.messages" does not exist
+psql:01_new_tables.sql:557: ERROR:  column "retry_total" of relation "public.messages" does not exist
+psql:01_new_tables.sql:571: ERROR:  relation "mfa_sessions" already exists
+psql:01_new_tables.sql:586: ERROR:  relation "nps_invitations" already exists
+psql:01_new_tables.sql:608: ERROR:  relation "outbox_events" already exists
+psql:01_new_tables.sql:622: ERROR:  relation "pii_access_log" already exists
+psql:01_new_tables.sql:640: ERROR:  relation "provider_session_logs" already exists
+psql:01_new_tables.sql:658: ERROR:  relation "provider_sessions" already exists
+psql:01_new_tables.sql:675: ERROR:  relation "proxy_alerts" already exists
+psql:01_new_tables.sql:687: ERROR:  relation "proxy_alerts_id_seq" already exists
+psql:01_new_tables.sql:694: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:715: ERROR:  relation "proxy_metrics" already exists
+psql:01_new_tables.sql:727: ERROR:  relation "proxy_metrics_id_seq" already exists
+psql:01_new_tables.sql:734: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:760: ERROR:  relation "reprocess_jobs" already exists
+psql:01_new_tables.sql:776: ERROR:  relation "scheduled_job_log" already exists
+psql:01_new_tables.sql:791: ERROR:  relation "user_service_accounts" already exists
+psql:01_new_tables.sql:808: ERROR:  relation "voice_command_logs" already exists
+psql:01_new_tables.sql:823: ERROR:  relation "webauthn_challenges" already exists
+psql:01_new_tables.sql:840: ERROR:  relation "webhook_audit_log" already exists
+psql:01_new_tables.sql:852: ERROR:  relation "webhook_audit_log_id_seq" already exists
+psql:01_new_tables.sql:859: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:872: ERROR:  relation "webhook_event_dedup" already exists
+psql:01_new_tables.sql:891: ERROR:  relation "webhook_events_processed" already exists
+psql:01_new_tables.sql:912: ERROR:  relation "webhook_rate_limits" already exists
+psql:01_new_tables.sql:919: ERROR:  column "id" is of type uuid but default expression is of type bigint
+HINT:  You will need to rewrite or cast the expression.
+psql:01_new_tables.sql:926: ERROR:  column "id" is of type uuid but default expression is of type bigint
+HINT:  You will need to rewrite or cast the expression.
+psql:01_new_tables.sql:933: ERROR:  column "id" is of type uuid but default expression is of type bigint
+HINT:  You will need to rewrite or cast the expression.
+psql:01_new_tables.sql:941: ERROR:  multiple primary keys for table "channel_provider_routes" are not allowed
+psql:01_new_tables.sql:949: ERROR:  multiple primary keys for table "contact_export_log" are not allowed
+psql:01_new_tables.sql:957: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:965: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:973: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:981: ERROR:  multiple primary keys for table "conversation_participants" are not allowed
+psql:01_new_tables.sql:989: ERROR:  relation "conversation_threads_external_contact_id_instance_name_chan_key" already exists
+psql:01_new_tables.sql:997: ERROR:  multiple primary keys for table "conversation_threads" are not allowed
+psql:01_new_tables.sql:1005: ERROR:  multiple primary keys for table "crisis_room_alerts" are not allowed
+psql:01_new_tables.sql:1013: ERROR:  multiple primary keys for table "email_attachments" are not allowed
+psql:01_new_tables.sql:1021: ERROR:  relation "email_labels_gmail_account_id_gmail_label_id_key" already exists
+psql:01_new_tables.sql:1029: ERROR:  multiple primary keys for table "email_labels" are not allowed
+psql:01_new_tables.sql:1037: ERROR:  relation "email_messages_gmail_message_id_key" already exists
+psql:01_new_tables.sql:1045: ERROR:  multiple primary keys for table "email_messages" are not allowed
+psql:01_new_tables.sql:1053: ERROR:  multiple primary keys for table "evolution_fallback_events" are not allowed
+psql:01_new_tables.sql:1061: ERROR:  multiple primary keys for table "file_scan_logs" are not allowed
+psql:01_new_tables.sql:1069: ERROR:  multiple primary keys for table "gmail_attachments" are not allowed
+psql:01_new_tables.sql:1077: ERROR:  multiple primary keys for table "gmail_health_logs" are not allowed
+psql:01_new_tables.sql:1085: ERROR:  multiple primary keys for table "instance_auth_events" are not allowed
+psql:01_new_tables.sql:1093: ERROR:  multiple primary keys for table "instance_processing_pauses" are not allowed
+psql:01_new_tables.sql:1101: ERROR:  multiple primary keys for table "integration_profiles" are not allowed
+psql:01_new_tables.sql:1109: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1117: ERROR:  multiple primary keys for table "mfa_sessions" are not allowed
+psql:01_new_tables.sql:1125: ERROR:  multiple primary keys for table "nps_invitations" are not allowed
+psql:01_new_tables.sql:1133: ERROR:  relation "outbox_events_idempotency_key_key" already exists
+psql:01_new_tables.sql:1141: ERROR:  multiple primary keys for table "outbox_events" are not allowed
+psql:01_new_tables.sql:1149: ERROR:  multiple primary keys for table "pii_access_log" are not allowed
+psql:01_new_tables.sql:1157: ERROR:  multiple primary keys for table "provider_session_logs" are not allowed
+psql:01_new_tables.sql:1165: ERROR:  multiple primary keys for table "provider_sessions" are not allowed
+psql:01_new_tables.sql:1173: ERROR:  multiple primary keys for table "proxy_alerts" are not allowed
+psql:01_new_tables.sql:1181: ERROR:  multiple primary keys for table "proxy_metrics" are not allowed
+psql:01_new_tables.sql:1189: ERROR:  relation "reprocess_jobs_idempotency_key_key" already exists
+psql:01_new_tables.sql:1197: ERROR:  multiple primary keys for table "reprocess_jobs" are not allowed
+psql:01_new_tables.sql:1205: ERROR:  multiple primary keys for table "scheduled_job_log" are not allowed
+psql:01_new_tables.sql:1213: ERROR:  relation "sticky_assignments_contact_id_key" already exists
+psql:01_new_tables.sql:1221: ERROR:  multiple primary keys for table "sticky_assignments" are not allowed
+psql:01_new_tables.sql:1229: ERROR:  multiple primary keys for table "user_service_accounts" are not allowed
+psql:01_new_tables.sql:1237: ERROR:  relation "user_service_accounts_user_id_service_type_key" already exists
+psql:01_new_tables.sql:1245: ERROR:  multiple primary keys for table "voice_command_logs" are not allowed
+psql:01_new_tables.sql:1253: ERROR:  multiple primary keys for table "webauthn_challenges" are not allowed
+psql:01_new_tables.sql:1261: ERROR:  multiple primary keys for table "webhook_audit_log" are not allowed
+psql:01_new_tables.sql:1269: ERROR:  multiple primary keys for table "webhook_event_dedup" are not allowed
+psql:01_new_tables.sql:1277: ERROR:  multiple primary keys for table "webhook_events_processed" are not allowed
+psql:01_new_tables.sql:1285: ERROR:  multiple primary keys for table "webhook_rate_limits" are not allowed
+psql:01_new_tables.sql:1292: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1299: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1306: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1313: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1320: ERROR:  column "deleted_at" does not exist
+LINE 1: ...N public.contacts USING btree (deleted_at) WHERE (deleted_at...
+                                                             ^
+psql:01_new_tables.sql:1327: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1334: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1341: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1348: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1355: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1362: ERROR:  column "deleted_at" does not exist
+LINE 1: ...N public.contacts USING btree (deleted_at) WHERE (deleted_at...
+                                                             ^
+psql:01_new_tables.sql:1369: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1376: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1383: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1390: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1397: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1404: ERROR:  relation "idx_email_attachments_message" already exists
+psql:01_new_tables.sql:1411: ERROR:  relation "idx_email_labels_account" already exists
+psql:01_new_tables.sql:1418: ERROR:  relation "idx_email_messages_account" already exists
+psql:01_new_tables.sql:1425: ERROR:  relation "idx_email_messages_date" already exists
+psql:01_new_tables.sql:1432: ERROR:  relation "idx_email_messages_from" already exists
+psql:01_new_tables.sql:1439: ERROR:  relation "idx_email_messages_gmail_id" already exists
+psql:01_new_tables.sql:1446: ERROR:  relation "idx_email_messages_thread" already exists
+psql:01_new_tables.sql:1453: ERROR:  column "action" does not exist
+psql:01_new_tables.sql:1460: ERROR:  column "instance" does not exist
+psql:01_new_tables.sql:1467: ERROR:  column "ts" does not exist
+psql:01_new_tables.sql:1474: ERROR:  relation "idx_gmail_attachments_msg" already exists
+psql:01_new_tables.sql:1481: ERROR:  relation "idx_gmail_health_logs_request_id" already exists
+psql:01_new_tables.sql:1488: ERROR:  relation "idx_gmail_health_logs_timestamp" already exists
+psql:01_new_tables.sql:1495: ERROR:  relation "idx_iae_created_at" already exists
+psql:01_new_tables.sql:1502: ERROR:  relation "idx_iae_instance_created" already exists
+psql:01_new_tables.sql:1509: ERROR:  column "reason" does not exist
+psql:01_new_tables.sql:1516: ERROR:  column "paused_until" does not exist
+psql:01_new_tables.sql:1523: ERROR:  column "investigated_at" does not exist
+psql:01_new_tables.sql:1530: ERROR:  column "paused_until" does not exist
+psql:01_new_tables.sql:1537: ERROR:  relation "idx_job_log_name_started" already exists
+psql:01_new_tables.sql:1544: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1551: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1558: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1565: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1572: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1579: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1586: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1593: ERROR:  column "request_id" does not exist
+LINE 1: ...N public.messages USING btree (request_id) WHERE (request_id...
+                                                             ^
+psql:01_new_tables.sql:1600: ERROR:  relation "idx_mfa_sessions_user" already exists
+psql:01_new_tables.sql:1607: ERROR:  relation "idx_nps_invitations_contact" already exists
+psql:01_new_tables.sql:1614: ERROR:  column "responded" does not exist
+psql:01_new_tables.sql:1621: ERROR:  relation "idx_outbox_aggregate" already exists
+psql:01_new_tables.sql:1628: ERROR:  relation "idx_outbox_event_type" already exists
+psql:01_new_tables.sql:1635: ERROR:  relation "idx_outbox_pending" already exists
+psql:01_new_tables.sql:1642: ERROR:  relation "idx_participants_active" already exists
+psql:01_new_tables.sql:1649: ERROR:  relation "idx_participants_profile" already exists
+psql:01_new_tables.sql:1656: ERROR:  relation "idx_participants_thread" already exists
+psql:01_new_tables.sql:1663: ERROR:  relation "idx_pii_access_log_user" already exists
+psql:01_new_tables.sql:1670: ERROR:  relation "idx_provider_session_logs_provider" already exists
+psql:01_new_tables.sql:1677: ERROR:  relation "idx_provider_session_logs_session" already exists
+psql:01_new_tables.sql:1684: ERROR:  relation "idx_provider_sessions_channel" already exists
+psql:01_new_tables.sql:1691: ERROR:  relation "idx_provider_sessions_open" already exists
+psql:01_new_tables.sql:1698: ERROR:  column "kind" does not exist
+psql:01_new_tables.sql:1705: ERROR:  column "ts" does not exist
+psql:01_new_tables.sql:1712: ERROR:  column "status" does not exist
+psql:01_new_tables.sql:1719: ERROR:  column "target" does not exist
+psql:01_new_tables.sql:1726: ERROR:  column "ts" does not exist
+psql:01_new_tables.sql:1733: ERROR:  relation "idx_rate_limits_instance_window" already exists
+psql:01_new_tables.sql:1740: ERROR:  relation "idx_rj_requested_by" already exists
+psql:01_new_tables.sql:1747: ERROR:  relation "idx_rj_status_sched" already exists
+psql:01_new_tables.sql:1754: ERROR:  relation "idx_rj_target" already exists
+psql:01_new_tables.sql:1761: ERROR:  relation "idx_sticky_agent" already exists
+psql:01_new_tables.sql:1768: ERROR:  relation "idx_sticky_contact" already exists
+psql:01_new_tables.sql:1775: ERROR:  relation "idx_sticky_expires" already exists
+psql:01_new_tables.sql:1782: ERROR:  relation "idx_threads_contact" already exists
+psql:01_new_tables.sql:1789: ERROR:  relation "idx_threads_instance_channel" already exists
+psql:01_new_tables.sql:1796: ERROR:  relation "idx_threads_status_lastev" already exists
+psql:01_new_tables.sql:1803: ERROR:  relation "idx_voice_command_logs_created_at" already exists
+psql:01_new_tables.sql:1810: ERROR:  relation "idx_voice_command_logs_user_id" already exists
+psql:01_new_tables.sql:1817: ERROR:  relation "idx_webauthn_challenges_expires" already exists
+psql:01_new_tables.sql:1824: ERROR:  relation "idx_webhook_event_dedup_instance" already exists
+psql:01_new_tables.sql:1831: ERROR:  relation "idx_webhook_event_dedup_received_at" already exists
+psql:01_new_tables.sql:1838: ERROR:  relation "integration_profiles_one_active" already exists
+psql:01_new_tables.sql:1845: ERROR:  relation "uniq_route_channel" already exists
+psql:01_new_tables.sql:1852: ERROR:  relation "uniq_route_wpp" already exists
+psql:01_new_tables.sql:1859: ERROR:  column "instance" does not exist
+psql:01_new_tables.sql:1866: ERROR:  column "received_at" does not exist
+psql:01_new_tables.sql:1873: ERROR:  column "status" does not exist
+LINE 1: ...lic.webhook_audit_log USING btree (status) WHERE (status = A...
+                                                             ^
+psql:01_new_tables.sql:1880: ERROR:  relation "webhook_events_processed_processed_at_idx" already exists
+psql:01_new_tables.sql:1887: ERROR:  trigger "channel_provider_routes_updated_at" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:1894: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1901: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1908: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1915: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1922: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1929: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1936: ERROR:  trigger "trg_integration_profiles_updated" for relation "integration_profiles" already exists
+psql:01_new_tables.sql:1943: ERROR:  trigger "trg_ipp_updated_at" for relation "instance_processing_pauses" already exists
+psql:01_new_tables.sql:1950: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1957: ERROR:  trigger "trg_log_route_switchover" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:1964: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1971: ERROR:  trigger "trg_outbox_updated" for relation "outbox_events" already exists
+psql:01_new_tables.sql:1978: ERROR:  trigger "trg_rj_updated" for relation "reprocess_jobs" already exists
+psql:01_new_tables.sql:1985: ERROR:  "messages" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1992: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1999: ERROR:  trigger "trg_threads_updated" for relation "conversation_threads" already exists
+psql:01_new_tables.sql:2006: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:2013: ERROR:  "messages" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:2020: ERROR:  trigger "update_user_service_accounts_updated_at" for relation "user_service_accounts" already exists
+psql:01_new_tables.sql:2028: ERROR:  constraint "channel_provider_routes_channel_connection_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2036: ERROR:  constraint "channel_provider_routes_current_provider_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2044: ERROR:  constraint "channel_provider_routes_fallback_provider_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2052: ERROR:  constraint "channel_provider_routes_primary_provider_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2060: ERROR:  constraint "channel_provider_routes_whatsapp_connection_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2068: ERROR:  column "exported_by" referenced in foreign key constraint does not exist
+psql:01_new_tables.sql:2076: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2084: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2092: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2100: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2108: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2116: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2124: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2132: ERROR:  constraint "conversation_participants_thread_id_fkey" for relation "conversation_participants" already exists
+psql:01_new_tables.sql:2140: ERROR:  constraint "crisis_room_alerts_acknowledged_by_fkey" for relation "crisis_room_alerts" already exists
+psql:01_new_tables.sql:2148: ERROR:  constraint "email_attachments_email_message_id_fkey" for relation "email_attachments" already exists
+psql:01_new_tables.sql:2156: ERROR:  constraint "email_labels_gmail_account_id_fkey" for relation "email_labels" already exists
+psql:01_new_tables.sql:2164: ERROR:  constraint "email_messages_gmail_account_id_fkey" for relation "email_messages" already exists
+psql:01_new_tables.sql:2172: ERROR:  constraint "email_messages_thread_id_fkey" for relation "email_messages" already exists
+psql:01_new_tables.sql:2180: ERROR:  referenced relation "messages" is not a table
+psql:01_new_tables.sql:2188: ERROR:  constraint "gmail_attachments_account_id_fkey" for relation "gmail_attachments" already exists
+psql:01_new_tables.sql:2196: ERROR:  constraint "gmail_attachments_message_id_ref_fkey" for relation "gmail_attachments" already exists
+psql:01_new_tables.sql:2204: ERROR:  column "investigated_by" referenced in foreign key constraint does not exist
+psql:01_new_tables.sql:2212: ERROR:  constraint "instance_processing_pauses_paused_by_fkey" for relation "instance_processing_pauses" already exists
+psql:01_new_tables.sql:2220: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2228: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2236: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2244: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2252: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2260: ERROR:  constraint "mfa_sessions_user_id_fkey" for relation "mfa_sessions" already exists
+psql:01_new_tables.sql:2268: ERROR:  referenced relation "contacts" is not a table
+psql:01_new_tables.sql:2276: ERROR:  column "response_id" referenced in foreign key constraint does not exist
+psql:01_new_tables.sql:2284: ERROR:  constraint "pii_access_log_accessed_by_fkey" for relation "pii_access_log" already exists
+psql:01_new_tables.sql:2292: ERROR:  constraint "provider_session_logs_provider_id_fkey" for relation "provider_session_logs" already exists
+psql:01_new_tables.sql:2300: ERROR:  constraint "provider_session_logs_session_id_fkey" for relation "provider_session_logs" already exists
+psql:01_new_tables.sql:2308: ERROR:  constraint "provider_sessions_channel_connection_id_fkey" for relation "provider_sessions" already exists
+psql:01_new_tables.sql:2316: ERROR:  constraint "provider_sessions_provider_id_fkey" for relation "provider_sessions" already exists
+psql:01_new_tables.sql:2324: ERROR:  constraint "provider_sessions_whatsapp_connection_id_fkey" for relation "provider_sessions" already exists
+psql:01_new_tables.sql:2332: ERROR:  constraint "reprocess_jobs_requested_by_fkey" for relation "reprocess_jobs" already exists
+psql:01_new_tables.sql:2340: ERROR:  constraint "sticky_assignments_agent_profile_id_fkey" for relation "sticky_assignments" already exists
+psql:01_new_tables.sql:2348: ERROR:  constraint "sticky_assignments_channel_connection_id_fkey" for relation "sticky_assignments" already exists
+psql:01_new_tables.sql:2356: ERROR:  referenced relation "contacts" is not a table
+psql:01_new_tables.sql:2364: ERROR:  constraint "sticky_assignments_queue_id_fkey" for relation "sticky_assignments" already exists
+psql:01_new_tables.sql:2371: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2378: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2385: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2392: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2399: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2406: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2413: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2420: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2427: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2434: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2441: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2448: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2455: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2462: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2469: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2476: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2483: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2490: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2500: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2507: ERROR:  policy "Authenticated can view crisis alerts" for table "crisis_room_alerts" already exists
+psql:01_new_tables.sql:2514: ERROR:  policy "Authenticated read provider logs" for table "provider_session_logs" already exists
+psql:01_new_tables.sql:2521: ERROR:  policy "Authenticated read routes" for table "channel_provider_routes" already exists
+psql:01_new_tables.sql:2528: ERROR:  policy "Authenticated read sessions" for table "provider_sessions" already exists
+psql:01_new_tables.sql:2535: ERROR:  policy "Authenticated users can insert gmail health logs" for table "gmail_health_logs" already exists
+psql:01_new_tables.sql:2542: ERROR:  policy "Authenticated users can view NPS invitations" for table "nps_invitations" already exists
+psql:01_new_tables.sql:2549: ERROR:  policy "Authorized users can read health logs" for table "gmail_health_logs" already exists
+psql:01_new_tables.sql:2556: ERROR:  policy "Block anon access to webauthn challenges" for table "webauthn_challenges" already exists
+psql:01_new_tables.sql:2563: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2570: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2577: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2584: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2593: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2600: ERROR:  policy "Users can insert own voice logs" for table "voice_command_logs" already exists
+psql:01_new_tables.sql:2607: ERROR:  policy "Users can manage own MFA sessions" for table "mfa_sessions" already exists
+psql:01_new_tables.sql:2614: ERROR:  policy "Users can manage own challenges" for table "webauthn_challenges" already exists
+psql:01_new_tables.sql:2636: ERROR:  policy "Users can read own voice logs" for table "voice_command_logs" already exists
+psql:01_new_tables.sql:2645: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2654: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2661: ERROR:  policy "Users can view own service accounts" for table "user_service_accounts" already exists
+psql:01_new_tables.sql:2668: ERROR:  policy "Users can view scan logs" for table "file_scan_logs" already exists
+psql:01_new_tables.sql:2688: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2695: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2702: ERROR:  policy "authenticated can read webhook_audit_log" for table "webhook_audit_log" already exists
+psql:01_new_tables.sql:2721: ERROR:  ALTER action ENABLE ROW SECURITY cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2727: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:2734: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:2847: ERROR:  column "exported_by" does not exist
+psql:01_new_tables.sql:2858: ERROR:  column "workspace_id" does not exist
+psql:01_new_tables.sql:2883: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2908: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2915: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2922: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2929: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2936: ERROR:  ALTER action ENABLE ROW SECURITY cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2944: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2963: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2976: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2983: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2990: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:2999: ERROR:  policy "participants_select_self" for table "conversation_participants" already exists
+psql:01_new_tables.sql:3012: ERROR:  policy "pii_access_log_insert" for table "pii_access_log" already exists
+psql:01_new_tables.sql:3021: ERROR:  policy "pii_access_log_select_managers" for table "pii_access_log" already exists
+psql:01_new_tables.sql:3058: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3065: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3072: ERROR:  policy "service role manages webhook_audit_log" for table "webhook_audit_log" already exists
+psql:01_new_tables.sql:3079: ERROR:  policy "service role manages webhook_events_processed" for table "webhook_events_processed" already exists
+psql:01_new_tables.sql:3092: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3099: ERROR:  function public.has_role(uuid, public.app_role) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3106: ERROR:  function public.is_admin_or_supervisor(uuid) does not exist
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+psql:01_new_tables.sql:3116: ERROR:  policy "threads_select_participant" for table "conversation_threads" already exists
+
+=== APPLYING 01_new_tables.sql (PASS 3) ===
+ set_config 
+------------
+ 
+(1 row)
+
+psql:01_new_tables.sql:43: ERROR:  relation "sticky_assignments" already exists
+psql:01_new_tables.sql:63: ERROR:  relation "instance_processing_pauses" already exists
+psql:01_new_tables.sql:85: ERROR:  relation "integration_profiles" already exists
+psql:01_new_tables.sql:104: ERROR:  relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:119: ERROR:  relation "contact_export_log" already exists
+psql:01_new_tables.sql:175: ERROR:  relation "contacts" already exists
+psql:01_new_tables.sql:182: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:189: ERROR:  column "contact_type" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:196: ERROR:  column "phone_numbers" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:203: ERROR:  column "version" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:210: ERROR:  column "lgpd_consent_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:217: ERROR:  column "lgpd_consent_channel" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:224: ERROR:  column "lgpd_opt_out_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:231: ERROR:  column "lgpd_marketing_consent" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:238: ERROR:  column "lgpd_data_sharing" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:245: ERROR:  column "lgpd_profiling" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:252: ERROR:  column "deleted_at" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:259: ERROR:  column "deleted_by" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:266: ERROR:  column "merged_from_id" of relation "public.contacts" does not exist
+psql:01_new_tables.sql:285: ERROR:  relation "conversation_participants" already exists
+psql:01_new_tables.sql:308: ERROR:  relation "conversation_threads" already exists
+psql:01_new_tables.sql:326: ERROR:  relation "crisis_room_alerts" already exists
+psql:01_new_tables.sql:342: ERROR:  relation "email_attachments" already exists
+psql:01_new_tables.sql:367: ERROR:  relation "email_labels" already exists
+psql:01_new_tables.sql:400: ERROR:  relation "email_messages" already exists
+psql:01_new_tables.sql:426: ERROR:  relation "evolution_fallback_events" already exists
+psql:01_new_tables.sql:441: ERROR:  relation "file_scan_logs" already exists
+psql:01_new_tables.sql:459: ERROR:  relation "gmail_attachments" already exists
+psql:01_new_tables.sql:476: ERROR:  relation "gmail_health_logs" already exists
+psql:01_new_tables.sql:493: ERROR:  relation "instance_auth_events" already exists
+psql:01_new_tables.sql:534: ERROR:  relation "messages" already exists
+psql:01_new_tables.sql:536: ERROR:  ALTER action REPLICA IDENTITY cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:543: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:550: ERROR:  column "retry_attempt" of relation "public.messages" does not exist
+psql:01_new_tables.sql:557: ERROR:  column "retry_total" of relation "public.messages" does not exist
+psql:01_new_tables.sql:571: ERROR:  relation "mfa_sessions" already exists
+psql:01_new_tables.sql:586: ERROR:  relation "nps_invitations" already exists
+psql:01_new_tables.sql:608: ERROR:  relation "outbox_events" already exists
+psql:01_new_tables.sql:622: ERROR:  relation "pii_access_log" already exists
+psql:01_new_tables.sql:640: ERROR:  relation "provider_session_logs" already exists
+psql:01_new_tables.sql:658: ERROR:  relation "provider_sessions" already exists
+psql:01_new_tables.sql:675: ERROR:  relation "proxy_alerts" already exists
+psql:01_new_tables.sql:687: ERROR:  relation "proxy_alerts_id_seq" already exists
+psql:01_new_tables.sql:694: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:715: ERROR:  relation "proxy_metrics" already exists
+psql:01_new_tables.sql:727: ERROR:  relation "proxy_metrics_id_seq" already exists
+psql:01_new_tables.sql:734: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:760: ERROR:  relation "reprocess_jobs" already exists
+psql:01_new_tables.sql:776: ERROR:  relation "scheduled_job_log" already exists
+psql:01_new_tables.sql:791: ERROR:  relation "user_service_accounts" already exists
+psql:01_new_tables.sql:808: ERROR:  relation "voice_command_logs" already exists
+psql:01_new_tables.sql:823: ERROR:  relation "webauthn_challenges" already exists
+psql:01_new_tables.sql:840: ERROR:  relation "webhook_audit_log" already exists
+psql:01_new_tables.sql:852: ERROR:  relation "webhook_audit_log_id_seq" already exists
+psql:01_new_tables.sql:859: ERROR:  sequence must have same owner as table it is linked to
+psql:01_new_tables.sql:872: ERROR:  relation "webhook_event_dedup" already exists
+psql:01_new_tables.sql:891: ERROR:  relation "webhook_events_processed" already exists
+psql:01_new_tables.sql:912: ERROR:  relation "webhook_rate_limits" already exists
+psql:01_new_tables.sql:919: ERROR:  column "id" is of type uuid but default expression is of type bigint
+HINT:  You will need to rewrite or cast the expression.
+psql:01_new_tables.sql:926: ERROR:  column "id" is of type uuid but default expression is of type bigint
+HINT:  You will need to rewrite or cast the expression.
+psql:01_new_tables.sql:933: ERROR:  column "id" is of type uuid but default expression is of type bigint
+HINT:  You will need to rewrite or cast the expression.
+psql:01_new_tables.sql:941: ERROR:  multiple primary keys for table "channel_provider_routes" are not allowed
+psql:01_new_tables.sql:949: ERROR:  multiple primary keys for table "contact_export_log" are not allowed
+psql:01_new_tables.sql:957: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:965: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:973: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:981: ERROR:  multiple primary keys for table "conversation_participants" are not allowed
+psql:01_new_tables.sql:989: ERROR:  relation "conversation_threads_external_contact_id_instance_name_chan_key" already exists
+psql:01_new_tables.sql:997: ERROR:  multiple primary keys for table "conversation_threads" are not allowed
+psql:01_new_tables.sql:1005: ERROR:  multiple primary keys for table "crisis_room_alerts" are not allowed
+psql:01_new_tables.sql:1013: ERROR:  multiple primary keys for table "email_attachments" are not allowed
+psql:01_new_tables.sql:1021: ERROR:  relation "email_labels_gmail_account_id_gmail_label_id_key" already exists
+psql:01_new_tables.sql:1029: ERROR:  multiple primary keys for table "email_labels" are not allowed
+psql:01_new_tables.sql:1037: ERROR:  relation "email_messages_gmail_message_id_key" already exists
+psql:01_new_tables.sql:1045: ERROR:  multiple primary keys for table "email_messages" are not allowed
+psql:01_new_tables.sql:1053: ERROR:  multiple primary keys for table "evolution_fallback_events" are not allowed
+psql:01_new_tables.sql:1061: ERROR:  multiple primary keys for table "file_scan_logs" are not allowed
+psql:01_new_tables.sql:1069: ERROR:  multiple primary keys for table "gmail_attachments" are not allowed
+psql:01_new_tables.sql:1077: ERROR:  multiple primary keys for table "gmail_health_logs" are not allowed
+psql:01_new_tables.sql:1085: ERROR:  multiple primary keys for table "instance_auth_events" are not allowed
+psql:01_new_tables.sql:1093: ERROR:  multiple primary keys for table "instance_processing_pauses" are not allowed
+psql:01_new_tables.sql:1101: ERROR:  multiple primary keys for table "integration_profiles" are not allowed
+psql:01_new_tables.sql:1109: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1117: ERROR:  multiple primary keys for table "mfa_sessions" are not allowed
+psql:01_new_tables.sql:1125: ERROR:  multiple primary keys for table "nps_invitations" are not allowed
+psql:01_new_tables.sql:1133: ERROR:  relation "outbox_events_idempotency_key_key" already exists
+psql:01_new_tables.sql:1141: ERROR:  multiple primary keys for table "outbox_events" are not allowed
+psql:01_new_tables.sql:1149: ERROR:  multiple primary keys for table "pii_access_log" are not allowed
+psql:01_new_tables.sql:1157: ERROR:  multiple primary keys for table "provider_session_logs" are not allowed
+psql:01_new_tables.sql:1165: ERROR:  multiple primary keys for table "provider_sessions" are not allowed
+psql:01_new_tables.sql:1173: ERROR:  multiple primary keys for table "proxy_alerts" are not allowed
+psql:01_new_tables.sql:1181: ERROR:  multiple primary keys for table "proxy_metrics" are not allowed
+psql:01_new_tables.sql:1189: ERROR:  relation "reprocess_jobs_idempotency_key_key" already exists
+psql:01_new_tables.sql:1197: ERROR:  multiple primary keys for table "reprocess_jobs" are not allowed
+psql:01_new_tables.sql:1205: ERROR:  multiple primary keys for table "scheduled_job_log" are not allowed
+psql:01_new_tables.sql:1213: ERROR:  relation "sticky_assignments_contact_id_key" already exists
+psql:01_new_tables.sql:1221: ERROR:  multiple primary keys for table "sticky_assignments" are not allowed
+psql:01_new_tables.sql:1229: ERROR:  multiple primary keys for table "user_service_accounts" are not allowed
+psql:01_new_tables.sql:1237: ERROR:  relation "user_service_accounts_user_id_service_type_key" already exists
+psql:01_new_tables.sql:1245: ERROR:  multiple primary keys for table "voice_command_logs" are not allowed
+psql:01_new_tables.sql:1253: ERROR:  multiple primary keys for table "webauthn_challenges" are not allowed
+psql:01_new_tables.sql:1261: ERROR:  multiple primary keys for table "webhook_audit_log" are not allowed
+psql:01_new_tables.sql:1269: ERROR:  multiple primary keys for table "webhook_event_dedup" are not allowed
+psql:01_new_tables.sql:1277: ERROR:  multiple primary keys for table "webhook_events_processed" are not allowed
+psql:01_new_tables.sql:1285: ERROR:  multiple primary keys for table "webhook_rate_limits" are not allowed
+psql:01_new_tables.sql:1292: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1299: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1306: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1313: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1320: ERROR:  column "deleted_at" does not exist
+LINE 1: ...N public.contacts USING btree (deleted_at) WHERE (deleted_at...
+                                                             ^
+psql:01_new_tables.sql:1327: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1334: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1341: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1348: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1355: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1362: ERROR:  column "deleted_at" does not exist
+LINE 1: ...N public.contacts USING btree (deleted_at) WHERE (deleted_at...
+                                                             ^
+psql:01_new_tables.sql:1369: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1376: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1383: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1390: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1397: ERROR:  cannot create index on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1404: ERROR:  relation "idx_email_attachments_message" already exists
+psql:01_new_tables.sql:1411: ERROR:  relation "idx_email_labels_account" already exists
+psql:01_new_tables.sql:1418: ERROR:  relation "idx_email_messages_account" already exists
+psql:01_new_tables.sql:1425: ERROR:  relation "idx_email_messages_date" already exists
+psql:01_new_tables.sql:1432: ERROR:  relation "idx_email_messages_from" already exists
+psql:01_new_tables.sql:1439: ERROR:  relation "idx_email_messages_gmail_id" already exists
+psql:01_new_tables.sql:1446: ERROR:  relation "idx_email_messages_thread" already exists
+psql:01_new_tables.sql:1453: ERROR:  column "action" does not exist
+psql:01_new_tables.sql:1460: ERROR:  column "instance" does not exist
+psql:01_new_tables.sql:1467: ERROR:  column "ts" does not exist
+psql:01_new_tables.sql:1474: ERROR:  relation "idx_gmail_attachments_msg" already exists
+psql:01_new_tables.sql:1481: ERROR:  relation "idx_gmail_health_logs_request_id" already exists
+psql:01_new_tables.sql:1488: ERROR:  relation "idx_gmail_health_logs_timestamp" already exists
+psql:01_new_tables.sql:1495: ERROR:  relation "idx_iae_created_at" already exists
+psql:01_new_tables.sql:1502: ERROR:  relation "idx_iae_instance_created" already exists
+psql:01_new_tables.sql:1509: ERROR:  column "reason" does not exist
+psql:01_new_tables.sql:1516: ERROR:  column "paused_until" does not exist
+psql:01_new_tables.sql:1523: ERROR:  column "investigated_at" does not exist
+psql:01_new_tables.sql:1530: ERROR:  column "paused_until" does not exist
+psql:01_new_tables.sql:1537: ERROR:  relation "idx_job_log_name_started" already exists
+psql:01_new_tables.sql:1544: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1551: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1558: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1565: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1572: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1579: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1586: ERROR:  cannot create index on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:1593: ERROR:  column "request_id" does not exist
+LINE 1: ...N public.messages USING btree (request_id) WHERE (request_id...
+                                                             ^
+psql:01_new_tables.sql:1600: ERROR:  relation "idx_mfa_sessions_user" already exists
+psql:01_new_tables.sql:1607: ERROR:  relation "idx_nps_invitations_contact" already exists
+psql:01_new_tables.sql:1614: ERROR:  column "responded" does not exist
+psql:01_new_tables.sql:1621: ERROR:  relation "idx_outbox_aggregate" already exists
+psql:01_new_tables.sql:1628: ERROR:  relation "idx_outbox_event_type" already exists
+psql:01_new_tables.sql:1635: ERROR:  relation "idx_outbox_pending" already exists
+psql:01_new_tables.sql:1642: ERROR:  relation "idx_participants_active" already exists
+psql:01_new_tables.sql:1649: ERROR:  relation "idx_participants_profile" already exists
+psql:01_new_tables.sql:1656: ERROR:  relation "idx_participants_thread" already exists
+psql:01_new_tables.sql:1663: ERROR:  relation "idx_pii_access_log_user" already exists
+psql:01_new_tables.sql:1670: ERROR:  relation "idx_provider_session_logs_provider" already exists
+psql:01_new_tables.sql:1677: ERROR:  relation "idx_provider_session_logs_session" already exists
+psql:01_new_tables.sql:1684: ERROR:  relation "idx_provider_sessions_channel" already exists
+psql:01_new_tables.sql:1691: ERROR:  relation "idx_provider_sessions_open" already exists
+psql:01_new_tables.sql:1698: ERROR:  column "kind" does not exist
+psql:01_new_tables.sql:1705: ERROR:  column "ts" does not exist
+psql:01_new_tables.sql:1712: ERROR:  column "status" does not exist
+psql:01_new_tables.sql:1719: ERROR:  column "target" does not exist
+psql:01_new_tables.sql:1726: ERROR:  column "ts" does not exist
+psql:01_new_tables.sql:1733: ERROR:  relation "idx_rate_limits_instance_window" already exists
+psql:01_new_tables.sql:1740: ERROR:  relation "idx_rj_requested_by" already exists
+psql:01_new_tables.sql:1747: ERROR:  relation "idx_rj_status_sched" already exists
+psql:01_new_tables.sql:1754: ERROR:  relation "idx_rj_target" already exists
+psql:01_new_tables.sql:1761: ERROR:  relation "idx_sticky_agent" already exists
+psql:01_new_tables.sql:1768: ERROR:  relation "idx_sticky_contact" already exists
+psql:01_new_tables.sql:1775: ERROR:  relation "idx_sticky_expires" already exists
+psql:01_new_tables.sql:1782: ERROR:  relation "idx_threads_contact" already exists
+psql:01_new_tables.sql:1789: ERROR:  relation "idx_threads_instance_channel" already exists
+psql:01_new_tables.sql:1796: ERROR:  relation "idx_threads_status_lastev" already exists
+psql:01_new_tables.sql:1803: ERROR:  relation "idx_voice_command_logs_created_at" already exists
+psql:01_new_tables.sql:1810: ERROR:  relation "idx_voice_command_logs_user_id" already exists
+psql:01_new_tables.sql:1817: ERROR:  relation "idx_webauthn_challenges_expires" already exists
+psql:01_new_tables.sql:1824: ERROR:  relation "idx_webhook_event_dedup_instance" already exists
+psql:01_new_tables.sql:1831: ERROR:  relation "idx_webhook_event_dedup_received_at" already exists
+psql:01_new_tables.sql:1838: ERROR:  relation "integration_profiles_one_active" already exists
+psql:01_new_tables.sql:1845: ERROR:  relation "uniq_route_channel" already exists
+psql:01_new_tables.sql:1852: ERROR:  relation "uniq_route_wpp" already exists
+psql:01_new_tables.sql:1859: ERROR:  column "instance" does not exist
+psql:01_new_tables.sql:1866: ERROR:  column "received_at" does not exist
+psql:01_new_tables.sql:1873: ERROR:  column "status" does not exist
+LINE 1: ...lic.webhook_audit_log USING btree (status) WHERE (status = A...
+                                                             ^
+psql:01_new_tables.sql:1880: ERROR:  relation "webhook_events_processed_processed_at_idx" already exists
+psql:01_new_tables.sql:1887: ERROR:  trigger "channel_provider_routes_updated_at" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:1894: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1901: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1908: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1915: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1922: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1929: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1936: ERROR:  trigger "trg_integration_profiles_updated" for relation "integration_profiles" already exists
+psql:01_new_tables.sql:1943: ERROR:  trigger "trg_ipp_updated_at" for relation "instance_processing_pauses" already exists
+psql:01_new_tables.sql:1950: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1957: ERROR:  trigger "trg_log_route_switchover" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:1964: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1971: ERROR:  trigger "trg_outbox_updated" for relation "outbox_events" already exists
+psql:01_new_tables.sql:1978: ERROR:  trigger "trg_rj_updated" for relation "reprocess_jobs" already exists
+psql:01_new_tables.sql:1985: ERROR:  "messages" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1992: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:1999: ERROR:  trigger "trg_threads_updated" for relation "conversation_threads" already exists
+psql:01_new_tables.sql:2006: ERROR:  "contacts" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:2013: ERROR:  "messages" is a view
+DETAIL:  Views cannot have row-level BEFORE or AFTER triggers.
+psql:01_new_tables.sql:2020: ERROR:  trigger "update_user_service_accounts_updated_at" for relation "user_service_accounts" already exists
+psql:01_new_tables.sql:2028: ERROR:  constraint "channel_provider_routes_channel_connection_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2036: ERROR:  constraint "channel_provider_routes_current_provider_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2044: ERROR:  constraint "channel_provider_routes_fallback_provider_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2052: ERROR:  constraint "channel_provider_routes_primary_provider_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2060: ERROR:  constraint "channel_provider_routes_whatsapp_connection_id_fkey" for relation "channel_provider_routes" already exists
+psql:01_new_tables.sql:2068: ERROR:  column "exported_by" referenced in foreign key constraint does not exist
+psql:01_new_tables.sql:2076: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2084: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2092: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2100: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2108: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2116: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2124: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2132: ERROR:  constraint "conversation_participants_thread_id_fkey" for relation "conversation_participants" already exists
+psql:01_new_tables.sql:2140: ERROR:  constraint "crisis_room_alerts_acknowledged_by_fkey" for relation "crisis_room_alerts" already exists
+psql:01_new_tables.sql:2148: ERROR:  constraint "email_attachments_email_message_id_fkey" for relation "email_attachments" already exists
+psql:01_new_tables.sql:2156: ERROR:  constraint "email_labels_gmail_account_id_fkey" for relation "email_labels" already exists
+psql:01_new_tables.sql:2164: ERROR:  constraint "email_messages_gmail_account_id_fkey" for relation "email_messages" already exists
+psql:01_new_tables.sql:2172: ERROR:  constraint "email_messages_thread_id_fkey" for relation "email_messages" already exists
+psql:01_new_tables.sql:2180: ERROR:  referenced relation "messages" is not a table
+psql:01_new_tables.sql:2188: ERROR:  constraint "gmail_attachments_account_id_fkey" for relation "gmail_attachments" already exists
+psql:01_new_tables.sql:2196: ERROR:  constraint "gmail_attachments_message_id_ref_fkey" for relation "gmail_attachments" already exists
+psql:01_new_tables.sql:2204: ERROR:  column "investigated_by" referenced in foreign key constraint does not exist
+psql:01_new_tables.sql:2212: ERROR:  constraint "instance_processing_pauses_paused_by_fkey" for relation "instance_processing_pauses" already exists
+psql:01_new_tables.sql:2220: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2228: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2236: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2244: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2252: ERROR:  ALTER action ADD CONSTRAINT cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2260: ERROR:  constraint "mfa_sessions_user_id_fkey" for relation "mfa_sessions" already exists
+psql:01_new_tables.sql:2268: ERROR:  referenced relation "contacts" is not a table
+psql:01_new_tables.sql:2276: ERROR:  column "response_id" referenced in foreign key constraint does not exist
+psql:01_new_tables.sql:2284: ERROR:  constraint "pii_access_log_accessed_by_fkey" for relation "pii_access_log" already exists
+psql:01_new_tables.sql:2292: ERROR:  constraint "provider_session_logs_provider_id_fkey" for relation "provider_session_logs" already exists
+psql:01_new_tables.sql:2300: ERROR:  constraint "provider_session_logs_session_id_fkey" for relation "provider_session_logs" already exists
+psql:01_new_tables.sql:2308: ERROR:  constraint "provider_sessions_channel_connection_id_fkey" for relation "provider_sessions" already exists
+psql:01_new_tables.sql:2316: ERROR:  constraint "provider_sessions_provider_id_fkey" for relation "provider_sessions" already exists
+psql:01_new_tables.sql:2324: ERROR:  constraint "provider_sessions_whatsapp_connection_id_fkey" for relation "provider_sessions" already exists
+psql:01_new_tables.sql:2332: ERROR:  constraint "reprocess_jobs_requested_by_fkey" for relation "reprocess_jobs" already exists
+psql:01_new_tables.sql:2340: ERROR:  constraint "sticky_assignments_agent_profile_id_fkey" for relation "sticky_assignments" already exists
+psql:01_new_tables.sql:2348: ERROR:  constraint "sticky_assignments_channel_connection_id_fkey" for relation "sticky_assignments" already exists
+psql:01_new_tables.sql:2356: ERROR:  referenced relation "contacts" is not a table
+psql:01_new_tables.sql:2364: ERROR:  constraint "sticky_assignments_queue_id_fkey" for relation "sticky_assignments" already exists
+psql:01_new_tables.sql:2507: ERROR:  policy "Authenticated can view crisis alerts" for table "crisis_room_alerts" already exists
+psql:01_new_tables.sql:2514: ERROR:  policy "Authenticated read provider logs" for table "provider_session_logs" already exists
+psql:01_new_tables.sql:2521: ERROR:  policy "Authenticated read routes" for table "channel_provider_routes" already exists
+psql:01_new_tables.sql:2528: ERROR:  policy "Authenticated read sessions" for table "provider_sessions" already exists
+psql:01_new_tables.sql:2535: ERROR:  policy "Authenticated users can insert gmail health logs" for table "gmail_health_logs" already exists
+psql:01_new_tables.sql:2542: ERROR:  policy "Authenticated users can view NPS invitations" for table "nps_invitations" already exists
+psql:01_new_tables.sql:2549: ERROR:  policy "Authorized users can read health logs" for table "gmail_health_logs" already exists
+psql:01_new_tables.sql:2556: ERROR:  policy "Block anon access to webauthn challenges" for table "webauthn_challenges" already exists
+psql:01_new_tables.sql:2593: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2600: ERROR:  policy "Users can insert own voice logs" for table "voice_command_logs" already exists
+psql:01_new_tables.sql:2607: ERROR:  policy "Users can manage own MFA sessions" for table "mfa_sessions" already exists
+psql:01_new_tables.sql:2614: ERROR:  policy "Users can manage own challenges" for table "webauthn_challenges" already exists
+psql:01_new_tables.sql:2629: ERROR:  policy "Users can manage their email labels" for table "email_labels" already exists
+psql:01_new_tables.sql:2636: ERROR:  policy "Users can read own voice logs" for table "voice_command_logs" already exists
+psql:01_new_tables.sql:2645: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2654: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2661: ERROR:  policy "Users can view own service accounts" for table "user_service_accounts" already exists
+psql:01_new_tables.sql:2668: ERROR:  policy "Users can view scan logs" for table "file_scan_logs" already exists
+psql:01_new_tables.sql:2681: ERROR:  policy "Users can view their email labels" for table "email_labels" already exists
+psql:01_new_tables.sql:2695: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2702: ERROR:  policy "authenticated can read webhook_audit_log" for table "webhook_audit_log" already exists
+psql:01_new_tables.sql:2721: ERROR:  ALTER action ENABLE ROW SECURITY cannot be performed on relation "contacts"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2727: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:2734: ERROR:  "contacts" is not a table
+psql:01_new_tables.sql:2779: ERROR:  policy "email_attachments_manage_via_messages" for table "email_attachments" already exists
+psql:01_new_tables.sql:2793: ERROR:  policy "email_attachments_select_via_messages" for table "email_attachments" already exists
+psql:01_new_tables.sql:2822: ERROR:  policy "email_messages_manage_own" for table "email_messages" already exists
+psql:01_new_tables.sql:2834: ERROR:  policy "email_messages_select_own" for table "email_messages" already exists
+psql:01_new_tables.sql:2847: ERROR:  column "exported_by" does not exist
+psql:01_new_tables.sql:2858: ERROR:  column "workspace_id" does not exist
+psql:01_new_tables.sql:2936: ERROR:  ALTER action ENABLE ROW SECURITY cannot be performed on relation "messages"
+DETAIL:  This operation is not supported for views.
+psql:01_new_tables.sql:2944: ERROR:  "messages" is not a table
+psql:01_new_tables.sql:2999: ERROR:  policy "participants_select_self" for table "conversation_participants" already exists
+psql:01_new_tables.sql:3012: ERROR:  policy "pii_access_log_insert" for table "pii_access_log" already exists
+psql:01_new_tables.sql:3021: ERROR:  policy "pii_access_log_select_managers" for table "pii_access_log" already exists
+psql:01_new_tables.sql:3072: ERROR:  policy "service role manages webhook_audit_log" for table "webhook_audit_log" already exists
+psql:01_new_tables.sql:3079: ERROR:  policy "service role manages webhook_events_processed" for table "webhook_events_processed" already exists
+psql:01_new_tables.sql:3116: ERROR:  policy "threads_select_participant" for table "conversation_threads" already exists
+ set_config 
+------------
+ 
+(1 row)
+
+psql:04_views.sql:42: ERROR:  relation "channel_connections_safe" already exists
+psql:04_views.sql:63: ERROR:  relation "password_reset_requests_safe" already exists
+psql:04_views.sql:91: ERROR:  relation "whatsapp_connections_agent" already exists
+psql:04_views.sql:103: ERROR:  relation "whatsapp_connections_public" already exists
+
+=== FINAL SNAPSHOT ===
+tables_public:471
+views_public:70
+functions_public:643
+enums_public:17
+storage_buckets:9
+rls_enabled:466
+triggers:399
+indexes:1127
+policies:1011
