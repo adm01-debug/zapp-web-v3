@@ -5,6 +5,7 @@ import { normalizeMediaUrl } from '@/utils/normalizeMediaUrl';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { newRequestId } from '@/lib/withRequestId';
+import { dbFrom } from '@/integrations/datasource/db';
 
 /**
  * Encapsulates WhatsApp instance resolution and media-message sending
@@ -34,8 +35,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
 
     try {
       // Query Supabase Cloud 'contacts' table (NOT evolution_contacts which is VPS-only)
-      const { data: contact } = await supabase
-        .from('contacts')
+      const { data: contact } = await dbFrom('contacts')
         .select('whatsapp_connection_id')
         .eq('id', contactId)
         .maybeSingle();
@@ -103,7 +103,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     }
 
     try {
-      const { data: dbData, error: dbError } = await supabase.from('messages').insert({
+      const { data: dbData, error: dbError } = await dbFrom('messages').insert({
         contact_id: contactId,
         whatsapp_connection_id: whatsappConnectionId,
         content: '[Sticker]',
@@ -125,7 +125,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         externalId = result?.key?.id || null;
       } catch (err: unknown) {
         if (messageId) {
-          await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
+          await dbFrom('messages').update({ status: 'failed' }).eq('id', messageId);
         }
         toast({
           title: 'Erro ao enviar figurinha',
@@ -137,7 +137,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
 
       if (!externalId) {
         if (messageId) {
-          await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
+          await dbFrom('messages').update({ status: 'failed' }).eq('id', messageId);
         }
         toast({ title: 'Erro ao enviar figurinha', description: 'Falha na API', variant: 'destructive' });
         return;
@@ -145,8 +145,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
 
       // FIX FALHA 5: Proper error handling instead of fire-and-forget .then(() => {})
       if (messageId) {
-        const { error: updateError } = await supabase
-          .from('messages')
+        const { error: updateError } = await dbFrom('messages')
           .update({ external_id: externalId, status: 'sent' })
           .eq('id', messageId);
 
@@ -207,7 +206,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         ? supabase.functions.invoke('evolution-api', { method: 'POST', body: { action: 'send-media', instanceName: inst, number: phone, mediaUrl: emojiUrl, mediaType: 'image' }, headers: trace.headers })
         : supabase.functions.invoke('evolution-api', { method: 'POST', body: { action: 'send-text', instanceName: inst, number: phone, text: emojiUrl }, headers: trace.headers });
 
-      const dbPromise = supabase.from('messages').insert({
+      const dbPromise = dbFrom('messages').insert({
         contact_id: contactId, whatsapp_connection_id: whatsappConnectionId,
         content: isUrl ? '[Emoji]' : emojiUrl, message_type: isUrl ? 'image' : 'text',
         media_url: isUrl ? emojiUrl : null, sender: 'agent', status: 'sending',
@@ -219,14 +218,14 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
       const externalId = apiResult?.data?.key?.id || null;
 
       if (apiResult?.error || !externalId) {
-        if (messageId) await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
+        if (messageId) await dbFrom('messages').update({ status: 'failed' }).eq('id', messageId);
         toast({ title: 'Erro ao enviar emoji', description: 'Falha na API', variant: 'destructive' });
         return;
       }
 
       // FIX: proper await instead of fire-and-forget
       if (messageId) {
-        const { error: updateErr } = await supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId);
+        const { error: updateErr } = await dbFrom('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId);
         if (updateErr) log.error('[Emoji] Status update failed:', updateErr);
       }
       toast({ title: 'Emoji enviado!' });
@@ -255,7 +254,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
         headers: trace.headers,
       });
 
-      const dbPromise = supabase.from('messages').insert({
+      const dbPromise = dbFrom('messages').insert({
         contact_id: contactId, whatsapp_connection_id: whatsappConnectionId,
         content: '[Áudio Meme]', message_type: 'audio',
         media_url: normalizedAudioUrl, sender: 'agent', status: 'sending',
@@ -266,7 +265,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
       const messageId = dbResult?.data?.id;
 
       if (apiResult?.error || !apiResult?.data?.key?.id) {
-        if (messageId) await supabase.from('messages').update({ status: 'failed' }).eq('id', messageId);
+        if (messageId) await dbFrom('messages').update({ status: 'failed' }).eq('id', messageId);
         toast({ title: 'Erro ao enviar áudio meme', description: 'Falha na API', variant: 'destructive' });
         return;
       }
@@ -274,7 +273,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
       const externalId = apiResult.data.key.id;
       // FIX: proper await instead of fire-and-forget
       if (messageId) {
-        const { error: updateErr } = await supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId);
+        const { error: updateErr } = await dbFrom('messages').update({ external_id: externalId, status: 'sent' }).eq('id', messageId);
         if (updateErr) log.error('[AudioMeme] Status update failed:', updateErr);
       }
       toast({ title: '🔊 Áudio meme enviado!' });

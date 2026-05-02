@@ -7,6 +7,7 @@ import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getLogger } from '@/lib/logger';
+import { dbFrom } from '@/integrations/datasource/db';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -59,7 +60,7 @@ export function MessageHoverToolbar({
           log.warn('WhatsApp API delete failed, marking locally only');
         }
       }
-      await supabase.from('messages').update({ is_deleted: true, content: '[Mensagem apagada]' }).eq('id', message.id);
+      await dbFrom('messages').update({ is_deleted: true, content: '[Mensagem apagada]' }).eq('id', message.id);
       toast.success(externalId ? 'Mensagem deletada para todos' : 'Mensagem removida');
       onMessageDeleted(message.id);
     } catch {

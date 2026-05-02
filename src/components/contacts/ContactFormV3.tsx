@@ -31,6 +31,7 @@ import { ContactPhoneManager, PhoneEntry } from './ContactPhoneManager';
 import { ContactConsentManager, ConsentData } from './ContactConsentManager';
 import { ContactMergeDialog, ContactForMerge } from './ContactMergeDialog';
 import { ConflictResolutionDialog, ConflictInfo } from './ConflictResolutionDialog';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -166,13 +167,12 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
 
       } else if (mode === 'edit' && form.id && forceOverwrite) {
         // Force overwrite after conflict resolution
-        const { error } = await supabase.from('contacts').update(payload).eq('id', form.id);
+        const { error } = await dbFrom('contacts').update(payload).eq('id', form.id);
         if (error) throw error;
 
       } else {
         // Insert new contact
-        const { data, error } = await supabase
-          .from('contacts')
+        const { data, error } = await dbFrom('contacts')
           .insert({ ...payload, created_at: new Date().toISOString() })
           .select()
           .single();

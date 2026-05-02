@@ -5,6 +5,7 @@ import { invokeEvolutionWithRetry } from '@/lib/evolutionSendRetry';
 import { buildSendIdempotencyKey, buildSendIdempotencyKeyFromFingerprint } from '@/lib/sendIdempotency';
 import { toast } from '@/hooks/use-toast';
 import { emitSendStatus } from './sendStatusBus';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const MAX_RETRIES = 3;
 const lastInstabilityToastByContact = new Map<string, number>();
@@ -130,8 +131,7 @@ export async function sendMessageToContact(
     .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
     .single();
 
-  const { data, error } = await supabase
-    .from('messages')
+  const { data, error } = await dbFrom('messages')
     .insert({
       contact_id: contactId,
       agent_id: profile?.id,
@@ -153,8 +153,7 @@ export async function sendMessageToContact(
   emitSendStatus(data.id, { status: 'sending' }, { contactId, source: 'messageSender' });
 
   try {
-    const { data: contact } = await supabase
-      .from('contacts')
+    const { data: contact } = await dbFrom('contacts')
       .select('phone, whatsapp_connection_id')
       .eq('id', contactId)
       .single();
@@ -163,7 +162,7 @@ export async function sendMessageToContact(
 
     if (!connection?.instance_id || connection.status !== 'connected') {
       log.warn('WhatsApp connection not active, message marked as failed');
-      await supabase.from('messages').update({ status: 'failed' }).eq('id', data.id);
+      await dbFrom('messages').update({ status: 'failed' }).eq('id', data.id);
       throw new Error('Nenhuma conexão WhatsApp ativa disponível');
     }
 
@@ -205,7 +204,7 @@ export async function sendMessageToContact(
           emitSendStatus(data.id, { status: 'retrying', attempt, totalRetries: total }, { contactId, source: 'messageSender' });
           // Persist counters so the "2/3" indicator survives a page reload.
           // Fire-and-forget — never block the retry loop.
-          supabase.from('messages').update({
+          dbFrom('messages').update({
             status: 'retrying',
             retry_attempt: attempt,
             retry_total: total,
@@ -231,7 +230,7 @@ export async function sendMessageToContact(
         || 'Falha ao enviar mensagem';
 
       if (auth.isAuth) {
-        await supabase.from('messages').update({
+        await dbFrom('messages').update({
           status: 'failed_auth',
           whatsapp_connection_id: resolvedConnectionId,
           error_code: auth.code ? String(auth.code) : null,
@@ -239,7 +238,7 @@ export async function sendMessageToContact(
         }).eq('id', data.id);
         emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender' });
       } else {
-        await supabase.from('messages').update({
+        await dbFrom('messages').update({
           status: 'failed',
           whatsapp_connection_id: resolvedConnectionId,
           error_reason: reason,
@@ -250,7 +249,7 @@ export async function sendMessageToContact(
     }
 
     const externalId = extractEvolutionMessageId(apiResult);
-    await supabase.from('messages').update({
+    await dbFrom('messages').update({
       status: 'sent',
       external_id: externalId,
       whatsapp_connection_id: resolvedConnectionId,
@@ -263,7 +262,7 @@ export async function sendMessageToContact(
     const auth = classifyAuthError(evolutionError);
     const reason = evolutionError instanceof Error ? evolutionError.message : 'Falha ao enviar mensagem';
     if (auth.isAuth) {
-      await supabase.from('messages').update({
+      await dbFrom('messages').update({
         status: 'failed_auth',
         error_code: auth.code ? String(auth.code) : null,
         error_reason: auth.reason || reason,
@@ -272,7 +271,7 @@ export async function sendMessageToContact(
     } else {
       // If error came from withRetry exhausting attempts, mark failed_retries.
       // Persist final attempt counters so the badge stays after a reload.
-      await supabase.from('messages').update({
+      await dbFrom('messages').update({
         status: 'failed_retries',
         error_reason: reason,
         retry_attempt: MAX_RETRIES,

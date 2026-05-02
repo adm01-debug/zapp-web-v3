@@ -9,6 +9,7 @@ import { Plus, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SLARuleRow } from './SLARuleRow';
 import { SLARuleFormDialog } from './SLARuleFormDialog';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ScopeRulesListProps {
   scope: SLARuleScope;
@@ -28,7 +29,7 @@ export function ScopeRulesList({ scope }: ScopeRulesListProps) {
     queryKey: ['sla-contact-names', contactIds],
     queryFn: async () => {
       if (contactIds.length === 0) return {};
-      const { data } = await supabase.from('contacts').select('id, name, phone').in('id', contactIds);
+      const { data } = await dbFrom('contacts').select('id, name, phone').in('id', contactIds);
       const map: Record<string, string> = {};
       (data || []).forEach(c => { map[c.id] = `${c.name} (${c.phone})`; });
       return map;

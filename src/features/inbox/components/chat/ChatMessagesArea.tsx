@@ -22,6 +22,7 @@ import {
 } from './loadOlderMetrics';
 
 import type { LoadOlderProps } from './loadOlderTypes';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ChatMessagesAreaProps extends LoadOlderProps {
   messages: Message[];
@@ -109,7 +110,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
 
   const handleMessageDeleted = useCallback(async (messageId: string) => {
     try {
-      await supabase.from('messages').update({ is_deleted: true, content: '[Mensagem apagada]' }).eq('id', messageId);
+      await dbFrom('messages').update({ is_deleted: true, content: '[Mensagem apagada]' }).eq('id', messageId);
     } catch {
       log.error('Failed to mark message as deleted in DB');
     }

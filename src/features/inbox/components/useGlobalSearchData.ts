@@ -5,6 +5,7 @@ import { getExternalSupabase, isExternalConfigured } from '@/integrations/supaba
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { subDays, subMonths, startOfDay } from 'date-fns';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface SearchResult {
   id: string;
@@ -94,7 +95,7 @@ export function useGlobalSearchData(open: boolean) {
       const addedMessageIds = new Set<string>();
 
       if (types.has('message') && (cleanQuery.length >= 2 || mediaType !== 'all')) {
-        let textQuery = supabase.from('messages')
+        let textQuery = dbFrom('messages')
           .select(`id, content, message_type, created_at, contact_id, contacts:contact_id (id, name, surname)`)
           .order('created_at', { ascending: false }).limit(20);
 
@@ -128,7 +129,7 @@ export function useGlobalSearchData(open: boolean) {
       }
 
       if (types.has('transcription') && cleanQuery.length >= 2) {
-        let audioQuery = supabase.from('messages')
+        let audioQuery = dbFrom('messages')
           .select(`id, content, transcription, message_type, created_at, contact_id, contacts:contact_id (id, name, surname)`)
           .not('transcription', 'is', null).ilike('transcription', `%${cleanQuery}%`)
           .order('created_at', { ascending: false }).limit(15);
@@ -151,7 +152,7 @@ export function useGlobalSearchData(open: boolean) {
       }
 
       if (types.has('contact')) {
-        let contactQuery = supabase.from('contacts').select('id, name, surname, phone, email, created_at, tags');
+        let contactQuery = dbFrom('contacts').select('id, name, surname, phone, email, created_at, tags');
         if (cleanQuery.length >= 2) contactQuery = contactQuery.or(`name.ilike.%${cleanQuery}%,surname.ilike.%${cleanQuery}%,phone.ilike.%${cleanQuery}%,email.ilike.%${cleanQuery}%`);
 
         const { data: contacts } = await contactQuery.order('name', { ascending: true }).limit(10);

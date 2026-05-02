@@ -1,4 +1,5 @@
 import { log } from '@/lib/logger';
+import { dbFrom } from '@/integrations/datasource/db';
 
 /**
  * Generic retry utility with exponential backoff and jitter.
@@ -9,7 +10,7 @@ import { log } from '@/lib/logger';
  *
  * Usage:
  *   const { data } = await retryWithBackoff(
- *     () => supabase.from('messages').select(),
+ *     () => dbFrom('messages').select(),
  *     { maxRetries: 3, initialDelayMs: 500 }
  *   );
  */

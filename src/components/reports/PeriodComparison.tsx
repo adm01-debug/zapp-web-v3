@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, ArrowRight, BarChart3 } from 'lucide-react';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface PeriodData {
   label: string;
@@ -37,9 +38,9 @@ export function PeriodComparison() {
     }
 
     const [currentRes, previousRes] = await Promise.all([
-      supabase.from('messages').select('id', { count: 'exact', head: true })
+      dbFrom('messages').select('id', { count: 'exact', head: true })
         .gte('created_at', currentStart.toISOString()).eq('sender', 'contact'),
-      supabase.from('messages').select('id', { count: 'exact', head: true })
+      dbFrom('messages').select('id', { count: 'exact', head: true })
         .gte('created_at', previousStart.toISOString())
         .lt('created_at', previousEnd.toISOString()).eq('sender', 'contact'),
     ]);
