@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { safeClient } from '../safeClient';
+import { safeClient, resourceCache } from '../safeClient';
 import { supabase as mockSupabase } from '../client';
 
 const mockSelect = vi.fn();
@@ -24,6 +24,7 @@ vi.mock('../client', () => ({
 describe('safeClient', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resourceCache.clear();
   });
 
   it('deve validar e falhar se uma tabela gmail_* não existir', async () => {
@@ -37,23 +38,21 @@ describe('safeClient', () => {
   });
 
   it('deve usar cache para validações subsequentes', async () => {
-    const tableName = `gmail_cached_${Math.random().toString(36).substring(7)}`;
+    const tableName = 'gmail_cached';
     
-    // Configura o mock para retornar sucesso na validação E nos dados
-    mockSelect.mockImplementation(async () => {
-       return { data: [{ id: 1 }], error: null };
-    });
+    // Sucesso na validação (select count) e na query real
+    mockSelect.mockResolvedValue({ data: [{ id: 1 }], error: null });
 
     const res1 = await safeClient.from(tableName, (q) => q.select('*'));
     expect(res1.data).toEqual([{ id: 1 }]);
+    expect(res1.error).toBeNull();
     
     // Segunda chamada
-    mockSelect.mockImplementation(async () => {
-       return { data: [{ id: 2 }], error: null };
-    });
+    mockSelect.mockResolvedValue({ data: [{ id: 2 }], error: null });
     const res2 = await safeClient.from(tableName, (q) => q.select('*'));
     expect(res2.data).toEqual([{ id: 2 }]);
 
+    // Total de chamadas a mockSelect: 3
     // 1 call para validar (select count), 1 call para res1 query, 1 call para res2 query
     expect(mockSelect).toHaveBeenCalledTimes(3);
   });
