@@ -62,13 +62,13 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
         daily,
       });
 
-      const { data: threads } = await safeClient.from<any>('gmail_threads', (q) =>
+      const { data: threadsData } = await safeClient.from('gmail_threads', (q) =>
         q.select('sla_status')
          .eq('account_id', accountId)
          .not('sla_status', 'is', null)
       );
 
-      const allThreads = threads ?? [];
+      const allThreads = gmailMappers.threads(threadsData ?? []);
       setSlaDash({
         ok_count:       allThreads.filter(t => t.sla_status === 'ok').length,
         warning_count:  allThreads.filter(t => t.sla_status === 'warning').length,
