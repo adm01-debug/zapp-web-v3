@@ -19,6 +19,16 @@ export interface SafeResponse<T> {
 const CACHE_TTL = 300000; // 5 minutos
 const resourceCache = new Map<string, { exists: boolean; expires: number }>();
 
+// Telemetria interna
+let lastValidation: Date | null = null;
+const recentFailures: any[] = [];
+const MAX_FAILURES = 50;
+const stats = {
+  totalCalls: 0,
+  failedCalls: 0,
+  cacheHits: 0
+};
+
 /**
  * safeClient — Wrapper para chamadas Supabase com tratamento de erro e tipagem opcional.
  * Resolve problemas de tabelas não tipadas e schemas externos.
