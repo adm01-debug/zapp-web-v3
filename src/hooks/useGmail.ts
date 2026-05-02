@@ -97,7 +97,7 @@ export function useGmail() {
 
   // ── Verificar status dos tokens ─────────────────────────────────────────
   const checkTokenStatus = useCallback(async () => {
-    const { data, error: rpcErr } = await safeClient.rpc('rpc_gmail_token_status');
+    const { data, error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_token_status');
     if (!rpcErr && data) {
       const tokenInfos = gmailMappers.tokenInfos(Array.isArray(data) ? data : []);
       setTokenStatus(tokenInfos);
