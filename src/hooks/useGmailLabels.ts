@@ -36,7 +36,7 @@ export function useGmailLabels(accountId: string | null) {
     if (dbErr) {
       setError(dbErr.message);
     } else {
-      setLabels(gmailMappers.labels(data ?? []));
+      setLabels(gmailMappers.labels(Array.isArray(data) ? data : []));
     }
     setIsLoading(false);
   }, [accountId]);
@@ -44,7 +44,7 @@ export function useGmailLabels(accountId: string | null) {
   const syncLabels = useCallback(async () => {
     if (!accountId) return;
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('gmail-sync', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-sync', {
         body: { action: 'syncLabels', accountId },
       });
       if (!fnErr && data?.success) {
@@ -62,7 +62,7 @@ export function useGmailLabels(accountId: string | null) {
       q.select('id, unread_count').eq('account_id', accountId).contains('label_ids', [labelId])
     );
 
-    const threads = data ?? [];
+    const threads = Array.isArray(data) ? data : [];
     return {
       thread_count: threads.length,
       unread_count: threads.reduce((s: number, t: any) => s + (t.unread_count ?? 0), 0),

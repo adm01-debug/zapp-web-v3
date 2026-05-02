@@ -9,7 +9,8 @@
  * - Debounced search input
  */
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { dbFrom } from '@/integrations/datasource/db';
 
@@ -48,7 +49,7 @@ export function useMessageSearch(conversationId: string, workspaceId: string) {
 
       if (error) throw error;
 
-      const mapped: SearchResult[] = (data ?? []).map((msg, i) => ({
+      const mapped: SearchResult[] = (Array.isArray(data) ? data : []).map((msg, i) => ({
         ...msg,
         match_index: i,
       }));

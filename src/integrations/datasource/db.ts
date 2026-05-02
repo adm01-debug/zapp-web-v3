@@ -42,7 +42,7 @@ export function dbTable(entity: LogicalEntity): string {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function dbFrom(entity: LogicalEntity): any {
-  return dbClient(entity).from(dbTable(entity));
+  return (dbClient(entity) as any).from(dbTable(entity));
 }
 
 export function dbChannel(entity: LogicalEntity, name: string): RealtimeChannel {
