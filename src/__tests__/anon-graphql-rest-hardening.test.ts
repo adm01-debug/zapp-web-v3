@@ -17,9 +17,9 @@
 
 import { describe, it, expect, beforeAll } from "vitest";
 
-const SUPABASE_URL = "https://allrjhkpuscmgbsnmjlv.supabase.co";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "http://localhost:8000";
 const ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsbHJqaGtwdXNjbWdic25tamx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NDc3NDQsImV4cCI6MjA4MTMyMzc0NH0.7S2yN87sjm22J9DXC7Njo7UaXQ2tHk6XMJheNVqHA74";
+  "TEST_ANON_KEY_PLACEHOLDER";
 
 /**
  * Tabelas que JAMAIS devem ser legíveis por anon, nem expostas com fields
