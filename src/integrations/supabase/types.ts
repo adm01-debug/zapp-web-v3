@@ -4918,6 +4918,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gmail_health_logs: {
+        Row: {
+          error_message: string | null
+          id: string
+          is_failure: boolean | null
+          metadata: Json | null
+          operation: string | null
+          request_id: string | null
+          resource: string | null
+          status: string
+          timestamp: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          is_failure?: boolean | null
+          metadata?: Json | null
+          operation?: string | null
+          request_id?: string | null
+          resource?: string | null
+          status: string
+          timestamp?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          is_failure?: boolean | null
+          metadata?: Json | null
+          operation?: string | null
+          request_id?: string | null
+          resource?: string | null
+          status?: string
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
       goals_configurations: {
         Row: {
           created_at: string
@@ -11396,6 +11432,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      rpc_get_gmail_health_summary: {
+        Args: { p_window_minutes?: number }
+        Returns: Json
+      }
       rpc_get_whatsapp_mode: { Args: never; Returns: string }
       rpc_instance_auth_event_summary: {
         Args: { p_hours?: number; p_instance?: string }
@@ -11579,6 +11619,18 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      rpc_log_gmail_health: {
+        Args: {
+          p_error_message?: string
+          p_is_failure?: boolean
+          p_metadata?: Json
+          p_operation?: string
+          p_request_id?: string
+          p_resource?: string
+          p_status: string
+        }
+        Returns: string
       }
       rpc_log_provider_message: {
         Args: {
