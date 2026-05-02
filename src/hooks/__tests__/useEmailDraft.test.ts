@@ -7,19 +7,31 @@ import { renderHook, act } from '@testing-library/react';
 import { useEmailDraft } from '../useEmailDraft';
 
 // Mock Supabase
-const mockSupabase = {
-  from: vi.fn().mockReturnThis(),
-  update: vi.fn().mockReturnThis(),
-  insert: vi.fn().mockReturnThis(),
-  delete: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  select: vi.fn().mockReturnThis(),
-  single: vi.fn().mockResolvedValue({ data: { id: 'draft-1' }, error: null }),
-};
+vi.mock('@/integrations/supabase/client', () => {
+  const mockSupabase = {
+    from: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: { id: 'draft-1' }, error: null }),
+  };
+  mockSupabase.from.mockReturnValue(mockSupabase);
+  mockSupabase.update.mockReturnValue(mockSupabase);
+  mockSupabase.insert.mockReturnValue(mockSupabase);
+  mockSupabase.delete.mockReturnValue(mockSupabase);
+  mockSupabase.eq.mockReturnValue(mockSupabase);
+  mockSupabase.select.mockReturnValue(mockSupabase);
+  
+  return {
+    supabase: mockSupabase,
+  };
+});
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
-}));
+// Helper para acessar o mock de fora do factory (necessário para verificação)
+import { supabase as mockedSupabase } from '@/integrations/supabase/client';
+const mockSupabase = mockedSupabase as any;
 
 // Mock gmailApi
 vi.mock('../gmail/gmailApi', () => ({
