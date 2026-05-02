@@ -284,7 +284,7 @@ export function useGmail() {
 
   // ── Star/Unstar thread ──────────────────────────────────────────────────
   const starThread = useCallback(async (threadId: string, starred = true) => {
-    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_star_thread', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_star_thread', {
       p_thread_id: threadId,
       p_starred:   starred,
     });
