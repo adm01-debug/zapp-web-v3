@@ -209,7 +209,7 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
 
           {/* ── Trash Tab ── */}
           <TabsContent value="trash" className="p-4 overflow-y-auto">
-            <ContactRecycleBin workspaceId={workspaceId} onRestored={() => loadContacts()} />
+            <ContactRecycleBin workspaceId={workspaceId} onRestored={() => { loadContacts(); }} />
           </TabsContent>
         </Tabs>
 
@@ -248,7 +248,7 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
             {editContact && (
               <ContactFormV3
                 workspaceId={workspaceId}
-                initial={editContact}
+                initial={editContact as unknown as Partial<import('./ContactFormV3').ContactV3FormData>}
                 mode="edit"
                 onSaved={() => { setEditContact(null); loadContacts(); }}
                 onCancel={() => setEditContact(null)}

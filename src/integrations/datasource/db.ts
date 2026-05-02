@@ -93,7 +93,7 @@ export async function dbRpc<P extends object, R>(
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await client.rpc(def.name, merged as any);
+    const { data, error } = await (client as any).rpc(def.name, merged as any);
     const durationMs = Math.round(performance.now() - startedAt);
     const errorMessage = error ? error.message ?? 'rpc error' : undefined;
 
