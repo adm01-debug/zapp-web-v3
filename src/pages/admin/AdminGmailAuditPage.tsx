@@ -72,7 +72,7 @@ export default function AdminGmailAuditPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <History className="w-5 h-5" />
+            <HistoryIcon className="w-5 h-5" />
             Logs de Revalidação
           </CardTitle>
           <Badge variant="outline">Total: {total}</Badge>
