@@ -80,9 +80,12 @@ export function useGmail() {
     );
 
     if (dbErr) {
+      setLastRequestId(requestId || null);
+      setSchemaStatus({ ok: !dbErr.message.includes('disponível'), lastChecked: new Date() });
       console.warn(`[useGmail][${requestId}] Falha ao carregar contas:`, dbErr.message);
       setError(`Não foi possível carregar as contas Gmail. ${dbErr.message.includes('disponível') ? 'O recurso ainda está sendo configurado.' : ''}`);
     } else {
+      setSchemaStatus({ ok: true, lastChecked: new Date() });
       const accs = gmailMappers.accounts(Array.isArray(data) ? data : []);
       setAccounts(accs);
       if (accs.length > 0 && !activeAccountId) {
