@@ -21,6 +21,9 @@ import type { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { externalSupabase } from '@/integrations/supabase/externalClient';
 import { ENTITY_MAP, type LogicalEntity } from './registry';
+import { recordQueryEvent, classifySeverity } from '@/lib/clientTelemetry';
+import { generateCorrelationId } from '@/lib/correlationId';
+import type { RpcDefinition, DatasourceClient } from './rpcCatalog';
 
 export function dbClient(entity: LogicalEntity): SupabaseClient {
   const mapping = ENTITY_MAP[entity];
