@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { supabase } from '@/integrations/supabase/client';
+import { dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 export interface SLAAttribution {
   agentId: string | null;
@@ -98,9 +100,8 @@ export function useConversationSLATimeline(remoteJid: string | null, contactId: 
 
       // 1. Messages — first inbound, first outbound, last
       // Uses the lite RPC (no payload/raw_data) — only timestamps/direction needed for SLA math.
-      const { data: msgs, error: msgErr } = await externalSupabase.rpc('rpc_list_messages_lite', {
+      const { data: msgs, error: msgErr } = await dbList(RPC.listMessagesLite, {
         p_remote_jid: remoteJid,
-        p_instance: 'wpp2',
         p_limit: 500,
       });
       if (msgErr) throw msgErr;
