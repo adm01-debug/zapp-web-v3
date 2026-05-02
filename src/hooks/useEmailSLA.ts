@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { SLAStatus } from '@/types/gmail';
+export type { SLAStatus } from '@/types/gmail';
 
 const supabase = _supabase as any;
 
