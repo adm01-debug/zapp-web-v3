@@ -45,7 +45,7 @@ export function useOptimisticMessages() {
       optimisticCounter++;
       const tempId = `_optimistic_${Date.now()}_${optimisticCounter}`;
 
-      const optimistic: OptimisticMessage = {
+      const optimistic = {
         id: tempId,
         _optimistic: true,
         contact_id: params.contactId,
