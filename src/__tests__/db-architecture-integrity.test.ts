@@ -18,9 +18,8 @@ describe('Database Architecture Integrity: No evolution_* in Lovable Cloud', () 
       /CREATE\s+INDEX\s+.*ON\s+public\.evolution_/i
     ];
 
-    // Algumas tabelas de telemetria/idempotência SÃO permitidas no Lovable Cloud
-    // para controle local do proxy/gateway.
-    const allowedTables = [
+    // Tabelas de controle local (telemetria/idempotência) SÃO permitidas no Lovable Cloud.
+    const allowedTablePrefixes = [
       'evolution_webhook_events',
       'evolution_retry_metrics',
       'evolution_send_idempotency',
@@ -34,12 +33,20 @@ describe('Database Architecture Integrity: No evolution_* in Lovable Cloud', () 
       const content = readFileSync(file, 'utf-8');
       
       forbiddenPatterns.forEach(pattern => {
-        const matches = content.match(pattern);
+        // Use global flag to find all occurrences
+        const globalPattern = new RegExp(pattern.source, 'gi');
+        const matches = content.match(globalPattern);
         if (matches) {
-          const tableName = matches[0].split('.').pop()?.split(' ')[0] || '';
-          if (!allowedTables.some(allowed => tableName.includes(allowed))) {
-            violations.push(`${file}: Found forbidden pattern "${matches[0]}"`);
-          }
+          matches.forEach(match => {
+            // Extract table name from pattern like "ALTER TABLE public.evolution_contacts"
+            const parts = match.split('.');
+            const afterDot = parts.length > 1 ? parts[1] : parts[0];
+            const tableName = afterDot.split(/[ \n\r\t(]/)[0];
+            
+            if (!allowedTablePrefixes.some(allowed => tableName.startsWith(allowed))) {
+              violations.push(`${file}: Found forbidden pattern "${match}" (table: ${tableName})`);
+            }
+          });
         }
       });
     });
