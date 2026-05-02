@@ -1,3 +1,4 @@
+import { dbFrom } from '@/integrations/datasource/db';
 /**
  * End-to-end request tracing helper.
  *
@@ -12,7 +13,7 @@
  *   await supabase.functions.invoke('evolution-api', {
  *     body: { … }, headers: trace.headers,
  *   });
- *   await supabase.from('messages').insert({ …, request_id: trace.requestId });
+ *   await dbFrom('messages').insert({ …, request_id: trace.requestId });
  */
 export interface RequestTrace {
   requestId: string;

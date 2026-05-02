@@ -11,7 +11,8 @@ import {
   Users, TrendingUp, Shield, GitMerge,
   RefreshCw, AlertTriangle, CheckCircle2,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 interface ContactStats {
   total_active:         number;
@@ -58,13 +59,13 @@ export const ContactStatsDashboard: React.FC<Props> = ({
     setLoading(true);
     try {
       const [statsRes, lgpdRes, dupesRes] = await Promise.all([
-        supabase.rpc('get_contact_stats', { p_instance_name: instanceName }),
-        supabase.rpc('get_lgpd_compliance_stats', { p_instance_name: instanceName }),
-        supabase.rpc('get_duplicate_report', { p_instance_name: instanceName }),
+        dbRpc(RPC.getContactStats, { p_instance_name: instanceName }),
+        dbRpc(RPC.getLgpdComplianceStats, { p_instance_name: instanceName }),
+        dbRpc(RPC.getDuplicateReport, { p_instance_name: instanceName }),
       ]);
 
-      if (statsRes.data) setStats(statsRes.data as ContactStats);
-      if (lgpdRes.data)  setLgpd(lgpdRes.data as LGPDStats);
+      if (statsRes.data) setStats(statsRes.data as unknown as ContactStats);
+      if (lgpdRes.data)  setLgpd(lgpdRes.data as unknown as LGPDStats);
       if (dupesRes.data) setDupes((dupesRes.data as Record<string, number>).total_duplicate_groups ?? 0);
     } catch (err) {
       console.error('[ContactStatsDashboard]', err);

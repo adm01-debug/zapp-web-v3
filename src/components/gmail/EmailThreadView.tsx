@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
 import { type GmailMessage, type GmailThread } from '@/hooks/gmail/gmailTypes';
 import { EmailChatBubble } from '../email/EmailChatBubble';
 import { EmailSLABadge, SLAProgressBar } from '../email/EmailSLABadge';
@@ -34,22 +35,22 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
     if (!thread) { setMessages([]); return; }
 
     setIsLoading(true);
-    supabase
+    (supabase as any)
       .from('gmail_messages')
       .select('*, gmail_attachments(*)')
       .eq('thread_id_ref', thread.id)
       .order('internal_date', { ascending: true })
-      .then(({ data, error }) => {
+      .then(({ data, error }: any) => {
         setIsLoading(false);
         if (error || !data) return;
         setMessages(data as GmailMessage[]);
 
         // Auto-marcar como lido
-        const unreadIds = data.filter((m: GmailMessage) => !m.is_read).map((m: GmailMessage) => m.message_id);
+        const unreadIds = (data as GmailMessage[]).filter((m) => !m.is_read).map((m) => m.message_id);
         if (unreadIds.length > 0) {
           gmailMarkRead({ accountId, messageIds: unreadIds, read: true }).catch(() => {});
-          supabase.from('gmail_messages').update({ is_read: true }).in('message_id', unreadIds).then(() => {});
-          supabase.from('gmail_threads').update({ unread_count: 0 }).eq('id', thread.id).then(() => {});
+          (supabase as any).from('gmail_messages').update({ is_read: true }).in('message_id', unreadIds).then(() => {});
+          (supabase as any).from('gmail_threads').update({ unread_count: 0 }).eq('id', thread.id).then(() => {});
         }
       });
   }, [thread?.id, accountId]);

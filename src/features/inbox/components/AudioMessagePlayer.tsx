@@ -9,6 +9,7 @@ import { log } from '@/lib/logger';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { AudioVolumeControl } from './AudioVolumeControl';
+import { dbFrom, dbTable } from '@/integrations/datasource/db';
 
 interface AudioMessagePlayerProps {
   audioUrl: string;
@@ -36,10 +37,10 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
 
   // Realtime subscription for transcription updates
   useEffect(() => {
-    logMessagesSubscribe('AudioMessagePlayer', { event: 'UPDATE', table: 'messages', filter: `id=eq.${messageId}` });
+    logMessagesSubscribe('AudioMessagePlayer', { event: 'UPDATE', table: dbTable('messages'), filter: `id=eq.${messageId}` });
     const channel = supabase
       .channel(`transcription-${messageId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `id=eq.${messageId}` },
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: dbTable('messages'), filter: `id=eq.${messageId}` },
         wrapMessagesHandler<{ new: { transcription_status?: string; transcription?: string } }>('AudioMessagePlayer', (payload) => {
           const newData = payload.new;
           if (newData.transcription_status) setTranscriptionStatus(newData.transcription_status);
@@ -63,7 +64,7 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
       }
       if (data?.transcription) {
         setTranscription(data.transcription); setTranscriptionStatus('completed');
-        await supabase.from('messages').update({ transcription: data.transcription, transcription_status: 'completed' }).eq('id', messageId);
+        await dbFrom('messages').update({ transcription: data.transcription, transcription_status: 'completed' }).eq('id', messageId);
       }
     } catch (error) {
       log.error('Transcription error:', error);

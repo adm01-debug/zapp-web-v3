@@ -33,7 +33,7 @@ export function useContactQuickNote({ contactId, workspaceId, maxNotes = 50 }: U
   const loadNotes = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('contact_notes')
         .select('id, text, agent_name, agent_id, created_at')
         .eq('contact_id', contactId)
@@ -62,7 +62,7 @@ export function useContactQuickNote({ contactId, workspaceId, maxNotes = 50 }: U
         agent_name: user.user_metadata?.full_name ?? user.email ?? 'Agente',
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('contact_notes')
         .insert(noteData)
         .select('id, text, agent_name, agent_id, created_at')
@@ -81,7 +81,7 @@ export function useContactQuickNote({ contactId, workspaceId, maxNotes = 50 }: U
 
   const deleteNote = useCallback(async (noteId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('contact_notes')
         .delete()
         .eq('id', noteId)

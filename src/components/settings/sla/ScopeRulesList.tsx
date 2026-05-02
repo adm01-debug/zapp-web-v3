@@ -9,6 +9,7 @@ import { Plus, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SLARuleRow } from './SLARuleRow';
 import { SLARuleFormDialog } from './SLARuleFormDialog';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ScopeRulesListProps {
   scope: SLARuleScope;

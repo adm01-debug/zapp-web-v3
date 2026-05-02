@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
-import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { subDays, subMonths, startOfDay } from 'date-fns';
+import { dbFrom, dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 export interface SearchResult {
   id: string;
@@ -94,7 +96,7 @@ export function useGlobalSearchData(open: boolean) {
       const addedMessageIds = new Set<string>();
 
       if (types.has('message') && (cleanQuery.length >= 2 || mediaType !== 'all')) {
-        let textQuery = supabase.from('messages')
+        let textQuery = dbFrom('messages')
           .select(`id, content, message_type, created_at, contact_id, contacts:contact_id (id, name, surname)`)
           .order('created_at', { ascending: false }).limit(20);
 
@@ -128,7 +130,7 @@ export function useGlobalSearchData(open: boolean) {
       }
 
       if (types.has('transcription') && cleanQuery.length >= 2) {
-        let audioQuery = supabase.from('messages')
+        let audioQuery = dbFrom('messages')
           .select(`id, content, transcription, message_type, created_at, contact_id, contacts:contact_id (id, name, surname)`)
           .not('transcription', 'is', null).ilike('transcription', `%${cleanQuery}%`)
           .order('created_at', { ascending: false }).limit(15);
@@ -151,7 +153,7 @@ export function useGlobalSearchData(open: boolean) {
       }
 
       if (types.has('contact')) {
-        let contactQuery = supabase.from('contacts').select('id, name, surname, phone, email, created_at, tags');
+        let contactQuery = dbFrom('contacts').select('id, name, surname, phone, email, created_at, tags');
         if (cleanQuery.length >= 2) contactQuery = contactQuery.or(`name.ilike.%${cleanQuery}%,surname.ilike.%${cleanQuery}%,phone.ilike.%${cleanQuery}%,email.ilike.%${cleanQuery}%`);
 
         const { data: contacts } = await contactQuery.order('name', { ascending: true }).limit(10);
@@ -174,11 +176,12 @@ export function useGlobalSearchData(open: boolean) {
 
       if (types.has('crm') && isExternalConfigured && cleanQuery.length >= 3) {
         try {
-          const { data: crmData } = await getExternalSupabase().rpc('search_contacts_advanced', {
+          const { data: crmDataRaw } = await dbRpc(RPC.searchContactsAdvanced, {
             p_search: cleanQuery, p_vendedor: null, p_ramo: null, p_rfm_segment: null,
             p_estado: null, p_cliente_ativado: null, p_ja_comprou: null,
             p_sort_by: 'relevance', p_page: 0, p_page_size: 8,
           });
+          const crmData = crmDataRaw as { results?: Record<string, string | null>[] } | null;
           if (crmData?.results) {
             const localPhones = new Set(searchResults.filter(r => r.type === 'contact').map(r => r.preview.replace(/\D/g, '')));
             crmData.results.forEach((cr: Record<string, string | null>) => {
@@ -220,9 +223,9 @@ export function useGlobalSearchData(open: boolean) {
     }
   }, [addToHistory, allTags]);
 
-  const debouncedSearch = useDebounce((query: string) => {
-    performSearch(query, activeTypes, dateFilter, selectedTags, mediaTypeFilter);
-  }, 300);
+  const debouncedSearch = useDebounce(((...args: unknown[]) => {
+    performSearch(args[0] as string, activeTypes, dateFilter, selectedTags, mediaTypeFilter);
+  }) as (...args: unknown[]) => unknown, 300);
 
   const handleSearch = useCallback((query: string) => {
     setSearch(query);

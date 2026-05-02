@@ -4,6 +4,7 @@ import { UserAgent, Inviter, SessionState, Web } from 'sip.js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSipConnection } from './sip/useSipConnection';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export type { SipStatus } from './sip/useSipConnection';
 export type CallStatus = 'idle' | 'calling' | 'ringing' | 'active' | 'on-hold' | 'ended';

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { newRequestId } from '@/lib/withRequestId';
 import { z } from 'zod';
 import { createCriticalPayloadSchemas, mapValidationIssuesToContractError } from '@/shared/criticalPayloadSchemas';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactResult {
   id: string;
@@ -68,9 +69,9 @@ export function useNewConversation(
       if (mode === 'new' && !contactId) {
         if (!newPhone.trim()) { toast.error('Informe o número do telefone'); setIsSending(false); return; }
         const cleanedNewPhone = newPhone.trim().replace(/\D/g, '');
-        const { data: existing } = await supabase.from('contacts').select('id, name').eq('phone', cleanedNewPhone).maybeSingle();
+        const { data: existing } = await dbFrom('contacts').select('id, name').eq('phone', cleanedNewPhone).maybeSingle();
         if (existing) { toast.error(`Já existe um contato com este número: ${existing.name}`); setIsSending(false); return; }
-        const { data: newContact, error } = await supabase.from('contacts').insert({
+        const { data: newContact, error } = await dbFrom('contacts').insert({
           name: newName.trim() || cleanedNewPhone, phone: cleanedNewPhone,
           whatsapp_connection_id: selectedConnection || null,
         }).select('id').single();
@@ -83,7 +84,7 @@ export function useNewConversation(
       }
       if (!contactId) { toast.error('Selecione um contato'); setIsSending(false); return; }
       const trace = newRequestId('new-conv');
-      const { error: msgError } = await supabase.from('messages').insert({
+      const { error: msgError } = await dbFrom('messages').insert({
         contact_id: contactId, content: messageText.trim(), sender: 'agent',
         message_type: 'text', status: 'sending', whatsapp_connection_id: selectedConnection || null,
         request_id: trace.requestId,

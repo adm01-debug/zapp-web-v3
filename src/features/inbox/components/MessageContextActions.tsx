@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { dbFrom } from '@/integrations/datasource/db';
 import {
   MoreVertical,
   Pencil,
@@ -64,7 +65,7 @@ export function MessageContextActions({
         }
       }
       // Always mark as deleted in local DB
-      await supabase.from('messages').update({ is_deleted: true, content: '[Mensagem apagada]' }).eq('id', message.id);
+      await dbFrom('messages').update({ is_deleted: true, content: '[Mensagem apagada]' }).eq('id', message.id);
       toast.success(externalId ? 'Mensagem deletada para todos' : 'Mensagem removida');
       onMessageDeleted?.(message.id);
     } catch {

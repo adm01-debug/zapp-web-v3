@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { WebhookTestResult, WebhookConfig, DiagnosticResult } from './types';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export function useMonitoringActions(fetchData: () => Promise<void>) {
   const [refreshing, setRefreshing] = useState(false);

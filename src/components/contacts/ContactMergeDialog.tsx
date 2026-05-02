@@ -12,6 +12,7 @@ import { AlertTriangle, Merge, Check, User, GitMerge } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -130,7 +131,7 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
 
   const pick = useCallback((field: keyof FieldResolution): string => {
     const src = resolution[field] === 'primary' ? primaryContact : secondaryContact;
-    return sanitizeText((src as Record<string, unknown>)[field] as string ?? '');
+    return sanitizeText(((src as unknown as Record<string, unknown>)[field] as string) ?? '');
   }, [resolution, primaryContact, secondaryContact]);
 
   const handleMerge = async () => {
@@ -139,8 +140,7 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
       const mergedTags = [...new Set([...primaryContact.tags, ...secondaryContact.tags])];
 
       // 1. Update primary with resolved fields
-      const { error: e1 } = await supabase
-        .from('contacts')
+      const { error: e1 } = await dbFrom('contacts')
         .update({
           name:    pick('name'),
           phone:   pick('phone'),
@@ -157,22 +157,19 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
       if (e1) throw e1;
 
       // 2. Re-assign conversations
-      const { error: e2 } = await supabase
-        .from('conversations')
+      const { error: e2 } = await dbFrom('conversations')
         .update({ contact_id: primaryContact.id })
         .eq('contact_id', secondaryContact.id);
       if (e2) throw e2;
 
       // 3. Re-assign messages
-      const { error: e3 } = await supabase
-        .from('messages')
+      const { error: e3 } = await dbFrom('messages')
         .update({ contact_id: primaryContact.id })
         .eq('contact_id', secondaryContact.id);
       if (e3) throw e3;
 
       // 4. Soft-delete secondary (never hard-delete — LGPD + audit trail)
-      const { error: e4 } = await supabase
-        .from('contacts')
+      const { error: e4 } = await dbFrom('contacts')
         .update({
           deleted_at:     new Date().toISOString(),
           deleted_reason: `merged_into:${primaryContact.id}`,

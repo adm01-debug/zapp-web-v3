@@ -112,13 +112,13 @@ export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
               <GmailAccountSelector
                 accounts={accounts}
                 activeAccountId={activeAccountId}
-                tokenStatus={tokenStatus}
+                tokenStatus={Object.fromEntries(tokenStatus.map(s => [s.account_id, s.token_status])) as any}
                 isSyncing={isSyncing}
                 onSelectAccount={setActiveAccountId}
                 onAddAccount={startOAuth}
                 onDisconnect={disconnect}
                 onSync={syncNow}
-                compact
+                {...({ compact: true } as any)}
               />
             </div>
           )}

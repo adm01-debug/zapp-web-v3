@@ -4,6 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { getLogger } from '@/lib/logger';
 import { newRequestId } from '@/lib/withRequestId';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const log = getLogger('useSendProduct');
 
@@ -43,8 +44,7 @@ export function useContactSearch(step: 'configure' | 'selectContact') {
   useEffect(() => {
     if (step !== 'selectContact') return;
     setSearchingContacts(true);
-    supabase
-      .from('contacts')
+    dbFrom('contacts')
       .select('id, name, phone, avatar_url')
       .order('updated_at', { ascending: false })
       .limit(15)
@@ -112,7 +112,7 @@ export function useSendToContact(onSuccess: () => void) {
 
         const externalId = extractEvolutionMessageId(apiResult);
         if (dbResult?.id && externalId) {
-          await supabase.from('messages')
+          await dbFrom('messages')
             .update({ external_id: externalId, status: 'sent' })
             .eq('id', dbResult.id);
         }
@@ -142,7 +142,7 @@ export function useSendToContact(onSuccess: () => void) {
 
       const textExternalId = extractEvolutionMessageId(textApiResult);
       if (textDbResult?.id && textExternalId) {
-        await supabase.from('messages')
+        await dbFrom('messages')
           .update({ external_id: textExternalId, status: 'sent' })
           .eq('id', textDbResult.id);
       }

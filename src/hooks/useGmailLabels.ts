@@ -1,30 +1,14 @@
-/**
- * useGmailLabels.ts — Gerenciamento de labels/pastas Gmail
- *
- * Permite listar, criar e sincronizar labels do Gmail.
- * Labels são usadas para filtrar threads por categoria.
- *
- * Labels do sistema sempre presentes:
- *   INBOX, SENT, DRAFTS, STARRED, IMPORTANT, TRASH, SPAM
- *
- * Labels customizadas são gerenciadas via gmail-sync.
- */
 
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+import { safeClient } from '@/integrations/supabase/safeClient';
+import { gmailMappers } from '@/utils/gmailMappers';
+import { GmailLabelInfo as GmailLabel } from '@/types/gmail';
 
-export interface GmailLabel {
-  id:           string;
-  account_id:   string;
-  gmail_label_id: string;
-  name:         string;
-  type:         'system' | 'user';
-  color?:       string | null;
-  thread_count?: number;
-  unread_count?: number;
-}
+export type { GmailLabel };
 
-// Labels do sistema com ícones e cores padrão
+const supabase = _supabase as any;
+
 export const SYSTEM_LABELS: Array<{ id: string; name: string; icon: string; color: string }> = [
   { id: 'INBOX',     name: 'Inbox',     icon: 'inbox',     color: '#1a73e8' },
   { id: 'STARRED',   name: 'Favoritos', icon: 'star',      color: '#f29900' },
@@ -40,46 +24,38 @@ export function useGmailLabels(accountId: string | null) {
   const [isLoading, setIsLoading]   = useState(false);
   const [error, setError]           = useState<string | null>(null);
 
-  // Carregar labels da DB
   const loadLabels = useCallback(async () => {
     if (!accountId) return;
 
     setIsLoading(true);
     setError(null);
-    try {
-      const { data, error: dbErr } = await supabase
-        .from('gmail_labels')
-        .select('*')
-        .eq('account_id', accountId)
-        .order('name', { ascending: true });
+    const { data, error: dbErr, requestId } = await safeClient.from('gmail_labels', (q) =>
+      q.select('*').eq('account_id', accountId).order('name', { ascending: true })
+    );
 
-      if (dbErr) throw new Error(dbErr.message);
-      setLabels(data ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsLoading(false);
+    if (dbErr) {
+      console.warn(`[useGmailLabels][${requestId}] Falha ao carregar labels:`, dbErr.message);
+      setError(`Não foi possível carregar as pastas do Gmail.`);
+    } else {
+      setLabels(gmailMappers.labels(Array.isArray(data) ? data : []));
     }
+    setIsLoading(false);
   }, [accountId]);
 
-  // Sincronizar labels via gmail-sync
   const syncLabels = useCallback(async () => {
     if (!accountId) return;
-
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('gmail-sync', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-sync', {
         body: { action: 'syncLabels', accountId },
       });
-
       if (!fnErr && data?.success) {
         await loadLabels();
       }
     } catch {
-      // Labels sync é best-effort
+      // ignore
     }
   }, [accountId, loadLabels]);
 
-  // Contar threads por label (query ao banco)
   const getLabelCount = useCallback(async (labelId: string): Promise<{ thread_count: number; unread_count: number }> => {
     if (!accountId) return { thread_count: 0, unread_count: 0 };
 
@@ -89,14 +65,13 @@ export function useGmailLabels(accountId: string | null) {
       .eq('account_id', accountId)
       .contains('label_ids', [labelId]);
 
-    const threads = data ?? [];
+    const threads = Array.isArray(data) ? data : [];
     return {
       thread_count: threads.length,
-      unread_count: threads.reduce((s, t) => s + (t.unread_count ?? 0), 0),
+      unread_count: threads.reduce((s: number, t: any) => s + (t.unread_count ?? 0), 0),
     };
   }, [accountId]);
 
-  // Labels do sistema enriquecidas com info local
   const systemLabels = SYSTEM_LABELS.map(sl => ({
     id:             `system-${sl.id}`,
     account_id:     accountId ?? '',
@@ -106,10 +81,7 @@ export function useGmailLabels(accountId: string | null) {
     color:          sl.color,
   }));
 
-  // Labels customizadas do usuário
   const userLabels = labels.filter(l => l.type === 'user');
-
-  // Todas as labels em ordem: sistema primeiro, depois custom
   const allLabels = [...systemLabels, ...userLabels];
 
   useEffect(() => {

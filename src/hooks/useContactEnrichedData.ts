@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface EnrichedContactData {
   company: string | null;
@@ -54,8 +55,7 @@ async function resolveLocalContactId(identifier: string): Promise<string | null>
   if (!phone) return null;
 
   // Try exact match first, then trailing-digits fallback for stored numbers with country code variations
-  const { data, error } = await supabase
-    .from('contacts')
+  const { data, error } = await dbFrom('contacts')
     .select('id')
     .or(`phone.eq.${phone},phone.eq.+${phone},phone.ilike.%${phone.slice(-8)}`)
     .limit(1)
@@ -82,8 +82,7 @@ export function useContactEnrichedData(contactId: string) {
   const { data: enrichedData } = useQuery({
     queryKey: ['contact-enriched', localId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contacts')
+      const { data, error } = await dbFrom('contacts')
         .select('company, job_title, nickname, surname, contact_type, ai_sentiment, ai_priority, channel_type')
         .eq('id', localId!)
         .single();

@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Users, UserPlus, Download, Trash2, Merge } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { useContactsPagination } from './useContactsPagination';
 import { useContactUndo } from './useContactUndo';
 import ContactFilterBar, { type ContactFilters } from './ContactFilterBar';
@@ -32,6 +31,8 @@ import ContactsErrorBoundary from './ContactsErrorBoundary';
 import { ContactsPageSkeleton } from './ContactSkeletonLoader';
 import { ContactFormV3 } from './ContactFormV3';
 import { type ContactListItem } from './useContactsPagination';
+import { sanitizeHtml, sanitizeText } from '@/lib/sanitize';
+import { useToast } from '@/hooks/use-toast';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -45,8 +46,6 @@ interface ContactsPageV3Props {
 export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
   workspaceId, onOpenChat,
 }) => {
-  const { toast } = useToast();
-
   // Pagination + search
   const {
     contacts, loading, loadingMore, hasMore, total, filters,
@@ -211,7 +210,7 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
 
           {/* ── Trash Tab ── */}
           <TabsContent value="trash" className="p-4 overflow-y-auto">
-            <ContactRecycleBin workspaceId={workspaceId} onRestored={loadContacts} />
+            <ContactRecycleBin workspaceId={workspaceId} onRestored={() => { loadContacts(); }} />
           </TabsContent>
         </Tabs>
 
@@ -250,8 +249,8 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
             {editContact && (
               <ContactFormV3
                 workspaceId={workspaceId}
-                initialData={editContact as Record<string, unknown>}
-                isEdit
+                initial={editContact as unknown as Partial<import('./ContactFormV3').ContactV3FormData>}
+                mode="edit"
                 onSaved={() => { setEditContact(null); loadContacts(); }}
                 onCancel={() => setEditContact(null)}
               />

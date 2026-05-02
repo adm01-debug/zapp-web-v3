@@ -8,6 +8,7 @@ import { useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const UNDO_WINDOW_MS = 5_000;
 
@@ -26,7 +27,7 @@ export function useContactUndoDelete({ onCommitted, onUndone }: Options = {}) {
 
     // Immediately mark as deleted (optimistic soft delete)
     const deletedAt = new Date().toISOString();
-    await supabase.from('contacts').update({ deleted_at: deletedAt }).in('id', ids);
+    await dbFrom('contacts').update({ deleted_at: deletedAt }).in('id', ids);
 
     // Clear any existing undo timer
     clearTimeout(commitTimerRef.current);
@@ -71,7 +72,7 @@ export function useContactUndoDelete({ onCommitted, onUndone }: Options = {}) {
     pendingIdsRef.current = [];
 
     // Restore contacts
-    await supabase.from('contacts').update({ deleted_at: null }).in('id', ids);
+    await dbFrom('contacts').update({ deleted_at: null }).in('id', ids);
 
     toast({
       title: '↩️ Contato restaurado!',

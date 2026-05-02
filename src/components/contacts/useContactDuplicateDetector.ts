@@ -8,6 +8,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

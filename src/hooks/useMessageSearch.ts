@@ -8,9 +8,11 @@
  * - Navigate between matches (prev/next)
  * - Debounced search input
  */
-import { useState, useCallback, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase = _supabase as any;
+import { useDebouncedValue } from '@/hooks/useDebounce';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface SearchResult {
   id: string;
@@ -26,7 +28,7 @@ export function useMessageSearch(conversationId: string, workspaceId: string) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const debouncedQuery = useDebounce(query, 300);
+  const debouncedQuery = useDebouncedValue(query, 300);
 
   const search = useCallback(async (searchTerm: string) => {
     if (!searchTerm.trim() || searchTerm.length < 2) {
@@ -37,8 +39,7 @@ export function useMessageSearch(conversationId: string, workspaceId: string) {
 
     setIsSearching(true);
     try {
-      const { data, error } = await supabase
-        .from('messages')
+      const { data, error } = await dbFrom('messages')
         .select('id, content, sender_name, sender_type, created_at')
         .eq('conversation_id', conversationId)
         .eq('workspace_id', workspaceId)
@@ -48,7 +49,7 @@ export function useMessageSearch(conversationId: string, workspaceId: string) {
 
       if (error) throw error;
 
-      const mapped: SearchResult[] = (data ?? []).map((msg, i) => ({
+      const mapped: SearchResult[] = (Array.isArray(data) ? data : []).map((msg, i) => ({
         ...msg,
         match_index: i,
       }));
@@ -62,8 +63,7 @@ export function useMessageSearch(conversationId: string, workspaceId: string) {
     }
   }, [conversationId, workspaceId]);
 
-  // Auto-search on debounced query change
-  useMemo(() => {
+  useEffect(() => {
     if (debouncedQuery) search(debouncedQuery);
     else { setResults([]); setActiveIndex(0); }
   }, [debouncedQuery, search]);

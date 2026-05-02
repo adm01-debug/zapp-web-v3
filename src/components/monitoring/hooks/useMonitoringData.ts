@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { ConnectionInfo, HealthLog, MessageStats, UptimeInfo, SparklineData, InstanceUptime, TimePeriod } from './types';
 import { periodMs, periodBuckets } from './types';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const HEALTHY_STATUSES = ['connected', 'healthy'];
 
@@ -74,7 +75,7 @@ export function useMonitoringData(onConnectionsUpdate?: (conns: ConnectionInfo[]
       const [connRes, logsRes, msgRes] = await Promise.all([
         supabase.from('whatsapp_connections').select('id, instance_id, phone_number, status, health_status, health_response_ms, last_health_check, updated_at'),
         supabase.from('connection_health_logs').select('*').order('checked_at', { ascending: false }).limit(500),
-        supabase.from('messages').select('sender, created_at').gte('created_at', since.toISOString()).order('created_at', { ascending: true }),
+        dbFrom('messages').select('sender, created_at').gte('created_at', since.toISOString()).order('created_at', { ascending: true }),
       ]);
 
       if (connRes.data) {

@@ -8,7 +8,9 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import { sanitizeContactFields } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -30,11 +32,26 @@ export interface Contact {
   deleted_at:           string | null;
   lgpd_consent_at:      string | null;
   lgpd_opt_out_at:      string | null;
+  lgpd_consent_channel?: string | null;
+  lgpd_marketing_consent?: boolean | null;
+  lgpd_data_sharing?:   boolean | null;
+  lgpd_profiling?:      boolean | null;
   dedup_hash:           string | null;
   last_message_at:      string | null;
   created_at:           string;
   updated_at:           string;
   version:              number;
+  surname?:             string | null;
+  nickname?:            string | null;
+  job_title?:           string | null;
+  contact_type?:        string | null;
+  name?:                string | null;
+  phone?:               string | null;
+  avatar_url?:          string | null;
+  // Optional aggregates / metadata returned by some FATOR X RPCs / views.
+  total_messages?:      number | null;
+  first_contact_at?:    string | null;
+  merge_source_id?:     string | null;
 }
 
 export interface ContactFilters {
@@ -81,11 +98,22 @@ function mapRow(raw: Record<string, unknown>): Contact {
     deleted_at:           raw.deleted_at as string | null,
     lgpd_consent_at:      raw.lgpd_consent_at as string | null,
     lgpd_opt_out_at:      raw.lgpd_opt_out_at as string | null,
+    lgpd_consent_channel: raw.lgpd_consent_channel as string | null,
+    lgpd_marketing_consent: typeof raw.lgpd_marketing_consent === 'boolean' ? raw.lgpd_marketing_consent : null,
+    lgpd_data_sharing:    typeof raw.lgpd_data_sharing === 'boolean' ? raw.lgpd_data_sharing : null,
+    lgpd_profiling:       typeof raw.lgpd_profiling === 'boolean' ? raw.lgpd_profiling : null,
     dedup_hash:           raw.dedup_hash as string | null,
     last_message_at:      raw.last_message_at as string | null,
     created_at:           String(raw.created_at ?? ''),
     updated_at:           String(raw.updated_at ?? ''),
     version:              Number(raw.version ?? 1),
+    surname:              sanitized.surname as string | null | undefined,
+    nickname:             sanitized.nickname as string | null | undefined,
+    job_title:            sanitized.job_title as string | null | undefined,
+    contact_type:         sanitized.contact_type as string | null | undefined,
+    name:                 sanitized.name as string | null | undefined,
+    phone:                sanitized.phone as string | null | undefined,
+    avatar_url:           sanitized.avatar_url as string | null | undefined,
   };
 }
 
@@ -105,8 +133,7 @@ export function useContacts() {
   // ── Build query ──────────────────────────────────────────────────────────
 
   const buildQuery = useCallback((f: ContactFilters) => {
-    let q = supabase
-      .from('evolution_contacts')
+    let q = dbFrom('contacts')
       .select([
         'id','remote_jid','phone_number','full_name','push_name','email',
         'company','lead_status','lead_score','tags','notes','instance_name',
@@ -193,25 +220,30 @@ export function useContacts() {
       title: `🗑️ ${label} excluído`,
       description: 'Você tem 5 segundos para desfazer.',
       duration: 5_000,
-      action: {
-        altText: 'Desfazer',
-        onClick: async () => {
-          // Cancel the delete
-          const timerId = timer.get(ids.join(','));
-          if (timerId) clearTimeout(timerId);
-          timer.delete(ids.join(','));
+      action: (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={async () => {
+            // Cancel the delete
+            const timerId = timer.get(ids.join(','));
+            if (timerId) clearTimeout(timerId);
+            timer.delete(ids.join(','));
 
-          // Restore optimistically
-          await loadContacts();
-          toast({ title: '↩️ Restaurado!', duration: 2_500 });
-        },
-      },
+            // Restore optimistically
+            await loadContacts();
+            toast({ title: '↩️ Restaurado!', duration: 2_500 });
+          }}
+        >
+          Desfazer
+        </Button>
+      ) as any,
     });
 
     // Schedule actual delete after 5s
     const timerId = setTimeout(async () => {
       timer.delete(ids.join(','));
-      const { error } = await supabase.rpc('bulk_soft_delete_contacts', {
+      const { error } = await (supabase as any).rpc('bulk_soft_delete_contacts', {
         p_contact_ids: ids,
         p_reason:      'user_deleted',
       });
@@ -231,8 +263,7 @@ export function useContacts() {
     // Optimistic
     setContacts((prev) => prev.map((c) => c.id === id ? { ...c, ...updates } : c));
 
-    const { error } = await supabase
-      .from('evolution_contacts')
+    const { error } = await dbFrom('contacts')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id);
 

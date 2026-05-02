@@ -28,6 +28,7 @@ import { ContactPhoneManager, PhoneEntry } from '@/components/contacts/ContactPh
 import { ContactConsentManager, ConsentData } from '@/components/contacts/ContactConsentManager';
 import { AuditLogPanel } from '@/components/contacts/AuditLogPanel';
 import { ConflictResolutionDialog, ConflictInfo } from '@/components/contacts/ConflictResolutionDialog';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ interface EditContactDialogProps {
   open:          boolean;
   onOpenChange:  (v: boolean) => void;
   contact:       ContactData;
-  onSaved:       (updated: ContactData) => void;
+  onSaved?:      (updated: ContactData) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -122,14 +123,13 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
       await withRetry(async () => {
         if (force) {
           // Force update ignoring version (admin override)
-          const { error } = await supabase
-            .from('contacts')
+          const { error } = await dbFrom('contacts')
             .update({ ...data, updated_at: new Date().toISOString() })
             .eq('id', contact.id);
           if (error) throw error;
         } else {
           // Use versioned update to detect concurrent edits
-          const { data: result, error } = await supabase.rpc('update_contact_versioned', {
+          const { data: result, error } = await (supabase as any).rpc('update_contact_versioned', {
             p_contact_id:       contact.id,
             p_expected_version: contact.version,
             p_updates:          data,
@@ -137,16 +137,17 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
 
           if (error) throw error;
 
-          if (result?.error === 'CONFLICT') {
+          const r = result as any;
+          if (r?.error === 'CONFLICT') {
             setPendingData(data);
-            setConflict(result as ConflictInfo);
+            setConflict(r as ConflictInfo);
             setConflictOpen(true);
             return;
           }
         }
 
         toast({ title: '✅ Contato atualizado!', duration: 3000 });
-        onSaved({ ...contact, ...data, version: (contact.version ?? 0) + 1 });
+        onSaved?.({ ...contact, ...data, version: (contact.version ?? 0) + 1 });
         onOpenChange(false);
       }, 'Salvar contato');
     } catch (err) {

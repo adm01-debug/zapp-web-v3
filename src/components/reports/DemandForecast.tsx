@@ -6,6 +6,7 @@ import { TrendingUp, TrendingDown, Calendar, AlertTriangle, Clock } from 'lucide
 import { format, subDays, startOfDay, getDay, getHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line, ComposedChart } from 'recharts';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 

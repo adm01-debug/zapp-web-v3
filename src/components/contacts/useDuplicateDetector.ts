@@ -8,6 +8,7 @@ import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizePhone } from '@/lib/phoneUtils';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface PotentialDuplicate {
   id:           string;
@@ -61,8 +62,7 @@ export function useDuplicateDetector({
         }
         if (normalizedEmail) phoneConds.push(`email.eq.${normalizedEmail}`);
 
-        let q = supabase
-          .from('evolution_contacts')
+        let q = dbFrom('contacts')
           .select('id,full_name,push_name,phone_number,email,lead_status')
           .is('deleted_at', null)
           .eq('instance_name', instanceName)

@@ -8,6 +8,7 @@ import { compressImage, formatCompressionInfo } from '@/utils/imageCompression';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 import { parseScanInvocation, ScanBlockedError } from '@/lib/scanResponse';
 import { useScanResponseHandler } from '@/hooks/useScanResponseHandler';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface FileMessageData {
   mediaUrl?: string;
@@ -132,13 +133,13 @@ export function useFileUploadLogic(opts: {
       : sendMediaMessage({ instanceName, number: recipientNumber, mediaUrl, mediaType: category as 'image' | 'video' | 'audio' | 'document', caption: cap || undefined });
 
     const dbPromise = contactId
-      ? supabase.from('messages').insert({ contact_id: contactId, whatsapp_connection_id: connectionId || null, content: messageContent, message_type: category || 'document', media_url: mediaUrl, sender: 'agent', status: 'sending' }).select('id').single()
+      ? dbFrom('messages').insert({ contact_id: contactId, whatsapp_connection_id: connectionId || null, content: messageContent, message_type: category || 'document', media_url: mediaUrl, sender: 'agent', status: 'sending' }).select('id').single()
       : Promise.resolve(null);
 
     const [result, dbResult] = await Promise.all([apiPromise, dbPromise]);
     const externalId = extractEvolutionMessageId(result);
     if (dbResult?.data?.id && externalId) {
-      supabase.from('messages').update({ external_id: externalId, status: 'sent' }).eq('id', dbResult.data.id).then(() => {});
+      dbFrom('messages').update({ external_id: externalId, status: 'sent' }).eq('id', dbResult.data.id).then(() => {});
     }
     return { result, mediaUrl, category };
   }, [instanceName, recipientNumber, contactId, connectionId, uploadFileToStorage, sendMediaMessage, sendAudioMessage]);

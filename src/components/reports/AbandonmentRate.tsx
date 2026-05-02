@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserX, MessageSquare, Clock, TrendingDown } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export function AbandonmentRate() {
   const [data, setData] = useState({ total: 0, abandoned: 0, responded: 0 });

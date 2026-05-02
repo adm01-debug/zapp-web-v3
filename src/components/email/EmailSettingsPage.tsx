@@ -112,7 +112,7 @@ export function EmailSettingsPage() {
                 <GmailAccountSelector
                   accounts={gmailAccounts}
                   activeAccountId={gmailActiveId}
-                  tokenStatus={tokenStatus}
+                  tokenStatus={Object.fromEntries(tokenStatus.map(s => [s.account_id, s.token_status])) as any}
                   isSyncing={isGmailSyncing}
                   onSelectAccount={setGmailActiveId}
                   onAddAccount={startGmailOAuth}

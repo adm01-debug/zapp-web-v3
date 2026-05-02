@@ -5,6 +5,7 @@ import { useAuth } from '@/features/auth';
 import { startOfDay, endOfDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MessageSquare, Users, CheckCircle2 } from 'lucide-react';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface Goal {
   id: string;
@@ -103,7 +104,7 @@ export function useGoalsDashboard() {
     queryKey: ['goals-messages', period, profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await supabase.from('messages').select('id, sender, created_at')
+      const { data, error } = await dbFrom('messages').select('id, sender, created_at')
         .eq('agent_id', profile.id).gte('created_at', dateRange.from.toISOString()).lte('created_at', dateRange.to.toISOString());
       if (error) throw error;
       return data || [];
@@ -115,7 +116,7 @@ export function useGoalsDashboard() {
     queryKey: ['goals-contacts', period, profile?.id],
     queryFn: async () => {
       if (!profile?.id) return [];
-      const { data, error } = await supabase.from('contacts').select('id, created_at')
+      const { data, error } = await dbFrom('contacts').select('id, created_at')
         .eq('assigned_to', profile.id).gte('created_at', dateRange.from.toISOString()).lte('created_at', dateRange.to.toISOString());
       if (error) throw error;
       return data || [];

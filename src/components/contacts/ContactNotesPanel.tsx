@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StickyNote, Pin, RefreshCw, Send, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { dbList, dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { sanitizeHtml } from '@/lib/sanitize';
 import SafeHtml from './SafeHtml';
 
@@ -59,14 +60,14 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
     if (!content) return;
     setSaving(true);
     try {
-      const { data, error } = await supabase.rpc('add_contact_note', {
+      const { data, error } = await dbRpc(RPC.addContactNote, {
         p_contact_id: contactId,
         p_content:    sanitizeHtml(content),
         p_note_type:  noteType,
         p_is_pinned:  pinned,
       });
       if (error) throw error;
-      const result = data as Record<string, unknown>;
+      const result = (data ?? {}) as Record<string, unknown>;
       if (result?.error) throw new Error(String(result.error));
       setText(''); setPinned(false);
       await load();
@@ -149,7 +150,7 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
               <Badge className={`text-xs px-1.5 py-0 h-4 ${TYPE_COLOR[note.note_type] ?? 'bg-gray-100'}`}>
                 {TYPE_LABEL[note.note_type] ?? note.note_type}
               </Badge>
-              {note.is_pinned && <Pin className="h-3 w-3 text-amber-600" title="Nota fixada" />}
+              {note.is_pinned && <span title="Nota fixada" className="inline-flex"><Pin className="h-3 w-3 text-amber-600" /></span>}
               <span className="ml-auto text-muted-foreground/60">
                 {new Date(note.created_at).toLocaleDateString('pt-BR', {
                   day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',

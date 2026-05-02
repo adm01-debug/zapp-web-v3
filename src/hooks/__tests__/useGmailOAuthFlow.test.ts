@@ -208,13 +208,13 @@ describe('useGmailOAuthFlow — estado do hook', () => {
   it('deve expor startOAuthFlow', async () => {
     const { result } = renderHook(() => useGmailOAuthFlow());
     await waitFor(() => result.current !== null);
-    expect(typeof result.current.startOAuthFlow).toBe('function');
+    expect(typeof (result.current as any).startOAuthFlow).toBe('function');
   });
 
   it('deve expor exchangeCode', async () => {
     const { result } = renderHook(() => useGmailOAuthFlow());
     await waitFor(() => result.current !== null);
-    expect(typeof result.current.exchangeCode).toBe('function');
+    expect(typeof (result.current as any).exchangeCode).toBe('function');
   });
 });
 

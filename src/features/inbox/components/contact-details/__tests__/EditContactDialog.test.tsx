@@ -26,7 +26,7 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-const baseContact = {
+const baseContact: any = {
   id: 'c1',
   name: 'John Doe',
   phone: '+5511999999999',
@@ -117,7 +117,7 @@ describe('EditContactDialog', () => {
         id: 'c2',
         name: 'Jane',
         phone: '+5511888888888',
-      },
+      } as any,
     });
     expect(screen.getByDisplayValue('Jane')).toBeInTheDocument();
   });
@@ -145,7 +145,7 @@ describe('EditContactDialog', () => {
         <EditContactDialog
           open={false}
           onOpenChange={vi.fn()}
-          contact={baseContact}
+          contact={baseContact as any}
         />
       </QueryClientProvider>
     );

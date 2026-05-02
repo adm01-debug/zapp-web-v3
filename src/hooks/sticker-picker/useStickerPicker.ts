@@ -1,11 +1,41 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getLogger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast'; // FIX: was 'sonner' — unified toast library
 import { type StickerItem, type PendingUpload, CATEGORY_LABELS } from '@/features/inbox';
 
 const log = getLogger('StickerPicker');
 const RECENT_LIMIT = 8;
+const MAX_STICKER_SIZE = 500 * 1024; // 500KB
+const ACCEPTED_TYPES = ['image/webp', 'image/png', 'image/gif', 'image/jpeg'];
+
+/**
+ * Safely extracts the storage path from a Supabase Storage URL.
+ * Handles query params, encoding, and nested paths.
+ */
+function extractStoragePath(url: string, bucket: string): string | null {
+  try {
+    const parsed = new URL(url);
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const idx = parsed.pathname.indexOf(marker);
+    if (idx === -1) return null;
+    return decodeURIComponent(parsed.pathname.slice(idx + marker.length));
+  } catch {
+    // Fallback: simple split (legacy URLs)
+    const parts = url.split(`/${bucket}/`);
+    if (parts.length < 2) return null;
+    return parts[1].split('?')[0]; // Strip query params
+  }
+}
+
+/**
+ * Validates that a DB record has the required StickerItem fields.
+ */
+function isStickerItem(item: unknown): item is StickerItem {
+  if (!item || typeof item !== 'object') return false;
+  const obj = item as Record<string, unknown>;
+  return typeof obj.id === 'string' && typeof obj.image_url === 'string';
+}
 
 /**
  * FIXES APPLIED (Audit 02/05/2026):
@@ -56,6 +86,7 @@ export function useStickerPicker(onSendSticker: (url: string) => void) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // FIX BUG 3: Runtime validation instead of unsafe `as StickerItem[]` cast
   const fetchStickers = useCallback(async () => {
     setLoading(true);
     try {

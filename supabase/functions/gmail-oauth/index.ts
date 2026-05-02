@@ -34,7 +34,16 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { action } = body;
+    // Normalize action: accept both camelCase and kebab-case
+    const rawAction = body.action as string | undefined;
+    const actionMap: Record<string, string> = {
+      'get-auth-url': 'getAuthUrl',
+      'exchange-code': 'exchangeCode',
+      'refresh-token': 'refresh',
+      'disconnect': 'revoke',
+      'list-accounts': 'listAccounts',
+    };
+    const action = rawAction && actionMap[rawAction] ? actionMap[rawAction] : rawAction;
 
     // ── 1. getAuthUrl ──────────────────────────────────────────────────
     if (action === 'getAuthUrl') {

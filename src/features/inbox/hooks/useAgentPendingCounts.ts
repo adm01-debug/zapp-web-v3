@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 /**
  * Conta mensagens com status `pending` ou `failed` agrupadas pelo agente
@@ -15,8 +16,7 @@ export function useAgentPendingCounts() {
   const query = useQuery({
     queryKey: ['agent-pending-counts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('messages')
+      const { data, error } = await dbFrom('messages')
         .select('agent_id, status, sender')
         .in('status', ['pending', 'failed'])
         .eq('sender', 'me')

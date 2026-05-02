@@ -14,9 +14,10 @@ import {
   GitMerge, Search, AlertTriangle, CheckCircle2, RefreshCw, Phone,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import ContactMergeDialog, { ContactForMerge } from './ContactMergeDialog';
+import { dbFrom, dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -44,12 +45,12 @@ export const ContactDuplicatesPanel: React.FC<ContactDuplicatesPanelProps> = ({ 
   const scan = useCallback(async () => {
     setScanning(true);
     try {
-      const { data, error } = await supabase.rpc('find_duplicate_contacts', {
+      const { data, error } = await dbList(RPC.findDuplicateContacts, {
         p_workspace_id: workspaceId,
       });
       if (error) throw error;
 
-      const rawGroups: DuplicateGroup[] = (data ?? []).map((g: DuplicateGroup) => ({
+      const rawGroups: DuplicateGroup[] = (data ?? []).map((g) => ({
         phone_normalized: g.phone_normalized,
         contact_ids:      g.contact_ids,
         contact_names:    (g.contact_names ?? []).map(sanitizeText),
@@ -76,8 +77,7 @@ export const ContactDuplicatesPanel: React.FC<ContactDuplicatesPanelProps> = ({ 
 
   const openMerge = useCallback(async (group: DuplicateGroup) => {
     // Load full contact data for the first two contacts in the group
-    const { data, error } = await supabase
-      .from('contacts')
+    const { data, error } = await dbFrom('contacts')
       .select('id, name, phone, email, company, tags, channel, avatar_url, created_at, notes, lgpd_consent_at')
       .in('id', group.contact_ids.slice(0, 2))
       .is('deleted_at', null);
@@ -90,8 +90,7 @@ export const ContactDuplicatesPanel: React.FC<ContactDuplicatesPanelProps> = ({ 
     // Count conversations per contact
     const counts = await Promise.all(
       data.map((c) =>
-        supabase
-          .from('conversations')
+        dbFrom('conversations')
           .select('id', { count: 'exact', head: true })
           .eq('contact_id', c.id)
       )

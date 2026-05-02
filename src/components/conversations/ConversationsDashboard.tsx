@@ -52,12 +52,12 @@ export const ConversationsDashboard: React.FC<{
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_conversation_stats', {
+      const { data, error } = await (supabase as any).rpc('get_conversation_stats', {
         p_instance_name: instanceName,
         p_days: days,
       });
       if (error) throw error;
-      setStats(data as ConvStats);
+      setStats(data as unknown as ConvStats);
     } catch (err) {
       console.error('[ConversationsDashboard]', err);
     } finally { setLoading(false); }

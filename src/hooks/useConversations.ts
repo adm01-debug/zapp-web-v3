@@ -7,6 +7,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -73,12 +75,11 @@ export function useConversations() {
   const [hasMore,       setHasMore]       = useState(false);
   const [total,         setTotal]         = useState(0);
   const [filters,       setFilters]       = useState<ConversationFilters>(DEFAULT_FILTERS);
-  const cursorRef = useRef<string | null>(null);
+  const offsetRef = useRef(0);
   const searchDebounce = useRef<ReturnType<typeof setTimeout>>();
 
   const buildQuery = useCallback((f: ConversationFilters) => {
-    let q = supabase
-      .from('evolution_conversations')
+    let q = dbFrom('conversations')
       .select([
         'id','contact_id','remote_jid','status','assigned_to','department',
         'subject','priority','labels','message_count','unread_count',
@@ -129,6 +130,7 @@ export function useConversations() {
   });
 
   // ── Load ──────────────────────────────────────────────────────────────
+  const cursorRef = useRef<string | null>(null);
 
   const loadConversations = useCallback(async (overrideFilters?: Partial<ConversationFilters>) => {
     const f = { ...filters, ...overrideFilters };
@@ -138,7 +140,9 @@ export function useConversations() {
       if (error) throw error;
       const items = (data ?? []).map(mapRow);
       const last = items[items.length - 1];
-      cursorRef.current = last ? String((last as Record<string, unknown>)[f.sort_field] ?? '') : null;
+      if (last) {
+        cursorRef.current = String((last as any)[f.sort_field] ?? '');
+      }
       setConversations(items);
       setTotal(count ?? items.length);
       setHasMore(items.length === PAGE_SIZE);
@@ -151,20 +155,23 @@ export function useConversations() {
   // ── Load More ─────────────────────────────────────────────────────────
 
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore || !cursorRef.current) return;
+    if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      let q = buildQuery(filters);
-      q = filters.sort_order === 'asc' ? q.gt(filters.sort_field, cursorRef.current!) : q.lt(filters.sort_field, cursorRef.current!);
-      const { data, error } = await q;
+      const { data, error } = await dbList(RPC.listConversations, {
+        p_instance: filters.instance_name,
+        p_status: filters.status === 'all' ? null : filters.status,
+        p_assigned_to: filters.assigned_to,
+        p_limit: PAGE_SIZE,
+        p_offset: offsetRef.current,
+      });
       if (error) throw error;
-      const newItems = (data ?? []).map(mapRow);
-      const last = newItems[newItems.length - 1];
-      if (last) cursorRef.current = String((last as Record<string, unknown>)[filters.sort_field] ?? '');
+      const newItems = (data ?? []).map(row => mapRow(row as any));
       setConversations((prev) => [...prev, ...newItems]);
       setHasMore(newItems.length === PAGE_SIZE);
+      offsetRef.current += newItems.length;
     } finally { setLoadingMore(false); }
-  }, [loadingMore, hasMore, filters, buildQuery]);
+  }, [loadingMore, hasMore, filters]);
 
   // ── Update Filters ────────────────────────────────────────────────────
 
@@ -177,7 +184,7 @@ export function useConversations() {
   // ── Actions ───────────────────────────────────────────────────────────
 
   const assignConversation = useCallback(async (id: string, agentId: string) => {
-    const { data, error } = await supabase.rpc('assign_conversation', {
+    const { data, error } = await (supabase as any).rpc('assign_conversation', {
       p_conversation_id: id, p_agent_id: agentId,
     });
     if (error) throw error;
@@ -186,7 +193,7 @@ export function useConversations() {
   }, []);
 
   const closeConversation = useCallback(async (id: string, note?: string) => {
-    const { data, error } = await supabase.rpc('close_conversation', {
+    const { data, error } = await (supabase as any).rpc('close_conversation', {
       p_id: id, p_note: note ?? null,
     });
     if (error) throw error;
@@ -200,7 +207,7 @@ export function useConversations() {
   }, [filters.status, toast]);
 
   const markAsRead = useCallback(async (id: string) => {
-    await supabase.from('evolution_conversations').update({ unread_count: 0, updated_at: new Date().toISOString() }).eq('id', id);
+    await dbFrom('conversations').update({ unread_count: 0, updated_at: new Date().toISOString() }).eq('id', id);
     setConversations((prev) => prev.map((c) => c.id === id ? { ...c, unread_count: 0 } : c));
   }, []);
 
@@ -210,7 +217,7 @@ export function useConversations() {
     const channel = supabase
       .channel(`conversations:${filters.instance_name}`)
       .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'evolution_conversations',
+        event: '*', schema: 'public', table: dbTable('conversations'),
         filter: `instance_name=eq.${filters.instance_name}`,
       }, (payload) => {
         if (payload.eventType === 'INSERT') {

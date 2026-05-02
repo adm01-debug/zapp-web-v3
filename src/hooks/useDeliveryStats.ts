@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { getExternalSupabase } from '@/integrations/supabase/externalClient';
+import { dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 export interface ParticipantStats {
   participantJid: string;
@@ -75,15 +76,19 @@ export function useDeliveryStats(remoteJid: string | undefined, instance = 'wpp2
     enabled: !!remoteJid,
     staleTime: 30_000,
     queryFn: async () => {
-      const externalClient = getExternalSupabase();
-      const { data, error } = await externalClient.rpc('rpc_list_messages', {
+      const { data, error } = await dbList(RPC.listMessages, {
         p_remote_jid: remoteJid!,
         p_instance: instance,
         p_limit: 500,
       });
-      if (error) throw error;
 
-      const messages = (data ?? []) as Record<string, unknown>[];
+      // Fallback para quando o retorno do Supabase vier em formato inesperado
+      if (error) {
+        console.error('[useDeliveryStats] Erro na query:', error);
+        return { isGroup: isGroupJid(remoteJid!), totals: { sent: 0, delivered: 0, read: 0, lastSentAt: null, lastDeliveredAt: null, lastReadAt: null }, participants: [], totalMessages: 0 };
+      }
+
+      const messages = (data && Array.isArray(data) ? data : []) as unknown as Record<string, unknown>[];
       const isGroup = isGroupJid(remoteJid!);
 
       const totals = { sent: 0, delivered: 0, read: 0, lastSentAt: null as string | null, lastDeliveredAt: null as string | null, lastReadAt: null as string | null };

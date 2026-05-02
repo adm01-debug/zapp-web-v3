@@ -40,6 +40,12 @@ const CONFIG: Record<SLAStatus, {
     variant: 'destructive',
     className: 'bg-destructive/10 border-destructive/50 text-destructive',
   },
+  met: {
+    label: 'Respondido',
+    icon: CheckCircle,
+    variant: 'secondary',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  },
 };
 
 export function EmailSLABadge({

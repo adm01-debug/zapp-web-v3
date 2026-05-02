@@ -17,6 +17,7 @@ import { ptBR } from 'date-fns/locale';
 import { MediaItem, getMediaType, getFilename } from './media-gallery/mediaUtils';
 import { MediaCard } from './media-gallery/MediaCard';
 import { MediaPreviewDialog } from './media-gallery/MediaPreviewDialog';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface MediaGalleryProps {
   contactId: string;
@@ -36,8 +37,7 @@ export function MediaGallery({ contactId, open, onOpenChange }: MediaGalleryProp
   const { data: messages, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['media-gallery', contactId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('messages')
+      const { data, error } = await dbFrom('messages')
         .select('id, media_url, message_type, content, created_at')
         .eq('contact_id', contactId)
         .not('media_url', 'is', null)

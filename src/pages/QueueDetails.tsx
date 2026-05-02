@@ -16,6 +16,7 @@ import { Users, AlertCircle, Settings } from 'lucide-react';
 import { QueueCharts } from '@/components/queues/QueueCharts';
 import { QueueMetricsCards } from './queue-details/QueueMetricsCards';
 import { QueueContactsTable } from './queue-details/QueueContactsTable';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface QueueDetailsData { id: string; name: string; description: string | null; color: string; max_wait_time_minutes: number; created_at: string; }
 interface QueueMember { id: string; profile_id: string; profile: { name: string; avatar_url: string | null; is_active: boolean }; }
@@ -46,12 +47,12 @@ export default function QueueDetails() {
       const { data: membersData } = await supabase.from('queue_members').select('id, profile_id, profile:profiles(name, avatar_url, is_active)').eq('queue_id', id);
       setMembers(membersData as unknown as QueueMember[]);
 
-      const { data: contactsData } = await supabase.from('contacts').select('id, name, phone, avatar_url, assigned_to, created_at').eq('queue_id', id).order('created_at', { ascending: false }).limit(50);
+      const { data: contactsData } = await dbFrom('contacts').select('id, name, phone, avatar_url, assigned_to, created_at').eq('queue_id', id).order('created_at', { ascending: false }).limit(50);
 
       const contactsWithDetails = await Promise.all(
         (contactsData || []).map(async (contact) => {
-          const { count } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('contact_id', contact.id);
-          const { data: lastMessage } = await supabase.from('messages').select('created_at').eq('contact_id', contact.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+          const { count } = await dbFrom('messages').select('*', { count: 'exact', head: true }).eq('contact_id', contact.id);
+          const { data: lastMessage } = await dbFrom('messages').select('created_at').eq('contact_id', contact.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
           let assignedAgent = null;
           if (contact.assigned_to) { const { data, error } = await supabase.from('profiles').select('name, avatar_url').eq('id', contact.assigned_to).maybeSingle(); assignedAgent = data; }
           return { ...contact, messages_count: count || 0, last_message_at: lastMessage?.created_at || null, assigned_agent: assignedAgent };

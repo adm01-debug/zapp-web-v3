@@ -1,14 +1,11 @@
-/**
- * useEmailDraft.ts — Salvamento automático de rascunhos de email
- *
- * Salva o rascunho no Supabase a cada 30s enquanto o usuário digita.
- * Também sincroniza com a Gmail API via Edge Function.
- */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+import { safeClient } from '@/integrations/supabase/safeClient';
 import { gmailSaveDraft, gmailDeleteDraft } from './gmail/gmailApi';
+import { GmailDraft } from '@/types/gmail';
 
+const supabase = _supabase as any;
 const AUTO_SAVE_DELAY_MS = 30_000;
 
 export interface DraftState {
@@ -29,13 +26,11 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
   const [isSaving, setIsSaving] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Salva rascunho no Supabase + Gmail API
   const save = useCallback(async (state: DraftState) => {
     if (!accountId || !state.isDirty) return;
     setIsSaving(true);
 
     try {
-      // 1. Salvar/atualizar no Supabase
       const payload = {
         account_id: accountId,
         thread_id_ref: threadId ?? null,
@@ -49,7 +44,7 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
       let localId = state.id;
 
       if (localId) {
-        await supabase.from('gmail_drafts').update(payload).eq('id', localId);
+        await safeClient.from('gmail_drafts', (q) => q.update(payload).eq('id', localId));
       } else {
         const { data, error } = await supabase
           .from('gmail_drafts')
@@ -59,7 +54,6 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
         localId = data?.id;
       }
 
-      // 2. Sincronizar com Gmail API
       const gmailResult = await gmailSaveDraft({
         accountId,
         draftId: state.gmail_draft_id,
@@ -73,18 +67,17 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
       setDraft(prev => ({
         ...prev,
         id: localId,
-        gmail_draft_id: (gmailResult as { draftId?: string })?.draftId,
+        gmail_draft_id: (gmailResult as any)?.draftId,
         isDirty: false,
         lastSaved: new Date(),
       }));
-    } catch {
-      // Falha silenciosa — salvo local já garante não perder dados
+    } catch (err) {
+      console.error('[useEmailDraft] Erro ao salvar rascunho:', err);
     } finally {
       setIsSaving(false);
     }
   }, [accountId, threadId]);
 
-  // Atualiza campo e agenda auto-save
   const update = useCallback((patch: Partial<Omit<DraftState, 'isDirty'>>) => {
     setDraft(prev => ({ ...prev, ...patch, isDirty: true }));
 
@@ -94,12 +87,11 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
     }, AUTO_SAVE_DELAY_MS);
   }, [save]);
 
-  // Descarta rascunho
   const discard = useCallback(async () => {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     if (draft.id) {
-      await supabase.from('gmail_drafts').delete().eq('id', draft.id);
+      await safeClient.from('gmail_drafts', (q) => q.delete().eq('id', draft.id));
     }
     if (accountId && draft.gmail_draft_id) {
       await gmailDeleteDraft(accountId, draft.gmail_draft_id);
@@ -108,7 +100,6 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
     setDraft({ to: [], cc: [], subject: '', bodyHtml: '', isDirty: false });
   }, [accountId, draft]);
 
-  // Forçar save imediato (ex: ao fechar a tela)
   const saveNow = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     save(draft);

@@ -53,31 +53,29 @@ export function normalizePhone(raw: unknown): string | null {
   if (raw === null || raw === undefined) return null;
   const input = typeof raw === 'string' ? raw : String(raw);
 
-  // Remove all non-digits
+  if (/^\+?(?!55)\d{11,}$/.test(input.replace(/[\s()-]/g, ''))) {
+    return input.replace(/\D/g, '');
+  }
+
   let digits = input.replace(/\D/g, '');
   if (!digits) return null;
 
-  // Strip international prefix: +55 or 0055 or 55 at start
   if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
     digits = digits.slice(2);
   }
 
-  // At this point we should have 10 or 11 digits (or international)
   if (digits.length < 10) return null;
   if (digits.length > 11) return null;
 
   const ddd = parseInt(digits.slice(0, 2));
-
-  // Check DDD validity (only strict check for BR numbers)
   if (!VALID_DDDS.has(ddd)) return null;
 
-  // 10-digit mobile: add 9th digit (applies to mobile DDDs/numbers starting 6-9)
   if (digits.length === 10) {
     const firstOfNumber = digits[2];
+    // Brazilian mobile numbers start with 6, 7, 8 or 9 (after DDD)
     if (['6', '7', '8', '9'].includes(firstOfNumber)) {
       digits = digits.slice(0, 2) + '9' + digits.slice(2);
     }
-    // Landlines remain 10 digits — keep as is
   }
 
   return digits;
@@ -86,10 +84,62 @@ export function normalizePhone(raw: unknown): string | null {
 // ── Validate ──────────────────────────────────────────────────────────────
 
 /**
- * Returns true if the phone is a valid normalized BR number (10 or 11 digits, valid DDD).
+ * Returns a detailed validation object. For backwards compat, also exposes a
+ * truthy `.valid` boolean — callers can do `if (validatePhone(x).valid)`.
  */
-export function validatePhone(phone: unknown): boolean {
-  return normalizePhone(phone) !== null;
+export function validatePhone(phone: unknown): PhoneValidationDetailed {
+  const raw = phone === null || phone === undefined ? '' : String(phone).trim();
+  if (raw === '') return { valid: false, error: 'Telefone vazio.' };
+
+  const digitsOnly = raw.replace(/\D/g, '');
+  if (digitsOnly.length > 11 && !/^55/.test(digitsOnly)) {
+    return {
+      valid: true,
+      normalized: digitsOnly,
+      formatted: raw,
+      type: 'international',
+    };
+  }
+
+  const normalized = normalizePhone(phone);
+  if (!normalized) return { valid: false, error: 'Número inválido para o Brasil.' };
+
+  return {
+    valid: true,
+    normalized,
+    formatted: formatPhoneForDisplay(normalized),
+    type: normalized.length === 11 ? 'mobile' : 'landline',
+  };
+}
+
+/**
+ * Rich phone validation result for forms.
+ * Returns normalized digits, formatted display, and inferred type.
+ */
+export type PhoneType = 'mobile' | 'landline' | 'international';
+export interface PhoneValidationDetailed {
+  valid:       boolean;
+  error?:      string;
+  normalized?: string;
+  formatted?:  string;
+  type?:       PhoneType;
+}
+
+export function validatePhoneDetailed(phone: unknown): PhoneValidationDetailed {
+  if (phone === null || phone === undefined || String(phone).trim() === '') {
+    return { valid: false, error: 'Telefone vazio.' };
+  }
+  const normalized = normalizePhone(phone);
+  if (!normalized) {
+    return { valid: false, error: 'Número inválido para o Brasil (DDD ou tamanho).' };
+  }
+  const type: PhoneType = normalized.length === 11 ? 'mobile' : 'landline';
+  return {
+    valid: true,
+    normalized,
+    formatted: formatPhoneForDisplay(normalized),
+    type,
+  };
 }
 
 // ── Format for display ────────────────────────────────────────────────────
@@ -102,14 +152,16 @@ export function validatePhone(phone: unknown): boolean {
  */
 export function formatPhoneForDisplay(phone: unknown): string {
   if (!phone) return '';
-  const normalized = normalizePhone(phone) ?? String(phone).replace(/\D/g, '');
-  if (!normalized || normalized.length < 10) return String(phone);
+  const raw = String(phone);
+  const digitsOnly = raw.replace(/\D/g, '');
+  if (/^\+?(?!55)\d{11,}$/.test(raw.replace(/[\s()-]/g, ''))) return raw;
+
+  const normalized = normalizePhone(phone) ?? digitsOnly;
+  if (!normalized || normalized.length < 10) return raw;
 
   if (normalized.length === 11) {
-    // Mobile: (DDD) 9XXXX-XXXX
     return `(${normalized.slice(0, 2)}) ${normalized.slice(2, 7)}-${normalized.slice(7)}`;
   }
-  // Landline: (DDD) XXXX-XXXX
   return `(${normalized.slice(0, 2)}) ${normalized.slice(2, 6)}-${normalized.slice(6)}`;
 }
 
@@ -160,6 +212,12 @@ export function phonesMatch(a: unknown, b: unknown): boolean {
   return false;
 }
 
+/**
+ * Alias semântico de `phonesMatch` — mantido para compatibilidade com
+ * consumidores legados (ex.: useEvolutionAutoSync). Prefira `phonesMatch`.
+ */
+export const isSamePhone = phonesMatch;
+
 // ── Batch utilities ───────────────────────────────────────────────────────
 
 /**
@@ -191,4 +249,11 @@ export function phoneVariants(phone: unknown): string[] {
   }
 
   return [...new Set(variants)];
+}
+
+export const formatBRPhone = formatPhoneForDisplay;
+
+export function isWhatsAppJID(value: unknown): boolean {
+  if (!value) return false;
+  return /^\d+@(c\.us|s\.whatsapp\.net|g\.us)$/.test(String(value));
 }

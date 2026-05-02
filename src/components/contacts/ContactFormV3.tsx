@@ -22,15 +22,16 @@ import {
   AlertTriangle, Save, Loader2, User, Building2, Mail, Tag, GitMerge,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
-import { validatePhone } from '@/lib/phoneUtils';
+import { validatePhoneDetailed } from '@/lib/phoneUtils';
 import { useContactDuplicateDetector } from './useContactDuplicateDetector';
 import { useRetryOperation } from '@/hooks/useRetryOperation';
 import { ContactPhoneManager, PhoneEntry } from './ContactPhoneManager';
 import { ContactConsentManager, ConsentData } from './ContactConsentManager';
 import { ContactMergeDialog, ContactForMerge } from './ContactMergeDialog';
 import { ConflictResolutionDialog, ConflictInfo } from './ConflictResolutionDialog';
+import { dbFrom, dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -125,7 +126,7 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
 
     // Phone validation
     if (form.phone) {
-      const phoneResult = validatePhone(form.phone);
+      const phoneResult = validatePhoneDetailed(form.phone);
       if (!phoneResult.valid) {
         toast({ title: `Telefone inválido: ${phoneResult.error}`, variant: 'destructive' });
         return;
@@ -147,7 +148,7 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
 
       if (mode === 'edit' && form.id && !forceOverwrite) {
         // Versioned update (optimistic locking)
-        const { data, error } = await supabase.rpc('update_contact_versioned', {
+        const { data, error } = await dbRpc(RPC.updateContactVersioned, {
           p_contact_id:      form.id,
           p_expected_version: form.version ?? 1,
           p_updates:         payload,
@@ -155,24 +156,24 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
 
         if (error) throw error;
 
-        if (data?.error === 'CONFLICT') {
-          setConflict(data as ConflictInfo);
+        const result = (data ?? {}) as Record<string, unknown>;
+        if (result?.error === 'CONFLICT') {
+          setConflict(result as unknown as ConflictInfo);
           setConflictOpen(true);
           return;
         }
 
         // Update local version
-        setForm((prev) => ({ ...prev, version: data?.version }));
+        setForm((prev) => ({ ...prev, version: (result?.version as number | undefined) ?? prev.version }));
 
       } else if (mode === 'edit' && form.id && forceOverwrite) {
         // Force overwrite after conflict resolution
-        const { error } = await supabase.from('contacts').update(payload).eq('id', form.id);
+        const { error } = await dbFrom('contacts').update(payload).eq('id', form.id);
         if (error) throw error;
 
       } else {
         // Insert new contact
-        const { data, error } = await supabase
-          .from('contacts')
+        const { data, error } = await dbFrom('contacts')
           .insert({ ...payload, created_at: new Date().toISOString() })
           .select()
           .single();
@@ -194,7 +195,7 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
 
   const handlePhoneBlur = () => {
     if (!form.phone) return;
-    const result = validatePhone(form.phone);
+    const result = validatePhoneDetailed(form.phone);
     if (result.valid && result.normalized) {
       update('phone', result.normalized);
     }
@@ -262,14 +263,14 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
             </div>
           )}
         </div>
-        {form.phone && !validatePhone(form.phone).valid && (
+        {form.phone && !validatePhoneDetailed(form.phone).valid && (
           <p className="text-xs text-muted-foreground">
-            {validatePhone(form.phone).error}
+            {validatePhoneDetailed(form.phone).error}
           </p>
         )}
-        {form.phone && validatePhone(form.phone).valid && (
+        {form.phone && validatePhoneDetailed(form.phone).valid && (
           <p className="text-xs text-green-600">
-            ✓ {validatePhone(form.phone).formatted} ({validatePhone(form.phone).type === 'mobile' ? 'Celular' : validatePhone(form.phone).type === 'landline' ? 'Fixo' : 'Internacional'})
+            ✓ {validatePhoneDetailed(form.phone).formatted} ({validatePhoneDetailed(form.phone).type === 'mobile' ? 'Celular' : validatePhoneDetailed(form.phone).type === 'landline' ? 'Fixo' : 'Internacional'})
           </p>
         )}
       </div>

@@ -66,12 +66,12 @@ export const PlatformHealthDashboard: React.FC<Props> = ({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: health, error } = await supabase.rpc('get_platform_health', {
+      const { data: health, error } = await (supabase as any).rpc('get_platform_health', {
         p_instance_name: instanceName,
         p_days: 1,
       });
       if (error) throw error;
-      setData(health as PlatformHealth);
+      setData(health as unknown as PlatformHealth);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('[PlatformHealthDashboard]', err);

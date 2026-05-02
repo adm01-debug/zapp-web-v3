@@ -13,6 +13,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export type TransferType = 'cold' | 'warm';
 export type TransferTarget = 'agent' | 'queue' | 'department';
@@ -81,7 +82,7 @@ export function useConversationTransfer(workspaceId: string) {
         transferData.to_department = request.targetId;
       }
 
-      const { data: transfer, error: transferError } = await supabase
+      const { data: transfer, error: transferError } = await (supabase as any)
         .from('conversation_transfers')
         .insert(transferData)
         .select('id')
@@ -110,8 +111,7 @@ export function useConversationTransfer(workspaceId: string) {
         updateData.sla_started_at = new Date().toISOString();
       }
 
-      const { error: updateError } = await supabase
-        .from('conversations')
+      const { error: updateError } = await dbFrom('conversations')
         .update(updateData)
         .eq('id', request.conversationId)
         .eq('workspace_id', workspaceId);
@@ -119,7 +119,7 @@ export function useConversationTransfer(workspaceId: string) {
       if (updateError) throw updateError;
 
       // 3. Add system message about the transfer
-      await supabase.from('messages').insert({
+      await dbFrom('messages').insert({
         conversation_id: request.conversationId,
         workspace_id: workspaceId,
         content: `Conversa transferida para ${request.targetName}${request.reason ? ` \u2014 Motivo: ${request.reason}` : ''}`,
@@ -135,7 +135,7 @@ export function useConversationTransfer(workspaceId: string) {
       });
 
       // 4. Log to audit
-      await supabase.from('audit_logs').insert({
+      await (supabase as any).from('audit_logs').insert({
         workspace_id: workspaceId,
         entity_type: 'conversation',
         entity_id: request.conversationId,
@@ -162,7 +162,7 @@ export function useConversationTransfer(workspaceId: string) {
   }, [user, workspaceId]);
 
   const loadTransferHistory = useCallback(async (conversationId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('conversation_transfers')
       .select('*')
       .eq('conversation_id', conversationId)
@@ -177,13 +177,12 @@ export function useConversationTransfer(workspaceId: string) {
 
   const acceptTransfer = useCallback(async (transferId: string, conversationId: string) => {
     if (!user) return;
-    await supabase
+    await (supabase as any)
       .from('conversation_transfers')
       .update({ status: 'accepted', accepted_at: new Date().toISOString() })
       .eq('id', transferId);
 
-    await supabase
-      .from('conversations')
+    await dbFrom('conversations')
       .update({
         assigned_agent_id: user.id,
         assigned_agent_name: user.user_metadata?.full_name ?? user.email,
@@ -195,7 +194,7 @@ export function useConversationTransfer(workspaceId: string) {
   }, [user]);
 
   const rejectTransfer = useCallback(async (transferId: string) => {
-    await supabase
+    await (supabase as any)
       .from('conversation_transfers')
       .update({ status: 'rejected' })
       .eq('id', transferId);

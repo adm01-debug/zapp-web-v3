@@ -12,6 +12,7 @@ import { Tag, Plus, Minus, Loader2, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactBulkTagDialogProps {
   open: boolean;
@@ -68,8 +69,7 @@ export function ContactBulkTagDialog({
         } else {
           selectedTags.forEach(t => current.delete(t));
         }
-        await supabase
-          .from('contacts')
+        await dbFrom('contacts')
           .update({ tags: [...current] })
           .eq('id', contact.id);
       }

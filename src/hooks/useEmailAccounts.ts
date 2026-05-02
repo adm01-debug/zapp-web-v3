@@ -1,31 +1,11 @@
-/**
- * useEmailAccounts.ts — Gerencia todas as contas de email unificadas
- *
- * Agrega Gmail (Google OAuth2) + Outlook (Microsoft Graph API) + IMAP genérico
- * em uma única interface. Usa a view v_email_accounts_unified do Supabase.
- *
- * Usado pelo Email Chat para mostrar todas as contas disponíveis
- * independente do provedor.
- */
 
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+import { safeClient } from '@/integrations/supabase/safeClient';
+import { gmailMappers } from '@/utils/gmailMappers';
+import { UnifiedEmailAccount } from '@/types/gmail';
 
-export type EmailProvider = 'gmail' | 'outlook' | 'yahoo' | 'custom';
-
-export interface UnifiedEmailAccount {
-  account_id:      string;
-  user_id:         string;
-  email:           string;
-  display_name:    string;
-  provider:        EmailProvider;
-  auth_method:     string;
-  is_active:       boolean;
-  token_expired:   boolean;
-  unread_threads:  number;
-  sla_breached:    number;
-  created_at:      string;
-}
+const supabase = _supabase as any;
 
 interface UseEmailAccountsReturn {
   accounts:         UnifiedEmailAccount[];
@@ -47,25 +27,21 @@ export function useEmailAccounts(): UseEmailAccountsReturn {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const { data, error: dbErr } = await supabase
-        .from('v_email_accounts_unified')
-        .select('*')
-        .order('created_at', { ascending: true });
+    const { data, error: dbErr } = await safeClient.from('v_email_accounts_unified', (q) =>
+      q.select('*').order('created_at', { ascending: true })
+    );
 
-      if (dbErr) throw new Error(dbErr.message);
-      setAccounts((data ?? []) as UnifiedEmailAccount[]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsLoading(false);
+    if (dbErr) {
+      setError(dbErr.message);
+    } else {
+      setAccounts(gmailMappers.unifiedAccounts(data ?? []));
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
     fetch();
 
-    // Realtime: recarrega quando contas mudam
     const channel = supabase
       .channel('email-accounts-changes')
       .on('postgres_changes', {

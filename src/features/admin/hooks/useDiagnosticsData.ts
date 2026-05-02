@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface ConnectionStatus {
   id: string;
@@ -78,12 +79,12 @@ export function useDiagnosticsData() {
       { count: failedCount },
       { count: pendingCount },
     ] = await Promise.all([
-      supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent'),
-      supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'sent'),
-      supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'delivered'),
-      supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'read'),
-      supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'failed'),
-      supabase.from('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'sending'),
+      dbFrom('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent'),
+      dbFrom('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'sent'),
+      dbFrom('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'delivered'),
+      dbFrom('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'read'),
+      dbFrom('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'failed'),
+      dbFrom('messages').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('sender', 'agent').eq('status', 'sending'),
     ]);
 
     const { data: failures , error } = await supabase
@@ -133,14 +134,14 @@ export function useDiagnosticsData() {
 
   const fetchSystemHealth = async () => {
     const dbStart = performance.now();
-    const { count: contactsCount } = await supabase.from('contacts').select('*', { count: 'exact', head: true });
+    const { count: contactsCount } = await dbFrom('contacts').select('*', { count: 'exact', head: true });
     const dbLatency = Math.round(performance.now() - dbStart);
 
     const storageStart = performance.now();
     await supabase.storage.from('whatsapp-media').list('', { limit: 1 });
     const storageLatency = Math.round(performance.now() - storageStart);
 
-    const { count: messagesCount } = await supabase.from('messages').select('*', { count: 'exact', head: true });
+    const { count: messagesCount } = await dbFrom('messages').select('*', { count: 'exact', head: true });
     const { count: connectionsCount } = await supabase.from('whatsapp_connections').select('*', { count: 'exact', head: true });
 
     let edgeFunctionsStatus: 'healthy' | 'degraded' | 'down' = 'healthy';
@@ -205,8 +206,7 @@ export function useDiagnosticsData() {
       }
     }
 
-    const { count: orphanCount } = await supabase
-      .from('contacts')
+    const { count: orphanCount } = await dbFrom('contacts')
       .select('*', { count: 'exact', head: true })
       .is('whatsapp_connection_id', null);
 
@@ -222,8 +222,7 @@ export function useDiagnosticsData() {
     }
 
     const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const { count: stuckCount } = await supabase
-      .from('messages')
+    const { count: stuckCount } = await dbFrom('messages')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'sending')
       .lt('created_at', fiveMinAgo);

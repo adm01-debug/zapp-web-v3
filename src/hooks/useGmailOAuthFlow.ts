@@ -10,7 +10,10 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+import { gmailMappers } from '@/utils/gmailMappers';
+import { GmailAccount } from '@/types/gmail';
+const supabase = _supabase as any;
 import { gmailRefreshToken, gmailRevokeAccount, gmailRegisterWatch } from './gmail/gmailApi';
 import { toast } from 'sonner';
 import { getLogger } from '@/lib/logger';
@@ -24,15 +27,6 @@ const CHECK_INTERVAL_MS = 60 * 1000;
 
 export type TokenStatus = 'loading' | 'valid' | 'expiring' | 'expired' | 'disconnected';
 
-export interface GmailAccount {
-  id: string;
-  email: string;
-  display_name: string | null;
-  picture_url: string | null;
-  token_expiry: string;
-  is_active: boolean;
-  watch_expiry: string | null;
-}
 
 interface UseGmailOAuthFlowReturn {
   accounts: GmailAccount[];
@@ -65,7 +59,7 @@ export function useGmailOAuthFlow(): UseGmailOAuthFlowReturn {
       return;
     }
 
-    setAccounts((data ?? []) as GmailAccount[]);
+    setAccounts(gmailMappers.accounts(data ?? []));
     setIsLoading(false);
   }, []);
 
@@ -105,13 +99,13 @@ export function useGmailOAuthFlow(): UseGmailOAuthFlowReturn {
       setAccounts(prev =>
         prev.map(a =>
           a.id === accountId
-            ? { ...a, token_expiry: result.token_expiry }
+            ? { ...a, token_expiry: (result as any).token_expiry }
             : a
         )
       );
       setTokenStatus(prev => ({ ...prev, [accountId]: 'valid' }));
 
-      log.info(`Token refreshed for account ${accountId}, expires at ${result.token_expiry}`);
+      log.info(`Token refreshed for account ${accountId}, expires at ${(result as any).token_expiry}`);
     } catch (err) {
       log.error(`Falha ao refreshar token para conta ${accountId}`, err);
       setTokenStatus(prev => ({ ...prev, [accountId]: 'expired' }));
@@ -153,11 +147,11 @@ export function useGmailOAuthFlow(): UseGmailOAuthFlowReturn {
         setAccounts(prev =>
           prev.map(a =>
             a.id === accountId
-              ? { ...a, watch_expiry: result.expiration }
+              ? { ...a, watch_expiry: (result as any).expiration }
               : a
           )
         );
-        log.info(`Pub/Sub watch renovado para ${accountId}, expira em ${result.expiration}`);
+        log.info(`Pub/Sub watch renovado para ${accountId}, expira em ${(result as any).expiration}`);
       } catch (err) {
         log.warn(`Não foi possível renovar watch para ${accountId}`, err);
       }

@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth';
 import { useActionFeedback } from '@/hooks/useActionFeedback';
 import { useContactsSearch } from '@/hooks/useContactsSearch';
 import { openContactInChat } from '@/lib/openContactInChat';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactFormData {
   name: string;
@@ -78,7 +79,7 @@ export function useContactsCRUD() {
     setIsSubmitting(true);
     await feedback.withFeedback(
       async () => {
-        const { error } = await supabase.from('contacts').insert({
+        const { error } = await dbFrom('contacts').insert({
           name: newContact.name,
           nickname: newContact.nickname || null,
           surname: newContact.surname || null,
@@ -118,8 +119,7 @@ export function useContactsCRUD() {
     setIsSubmitting(true);
     await feedback.withFeedback(
       async () => {
-        const { error } = await supabase
-          .from('contacts')
+        const { error } = await dbFrom('contacts')
           .update({
             name: editingContact.name,
             nickname: editingContact.nickname,
@@ -155,7 +155,7 @@ export function useContactsCRUD() {
   const handleDeleteContact = async (id: string) => {
     await feedback.withFeedback(
       async () => {
-        const { error } = await supabase.from('contacts').delete().eq('id', id);
+        const { error } = await dbFrom('contacts').delete().eq('id', id);
         if (error) throw error;
       },
       {

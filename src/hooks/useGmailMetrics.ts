@@ -1,45 +1,15 @@
-/**
- * useGmailMetrics.ts — Hook para dashboard de métricas Gmail
- *
- * Consulta gmail_daily_metrics e v_gmail_sla_dashboard para:
- * - Métricas dos últimos 7/30 dias
- * - SLA compliance rate
- * - Average first reply time
- * - Threads por dia (chart data)
- * - Top remetentes
- */
 
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+import { safeClient } from '@/integrations/supabase/safeClient';
+import { gmailMappers } from '@/utils/gmailMappers';
+import { 
+  GmailDayMetric, 
+  GmailMetricsSummary, 
+  GmailSLADashboard 
+} from '@/types/gmail';
 
-export interface GmailDayMetric {
-  date:                    string;
-  threads_received:        number;
-  threads_replied:         number;
-  avg_first_reply_minutes: number | null;
-  sla_met_count:           number;
-  sla_breached_count:      number;
-}
-
-export interface GmailMetricsSummary {
-  period:              string;
-  total_received:      number;
-  total_replied:       number;
-  reply_rate:          number;        // 0-100%
-  avg_reply_minutes:   number | null;
-  sla_compliance_rate: number;        // 0-100%
-  total_sla_met:       number;
-  total_sla_breached:  number;
-  daily:               GmailDayMetric[];
-}
-
-export interface GmailSLADashboard {
-  ok_count:       number;
-  warning_count:  number;
-  breached_count: number;
-  met_count:      number;
-  total:          number;
-}
+const supabase = _supabase as any;
 
 export function useGmailMetrics(accountId: string | null, days = 7) {
   const [summary, setSummary]     = useState<GmailMetricsSummary | null>(null);
@@ -55,19 +25,20 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
     try {
       const sinceDate = new Date(Date.now() - days * 86400_000).toISOString().split('T')[0];
 
-      // Buscar métricas diárias
-      const { data: dailyData, error: dbErr } = await supabase
-        .from('gmail_daily_metrics')
-        .select('date, threads_received, threads_replied, avg_first_reply_minutes, sla_met_count, sla_breached_count')
-        .eq('account_id', accountId)
-        .gte('date', sinceDate)
-        .order('date', { ascending: true });
+      const { data: dailyData, error: dbErr, requestId } = await safeClient.from('gmail_daily_metrics', (q) =>
+        q.select('date, threads_received, threads_replied, avg_first_reply_minutes, sla_met_count, sla_breached_count')
+         .eq('account_id', accountId)
+         .gte('date', sinceDate)
+         .order('date', { ascending: true })
+      );
 
-      if (dbErr) throw new Error(dbErr.message);
+      if (dbErr) {
+        console.warn(`[useGmailMetrics][${requestId}] Falha ao carregar métricas:`, dbErr.message);
+        throw dbErr;
+      }
 
-      const daily = (dailyData ?? []) as GmailDayMetric[];
+      const daily = gmailMappers.metrics(Array.isArray(dailyData) ? dailyData : []);
 
-      // Calcular sumário
       const total_received   = daily.reduce((s, d) => s + (d.threads_received ?? 0), 0);
       const total_replied    = daily.reduce((s, d) => s + (d.threads_replied ?? 0), 0);
       const total_sla_met    = daily.reduce((s, d) => s + (d.sla_met_count ?? 0), 0);
@@ -94,14 +65,13 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
         daily,
       });
 
-      // Buscar SLA dashboard atual (threads abertas)
-      const { data: threads } = await supabase
-        .from('gmail_threads')
-        .select('sla_status')
-        .eq('account_id', accountId)
-        .not('sla_status', 'is', null);
+      const { data: threadsData } = await safeClient.from('gmail_threads', (q) =>
+        q.select('sla_status')
+         .eq('account_id', accountId)
+         .not('sla_status', 'is', null)
+      );
 
-      const allThreads = threads ?? [];
+      const allThreads = gmailMappers.threads(Array.isArray(threadsData) ? threadsData : []);
       setSlaDash({
         ok_count:       allThreads.filter(t => t.sla_status === 'ok').length,
         warning_count:  allThreads.filter(t => t.sla_status === 'warning').length,
@@ -119,7 +89,6 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
 
   useEffect(() => { loadMetrics(); }, [loadMetrics]);
 
-  // Chart data formatado para Recharts
   const chartData = (summary?.daily ?? []).map(d => ({
     date:     new Date(d.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
     recebidos: d.threads_received,

@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Search, Loader2, Bell, FileText } from 'lucide-react';
 import { CONTACT_TYPES, SCOPE_LABELS } from './sla-utils';
 import { cn } from '@/lib/utils';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface SLARuleFormDialogProps {
   open: boolean;

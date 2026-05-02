@@ -3,6 +3,7 @@ import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { AdvancedCRMSearch } from '@/components/contacts/AdvancedCRMSearch';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactCRMDialogProps {
   open: boolean;
@@ -25,16 +26,14 @@ export function ContactCRMDialog({ open, onOpenChange, onContactSelected }: Cont
             onSelectContact={async (crmContact) => {
               if (!crmContact.phone_primary) return;
               const cleanPhone = crmContact.phone_primary.replace(/\D/g, '');
-              const { data: existing } = await supabase
-                .from('contacts').select('id')
+              const { data: existing } = await dbFrom('contacts').select('id')
                 .or(`phone.eq.${crmContact.phone_primary},phone.eq.${cleanPhone}`)
                 .limit(1);
               if (existing && existing.length > 0) {
                 onOpenChange(false);
                 onContactSelected(existing[0].id);
               } else {
-                const { data: newC, error } = await supabase
-                  .from('contacts')
+                const { data: newC, error } = await dbFrom('contacts')
                   .insert({
                     name: crmContact.full_name || crmContact.nome_tratamento || 'Contato CRM',
                     phone: crmContact.phone_primary.replace(/\D/g, ''),

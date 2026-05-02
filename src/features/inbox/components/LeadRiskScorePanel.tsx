@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, ShieldAlert, Save, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface LeadRiskScorePanelProps {
   contactId: string;
@@ -52,8 +53,7 @@ export function LeadRiskScorePanel({ contactId }: LeadRiskScorePanelProps) {
 
   const save = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from('contacts')
+    const { error } = await dbFrom('contacts')
       .update({
         lead_score: leadScore,
         risk_score: riskScore,

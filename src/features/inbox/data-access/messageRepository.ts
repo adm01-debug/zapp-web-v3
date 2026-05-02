@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { dbFrom, dbChannel, dbClient, dbTable, dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 export interface Message {
@@ -23,12 +24,24 @@ export interface Message {
 
 export const messageRepository = {
   async fetchMessagesByContact(contactId: string, from = 0, limit = 1000) {
-    return supabase
-      .from('messages')
+    return dbFrom('messages')
       .select('*')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: true })
       .range(from, from + limit - 1);
+  },
+
+  /**
+   * Lista mensagens via RPC SECURITY DEFINER (caminho recomendado para FATOR X).
+   * Use em vez de `fetchMessagesByContact` quando tiver o `remote_jid` —
+   * bypassa RLS e respeita a regra do projeto (toda leitura de evolution_* via RPC).
+   */
+  async listByContactJid(remoteJid: string, limit = 1000, offset = 0) {
+    return dbList(RPC.listMessagesLite, {
+      p_remote_jid: remoteJid,
+      p_limit: limit,
+      p_offset: offset,
+    });
   },
 
   subscribeToMessages(contactId: string, callbacks: {
@@ -36,14 +49,14 @@ export const messageRepository = {
     onUpdate: (payload: RealtimePostgresChangesPayload<Message>) => void;
     onDelete: (payload: RealtimePostgresChangesPayload<Message>) => void;
   }) {
-    const channel = supabase
-      .channel(`messages:${contactId}`)
+    const table = dbTable('messages');
+    const channel = dbChannel('messages', `messages:${contactId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
+          table,
           filter: `contact_id=eq.${contactId}`,
         },
         callbacks.onInsert
@@ -53,7 +66,7 @@ export const messageRepository = {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'messages',
+          table,
           filter: `contact_id=eq.${contactId}`,
         },
         callbacks.onUpdate
@@ -63,7 +76,7 @@ export const messageRepository = {
         {
           event: 'DELETE',
           schema: 'public',
-          table: 'messages',
+          table,
           filter: `contact_id=eq.${contactId}`,
         },
         callbacks.onDelete
@@ -74,6 +87,6 @@ export const messageRepository = {
   },
 
   unsubscribe(channel: any) {
-    supabase.removeChannel(channel);
+    dbClient('messages').removeChannel(channel);
   }
 };

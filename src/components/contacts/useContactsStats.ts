@@ -5,6 +5,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom, dbTable } from '@/integrations/datasource/db';
 
 // ── Hook ───────────────────────────────────────────────────────────────────
 
@@ -29,23 +30,20 @@ export function useContactsStats(workspaceId: string) {
 
       const [totalRes, noConsentRes, birthdayRes, deletedRes] = await Promise.all([
         // Total active contacts
-        supabase
-          .from('contacts')
+        dbFrom('contacts')
           .select('id', { count: 'exact', head: true })
           .eq('workspace_id', workspaceId)
           .is('deleted_at', null),
 
         // Contacts without LGPD consent
-        supabase
-          .from('contacts')
+        dbFrom('contacts')
           .select('id', { count: 'exact', head: true })
           .eq('workspace_id', workspaceId)
           .is('deleted_at', null)
           .is('lgpd_consent_at', null),
 
         // Birthdays today (by month/day)
-        supabase
-          .from('contacts')
+        dbFrom('contacts')
           .select('id', { count: 'exact', head: true })
           .eq('workspace_id', workspaceId)
           .is('deleted_at', null)
@@ -53,8 +51,7 @@ export function useContactsStats(workspaceId: string) {
           .filter('birth_date', 'like', `%-${mm}-${dd}`),
 
         // Deleted contacts pending purge
-        supabase
-          .from('contacts')
+        dbFrom('contacts')
           .select('id', { count: 'exact', head: true })
           .eq('workspace_id', workspaceId)
           .not('deleted_at', 'is', null)
@@ -82,7 +79,7 @@ export function useContactsStats(workspaceId: string) {
       .channel(`contacts-stats-${workspaceId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'contacts', filter: `workspace_id=eq.${workspaceId}` },
+        { event: '*', schema: 'public', table: dbTable('contacts'), filter: `workspace_id=eq.${workspaceId}` },
         () => { load(); }
       )
       .subscribe();

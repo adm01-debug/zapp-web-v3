@@ -4,12 +4,12 @@
  */
 import { describe, it, expect } from 'vitest';
 import { sanitizeText, sanitizeContactFields } from '@/lib/sanitize';
-import { escapeCsvCell, buildCsvString } from '@/lib/csvUtils';
+import { escapeCsvCell, buildCsv } from '@/lib/csvUtils';
 import { normalizePhone, phonesMatch, formatPhoneForDisplay } from '@/lib/phoneUtils';
 
 describe('CSV Safety', () => {
   it('neutralizes =HYPERLINK injection', () => {
-    const csv = buildCsvString([{name:'T',phone:'=HYPERLINK("evil","x")',email:'',company:'',tags:'',notes:''}],[{key:'name' as const,label:'Nome'},{key:'phone' as const,label:'Tel'}]);
+    const csv = buildCsv([{name:'T',phone:'=HYPERLINK("evil","x")',email:'',company:'',tags:'',notes:''}],[{key:'name' as const,label:'Nome'},{key:'phone' as const,label:'Tel'}]);
     expect(csv).not.toContain('=HYPERLINK');
   });
   it('BR accents preserved', () => { expect(escapeCsvCell('João')).toBe('"João"'); });
@@ -67,8 +67,8 @@ describe('LGPD', () => {
 });
 
 describe('Optimistic Lock', () => {
-  it('conflict on version diff', () => { expect(5 !== 7).toBe(true); });
-  it('no conflict on equal', () => { expect(7 !== 7).toBe(false); });
+  it('conflict on version diff', () => { const a:number=5, b:number=7; expect(a !== b).toBe(true); });
+  it('no conflict on equal', () => { const a:number=7, b:number=7; expect(a !== b).toBe(false); });
 });
 
 describe('Tag Merge Union', () => {

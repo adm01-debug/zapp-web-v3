@@ -34,6 +34,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useTransferConversation } from '@/features/inbox/hooks/useTransferConversation';
 import { useScheduledMediaUpload } from '@/features/inbox/hooks/useScheduledMediaUpload';
 import { useSafeInteractiveMessage } from '@/features/inbox/hooks/useSafeInteractiveMessage';
+import { dbFrom } from '@/integrations/datasource/db';
 
 const WhisperMode = lazy(() => import('./WhisperMode').then(m => ({ default: m.WhisperMode })));
 const NextBestActionEngine = lazy(() => import('./NextBestActionEngine').then(m => ({ default: m.NextBestActionEngine })));
@@ -517,8 +518,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           onOpenLocationPicker={() => openDialog('locationPicker')} onSendProduct={handlers.handleSendProduct} onSendSticker={handleSendSticker}
           onSendAudioMeme={handleSendAudioMeme} onSendCustomEmoji={handleSendCustomEmoji}
           signatureEnabled={signatureEnabled} signatureName={agentName} onToggleSignature={toggleSignature}
-          onPollSent={async (poll) => { await supabase.from('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📊 *Enquete:* ${poll.name}\n${poll.options.map((o, i) => `${i + 1}. ${o}`).join('\n')}`, message_type: 'text', sender: 'agent', status: 'sending' }); }}
-          onContactSent={async (contactName) => { await supabase.from('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📇 Cartão de contato: ${contactName}`, message_type: 'text', sender: 'agent', status: 'sending' }); }}
+          onPollSent={async (poll) => { await dbFrom('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📊 *Enquete:* ${poll.name}\n${poll.options.map((o, i) => `${i + 1}. ${o}`).join('\n')}`, message_type: 'text', sender: 'agent', status: 'sending' }); }}
+          onContactSent={async (contactName) => { await dbFrom('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📇 Cartão de contato: ${contactName}`, message_type: 'text', sender: 'agent', status: 'sending' }); }}
           onOpenCatalog={() => openDialog('catalogDirect')} onSelectSuggestion={(text) => handlers.setInputValue(text)} onSelectTemplate={(text) => handlers.setInputValue(text)}
           fileUploaderRef={fileUploaderRef} inputRef={handlers.inputRef} />
 

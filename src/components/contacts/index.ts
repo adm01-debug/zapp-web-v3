@@ -96,10 +96,10 @@ export { ContactPurchaseHistory } from './ContactPurchaseHistory';
 
 // States & skeletons
 export { ContactEmptyState } from './ContactEmptyState';
-export { ContactSkeleton } from './ContactSkeleton';
-export { ContactSkeletonLoader } from './ContactSkeletonLoader';
+export { ContactRowSkeleton as ContactSkeleton } from './ContactSkeleton';
+export { ContactRowSkeleton as ContactSkeletonLoader } from './ContactSkeletonLoader';
 export { ContactsSkeleton } from './ContactsSkeleton';
-export { ContactLoadingSkeleton } from './ContactLoadingSkeleton';
+export { ContactCardSkeleton as ContactLoadingSkeleton } from './ContactLoadingSkeleton';
 
 // Error boundaries
 export { ContactErrorBoundary } from './ContactErrorBoundary';
@@ -140,5 +140,5 @@ export { useContactsViewState } from './useContactsViewState';
 export { useDuplicateDetector } from './useDuplicateDetector';
 
 // Config
-export { contactTypeConfig } from './contactTypeConfig';
-export type { ContactType } from './types';
+export { CONTACT_TYPE_CONFIG as contactTypeConfig } from './contactTypeConfig';
+export type { Contact as ContactType } from './types';

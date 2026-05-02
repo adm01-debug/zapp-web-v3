@@ -12,6 +12,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
+import { dbFrom } from '@/integrations/datasource/db';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -74,18 +75,16 @@ export function useContactsPagination(workspaceId: string) {
 
         if (f.search.trim()) {
           // Use full-text search RPC (handles unaccent + trigram)
-          const { data: searchData, error } = await supabase.rpc('search_contacts', {
-            p_query:        f.search.trim(),
-            p_workspace_id: workspaceId,
-            p_limit:        PAGE_SIZE,
-            p_offset:       0,
+          const { data: searchData, error } = await (supabase as any).rpc('search_contacts', {
+            search_term: f.search.trim(),
+            page_size:   PAGE_SIZE,
+            page_offset: 0,
           });
           if (error) throw error;
           data = (searchData ?? []).map(sanitizeRow);
         } else {
           // Standard query with filters
-          let query = supabase
-            .from('contacts')
+          let query = dbFrom('contacts')
             .select('id, name, phone, email, company, tags, channel, avatar_url, last_seen_at, created_at', { count: 'exact' })
             .eq('workspace_id', workspaceId)
             .is('deleted_at', null)
@@ -132,17 +131,15 @@ export function useContactsPagination(workspaceId: string) {
       let data: ContactListItem[] = [];
 
       if (filters.search.trim()) {
-        const { data: searchData, error } = await supabase.rpc('search_contacts', {
-          p_query:        filters.search.trim(),
-          p_workspace_id: workspaceId,
-          p_limit:        PAGE_SIZE,
-          p_offset:       offset,
+        const { data: searchData, error } = await (supabase as any).rpc('search_contacts', {
+          search_term: filters.search.trim(),
+          page_size:   PAGE_SIZE,
+          page_offset: offset,
         });
         if (error) throw error;
         data = (searchData ?? []).map(sanitizeRow);
       } else {
-        let query = supabase
-          .from('contacts')
+        let query = dbFrom('contacts')
           .select('id, name, phone, email, company, tags, channel, avatar_url, last_seen_at, created_at')
           .eq('workspace_id', workspaceId)
           .is('deleted_at', null)

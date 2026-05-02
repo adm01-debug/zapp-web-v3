@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { DealCard } from './DealCard';
 import { PipelineKPICards } from './PipelineKPICards';
 import type { Deal } from './DealCard';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface PipelineStage { id: string; name: string; color: string; position: number; }
 
@@ -43,7 +44,7 @@ export function SalesPipelineView() {
     const [stagesRes, dealsRes, contactsRes, agentsRes] = await Promise.all([
       supabase.from('sales_pipeline_stages').select('*').order('position'),
       supabase.from('sales_deals').select('*, contacts(name, phone), profiles!sales_deals_assigned_to_fkey(name)').order('created_at', { ascending: false }),
-      supabase.from('contacts').select('id, name, phone').limit(200),
+      dbFrom('contacts').select('id, name, phone').limit(200),
       supabase.from('profiles').select('id, name').eq('is_active', true),
     ]);
     if (stagesRes.data) setStages(stagesRes.data);

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Users, Clock, MessageSquare, TrendingUp, ShieldAlert, CheckCircle2, XCircle, Siren } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface CrisisMetric {
   label: string;
@@ -28,9 +29,9 @@ export function CrisisRoom() {
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
     const [unanswered, totalToday, activeAgents, breachedSLA] = await Promise.all([
-      supabase.from('messages').select('id', { count: 'exact', head: true })
+      dbFrom('messages').select('id', { count: 'exact', head: true })
         .eq('sender', 'contact').gte('created_at', oneHourAgo.toISOString()),
-      supabase.from('messages').select('id', { count: 'exact', head: true })
+      dbFrom('messages').select('id', { count: 'exact', head: true })
         .gte('created_at', new Date(now.setHours(0, 0, 0, 0)).toISOString()),
       supabase.from('profiles').select('id', { count: 'exact', head: true })
         .eq('is_active', true).in('role', ['agent', 'admin', 'supervisor']),

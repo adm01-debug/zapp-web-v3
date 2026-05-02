@@ -52,7 +52,7 @@ function WithHeader({ viewId, children }: WithHeaderProps) {
 }
 
 // Declarative route map — easier to maintain than switch/case
-const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Record<string, never>>>> = {
+const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
   'inbox': Views.RealtimeInboxView,
   'dashboard': Views.DashboardView,
   'agents': Views.AgentsView,
@@ -121,6 +121,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'dispatch-errors-history': Views.AdminDispatchErrorsHistoryPage,
   'inbox-sync-status': Views.AdminInboxSyncStatusPage,
   'evo-api-health': Views.AdminEvoApiHealthPage,
+  'gmail-status': Views.AdminGmailStatusPage,
 };
 
 // Views that need custom props

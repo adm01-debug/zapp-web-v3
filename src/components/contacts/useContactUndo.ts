@@ -64,7 +64,7 @@ export function useContactUndo(options: UseContactUndoOptions = {}) {
         title: `🗑️ ${description} excluído${count !== 1 ? 's' : ''}`,
         description: 'Clique em "Desfazer" para restaurar.',
         duration: UNDO_WINDOW_MS,
-        action: {
+        action: ({
           // The toast action button
           altText: 'Desfazer exclusão',
           onClick: () => {
@@ -77,8 +77,8 @@ export function useContactUndo(options: UseContactUndoOptions = {}) {
               duration: 3_000,
             });
           },
-        },
-      } as Parameters<typeof toast>[0]);
+        } as unknown as never),
+      });
 
       // Schedule the actual soft-delete commit after UNDO_WINDOW_MS
       const timer = setTimeout(async () => {
@@ -89,7 +89,7 @@ export function useContactUndo(options: UseContactUndoOptions = {}) {
           // Safety: max 500 per call
           const chunks = chunkArray(contactIds, 500);
           for (const chunk of chunks) {
-            const { error } = await supabase.rpc('bulk_soft_delete_contacts', {
+            const { error } = await (supabase as any).rpc('bulk_soft_delete_contacts', {
               p_contact_ids: chunk,
               p_reason: 'bulk_deletion',
             });
@@ -121,7 +121,7 @@ export function useContactUndo(options: UseContactUndoOptions = {}) {
   const hardDelete = useCallback(
     async (contactId: string, contactName: string) => {
       try {
-        const { error } = await supabase.rpc('soft_delete_contact', {
+        const { error } = await (supabase as any).rpc('soft_delete_contact', {
           p_contact_id: contactId,
           p_reason: 'manual_deletion',
         });

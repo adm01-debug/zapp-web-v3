@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
 import { toast } from '@/hooks/use-toast';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface UseSafeInteractiveMessageOptions {
   contactId: string;
@@ -49,7 +50,7 @@ export function useSafeInteractiveMessage({
           .map((o, i) => `${i + 1}. ${o}`)
           .join('\n')}`;
 
-        const { error } = await supabase.from('messages').insert({
+        const { error } = await dbFrom('messages').insert({
           contact_id: contactId,
           whatsapp_connection_id: whatsappConnectionId,
           content,
@@ -83,7 +84,7 @@ export function useSafeInteractiveMessage({
       }
 
       try {
-        const { error } = await supabase.from('messages').insert({
+        const { error } = await dbFrom('messages').insert({
           contact_id: contactId,
           whatsapp_connection_id: whatsappConnectionId,
           content: `📇 Cartão de contato: ${contactName}`,

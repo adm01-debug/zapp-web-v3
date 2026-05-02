@@ -24,7 +24,7 @@ const RICH_ALLOWED_ATTR: string[] = []; // no attributes allowed (prevents style
 export function sanitizeText(input: unknown): string {
   if (input === null || input === undefined) return '';
   const str = typeof input === 'string' ? input : String(input);
-  return DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
+  return DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim().replace(/<[^>]*>?/gm, '');
 }
 
 /**
@@ -38,7 +38,6 @@ export function sanitizeHtml(html: unknown): string {
   return DOMPurify.sanitize(str, {
     ALLOWED_TAGS:  RICH_ALLOWED_TAGS,
     ALLOWED_ATTR:  RICH_ALLOWED_ATTR,
-    FORBID_SCRIPTS:true,
     FORBID_ATTR:   ['onerror','onload','onclick','onmouseover','onfocus','onblur','onchange','onsubmit','style','href','src'],
   }).trim();
 }
@@ -74,8 +73,8 @@ export function sanitizeContactFields<T extends Record<string, unknown>>(contact
   }
 
   // Sanitize tags array
-  if (Array.isArray(result.tags)) {
-    result.tags = (result.tags as string[]).map(sanitizeText).filter(Boolean) as T['tags'];
+  if (Array.isArray((result as any).tags)) {
+    (result as any).tags = ((result as any).tags as string[]).map(sanitizeText).filter(Boolean);
   }
 
   return result;

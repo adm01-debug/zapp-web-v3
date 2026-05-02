@@ -37,7 +37,7 @@ export const IndexContentConnected = forwardRef<HTMLDivElement>(function IndexCo
     navDirectionRef
   } = useIndexNavigation(user, loading);
 
-  useGmailOAuthFlow({ user, loading, onNavigate: setCurrentView });
+  (useGmailOAuthFlow as any)({ user, loading, onNavigate: setCurrentView });
   useIndexKeyboardShortcuts({ goBack, goForward, canGoBack, setCurrentView });
 
   // Notifications & Alerts

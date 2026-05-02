@@ -15,8 +15,10 @@ export interface GmailAccount {
   is_active:    boolean;
   token_expiry: string | null;
   watch_expiry: string | null;
-  created_at:   string;
-  updated_at:   string;
+  created_at?:  string;
+  updated_at?:  string;
+  /** @deprecated Foto de perfil legada. */
+  picture_url?: string | null;
 }
 
 export type GmailTokenStatus  = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
@@ -40,6 +42,8 @@ export interface GmailThread {
   id:               string;
   account_id:       string;
   gmail_thread_id:  string;
+  /** @deprecated Alias legado para `gmail_thread_id`. */
+  thread_id?:       string;
   subject:          string | null;
   snippet:          string | null;
   from_email:       string | null;
@@ -54,7 +58,13 @@ export interface GmailThread {
   last_message_at:  string | null;
   first_reply_at:   string | null;
   created_at:       string;
-  updated_at:       string;
+  updated_at?:      string;
+  /** @deprecated Lista de e-mails dos participantes (legado). */
+  participant_emails?: string[];
+  /** @deprecated Flag legada. */
+  is_unread?:       boolean;
+  /** @deprecated Contato vinculado (legado). */
+  contact?:         { id?: string; name?: string | null; phone?: string | null } | null;
 }
 
 export interface GmailThreadFilters {
@@ -75,6 +85,8 @@ export interface GmailMessage {
   id:              string;
   thread_id:       string;
   gmail_msg_id:    string;
+  /** @deprecated Alias legado para `gmail_msg_id`. */
+  message_id?:     string;
   from_email:      string | null;
   from_name:       string | null;
   to_emails:       string[] | null;
@@ -83,11 +95,19 @@ export interface GmailMessage {
   snippet:         string | null;
   body_html:       string | null;
   body_text:       string | null;
+  /** @deprecated Alias legado para `body_text`. */
+  body_plain?:     string | null;
   is_read:         boolean;
+  /** @deprecated Indica se foi enviada pela conta (legado). */
+  is_sent?:        boolean;
   date:            string | null;
+  /** @deprecated Timestamp interno do Gmail (legado). */
+  internal_date?:  string | null;
   has_attachments: boolean;
   in_reply_to:     string | null;
   references:      string[] | null;
+  /** @deprecated Lista de label ids (legado, use a tabela própria). */
+  label_ids?:      string[];
   created_at:      string;
 }
 
@@ -100,6 +120,8 @@ export interface GmailAttachment {
   filename:       string;
   mime_type:      string;
   size:           number;
+  /** @deprecated Alias legado para `size`. */
+  size_bytes?:    number;
   storage_url:    string | null;
   created_at:     string;
 }
@@ -165,9 +187,13 @@ export interface GmailSendParams {
 
 export interface GmailSendAttachment {
   name:        string;
+  /** @deprecated Alias legado para `name`. */
+  filename?:   string;
   mimeType:    string;
-  base64Data:  string;
-  size:        number;
+  base64Data?: string;
+  /** @deprecated Alias legado para `base64Data`. */
+  data?:       string;
+  size?:       number;
 }
 
 export interface GmailSendResult {

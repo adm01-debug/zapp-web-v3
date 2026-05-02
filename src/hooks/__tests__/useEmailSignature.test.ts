@@ -100,7 +100,7 @@ describe('useEmailSignature — criar assinatura', () => {
     const { result } = renderHook(() => useEmailSignature('acc-1'));
 
     await act(async () => {
-      await result.current.createSignature({
+      await (result.current as any).createSignature({
         name: 'Nova Assinatura',
         html_content: '<p>Conteúdo da assinatura</p>',
         is_default: false,
@@ -121,7 +121,7 @@ describe('useEmailSignature — assinatura padrão', () => {
     const { result } = renderHook(() => useEmailSignature('acc-1'));
     await waitFor(() => expect(result.current.defaultSignature).not.toBeNull());
 
-    const bodyWithSig = result.current.injectSignature('<p>Olá, tudo bem?</p>');
+    const bodyWithSig = (result.current as any).injectSignature('<p>Olá, tudo bem?</p>');
 
     expect(bodyWithSig).toContain('João Silva');
     expect(bodyWithSig).toContain('Olá, tudo bem?');
@@ -131,7 +131,7 @@ describe('useEmailSignature — assinatura padrão', () => {
     const { result } = renderHook(() => useEmailSignature('acc-1'));
     await waitFor(() => expect(result.current.defaultSignature).not.toBeNull());
 
-    const bodyWithSig = result.current.injectSignature('<p>Body</p>');
+    const bodyWithSig = (result.current as any).injectSignature('<p>Body</p>');
     // A assinatura deve vir após o body
     const bodyIndex = bodyWithSig.indexOf('Body');
     const sigIndex  = bodyWithSig.indexOf('João Silva');
@@ -144,7 +144,7 @@ describe('useEmailSignature — assinatura padrão', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     const body = '<p>Corpo do email</p>';
-    const result2 = result.current.injectSignature(body);
+    const result2 = (result.current as any).injectSignature(body);
     expect(result2).toBe(body);
   });
 });
@@ -161,7 +161,7 @@ describe('useEmailSignature — sanitização XSS', () => {
 
     // Simular criação com HTML malicioso
     const maliciousHtml = '<p>Assinatura</p><script>alert("xss")</script>';
-    const clean = result.current.sanitizeHtml(maliciousHtml);
+    const clean = (result.current as any).sanitizeHtml(maliciousHtml);
 
     expect(clean).not.toContain('<script>');
     expect(clean).toContain('Assinatura');
@@ -172,7 +172,7 @@ describe('useEmailSignature — sanitização XSS', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     const safeHtml = '<p><strong>João</strong> <em>Silva</em><br>Tel: (11) 99999-9999</p>';
-    const clean = result.current.sanitizeHtml(safeHtml);
+    const clean = (result.current as any).sanitizeHtml(safeHtml);
 
     expect(clean).toContain('<strong>');
     expect(clean).toContain('<em>');

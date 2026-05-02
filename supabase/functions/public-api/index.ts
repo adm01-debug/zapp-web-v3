@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, checkRateLimit, getClientIP } from "../_shared/validation.ts";
 import { extractEvolutionMessageId } from "../_shared/evolution-message-id.ts";
-import { createCriticalPayloadSchemas, mapValidationIssuesToContractError } from "../../../src/shared/criticalPayloadSchemas.ts";
+import { createCriticalPayloadSchemas, mapValidationIssuesToContractError } from "../_shared/criticalPayloadSchemas.ts";
 
 const { publicApiSendSchema } = createCriticalPayloadSchemas(z);
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { subDays } from 'date-fns';
 import { log } from '@/lib/logger';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface QueuePerformance {
   id: string;
@@ -46,8 +47,7 @@ export function useQueuesComparison(dateRange: DateRange) {
       }
 
       // Fetch all contacts with queue assignment
-      const { data: contacts, error: contactsError } = await supabase
-        .from('contacts')
+      const { data: contacts, error: contactsError } = await dbFrom('contacts')
         .select('id, queue_id, assigned_to, created_at')
         .not('queue_id', 'is', null);
 
@@ -67,8 +67,7 @@ export function useQueuesComparison(dateRange: DateRange) {
       // Fetch messages in date range
       let messages: Array<{ contact_id: string }> = [];
       if (contactIds.length > 0) {
-        const { data: messagesData, error: messagesError } = await supabase
-          .from('messages')
+        const { data: messagesData, error: messagesError } = await dbFrom('messages')
           .select('contact_id')
           .in('contact_id', contactIds)
           .gte('created_at', dateRange.from.toISOString())
