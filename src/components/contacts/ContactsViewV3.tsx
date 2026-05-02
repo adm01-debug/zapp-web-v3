@@ -146,10 +146,10 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
             <div className="px-4 py-2 bg-primary/5 border-b shrink-0">
               <BulkActionsBar
                 selectedIds={selectedIds}
+                workspaceId={workspaceId}
                 onClearSelection={clearSelection}
                 onSelectAll={selectAll}
-                onDelete={handleBulkDelete}
-                onExport={() => setExportOpen(true)}
+                onDeleted={() => loadContacts()}
                 totalCount={contacts.length}
               />
             </div>
@@ -187,7 +187,7 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
                 onOpenChat={() => {}}
                 onEdit={(contact) => setEditContactId(contact.id)}
                 onDelete={(contact) => softDeleteWithUndo([contact.id], contact.name)}
-                            />
+              />
             )}
 
             {/* Load more indicator */}
