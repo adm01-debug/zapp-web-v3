@@ -1,83 +1,82 @@
 /**
- * sanitize.ts
- * Centralized XSS sanitization using DOMPurify.
- * OWASP A03:2021 – Injection mitigation.
- * ALL user-supplied text rendered into the DOM MUST pass through here.
+ * sanitize.ts — v2.0
+ * XSS prevention utilities using DOMPurify.
+ * All user input rendering MUST pass through these functions.
+ *
+ * OWASP A03:2021 — Injection Prevention
+ * WCAG 2.1 — Accessible content must be safe
  */
 import DOMPurify from 'dompurify';
 
-// ── Configs ────────────────────────────────────────────────────────────────
+// ── Config ─────────────────────────────────────────────────────────────────
 
-/** Strips ALL HTML — use for names, phones, emails, tags */
-const PLAIN_TEXT_CONFIG: DOMPurify.Config = {
-  ALLOWED_TAGS: [],
-  ALLOWED_ATTR: [],
-  KEEP_CONTENT: true,
-};
+/** Allowed HTML tags for rich notes (conservative whitelist) */
+const RICH_ALLOWED_TAGS = ['b', 'i', 'em', 'strong', 'u', 'br', 'p', 'ul', 'ol', 'li'];
+/** Allowed attributes for rich HTML */
+const RICH_ALLOWED_ATTR = ['class'];
 
-/** Allows limited safe formatting — use for notes, descriptions */
-const RICH_TEXT_CONFIG: DOMPurify.Config = {
-  ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'u', 'br', 'p', 'ul', 'ol', 'li', 'a'],
-  ALLOWED_ATTR: ['href', 'target', 'rel'],
-  ALLOW_DATA_ATTR: false,
-  FORCE_BODY: true,
-};
-
-// Force all links to open safely
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'A') {
-    node.setAttribute('target', '_blank');
-    node.setAttribute('rel', 'noopener noreferrer');
-  }
-});
-
-// ── Public API ─────────────────────────────────────────────────────────────
+// ── Core functions ─────────────────────────────────────────────────────────
 
 /**
- * Strip ALL HTML — safe for names, phones, emails, custom field values.
+ * Sanitize plain text — strips ALL HTML tags.
+ * Use for: names, phones, emails, companies, tags.
  */
 export function sanitizeText(input: unknown): string {
   if (input === null || input === undefined) return '';
-  return DOMPurify.sanitize(String(input), PLAIN_TEXT_CONFIG);
+  const str = typeof input === 'string' ? input : String(input);
+  return DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
 }
 
 /**
- * Allow limited safe HTML — safe for notes, descriptions, internal comments.
+ * Sanitize rich HTML — allows safe formatting tags.
+ * Use for: notes, descriptions, internal comments.
  */
-export function sanitizeHtml(input: unknown): string {
-  if (input === null || input === undefined) return '';
-  return DOMPurify.sanitize(String(input), RICH_TEXT_CONFIG);
+export function sanitizeHtml(html: unknown): string {
+  if (!html) return '';
+  const str = typeof html === 'string' ? html : String(html);
+  return DOMPurify.sanitize(str, {
+    ALLOWED_TAGS: RICH_ALLOWED_TAGS,
+    ALLOWED_ATTR: RICH_ALLOWED_ATTR,
+    FORBID_SCRIPTS: true,
+    FORBID_ATTR:  ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'onchange', 'onsubmit', 'style'],
+  }).trim();
 }
 
 /**
- * Sanitize all string fields of a contact record before rendering.
- * Notes/description get rich-text treatment; all other strings are plain text.
+ * Sanitize a complete contact record.
+ * Applies sanitizeText to all plain-text fields and sanitizeHtml to notes.
  */
 export function sanitizeContactFields<T extends Record<string, unknown>>(contact: T): T {
-  const RICH_KEYS = new Set(['notes', 'description', 'internal_notes']);
-  const result: Record<string, unknown> = {};
+  const result = { ...contact };
+  const textFields = ['name', 'phone', 'email', 'company', 'address', 'city', 'state', 'country', 'zip', 'channel'];
+  const richFields = ['notes', 'description'];
 
-  for (const [key, value] of Object.entries(contact)) {
-    if (typeof value === 'string') {
-      result[key] = RICH_KEYS.has(key) ? sanitizeHtml(value) : sanitizeText(value);
-    } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      result[key] = sanitizeContactFields(value as Record<string, unknown>);
-    } else {
-      result[key] = value;
+  for (const field of textFields) {
+    if (field in result) {
+      result[field as keyof T] = sanitizeText(result[field]) as T[keyof T];
     }
   }
 
-  return result as T;
+  for (const field of richFields) {
+    if (field in result) {
+      result[field as keyof T] = sanitizeHtml(result[field]) as T[keyof T];
+    }
+  }
+
+  if (Array.isArray(result.tags)) {
+    result.tags = (result.tags as string[]).map(sanitizeText).filter(Boolean) as T['tags'];
+  }
+
+  return result;
 }
 
 /**
- * Sanitize custom_fields JSONB object — all keys and values become plain text.
+ * Sanitize a URL — only allows http/https/mailto.
+ * Prevents javascript: protocol injection.
  */
-export function sanitizeCustomFields(
-  fields: Record<string, unknown> | null | undefined
-): Record<string, string> {
-  if (!fields) return {};
-  return Object.fromEntries(
-    Object.entries(fields).map(([k, v]) => [sanitizeText(k), sanitizeText(v)])
-  );
+export function sanitizeUrl(url: unknown): string {
+  if (!url) return '';
+  const str = sanitizeText(url);
+  if (/^https?:\/\//i.test(str) || /^mailto:/i.test(str)) return str;
+  return '';
 }
