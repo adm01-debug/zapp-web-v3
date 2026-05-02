@@ -27,14 +27,14 @@ export function useEmailAccounts(): UseEmailAccountsReturn {
     setIsLoading(true);
     setError(null);
 
-    const { data, error: dbErr } = await safeClient.from<UnifiedEmailAccount>('v_email_accounts_unified', (q) =>
+    const { data, error: dbErr } = await safeClient.from('v_email_accounts_unified', (q) =>
       q.select('*').order('created_at', { ascending: true })
     );
 
     if (dbErr) {
       setError(dbErr.message);
     } else {
-      setAccounts(data ?? []);
+      setAccounts(gmailMappers.unifiedAccounts(data ?? []));
     }
     setIsLoading(false);
   }, []);
