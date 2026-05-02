@@ -111,7 +111,7 @@ export function useGmail() {
     if (!id) return;
 
     setIsLoadingThreads(true);
-    const { data, error: rpcErr } = await safeClient.rpc('rpc_gmail_search_threads', {
+    const { data, error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_search_threads', {
       p_account_id: id,
       p_query:      null,
       p_label_id:   label,
@@ -120,7 +120,8 @@ export function useGmail() {
     });
 
     if (rpcErr) {
-      setError(rpcErr.message);
+      console.warn(`[useGmail][${requestId}] Falha ao buscar threads:`, rpcErr.message);
+      setError(`Erro ao carregar mensagens do Gmail. ${rpcErr.message.includes('disponível') ? 'A funcionalidade está sendo ativada.' : ''}`);
     } else {
       const mappedThreads = gmailMappers.threads(Array.isArray(data) ? data : []);
       setThreads(prev => append ? [...prev, ...mappedThreads] : mappedThreads);
