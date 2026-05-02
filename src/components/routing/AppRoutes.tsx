@@ -55,6 +55,8 @@ const AdminAutomationsPage = lazyWithRetry(() => import("@/pages/admin/AdminAuto
 const AdminAutomationLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminAutomationLogsPage"));
 const AdminWhatsAppModePage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppModePage"));
 const AdminWhatsAppLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppLogsPage"));
+const AdminGmailStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailStatusPage"));
+const AdminGmailAuditPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailAuditPage"));
 const Install = lazyWithRetry(() => import("@/pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("@/pages/ChatPopup"));
 const InboxPage = lazyWithRetry(() => import("@/pages/inbox/InboxPage"));
