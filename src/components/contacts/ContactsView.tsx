@@ -1,245 +1,256 @@
-import { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { useExternalContact360Batch } from '@/hooks/useExternalContact360Batch';
-import { ScrollToTopButton } from '@/components/ui/scroll-to-top';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { FloatingParticles } from '@/components/dashboard/FloatingParticles';
-import { AuroraBorealis } from '@/components/effects/AuroraBorealis';
+/**
+ * ContactsView.tsx — v3.0
+ * Full integration of all Contacts Module v3.0 features:
+ * - Server-side pagination via useContactsPagination
+ * - Advanced filter bar (search, tags, channel, sort)
+ * - Tabs: Contacts | Duplicates | Recycle Bin
+ * - Export dialog with column picker
+ * - Virtual scroll ready
+ */
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Upload, Users, Sparkles, FileSpreadsheet, RefreshCw,
+  Users, Download, Upload, Plus, GitMerge, Trash2, RefreshCw,
 } from 'lucide-react';
-import { CONTACT_TYPES } from '@/utils/whatsappFileTypes';
-import { isExternalConfigured } from '@/integrations/supabase/externalClient';
-import { BulkActionsBar } from '@/components/contacts/BulkActionsBar';
-import { CONTACT_TYPE_ICONS } from './ContactsTable';
-import { ContactStatsCards } from './ContactStatsCards';
-import { ContactImportDialog } from './ContactImportDialog';
-import { ContactMergeDialog } from './ContactMergeDialog';
-import { ContactCompareDialog } from './ContactCompareDialog';
-import { ContactBulkTagDialog } from './ContactBulkTagDialog';
-import { ContactBirthdayPanel } from './ContactBirthdayPanel';
-import { ContactDialogs } from './ContactDialogs';
-import { ContactToolbar } from './ContactToolbar';
-import { ContactPagination } from './ContactPagination';
-import { ContactDetailPanel } from './ContactDetailPanel';
-import { ContactContentArea } from './ContactContentArea';
-import { ContactResultsSummary } from './ContactResultsSummary';
-import { ContactCRMDialog } from './ContactCRMDialog';
-import { useContactsViewState } from './useContactsViewState';
+import { useToast } from '@/hooks/use-toast';
+import { useContactsPagination }     from './useContactsPagination';
+import { ContactFilterBar }          from './ContactFilterBar';
+import { ContactExportDialog }       from './ContactExportDialog';
+import { DuplicateContactsPanel }    from './DuplicateContactsPanel';
+import { ContactRecycleBin }         from './ContactRecycleBin';
+import ContactsTable                 from './ContactsTable';
+import ContactEmptyState             from './ContactEmptyState';
+import ContactImportDialog           from './ContactImportDialog';
+import ContactForm                   from './ContactForm';
 
-export function ContactsView() {
+// ── Types ──────────────────────────────────────────────────────────────────
+
+interface ContactsViewProps {
+  workspaceId: string;
+}
+
+// ── Component ──────────────────────────────────────────────────────────────
+
+export const ContactsView: React.FC<ContactsViewProps> = ({ workspaceId }) => {
+  const { toast } = useToast();
+
+  // ── Pagination + filters ────────────────────────────────────────────────
   const {
-    crud, viewMode, setViewMode, gridColumns, setGridColumns,
-    isImportOpen, setIsImportOpen, isMergeOpen, setIsMergeOpen,
-    isCompareOpen, setIsCompareOpen, groupByCompany, setGroupByCompany,
-    isBulkTagOpen, setIsBulkTagOpen, detailContact, setDetailContact,
-    handleApplyPreset, handleToggleSelect, handleSelectAll,
-    handleContactClick, handleExportCSV,
-  } = useContactsViewState();
+    contacts, loading, loadingMore, hasMore, total, filters,
+    loadContacts, loadMore, updateFilters,
+  } = useContactsPagination(workspaceId);
 
-  const {
-    contacts: filteredContacts, totalCount, loading, hasMore,
-    contactCountByType, uniqueCompanies, uniqueJobTitles, uniqueTags,
-    searchInput, debouncedSearch: search, handleSearchChange, clearSearch,
-    activeTab, setActiveTab, filterCompany, setFilterCompany,
-    filterJobTitle, setFilterJobTitle, filterTag, setFilterTag,
-    filterDateRange, setFilterDateRange, sortBy, setSortBy,
-    activeFiltersCount, clearFilters, page, setPage, pageSize,
-    loadMore, loadPrevious, refetch,
-    profile, scrollContainerRef,
-    isSubmitting, deleteTarget, setDeleteTarget,
-    showSuccess, setShowSuccess,
-    isAddDialogOpen, setIsAddDialogOpen,
-    isEditDialogOpen, setIsEditDialogOpen,
-    editingContact, showFilters, setShowFilters,
-    isCRMSearchOpen, setIsCRMSearchOpen,
-    selectedIds, setSelectedIds,
-    newContact, openContactChat,
-    handleAddContact, handleEditContact, handleDeleteContact,
-    openEditDialog, handleCancelForm,
-    handleNewContactChange, handleEditContactChange,
-  } = crud;
+  // ── UI State ────────────────────────────────────────────────────────────
+  const [selectedIds,    setSelectedIds]    = useState<string[]>([]);
+  const [exportOpen,     setExportOpen]     = useState(false);
+  const [importOpen,     setImportOpen]     = useState(false);
+  const [createOpen,     setCreateOpen]     = useState(false);
+  const [activeTab,      setActiveTab]      = useState('contacts');
 
-  const contactPhones = useMemo(() => filteredContacts.map(c => c.phone), [filteredContacts]);
-  const { lookup: getCRMData } = useExternalContact360Batch(contactPhones);
+  // ── Infinite scroll sentinel ────────────────────────────────────────────
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && hasMore && !loadingMore) loadMore(); },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loadMore]);
+
+  // ── Load on mount ───────────────────────────────────────────────────────
+  useEffect(() => { loadContacts(); }, [loadContacts]);
+
+  // ── Selection handling ──────────────────────────────────────────────────
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(contacts.map((c) => c.id));
+  }, [contacts]);
+
+  const clearSelection = useCallback(() => setSelectedIds([]), []);
+
+  // ── After create/import ─────────────────────────────────────────────────
+  const handleContactSaved = useCallback(() => {
+    setCreateOpen(false);
+    loadContacts();
+    toast({ title: '✅ Contato salvo!', duration: 3000 });
+  }, [loadContacts, toast]);
+
+  const handleImportComplete = useCallback(() => {
+    setImportOpen(false);
+    loadContacts();
+    toast({ title: '✅ Importação concluída!', duration: 3000 });
+  }, [loadContacts, toast]);
+
+  // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div ref={scrollContainerRef} className="p-6 space-y-5 overflow-y-auto h-full relative bg-background">
-      <ScrollToTopButton scrollRef={scrollContainerRef} />
-      <AuroraBorealis />
-      <FloatingParticles />
-
-      <PageHeader
-        title="Contatos"
-        subtitle={`Base de clientes e leads (${totalCount} contatos)`}
-        breadcrumbs={[{ label: 'Gestão' }, { label: 'Contatos' }]}
-        actions={
-          <div className="flex items-center gap-2">
-            {isExternalConfigured && (
-              <Button variant="outline" onClick={() => setIsCRMSearchOpen(true)} className="border-primary/30 text-primary hover:bg-primary/10">
-                <Sparkles className="w-4 h-4 mr-2" />CRM 360°
-              </Button>
-            )}
-            <Button variant="outline" onClick={() => refetch()} disabled={loading}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />Sincronizar
-            </Button>
-            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
-              <Upload className="w-4 h-4 mr-2" />Importar
-            </Button>
-            <Button variant="outline" onClick={handleExportCSV} disabled={filteredContacts.length === 0}>
-              <FileSpreadsheet className="w-4 h-4 mr-2" />Exportar
-            </Button>
-            <ContactDialogs
-              isAddDialogOpen={isAddDialogOpen} setIsAddDialogOpen={setIsAddDialogOpen}
-              newContact={newContact} handleNewContactChange={handleNewContactChange}
-              handleAddContact={handleAddContact} handleCancelForm={handleCancelForm}
-              isSubmitting={isSubmitting}
-              isEditDialogOpen={isEditDialogOpen} setIsEditDialogOpen={setIsEditDialogOpen}
-              editingContact={editingContact} handleEditContactChange={handleEditContactChange}
-              handleEditContact={handleEditContact}
-              showSuccess={showSuccess} setShowSuccess={setShowSuccess}
-              deleteTarget={deleteTarget} setDeleteTarget={setDeleteTarget}
-              handleDeleteContact={handleDeleteContact}
-            />
-          </div>
-        }
-      />
-
-      <ContactImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} onImportComplete={refetch} />
-      <ContactMergeDialog
-        open={isMergeOpen} onOpenChange={setIsMergeOpen}
-        contacts={filteredContacts.filter(c => selectedIds.includes(c.id))}
-        onMergeComplete={() => { setSelectedIds([]); refetch(); }}
-      />
-      <ContactCompareDialog
-        open={isCompareOpen} onOpenChange={setIsCompareOpen}
-        contacts={filteredContacts.filter(c => selectedIds.includes(c.id))}
-      />
-      <ContactBulkTagDialog
-        open={isBulkTagOpen} onOpenChange={setIsBulkTagOpen}
-        contactIds={selectedIds} allTags={uniqueTags}
-        onComplete={() => { setSelectedIds([]); refetch(); }}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3">
-          <ContactStatsCards totalCount={totalCount} contactCountByType={contactCountByType} uniqueCompanies={uniqueCompanies} contacts={filteredContacts} />
+    <div className="flex flex-col h-full">
+      {/* ── Header ───────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-background shrink-0">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-primary" />
+          <h1 className="font-semibold text-lg">Contatos</h1>
+          {total > 0 && (
+            <Badge variant="secondary">{total.toLocaleString('pt-BR')}</Badge>
+          )}
         </div>
-        <div className="lg:col-span-1">
-          <ContactBirthdayPanel
-            contacts={filteredContacts.map(c => ({ id: c.id, name: c.name, avatar_url: c.avatar_url, birthday: undefined }))}
-            onContactClick={openContactChat}
-          />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)} className="gap-1">
+            <Upload className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Importar</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-1">
+            <Download className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Exportar</span>
+          </Button>
+          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1">
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Novo contato</span>
+          </Button>
         </div>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-muted/50 p-1 h-auto flex-wrap">
-            <TabsTrigger value="all" className="data-[state=active]:bg-background flex items-center gap-2">
-              <Users className="w-4 h-4" />Todos
-              <Badge variant="secondary" className="ml-1 text-xs">{contactCountByType['all'] || 0}</Badge>
+      {/* ── Tabs ─────────────────────────────────────────────────────────── */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+        <div className="px-4 pt-2 border-b shrink-0">
+          <TabsList className="h-8">
+            <TabsTrigger value="contacts" className="text-xs gap-1">
+              <Users className="h-3 w-3" />
+              Contatos
             </TabsTrigger>
-            {CONTACT_TYPES.map((type) => (
-              <TabsTrigger key={type.value} value={type.value} className="data-[state=active]:bg-background flex items-center gap-2">
-                {CONTACT_TYPE_ICONS[type.value]}
-                {type.label}
-                {contactCountByType[type.value] > 0 && (
-                  <Badge variant="secondary" className="ml-1 text-xs">{contactCountByType[type.value]}</Badge>
-                )}
-              </TabsTrigger>
-            ))}
+            <TabsTrigger value="duplicates" className="text-xs gap-1">
+              <GitMerge className="h-3 w-3" />
+              Duplicados
+            </TabsTrigger>
+            <TabsTrigger value="trash" className="text-xs gap-1">
+              <Trash2 className="h-3 w-3" />
+              Lixeira
+            </TabsTrigger>
           </TabsList>
-        </Tabs>
-      </motion.div>
+        </div>
 
-      <ContactToolbar
-        searchInput={searchInput} onSearchChange={handleSearchChange}
-        sortBy={sortBy} setSortBy={setSortBy}
-        showFilters={showFilters} setShowFilters={setShowFilters}
-        activeFiltersCount={activeFiltersCount} clearFilters={clearFilters}
-        activeTab={activeTab}
-        filterCompany={filterCompany} setFilterCompany={setFilterCompany}
-        filterJobTitle={filterJobTitle} setFilterJobTitle={setFilterJobTitle}
-        filterTag={filterTag} setFilterTag={setFilterTag}
-        filterDateRange={filterDateRange} setFilterDateRange={setFilterDateRange}
-        uniqueCompanies={uniqueCompanies} uniqueJobTitles={uniqueJobTitles} uniqueTags={uniqueTags}
-        onApplyPreset={handleApplyPreset}
-        groupByCompany={groupByCompany} setGroupByCompany={setGroupByCompany}
-        selectedIds={selectedIds}
-        onBulkTag={() => setIsBulkTagOpen(true)}
-        onCompare={() => setIsCompareOpen(true)}
-        onMerge={() => setIsMergeOpen(true)}
-        viewMode={viewMode} setViewMode={setViewMode}
-        gridColumns={gridColumns} setGridColumns={setGridColumns}
-        totalCount={totalCount}
+        {/* ── Contacts tab ───────────────────────────────────────────────── */}
+        <TabsContent value="contacts" className="flex flex-col flex-1 min-h-0 mt-0">
+          {/* Filter bar */}
+          <div className="px-4 py-3 border-b shrink-0">
+            <ContactFilterBar
+              filters={filters}
+              onFiltersChange={updateFilters}
+              totalContacts={total}
+            />
+          </div>
+
+          {/* Selection toolbar */}
+          {selectedIds.length > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border-b shrink-0">
+              <span className="text-sm text-primary font-medium">
+                {selectedIds.length} selecionado{selectedIds.length !== 1 ? 's' : ''}
+              </span>
+              <Button size="sm" variant="outline" onClick={() => setExportOpen(true)} className="gap-1 h-7">
+                <Download className="h-3 w-3" />
+                Exportar
+              </Button>
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="text-xs text-muted-foreground hover:text-foreground ml-auto"
+              >
+                Limpar seleção
+              </button>
+            </div>
+          )}
+
+          {/* Contact list */}
+          <div className="flex-1 overflow-y-auto">
+            {loading && contacts.length === 0 ? (
+              <div className="flex items-center justify-center h-32">
+                <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : contacts.length === 0 ? (
+              <ContactEmptyState
+                hasFilters={!!(filters.search || filters.tags.length > 0 || filters.channel)}
+                onClearFilters={() => updateFilters({ search: '', tags: [], channel: null })}
+                onCreateContact={() => setCreateOpen(true)}
+              />
+            ) : (
+              <>
+                <ContactsTable
+                  contacts={contacts}
+                  selectedIds={selectedIds}
+                  onToggleSelect={toggleSelect}
+                  onSelectAll={selectAll}
+                  onClearSelection={clearSelection}
+                  workspaceId={workspaceId}
+                  onContactUpdated={loadContacts}
+                />
+                {/* Infinite scroll sentinel */}
+                <div ref={sentinelRef} className="h-8 flex items-center justify-center">
+                  {loadingMore && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  {!hasMore && contacts.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Todos os {total.toLocaleString('pt-BR')} contatos carregados.
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ── Duplicates tab ─────────────────────────────────────────────── */}
+        <TabsContent value="duplicates" className="flex-1 overflow-y-auto p-4 mt-0">
+          <DuplicateContactsPanel
+            workspaceId={workspaceId}
+            onMergeComplete={loadContacts}
+          />
+        </TabsContent>
+
+        {/* ── Recycle bin tab ────────────────────────────────────────────── */}
+        <TabsContent value="trash" className="flex-1 overflow-y-auto p-4 mt-0">
+          <ContactRecycleBin
+            workspaceId={workspaceId}
+            onRestored={loadContacts}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* ── Dialogs ──────────────────────────────────────────────────────── */}
+      <ContactExportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        workspaceId={workspaceId}
+        activeFilters={filters}
+        selectedIds={selectedIds.length > 0 ? selectedIds : undefined}
       />
 
-      {!loading && (
-        <ContactResultsSummary
-          totalCount={totalCount}
-          filteredCount={filteredContacts.length}
-          selectedCount={selectedIds.length}
-          activeFiltersCount={activeFiltersCount}
-          search={search}
-          onSelectAll={handleSelectAll}
-          allSelected={selectedIds.length === filteredContacts.length}
+      {importOpen && (
+        <ContactImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          workspaceId={workspaceId}
+          onImportComplete={handleImportComplete}
         />
       )}
 
-      <ContactContentArea
-        loading={loading}
-        contacts={filteredContacts}
-        viewMode={viewMode}
-        gridColumns={gridColumns}
-        groupByCompany={groupByCompany}
-        selectedIds={selectedIds}
-        search={search}
-        activeFiltersCount={activeFiltersCount}
-        onToggleSelect={handleToggleSelect}
-        onContactClick={handleContactClick}
-        onEdit={openEditDialog}
-        onDelete={setDeleteTarget}
-        onSelectIds={setSelectedIds}
-        onAddContact={() => setIsAddDialogOpen(true)}
-        onClearSearch={search ? clearSearch : undefined}
-        onClearFilters={activeFiltersCount > 0 ? clearFilters : undefined}
-        onImport={() => setIsImportOpen(true)}
-        getCRMData={getCRMData}
-      />
-
-      <ContactPagination
-        totalCount={totalCount} pageSize={pageSize} page={page}
-        setPage={setPage} loadMore={loadMore} loadPrevious={loadPrevious}
-        hasMore={hasMore} loading={loading}
-      />
-
-      {detailContact && (
-        <ContactDetailPanel
-          contact={detailContact}
-          onClose={() => setDetailContact(null)}
-          onOpenChat={openContactChat}
-          onEdit={openEditDialog}
+      {createOpen && (
+        <ContactForm
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          workspaceId={workspaceId}
+          onSaved={handleContactSaved}
         />
       )}
-
-      {isExternalConfigured && (
-        <ContactCRMDialog
-          open={isCRMSearchOpen}
-          onOpenChange={setIsCRMSearchOpen}
-          onContactSelected={openContactChat}
-        />
-      )}
-
-      <BulkActionsBar
-        selectedIds={selectedIds}
-        onClearSelection={() => setSelectedIds([])}
-        onActionComplete={() => { setSelectedIds([]); refetch(); }}
-        availableTags={uniqueTags}
-      />
     </div>
   );
-}
+};
+
+export default ContactsView;
