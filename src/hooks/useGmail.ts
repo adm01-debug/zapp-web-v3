@@ -466,6 +466,8 @@ export function useGmail() {
     isSending,
     hasMore,
     error,
+    lastRequestId,
+    schemaStatus,
     nextPageToken,
     // Contadores
     unreadCount,
