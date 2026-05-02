@@ -1,97 +1,93 @@
-## Contexto verificado nesta análise
+## O que descobri rodando o build de verdade
 
-Confirmei nos dois backends (não estava documentado em nenhum lugar do código de forma centralizada):
+`bunx vite build` falha com **um único erro real** no momento, mas que bloqueia toda a publicação:
 
-- **Self-hosted (`externalClient` → `supabase.atomicabr.com.br`)** tem as tabelas reais: `evolution_messages`, `evolution_contacts`, `evolution_conversations`, `evolution_audit_log`. **Não tem `rpc_list_messages` deployada** (PGRST202). Acesso é via `.from('evolution_*')` direto.
-- **Lovable Cloud (`supabase`)** tem `messages` e `contacts` (legado/duplicado) e **não tem** `conversations` nem `contact_audit_log`. É a fonte só para `auth`, `profiles`, `user_roles`, `queues`, `whatsapp_connections`.
-- ~40 arquivos hoje fazem `supabase.from('messages'|'contacts'|'conversations')` apontando para o cliente errado — isso causa os erros de TS (tabela não existe nos types do Lovable Cloud) e dados vazios em runtime.
-
-Também há um erro de runtime no preview (`gmailRefreshToken` não exportado em `src/hooks/gmail/gmailApi.ts`) que vou corrigir junto, sem alarde.
-
-## Solução: registry + proxy fino
-
-### 1. `src/integrations/datasource/registry.ts`
-
-Mapa declarativo, fonte única da verdade:
-
-```ts
-export type LogicalEntity =
-  | 'messages' | 'contacts' | 'conversations' | 'audit_log' | 'calls'
-  | 'profiles' | 'user_roles' | 'queues' | 'whatsapp_connections';
-
-export const ENTITY_MAP = {
-  messages:             { client: 'external', table: 'evolution_messages' },
-  contacts:             { client: 'external', table: 'evolution_contacts' },
-  conversations:        { client: 'external', table: 'evolution_conversations' },
-  audit_log:            { client: 'external', table: 'evolution_audit_log' },
-  calls:                { client: 'external', table: 'evolution_calls' },
-  profiles:             { client: 'lovable',  table: 'profiles' },
-  user_roles:           { client: 'lovable',  table: 'user_roles' },
-  queues:               { client: 'lovable',  table: 'queues' },
-  whatsapp_connections: { client: 'lovable',  table: 'whatsapp_connections' },
-} as const satisfies Record<LogicalEntity, { client: 'lovable' | 'external'; table: string }>;
+```
+src/hooks/useEvolutionAutoSync.ts:4
+"isSamePhone" is not exported by "src/lib/phoneUtils.ts"
 ```
 
-### 2. `src/integrations/datasource/db.ts` — proxy fino
+`phoneUtils.ts` exporta `phonesMatch` (linha 146), que faz exatamente o mesmo papel — alguém importou com nome antigo. O TypeScript não pega isso porque `tsconfig.app.json` tem `strict: false` + `noImplicitAny: false`, então o resolver é permissivo. Já o Rollup, que monta o bundle real, é estrito.
 
-Helpers que devolvem o `SupabaseClient` correto e a query builder apontando para a tabela física certa:
+Esse é o "erro real" que o pipeline precisa enxergar. Tudo o que vem antes (113 arquivos do registry de roteamento, dompurify, gmailRefreshToken) já está verde no `tsc --noEmit`.
 
-```ts
-import { supabase } from '@/integrations/supabase/client';
-import { externalSupabase } from '@/integrations/supabase/externalClient';
-import { ENTITY_MAP, type LogicalEntity } from './registry';
+## Diagnóstico do pipeline atual
 
-export function dbClient(entity: LogicalEntity) {
-  const target = ENTITY_MAP[entity].client === 'external' ? externalSupabase : supabase;
-  if (!target) throw new Error(`[db] Cliente para "${entity}" não configurado`);
-  return target;
-}
-export function dbFrom(entity: LogicalEntity) {
-  return dbClient(entity).from(ENTITY_MAP[entity].table) as any;
-}
-export function dbChannel(entity: LogicalEntity, name: string) {
-  return dbClient(entity).channel(`${name}:${ENTITY_MAP[entity].table}`);
-}
-export function dbTable(entity: LogicalEntity) { return ENTITY_MAP[entity].table; }
+`package.json`:
+```
+"build": "vite build"
 ```
 
-Tipo do retorno é `any` por enquanto (os types do `externalClient` não estão no `Database` do Lovable). Isso destrava o build sem mascarar erros — a regra é "se você importou de `@/integrations/datasource/db`, você assume a forma da linha".
+`.github/workflows/ci.yml` separa em jobs corretos:
+1. `lint-and-typecheck` — roda `npx tsc --noEmit` (passa hoje)
+2. `build` — roda `npm run build` (falha agora por causa do `isSamePhone`)
 
-### 3. Migrações de chamadas (Phase A — destravar build)
+Problemas:
 
-Ajusto os ~40 arquivos listados, padrão único:
+- **Local não simula CI**: não há um único comando `npm run check` que rode TSC + ESLint + Vite build. Quando alguém roda só `bun dev` ou `tsc`, não vê esse tipo de erro até o CI explodir.
+- **Vite build aceita warnings de chunk grande sem alarde** (`chunkSizeWarningLimit: 1700`) mas falha por export inexistente — comportamento correto, só precisa ser usado.
+- **ESLint hoje permite `import { foo }` mesmo se `foo` não existir** — a regra `import/no-unresolved` não está habilitada porque o plugin `eslint-plugin-import` não está instalado. Adicionar isso transforma erros como o `isSamePhone` em fail rápido (em ms, não em 20s de Rollup).
+- **Dependências fantasma**: `package.json` tem `vitest` em `dependencies` (deveria ser `devDependencies`) e algumas libs de QA (`@axe-core/react`, `@playwright/test`, `@testing-library/*`, `@types/*`, `jsdom`) também estão em `dependencies`. Não bloqueia build mas infla o bundle e atrapalha auditoria. Não vou mexer nessa rodada para não estourar o escopo — só vou anotar.
 
-- `supabase.from('messages').select(...)` → `dbFrom('messages').select(...)`
-- `supabase.from('contacts').update(...)` → `dbFrom('contacts').update(...)`
-- `supabase.from('conversations').select(...)` → `dbFrom('conversations').select(...)`
-- `supabase.channel('msg').on('postgres_changes', { table: 'messages' }, ...)` → `dbChannel('messages','msg').on('postgres_changes', { table: dbTable('messages') }, ...)`
+## Plano de ação
 
-Casos especiais que já vi:
+### Passo 1 — Corrigir o erro real que bloqueia produção (1 arquivo)
 
-- `src/features/inbox/data-access/messageRepository.ts` e `useContactsRealtime.ts`: hoje fazem realtime contra Lovable Cloud. Vou trocar para `dbChannel('messages'|'contacts', ...)` + filtro pela coluna correta (`remote_jid` ou `contact_id` conforme schema do `evolution_*`).
-- `useTeamProfiles.ts` (RPC `get_team_profiles` no Lovable): permanece em `supabase`, é tabela `profiles`, mapeamento já manda para `lovable`.
-- `ContactConversationHistory.tsx`: hoje seleciona campos `last_message_preview`, `assigned_agent_name`, `message_count` que são do schema antigo. No `evolution_conversations` os campos equivalentes são outros — vou ajustar o select para `id, status, last_message_at, assigned_to, remote_jid` e adaptar a render. Sem RPC `rpc_list_conversations` no host, fica `.from('evolution_conversations').select(...).eq('contact_id', id)`.
+Em `src/lib/phoneUtils.ts`, depois do `export function phonesMatch`, adicionar:
 
-### 4. Fix paralelo do erro de runtime
+```ts
+/**
+ * Alias semântico de `phonesMatch` — mantido para compatibilidade.
+ * Prefira `phonesMatch` em código novo.
+ */
+export const isSamePhone = phonesMatch;
+```
 
-`useGmailOAuthFlow.ts` importa `gmailRefreshToken` de `./gmail/gmailApi` mas a função não existe lá. Vou adicionar a função (POST para a edge function `gmail-refresh-token` que já existe no projeto) seguindo o mesmo padrão das outras (`gmailRevokeAccount`, `gmailRegisterWatch`).
+Único uso é `useEvolutionAutoSync.ts:54` e a semântica bate exatamente.
 
-### 5. Lint guard (opcional, depois do build verde)
+### Passo 2 — Endurecer o build local para falhar igual ao CI
 
-ESLint rule `no-restricted-syntax` que bane `supabase.from('messages'|'contacts'|'conversations'|'audit_log'|'calls')` direto, forçando uso do `dbFrom`. Adiciono comentado em `eslint.config.js` para você ativar quando quiser.
+Em `package.json`, adicionar scripts compostos:
+
+```jsonc
+{
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "check":     "npm run typecheck && npm run lint && npm run build",
+    "verify":    "npm run check"
+  }
+}
+```
+
+Razão: `npm run check` reproduz exatamente o gate do CI antes do push. Quando alguém roda local, vê o mesmo erro que o GitHub Actions vê.
+
+### Passo 3 — Validar que `vite build` passa (sem custom flag, build atual já falha em export inexistente)
+
+O Rollup já trata `export X from Y` ausente como erro fatal — o comportamento desejado já existe nativamente. Não precisa de nenhuma flag custom. Vou apenas rodar `bun run build` depois do passo 1 para confirmar que o bundle é gerado.
+
+### Passo 4 — Pequeno endurecimento opcional do `tsconfig.app.json`
+
+Mudar `noUnusedLocals` e `noUnusedParameters` para `true` é tentador mas vai gerar centenas de warnings agora — fora do escopo. Em vez disso, propus apenas:
+
+- Manter `tsconfig.app.json` como está (compatibilidade com a base atual).
+- Garantir que o CI continue rodando `tsc --noEmit` (já roda).
+- O combo `typecheck + build` no script `check` cobre as duas dimensões: types + bundling real.
+
+### Passo 5 — Documentar no `package.json` (sem novos arquivos)
+
+A descrição dos scripts fica auto-explicativa pelos nomes. Não vou criar README novo — `npm run check` é o contrato.
+
+## O que NÃO faço nesta rodada (anotações para depois)
+
+- Mover `vitest`, `@playwright/test`, `@testing-library/*`, `jsdom`, `@axe-core/react`, `@types/dompurify`, `@vitejs/plugin-react`, `@types/react*` (subset) para `devDependencies`. Risco baixo, mas mexe em ~10 entradas e quero manter este PR cirúrgico.
+- Adicionar `eslint-plugin-import` para detectar imports inexistentes em ms. Útil, mas requer install + nova regra em `eslint.config.js`. Posso fazer em PR separado se você quiser.
+- Promover globs do `STRICT ZONE` no `eslint.config.js` para mais arquivos. Migração de tipo separada.
 
 ## Entregáveis desta rodada
 
-1. `src/integrations/datasource/registry.ts` (novo)
-2. `src/integrations/datasource/db.ts` (novo)
-3. ~40 arquivos editados para usar `dbFrom`/`dbChannel` (lista exata acima — todos os que apareceram no `rg`)
-4. `src/hooks/gmail/gmailApi.ts` ganha `gmailRefreshToken`
-5. Documentação curta no topo do `registry.ts` explicando como adicionar uma nova entidade
-
-## O que **não** faço agora (fora do escopo desta rodada)
-
-- Não crio RPCs no self-hosted (você disse explicitamente que não está mais no FATOR X; se quiser as RPCs lá depois, é outra discussão).
-- Não altero `evolution_*` schemas.
-- Não migro nada do Lovable Cloud (`profiles`/`queues`/etc.).
+1. `src/lib/phoneUtils.ts` — adiciona `export const isSamePhone = phonesMatch;`
+2. `package.json` — adiciona scripts `typecheck`, `check`, `verify`
+3. Rodar `bun run check` (typecheck + lint + build) e mostrar saída verde
 
 Aprova para eu executar?
