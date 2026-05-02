@@ -22,6 +22,7 @@ export const gmailMappers = {
     user_id:       data.user_id,
     email:         data.email,
     display_name:  data.display_name,
+    picture_url:   data.picture_url,
     is_active:     data.is_active ?? true,
     token_expiry:  data.token_expiry,
     watch_expiry:  data.watch_expiry,
