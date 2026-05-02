@@ -20,7 +20,7 @@ export async function fetchById<T extends Record<string, unknown>>(
   id: string,
   select = '*',
 ): Promise<T | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from(table)
     .select(select)
     .eq('id', id)
@@ -42,7 +42,7 @@ export async function upsertRecord<T extends Record<string, unknown>>(
   record: Record<string, Json>,
   conflictColumns: string[] = ['id'],
 ): Promise<T | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from(table)
     .upsert(record, { onConflict: conflictColumns.join(',') })
     .select()
@@ -70,7 +70,7 @@ export async function batchInsert(
 
   for (let i = 0; i < records.length; i += chunkSize) {
     const chunk = records.slice(i, i + chunkSize);
-    const { error } = await supabase.from(table).insert(chunk);
+    const { error } = await (supabase as any).from(table).insert(chunk);
 
     if (error) {
       log.error(`[DB] Batch insert chunk ${Math.floor(i / chunkSize)} failed:`, error);
@@ -91,7 +91,7 @@ export async function countRows(
   table: string,
   filters?: Record<string, string | number | boolean | null>,
 ): Promise<number> {
-  let query = supabase.from(table).select('id', { count: 'exact', head: true });
+  let query = (supabase as any).from(table).select('id', { count: 'exact', head: true });
 
   if (filters) {
     for (const [key, value] of Object.entries(filters)) {
