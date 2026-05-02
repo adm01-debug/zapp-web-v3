@@ -64,9 +64,9 @@ export function useSystemHealth(autoRefresh = true) {
 
   const fetch = useCallback(async () => {
     try {
-      const { data, error: rpcErr } = await supabase.rpc('rpc_system_health_check');
+      const { data, error: rpcErr } = await (supabase as any).rpc('rpc_system_health_check');
       if (rpcErr) throw new Error(rpcErr.message);
-      setHealth(data as SystemHealthData);
+      setHealth((data as unknown) as SystemHealthData);
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
