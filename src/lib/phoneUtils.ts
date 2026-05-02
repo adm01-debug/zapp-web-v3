@@ -92,6 +92,36 @@ export function validatePhone(phone: unknown): boolean {
   return normalizePhone(phone) !== null;
 }
 
+/**
+ * Rich phone validation result for forms.
+ * Returns normalized digits, formatted display, and inferred type.
+ */
+export type PhoneType = 'mobile' | 'landline' | 'international';
+export interface PhoneValidationDetailed {
+  valid:       boolean;
+  error?:      string;
+  normalized?: string;
+  formatted?:  string;
+  type?:       PhoneType;
+}
+
+export function validatePhoneDetailed(phone: unknown): PhoneValidationDetailed {
+  if (phone === null || phone === undefined || String(phone).trim() === '') {
+    return { valid: false, error: 'Telefone vazio.' };
+  }
+  const normalized = normalizePhone(phone);
+  if (!normalized) {
+    return { valid: false, error: 'Número inválido para o Brasil (DDD ou tamanho).' };
+  }
+  const type: PhoneType = normalized.length === 11 ? 'mobile' : 'landline';
+  return {
+    valid: true,
+    normalized,
+    formatted: formatPhoneForDisplay(normalized),
+    type,
+  };
+}
+
 // ── Format for display ────────────────────────────────────────────────────
 
 /**
