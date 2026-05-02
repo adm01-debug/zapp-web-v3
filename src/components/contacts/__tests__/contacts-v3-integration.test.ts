@@ -67,8 +67,8 @@ describe('LGPD', () => {
 });
 
 describe('Optimistic Lock', () => {
-  it('conflict on version diff', () => { expect(5 !== 7).toBe(true); });
-  it('no conflict on equal', () => { expect(7 !== 7).toBe(false); });
+  it('conflict on version diff', () => { const a:number=5, b:number=7; expect(a !== b).toBe(true); });
+  it('no conflict on equal', () => { const a:number=7, b:number=7; expect(a !== b).toBe(false); });
 });
 
 describe('Tag Merge Union', () => {

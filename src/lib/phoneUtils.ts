@@ -83,9 +83,10 @@ export function normalizePhone(raw: unknown): string | null {
 // ── Validate ──────────────────────────────────────────────────────────────
 
 /**
- * Returns true if the phone is a valid normalized BR number (10 or 11 digits, valid DDD).
+ * Returns a detailed validation object. For backwards compat, also exposes a
+ * truthy `.valid` boolean — callers can do `if (validatePhone(x).valid)`.
  */
-export function validatePhone(phone: unknown): boolean | PhoneValidationDetailed {
+export function validatePhone(phone: unknown): PhoneValidationDetailed {
   const raw = phone === null || phone === undefined ? '' : String(phone).trim();
   if (raw === '') return { valid: false, error: 'Telefone vazio.' };
 
@@ -100,7 +101,7 @@ export function validatePhone(phone: unknown): boolean | PhoneValidationDetailed
   }
 
   const normalized = normalizePhone(phone);
-  if (!normalized) return false;
+  if (!normalized) return { valid: false, error: 'Número inválido para o Brasil.' };
 
   return {
     valid: true,

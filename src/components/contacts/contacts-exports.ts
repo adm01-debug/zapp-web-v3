@@ -3,15 +3,15 @@
  * Centralized re-exports for all Contacts Module v3.0 components and hooks.
  */
 
-// Core UI
-export { default as ContactsView }          from './ContactsView';
-export { default as ContactForm }           from './ContactForm';
-export { default as ContactsTable }         from './ContactsTable';
-export { default as ContactEmptyState }     from './ContactEmptyState';
-export { default as ContactMapView }        from './ContactMapView';
-export { default as ContactBirthdayPanel }  from './ContactBirthdayPanel';
-export { default as ContactPurchaseHistory}  from './ContactPurchaseHistory';
-export { default as ContactImportDialog }   from './ContactImportDialog';
+// Core UI (named exports — none of these have a default export)
+export { default as ContactsView }            from './ContactsView';
+export { ContactForm }                        from './ContactForm';
+export { ContactsTable }                      from './ContactsTable';
+export { ContactEmptyState }                  from './ContactEmptyState';
+export { ContactMapView }                     from './ContactMapView';
+export { ContactBirthdayPanel }               from './ContactBirthdayPanel';
+export { ContactPurchaseHistory }             from './ContactPurchaseHistory';
+export { default as ContactImportDialog }     from './ContactImportDialog';
 
 // v3.0 New features
 export { default as ContactFilterBar }         from './ContactFilterBar';

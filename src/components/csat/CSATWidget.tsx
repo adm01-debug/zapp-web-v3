@@ -52,12 +52,12 @@ export const CSATWidget: React.FC<Props> = ({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_csat_stats', {
+      const { data, error } = await (supabase as any).rpc('get_csat_stats', {
         p_instance_name: instanceName,
         p_days: days,
       });
       if (error) throw error;
-      setStats(data as CSATStats);
+      setStats(data as unknown as CSATStats);
     } catch (err) { console.error('[CSATWidget]', err); }
     finally { setLoading(false); }
   }, [instanceName, days]);
