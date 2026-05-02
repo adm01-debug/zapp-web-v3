@@ -13,13 +13,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Phone, Mail, Building2, Tag, AlertTriangle, Save, Loader2, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
-import { normalizePhone, validatePhone, formatPhoneForDisplay } from '@/lib/phoneUtils';
+import { normalizePhone, validatePhoneDetailed, formatPhoneForDisplay } from '@/lib/phoneUtils';
 import { useRetryOperation } from '@/hooks/useRetryOperation';
 import { useDuplicateDetector } from '@/components/contacts/useDuplicateDetector';
 import { type Contact } from '@/hooks/useContacts';
-import { dbFrom } from '@/integrations/datasource/db';
+import { dbFrom, dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 interface ContactFormModalProps {
   instanceName: string;
@@ -88,7 +88,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
     let ok = true;
     if (!fullName.trim()) { setNameError('Nome é obrigatório.'); ok = false; } else setNameError('');
     if (phone) {
-      const r = validatePhone(phone);
+      const r = validatePhoneDetailed(phone);
       if (!r.valid) { setPhoneError(r.error ?? 'Telefone inválido.'); ok = false; } else setPhoneError('');
     } else setPhoneError('');
     return ok;
@@ -104,7 +104,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
         const remoteJid = normalizedPhone ? `55${normalizedPhone}@c.us` : `unknown_${Date.now()}@c.us`;
 
         if (isEdit && initialData?.id) {
-          const { data: result, error } = await supabase.rpc('update_contact_versioned', {
+          const { data: result, error } = await dbRpc(RPC.updateContactVersioned, {
             p_contact_id:       initialData.id,
             p_expected_version: initialData.version ?? 1,
             p_updates: {
@@ -119,7 +119,7 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
             },
           });
           if (error) throw error;
-          const r = result as Record<string, unknown>;
+          const r = (result ?? {}) as Record<string, unknown>;
           if (r?.error === 'CONFLICT') {
             toast({
               title: '⚠️ Conflito de edição',

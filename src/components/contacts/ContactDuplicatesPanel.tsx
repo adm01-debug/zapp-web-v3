@@ -14,10 +14,10 @@ import {
   GitMerge, Search, AlertTriangle, CheckCircle2, RefreshCw, Phone,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import ContactMergeDialog, { ContactForMerge } from './ContactMergeDialog';
-import { dbFrom } from '@/integrations/datasource/db';
+import { dbFrom, dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -45,12 +45,12 @@ export const ContactDuplicatesPanel: React.FC<ContactDuplicatesPanelProps> = ({ 
   const scan = useCallback(async () => {
     setScanning(true);
     try {
-      const { data, error } = await supabase.rpc('find_duplicate_contacts', {
+      const { data, error } = await dbList(RPC.findDuplicateContacts, {
         p_workspace_id: workspaceId,
       });
       if (error) throw error;
 
-      const rawGroups: DuplicateGroup[] = (data ?? []).map((g: DuplicateGroup) => ({
+      const rawGroups: DuplicateGroup[] = (data ?? []).map((g) => ({
         phone_normalized: g.phone_normalized,
         contact_ids:      g.contact_ids,
         contact_names:    (g.contact_names ?? []).map(sanitizeText),

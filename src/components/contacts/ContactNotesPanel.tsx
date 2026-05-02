@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StickyNote, Pin, RefreshCw, Send, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { dbList, dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { sanitizeHtml } from '@/lib/sanitize';
 import SafeHtml from './SafeHtml';
 
@@ -47,8 +48,8 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await supabase.rpc('get_contact_notes', { p_contact_id: contactId, p_limit: 30 });
-      setNotes((data ?? []) as Note[]);
+      const { data } = await dbList(RPC.getContactNotes, { p_contact_id: contactId, p_limit: 30 });
+      setNotes((data ?? []) as unknown as Note[]);
     } finally { setLoading(false); }
   }, [contactId]);
 
@@ -59,14 +60,14 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
     if (!content) return;
     setSaving(true);
     try {
-      const { data, error } = await supabase.rpc('add_contact_note', {
+      const { data, error } = await dbRpc(RPC.addContactNote, {
         p_contact_id: contactId,
         p_content:    sanitizeHtml(content),
         p_note_type:  noteType,
         p_is_pinned:  pinned,
       });
       if (error) throw error;
-      const result = data as Record<string, unknown>;
+      const result = (data ?? {}) as Record<string, unknown>;
       if (result?.error) throw new Error(String(result.error));
       setText(''); setPinned(false);
       await load();

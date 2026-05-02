@@ -250,6 +250,65 @@ export const RPC = {
     name: 'sync_interaction_from_zapp',
     client: 'external',
   }),
+
+  // ── Contacts module: notes, audit, dashboards, bulk ops ─────────────────
+  getContactConversations: def<{ p_contact_id: string; p_limit?: number }, Record<string, unknown>[]>({
+    name: 'get_contact_conversations',
+    client: 'external',
+  }),
+  getContactNotes: def<{ p_contact_id: string; p_limit?: number }, Record<string, unknown>[]>({
+    name: 'get_contact_notes',
+    client: 'external',
+  }),
+  addContactNote: def<{
+    p_contact_id: string;
+    p_content:    string;
+    p_note_type?: string;
+    p_is_pinned?: boolean;
+  }, Record<string, unknown>>({
+    name: 'add_contact_note',
+    client: 'external',
+  }),
+  bulkUpdateLeadStatus: def<{ p_contact_ids: string[]; p_status: string }, unknown>({
+    name: 'bulk_update_lead_status',
+    client: 'external',
+  }),
+  bulkAddTag: def<{ p_contact_ids: string[]; p_tag: string }, unknown>({
+    name: 'bulk_add_tag',
+    client: 'external',
+  }),
+  findDuplicateContacts: def<{ p_workspace_id: string }, Array<{
+    phone_normalized: string;
+    contact_ids:      string[];
+    contact_names:    string[];
+  }>>({
+    name: 'find_duplicate_contacts',
+    client: 'external',
+  }),
+  updateContactVersioned: def<{
+    p_contact_id:       string;
+    p_expected_version: number;
+    p_updates:          Record<string, unknown>;
+  }, Record<string, unknown>>({
+    name: 'update_contact_versioned',
+    client: 'external',
+  }),
+  restoreContact: def<{ p_contact_id: string }, Record<string, unknown>>({
+    name: 'restore_contact',
+    client: 'external',
+  }),
+  getContactStats: def<{ p_instance_name: string }, Record<string, unknown>>({
+    name: 'get_contact_stats',
+    client: 'external',
+  }),
+  getLgpdComplianceStats: def<{ p_instance_name: string }, Record<string, unknown>>({
+    name: 'get_lgpd_compliance_stats',
+    client: 'external',
+  }),
+  getDuplicateReport: def<{ p_instance_name: string }, Record<string, unknown>>({
+    name: 'get_duplicate_report',
+    client: 'external',
+  }),
 } as const;
 
 export type RpcKey = keyof typeof RPC;

@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Trash2, RotateCcw, RefreshCw, Search, Clock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { dbFrom, dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatPhoneForDisplay } from '@/lib/phoneUtils';
 
@@ -49,9 +50,8 @@ export const ContactRecycleBin: React.FC<ContactRecycleBinProps> = ({ workspaceI
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // Use the v_deleted_contacts view
-      const { data, error } = await supabase
-        .from('v_deleted_contacts')
+      // Use the v_deleted_contacts view via the datasource registry.
+      const { data, error } = await dbFrom('deleted_contacts')
         .select('id,display_name,phone_number,email,instance_name,deleted_at,deleted_reason,days_remaining')
         .eq('instance_name', instanceName)
         .order('deleted_at', { ascending: false })
@@ -69,9 +69,9 @@ export const ContactRecycleBin: React.FC<ContactRecycleBinProps> = ({ workspaceI
   const restore = async (id: string, name: string) => {
     setRestoring(id);
     try {
-      const { data, error } = await supabase.rpc('restore_contact', { p_contact_id: id });
+      const { data, error } = await dbRpc(RPC.restoreContact, { p_contact_id: id });
       if (error) throw error;
-      const result = data as Record<string, unknown>;
+      const result = (data ?? {}) as Record<string, unknown>;
       if (result?.error) throw new Error(String(result.error));
 
       setContacts((prev) => prev.filter((c) => c.id !== id));
