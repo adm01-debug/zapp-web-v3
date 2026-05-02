@@ -95,6 +95,9 @@ export function useMessagesCursor({
       abortRef.current?.abort();
       abortRef.current = controller;
 
+      // NOTE: usa `externalSupabase.rpc` direto (em vez de `dbList(RPC.listMessagesLite, ...)`)
+      // porque precisamos do `.abortSignal()` do PostgrestBuilder — o wrapper `dbRpc`
+      // resolve a Promise antes do builder ser exposto. Caso de uso raro e justificado.
       const builder = externalSupabase.rpc('rpc_list_messages_lite', {
         p_remote_jid: remoteJid,
         p_instance: instanceName,

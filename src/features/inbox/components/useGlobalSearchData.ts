@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
-import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { subDays, subMonths, startOfDay } from 'date-fns';
-import { dbFrom } from '@/integrations/datasource/db';
+import { dbFrom, dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 export interface SearchResult {
   id: string;
@@ -175,11 +176,12 @@ export function useGlobalSearchData(open: boolean) {
 
       if (types.has('crm') && isExternalConfigured && cleanQuery.length >= 3) {
         try {
-          const { data: crmData } = await getExternalSupabase().rpc('search_contacts_advanced', {
+          const { data: crmDataRaw } = await dbRpc(RPC.searchContactsAdvanced, {
             p_search: cleanQuery, p_vendedor: null, p_ramo: null, p_rfm_segment: null,
             p_estado: null, p_cliente_ativado: null, p_ja_comprou: null,
             p_sort_by: 'relevance', p_page: 0, p_page_size: 8,
           });
+          const crmData = crmDataRaw as { results?: Record<string, string | null>[] } | null;
           if (crmData?.results) {
             const localPhones = new Set(searchResults.filter(r => r.type === 'contact').map(r => r.preview.replace(/\D/g, '')));
             crmData.results.forEach((cr: Record<string, string | null>) => {

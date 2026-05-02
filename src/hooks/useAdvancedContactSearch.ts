@@ -7,7 +7,9 @@
  */
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useState, useCallback, useMemo } from 'react';
-import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { dbRpc } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { log } from '@/lib/logger';
 import type {
   SearchContactsParams,
@@ -35,7 +37,7 @@ export function useAdvancedContactSearch() {
   const query = useQuery<SearchContactsResponse | null>({
     queryKey: ['advanced-contact-search', params],
     queryFn: async () => {
-      const { data, error } = await getExternalSupabase().rpc('search_contacts_advanced', {
+      const { data, error } = await dbRpc(RPC.searchContactsAdvanced, {
         p_search: params.search || null,
         p_vendedor: params.vendedor || null,
         p_ramo: params.ramo || null,
