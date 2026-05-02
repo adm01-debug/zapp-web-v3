@@ -7,7 +7,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import { useToast } from '@/hooks/use-toast';
-import { dbFrom, dbTable } from '@/integrations/datasource/db';
+import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -73,14 +74,19 @@ export function useMessages(remoteJid: string | null) {
     setMessages([]);
     offsetRef.current = 0;
     try {
-      const { data, error } = await supabase.rpc('get_conversation_messages', {
+      const { data, error } = await dbList(RPC.listMessagesLite, {
         p_remote_jid: jid,
         p_limit:      PAGE_SIZE,
         p_offset:     0,
       });
       if (error) throw error;
       const items = (data ?? []).map(mapRow);
-      setMessages(items);
+      // FATOR X RPCs return oldest first? Usually messages are ordered DESC in lists, 
+      // but inbox needs oldest at top for scroll-to-bottom. 
+      // rpc_list_messages_lite uses ORDER BY created_at DESC for pagination consistency.
+      // We reverse them to show in chat.
+      const reversed = [...items].reverse();
+      setMessages(reversed);
       setHasMore(items.length === PAGE_SIZE);
       offsetRef.current = items.length;
     } catch (err) {
@@ -98,14 +104,16 @@ export function useMessages(remoteJid: string | null) {
     if (!remoteJid || loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      const { data, error } = await supabase.rpc('get_conversation_messages', {
+      const { data, error } = await dbList(RPC.listMessagesLite, {
         p_remote_jid: remoteJid,
         p_limit:      PAGE_SIZE,
         p_offset:     offsetRef.current,
       });
       if (error) throw error;
       const newItems = (data ?? []).map(mapRow);
-      setMessages((prev) => [...newItems, ...prev]); // prepend older messages
+      // Prepended because they are older (reversed for UI)
+      const reversed = [...newItems].reverse();
+      setMessages((prev) => [...reversed, ...prev]);
       setHasMore(newItems.length === PAGE_SIZE);
       offsetRef.current += newItems.length;
     } finally { setLoadingMore(false); }
