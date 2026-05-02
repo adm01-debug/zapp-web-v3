@@ -37,7 +37,6 @@ export type Database = {
           profile_id?: string
           xp_earned?: number
         }
-        Relationships: []
       }
       agent_installed_skills: {
         Row: {
@@ -61,7 +60,6 @@ export type Database = {
           installed_at?: string
           config_overrides?: Json | null
         }
-        Relationships: []
       }
       agent_memories: {
         Row: {
@@ -94,7 +92,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       agent_permissions: {
         Row: {
@@ -121,7 +118,6 @@ export type Database = {
           granted_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       agent_presence: {
         Row: {
@@ -163,7 +159,6 @@ export type Database = {
           went_offline_at?: string | null
           updated_at?: string
         }
-        Relationships: []
       }
       agent_skills: {
         Row: {
@@ -205,7 +200,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       agent_stats: {
         Row: {
@@ -256,7 +250,6 @@ export type Database = {
           updated_at?: string | null
           xp?: number
         }
-        Relationships: []
       }
       agent_templates: {
         Row: {
@@ -295,7 +288,6 @@ export type Database = {
           created_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       agent_traces: {
         Row: {
@@ -343,7 +335,6 @@ export type Database = {
           cost_usd?: number | null
           created_at?: string
         }
-        Relationships: []
       }
       agent_usage: {
         Row: {
@@ -385,7 +376,6 @@ export type Database = {
           error_count?: number | null
           created_at?: string
         }
-        Relationships: []
       }
       agent_versions: {
         Row: {
@@ -427,7 +417,6 @@ export type Database = {
           created_by?: string | null
           created_at?: string
         }
-        Relationships: []
       }
       agent_visibility_grants: {
         Row: {
@@ -451,7 +440,6 @@ export type Database = {
           granted_by?: string | null
           id?: string
         }
-        Relationships: []
       }
       agents: {
         Row: {
@@ -511,7 +499,6 @@ export type Database = {
           updated_at?: string
           workspace_id?: string | null
         }
-        Relationships: []
       }
       ai_conversation_tags: {
         Row: {
@@ -538,7 +525,6 @@ export type Database = {
           source?: string | null
           tag_name?: string
         }
-        Relationships: []
       }
       ai_providers: {
         Row: {
@@ -592,7 +578,6 @@ export type Database = {
           updated_at?: string | null
           use_for?: string
         }
-        Relationships: []
       }
       ai_usage_logs: {
         Row: {
@@ -640,7 +625,6 @@ export type Database = {
           total_tokens?: number | null
           user_id?: string | null
         }
-        Relationships: []
       }
       alert_channels: {
         Row: {
@@ -670,7 +654,6 @@ export type Database = {
           is_active?: boolean
           created_at?: string | null
         }
-        Relationships: []
       }
       alert_dispatch_state: {
         Row: {
@@ -691,7 +674,6 @@ export type Database = {
           last_severity?: string | null
           count_1h?: number
         }
-        Relationships: []
       }
       alerts: {
         Row: {
@@ -727,7 +709,6 @@ export type Database = {
           resolved_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       allowed_countries: {
         Row: {
@@ -751,7 +732,6 @@ export type Database = {
           created_at?: string | null
           id?: string
         }
-        Relationships: []
       }
       api_keys: {
         Row: {
@@ -793,7 +773,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       app_error_logs: {
         Row: {
@@ -832,7 +811,6 @@ export type Database = {
           timestamp?: string
           created_at?: string
         }
-        Relationships: []
       }
       app_notifications: {
         Row: {
@@ -874,7 +852,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string
         }
-        Relationships: []
       }
       app_settings: {
         Row: {
@@ -892,7 +869,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       audio_memes: {
         Row: {
@@ -928,7 +904,6 @@ export type Database = {
           uploaded_by?: string | null
           use_count?: number
         }
-        Relationships: []
       }
       audit_backfill_chunks: {
         Row: {
@@ -964,7 +939,6 @@ export type Database = {
           result?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       audit_backfill_progress: {
         Row: {
@@ -1009,7 +983,6 @@ export type Database = {
           finished_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       audit_dump_chunks: {
         Row: {
@@ -1048,7 +1021,6 @@ export type Database = {
           errors?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       audit_evo_fetches: {
         Row: {
@@ -1078,7 +1050,6 @@ export type Database = {
           result?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       audit_full_diff: {
         Row: {
@@ -1120,7 +1091,6 @@ export type Database = {
           detected_at?: string | null
           resolved_at?: string | null
         }
-        Relationships: []
       }
       audit_full_runs: {
         Row: {
@@ -1162,7 +1132,6 @@ export type Database = {
           unrecoverable_count?: number | null
           notes?: Json | null
         }
-        Relationships: []
       }
       audit_log: {
         Row: {
@@ -1195,7 +1164,6 @@ export type Database = {
           ip_address?: string | null
           created_at?: string
         }
-        Relationships: []
       }
       audit_log_tables: {
         Row: {
@@ -1231,7 +1199,6 @@ export type Database = {
           new_values?: Json | null
           created_at?: string
         }
-        Relationships: []
       }
       audit_logs: {
         Row: {
@@ -1267,7 +1234,6 @@ export type Database = {
           user_agent?: string | null
           user_id?: string | null
         }
-        Relationships: []
       }
       audit_results: {
         Row: {
@@ -1288,7 +1254,6 @@ export type Database = {
           result?: Json
           created_at?: string | null
         }
-        Relationships: []
       }
       audit_source_full: {
         Row: {
@@ -1321,7 +1286,6 @@ export type Database = {
           loaded_at?: string | null
           batch_ts?: string | null
         }
-        Relationships: []
       }
       audit_source_head_10k: {
         Row: {
@@ -1336,7 +1300,6 @@ export type Database = {
           source_id?: string
           loaded_at?: string | null
         }
-        Relationships: []
       }
       audit_source_sample: {
         Row: {
@@ -1348,7 +1311,6 @@ export type Database = {
         Update: {
           source_id?: string
         }
-        Relationships: []
       }
       audit_source_tail_10k: {
         Row: {
@@ -1363,7 +1325,6 @@ export type Database = {
           source_id?: string
           loaded_at?: string | null
         }
-        Relationships: []
       }
       audit_test_results: {
         Row: {
@@ -1402,7 +1363,6 @@ export type Database = {
           notes?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       auto_close_config: {
         Row: {
@@ -1432,7 +1392,6 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
       }
       automations: {
         Row: {
@@ -1477,7 +1436,6 @@ export type Database = {
           trigger_type?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       avatars: {
         Row: {
@@ -1495,7 +1453,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       away_messages: {
         Row: {
@@ -1522,7 +1479,6 @@ export type Database = {
           updated_at?: string | null
           whatsapp_connection_id?: string
         }
-        Relationships: []
       }
       batch_jobs: {
         Row: {
@@ -1567,7 +1523,6 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bling_token: {
         Row: {
@@ -1600,7 +1555,6 @@ export type Database = {
           refresh_token?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       blocked_countries: {
         Row: {
@@ -1627,7 +1581,6 @@ export type Database = {
           id?: string
           reason?: string | null
         }
-        Relationships: []
       }
       blocked_ips: {
         Row: {
@@ -1666,7 +1619,6 @@ export type Database = {
           reason?: string
           request_count?: number | null
         }
-        Relationships: []
       }
       bpm_activity_log: {
         Row: {
@@ -1714,7 +1666,6 @@ export type Database = {
           ip_address?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_automation_actions: {
         Row: {
@@ -1750,7 +1701,6 @@ export type Database = {
           webhook_id?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_automation_conditions: {
         Row: {
@@ -1789,7 +1739,6 @@ export type Database = {
           compare_values?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_automation_executions: {
         Row: {
@@ -1834,7 +1783,6 @@ export type Database = {
           completed_at?: string | null
           execution_time_ms?: number | null
         }
-        Relationships: []
       }
       bpm_automations: {
         Row: {
@@ -1882,7 +1830,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_answer_fields: {
         Row: {
@@ -1921,7 +1868,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_answers: {
         Row: {
@@ -1954,7 +1900,6 @@ export type Database = {
           updated_at?: string | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_attachments: {
         Row: {
@@ -1987,7 +1932,6 @@ export type Database = {
           uploaded_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_checklist_items: {
         Row: {
@@ -2020,7 +1964,6 @@ export type Database = {
           checked_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_checklists: {
         Row: {
@@ -2047,7 +1990,6 @@ export type Database = {
           created_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_comments: {
         Row: {
@@ -2089,7 +2031,6 @@ export type Database = {
           deleted_at?: string | null
           search_vector?: string | null
         }
-        Relationships: []
       }
       bpm_card_email_attachments: {
         Row: {
@@ -2119,7 +2060,6 @@ export type Database = {
           mime_type?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_emails: {
         Row: {
@@ -2188,7 +2128,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_labels: {
         Row: {
@@ -2203,7 +2142,6 @@ export type Database = {
           card_id?: string
           label_id?: string
         }
-        Relationships: []
       }
       bpm_card_movements: {
         Row: {
@@ -2236,7 +2174,6 @@ export type Database = {
           metadata?: Json | null
           moved_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_recurrences: {
         Row: {
@@ -2293,7 +2230,6 @@ export type Database = {
           created_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_subtasks: {
         Row: {
@@ -2338,7 +2274,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_time_entries: {
         Row: {
@@ -2371,7 +2306,6 @@ export type Database = {
           description?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_card_watchers: {
         Row: {
@@ -2392,7 +2326,6 @@ export type Database = {
           watch_type?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_cards: {
         Row: {
@@ -2458,7 +2391,6 @@ export type Database = {
           deleted_at?: string | null
           search_vector?: string | null
         }
-        Relationships: []
       }
       bpm_connections: {
         Row: {
@@ -2488,7 +2420,6 @@ export type Database = {
           connection_config?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_dashboard_elements: {
         Row: {
@@ -2527,7 +2458,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_email_configs: {
         Row: {
@@ -2572,7 +2502,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_flow_steps: {
         Row: {
@@ -2620,7 +2549,6 @@ export type Database = {
           updated_at?: string | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       bpm_flow_template_installs: {
         Row: {
@@ -2647,7 +2575,6 @@ export type Database = {
           installed_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_flow_templates: {
         Row: {
@@ -2704,7 +2631,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_flows: {
         Row: {
@@ -2752,7 +2678,6 @@ export type Database = {
           updated_at?: string | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       bpm_form_fields: {
         Row: {
@@ -2815,7 +2740,6 @@ export type Database = {
           updated_at?: string | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       bpm_forms: {
         Row: {
@@ -2851,7 +2775,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_labels: {
         Row: {
@@ -2875,7 +2798,6 @@ export type Database = {
           color?: string
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_notification_preferences: {
         Row: {
@@ -2932,7 +2854,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_public_form_submissions: {
         Row: {
@@ -2983,7 +2904,6 @@ export type Database = {
           processed_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_public_share_access: {
         Row: {
@@ -3010,7 +2930,6 @@ export type Database = {
           referrer?: string | null
           accessed_at?: string | null
         }
-        Relationships: []
       }
       bpm_public_shares: {
         Row: {
@@ -3061,7 +2980,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_register_fields: {
         Row: {
@@ -3103,7 +3021,6 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       bpm_register_records: {
         Row: {
@@ -3130,7 +3047,6 @@ export type Database = {
           updated_at?: string | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       bpm_register_values: {
         Row: {
@@ -3160,7 +3076,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_registers: {
         Row: {
@@ -3202,7 +3117,6 @@ export type Database = {
           updated_at?: string | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       bpm_saved_views: {
         Row: {
@@ -3262,7 +3176,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       bpm_sla_records: {
         Row: {
@@ -3304,7 +3217,6 @@ export type Database = {
           time_in_step_minutes?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       bpm_user_favorites: {
         Row: {
@@ -3328,7 +3240,6 @@ export type Database = {
           entity_id?: string
           created_at?: string | null
         }
-        Relationships: []
       }
       budgets: {
         Row: {
@@ -3367,7 +3278,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       business_hours: {
         Row: {
@@ -3400,7 +3310,6 @@ export type Database = {
           updated_at?: string | null
           whatsapp_connection_id?: string
         }
-        Relationships: []
       }
       calls: {
         Row: {
@@ -3448,7 +3357,6 @@ export type Database = {
           status?: string
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       campaign_ab_variants: {
         Row: {
@@ -3490,7 +3398,6 @@ export type Database = {
           send_count?: number | null
           variant_name?: string
         }
-        Relationships: []
       }
       campaign_contacts: {
         Row: {
@@ -3523,7 +3430,6 @@ export type Database = {
           sent_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       campaigns: {
         Row: {
@@ -3598,7 +3504,6 @@ export type Database = {
           updated_at?: string | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       channel_connections: {
         Row: {
@@ -3649,7 +3554,6 @@ export type Database = {
           webhook_url?: string | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       channel_connections_safe: {
         Row: {
@@ -3694,7 +3598,6 @@ export type Database = {
           webhook_url?: string | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       channel_routing_rules: {
         Row: {
@@ -3727,7 +3630,6 @@ export type Database = {
           priority?: number | null
           queue_id?: string | null
         }
-        Relationships: []
       }
       chatbot_executions: {
         Row: {
@@ -3766,7 +3668,6 @@ export type Database = {
           status?: string
           variables?: Json | null
         }
-        Relationships: []
       }
       chatbot_flows: {
         Row: {
@@ -3820,7 +3721,6 @@ export type Database = {
           variables?: Json | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       chunks: {
         Row: {
@@ -3871,7 +3771,6 @@ export type Database = {
           embedding?: string | null
           bm25_tsvector?: string | null
         }
-        Relationships: []
       }
       client_wallet_rules: {
         Row: {
@@ -3901,7 +3800,6 @@ export type Database = {
           priority?: number | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       colaboradores: {
         Row: {
@@ -3937,7 +3835,6 @@ export type Database = {
           criado_em?: string | null
           atualizado_em?: string | null
         }
-        Relationships: []
       }
       collections: {
         Row: {
@@ -3967,7 +3864,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       connection_health_logs: {
         Row: {
@@ -3997,7 +3893,6 @@ export type Database = {
           response_time_ms?: number | null
           status?: string
         }
-        Relationships: []
       }
       consent_records: {
         Row: {
@@ -4030,7 +3925,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       constraint_changelog: {
         Row: {
@@ -4066,7 +3960,6 @@ export type Database = {
           in_extension?: boolean | null
           details?: Json | null
         }
-        Relationships: []
       }
       contact_audit_log: {
         Row: {
@@ -4084,7 +3977,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       contact_custom_fields: {
         Row: {
@@ -4114,7 +4006,6 @@ export type Database = {
           id?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       contact_notes: {
         Row: {
@@ -4141,7 +4032,6 @@ export type Database = {
           id?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       contact_phones: {
         Row: {
@@ -4186,7 +4076,6 @@ export type Database = {
           verified_at?: string | null
           created_at?: string
         }
-        Relationships: []
       }
       contact_purchases: {
         Row: {
@@ -4234,7 +4123,6 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       contact_tags: {
         Row: {
@@ -4255,7 +4143,6 @@ export type Database = {
           id?: string
           tag_id?: string
         }
-        Relationships: []
       }
       contatos: {
         Row: {
@@ -4288,7 +4175,6 @@ export type Database = {
           sobrenome?: string | null
           email?: Json | null
         }
-        Relationships: []
       }
       conversation_analyses: {
         Row: {
@@ -4345,7 +4231,6 @@ export type Database = {
           topics?: string | null
           urgency?: string | null
         }
-        Relationships: []
       }
       conversation_closures: {
         Row: {
@@ -4378,7 +4263,6 @@ export type Database = {
           notes?: string | null
           outcome?: string | null
         }
-        Relationships: []
       }
       conversation_events: {
         Row: {
@@ -4429,7 +4313,6 @@ export type Database = {
           to_queue_id?: string | null
           trace_id?: string | null
         }
-        Relationships: []
       }
       conversation_memory: {
         Row: {
@@ -4471,7 +4354,6 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
       }
       conversation_sla: {
         Row: {
@@ -4510,7 +4392,6 @@ export type Database = {
           sla_configuration_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       conversation_snoozes: {
         Row: {
@@ -4537,7 +4418,6 @@ export type Database = {
           snooze_until?: string
           snoozed_by?: string
         }
-        Relationships: []
       }
       conversation_summaries: {
         Row: {
@@ -4555,7 +4435,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       conversation_tasks: {
         Row: {
@@ -4600,7 +4479,6 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       conversation_transfers: {
         Row: {
@@ -4618,7 +4496,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       conversations: {
         Row: {
@@ -4642,7 +4519,6 @@ export type Database = {
           pinned_by?: string
           position?: number
         }
-        Relationships: []
       }
       cookies_config: {
         Row: {
@@ -4672,7 +4548,6 @@ export type Database = {
           csrf_token?: string | null
           atualizado_em?: string | null
         }
-        Relationships: []
       }
       credential_audit_logs: {
         Row: {
@@ -4702,7 +4577,6 @@ export type Database = {
           details?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       credential_vault: {
         Row: {
@@ -4744,7 +4618,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       cron_schedule_executions: {
         Row: {
@@ -4777,7 +4650,6 @@ export type Database = {
           started_at?: string | null
           completed_at?: string | null
         }
-        Relationships: []
       }
       cron_schedules: {
         Row: {
@@ -4816,7 +4688,6 @@ export type Database = {
           next_run_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       csat_auto_config: {
         Row: {
@@ -4849,7 +4720,6 @@ export type Database = {
           updated_by?: string | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       csat_responses: {
         Row: {
@@ -4885,7 +4755,6 @@ export type Database = {
           response_time_seconds?: number | null
           created_at?: string
         }
-        Relationships: []
       }
       csat_surveys: {
         Row: {
@@ -4915,7 +4784,6 @@ export type Database = {
           id?: string
           rating?: number
         }
-        Relationships: []
       }
       custom_emojis: {
         Row: {
@@ -4951,7 +4819,6 @@ export type Database = {
           uploaded_by?: string | null
           use_count?: number | null
         }
-        Relationships: []
       }
       data_deletion_requests: {
         Row: {
@@ -4981,7 +4848,6 @@ export type Database = {
           completed_at?: string | null
           metadata?: Json | null
         }
-        Relationships: []
       }
       dead_letter_queue: {
         Row: {
@@ -5011,7 +4877,6 @@ export type Database = {
           attempts?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       deal_activities: {
         Row: {
@@ -5038,7 +4903,6 @@ export type Database = {
           id?: string
           performed_by?: string | null
         }
-        Relationships: []
       }
       departments: {
         Row: {
@@ -5068,7 +4932,6 @@ export type Database = {
           slug?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       deploy_connections: {
         Row: {
@@ -5110,7 +4973,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       documents: {
         Row: {
@@ -5152,7 +5014,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       email_contact_scores: {
         Row: {
@@ -5194,7 +5055,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       email_link_click_events: {
         Row: {
@@ -5236,7 +5096,6 @@ export type Database = {
           os?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       email_templates: {
         Row: {
@@ -5254,7 +5113,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       email_threads: {
         Row: {
@@ -5317,7 +5175,6 @@ export type Database = {
           tags?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       email_tracked_links: {
         Row: {
@@ -5356,7 +5213,6 @@ export type Database = {
           last_clicked_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       email_tracked_messages: {
         Row: {
@@ -5434,7 +5290,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       email_tracking_events: {
         Row: {
@@ -5485,7 +5340,6 @@ export type Database = {
           referer?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       embedding_configs: {
         Row: {
@@ -5527,7 +5381,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       empresas: {
         Row: {
@@ -5554,7 +5407,6 @@ export type Database = {
           telefone?: string | null
           bitrix_empresa_id?: string | null
         }
-        Relationships: []
       }
       engineering_principles: {
         Row: {
@@ -5590,7 +5442,6 @@ export type Database = {
           discovered_at?: string | null
           batch_ref?: string | null
         }
-        Relationships: []
       }
       entity_versions: {
         Row: {
@@ -5623,7 +5474,6 @@ export type Database = {
           id?: string
           version_number?: number
         }
-        Relationships: []
       }
       environments: {
         Row: {
@@ -5647,7 +5497,6 @@ export type Database = {
           config?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evaluation_datasets: {
         Row: {
@@ -5677,7 +5526,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evaluation_runs: {
         Row: {
@@ -5716,7 +5564,6 @@ export type Database = {
           created_at?: string | null
           completed_at?: string | null
         }
-        Relationships: []
       }
       evolution_alerts: {
         Row: {
@@ -5770,7 +5617,6 @@ export type Database = {
           title?: string | null
           description?: string | null
         }
-        Relationships: []
       }
       evolution_audit_log: {
         Row: {
@@ -5821,7 +5667,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_automation_logs: {
         Row: {
@@ -5854,7 +5699,6 @@ export type Database = {
           error_message?: string | null
           executed_at?: string | null
         }
-        Relationships: []
       }
       evolution_automations: {
         Row: {
@@ -5905,7 +5749,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_backfill_audit: {
         Row: {
@@ -5944,7 +5787,6 @@ export type Database = {
           executed_at?: string | null
           executed_by?: string | null
         }
-        Relationships: []
       }
       evolution_baileys_session_history: {
         Row: {
@@ -5998,7 +5840,6 @@ export type Database = {
           alerts_resolved?: number | null
           messages_reset?: number | null
         }
-        Relationships: []
       }
       evolution_bitrix_field_mapping: {
         Row: {
@@ -6034,7 +5875,6 @@ export type Database = {
           is_active?: boolean | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_bitrix_queue: {
         Row: {
@@ -6079,7 +5919,6 @@ export type Database = {
           processed_at?: string | null
           next_attempt_at?: string | null
         }
-        Relationships: []
       }
       evolution_bitrix_sync: {
         Row: {
@@ -6124,7 +5963,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_blacklist: {
         Row: {
@@ -6160,7 +5998,6 @@ export type Database = {
           is_active?: boolean | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_broadcasts: {
         Row: {
@@ -6238,7 +6075,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_business_hours: {
         Row: {
@@ -6268,7 +6104,6 @@ export type Database = {
           timezone?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_calls: {
         Row: {
@@ -6319,7 +6154,6 @@ export type Database = {
           raw_data?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_campaign_recipients: {
         Row: {
@@ -6361,7 +6195,6 @@ export type Database = {
           message_id?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_campaigns: {
         Row: {
@@ -6424,7 +6257,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_chatbot_responses: {
         Row: {
@@ -6457,7 +6289,6 @@ export type Database = {
           feedback?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_connection_history: {
         Row: {
@@ -6487,7 +6318,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_contact_attachments: {
         Row: {
@@ -6526,7 +6356,6 @@ export type Database = {
           uploaded_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_contact_blacklist: {
         Row: {
@@ -6556,7 +6385,6 @@ export type Database = {
           expires_at?: string | null
           is_active?: boolean | null
         }
-        Relationships: []
       }
       evolution_contact_notes: {
         Row: {
@@ -6589,7 +6417,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_contact_rate_limits: {
         Row: {
@@ -6619,7 +6446,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_contacts: {
         Row: {
@@ -6706,7 +6532,6 @@ export type Database = {
           deleted_at?: string | null
           message_count?: number
         }
-        Relationships: []
       }
       evolution_conversations: {
         Row: {
@@ -6802,7 +6627,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_compras: {
         Row: {
@@ -6898,7 +6722,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_default: {
         Row: {
@@ -6994,7 +6817,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_diretoria: {
         Row: {
@@ -7090,7 +6912,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_financeiro: {
         Row: {
@@ -7186,7 +7007,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_logistica: {
         Row: {
@@ -7282,7 +7102,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_marketing: {
         Row: {
@@ -7378,7 +7197,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_sac: {
         Row: {
@@ -7474,7 +7292,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_vendedor_01: {
         Row: {
@@ -7570,7 +7387,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_vendedor_02: {
         Row: {
@@ -7666,7 +7482,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_vendedor_03: {
         Row: {
@@ -7762,7 +7577,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_vendedor_04: {
         Row: {
@@ -7858,7 +7672,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_vendedor_05: {
         Row: {
@@ -7954,7 +7767,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_vendedor_06: {
         Row: {
@@ -8050,7 +7862,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_vendedor_07: {
         Row: {
@@ -8146,7 +7957,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_wpp2: {
         Row: {
@@ -8242,7 +8052,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_conversations_wpp_pink_test: {
         Row: {
@@ -8338,7 +8147,6 @@ export type Database = {
           last_message_type?: string | null
           unread_count?: number | null
         }
-        Relationships: []
       }
       evolution_daily_metrics: {
         Row: {
@@ -8413,7 +8221,6 @@ export type Database = {
           followups_sent?: number | null
           calculated_at?: string | null
         }
-        Relationships: []
       }
       evolution_deals: {
         Row: {
@@ -8515,7 +8322,6 @@ export type Database = {
           won?: boolean | null
           lost?: boolean | null
         }
-        Relationships: []
       }
       evolution_dlq: {
         Row: {
@@ -8554,7 +8360,6 @@ export type Database = {
           processed_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_ef_logs: {
         Row: {
@@ -8590,7 +8395,6 @@ export type Database = {
           duration_ms?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_followup_rules: {
         Row: {
@@ -8641,7 +8445,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_followups: {
         Row: {
@@ -8704,7 +8507,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_group_messages: {
         Row: {
@@ -8749,7 +8551,6 @@ export type Database = {
           quoted_message_id?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_group_participants: {
         Row: {
@@ -8782,7 +8583,6 @@ export type Database = {
           left_at?: string | null
           is_active?: boolean | null
         }
-        Relationships: []
       }
       evolution_group_rules: {
         Row: {
@@ -8821,7 +8621,6 @@ export type Database = {
           last_executed_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_group_stats: {
         Row: {
@@ -8857,7 +8656,6 @@ export type Database = {
           media_count?: number | null
           links_count?: number | null
         }
-        Relationships: []
       }
       evolution_groups: {
         Row: {
@@ -8926,7 +8724,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_holidays: {
         Row: {
@@ -8956,7 +8753,6 @@ export type Database = {
           auto_reply_message?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_keyword_automations: {
         Row: {
@@ -9019,7 +8815,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_label_associations: {
         Row: {
@@ -9052,7 +8847,6 @@ export type Database = {
           removed_at?: string | null
           is_active?: boolean | null
         }
-        Relationships: []
       }
       evolution_labels: {
         Row: {
@@ -9091,7 +8885,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_media: {
         Row: {
@@ -9154,7 +8947,6 @@ export type Database = {
           thumbnail_base64?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_message_queue: {
         Row: {
@@ -9238,7 +9030,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_message_templates: {
         Row: {
@@ -9307,7 +9098,6 @@ export type Database = {
           approved_at?: string | null
           instance_name?: string | null
         }
-        Relationships: []
       }
       evolution_messages: {
         Row: {
@@ -9418,7 +9208,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_compras: {
         Row: {
@@ -9529,7 +9318,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_default: {
         Row: {
@@ -9640,7 +9428,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_diretoria: {
         Row: {
@@ -9751,7 +9538,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_financeiro: {
         Row: {
@@ -9862,7 +9648,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_logistica: {
         Row: {
@@ -9973,7 +9758,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_marketing: {
         Row: {
@@ -10084,7 +9868,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_sac: {
         Row: {
@@ -10195,7 +9978,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_vendedor_01: {
         Row: {
@@ -10306,7 +10088,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_vendedor_02: {
         Row: {
@@ -10417,7 +10198,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_vendedor_03: {
         Row: {
@@ -10528,7 +10308,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_vendedor_04: {
         Row: {
@@ -10639,7 +10418,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_vendedor_05: {
         Row: {
@@ -10750,7 +10528,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_vendedor_06: {
         Row: {
@@ -10861,7 +10638,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_vendedor_07: {
         Row: {
@@ -10972,7 +10748,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_wpp2: {
         Row: {
@@ -11083,7 +10858,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_messages_wpp_pink_test: {
         Row: {
@@ -11194,7 +10968,6 @@ export type Database = {
           raw_data?: Json | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_mirror_batches: {
         Row: {
@@ -11239,7 +11012,6 @@ export type Database = {
           consumer_error?: string | null
           metrics?: Json | null
         }
-        Relationships: []
       }
       evolution_mirror_checkpoints: {
         Row: {
@@ -11266,7 +11038,6 @@ export type Database = {
           total_synced?: number | null
           updated_at?: string
         }
-        Relationships: []
       }
       evolution_mirror_media_queue: {
         Row: {
@@ -11320,7 +11091,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       evolution_mirror_runs: {
         Row: {
@@ -11377,7 +11147,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string
         }
-        Relationships: []
       }
       evolution_notification_config: {
         Row: {
@@ -11393,7 +11162,7 @@ export type Database = {
           slack_webhook: string | null
           email_addresses: string[] | null
           notify_on_hours: string | null
-          notify_on_days: number[] | null
+          notify_on_days: string[] | null
           priority_filter: string[] | null
         }
         Insert: {
@@ -11409,7 +11178,7 @@ export type Database = {
           slack_webhook?: string | null
           email_addresses?: string[] | null
           notify_on_hours?: string | null
-          notify_on_days?: number[] | null
+          notify_on_days?: string[] | null
           priority_filter?: string[] | null
         }
         Update: {
@@ -11425,10 +11194,9 @@ export type Database = {
           slack_webhook?: string | null
           email_addresses?: string[] | null
           notify_on_hours?: string | null
-          notify_on_days?: number[] | null
+          notify_on_days?: string[] | null
           priority_filter?: string[] | null
         }
-        Relationships: []
       }
       evolution_notification_log: {
         Row: {
@@ -11461,7 +11229,6 @@ export type Database = {
           sent_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_notifications: {
         Row: {
@@ -11515,7 +11282,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_performance_metrics: {
         Row: {
@@ -11542,7 +11308,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_pipeline_health_log: {
         Row: {
@@ -11602,7 +11367,6 @@ export type Database = {
           detail?: string | null
           snapshot?: Json | null
         }
-        Relationships: []
       }
       evolution_pipeline_health_log_legacy: {
         Row: {
@@ -11635,7 +11399,6 @@ export type Database = {
           idade_ultima_msg?: string | null
           idade_ultimo_webhook?: string | null
         }
-        Relationships: []
       }
       evolution_pipeline_history: {
         Row: {
@@ -11665,7 +11428,6 @@ export type Database = {
           reason?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_quick_replies: {
         Row: {
@@ -11698,7 +11460,6 @@ export type Database = {
           is_active?: boolean | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_realtime_events: {
         Row: {
@@ -11746,7 +11507,6 @@ export type Database = {
           target_users?: string[] | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_retention_log: {
         Row: {
@@ -11788,7 +11548,6 @@ export type Database = {
           triggered_by?: string
           error_message?: string | null
         }
-        Relationships: []
       }
       evolution_retry_metrics: {
         Row: {
@@ -11830,7 +11589,6 @@ export type Database = {
           retry_reasons?: Json
           total_duration_ms?: number | null
         }
-        Relationships: []
       }
       evolution_sales_pipeline: {
         Row: {
@@ -11878,7 +11636,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_scheduled_messages: {
         Row: {
@@ -11923,7 +11680,6 @@ export type Database = {
           instance_name?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_send_idempotency: {
         Row: {
@@ -11956,7 +11712,6 @@ export type Database = {
           path?: string
           response?: Json
         }
-        Relationships: []
       }
       evolution_sentiment_alerts: {
         Row: {
@@ -12004,7 +11759,6 @@ export type Database = {
           resolution_notes?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_sentiment_analysis: {
         Row: {
@@ -12061,7 +11815,6 @@ export type Database = {
           model_used?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_sentiment_metrics: {
         Row: {
@@ -12097,7 +11850,6 @@ export type Database = {
           alerts_generated?: number | null
           calculated_at?: string | null
         }
-        Relationships: []
       }
       evolution_settings: {
         Row: {
@@ -12130,7 +11882,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       evolution_source_schema_map: {
         Row: {
@@ -12178,7 +11929,6 @@ export type Database = {
           discovered_at?: string
           raw_metadata?: Json | null
         }
-        Relationships: []
       }
       evolution_spam_keywords: {
         Row: {
@@ -12211,7 +11961,6 @@ export type Database = {
           hit_count?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_stage_mapping: {
         Row: {
@@ -12238,7 +11987,6 @@ export type Database = {
           auto_transition_after_hours?: number | null
           next_stage?: string | null
         }
-        Relationships: []
       }
       evolution_tag_assignments: {
         Row: {
@@ -12265,7 +12013,6 @@ export type Database = {
           assigned_by?: string | null
           assigned_at?: string | null
         }
-        Relationships: []
       }
       evolution_tags: {
         Row: {
@@ -12301,7 +12048,6 @@ export type Database = {
           use_count?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_tasks: {
         Row: {
@@ -12388,7 +12134,6 @@ export type Database = {
           updated_at?: string | null
           deleted_at?: string | null
         }
-        Relationships: []
       }
       evolution_template_usage: {
         Row: {
@@ -12418,7 +12163,6 @@ export type Database = {
           error_message?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_typebot_sessions: {
         Row: {
@@ -12466,7 +12210,6 @@ export type Database = {
           total_interactions?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       evolution_webhook_dlq: {
         Row: {
@@ -12523,7 +12266,6 @@ export type Database = {
           created_at?: string | null
           last_request_id?: number | null
         }
-        Relationships: []
       }
       evolution_webhook_events: {
         Row: {
@@ -12571,7 +12313,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_compras: {
         Row: {
@@ -12619,7 +12360,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_default: {
         Row: {
@@ -12667,7 +12407,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_diretoria: {
         Row: {
@@ -12715,7 +12454,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_financeiro: {
         Row: {
@@ -12763,7 +12501,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_logistica: {
         Row: {
@@ -12811,7 +12548,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_marketing: {
         Row: {
@@ -12859,7 +12595,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_sac: {
         Row: {
@@ -12907,7 +12642,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_vendedor_01: {
         Row: {
@@ -12955,7 +12689,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_vendedor_02: {
         Row: {
@@ -13003,7 +12736,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_vendedor_03: {
         Row: {
@@ -13051,7 +12783,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_vendedor_04: {
         Row: {
@@ -13099,7 +12830,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_vendedor_05: {
         Row: {
@@ -13147,7 +12877,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_vendedor_06: {
         Row: {
@@ -13195,7 +12924,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_vendedor_07: {
         Row: {
@@ -13243,7 +12971,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_wpp2: {
         Row: {
@@ -13291,7 +13018,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_events_wpp_pink_test: {
         Row: {
@@ -13339,7 +13065,6 @@ export type Database = {
           created_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       evolution_webhook_metrics: {
         Row: {
@@ -13369,7 +13094,6 @@ export type Database = {
           avg_processing_time_ms?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       extensions: {
         Row: {
@@ -13396,7 +13120,6 @@ export type Database = {
           inserted_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       failed_messages: {
         Row: {
@@ -13456,7 +13179,6 @@ export type Database = {
           succeeded_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       favorite_contacts: {
         Row: {
@@ -13477,7 +13199,6 @@ export type Database = {
           id?: string
           user_id?: string
         }
-        Relationships: []
       }
       finetune_jobs: {
         Row: {
@@ -13525,7 +13246,6 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       followup_executions: {
         Row: {
@@ -13561,7 +13281,6 @@ export type Database = {
           started_at?: string | null
           status?: string
         }
-        Relationships: []
       }
       followup_sequences: {
         Row: {
@@ -13594,7 +13313,6 @@ export type Database = {
           updated_at?: string | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       followup_steps: {
         Row: {
@@ -13627,7 +13345,6 @@ export type Database = {
           sequence_id?: string
           step_order?: number
         }
-        Relationships: []
       }
       forensic_snapshots: {
         Row: {
@@ -13678,7 +13395,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string
         }
-        Relationships: []
       }
       geo_blocking_settings: {
         Row: {
@@ -13702,7 +13418,6 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
       }
       global_settings: {
         Row: {
@@ -13732,7 +13447,6 @@ export type Database = {
           updated_by?: string | null
           value?: string | null
         }
-        Relationships: []
       }
       gmail_accounts: {
         Row: {
@@ -13777,7 +13491,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
       }
       gmail_daily_metrics: {
         Row: {
@@ -13795,7 +13508,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       gmail_drafts: {
         Row: {
@@ -13813,7 +13525,35 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+      }
+      gmail_health_summary: {
+        Row: {
+          id: string
+          account_id: string | null
+          status: string | null
+          last_check_at: string | null
+          error_count: number | null
+          metadata: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          account_id?: string | null
+          status?: string | null
+          last_check_at?: string | null
+          error_count?: number | null
+          metadata?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          account_id?: string | null
+          status?: string | null
+          last_check_at?: string | null
+          error_count?: number | null
+          metadata?: Json | null
+          created_at?: string | null
+        }
       }
       gmail_labels: {
         Row: {
@@ -13831,7 +13571,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       gmail_messages: {
         Row: {
@@ -13849,7 +13588,35 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+      }
+      gmail_revalidation_jobs: {
+        Row: {
+          id: string
+          account_id: string | null
+          status: string | null
+          started_at: string | null
+          completed_at: string | null
+          error_message: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          account_id?: string | null
+          status?: string | null
+          started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          account_id?: string | null
+          status?: string | null
+          started_at?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          created_at?: string | null
+        }
       }
       gmail_signatures: {
         Row: {
@@ -13867,7 +13634,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       gmail_threads: {
         Row: {
@@ -13885,7 +13651,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       goals_configurations: {
         Row: {
@@ -13924,7 +13689,6 @@ export type Database = {
           updated_at?: string | null
           weekly_target?: number
         }
-        Relationships: []
       }
       guardrail_ml_logs: {
         Row: {
@@ -13963,7 +13727,6 @@ export type Database = {
           latency_ms?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       guardrail_policies: {
         Row: {
@@ -13996,7 +13759,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       hf_config: {
         Row: {
@@ -14026,7 +13788,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       hmac_selftest_audit: {
         Row: {
@@ -14065,7 +13826,6 @@ export type Database = {
           ok?: boolean
           tampered_rejected?: boolean | null
         }
-        Relationships: []
       }
       imap_smtp_accounts: {
         Row: {
@@ -14083,7 +13843,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       installed_templates: {
         Row: {
@@ -14110,7 +13869,6 @@ export type Database = {
           installed_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       instance_registry: {
         Row: {
@@ -14185,7 +13943,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       integration_registry: {
         Row: {
@@ -14230,7 +13987,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       ip_whitelist: {
         Row: {
@@ -14254,7 +14010,6 @@ export type Database = {
           id?: string
           ip_address?: string
         }
-        Relationships: []
       }
       knowledge_base_articles: {
         Row: {
@@ -14302,7 +14057,6 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       knowledge_base_files: {
         Row: {
@@ -14338,7 +14092,6 @@ export type Database = {
           id?: string
           processing_status?: string | null
         }
-        Relationships: []
       }
       knowledge_bases: {
         Row: {
@@ -14380,7 +14133,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       mcp_servers: {
         Row: {
@@ -14437,7 +14189,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       media_download_queue: {
         Row: {
@@ -14503,7 +14254,6 @@ export type Database = {
           created_at?: string
           processed_at?: string | null
         }
-        Relationships: []
       }
       message_reactions: {
         Row: {
@@ -14530,7 +14280,6 @@ export type Database = {
           message_id?: string
           user_id?: string | null
         }
-        Relationships: []
       }
       message_templates: {
         Row: {
@@ -14569,7 +14318,6 @@ export type Database = {
           use_count?: number | null
           user_id?: string
         }
-        Relationships: []
       }
       meta_capi_events: {
         Row: {
@@ -14611,7 +14359,6 @@ export type Database = {
           pixel_id?: string | null
           sent_to_meta?: boolean | null
         }
-        Relationships: []
       }
       migration_audit: {
         Row: {
@@ -14647,7 +14394,6 @@ export type Database = {
           executed_at?: string
           executed_by?: string
         }
-        Relationships: []
       }
       migration_snapshot_d30: {
         Row: {
@@ -14683,7 +14429,6 @@ export type Database = {
           snapshot_at?: string | null
           notes?: string | null
         }
-        Relationships: []
       }
       model_pricing: {
         Row: {
@@ -14707,7 +14452,6 @@ export type Database = {
           output_cost_per_1k?: number
           created_at?: string
         }
-        Relationships: []
       }
       model_pricing_v2: {
         Row: {
@@ -14749,7 +14493,6 @@ export type Database = {
           total_params?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       n8n_variables: {
         Row: {
@@ -14782,7 +14525,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       nlp_extractions: {
         Row: {
@@ -14827,7 +14569,6 @@ export type Database = {
           processing_time_ms?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       notification_channels_config: {
         Row: {
@@ -14857,7 +14598,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       notification_templates: {
         Row: {
@@ -14893,7 +14633,6 @@ export type Database = {
           is_active?: boolean | null
           created_at?: string | null
         }
-        Relationships: []
       }
       notifications: {
         Row: {
@@ -14932,7 +14671,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       nps_surveys: {
         Row: {
@@ -14962,7 +14700,6 @@ export type Database = {
           score?: number
           survey_type?: string
         }
-        Relationships: []
       }
       number_reputation: {
         Row: {
@@ -15007,7 +14744,6 @@ export type Database = {
           warmup_status?: string
           whatsapp_connection_id?: string
         }
-        Relationships: []
       }
       oracle_history: {
         Row: {
@@ -15064,7 +14800,6 @@ export type Database = {
           total_tokens?: number | null
           created_at?: string
         }
-        Relationships: []
       }
       outbound_message_queue: {
         Row: {
@@ -15133,7 +14868,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       passkey_credentials: {
         Row: {
@@ -15175,7 +14909,6 @@ export type Database = {
           transports?: string | null
           user_id?: string
         }
-        Relationships: []
       }
       password_reset_requests: {
         Row: {
@@ -15223,7 +14956,6 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
         }
-        Relationships: []
       }
       payment_links: {
         Row: {
@@ -15280,7 +15012,6 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       performance_snapshots: {
         Row: {
@@ -15331,7 +15062,6 @@ export type Database = {
           ttfb?: number | null
           user_agent?: string | null
         }
-        Relationships: []
       }
       permissions: {
         Row: {
@@ -15364,7 +15094,6 @@ export type Database = {
           is_system?: boolean | null
           created_at?: string | null
         }
-        Relationships: []
       }
       pinned_conversations: {
         Row: {
@@ -15388,7 +15117,6 @@ export type Database = {
           pinned_by?: string
           position?: number
         }
-        Relationships: []
       }
       playbooks: {
         Row: {
@@ -15424,7 +15152,6 @@ export type Database = {
           steps?: Json
           updated_at?: string | null
         }
-        Relationships: []
       }
       products: {
         Row: {
@@ -15475,7 +15202,6 @@ export type Database = {
           updated_at?: string | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       profiles: {
         Row: {
@@ -15520,7 +15246,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       prompt_ab_tests: {
         Row: {
@@ -15565,7 +15290,6 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       prompt_versions: {
         Row: {
@@ -15598,7 +15322,6 @@ export type Database = {
           is_active?: boolean | null
           created_at?: string
         }
-        Relationships: []
       }
       provider_configs: {
         Row: {
@@ -15652,7 +15375,6 @@ export type Database = {
           status?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       qr_attempts: {
         Row: {
@@ -15697,7 +15419,6 @@ export type Database = {
           status?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       queue_goals: {
         Row: {
@@ -15733,7 +15454,6 @@ export type Database = {
           queue_id?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       queue_items: {
         Row: {
@@ -15778,7 +15498,6 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       queue_members: {
         Row: {
@@ -15808,7 +15527,6 @@ export type Database = {
           max_simultaneous?: number | null
           created_at?: string
         }
-        Relationships: []
       }
       queue_positions: {
         Row: {
@@ -15841,7 +15559,6 @@ export type Database = {
           position?: number
           queue_id?: string
         }
-        Relationships: []
       }
       queue_routing_rules: {
         Row: {
@@ -15871,7 +15588,6 @@ export type Database = {
           is_active?: boolean | null
           created_at?: string
         }
-        Relationships: []
       }
       queue_skill_requirements: {
         Row: {
@@ -15895,7 +15611,6 @@ export type Database = {
           queue_id?: string
           skill_name?: string
         }
-        Relationships: []
       }
       queues: {
         Row: {
@@ -15946,7 +15661,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       quick_replies: {
         Row: {
@@ -15994,7 +15708,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       ragas_scores: {
         Row: {
@@ -16048,7 +15761,6 @@ export type Database = {
           model_used?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       rate_limit_configs: {
         Row: {
@@ -16084,7 +15796,6 @@ export type Database = {
           updated_at?: string | null
           window_seconds?: number
         }
-        Relationships: []
       }
       rate_limit_logs: {
         Row: {
@@ -16126,7 +15837,6 @@ export type Database = {
           user_agent?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       reminders: {
         Row: {
@@ -16159,7 +15869,6 @@ export type Database = {
           remind_at?: string
           title?: string
         }
-        Relationships: []
       }
       restore_test_log: {
         Row: {
@@ -16192,7 +15901,6 @@ export type Database = {
           run_id?: string | null
           dump_file?: string | null
         }
-        Relationships: []
       }
       role_permissions: {
         Row: {
@@ -16213,7 +15921,6 @@ export type Database = {
           permission_id?: string
           created_at?: string | null
         }
-        Relationships: []
       }
       roles: {
         Row: {
@@ -16255,7 +15962,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       route_permissions: {
         Row: {
@@ -16285,7 +15991,6 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
       }
       rpc_rate_limits: {
         Row: {
@@ -16309,7 +16014,6 @@ export type Database = {
           window_start?: string
           call_count?: number
         }
-        Relationships: []
       }
       sales_deals: {
         Row: {
@@ -16369,7 +16073,6 @@ export type Database = {
           value?: number | null
           won_at?: string | null
         }
-        Relationships: []
       }
       sales_pipeline_stages: {
         Row: {
@@ -16399,7 +16102,6 @@ export type Database = {
           position?: number
           updated_at?: string | null
         }
-        Relationships: []
       }
       salespeople: {
         Row: {
@@ -16417,7 +16119,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       saved_filters: {
         Row: {
@@ -16453,7 +16154,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
       }
       scheduled_messages: {
         Row: {
@@ -16501,7 +16201,6 @@ export type Database = {
           updated_at?: string | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       scheduled_report_configs: {
         Row: {
@@ -16546,7 +16245,6 @@ export type Database = {
           report_type?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       scheduled_reports: {
         Row: {
@@ -16591,7 +16289,6 @@ export type Database = {
           report_type?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       schema_migrations: {
         Row: {
@@ -16606,7 +16303,6 @@ export type Database = {
           version?: number
           inserted_at?: string | null
         }
-        Relationships: []
       }
       security_alerts: {
         Row: {
@@ -16651,7 +16347,6 @@ export type Database = {
           title?: string
           user_id?: string | null
         }
-        Relationships: []
       }
       security_events: {
         Row: {
@@ -16687,7 +16382,6 @@ export type Database = {
           details?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       session_traces: {
         Row: {
@@ -16726,7 +16420,6 @@ export type Database = {
           cost_usd?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       sessions: {
         Row: {
@@ -16756,7 +16449,6 @@ export type Database = {
           started_at?: string | null
           ended_at?: string | null
         }
-        Relationships: []
       }
       sicoob_contact_mapping: {
         Row: {
@@ -16786,7 +16478,6 @@ export type Database = {
           sicoob_vendedor_id?: string
           zappweb_agent_id?: string | null
         }
-        Relationships: []
       }
       skill_registry: {
         Row: {
@@ -16846,7 +16537,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       sla_alert_preferences: {
         Row: {
@@ -16882,7 +16572,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
       }
       sla_configurations: {
         Row: {
@@ -16918,7 +16607,6 @@ export type Database = {
           resolution_minutes?: number
           updated_at?: string | null
         }
-        Relationships: []
       }
       sla_policies: {
         Row: {
@@ -16966,7 +16654,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       sla_rules: {
         Row: {
@@ -17020,7 +16707,6 @@ export type Database = {
           resolution_minutes?: number
           updated_at?: string | null
         }
-        Relationships: []
       }
       sla_violations: {
         Row: {
@@ -17062,7 +16748,6 @@ export type Database = {
           resolved_at?: string | null
           created_at?: string
         }
-        Relationships: []
       }
       solicitacoes_vale: {
         Row: {
@@ -17101,7 +16786,6 @@ export type Database = {
           respondido_em?: string | null
           criado_em?: string | null
         }
-        Relationships: []
       }
       sticker_categories: {
         Row: {
@@ -17137,7 +16821,6 @@ export type Database = {
           sticker_count?: number | null
           total_uses?: number | null
         }
-        Relationships: []
       }
       stickers: {
         Row: {
@@ -17197,7 +16880,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       stress_test_runs: {
         Row: {
@@ -17242,7 +16924,6 @@ export type Database = {
           total_planned?: number
           total_sent?: number
         }
-        Relationships: []
       }
       supabase_projects: {
         Row: {
@@ -17293,7 +16974,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       system_docs: {
         Row: {
@@ -17332,7 +17012,6 @@ export type Database = {
           total_lines?: number | null
           drift_from_previous?: Json | null
         }
-        Relationships: []
       }
       system_settings: {
         Row: {
@@ -17350,7 +17029,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       tags: {
         Row: {
@@ -17377,7 +17055,6 @@ export type Database = {
           source?: string | null
           tag_name?: string
         }
-        Relationships: []
       }
       talkx_blacklist: {
         Row: {
@@ -17401,7 +17078,6 @@ export type Database = {
           id?: string
           reason?: string | null
         }
-        Relationships: []
       }
       talkx_campaigns: {
         Row: {
@@ -17476,7 +17152,6 @@ export type Database = {
           variables_config?: Json
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       talkx_recipients: {
         Row: {
@@ -17518,7 +17193,6 @@ export type Database = {
           status?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       task_queues: {
         Row: {
@@ -17545,7 +17219,6 @@ export type Database = {
           status?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       team_conversation_members: {
         Row: {
@@ -17572,7 +17245,6 @@ export type Database = {
           last_read_at?: string | null
           profile_id?: string
         }
-        Relationships: []
       }
       team_conversations: {
         Row: {
@@ -17602,7 +17274,6 @@ export type Database = {
           type?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       team_messages: {
         Row: {
@@ -17644,7 +17315,6 @@ export type Database = {
           sender_id?: string
           updated_at?: string | null
         }
-        Relationships: []
       }
       tenants: {
         Row: {
@@ -17719,7 +17389,6 @@ export type Database = {
           max_client_presence_events_per_window?: number | null
           client_presence_window_ms?: number | null
         }
-        Relationships: []
       }
       test_cases: {
         Row: {
@@ -17749,7 +17418,6 @@ export type Database = {
           tags?: string[] | null
           created_at?: string | null
         }
-        Relationships: []
       }
       tool_integrations: {
         Row: {
@@ -17785,7 +17453,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       tool_policies: {
         Row: {
@@ -17821,7 +17488,6 @@ export type Database = {
           config?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       trace_events: {
         Row: {
@@ -17845,7 +17511,6 @@ export type Database = {
           data?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       training_sessions: {
         Row: {
@@ -17887,7 +17552,6 @@ export type Database = {
           started_at?: string
           status?: string | null
         }
-        Relationships: []
       }
       usage_records: {
         Row: {
@@ -17920,7 +17584,6 @@ export type Database = {
           metadata?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       user_devices: {
         Row: {
@@ -17968,7 +17631,6 @@ export type Database = {
           os?: string | null
           user_id?: string
         }
-        Relationships: []
       }
       user_roles: {
         Row: {
@@ -17995,7 +17657,6 @@ export type Database = {
           assigned_by?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       user_sessions: {
         Row: {
@@ -18034,7 +17695,6 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
         }
-        Relationships: []
       }
       user_settings: {
         Row: {
@@ -18148,7 +17808,6 @@ export type Database = {
           welcome_message?: string | null
           work_days?: string | null
         }
-        Relationships: []
       }
       vector_indexes: {
         Row: {
@@ -18181,7 +17840,6 @@ export type Database = {
           config?: Json | null
           created_at?: string | null
         }
-        Relationships: []
       }
       warroom_alerts: {
         Row: {
@@ -18220,7 +17878,6 @@ export type Database = {
           source?: string | null
           title?: string
         }
-        Relationships: []
       }
       webhook_endpoints: {
         Row: {
@@ -18265,7 +17922,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       webhook_events: {
         Row: {
@@ -18298,7 +17954,6 @@ export type Database = {
           latency_ms?: number | null
           created_at?: string | null
         }
-        Relationships: []
       }
       webhook_health_alerts: {
         Row: {
@@ -18331,7 +17986,6 @@ export type Database = {
           resolved_at?: string | null
           acknowledged?: boolean | null
         }
-        Relationships: []
       }
       whatsapp_connection_queues: {
         Row: {
@@ -18352,7 +18006,6 @@ export type Database = {
           queue_id?: string
           whatsapp_connection_id?: string
         }
-        Relationships: []
       }
       whatsapp_connections: {
         Row: {
@@ -18418,7 +18071,6 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-        Relationships: []
       }
       whatsapp_flows: {
         Row: {
@@ -18463,7 +18115,6 @@ export type Database = {
           whatsapp_connection_id?: string | null
           whatsapp_flow_id?: string | null
         }
-        Relationships: []
       }
       whatsapp_groups: {
         Row: {
@@ -18505,7 +18156,6 @@ export type Database = {
           updated_at?: string | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       whatsapp_official_credentials: {
         Row: {
@@ -18550,7 +18200,6 @@ export type Database = {
           verify_token?: string
           waba_id?: string | null
         }
-        Relationships: []
       }
       whatsapp_templates: {
         Row: {
@@ -18601,7 +18250,6 @@ export type Database = {
           variables?: string | null
           whatsapp_connection_id?: string | null
         }
-        Relationships: []
       }
       whisper_messages: {
         Row: {
@@ -18631,7 +18279,6 @@ export type Database = {
           sender_id?: string
           target_agent_id?: string
         }
-        Relationships: []
       }
       workflow_checkpoints: {
         Row: {
@@ -18655,7 +18302,6 @@ export type Database = {
           state?: Json
           created_at?: string | null
         }
-        Relationships: []
       }
       workflow_executions: {
         Row: {
@@ -18697,7 +18343,6 @@ export type Database = {
           started_at?: string | null
           completed_at?: string | null
         }
-        Relationships: []
       }
       workflow_handoffs: {
         Row: {
@@ -18727,7 +18372,6 @@ export type Database = {
           status?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       workflow_runs: {
         Row: {
@@ -18766,7 +18410,6 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
         }
-        Relationships: []
       }
       workflow_step_runs: {
         Row: {
@@ -18814,7 +18457,6 @@ export type Database = {
           started_at?: string | null
           completed_at?: string | null
         }
-        Relationships: []
       }
       workflow_steps: {
         Row: {
@@ -18856,7 +18498,6 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
         }
-        Relationships: []
       }
       workflows: {
         Row: {
@@ -18892,7 +18533,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       workspace_members: {
         Row: {
@@ -18925,7 +18565,6 @@ export type Database = {
           invited_at?: string | null
           accepted_at?: string | null
         }
-        Relationships: []
       }
       workspace_secrets: {
         Row: {
@@ -18955,7 +18594,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       workspaces: {
         Row: {
@@ -18988,7 +18626,6 @@ export type Database = {
           created_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
       }
       zapp_audit_log: {
         Row: {
@@ -19030,102 +18667,852 @@ export type Database = {
           metadata?: Json | null
           created_at?: string
         }
-        Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      audit_log_safe: {
+        Row: {
+          id: string | null
+          user_id: string | null
+          action: string | null
+          entity_type: string | null
+          entity_id: string | null
+          metadata: Json | null
+          created_at: string | null
+        }
+      }
+      contacts: {
+        Row: {
+          id: string | null
+          name: string | null
+          phone: string | null
+          email: string | null
+          avatar_url: string | null
+          status: string | null
+          assigned_to: string | null
+          queue_id: string | null
+          whatsapp_connection_id: string | null
+          last_message_at: string | null
+          first_message_at: string | null
+          unread_count: number | null
+          is_blocked: boolean | null
+          is_favorite: boolean | null
+          cpf: string | null
+          company: string | null
+          position: string | null
+          address: string | null
+          city: string | null
+          state: string | null
+          country: string | null
+          notes: string | null
+          source: string | null
+          external_id: string | null
+          metadata: Json | null
+          created_at: string | null
+          updated_at: string | null
+          remote_jid: string | null
+          push_name: string | null
+          instance_name: string | null
+          lead_score: number | null
+          total_purchases: number | null
+          whatsapp_labels: string[] | null
+          tags: string[] | null
+        }
+      }
+      email_tracking_summary: {
+        Row: {
+          user_id: string | null
+          total_tracked: number | null
+          total_opened: number | null
+          total_clicked: number | null
+          total_bounced: number | null
+          total_failed: number | null
+          sum_opens: number | null
+          sum_clicks: number | null
+          open_rate: number | null
+          click_through_rate: number | null
+          first_tracked_at: string | null
+          last_tracked_at: string | null
+        }
+      }
+      messages: {
+        Row: {
+          id: string | null
+          contact_id: string | null
+          connection_id: string | null
+          direction: string | null
+          content: string | null
+          message_type: string | null
+          media_url: string | null
+          media_mime_type: string | null
+          media_filename: string | null
+          media_size: number | null
+          whatsapp_message_id: string | null
+          whatsapp_timestamp: string | null
+          status: string | null
+          is_from_me: boolean | null
+          sender_id: string | null
+          reply_to_message_id: string | null
+          quoted_message: Json | null
+          metadata: Json | null
+          is_deleted: boolean | null
+          is_edited: boolean | null
+          reaction: string | null
+          latitude: number | null
+          longitude: number | null
+          external_id: string | null
+          caption: string | null
+          instance_name: string | null
+          push_name: string | null
+          remote_jid: string | null
+          conversation_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+      }
+      v_active_alerts: {
+        Row: {
+          id: string | null
+          alert_type: string | null
+          severity: string | null
+          message: string | null
+          payload: Json | null
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string | null
+        }
+      }
+      v_active_stages: {
+        Row: {
+          stage_key: string | null
+          label_name: string | null
+          label_color: string | null
+          stage_order: number | null
+          auto_transition_after_hours: number | null
+          next_stage: string | null
+        }
+      }
+      v_backfill_stats: {
+        Row: {
+          total_jids: number | null
+          pending: number | null
+          fetching: number | null
+          ingesting: number | null
+          completed: number | null
+          errors: number | null
+          total_source_msgs: number | null
+          total_ingested: number | null
+          pct_done: number | null
+        }
+      }
+      v_complete_dashboard: {
+        Row: {
+          total_contacts: number | null
+          total_messages: number | null
+          total_conversations: number | null
+          pipeline_value: number | null
+        }
+      }
+      v_connection_uptime: {
+        Row: {
+          instance_name: string | null
+          times_connected: number | null
+          times_disconnected: number | null
+          total_uptime_seconds: number | null
+          total_downtime_seconds: number | null
+          uptime_percentage: number | null
+        }
+      }
+      v_contact_360: {
+        Row: {
+          id: string | null
+          remote_jid: string | null
+          nome: string | null
+          phone_number: string | null
+          company: string | null
+          lead_status: string | null
+          lead_score: number | null
+          total_messages: number | null
+          last_message_at: string | null
+          assigned_to: string | null
+          instancias_interacao: Json | null
+          departamentos_contato: Json | null
+          deals_ativos: number | null
+          pipeline_value: number | null
+        }
+      }
+      v_contacts_by_tag: {
+        Row: {
+          tag_name: string | null
+          color: string | null
+          contact_count: number | null
+          phones: string[] | null
+        }
+      }
+      v_contacts_with_legacy: {
+        Row: {
+          id: string | null
+          remote_jid: string | null
+          phone_number: string | null
+          push_name: string | null
+          profile_picture_url: string | null
+          full_name: string | null
+          email: string | null
+          company: string | null
+          role_title: string | null
+          lead_status: string | null
+          lead_source: string | null
+          lead_score: number | null
+          whatsapp_labels: string[] | null
+          tags: string[] | null
+          assigned_to: string | null
+          first_contact_at: string | null
+          last_message_at: string | null
+          total_messages: number | null
+          total_purchases: number | null
+          notes: string | null
+          instance_name: string | null
+          raw_data: Json | null
+          created_at: string | null
+          updated_at: string | null
+          deleted_at: string | null
+          message_count: number | null
+        }
+      }
+      v_cron_status: {
+        Row: {
+          job_name: string | null
+          schedule: Json | null
+          description: string | null
+          items_pending: number | null
+          last_config_update: string | null
+        }
+      }
+      v_daily_sales_summary: {
+        Row: {
+          date: string | null
+          new_deals: number | null
+          total_value: number | null
+          closed_value: number | null
+          lost_value: number | null
+          won_count: number | null
+          lost_count: number | null
+        }
+      }
+      v_deleted_contacts: {
+        Row: {
+          id: string | null
+          name: string | null
+          phone: string | null
+          email: string | null
+          deleted_at: string | null
+          instance_name: string | null
+        }
+      }
+      v_department_volume: {
+        Row: {
+          department: string | null
+          instancias: number | null
+          instance_names: string[] | null
+        }
+      }
+      v_email_accounts_unified: {
+        Row: {
+          id: string | null
+          provider: string | null
+          created_at: string | null
+        }
+      }
+      v_evolution_dlq_open: {
+        Row: {
+          id: string | null
+          created_at: string | null
+          event_type: string | null
+          instance_name: string | null
+          remote_jid: string | null
+          status: string | null
+          retry_count: number | null
+          max_retries: number | null
+          next_retry_at: string | null
+          error_message_preview: string | null
+          exhausted: boolean | null
+          age_seconds: number | null
+        }
+      }
+      v_evolution_source_tables_summary: {
+        Row: {
+          table_name: string | null
+          rows: number | null
+          num_columns: number | null
+          jsonb_cols: number | null
+          timestamp_cols: number | null
+          status: string | null
+          last_discovered: string | null
+        }
+      }
+      v_gmail_sla_dashboard: {
+        Row: {
+          account_id: string | null
+          email_address: string | null
+          sync_status: string | null
+          created_at: string | null
+        }
+      }
+      v_guardrail_dashboard: {
+        Row: {
+          day: string | null
+          workspace_id: string | null
+          direction: string | null
+          total_checks: number | null
+          passed: number | null
+          blocked: number | null
+          avg_latency_ms: number | null
+        }
+      }
+      v_hourly_metrics: {
+        Row: {
+          hora: string | null
+          total: number | null
+          inbound: number | null
+          outbound: number | null
+        }
+      }
+      v_instance_dashboard: {
+        Row: {
+          instance_name: string | null
+          display_name: string | null
+          department: string | null
+          responsible_name: string | null
+          phone_number: string | null
+          is_active: boolean | null
+          sla_first_response_minutes: number | null
+          sla_resolution_hours: number | null
+        }
+      }
+      v_integration_dashboard: {
+        Row: {
+          id: string | null
+          name: string | null
+          type: string | null
+          provider: string | null
+          status: string | null
+          health_status: string | null
+          endpoint_url: string | null
+          last_health_check: string | null
+          hours_since_check: number | null
+          config: Json | null
+          metadata: Json | null
+          status_emoji: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+      }
+      v_lead_status_coverage: {
+        Row: {
+          status: string | null
+          permitido_no_constraint: boolean | null
+          qtd_contatos: number | null
+          status_visual: string | null
+        }
+      }
+      v_legacy_stages: {
+        Row: {
+          stage_key: string | null
+          label_name: string | null
+          label_color: string | null
+          stage_order: number | null
+          auto_transition_after_hours: number | null
+          next_stage: string | null
+        }
+      }
+      v_legacy_vs_evolution_comparison: {
+        Row: {
+          entidade: string | null
+          qtd_legacy: number | null
+          qtd_evolution: number | null
+          migrados: number | null
+          novos_pos_migracao: number | null
+          pct_migrado: number | null
+          status_visual: string | null
+          dados_em: string | null
+          origem: string | null
+        }
+      }
+      v_migration_reconciliation: {
+        Row: {
+          entidade: string | null
+          legacy_total: number | null
+          evolution_total: number | null
+          from_legacy: number | null
+          native_or_live: number | null
+          status_reconciliacao: string | null
+          taxa_migracao_pct: number | null
+          snapshot_em: string | null
+        }
+      }
+      v_mirror_backfill_progress: {
+        Row: {
+          run_id: string | null
+          total_batches: number | null
+          consumed: number | null
+          consuming: number | null
+          pending: number | null
+          failed: number | null
+          progress_pct: number | null
+          total_rows: number | null
+          rows_inserted: number | null
+          rows_skipped: number | null
+          rows_errored: number | null
+          avg_chunk_ms: number | null
+          started_at: string | null
+          last_consumed_at: string | null
+          eta: string | null
+        }
+      }
+      v_model_catalog: {
+        Row: {
+          model: string | null
+          provider: string | null
+          tier: string | null
+          capabilities: string[] | null
+          context_window: number | null
+          input_cost_per_1m: number | null
+          output_cost_per_1m: number | null
+          active_params: string | null
+          total_params: string | null
+          cost_tier: string | null
+        }
+      }
+      v_monthly_comparison: {
+        Row: {
+          month: string | null
+          new_contacts: number | null
+          messages_received: number | null
+          messages_sent: number | null
+          deals_created: number | null
+          deals_won: number | null
+          deals_lost: number | null
+          revenue: number | null
+          win_rate: number | null
+          avg_deal_value: number | null
+        }
+      }
+      v_nlp_analytics: {
+        Row: {
+          day: string | null
+          workspace_id: string | null
+          source_type: string | null
+          total_extractions: number | null
+          avg_processing_ms: number | null
+          positive_count: number | null
+          negative_count: number | null
+          urgent_count: number | null
+          neutral_count: number | null
+        }
+      }
+      v_pending_conversations: {
+        Row: {
+          id: string | null
+          contact_id: string | null
+          remote_jid: string | null
+          status: string | null
+          assigned_to: string | null
+          department: string | null
+          subject: string | null
+          priority: string | null
+          labels: string[] | null
+          message_count: number | null
+          first_message_at: string | null
+          last_message_at: string | null
+          last_inbound_at: string | null
+          last_outbound_at: string | null
+          first_response_at: string | null
+          first_response_seconds: number | null
+          resolution_at: string | null
+          resolution_seconds: number | null
+          is_bot_active: boolean | null
+          bot_session_id: string | null
+          satisfaction_score: number | null
+          satisfaction_comment: string | null
+          instance_name: string | null
+          metadata: Json | null
+          created_at: string | null
+          updated_at: string | null
+          last_message_content: string | null
+          last_message_type: string | null
+          unread_count: number | null
+          contact_name: string | null
+          phone_number: string | null
+        }
+      }
+      v_pending_notifications: {
+        Row: {
+          id: string | null
+          channel: string | null
+          message: string | null
+          created_at: string | null
+          webhook_url: string | null
+          api_token: string | null
+          chat_id: string | null
+          severity: string | null
+          alert_type: string | null
+        }
+      }
+      v_pending_tasks: {
+        Row: {
+          id: string | null
+          title: string | null
+          task_type: string | null
+          priority: string | null
+          due_date: string | null
+          due_time: string | null
+          assigned_to: string | null
+          status: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          deal_title: string | null
+          deal_value: number | null
+          urgency: string | null
+        }
+      }
+      v_popular_tags: {
+        Row: {
+          id: string | null
+          name: string | null
+          color: string | null
+          category: string | null
+          use_count: number | null
+          current_assignments: number | null
+        }
+      }
+      v_ragas_by_agent: {
+        Row: {
+          agent_id: string | null
+          workspace_id: string | null
+          total_evaluations: number | null
+          avg_faithfulness: number | null
+          avg_answer_relevancy: number | null
+          avg_context_precision: number | null
+          avg_context_recall: number | null
+          avg_answer_correctness: number | null
+          avg_overall_score: number | null
+          first_eval: string | null
+          last_eval: string | null
+        }
+      }
+      v_realtime_dashboard: {
+        Row: {
+          total_contatos: number | null
+          novos_7d: number | null
+          mensagens_hoje: number | null
+          mensagens_7d: number | null
+          conversas_abertas: number | null
+          deals_ativos: number | null
+          pipeline_value: number | null
+        }
+      }
+      v_sales_pipeline: {
+        Row: {
+          stage: string | null
+          deals_count: number | null
+          total_value: number | null
+          weighted_value: number | null
+          avg_deal_value: number | null
+          avg_probability: number | null
+        }
+      }
+      v_system_health: {
+        Row: {
+          total_contacts: number | null
+          messages_24h: number | null
+          total_failed: number | null
+          stuck_sending: number | null
+          pending: number | null
+          dlq_size: number | null
+          errors_24h: number | null
+          active_connections: number | null
+          total_connections: number | null
+          db_size: string | null
+          checked_at: string | null
+        }
+      }
+      v_top_contacts: {
+        Row: {
+          id: string | null
+          phone_number: string | null
+          name: string | null
+          company: string | null
+          lead_status: string | null
+          lead_score: number | null
+          total_messages: number | null
+          total_purchases: number | null
+          last_message_at: string | null
+          active_deals: number | null
+          pipeline_value: number | null
+        }
+      }
+      v_webhook_events_last_hour: {
+        Row: {
+          event_type: string | null
+          instance_name: string | null
+          cnt: number | null
+        }
+      }
+      v_weekly_metrics: {
+        Row: {
+          metric_date: string | null
+          new_contacts: number | null
+          total_messages: number | null
+          deals_created: number | null
+          deals_won: number | null
+          revenue: number | null
+          win_rate: number | null
+        }
+      }
+      vw_contact_labels: {
+        Row: {
+          remote_jid: string | null
+          contact_name: string | null
+          phone_number: string | null
+          active_labels: string[] | null
+          label_count: number | null
+        }
+      }
+      vw_dlq_pending: {
+        Row: {
+          id: string | null
+          event_type: string | null
+          instance_name: string | null
+          remote_jid: string | null
+          error_message: string | null
+          retry_count: number | null
+          max_retries: number | null
+          next_retry_at: string | null
+          status: string | null
+          created_at: string | null
+          retry_status: string | null
+        }
+      }
+      vw_evolution_hot_leads: {
+        Row: {
+          remote_jid: string | null
+          push_name: string | null
+          lead_score: number | null
+          total_messages: number | null
+          last_message_at: string | null
+          created_at: string | null
+        }
+      }
+      vw_evolution_queue_failures: {
+        Row: {
+          id: string | null
+          status: string | null
+          attempts: number | null
+          max_attempts: number | null
+          remote_jid: string | null
+          message_type: string | null
+          source: string | null
+          created_at: string | null
+          error_message: string | null
+          error_category: string | null
+          is_retriable: boolean | null
+          is_real_failure: boolean | null
+        }
+      }
+      vw_evolution_queues_health: {
+        Row: {
+          queue_name: string | null
+          pending: number | null
+          pending_old: number | null
+          sent: number | null
+          delivered: number | null
+          failed: number | null
+          status_summary: string | null
+          success_rate_pct: number | null
+        }
+      }
+      vw_evolution_realtime_metrics: {
+        Row: {
+          total_contacts: number | null
+          total_messages: number | null
+          total_conversations: number | null
+          unresolved_alerts: number | null
+          events_last_hour: number | null
+        }
+      }
+      vw_evolution_sales_funnel: {
+        Row: {
+          stage_key: string | null
+          label_name: string | null
+          stage_order: number | null
+          contacts_count: number | null
+          pct_of_total: number | null
+        }
+      }
+      vw_evolution_top_contacts: {
+        Row: {
+          remote_jid: string | null
+          push_name: string | null
+          lead_score: number | null
+          total_messages: number | null
+          lead_status: string | null
+          last_message_at: string | null
+          created_at: string | null
+          days_as_contact: number | null
+        }
+      }
+      vw_groups_summary: {
+        Row: {
+          id: string | null
+          group_jid: string | null
+          name: string | null
+          category: string | null
+          participant_count: number | null
+          is_community: boolean | null
+          is_monitored: boolean | null
+          auto_response_enabled: boolean | null
+          last_activity_at: string | null
+          messages_today: number | null
+          active_rules: number | null
+        }
+      }
+      vw_historico: {
+        Row: {
+          id_bitrix: number | null
+          nome: string | null
+          periodo: string | null
+          status: string | null
+          valor: number | null
+          lembretes: number | null
+          respondido_em: string | null
+        }
+      }
+      vw_media_health_dashboard: {
+        Row: {
+          message_type: string | null
+          total: number | null
+          with_url: number | null
+          pct_with_url: number | null
+          with_mime: number | null
+          last_24h: number | null
+          last_24h_with_url: number | null
+          pct_24h_with_url: number | null
+          health_status: string | null
+        }
+      }
+      vw_media_pipeline_status: {
+        Row: {
+          total_media_msgs: number | null
+          with_url: number | null
+          without_url: number | null
+          pct_with_url: number | null
+          s3_public: number | null
+          supabase_cloud: number | null
+          minio_internal: number | null
+          queue_pending: number | null
+          queue_processing: number | null
+          queue_done: number | null
+          queue_failed: number | null
+          overall_status: string | null
+        }
+      }
+      vw_missed_calls_pending: {
+        Row: {
+          id: string | null
+          call_id: string | null
+          remote_jid: string | null
+          call_type: string | null
+          created_at: string | null
+          missed_callback_sent: boolean | null
+          contact_name: string | null
+          phone_number: string | null
+          minutes_since_call: number | null
+        }
+      }
+      vw_pendentes_atual: {
+        Row: {
+          id_bitrix: number | null
+          nome: string | null
+          dialog_id: string | null
+          lembretes: number | null
+          disparado_em: string | null
+        }
+      }
+      vw_recent_media: {
+        Row: {
+          id: string | null
+          message_id: string | null
+          remote_jid: string | null
+          media_type: string | null
+          mime_type: string | null
+          file_name: string | null
+          file_size: number | null
+          storage_url: string | null
+          caption: string | null
+          created_at: string | null
+          contact_name: string | null
+        }
+      }
+      vw_resumo_mes: {
+        Row: {
+          periodo: string | null
+          pendentes: number | null
+          solicitaram: number | null
+          recusaram: number | null
+          valor_total: number | null
+          total: number | null
+        }
+      }
+      vw_sticker_categories: {
+        Row: {
+          category: string | null
+          total: number | null
+          favorites: number | null
+          total_uses: number | null
+          last_used_at: string | null
+        }
+      }
+      vw_sticker_messages: {
+        Row: {
+          id: string | null
+          message_id: string | null
+          remote_jid: string | null
+          from_me: boolean | null
+          media_url: string | null
+          media_mimetype: string | null
+          status: string | null
+          instance_name: string | null
+          push_name: string | null
+          contact_id: string | null
+          created_at: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          storage_type: string | null
+          has_media: boolean | null
+        }
+      }
+      vw_unread_events: {
+        Row: {
+          id: string | null
+          event_type: string | null
+          entity_type: string | null
+          entity_id: string | null
+          remote_jid: string | null
+          title: string | null
+          body: string | null
+          data: Json | null
+          priority: string | null
+          read: boolean | null
+          read_at: string | null
+          target_users: string[] | null
+          created_at: string | null
+          priority_order: number | null
+        }
+      }
     }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Functions: {}
+    Enums: {}
+    CompositeTypes: {}
   }
 }
-
-type PublicSchema = Database[Extract<keyof Database, "public">]
-
-export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
-    : never
