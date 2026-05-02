@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
+import { gmailMappers } from '@/utils/gmailMappers';
 import { 
   GmailDayMetric, 
   GmailMetricsSummary, 
@@ -24,7 +25,7 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
     try {
       const sinceDate = new Date(Date.now() - days * 86400_000).toISOString().split('T')[0];
 
-      const { data: dailyData, error: dbErr } = await safeClient.from<GmailDayMetric>('gmail_daily_metrics', (q) =>
+      const { data: dailyData, error: dbErr } = await safeClient.from('gmail_daily_metrics', (q) =>
         q.select('date, threads_received, threads_replied, avg_first_reply_minutes, sla_met_count, sla_breached_count')
          .eq('account_id', accountId)
          .gte('date', sinceDate)
@@ -33,7 +34,7 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
 
       if (dbErr) throw dbErr;
 
-      const daily = (dailyData ?? []) as GmailDayMetric[];
+      const daily = gmailMappers.metrics(dailyData ?? []);
 
       const total_received   = daily.reduce((s, d) => s + (d.threads_received ?? 0), 0);
       const total_replied    = daily.reduce((s, d) => s + (d.threads_replied ?? 0), 0);
@@ -61,13 +62,13 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
         daily,
       });
 
-      const { data: threads } = await safeClient.from<any>('gmail_threads', (q) =>
+      const { data: threadsData } = await safeClient.from('gmail_threads', (q) =>
         q.select('sla_status')
          .eq('account_id', accountId)
          .not('sla_status', 'is', null)
       );
 
-      const allThreads = threads ?? [];
+      const allThreads = gmailMappers.threads(threadsData ?? []);
       setSlaDash({
         ok_count:       allThreads.filter(t => t.sla_status === 'ok').length,
         warning_count:  allThreads.filter(t => t.sla_status === 'warning').length,

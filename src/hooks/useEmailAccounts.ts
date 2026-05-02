@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
+import { gmailMappers } from '@/utils/gmailMappers';
 import { UnifiedEmailAccount } from '@/types/gmail';
 
 const supabase = _supabase as any;
@@ -26,14 +27,14 @@ export function useEmailAccounts(): UseEmailAccountsReturn {
     setIsLoading(true);
     setError(null);
 
-    const { data, error: dbErr } = await safeClient.from<UnifiedEmailAccount>('v_email_accounts_unified', (q) =>
+    const { data, error: dbErr } = await safeClient.from('v_email_accounts_unified', (q) =>
       q.select('*').order('created_at', { ascending: true })
     );
 
     if (dbErr) {
       setError(dbErr.message);
     } else {
-      setAccounts(data ?? []);
+      setAccounts(gmailMappers.unifiedAccounts(data ?? []));
     }
     setIsLoading(false);
   }, []);

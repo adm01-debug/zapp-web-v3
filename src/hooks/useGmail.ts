@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
+import { gmailMappers } from '@/utils/gmailMappers';
 import { type GmailMessage } from './gmail/gmailTypes';
 import { 
   GmailAccount, 
@@ -70,7 +71,7 @@ export function useGmail() {
     setIsLoading(true);
     setError(null);
     
-    const { data, error: dbErr } = await safeClient.from<GmailAccount>('gmail_accounts', (q) => 
+    const { data, error: dbErr } = await safeClient.from('gmail_accounts', (q) => 
       q.select('id, user_id, email, display_name, is_active, token_expiry, watch_expiry')
        .eq('is_active', true)
        .order('created_at', { ascending: true })
@@ -79,7 +80,7 @@ export function useGmail() {
     if (dbErr) {
       setError(dbErr.message);
     } else {
-      const accs = data ?? [];
+      const accs = gmailMappers.accounts(data ?? []);
       setAccounts(accs);
       if (accs.length > 0 && !activeAccountId) {
         setActiveAccountId(accs[0].id);
@@ -90,12 +91,13 @@ export function useGmail() {
 
   // ── Verificar status dos tokens ─────────────────────────────────────────
   const checkTokenStatus = useCallback(async () => {
-    const { data, error: rpcErr } = await safeClient.rpc<GmailTokenInfo[]>('rpc_gmail_token_status');
+    const { data, error: rpcErr } = await safeClient.rpc('rpc_gmail_token_status');
     if (!rpcErr && data) {
-      setTokenStatus(data);
+      const tokenInfos = gmailMappers.tokenInfos(data);
+      setTokenStatus(tokenInfos);
       
       const statusMap: Record<string, string> = {};
-      data.forEach(s => {
+      tokenInfos.forEach(s => {
         statusMap[s.account_id] = s.token_status;
       });
       (setTokenStatus as any).asMap = statusMap;
@@ -108,7 +110,7 @@ export function useGmail() {
     if (!id) return;
 
     setIsLoadingThreads(true);
-    const { data, error: rpcErr } = await safeClient.rpc<any[]>('rpc_gmail_search_threads', {
+    const { data, error: rpcErr } = await safeClient.rpc('rpc_gmail_search_threads', {
       p_account_id: id,
       p_query:      null,
       p_label_id:   label,
@@ -119,13 +121,9 @@ export function useGmail() {
     if (rpcErr) {
       setError(rpcErr.message);
     } else {
-      const newThreads = (data ?? []).map((t: any) => ({
-        ...t,
-        thread_id: t.gmail_thread_id,
-        is_unread: t.unread_count > 0
-      })) as GmailThread[];
-      setThreads(prev => append ? [...prev, ...newThreads] : newThreads);
-      setHasMore(newThreads.length === 50);
+      const mappedThreads = gmailMappers.threads(data ?? []);
+      setThreads(prev => append ? [...prev, ...mappedThreads] : mappedThreads);
+      setHasMore(mappedThreads.length === 50);
     }
     setIsLoadingThreads(false);
   }, [activeAccountId, threads.length]);

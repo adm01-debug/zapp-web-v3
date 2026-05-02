@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
+import { gmailMappers } from '@/utils/gmailMappers';
 import { GmailLabelInfo as GmailLabel } from '@/types/gmail';
 
 export type { GmailLabel };
@@ -28,14 +29,14 @@ export function useGmailLabels(accountId: string | null) {
 
     setIsLoading(true);
     setError(null);
-    const { data, error: dbErr } = await safeClient.from<GmailLabel>('gmail_labels', (q) =>
+    const { data, error: dbErr } = await safeClient.from('gmail_labels', (q) =>
       q.select('*').eq('account_id', accountId).order('name', { ascending: true })
     );
 
     if (dbErr) {
       setError(dbErr.message);
     } else {
-      setLabels(data ?? []);
+      setLabels(gmailMappers.labels(data ?? []));
     }
     setIsLoading(false);
   }, [accountId]);

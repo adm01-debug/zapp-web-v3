@@ -14,6 +14,7 @@ export interface GmailAccount {
   user_id:       string;
   email:         string;
   display_name:  string | null;
+  picture_url?:  string | null;
   is_active:     boolean;
   token_expiry:  string | null;
   watch_expiry:  string | null;
