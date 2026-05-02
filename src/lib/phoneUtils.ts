@@ -53,31 +53,28 @@ export function normalizePhone(raw: unknown): string | null {
   if (raw === null || raw === undefined) return null;
   const input = typeof raw === 'string' ? raw : String(raw);
 
-  // Remove all non-digits
+  if (/^\+?(?!55)\d{11,}$/.test(input.replace(/[\s()-]/g, ''))) {
+    return input.replace(/\D/g, '');
+  }
+
   let digits = input.replace(/\D/g, '');
   if (!digits) return null;
 
-  // Strip international prefix: +55 or 0055 or 55 at start
   if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
     digits = digits.slice(2);
   }
 
-  // At this point we should have 10 or 11 digits (or international)
   if (digits.length < 10) return null;
   if (digits.length > 11) return null;
 
   const ddd = parseInt(digits.slice(0, 2));
-
-  // Check DDD validity (only strict check for BR numbers)
   if (!VALID_DDDS.has(ddd)) return null;
 
-  // 10-digit mobile: add 9th digit (applies to mobile DDDs/numbers starting 6-9)
   if (digits.length === 10) {
     const firstOfNumber = digits[2];
-    if (['6', '7', '8', '9'].includes(firstOfNumber)) {
+    if (['7', '8'].includes(firstOfNumber)) {
       digits = digits.slice(0, 2) + '9' + digits.slice(2);
     }
-    // Landlines remain 10 digits — keep as is
   }
 
   return digits;
@@ -153,14 +150,16 @@ export function validatePhoneDetailed(phone: unknown): PhoneValidationDetailed {
  */
 export function formatPhoneForDisplay(phone: unknown): string {
   if (!phone) return '';
-  const normalized = normalizePhone(phone) ?? String(phone).replace(/\D/g, '');
-  if (!normalized || normalized.length < 10) return String(phone);
+  const raw = String(phone);
+  const digitsOnly = raw.replace(/\D/g, '');
+  if (/^\+?(?!55)\d{11,}$/.test(raw.replace(/[\s()-]/g, ''))) return raw;
+
+  const normalized = normalizePhone(phone) ?? digitsOnly;
+  if (!normalized || normalized.length < 10) return raw;
 
   if (normalized.length === 11) {
-    // Mobile: (DDD) 9XXXX-XXXX
     return `(${normalized.slice(0, 2)}) ${normalized.slice(2, 7)}-${normalized.slice(7)}`;
   }
-  // Landline: (DDD) XXXX-XXXX
   return `(${normalized.slice(0, 2)}) ${normalized.slice(2, 6)}-${normalized.slice(6)}`;
 }
 
