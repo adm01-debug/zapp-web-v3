@@ -270,7 +270,7 @@ export function useGmail() {
 
   // ── Marcar thread como lida/não lida ───────────────────────────────────
   const markAsRead = useCallback(async (threadId: string, read = true) => {
-    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_mark_thread_read', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_mark_thread_read', {
       p_thread_id: threadId,
       p_read:      read,
     });
