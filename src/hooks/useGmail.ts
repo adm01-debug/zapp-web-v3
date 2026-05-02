@@ -23,12 +23,19 @@ import {
   GmailTokenInfo, 
   GmailThread, 
   GmailSendParams,
+export type { 
+  GmailAccount, 
+  GmailTokenInfo, 
+  GmailThread, 
+  GmailSendParams,
   GmailLabel,
   EmailThread,
   SLAStatus
 } from '@/types/gmail';
 
-const supabase = _supabase as any;
+export type GmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
+export type GmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
+export type TokenStatus = GmailTokenStatus; // Alias legado
 
 
 // ── Hook Principal ─────────────────────────────────────────────────────────
