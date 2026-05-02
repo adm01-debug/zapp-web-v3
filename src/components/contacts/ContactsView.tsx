@@ -1,7 +1,7 @@
 /**
- * ContactsView.tsx — ZAPP WEB v3.0
- * Complete contacts page. Tabs: All / Duplicates / Recycle Bin.
- * Uses evolution_contacts (real DB schema).
+ * ContactsView.tsx — ZAPP WEB v3.1
+ * Complete contacts page with evolution_contacts schema.
+ * Updated to include Import button + ContactImportDialogV2.
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, UserPlus, Search, Download, Trash2, GitMerge, SlidersHorizontal, X, ArrowUpDown, RefreshCw, CheckSquare } from 'lucide-react';
+import {
+  Users, UserPlus, Search, Download, Trash2, GitMerge,
+  SlidersHorizontal, X, ArrowUpDown, RefreshCw, CheckSquare, Upload,
+} from 'lucide-react';
 import { useContacts, type Contact, type ContactFilters } from '@/hooks/useContacts';
 import { ContactsErrorBoundary } from '@/components/contacts/ContactsErrorBoundary';
 import { ContactsPageSkeleton } from '@/components/contacts/ContactSkeletonLoader';
@@ -18,6 +21,7 @@ import DuplicateContactsPanel from '@/components/contacts/DuplicateContactsPanel
 import ContactRecycleBin from '@/components/contacts/ContactRecycleBin';
 import ContactExportDialog from '@/components/contacts/ContactExportDialog';
 import ContactFormModal from '@/components/contacts/ContactFormModal';
+import { ContactImportDialogV2 } from '@/components/contacts/ContactImportDialogV2';
 import ContactRow from '@/components/contacts/ContactRow';
 
 interface ContactsViewProps {
@@ -38,7 +42,7 @@ const SORT_OPTIONS = [
   { value: 'full_name:asc',        label: 'Nome A→Z' },
   { value: 'full_name:desc',       label: 'Nome Z→A' },
   { value: 'created_at:desc',      label: 'Criado (recente)' },
-  { value: 'lead_score:desc',      label: 'Lead score ↓' },
+  { value: 'lead_score:desc',      label: 'Score ↓' },
 ];
 
 export const ContactsView: React.FC<ContactsViewProps> = ({ instanceName = 'wpp2', onOpenChat }) => {
@@ -49,6 +53,7 @@ export const ContactsView: React.FC<ContactsViewProps> = ({ instanceName = 'wpp2
   const [createOpen, setCreateOpen]   = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [exportOpen, setExportOpen]   = useState(false);
+  const [importOpen, setImportOpen]   = useState(false);
   const searchDebounce = useRef<ReturnType<typeof setTimeout>>();
   const loadMoreRef    = useRef<HTMLDivElement>(null);
 
@@ -87,11 +92,14 @@ export const ContactsView: React.FC<ContactsViewProps> = ({ instanceName = 'wpp2
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b gap-2">
           <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-muted-foreground" />
+            <Users className="h-5 w-5 text-muted-foreground shrink-0" />
             <h1 className="font-semibold">Contatos</h1>
             {total > 0 && <span className="text-xs text-muted-foreground">{total.toLocaleString('pt-BR')}</span>}
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setImportOpen(true)} title="Importar contatos" aria-label="Importar contatos">
+              <Upload className="h-4 w-4" />
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-1">
               <Download className="h-3.5 w-3.5" /><span className="hidden sm:inline">Exportar</span>
             </Button>
@@ -117,7 +125,7 @@ export const ContactsView: React.FC<ContactsViewProps> = ({ instanceName = 'wpp2
           </div>
 
           <TabsContent value="all" className="flex-1 flex flex-col overflow-hidden mt-0 p-0">
-            {/* Search + sort */}
+            {/* Search + sort bar */}
             <div className="px-4 py-2 border-b space-y-2">
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
@@ -129,7 +137,7 @@ export const ContactsView: React.FC<ContactsViewProps> = ({ instanceName = 'wpp2
                   <SelectTrigger className="w-40 h-9 shrink-0"><ArrowUpDown className="h-3.5 w-3.5 mr-1 text-muted-foreground" /><SelectValue /></SelectTrigger>
                   <SelectContent>{SORT_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
                 </Select>
-                <Button variant={filters.lead_status ? 'default' : 'outline'} size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowFilters((v) => !v)}>
+                <Button variant={filters.lead_status ? 'default' : 'outline'} size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowFilters((v) => !v)} aria-label="Filtros avançados">
                   <SlidersHorizontal className="h-4 w-4" />
                 </Button>
               </div>
@@ -156,7 +164,7 @@ export const ContactsView: React.FC<ContactsViewProps> = ({ instanceName = 'wpp2
               </div>
             )}
 
-            {/* List */}
+            {/* Contact list */}
             <div className="flex-1 overflow-y-auto">
               {loading && contacts.length === 0 ? (
                 <ContactsPageSkeleton />
@@ -165,24 +173,25 @@ export const ContactsView: React.FC<ContactsViewProps> = ({ instanceName = 'wpp2
                   <Users className="h-12 w-12 mb-3 opacity-20" />
                   <p className="font-medium">Nenhum contato encontrado</p>
                   <p className="text-sm">Tente outro termo ou crie um novo contato.</p>
-                  <Button variant="outline" size="sm" className="mt-4 gap-1" onClick={() => setCreateOpen(true)}><UserPlus className="h-4 w-4" />Criar contato</Button>
+                  <div className="flex gap-2 mt-4">
+                    <Button variant="outline" size="sm" className="gap-1" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4" />Importar CSV</Button>
+                    <Button variant="outline" size="sm" className="gap-1" onClick={() => setCreateOpen(true)}><UserPlus className="h-4 w-4" />Criar contato</Button>
+                  </div>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/30 border-b text-xs text-muted-foreground">
-                    <button onClick={selected.size > 0 ? clearSel : selectAll} className="flex items-center gap-2 hover:text-foreground">
+                    <button onClick={selected.size > 0 ? clearSel : selectAll} className="flex items-center gap-2 hover:text-foreground transition-colors">
                       <CheckSquare className="h-3.5 w-3.5" />{selected.size > 0 ? 'Desmarcar todos' : 'Selecionar todos'}
                     </button>
                     <span className="ml-auto">{total.toLocaleString('pt-BR')} contato{total !== 1 ? 's' : ''}</span>
                   </div>
                   {contacts.map((c) => (
-                    <ContactRow
-                      key={c.id} contact={c} isSelected={selected.has(c.id)}
+                    <ContactRow key={c.id} contact={c} isSelected={selected.has(c.id)}
                       onSelect={() => toggleSelect(c.id)}
                       onOpenChat={() => onOpenChat?.(c.remote_jid, c.full_name ?? c.push_name ?? c.phone_number ?? '')}
                       onEdit={() => setEditContact(c)}
-                      onDelete={() => deleteContactsWithUndo([c.id], c.full_name ?? c.push_name ?? 'Contato')}
-                    />
+                      onDelete={() => deleteContactsWithUndo([c.id], c.full_name ?? c.push_name ?? 'Contato')} />
                   ))}
                   <div ref={loadMoreRef} className="h-2" />
                   {loadingMore && <div className="flex justify-center py-3 text-xs text-muted-foreground gap-2"><RefreshCw className="h-3.5 w-3.5 animate-spin" />Carregando...</div>}
@@ -203,6 +212,9 @@ export const ContactsView: React.FC<ContactsViewProps> = ({ instanceName = 'wpp2
         <ContactExportDialog open={exportOpen} onOpenChange={setExportOpen} workspaceId={instanceName}
           activeFilters={{ search: filters.search, tags: filters.tags, channel: filters.lead_status }}
           selectedIds={selected.size > 0 ? Array.from(selected) : undefined} />
+
+        <ContactImportDialogV2 open={importOpen} onOpenChange={setImportOpen} instanceName={instanceName}
+          onImported={() => { setImportOpen(false); loadContacts(); }} />
 
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetContent side="right" className="w-full sm:w-[480px] overflow-y-auto">
