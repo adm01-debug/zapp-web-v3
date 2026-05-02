@@ -131,12 +131,12 @@ describe('Chat Module Fixes — Unit Tests', () => {
         }
       };
 
-      let state = { chatSearch: false, aiAssistant: false };
-      state = reducer(state, { type: 'OPEN', key: 'chatSearch' });
+      let state: { chatSearch: boolean; aiAssistant: boolean } = { chatSearch: false, aiAssistant: false };
+      state = reducer(state, { type: 'OPEN', key: 'chatSearch' }) as typeof state;
       expect(state.chatSearch).toBe(true);
-      state = reducer(state, { type: 'CLOSE', key: 'chatSearch' });
+      state = reducer(state, { type: 'CLOSE', key: 'chatSearch' }) as typeof state;
       expect(state.chatSearch).toBe(false);
-      state = reducer(state, { type: 'TOGGLE', key: 'aiAssistant' });
+      state = reducer(state, { type: 'TOGGLE', key: 'aiAssistant' }) as typeof state;
       expect(state.aiAssistant).toBe(true);
     });
   });

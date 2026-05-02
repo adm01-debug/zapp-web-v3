@@ -36,9 +36,9 @@ describe('useAdvancedContactSearch', () => {
     mockFrom.mockReturnValue(makeSupabaseMock([]));
     const { result } = renderHook(() => useAdvancedContactSearch());
 
-    expect(result.current.contacts).toEqual([]);
+    expect((result.current as any).contacts).toEqual([]);
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.query).toBe('');
+    expect((result.current as any).query).toBe('');
   });
 
   it('deve buscar contatos ao atualizar query com >2 caracteres', async () => {
@@ -51,7 +51,7 @@ describe('useAdvancedContactSearch', () => {
     const { result } = renderHook(() => useAdvancedContactSearch());
 
     act(() => {
-      result.current.setQuery('João');
+      (result.current as any).setQuery('João');
     });
 
     await waitFor(() => {
@@ -64,7 +64,7 @@ describe('useAdvancedContactSearch', () => {
     const { result } = renderHook(() => useAdvancedContactSearch());
 
     act(() => {
-      result.current.setQuery('J');
+      (result.current as any).setQuery('J');
     });
 
     // Aguardar possível debounce
@@ -81,7 +81,7 @@ describe('useAdvancedContactSearch', () => {
     const { result } = renderHook(() => useAdvancedContactSearch());
 
     act(() => {
-      result.current.setQuery('Maria');
+      (result.current as any).setQuery('Maria');
     });
 
     await waitFor(() => {
@@ -89,11 +89,11 @@ describe('useAdvancedContactSearch', () => {
     }, { timeout: 2000 });
 
     act(() => {
-      result.current.clear();
+      (result.current as any).clear();
     });
 
-    expect(result.current.query).toBe('');
-    expect(result.current.contacts).toEqual([]);
+    expect((result.current as any).query).toBe('');
+    expect((result.current as any).contacts).toEqual([]);
   });
 
   it('deve retornar erro quando Supabase falha', async () => {
@@ -101,7 +101,7 @@ describe('useAdvancedContactSearch', () => {
     const { result } = renderHook(() => useAdvancedContactSearch());
 
     act(() => {
-      result.current.setQuery('Teste');
+      (result.current as any).setQuery('Teste');
     });
 
     await waitFor(() => {
@@ -109,6 +109,6 @@ describe('useAdvancedContactSearch', () => {
     }, { timeout: 2000 });
 
     // Não deve crashar com erro
-    expect(result.current.contacts).toEqual([]);
+    expect((result.current as any).contacts).toEqual([]);
   });
 });
