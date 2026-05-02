@@ -5,6 +5,7 @@ import {
   GmailThread, 
   GmailDayMetric, 
   GmailLabelInfo,
+  UnifiedEmailAccount,
   SLAStatus
 } from '@/types/gmail';
 
