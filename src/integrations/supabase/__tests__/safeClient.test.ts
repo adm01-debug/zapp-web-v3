@@ -14,11 +14,9 @@ vi.mock('../client', () => ({
       order: vi.fn().mockReturnThis(),
     })),
     rpc: vi.fn((name: string, params: any) => ({
-      // Handle the .limit(0) in validateResource
       limit: vi.fn().mockImplementation(() => {
         return mockRpcChain();
       }),
-      // Handle direct rpc() call
       then: (resolve: any) => resolve(mockRpcChain())
     })),
   },
@@ -42,12 +40,13 @@ describe('safeClient', () => {
   it('deve usar cache para validações subsequentes', async () => {
     const tableName = 'gmail_cached';
     
-    // Sucesso na validação E dados
+    // Configura o mock para SEMPRE retornar sucesso primeiro, para simular existência
     mockSelect.mockResolvedValue({ data: [{ id: 1 }], error: null });
 
     const res1 = await safeClient.from(tableName, (q) => q.select('*'));
     expect(res1.data).toEqual([{ id: 1 }]);
     
+    // Muda o mock para a segunda query
     mockSelect.mockResolvedValue({ data: [{ id: 2 }], error: null });
     const res2 = await safeClient.from(tableName, (q) => q.select('*'));
     expect(res2.data).toEqual([{ id: 2 }]);
