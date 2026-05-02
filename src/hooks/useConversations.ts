@@ -130,6 +130,7 @@ export function useConversations() {
   });
 
   // ── Load ──────────────────────────────────────────────────────────────
+  const cursorRef = useRef<string | null>(null);
 
   const loadConversations = useCallback(async (overrideFilters?: Partial<ConversationFilters>) => {
     const f = { ...filters, ...overrideFilters };
@@ -139,7 +140,9 @@ export function useConversations() {
       if (error) throw error;
       const items = (data ?? []).map(mapRow);
       const last = items[items.length - 1];
-      cursorRef.current = last ? String((last as Record<string, unknown>)[f.sort_field] ?? '') : null;
+      if (last) {
+        cursorRef.current = String((last as any)[f.sort_field] ?? '');
+      }
       setConversations(items);
       setTotal(count ?? items.length);
       setHasMore(items.length === PAGE_SIZE);
@@ -163,7 +166,7 @@ export function useConversations() {
         p_offset: offsetRef.current,
       });
       if (error) throw error;
-      const newItems = (data ?? []).map(mapRow);
+      const newItems = (data ?? []).map(row => mapRow(row as any));
       setConversations((prev) => [...prev, ...newItems]);
       setHasMore(newItems.length === PAGE_SIZE);
       offsetRef.current += newItems.length;
@@ -181,7 +184,7 @@ export function useConversations() {
   // ── Actions ───────────────────────────────────────────────────────────
 
   const assignConversation = useCallback(async (id: string, agentId: string) => {
-    const { data, error } = await supabase.rpc('assign_conversation', {
+    const { data, error } = await (supabase as any).rpc('assign_conversation', {
       p_conversation_id: id, p_agent_id: agentId,
     });
     if (error) throw error;
@@ -190,7 +193,7 @@ export function useConversations() {
   }, []);
 
   const closeConversation = useCallback(async (id: string, note?: string) => {
-    const { data, error } = await supabase.rpc('close_conversation', {
+    const { data, error } = await (supabase as any).rpc('close_conversation', {
       p_id: id, p_note: note ?? null,
     });
     if (error) throw error;
