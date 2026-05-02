@@ -8,6 +8,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import { sanitizeContactFields } from '@/lib/sanitize';
 import { dbFrom } from '@/integrations/datasource/db';
 

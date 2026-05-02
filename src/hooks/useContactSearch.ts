@@ -87,7 +87,7 @@ export function useContactSearch(options: ContactSearchOptions = {}) {
 
       try {
         // Primary: FTS with unaccent via RPC
-        const { data, error } = await supabase.rpc('search_contacts', {
+        const { data, error } = await (supabase as any).rpc('search_contacts', {
           p_query:         sanitized,
           p_instance_name: instanceName,
           p_lead_status:   leadStatus ?? null,
