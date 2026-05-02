@@ -11223,7 +11223,9 @@ export type Database = {
           locked_until: string
         }[]
       }
-      is_admin_or_supervisor: { Args: { _user_id: string }; Returns: boolean }
+      is_admin_or_supervisor:
+        | { Args: never; Returns: boolean }
+        | { Args: { _user_id: string }; Returns: boolean }
       is_contact_visible_to_user: {
         Args: { _contact_id: string; _user_id: string }
         Returns: boolean
@@ -11339,6 +11341,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_check_and_trigger_gmail_revalidation: { Args: never; Returns: Json }
       rpc_conversation_sla_panel: {
         Args: {
           p_assigned_to?: string
