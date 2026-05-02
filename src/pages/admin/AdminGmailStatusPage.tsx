@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
   AlertCircle, CheckCircle2, Clock, ShieldCheck, Database, 
   Search, RefreshCcw, AlertTriangle, ChevronLeft, ChevronRight,
-  Filter
+  Filter, History as HistoryIcon
 } from 'lucide-react';
 import { useGmail } from '@/hooks/useGmail';
 import { gmailHealthService, GmailHealthInfo, GmailFailure } from '@/services/gmailHealthService';
