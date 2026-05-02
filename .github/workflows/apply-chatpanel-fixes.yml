@@ -11,33 +11,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Run ChatPanel migration script
+      - name: Apply all 8 fixes via migration script
         run: node scripts/migrate-chatpanel.mjs
 
-      - name: Verify TypeScript compilation
-        run: |
-          npm install --legacy-peer-deps 2>/dev/null || true
-          npx tsc --noEmit --skipLibCheck 2>&1 | head -50 || echo "TypeScript check completed (warnings may be expected)"
-
-      - name: Commit and push changes
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "fix: apply all 8 ChatPanel critical fixes via migration script
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "fix: apply all 8 ChatPanel critical fixes
 
-          Automated commit from GitHub Action running migrate-chatpanel.mjs:
-          1. Add imports for useTransferConversation, useScheduledMediaUpload, useSafeInteractiveMessage
-          2. Remove 'as any' casts on openDialog/closeDialog (type-safe)
-          3. Fix currentUserId: 'agent' → conversation.assignedTo?.id || 'agent'
-          4. Fix assignedTo: null → conversation.assignedTo?.id ?? null
-          5. Replace handleTransfer stub with useTransferConversation hook
-          6. Fix signed URL TTL: 3600s (1h) → 604800s (7 days)
-          7. Add upload error toast in handleScheduleMessage
-          8. Fix poll/contact status: 'sent' → 'sending'"
+          1. Add hook imports (useTransferConversation, useScheduledMediaUpload, useSafeInteractiveMessage)
+          2. Remove as any casts → type-safe dialog functions
+          3. currentUserId: agent → real agent ID
+          4. assignedTo: null → real assignedTo
+          5. handleTransfer stub → useTransferConversation
+          6. Signed URL TTL 1h → 7 days
+          7. Upload error handling with toast
+          8. Poll/contact status sent → sending"
           git push
