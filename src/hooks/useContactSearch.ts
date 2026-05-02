@@ -1,134 +1,136 @@
 /**
- * useContactSearch.ts
- * Debounced contact search using the search_contacts() RPC.
- * Uses materialized tsvector + unaccent — finds "José" with "jose".
- *
- * Uses the optimized search_contacts() RPC instead of
- * client-side ILIKE for better performance on 100k+ contacts.
+ * useContactSearch.ts — v2.0
+ * Full-text search hook for contacts using search_contacts() RPC.
+ * Features:
+ * - FTS (tsvector) with unaccent support
+ * - Trigram fallback for partial matching
+ * - Debounced search (400ms)
+ * - Abort on new query
+ * - XSS prevention via sanitizeForSearch
  */
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { sanitizeText } from '@/lib/sanitize';
-import { type Contact } from '@/hooks/useContacts';
+import { sanitizeForSearch } from '@/lib/sanitize';
 
-interface SearchResult {
-  id:             string;
-  remote_jid:     string;
-  phone_number:   string | null;
-  full_name:      string | null;
-  push_name:      string | null;
-  email:          string | null;
-  company:        string | null;
-  tags:           string[];
-  lead_status:    string;
-  lead_score:     number;
-  last_message_at:string | null;
-  profile_pic_url:string | null;
-  rank:           number;
+export interface SearchResult {
+  id:           string;
+  remote_jid:   string;
+  phone_number: string | null;
+  full_name:    string | null;
+  push_name:    string | null;
+  email:        string | null;
+  company:      string | null;
+  lead_status:  string;
+  lead_score:   number;
+  tags:         string[];
+  rank:         number;
 }
 
-interface Options {
-  instanceName?:  string;
-  leadStatus?:    string | null;
-  limit?:         number;
-  debounceMs?:    number;
-  minLength?:     number;
+export interface ContactSearchOptions {
+  instanceName?: string;
+  leadStatus?:   string | null;
+  limit?:        number;
+  debounceMs?:   number;
 }
 
-export function useContactSearch({
-  instanceName = 'wpp2',
-  leadStatus,
-  limit = 10,
-  debounceMs = 350,
-  minLength = 2,
-}: Options = {}) {
-  const [results,  setResults]  = useState<SearchResult[]>([]);
-  const [loading,  setLoading]  = useState(false);
-  const [query,    setQuery]    = useState('');
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+export function useContactSearch(options: ContactSearchOptions = {}) {
+  const {
+    instanceName = 'wpp2',
+    leadStatus   = null,
+    limit        = 20,
+    debounceMs   = 400,
+  } = options;
 
-  const search = useCallback((searchQuery: string) => {
-    setQuery(searchQuery);
-    clearTimeout(debounceRef.current);
+  const [results,   setResults]   = useState<SearchResult[]>([]);
+  const [loading,   setLoading]   = useState(false);
+  const [query,     setQuery]     = useState('');
+  const timerRef   = useRef<ReturnType<typeof setTimeout>>();
+  const abortRef   = useRef<AbortController | null>(null);
 
-    if (!searchQuery.trim() || searchQuery.trim().length < minLength) {
+  const mapRow = (row: Record<string, unknown>): SearchResult => ({
+    id:           String(row.id ?? ''),
+    remote_jid:   String(row.remote_jid ?? ''),
+    phone_number: row.phone_number as string | null,
+    full_name:    row.full_name as string | null,
+    push_name:    row.push_name as string | null,
+    email:        row.email as string | null,
+    company:      row.company as string | null,
+    lead_status:  String(row.lead_status ?? 'novo'),
+    lead_score:   Number(row.lead_score ?? 0),
+    tags:         Array.isArray(row.tags) ? row.tags as string[] : [],
+    rank:         Number(row.rank ?? 0),
+  });
+
+  const search = useCallback((rawQuery: string) => {
+    setQuery(rawQuery);
+
+    // Clear previous debounce
+    clearTimeout(timerRef.current);
+
+    if (!rawQuery.trim()) {
       setResults([]);
+      setLoading(false);
       return;
     }
 
-    debounceRef.current = setTimeout(async () => {
+    timerRef.current = setTimeout(async () => {
+      // Cancel previous request
+      abortRef.current?.abort();
+      const abort = new AbortController();
+      abortRef.current = abort;
+
+      const sanitized = sanitizeForSearch(rawQuery);
+      if (!sanitized) { setResults([]); return; }
+
       setLoading(true);
+
       try {
+        // Primary: FTS with unaccent via RPC
         const { data, error } = await supabase.rpc('search_contacts', {
-          p_query:         searchQuery.trim(),
+          p_query:         sanitized,
           p_instance_name: instanceName,
           p_lead_status:   leadStatus ?? null,
           p_limit:         limit,
           p_offset:        0,
         });
 
-        if (error) throw error;
-        setResults((data ?? []) as SearchResult[]);
-      } catch (err) {
-        console.error('[useContactSearch]', err);
-        // Fallback to simple ilike
-        try {
-          const safe = sanitizeText(searchQuery.trim());
+        if (abort.signal.aborted) return;
+
+        if (error) {
+          // Fallback: direct ilike search
           const { data: fallback } = await supabase
             .from('evolution_contacts')
-            .select('id,remote_jid,phone_number,full_name,push_name,email,company,tags,lead_status,lead_score,last_message_at,profile_picture_url')
+            .select('id,remote_jid,phone_number,full_name,push_name,email,company,lead_status,lead_score,tags')
             .is('deleted_at', null)
             .eq('instance_name', instanceName)
-            .or(`full_name.ilike.%${safe}%,phone_number.ilike.%${safe}%,email.ilike.%${safe}%`)
+            .or(`full_name.ilike.%${sanitized}%,push_name.ilike.%${sanitized}%,phone_number.ilike.%${sanitized}%,email.ilike.%${sanitized}%`)
             .limit(limit);
 
-          setResults((fallback ?? []).map((c) => ({
-            ...c,
-            phone_number:    c.phone_number as string | null,
-            full_name:       c.full_name as string | null,
-            push_name:       c.push_name as string | null,
-            email:           c.email as string | null,
-            company:         c.company as string | null,
-            tags:            Array.isArray(c.tags) ? c.tags as string[] : [],
-            lead_status:     String(c.lead_status ?? 'novo'),
-            lead_score:      Number(c.lead_score ?? 0),
-            last_message_at: c.last_message_at as string | null,
-            profile_pic_url: c.profile_picture_url as string | null,
-            rank:            0.5,
-          })));
-        } catch { setResults([]); }
+          if (!abort.signal.aborted) {
+            setResults((fallback ?? []).map((row) => mapRow({ ...row, rank: 0 })));
+          }
+        } else {
+          setResults((data ?? []).map(mapRow));
+        }
+      } catch (err) {
+        if (!abort.signal.aborted) {
+          console.error('[useContactSearch]', err);
+        }
       } finally {
-        setLoading(false);
+        if (!abort.signal.aborted) setLoading(false);
       }
     }, debounceMs);
-  }, [instanceName, leadStatus, limit, debounceMs, minLength]);
+  }, [instanceName, leadStatus, limit, debounceMs]);
 
-  const clear = useCallback(() => {
-    clearTimeout(debounceRef.current);
-    setResults([]);
+  const clearSearch = useCallback(() => {
+    clearTimeout(timerRef.current);
+    abortRef.current?.abort();
     setQuery('');
+    setResults([]);
+    setLoading(false);
   }, []);
 
-  return { results, loading, query, search, clear };
+  return { results, loading, query, search, clearSearch };
 }
 
-/**
- * Convert a SearchResult to a Contact type.
- * Useful when you need to pass search results to components expecting Contact.
- */
-export function searchResultToContact(r: SearchResult): Partial<Contact> {
-  return {
-    id:              r.id,
-    remote_jid:      r.remote_jid,
-    phone_number:    r.phone_number,
-    full_name:       r.full_name ? sanitizeText(r.full_name) : null,
-    push_name:       r.push_name ? sanitizeText(r.push_name) : null,
-    email:           r.email,
-    company:         r.company ? sanitizeText(r.company) : null,
-    tags:            r.tags,
-    lead_status:     r.lead_status,
-    lead_score:      r.lead_score,
-    last_message_at: r.last_message_at,
-    profile_picture_url: r.profile_pic_url,
-  };
-}
+export default useContactSearch;
