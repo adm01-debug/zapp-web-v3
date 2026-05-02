@@ -55,20 +55,22 @@ export class AppErrorBoundary extends Component<Props, State> {
   }
 
   private async reportError(error: Error, errorInfo: ErrorInfo, errorId: string | null) {
+    // Persistent error logging table (`app_error_logs`) is not provisioned in
+    // Lovable Cloud. Keep structured logging via the shared logger so that the
+    // boundary still surfaces the failure without crashing on a missing table.
     try {
-      await supabase.from('app_error_logs').insert({
-        error_id: errorId,
+      log.error('[AppErrorBoundary] render failure', {
+        errorId,
         module: this.props.module || 'unknown',
         message: error.message,
-        stack: error.stack?.slice(0, 2000), // Truncate to avoid huge payloads
-        component_stack: errorInfo.componentStack?.slice(0, 2000),
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        stack: error.stack?.slice(0, 2000),
+        componentStack: errorInfo.componentStack?.slice(0, 2000),
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
         url: typeof window !== 'undefined' ? window.location.href : null,
         timestamp: new Date().toISOString(),
       });
-    } catch (reportError) {
-      // Silently fail — we don't want error reporting to cause more errors
-      log.error('Failed to report error to Supabase:', reportError);
+    } catch {
+      // Never let the reporter throw.
     }
   }
 
