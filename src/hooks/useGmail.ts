@@ -148,7 +148,8 @@ export function useGmail() {
     );
 
     if (dbErr) {
-      console.error('Erro ao carregar mensagens:', dbErr);
+      const rid = (dbErr as any).requestId || 'N/A';
+      console.error(`[useGmail][${rid}] Erro ao carregar mensagens:`, dbErr);
     } else {
       setMessages(Array.isArray(data) ? data : []);
     }
