@@ -32,7 +32,7 @@ export function useConversationSummary(workspaceId: string) {
     setIsGenerating(true);
     try {
       // Call Edge Function that uses AI to summarize
-      const { data, error } = await supabase.functions.invoke('generate-conversation-summary', {
+      const { data, error } = await (supabase as any).functions.invoke('generate-conversation-summary', {
         body: {
           conversation_id: conversationId,
           workspace_id: workspaceId,
@@ -46,7 +46,7 @@ export function useConversationSummary(workspaceId: string) {
       setSummary(result);
 
       // Persist summary
-      await supabase.from('conversation_summaries').upsert({
+      await (supabase as any).from('conversation_summaries').upsert({
         conversation_id: conversationId,
         workspace_id: workspaceId,
         summary: result.summary,
@@ -71,7 +71,7 @@ export function useConversationSummary(workspaceId: string) {
   }, [workspaceId]);
 
   const loadSummary = useCallback(async (conversationId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('conversation_summaries')
       .select('*')
       .eq('conversation_id', conversationId)

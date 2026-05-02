@@ -110,7 +110,7 @@ export function useAgents(workspaceId?: string) {
   // ── Promote to production ────────────────────────────────────────────
 
   const promoteToProduction = useCallback(async (id: string) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('agents')
       .update({ status: 'production', updated_at: new Date().toISOString() })
       .eq('id', id);
@@ -123,7 +123,7 @@ export function useAgents(workspaceId?: string) {
   // ── Deprecate ────────────────────────────────────────────────────────
 
   const deprecateAgent = useCallback(async (id: string) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('agents')
       .update({ status: 'deprecated', updated_at: new Date().toISOString() })
       .eq('id', id);
@@ -135,7 +135,7 @@ export function useAgents(workspaceId?: string) {
   // ── Smart assign ─────────────────────────────────────────────────────
 
   const smartAssignToConversation = useCallback(async (conversationId: string) => {
-    const { data, error } = await supabase.rpc('smart_assign_conversation', {
+    const { data, error } = await (supabase as any).rpc('smart_assign_conversation', {
       p_conversation_id: conversationId,
       p_workspace_id:    workspaceId ?? null,
     });
