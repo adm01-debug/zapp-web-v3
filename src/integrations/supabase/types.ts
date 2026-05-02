@@ -19510,9 +19510,47 @@ export type Database = {
           priority_order: number | null
         }
       }
+      vw_recent_media_gallery: {
+        Row: {
+          id: string | null
+          message_id: string | null
+          media_type: string | null
+          public_url: string | null
+          media_mimetype: string | null
+          media_filename: string | null
+          media_size: number | null
+          caption: string | null
+          from_me: boolean | null
+          remote_jid: string | null
+          instance_name: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          storage_provider: string | null
+        }
+      }
     }
     Functions: {}
     Enums: {}
     CompositeTypes: {}
   }
+}
+
+// View: vw_recent_media_gallery (added during re-audit sync)
+export interface VwRecentMediaGalleryRow {
+  id: string | null
+  message_id: string | null
+  media_type: string | null
+  public_url: string | null
+  media_mimetype: string | null
+  media_filename: string | null
+  media_size: number | null
+  caption: string | null
+  from_me: boolean | null
+  remote_jid: string | null
+  instance_name: string | null
+  contact_name: string | null
+  contact_phone: string | null
+  created_at: string | null
+  storage_provider: string | null
 }
