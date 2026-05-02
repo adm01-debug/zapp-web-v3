@@ -199,6 +199,45 @@ export async function sendDraft(
   return { data, error: null };
 }
 
+/**
+ * Renova o access_token Gmail via refresh_token armazenado.
+ * Edge function: gmail-token-refresh.
+ */
+export async function gmailRefreshToken(
+  accountId: string,
+): Promise<GmailApiResponse<{ accessToken: string; expiresAt: string }>> {
+  const { data, error } = await supabase.functions.invoke('gmail-token-refresh', {
+    body: { accountId },
+  });
+
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data, error: null };
+}
+
+/**
+ * Revoga a conta Gmail (tokens + watch) e remove credenciais armazenadas.
+ */
+export async function gmailRevokeAccount(
+  accountId: string,
+): Promise<GmailApiResponse<{ success: boolean }>> {
+  const { data, error } = await supabase.functions.invoke('gmail-oauth', {
+    body: { action: 'revoke', accountId },
+  });
+
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data, error: null };
+}
+
+/**
+ * Registra/renova o Pub/Sub watch da conta Gmail.
+ * Alias semântico de renewGmailWatch para clareza no fluxo de OAuth.
+ */
+export async function gmailRegisterWatch(
+  accountId: string,
+): Promise<GmailApiResponse<{ watchExpiry: string; historyId: string }>> {
+  return renewGmailWatch(accountId);
+}
+
 // ── Tipos de Anexo ────────────────────────────────────────────────────────
 
 export interface GmailAttachment {
