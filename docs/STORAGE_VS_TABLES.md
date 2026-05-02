@@ -28,3 +28,16 @@ supabase.from('audio_memes').insert({...})
 ## Regra de Ouro
 - **Hífen** (`-`) = Storage Bucket (arquivos binários)
 - **Underscore** (`_`) = Tabela PostgreSQL (dados estruturados)
+
+---
+
+## Foreign Keys Pendentes (Fase 2)
+
+14 tabelas core do ZAPP sem FK constraint em `contact_id`:
+- campaign_contacts, contact_audit_log, contact_custom_fields, contact_notes
+- contact_purchases, contact_tags, conversation_analyses, conversation_closures
+- conversation_events, conversation_memory, conversation_sla, conversation_snoozes
+- conversation_tasks, csat_surveys
+
+**Por que não adicionar agora:** Dados órfãos existentes podem violar a constraint.
+**Ação:** Limpar dados órfãos antes de adicionar FK em janela de manutenção.
