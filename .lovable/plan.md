@@ -1,60 +1,63 @@
-## Problema
+# Plano: destravar o preview (build TS quebrado pós-FATOR X)
 
-O banner vermelho gigante fixo no topo (`EvolutionDisconnectBanner`) ocupa toda a largura da tela, empurra o conteúdo para baixo e tem visual agressivo (`bg-destructive`, animação de pulse, ícone grande). Aparece sempre que `whatsapp_connections.status = 'disconnected'`.
+## Diagnóstico
 
-Já existe um componente discreto e elegante para o mesmo dado: `WhatsAppConnectionStatus` (badge pequeno verde/vermelho com contagem `connected/total`), atualmente usado dentro da `ConversationListSidebar` do Inbox.
+O preview mostra tela branca **não** por bug de runtime, mas porque o **build TypeScript falha**. O Vite serve a página vazia e o React nunca monta.
 
-## Solução
+A causa raiz é arquitetural: a migração para FATOR X removeu várias tabelas e RPCs do schema do Lovable Cloud (`src/integrations/supabase/types.ts`), mas **112 arquivos** ainda chamam essas entidades pelo client errado:
 
-Trocar o banner intrusivo por um **chip discreto no header global**, com Popover de detalhes e ação de reconectar — mantendo a informação acessível sem ser irritante.
+- `supabase.from('contact_audit_log' | 'conversations' | 'contacts' | 'messages' | 'whisper_messages' | 'app_error_logs' | 'contact_tags' | 'deals' | 'tasks' | ...)`
+- `supabase.rpc('find_duplicate_contacts' | 'bulk_update_lead_status' | 'bulk_add_tag' | 'get_contact_conversations' | ...)`
 
-### 1. Remover o banner fixo
+Pela memória do projeto, todo domínio WhatsApp/CRM mora no `externalClient` e deve ser acessado via RPC (`rpc_list_*`, `rpc_get_contact`, `rpc_insert_message` etc.).
 
-- Em `src/components/layout/IndexContentConnected.tsx`:
-  - Remover o import e a renderização de `<EvolutionDisconnectBanner />` (linhas 20 e 96).
-- Marcar `src/components/alerts/EvolutionDisconnectBanner.tsx` como deprecated (manter o arquivo por enquanto, sem uso) ou deletar — preferência: **deletar** para evitar regressão.
+## Estratégia em duas fases
 
-### 2. Criar indicador compacto no header
+### Fase 1 — Destravar o build AGORA (escopo cirúrgico)
 
-Novo componente `src/components/layout/ConnectionStatusIndicator.tsx`:
+Objetivo único: voltar o preview a renderizar. Não vamos refatorar 112 arquivos de uma vez.
 
-- Reaproveita a lógica de `EvolutionDisconnectBanner` (query + realtime em `whatsapp_connections`) e a ação `handleReconnect` (com cooldown de 30s e tratamento `EVOLUTION_AUTH_ERROR`).
-- Renderização:
-  - **Tudo OK** → ícone `Wifi` pequeno em `text-emerald-500`, sem destaque (ou nada — opcional).
-  - **1+ desconectada** → botão chip pequeno (`h-7 px-2`) com ícone `WifiOff` âmbar/vermelho sutil + texto curto "wpp2 offline" (ou "2 offline").
-  - Clique abre `Popover` (shadcn) listando as instâncias desconectadas com botão "Reconectar" individual + cooldown.
-- Sem `position: fixed`, sem `motion` de slide, sem ocupar largura inteira. Cores semânticas (`text-destructive`, `bg-destructive/10`), nada de `bg-destructive` chapado.
-- Acessibilidade: `aria-label`, foco visível, `role="status"` com `aria-live="polite"` para mudanças de estado.
+Apenas os arquivos que **bloqueiam o bundle inicial** (importados pelo `App.tsx` → `AppRoutes` → boundaries globais) precisam compilar. O resto pode ficar com erros até serem abertos.
 
-### 3. Posicionar o indicador no header
+Lista mínima identificada nos erros do build atual:
 
-- Adicionar `<ConnectionStatusIndicator />` no header global (provavelmente `AppShell` / `AppHeader` — confirmar arquivo durante implementação) ao lado dos demais ícones de status (notificações, sirene, etc.).
-- Manter `WhatsAppConnectionStatus` na sidebar do Inbox como está (já é discreto e contextual).
+1. `src/components/AppErrorBoundary.tsx` — usa `supabase.from('app_error_logs')` (tabela inexistente).  
+   **Ação**: remover o `reportError` para Supabase e logar apenas via `log.error`. (A tabela `app_error_logs` não existe em nenhum dos dois backends.)
 
-### 4. Notificação inicial (opcional, recomendado)
+2. `src/components/contacts/AuditLogPanel.tsx`, `ContactAuditLogPanel.tsx`, `ContactActivityFeed.tsx`  
+   **Ação**: trocar `supabase.from('contact_audit_log')` → `externalClient.rpc('rpc_list_audit_log', { p_entity_type: 'contact', p_entity_id: contactId })`.
 
-- Quando uma instância transiciona de `connected` → `disconnected`, disparar **um único toast** (sonner, variant `warning`, duração 6s) com botão "Reconectar". Não repetir enquanto o usuário não dispensar; deduplicar por `instance_id`.
-- Isso preserva o "alerta ativo" sem precisar do banner permanente.
+3. `src/components/contacts/ContactConversationHistory.tsx`, `ContactDuplicatesPanel.tsx`  
+   **Ação**: trocar `supabase.from('conversations')` → `externalClient.rpc('rpc_list_conversations', ...)`.
+
+4. `src/components/contacts/ContactBulkActionsBar.tsx`  
+   **Ação**: as RPCs `bulk_update_lead_status` / `bulk_add_tag` / `bulk_remove_tag` não existem no FATOR X. Substituir por loop de `rpc_upsert_contact` (status) e operação direta em `evolution_contact_tags` (quando a RPC existir; senão, desabilitar temporariamente o botão com um toast "em manutenção").
+
+5. `src/components/contacts/ContactConsentManager.tsx`, `ContactDuplicateIndicator.tsx`, `ContactDuplicatesPanel.tsx`  
+   **Ação**: trocar `supabase.from('contacts')` → `externalClient.rpc('rpc_get_contact' | 'rpc_upsert_contact' | 'rpc_global_search')`. Para campos LGPD não cobertos por RPC, usar `rpc_upsert_contact` com `p_notes` ou pedir RPC nova ao operador (registrar em `BUGS.md`).
+
+Critério de saída: `tsc --noEmit` (que o harness roda) volta a ficar verde, o Vite bundla e o preview renderiza `/auth`.
+
+### Fase 2 — Backlog (não nesta loop)
+
+Os outros ~107 arquivos serão corrigidos sob demanda, conforme cada tela for aberta. Vou abrir um item em `BUGS.md` listando-os por feature (inbox, calls, deals, tasks, war room, etc.) com o RPC alvo de cada um.
 
 ## Detalhes técnicos
 
-- **Cores**: usar tokens semânticos (`text-destructive`, `bg-destructive/10`, `border-destructive/30`) — nunca hardcoded. Para estado "atenção" preferir âmbar (`text-amber-500`) ao vermelho puro.
-- **Tamanho**: chip `h-7`, ícone `w-3.5 h-3.5`, texto `text-xs`. Touch target mínimo 44px garantido via `min-h-11` no wrapper invisível ou padding.
-- **Realtime**: manter o canal Supabase (`whatsapp_connections` UPDATE) já existente; reutilizar lógica.
-- **Logger**: continuar usando `getLogger('EvolutionBanner')` → renomear para `'ConnectionStatusIndicator'`.
-- **Memory**: alinhado com `mem://style/design-system-and-skins` (sem cores hardcoded) e `mem://features/sidebar/quick-access-controls`.
-
-## Arquivos afetados
-
-- ✏️ `src/components/layout/IndexContentConnected.tsx` — remover banner.
-- 🗑️ `src/components/alerts/EvolutionDisconnectBanner.tsx` — deletar.
-- ➕ `src/components/layout/ConnectionStatusIndicator.tsx` — novo chip + popover.
-- ✏️ `AppShell` / header global — montar o novo indicador (arquivo confirmado na implementação).
+- **Padrão de substituição** já documentado em `mem://database/migration/external-fator-x-transition` e no project-knowledge: nunca `JOIN` cross-client; sempre RPC para `evolution_*`.
+- **`app_error_logs`**: como a tabela não existe nem no FATOR X nem no Lovable Cloud, vamos manter o ErrorBoundary funcionando com log local. Se quiser persistência, criamos depois uma tabela `app_error_logs` no Lovable Cloud via migration (decisão posterior).
+- **Tipos**: nada a fazer em `types.ts` (auto-gerado). Os erros somem assim que as chamadas mudarem para `externalClient.rpc(...)`, que é tipado como `any` por design no FATOR X.
+- **Sem mudanças de DB nesta loop** — só código frontend.
 
 ## Resultado esperado
 
-```text
-Antes: [================ BANNER VERMELHO FULL WIDTH ================]
-Depois: [ ZAPP Web ............... 🔔  📞  ⚠ wpp2 offline  👤 ]
-                                          └─ click → popover c/ Reconectar
-```
+- `tsc` passa.
+- Preview carrega `LoadingSplash` → redireciona para `/auth` (ou já mostra o Inbox se houver sessão salva).
+- Telas ainda não tocadas (kanban, tasks, war room) podem mostrar o `ErrorBoundary` local quando abertas — esperado e tratado na Fase 2.
+
+## Riscos
+
+- Algum arquivo da Fase 1 pode depender de outro arquivo da Fase 2 em runtime e quebrar ao abrir contatos. Mitigação: envolver com `try/catch` e `GenericEmptyState` quando a RPC falhar.
+- A funcionalidade "bulk actions" e "duplicates" ficará degradada até as RPCs equivalentes serem criadas no FATOR X — vou sinalizar com toast claro ao usuário.
+
+Posso seguir com a Fase 1?
