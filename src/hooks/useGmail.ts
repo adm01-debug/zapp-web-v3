@@ -71,14 +71,15 @@ export function useGmail() {
     setIsLoading(true);
     setError(null);
     
-    const { data, error: dbErr } = await safeClient.from('gmail_accounts', (q) => 
+    const { data, error: dbErr, requestId } = await safeClient.from('gmail_accounts', (q) => 
       q.select('id, user_id, email, display_name, is_active, token_expiry, watch_expiry')
        .eq('is_active', true)
        .order('created_at', { ascending: true })
     );
 
     if (dbErr) {
-      setError(dbErr.message);
+      console.warn(`[useGmail][${requestId}] Falha ao carregar contas:`, dbErr.message);
+      setError(`Não foi possível carregar as contas Gmail. ${dbErr.message.includes('disponível') ? 'O recurso ainda está sendo configurado.' : ''}`);
     } else {
       const accs = gmailMappers.accounts(Array.isArray(data) ? data : []);
       setAccounts(accs);
