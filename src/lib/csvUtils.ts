@@ -20,7 +20,7 @@ const FORMULA_PREFIXES = /^[=+\-@\t\r]/;
  * - Handles null/undefined/number/boolean inputs
  */
 export function escapeCsvCell(value: unknown): string {
-  if (value === null || value === undefined) return '""';
+  if (value === null || value === undefined) return '';
 
   const str = String(value);
 
@@ -194,3 +194,5 @@ export async function parseCsvFile(file: File): Promise<string[][]> {
 export function downloadCsv(filename: string, csvContent: string): void {
   downloadCsvFile(csvContent, filename);
 }
+
+export const buildCsvString = buildCsv;
