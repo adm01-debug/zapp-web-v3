@@ -51,12 +51,12 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
       if (localId) {
         await (supabase as any).from('gmail_drafts' as any).update(payload).eq('id', localId);
       } else {
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from('gmail_drafts' as any)
           .insert(payload)
           .select('id')
           .single();
-        localId = data?.id;
+        localId = (data as any)?.id;
       }
 
       // 2. Sincronizar com Gmail API
