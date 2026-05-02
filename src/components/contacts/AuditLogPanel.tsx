@@ -81,7 +81,7 @@ export const AuditLogPanel: React.FC<{ contactId: string; maxEntries?: number }>
         <div className="flex items-center gap-1.5">
           <History className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Histórico</span>
-          <Shield className="h-3 w-3 text-muted-foreground" title="LGPD Art.37" />
+          <span title="LGPD Art.37" className="inline-flex"><Shield className="h-3 w-3 text-muted-foreground" /></span>
         </div>
         <Button variant="ghost" size="sm" onClick={load} disabled={loading} className="h-6 w-6 p-0">
           <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />

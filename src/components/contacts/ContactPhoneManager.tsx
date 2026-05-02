@@ -158,7 +158,7 @@ export const ContactPhoneManager: React.FC<ContactPhoneManagerProps> = ({
 
             {/* WhatsApp badge */}
             {phone.is_whatsapp && (
-              <MessageCircle className="h-3.5 w-3.5 text-green-500 shrink-0" title="WhatsApp" />
+              <span title="WhatsApp" className="inline-flex"><MessageCircle className="h-3.5 w-3.5 text-green-500 shrink-0" /></span>
             )}
 
             {/* Remove */}
