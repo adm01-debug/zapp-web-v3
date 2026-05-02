@@ -19,7 +19,7 @@ export const SYSTEM_LABELS: Array<{ id: string; name: string; icon: string; colo
 ];
 
 export function useGmailLabels(accountId: string | null) {
-  const [labels, setLabels]         = useState<GmailLabelInfo[]>([]);
+  const [labels, setLabels]         = useState<GmailLabel[]>([]);
   const [isLoading, setIsLoading]   = useState(false);
   const [error, setError]           = useState<string | null>(null);
 
@@ -28,7 +28,7 @@ export function useGmailLabels(accountId: string | null) {
 
     setIsLoading(true);
     setError(null);
-    const { data, error: dbErr } = await safeClient.from<GmailLabelInfo>('gmail_labels', (q) =>
+    const { data, error: dbErr } = await safeClient.from<GmailLabel>('gmail_labels', (q) =>
       q.select('*').eq('account_id', accountId).order('name', { ascending: true })
     );
 
