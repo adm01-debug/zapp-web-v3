@@ -147,7 +147,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
         }
 
         toast({ title: '✅ Contato atualizado!', duration: 3000 });
-        onSaved({ ...contact, ...data, version: (contact.version ?? 0) + 1 });
+        onSaved?.({ ...contact, ...data, version: (contact.version ?? 0) + 1 });
         onOpenChange(false);
       }, 'Salvar contato');
     } catch (err) {
