@@ -29,12 +29,13 @@ export function useGmailLabels(accountId: string | null) {
 
     setIsLoading(true);
     setError(null);
-    const { data, error: dbErr } = await safeClient.from('gmail_labels', (q) =>
+    const { data, error: dbErr, requestId } = await safeClient.from('gmail_labels', (q) =>
       q.select('*').eq('account_id', accountId).order('name', { ascending: true })
     );
 
     if (dbErr) {
-      setError(dbErr.message);
+      console.warn(`[useGmailLabels][${requestId}] Falha ao carregar labels:`, dbErr.message);
+      setError(`Não foi possível carregar as pastas do Gmail.`);
     } else {
       setLabels(gmailMappers.labels(Array.isArray(data) ? data : []));
     }
