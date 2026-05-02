@@ -40,11 +40,11 @@ describe('normalizePhone', () => {
 });
 
 describe('validatePhone', () => {
-  it('valid mobile → true', () => expect(validatePhone('11987654321')).toBe(true));
-  it('valid landline → true', () => expect(validatePhone('1133334444')).toBe(true));
-  it('invalid DDD → false', () => expect(validatePhone('1087654321')).toBe(false));
-  it('empty → false', () => expect(validatePhone('')).toBe(false));
-  it('null → false', () => expect(validatePhone(null)).toBe(false));
+  it('valid mobile → true', () => expect(validatePhone('11987654321').valid).toBe(true));
+  it('valid landline → true', () => expect(validatePhone('1133334444').valid).toBe(true));
+  it('invalid DDD → false', () => expect(validatePhone('1087654321').valid).toBe(false));
+  it('empty → false', () => expect(validatePhone('').valid).toBe(false));
+  it('null → false', () => expect(validatePhone(null).valid).toBe(false));
 });
 
 describe('formatPhoneForDisplay', () => {
