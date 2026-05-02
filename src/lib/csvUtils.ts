@@ -196,3 +196,13 @@ export function downloadCsv(filename: string, csvContent: string): void {
 }
 
 export const buildCsvString = buildCsv;
+
+/**
+ * Detect possible encoding issues in raw CSV text (mojibake artifacts from
+ * latin1 → UTF-8 misreads). Returns true when typical broken sequences appear.
+ */
+export function hasEncodingIssues(text: string): boolean {
+  if (!text) return false;
+  // Common mojibake markers: replacement char, "Ã" sequences, "Â" before ASCII
+  return /\uFFFD|Ã[\u0080-\u00BF]|Â[\u00A0-\u00BF]/.test(text);
+}
