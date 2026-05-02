@@ -52,3 +52,101 @@ export function dbChannel(entity: LogicalEntity, name: string): RealtimeChannel 
 export function dbRemoveChannel(entity: LogicalEntity, channel: RealtimeChannel): void {
   dbClient(entity).removeChannel(channel);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RPC layer — padrão para toda leitura/escrita em `evolution_*` (FATOR X).
+//
+// `dbFrom`/`dbChannel` acima continuam servindo entidades Lovable Cloud e
+// realtime. Para o domínio de WhatsApp/CRM use SEMPRE as RPCs:
+//
+//   const { data } = await dbList(RPC.listMessagesLite, {
+//     p_remote_jid: jid, p_limit: 50,
+//   });
+//
+// `dbList`/`dbGet`/`dbInsert` são aliases nominais — todos delegam a `dbRpc`.
+// Servem para deixar a intenção legível no call site.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface DbRpcResult<R> {
+  data: R | null;
+  error: unknown;
+  correlationId: string;
+}
+
+function rpcClient(client: DatasourceClient): SupabaseClient {
+  const target = client === 'external' ? externalSupabase : supabase;
+  if (!target) {
+    throw new Error(`[datasource] cliente "${client}" indisponível para RPC.`);
+  }
+  return target as SupabaseClient;
+}
+
+export async function dbRpc<P extends object, R>(
+  def: RpcDefinition<P, R>,
+  params: P,
+): Promise<DbRpcResult<R>> {
+  const client = rpcClient(def.client);
+  const merged = { ...(def.defaults ?? {}), ...params };
+  const startedAt = performance.now();
+  const correlationId = generateCorrelationId();
+  const source = def.client === 'external' ? 'externalSupabase' : 'lovableCloud';
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await client.rpc(def.name, merged as any);
+    const durationMs = Math.round(performance.now() - startedAt);
+    const errorMessage = error ? error.message ?? 'rpc error' : undefined;
+
+    recordQueryEvent({
+      operation: 'rpc',
+      source,
+      target: def.name,
+      durationMs,
+      filters: merged as Record<string, unknown>,
+      recordCount: Array.isArray(data) ? data.length : null,
+      errorMessage,
+      severity: classifySeverity(durationMs, !!error, false),
+      startedAt,
+      correlationId,
+    });
+
+    return { data: (data as R) ?? null, error, correlationId };
+  } catch (err) {
+    const durationMs = Math.round(performance.now() - startedAt);
+    const message = (err as Error)?.message ?? 'rpc error';
+    const isTimeout = (err as Error)?.name === 'TimeoutError' || /timeout/i.test(message);
+
+    recordQueryEvent({
+      operation: 'rpc',
+      source,
+      target: def.name,
+      durationMs,
+      filters: merged as Record<string, unknown>,
+      recordCount: null,
+      errorMessage: message,
+      severity: isTimeout ? 'timeout' : 'error',
+      startedAt,
+      correlationId,
+    });
+    throw err;
+  }
+}
+
+/** Lista (RPC que retorna array). Alias semântico de `dbRpc`. */
+export const dbList = <P extends object, R>(
+  def: RpcDefinition<P, R[]>,
+  params: P,
+): Promise<DbRpcResult<R[]>> => dbRpc<P, R[]>(def, params);
+
+/** Busca individual (RPC que retorna single row). Alias semântico de `dbRpc`. */
+export const dbGet = <P extends object, R>(
+  def: RpcDefinition<P, R>,
+  params: P,
+): Promise<DbRpcResult<R>> => dbRpc<P, R>(def, params);
+
+/** Inserção/escrita (RPC mutation). Alias semântico de `dbRpc`. */
+export const dbInsert = <P extends object, R>(
+  def: RpcDefinition<P, R>,
+  params: P,
+): Promise<DbRpcResult<R>> => dbRpc<P, R>(def, params);
+
