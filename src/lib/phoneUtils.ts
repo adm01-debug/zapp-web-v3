@@ -72,7 +72,8 @@ export function normalizePhone(raw: unknown): string | null {
 
   if (digits.length === 10) {
     const firstOfNumber = digits[2];
-    if (['7', '8'].includes(firstOfNumber)) {
+    // Brazilian mobile numbers start with 6, 7, 8 or 9 (after DDD)
+    if (['6', '7', '8', '9'].includes(firstOfNumber)) {
       digits = digits.slice(0, 2) + '9' + digits.slice(2);
     }
   }
