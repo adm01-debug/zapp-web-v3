@@ -4,12 +4,13 @@
  * Estratégia dual:
  * 1. Busca local imediata no Supabase (FTS via tsvector) — < 100ms
  * 2. Busca remota na Gmail API para resultados não sincronizados — async
+ *
+ * NOTA: Sem dependência de use-debounce — usa setTimeout nativo.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { gmailListThreads } from './gmail/gmailApi';
-import { useDebouncedCallback } from 'use-debounce';
 
 export interface EmailSearchResult {
   id: string;
@@ -31,13 +32,14 @@ export function useEmailSearch(accountId: string | null) {
   const [results, setResults] = useState<EmailSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllerRef = useRef<{ aborted: boolean }>({ aborted: false });
 
   const searchLocal = useCallback(async (q: string): Promise<EmailSearchResult[]> => {
     if (!accountId) return [];
 
-    // Normaliza para FTS: substitui espaços por &
-    const ftsQuery = q.trim().split(/\s+/).join(' & ');
+    // Normaliza para FTS websearch
+    const ftsQuery = q.trim();
 
     const { data, error: dbErr } = await supabase
       .from('gmail_threads')
@@ -79,8 +81,7 @@ export function useEmailSearch(accountId: string | null) {
 
     try {
       const res = await gmailListThreads({ accountId, q, maxResults: 10 });
-      // Marca resultados remotos para diferenciação visual
-      return (res.threads ?? []).map((t: Record<string, unknown>) => ({
+      return ((res.threads as Record<string, unknown>[]) ?? []).map((t) => ({
         id: String(t.id ?? ''),
         thread_id: String(t.id ?? ''),
         subject: String(t.snippet ?? '').substring(0, 80),
@@ -103,9 +104,9 @@ export function useEmailSearch(accountId: string | null) {
       return;
     }
 
-    // Cancela busca anterior se ainda em andamento
-    abortRef.current?.abort();
-    abortRef.current = new AbortController();
+    // Marca esta instância de busca como "atual"
+    const signal = { aborted: false };
+    abortControllerRef.current = signal;
 
     setIsSearching(true);
     setError(null);
@@ -113,39 +114,60 @@ export function useEmailSearch(accountId: string | null) {
     try {
       // Fase 1: local imediato
       const local = await searchLocal(q);
+      if (signal.aborted) return;
       setResults(local);
 
-      // Fase 2: remoto async (adiciona sem substituir local)
+      // Fase 2: remoto async
       const remote = await searchRemote(q);
+      if (signal.aborted) return;
 
-      // Deduplica: remove resultados remotos que já vieram do local
+      // Deduplica resultados remotos vs locais
       const localThreadIds = new Set(local.map(r => r.thread_id));
       const newRemote = remote.filter(r => !localThreadIds.has(r.thread_id));
 
       setResults([...local, ...newRemote]);
     } catch {
-      setError('Erro ao buscar emails');
+      if (!signal.aborted) setError('Erro ao buscar emails');
     } finally {
-      setIsSearching(false);
+      if (!signal.aborted) setIsSearching(false);
     }
   }, [searchLocal, searchRemote]);
 
-  const debouncedSearch = useDebouncedCallback(doSearch, DEBOUNCE_MS);
-
   const handleQueryChange = useCallback((q: string) => {
     setQuery(q);
-    debouncedSearch(q);
-  }, [debouncedSearch]);
+
+    // Cancela busca anterior
+    abortControllerRef.current.aborted = true;
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    if (!q || q.length < MIN_QUERY_LEN) {
+      setResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      doSearch(q);
+    }, DEBOUNCE_MS);
+  }, [doSearch]);
 
   const clearSearch = useCallback(() => {
+    abortControllerRef.current.aborted = true;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     setQuery('');
     setResults([]);
     setError(null);
-    abortRef.current?.abort();
+    setIsSearching(false);
   }, []);
 
-  // Limpa ao desmontar
-  useEffect(() => () => { abortRef.current?.abort(); }, []);
+  // Cleanup ao desmontar
+  useEffect(() => () => {
+    abortControllerRef.current.aborted = true;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+  }, []);
 
   return {
     query,
