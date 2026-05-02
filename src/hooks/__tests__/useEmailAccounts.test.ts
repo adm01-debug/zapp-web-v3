@@ -6,19 +6,63 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useEmailAccounts } from '../useEmailAccounts';
 
-const mockFrom   = vi.fn();
+const mockFrom = vi.fn();
 const mockChannel = {
   on: vi.fn().mockReturnThis(),
   subscribe: vi.fn().mockReturnThis(),
 };
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: (table: string) => mockFrom(table),
-    channel: vi.fn().mockReturnValue(mockChannel),
-    removeChannel: vi.fn(),
-  },
-}));
+vi.mock('@/integrations/supabase/client', () => {
+  const mockChannel = {
+    on: vi.fn().mockReturnThis(),
+    subscribe: vi.fn().mockReturnThis(),
+  };
+  return {
+    supabase: {
+      from: vi.fn((table: string) => ({
+        select: vi.fn().mockReturnThis(),
+        order: vi.fn().mockImplementation(() => {
+          if (table === 'v_email_accounts_unified') {
+            return Promise.resolve({ 
+              data: [
+                {
+                  account_id: 'gmail-1',
+                  user_id: 'user-1',
+                  email: 'joao@gmail.com',
+                  display_name: 'João Silva',
+                  provider: 'gmail',
+                  auth_method: 'Google OAuth2',
+                  is_active: true,
+                  token_expired: false,
+                  unread_threads: 3,
+                  sla_breached: 0,
+                  created_at: new Date().toISOString(),
+                },
+                {
+                  account_id: 'outlook-1',
+                  user_id: 'user-1',
+                  email: 'joao@empresa.com',
+                  display_name: 'joao@empresa.com',
+                  provider: 'outlook',
+                  auth_method: 'Microsoft Graph API',
+                  is_active: true,
+                  token_expired: false,
+                  unread_threads: 5,
+                  sla_breached: 1,
+                  created_at: new Date().toISOString(),
+                }
+              ], 
+              error: null 
+            });
+          }
+          return Promise.resolve({ data: [], error: null });
+        }),
+      })),
+      channel: vi.fn().mockReturnValue(mockChannel),
+      removeChannel: vi.fn(),
+    },
+  };
+});
 
 const makeViewMock = (data: unknown[], error = null) => ({
   select: vi.fn().mockReturnThis(),
