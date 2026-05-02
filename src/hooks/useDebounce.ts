@@ -20,8 +20,9 @@ interface UseDebounceOptions {
  */
 export function useDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
-  options: UseDebounceOptions = {},
+  optionsOrDelay: UseDebounceOptions | number = {},
 ): T {
+  const options: UseDebounceOptions = typeof optionsOrDelay === 'number' ? { delay: optionsOrDelay } : optionsOrDelay;
   const { delay = 300, leading = false } = options;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbackRef = useRef(callback);

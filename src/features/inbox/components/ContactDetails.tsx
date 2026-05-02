@@ -147,11 +147,12 @@ export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
       <EditContactDialog
         open={editDialogOpen} onOpenChange={setEditDialogOpen}
         contact={{
-          id: contact.id, name: contact.name, phone: contact.phone, avatar: contact.avatar,
+          id: contact.id, name: contact.name, phone: contact.phone,
           email: contact.email, nickname: enrichedData?.nickname ?? undefined,
           surname: enrichedData?.surname ?? undefined, job_title: enrichedData?.job_title ?? undefined,
           company: enrichedData?.company ?? undefined, contact_type: enrichedData?.contact_type,
-        }}
+          avatar: (contact as any).avatar,
+        } as any}
       />
     </motion.div>
   );

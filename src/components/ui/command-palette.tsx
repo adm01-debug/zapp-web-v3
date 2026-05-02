@@ -60,11 +60,12 @@ export function CommandPalette({
 
   const allItems = React.useMemo(() => groupedCommands.flatMap(g => g.items), [groupedCommands]);
 
-  const debouncedSearch = useDebounce(async (q: string) => {
+  const debouncedSearch = useDebounce((async (...args: unknown[]) => {
+    const q = args[0] as string;
     if (!onSearch || q.length < 2) { setSearchResults([]); return; }
     setIsSearching(true);
     try { setSearchResults(await onSearch(q)); } catch (e) { log.error('Search error:', e); setSearchResults([]); } finally { setIsSearching(false); }
-  }, 300);
+  }) as (...args: unknown[]) => unknown, 300);
 
   const handleQueryChange = (v: string) => { setQuery(v); setSelectedIndex(0); debouncedSearch(v); };
 

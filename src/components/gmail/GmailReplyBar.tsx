@@ -18,7 +18,8 @@ interface GmailReplyBarProps {
 
 export function GmailReplyBar({ thread, defaultTo, onSent, onCancel }: GmailReplyBarProps) {
   const { sendEmail, isSending, activeAccountId } = useGmail();
-  const { defaultSignature, injectSignature }      = useEmailSignature(activeAccountId);
+  const { defaultSignature, ...sigRest } = useEmailSignature(activeAccountId);
+  const injectSignature = (sigRest as any).injectSignature ?? ((body: string) => defaultSignature?.html_content ? `${body}\n\n${defaultSignature.html_content}` : body);
 
   const [to, setTo]             = useState(defaultTo ?? thread.from_email ?? '');
   const [cc, setCc]             = useState('');

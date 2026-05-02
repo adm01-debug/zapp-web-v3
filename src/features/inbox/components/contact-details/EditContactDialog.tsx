@@ -54,7 +54,7 @@ interface EditContactDialogProps {
   open:          boolean;
   onOpenChange:  (v: boolean) => void;
   contact:       ContactData;
-  onSaved:       (updated: ContactData) => void;
+  onSaved?:      (updated: ContactData) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -129,7 +129,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
           if (error) throw error;
         } else {
           // Use versioned update to detect concurrent edits
-          const { data: result, error } = await supabase.rpc('update_contact_versioned', {
+          const { data: result, error } = await (supabase as any).rpc('update_contact_versioned', {
             p_contact_id:       contact.id,
             p_expected_version: contact.version,
             p_updates:          data,
@@ -137,16 +137,17 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
 
           if (error) throw error;
 
-          if (result?.error === 'CONFLICT') {
+          const r = result as any;
+          if (r?.error === 'CONFLICT') {
             setPendingData(data);
-            setConflict(result as ConflictInfo);
+            setConflict(r as ConflictInfo);
             setConflictOpen(true);
             return;
           }
         }
 
         toast({ title: '✅ Contato atualizado!', duration: 3000 });
-        onSaved({ ...contact, ...data, version: (contact.version ?? 0) + 1 });
+        onSaved?.({ ...contact, ...data, version: (contact.version ?? 0) + 1 });
         onOpenChange(false);
       }, 'Salvar contato');
     } catch (err) {

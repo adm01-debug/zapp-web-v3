@@ -24,6 +24,8 @@ export interface OptimisticMessage extends Omit<Message, 'timestamp'> {
   /** Marks this as an optimistic message that hasn't been confirmed by the server */
   _optimistic: true;
   timestamp: Date;
+  contact_id?: string;
+  [key: string]: unknown;
 }
 
 export function useOptimisticMessages() {
@@ -43,7 +45,7 @@ export function useOptimisticMessages() {
       optimisticCounter++;
       const tempId = `_optimistic_${Date.now()}_${optimisticCounter}`;
 
-      const optimistic: OptimisticMessage = {
+      const optimistic = {
         id: tempId,
         _optimistic: true,
         contact_id: params.contactId,
@@ -57,8 +59,8 @@ export function useOptimisticMessages() {
         quoted_message_id: params.replyToId || null,
       };
 
-      pendingRef.current.set(tempId, optimistic);
-      return optimistic;
+      pendingRef.current.set(tempId, optimistic as unknown as OptimisticMessage);
+      return optimistic as unknown as OptimisticMessage;
     },
     [],
   );

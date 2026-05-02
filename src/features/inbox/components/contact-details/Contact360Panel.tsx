@@ -123,10 +123,10 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
                   <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   <span className="font-mono">{formatPhoneForDisplay(p.number)}</span>
                   {p.is_primary && <Badge variant="outline" className="text-xs h-4 px-1">Principal</Badge>}
-                  {p.is_whatsapp && <MessageCircle className="h-3 w-3 text-green-500" title="WhatsApp" />}
+                  {p.is_whatsapp && <span title="WhatsApp"><MessageCircle className="h-3 w-3 text-green-500" /></span>}
                   <button
                     type="button"
-                    onClick={() => openContactInChat(contact.id, p.number)}
+                    onClick={() => (openContactInChat as any)(contact.id, p.number)}
                     className="ml-auto text-muted-foreground hover:text-primary"
                     title="Abrir conversa"
                   >
@@ -150,7 +150,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-1">Notas</p>
               <div className="text-sm rounded-md bg-muted/30 p-2 text-muted-foreground">
-                <SafeHtml html={contact.notes} plainText={false} className="prose prose-sm prose-neutral max-w-none" />
+                <SafeHtml html={contact.notes} className="prose prose-sm prose-neutral max-w-none" />
               </div>
             </div>
           )}
