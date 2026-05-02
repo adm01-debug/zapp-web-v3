@@ -311,7 +311,7 @@ export function useGmail() {
 
   // ── Assign thread a agente ──────────────────────────────────────────────
   const assignThread = useCallback(async (threadId: string, agentId: string | null) => {
-    const { error: rpcErr } = await (supabase as any).rpc('rpc_gmail_assign_thread', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_assign_thread', {
       p_thread_id: threadId,
       p_agent_id:  agentId,
     });
@@ -320,6 +320,8 @@ export function useGmail() {
       setThreads(prev => prev.map(t =>
         t.id === threadId ? { ...t, assigned_to: agentId } : t
       ));
+    } else {
+      console.warn(`[useGmail][${requestId}] Falha ao atribuir thread:`, rpcErr.message);
     }
   }, []);
 
