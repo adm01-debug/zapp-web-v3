@@ -1,192 +1,118 @@
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
-import {
-  PRESETS,
-  CSS_VARS_TO_APPLY,
-  STORAGE_KEY,
+import { 
+  PRESETS, 
+  CSS_VARS_TO_APPLY, 
+  STORAGE_KEY, 
   DEFAULT_PRESET_ID,
-  normalizeStoredPresetId,
+  normalizeStoredPresetId 
 } from './presets';
-import type { ThemePreset, ThemeModeColors } from './presets';
+import type { ThemeModeColors } from './presets';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/features/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { getLogger } from '@/lib/logger';
 
-interface ThemeConfig {
-  borderRadius?: number;
-  cacheMode?: 'light' | 'dark';
-  cachePreset?: string;
-  cssVarsCache?: Record<string, string>;
-  preset?: string;
-}
+const log = getLogger('useThemePreset');
 
 export function useThemePreset() {
   const { resolvedTheme } = useTheme();
+  const { user } = useAuth();
+  
   const [activePreset, setActivePreset] = useState<string>(DEFAULT_PRESET_ID);
   const [borderRadius, setBorderRadius] = useState<number>(8);
 
-  const save = useCallback((presetId: string, radius: number) => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ preset: normalizeStoredPresetId(presetId), borderRadius: radius }),
-    );
-  }, []);
-
-  const applyPresetColors = useCallback((preset: ThemePreset, mode: 'light' | 'dark') => {
-    const colors: ThemeModeColors = mode === 'dark' ? preset.dark : preset.light;
-    const root = document.documentElement;
-    for (const key of CSS_VARS_TO_APPLY) {
-      root.style.setProperty(`--${key}`, colors[key]);
-    }
-    // Fonte por skin: aplica no token global ou volta ao default
-    // (o tokens.css define o fallback em :root).
-    if (preset.font) {
-      root.style.setProperty('--font-sans', preset.font);
-      root.style.setProperty('--font-display', preset.font);
-    } else {
-      root.style.removeProperty('--font-sans');
-      root.style.removeProperty('--font-display');
-    }
-  }, []);
-
-  const applyBorderRadius = useCallback((radius: number) => {
-    document.documentElement.style.setProperty('--radius', `${radius / 16}rem`);
-  }, []);
-
-  const applyPresetById = useCallback((presetId: string, notify = true) => {
-    const preset = PRESETS.find(p => p.id === presetId);
-    if (!preset) return;
-
-    const root = document.documentElement;
-    root.classList.add('theme-transitioning');
-
-    applyPresetColors(preset, resolvedTheme);
-    setActivePreset(presetId);
-
-    // Skins podem sugerir um border-radius próprio (ex.: Opera GX usa
-    // cantos retos). Quando o usuário escolhe explicitamente um skin,
-    // aplicamos o radius sugerido — ele continua editável depois pelo
-    // controle de Border Radius.
-    const nextRadius = preset.borderRadius ?? borderRadius;
-    if (preset.borderRadius != null && preset.borderRadius !== borderRadius) {
-      setBorderRadius(preset.borderRadius);
-      applyBorderRadius(preset.borderRadius);
-    }
-
-    if (notify) {
-      save(presetId, nextRadius);
-      toast.success(`Tema "${preset.name}" aplicado!`);
-    }
-
-    setTimeout(() => root.classList.remove('theme-transitioning'), 350);
-  }, [applyPresetColors, resolvedTheme, borderRadius, save, applyBorderRadius]);
-
+  // Load initial state
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        const parsed: ThemeConfig = JSON.parse(saved);
-        const presetId = normalizeStoredPresetId(parsed.preset);
-        const radius = parsed.borderRadius ?? 8;
-
-        setActivePreset(presetId);
-        setBorderRadius(radius);
-        applyBorderRadius(radius);
-
-        const preset = PRESETS.find(p => p.id === presetId);
-        if (preset) applyPresetColors(preset, resolvedTheme);
-
-        if (
-          parsed.preset !== presetId ||
-          parsed.cssVarsCache ||
-          parsed.cacheMode ||
-          parsed.cachePreset
-        ) {
-          save(presetId, radius);
-        }
-      } catch {
-        const corporate = PRESETS.find(p => p.id === DEFAULT_PRESET_ID);
-        if (corporate) {
-          applyPresetColors(corporate, resolvedTheme);
-          save(DEFAULT_PRESET_ID, borderRadius);
-        }
-      }
-    } else {
-      const corporate = PRESETS.find(p => p.id === DEFAULT_PRESET_ID);
-      if (corporate) {
-        applyPresetColors(corporate, resolvedTheme);
-        save(DEFAULT_PRESET_ID, borderRadius);
+        const parsed = JSON.parse(saved);
+        setActivePreset(normalizeStoredPresetId(parsed.preset));
+        if (parsed.borderRadius != null) setBorderRadius(parsed.borderRadius);
+      } catch (e) {
+        log.error('Failed to parse theme config', e);
       }
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Sync with Database if user is logged in
   useEffect(() => {
-    const preset = PRESETS.find(p => p.id === activePreset);
-    if (preset) {
-      applyPresetColors(preset, resolvedTheme);
-    }
-  }, [resolvedTheme, activePreset, applyPresetColors]);
+    if (!user) return;
 
-  const handleBorderRadiusChange = useCallback((value: number[]) => {
-    const radius = value[0];
-    setBorderRadius(radius);
-    applyBorderRadius(radius);
-    save(activePreset, radius);
-  }, [activePreset, applyBorderRadius, save]);
+    const syncFromDb = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('theme_config')
+        .eq('id', user.id)
+        .single();
 
-  const resetTheme = useCallback(() => {
-    const corporate = PRESETS.find(p => p.id === DEFAULT_PRESET_ID);
-    if (corporate) {
-      applyPresetColors(corporate, resolvedTheme);
-    }
-    setActivePreset(DEFAULT_PRESET_ID);
-    setBorderRadius(8);
-    document.documentElement.style.setProperty('--radius', '0.5rem');
-    save(DEFAULT_PRESET_ID, 8);
-    toast.success('Tema restaurado ao padrão!');
-  }, [applyPresetColors, resolvedTheme, save]);
-
-  const exportTheme = useCallback(() => {
-    const config: ThemeConfig = { preset: activePreset, borderRadius };
-    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `skin-${activePreset}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Tema exportado!');
-  }, [activePreset, borderRadius]);
-
-  const importTheme = useCallback((onThemeChange?: (theme: string) => void) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const config = JSON.parse(text);
-        if (config.preset) applyPresetById(config.preset);
-        if (config.borderRadius != null) {
-          setBorderRadius(config.borderRadius);
-          applyBorderRadius(config.borderRadius);
-        }
-        if (config.theme && onThemeChange) onThemeChange(config.theme);
-        toast.success('Tema importado!');
-      } catch {
-        toast.error('Arquivo de tema inválido');
+      if (data?.theme_config) {
+        const config = data.theme_config as any;
+        if (config.preset) setActivePreset(normalizeStoredPresetId(config.preset));
+        if (config.borderRadius != null) setBorderRadius(config.borderRadius);
       }
     };
-    input.click();
-  }, [applyPresetById, applyBorderRadius]);
+
+    syncFromDb();
+  }, [user]);
+
+  const saveToDb = useCallback(async (config: any) => {
+    if (!user) return;
+    
+    await supabase
+      .from('profiles')
+      .update({ theme_config: config })
+      .eq('id', user.id);
+  }, [user]);
+
+  const applyPreset = useCallback((presetId: string) => {
+    const preset = PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+
+    setActivePreset(presetId);
+    
+    const config = {
+      preset: presetId,
+      borderRadius: preset.borderRadius ?? borderRadius
+    };
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    saveToDb(config);
+    
+    if (preset.borderRadius != null) {
+      setBorderRadius(preset.borderRadius);
+    }
+  }, [borderRadius, saveToDb]);
+
+  const handleBorderRadiusChange = useCallback((value: number[]) => {
+    const newRadius = value[0];
+    setBorderRadius(newRadius);
+    
+    const config = {
+      preset: activePreset,
+      borderRadius: newRadius
+    };
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    saveToDb(config);
+  }, [activePreset, saveToDb]);
+
+  const resetTheme = useCallback(() => {
+    const config = {
+      preset: DEFAULT_PRESET_ID,
+      borderRadius: 8
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    saveToDb(config);
+    setActivePreset(DEFAULT_PRESET_ID);
+    setBorderRadius(8);
+  }, [saveToDb]);
 
   return {
     activePreset,
     borderRadius,
-    applyPreset: applyPresetById,
+    applyPreset,
     handleBorderRadiusChange,
-    resetTheme,
-    exportTheme,
-    importTheme,
+    resetTheme
   };
 }
