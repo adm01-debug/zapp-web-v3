@@ -50,49 +50,7 @@ export interface QrCodeDialogState {
 }
 
 const QR_TTL_DEFAULT_MS = 60_000;
-const QR_TTL_MIN_MS = 15_000;
-const QR_TTL_MAX_MS = 5 * 60_000;
 const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
-
-function loadPersistedQr(): any | null {
-  try {
-    const raw = sessionStorage.getItem(QR_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed.status === 'pending' && parsed.expiresAt && parsed.expiresAt <= Date.now()) {
-      sessionStorage.removeItem(QR_STORAGE_KEY);
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function savePersistedQr(state: QrCodeDialogState) {
-  try {
-    if (!state.open || state.status === 'connected') {
-      sessionStorage.removeItem(QR_STORAGE_KEY);
-      return;
-    }
-    const payload = {
-      connectionId: state.connectionId,
-      connectionName: state.connectionName,
-      qrCode: state.qrCode,
-      status: state.status,
-      expiresAt: state.expiresAt,
-      attemptId: state.attemptId,
-      errorMessage: state.errorMessage,
-    };
-    sessionStorage.setItem(QR_STORAGE_KEY, JSON.stringify(payload));
-  } catch {
-    // ignore storage errors
-  }
-}
-
-function clearPersistedQr() {
-  try { sessionStorage.removeItem(QR_STORAGE_KEY); } catch { /* noop */ }
-}
 
 export function useConnectionsManager() {
   const state = useConnectionsState();
@@ -110,29 +68,8 @@ export function useConnectionsManager() {
     deleteInstance,
   } = useEvolutionApi();
 
-  const actions = useConnectionsActions(
-    connections, setConnections, setIsCreating, setIsAddDialogOpen, setNewConnection,
-    (conn) => handleShowQrCode(conn), disconnectInstance, deleteInstance
-  );
-
-  useConnectionsRealtime(setConnections, qrCodeDialog, setQrCodeDialog, announceConnected);
-
-  useEffect(() => {
-    savePersistedQr(qrCodeDialog);
-  }, [qrCodeDialog]);
-
-  useEffect(() => {
-    fetchConnections();
-  }, []);
-
-  const fetchConnections = async () => {
-    setLoading(true);
-    const data = await whatsappConnectionRepository.fetchConnections();
-    setConnections(data as WhatsAppConnection[]);
-    setLoading(false);
-  };
-
-  const handleShowQrCode = async (connection: WhatsAppConnection) => {
+  // Helper local function since actions need it
+  const handleShowQrCode = useCallback(async (connection: WhatsAppConnection) => {
     if ((connection.api_type ?? 'evolution') === 'official') {
       toast({
         title: 'QR Code não disponível',
@@ -156,12 +93,101 @@ export function useConnectionsManager() {
       ttlSeconds: null,
       ttlSource: null,
     });
+    
+    // Inicia geração do QR
+    if (connection.status !== 'connected') {
+      await generateQr(connection);
+    }
+  }, [setQrCodeDialog]);
+
+  const actions = useConnectionsActions(
+    connections, setConnections, setIsCreating, setIsAddDialogOpen, setNewConnection,
+    handleShowQrCode, disconnectInstance, deleteInstance
+  );
+
+  useConnectionsRealtime(setConnections, qrCodeDialog, setQrCodeDialog, announceConnected);
+
+  useEffect(() => {
+    try {
+      if (!qrCodeDialog.open || qrCodeDialog.status === 'connected') {
+        sessionStorage.removeItem(QR_STORAGE_KEY);
+      } else {
+        sessionStorage.setItem(QR_STORAGE_KEY, JSON.stringify(qrCodeDialog));
+      }
+    } catch {}
+  }, [qrCodeDialog]);
+
+  useEffect(() => {
+    fetchConnections();
+  }, []);
+
+  const fetchConnections = async () => {
+    setLoading(true);
+    const { data, error } = await whatsappConnectionRepository.fetchConnections();
+    if (!error && data) setConnections(data as unknown as WhatsAppConnection[]);
+    setLoading(false);
+  };
+
+  const generateQr = async (connection: WhatsAppConnection) => {
+    if (!connection.instance_id) return;
+    const attemptId = await whatsappConnectionService.logQrAttempt(connection.id, connection.instance_id, connection.name);
+    try {
+      const result = await whatsappConnectionService.requestQrCode(connection.instance_id);
+      const { ttlMs, source: ttlSource } = whatsappConnectionService.detectQrTtlMs(result);
+      const expiresAt = Date.now() + ttlMs;
+      
+      setQrCodeDialog((prev) => ({
+        ...prev,
+        qrCode: result?.qrcode?.base64 || prev.qrCode,
+        status: 'pending',
+        expiresAt,
+        attemptId: attemptId.data?.id || null,
+        ttlSeconds: Math.round(ttlMs / 1000),
+        ttlSource,
+      }));
+    } catch (error: any) {
+      setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage: error.message }));
+    }
+  };
+
+  const handleRefreshQrCode = async () => {
+    if (refreshInFlightRef.current) return;
+    const connection = connections.find((c) => c.id === qrCodeDialog.connectionId);
+    if (!connection) return;
+    refreshInFlightRef.current = true;
+    setQrCodeDialog(prev => ({ ...prev, status: 'loading' }));
+    await generateQr(connection);
+    refreshInFlightRef.current = false;
+  };
+
+  const handleCopyId = (id: string) => {
+    navigator.clipboard.writeText(id);
+    toast({ title: 'ID copiado!' });
+  };
+
+  const handleDisconnect = async (connection: WhatsAppConnection) => {
+    if (!connection.instance_id) return;
+    try {
+      await disconnectInstance(connection.instance_id);
+      await whatsappConnectionRepository.updateConnection(connection.id, { status: 'disconnected', qr_code: null });
+    } catch (error: any) {
+      toast({ title: 'Erro ao desconectar', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleSetApiType = async (connection: WhatsAppConnection, api_type: WhatsAppApiType) => {
+    const { error } = await whatsappConnectionRepository.updateConnection(connection.id, { api_type });
+    if (error) {
+      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setConnections(prev => prev.map(c => c.id === connection.id ? { ...c, api_type } : c));
   };
 
   const closeQrDialog = () => {
     dialogGenRef.current += 1;
     refreshInFlightRef.current = false;
-    clearPersistedQr();
+    sessionStorage.removeItem(QR_STORAGE_KEY);
     setQrCodeDialog(INITIAL_QR_STATE);
   };
 
@@ -170,6 +196,11 @@ export function useConnectionsManager() {
     evolutionLoading,
     ...actions,
     handleShowQrCode,
+    handleRefreshQrCode,
+    handleCopyId,
+    handleDisconnect,
+    handleSetApiType,
+    handleReconnect: (c: WhatsAppConnection) => handleShowQrCode(c),
     closeQrDialog
   };
 }
