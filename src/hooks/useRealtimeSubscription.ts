@@ -44,7 +44,7 @@ export function useRealtimeSubscription(config: SubscriptionConfig) {
       )
       .subscribe((status) => {
         if (status === 'CHANNEL_ERROR') {
-          console.error(\`[Realtime] Channel \${config.channelName} error\`);
+          console.error(`[Realtime] Channel ${config.channelName} error`);
         }
       });
 
