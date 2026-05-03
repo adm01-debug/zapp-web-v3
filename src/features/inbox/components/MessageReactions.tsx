@@ -82,10 +82,6 @@ export function MessageReactions({
     } else {
       await addReaction(emoji);
     }
-
-    if (typeof trackReactionEvent === 'function') {
-      trackReactionEvent('open_picker', { messageId });
-    }
     setIsOpen(false);
   };
 
@@ -123,7 +119,12 @@ export function MessageReactions({
         ))}
       </TooltipProvider>
 
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if (open && typeof trackReactionEvent === 'function') {
+          trackReactionEvent('open_picker', { messageId });
+        }
+      }}>
         <PopoverTrigger asChild>
           <button
             className={cn(
@@ -210,9 +211,6 @@ export function QuickReactionBar({
     } else {
       await addReaction(emoji);
     }
-    if (typeof trackReactionEvent === 'function') {
-      trackReactionEvent('open_picker', { messageId });
-    }
     setShowPicker(false);
   };
 
@@ -247,7 +245,12 @@ export function QuickReactionBar({
           </button>
         ))}
 
-        <Popover open={showPicker} onOpenChange={setShowPicker}>
+        <Popover open={showPicker} onOpenChange={(open) => {
+          setShowPicker(open);
+          if (open && typeof trackReactionEvent === 'function') {
+            trackReactionEvent('open_picker', { messageId });
+          }
+        }}>
           <PopoverTrigger asChild>
             <button 
               className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted/80 transition-all text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary outline-none"
