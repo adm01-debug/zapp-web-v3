@@ -99,13 +99,36 @@ export function MessageBubble({
     ? { instanceName, remoteJid: contactJid, fromMe: isSent, id: message.external_id }
     : undefined;
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey) return; // Allow system shortcuts
+    
+    switch (e.key.toLowerCase()) {
+      case 'r':
+        e.preventDefault();
+        onReply(message);
+        break;
+      case 'f':
+        e.preventDefault();
+        onForward(message);
+        break;
+      case 'c':
+        e.preventDefault();
+        onCopy(message.content || '');
+        break;
+    }
+  };
+
   const bubbleContent = (
       <SwipeableMessage onSwipeRight={() => onReply(message)} onSwipeLeft={() => onForward(message)}>
         <div
           ref={registerRef}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          role="listitem"
+          aria-label={`Mensagem de ${senderName} às ${formatMessageTime(message.timestamp)}. Pressione R para responder, F para encaminhar, C para copiar.`}
           data-search-highlight={highlightedMessageIds?.has(message.id) ? 'true' : undefined}
           className={cn(
-            'flex group gap-2.5 transition-all duration-300',
+            'flex group gap-2.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
             isSent ? 'justify-end' : 'justify-start',
             density === 'comfortable' ? 'mb-4' : density === 'compact' ? 'mb-1.5' : 'mb-0.5',
             highlightedMessageIds?.has(message.id) && 'relative',
