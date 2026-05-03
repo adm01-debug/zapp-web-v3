@@ -13,7 +13,8 @@
  *    hydrate from the persisted `retry_attempt` / `retry_total` columns so
  *    the "2/3" badge survives navigation.
  */
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useRef } from 'react';
+import { log } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
 import { MessageStatusIcon } from './messageUtils';
@@ -58,6 +59,14 @@ export const MessageStatusInline = memo(function MessageStatusInline({
   const { showLabel } = useInboxStatusPref();
   const showTextLabel = forceLabel || showLabel;
   const bus = useMessageSendStatus(message.id);
+  const lastStatusRef = useRef(message.status);
+
+  useEffect(() => {
+    if (message.status !== lastStatusRef.current) {
+      log.info(`[Status Update] Msg ${message.id.slice(0, 8)} changed: ${lastStatusRef.current} -> ${message.status}`);
+      lastStatusRef.current = message.status;
+    }
+  }, [message.id, message.status]);
 
   // Reconciliation: when the persisted DB status reaches a terminal state but
   // the in-memory bus still holds a stale transient (sending/retrying) — a

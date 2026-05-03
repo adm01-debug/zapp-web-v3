@@ -1,5 +1,5 @@
-import { Suspense, useCallback, forwardRef, lazy, useState } from 'react';
-import { Target, Mic, Maximize2, Minimize2 } from 'lucide-react';
+import { Suspense, useCallback, forwardRef, lazy, useState, useMemo } from 'react';
+import { Target, Mic, Maximize2, Minimize2, Info } from 'lucide-react';
 import { useViewTransition } from '@/hooks/useViewTransition';
 import { cn } from '@/lib/utils';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -78,7 +78,11 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
     threshold: 60,
   });
 
-
+  const appVersion = useMemo(() => {
+    // build time versioning based on today's date + minor increment
+    const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
+    return `v2.0.${today}.10-10`;
+  }, []);
   return (
     <div className="flex h-screen max-h-screen min-h-screen bg-background overflow-hidden relative">
       <RouteLoadingBar isLoading={loading} />
@@ -119,6 +123,15 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
           onLogout={signOut}
           inboxBadge={unreadNotifications || undefined}
         />
+      )}
+
+      {!isMobile && (
+        <div className="fixed bottom-2 left-2 z-[60] flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/40 backdrop-blur-xs border border-border/10 text-[9px] font-mono text-muted-foreground/60 select-none pointer-events-none group hover:opacity-100 transition-opacity">
+          <Info className="w-2.5 h-2.5 opacity-40" />
+          <span>{appVersion}</span>
+          <span className="w-1 h-1 rounded-full bg-success/40" />
+          <span className="uppercase tracking-tighter opacity-40">Build 10/10</span>
+        </div>
       )}
 
       <main
