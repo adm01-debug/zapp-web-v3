@@ -189,10 +189,16 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
             </div>
 
             <div 
-              className="max-h-[300px] overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-amber-50/20 to-transparent flex flex-col-reverse"
+              className="max-h-[300px] overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-amber-50/20 to-transparent flex flex-col-reverse relative"
               role="log"
               aria-live="polite"
             >
+              {/* Overlay visual para o modo interno */}
+              <div className="sticky top-0 z-10 bg-amber-100/80 backdrop-blur-sm border border-amber-200/50 rounded-lg px-2 py-1 mb-2 flex items-center justify-center gap-1.5 shadow-sm">
+                <EyeOff className="w-3 h-3 text-amber-700" />
+                <span className="text-[9px] font-bold text-amber-800 uppercase tracking-tighter">Ambiente de Equipe — Privado</span>
+              </div>
+
               {whispers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center space-y-2">
                   <EyeOff className="w-8 h-8 text-amber-200" />
@@ -205,14 +211,15 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="flex flex-col gap-1"
+                    className="flex flex-col gap-1 group/whisper"
                   >
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[10px] font-bold text-amber-600/80">{w.sender_name}</span>
                       <span className="text-[9px] text-muted-foreground/60">{new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <div className="text-xs p-2.5 rounded-2xl bg-amber-100/50 border border-amber-200/30 text-amber-900 shadow-sm leading-relaxed">
+                    <div className="relative text-xs p-2.5 rounded-2xl bg-amber-100/50 border border-amber-200/30 text-amber-900 shadow-sm leading-relaxed group-hover/whisper:bg-amber-100 transition-colors">
                       {w.content}
+                      {/* Placeholder para futuras reações e threads internas */}
                     </div>
                   </motion.div>
                 ))
