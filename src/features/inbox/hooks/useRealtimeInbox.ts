@@ -360,6 +360,45 @@ export function useRealtimeInbox() {
     [messageSource, resolvedSelectedConversation, selectedContactId]
   );
 
+  const [whisperCount, setWhisperCount] = useState(0);
+
+  // Fetch whisper count for selected contact
+  useEffect(() => {
+    if (!selectedContactId || !profile?.id) {
+      setWhisperCount(0);
+      return;
+    }
+
+    const fetchWhisperCount = async () => {
+      const { count, error } = await supabase
+        .from('whisper_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('contact_id', selectedContactId)
+        .eq('is_read', false);
+      
+      if (!error && count !== null) {
+        setWhisperCount(count);
+      }
+    };
+
+    fetchWhisperCount();
+
+    // Subscribe to whisper changes
+    const channel = supabase
+      .channel(`whisper-count-${selectedContactId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'whisper_messages',
+        filter: `contact_id=eq.${selectedContactId}`
+      }, () => {
+        fetchWhisperCount();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedContactId, profile?.id]);
+
   return {
     // State
     selectedContactId, setSelectedContactId,
