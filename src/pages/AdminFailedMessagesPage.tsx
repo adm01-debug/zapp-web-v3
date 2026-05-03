@@ -30,6 +30,8 @@ import {
   useFailedMessagesStats,
   type FailedMessageRow,
   type FailedMessageStatus,
+  FailedMessageKpiCard,
+  FailedMessageStatusBadge,
 } from '@/features/admin';
 import { useUserRole } from '@/features/auth';
 import { cn } from '@/lib/utils';
@@ -81,20 +83,6 @@ const ROOT_CAUSE_TONE_CLASS: Record<'warning' | 'destructive' | 'info' | 'muted'
   destructive: 'bg-destructive/15 text-destructive border-destructive/40',
   info: 'bg-primary/15 text-primary border-primary/40',
   muted: 'bg-muted text-muted-foreground border-border',
-};
-
-const STATUS_LABEL: Record<FailedMessageStatus, string> = {
-  pending: 'Pendente',
-  retrying: 'Reprocessando',
-  succeeded: 'Sucesso',
-  abandoned: 'Abandonado',
-};
-
-const STATUS_VARIANT: Record<FailedMessageStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pending: 'secondary',
-  retrying: 'default',
-  succeeded: 'outline',
-  abandoned: 'destructive',
 };
 
 function formatDate(iso: string | null) {
@@ -271,16 +259,16 @@ export default function AdminFailedMessagesPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <KpiCard icon={Clock} label="Pendentes" value={aggregates.pending} tone="warning" />
-        <KpiCard icon={RotateCw} label="Reprocessando" value={aggregates.retrying} tone="info" />
-        <KpiCard icon={XCircle} label="Abandonados" value={aggregates.abandoned24h} tone="destructive" />
-        <KpiCard
+        <FailedMessageKpiCard icon={Clock} label="Pendentes" value={aggregates.pending} tone="warning" />
+        <FailedMessageKpiCard icon={RotateCw} label="Reprocessando" value={aggregates.retrying} tone="info" />
+        <FailedMessageKpiCard icon={XCircle} label="Abandonados" value={aggregates.abandoned24h} tone="destructive" />
+        <FailedMessageKpiCard
           icon={CheckCircle2}
           label="Sucesso após retry"
           value={`${aggregates.successAfterRetryRate}%`}
           tone="success"
         />
-        <KpiCard
+        <FailedMessageKpiCard
           icon={Server}
           label="Top instância"
           value={aggregates.topInstance ? `${aggregates.topInstance.instance} (${aggregates.topInstance.count})` : '—'}
@@ -631,9 +619,7 @@ export default function AdminFailedMessagesPage() {
                       </TableCell>
                     )}
                     <TableCell data-testid="failed-message-status">
-                      <Badge variant={STATUS_VARIANT[row.status]}>
-                        {STATUS_LABEL[row.status]}
-                      </Badge>
+                      <FailedMessageStatusBadge status={row.status} />
                     </TableCell>
                     <TableCell className="font-mono text-xs" data-testid="failed-message-instance">{row.instance_name}</TableCell>
                     <TableCell className="font-mono text-xs" data-testid="failed-message-jid">{shortJid(row.remote_jid)}</TableCell>
@@ -836,9 +822,7 @@ export default function AdminFailedMessagesPage() {
           {selected && (
             <div className="space-y-4 mt-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant={STATUS_VARIANT[selected.status]}>
-                  {STATUS_LABEL[selected.status]}
-                </Badge>
+                <FailedMessageStatusBadge status={selected.status} />
                 {(() => {
                   const cause = classifyRootCause(selected);
                   const meta = getRootCauseMeta(cause);
@@ -972,33 +956,6 @@ export default function AdminFailedMessagesPage() {
       {/* Histórico de reprocesso e ações DLQ */}
       <DLQAuditHistory />
     </div>
-  );
-}
-
-function KpiCard({
-  icon: Icon, label, value, tone,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string | number;
-  tone: 'warning' | 'info' | 'destructive' | 'success';
-}) {
-  const toneClasses = {
-    warning: 'text-warning',
-    info: 'text-primary',
-    destructive: 'text-destructive',
-    success: 'text-success',
-  }[tone];
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center justify-between">
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold mt-1 truncate">{value}</p>
-        </div>
-        <Icon className={cn('h-8 w-8 opacity-70 shrink-0', toneClasses)} />
-      </CardContent>
-    </Card>
   );
 }
 
