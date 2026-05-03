@@ -115,6 +115,8 @@ export interface Message {
   retry_total?: number | null;
   /** Cache do avatar do contato para mensagens recebidas. */
   contactAvatar?: string | null;
+  /** Indica se a mensagem é interna (whisper/nota). */
+  isWhisper?: boolean;
 }
 
 
