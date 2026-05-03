@@ -98,6 +98,16 @@ test.describe('Chat Advanced Accessibility', () => {
     await page.keyboard.press('PageUp');
     await page.keyboard.press('Tab');
   });
+
+  test('ícones decorativos devem ter aria-hidden', async ({ page }) => {
+    // Verificar ícone do trigger de figurinhas
+    const stickerIcon = page.locator('button[aria-label="Figurinhas"] svg');
+    await expect(stickerIcon).toHaveAttribute('aria-hidden', 'true');
+
+    // Verificar ícone do trigger de áudio memes
+    const audioMemeIcon = page.locator('button[aria-label="Áudio Memes"] svg');
+    await expect(audioMemeIcon).toHaveAttribute('aria-hidden', 'true');
+  });
 });
 
 test.describe('Chat Accessibility - Mobile', () => {
