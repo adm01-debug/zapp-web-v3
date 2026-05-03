@@ -16,10 +16,11 @@ interface Props {
   messageId: string;
   reactions: AggregatedReaction[];
   isMine: boolean;
+  isToggling: boolean;
   onToggle: (emoji: string) => void;
 }
 
-export function MessageReactions({ messageId, reactions, isMine, onToggle }: Props) {
+export function MessageReactions({ messageId, reactions, isMine, isToggling, onToggle }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const handlePick = (emoji: string) => {
