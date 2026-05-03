@@ -204,14 +204,28 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
           >
             <div className="p-3 bg-amber-50/50 border-b border-amber-100 flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
-                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                Equipe — Interno
+                {activeThreadId ? (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 mr-1 text-amber-600 hover:bg-amber-100" 
+                    onClick={() => setActiveThreadId(null)}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                )}
+                {activeThreadId ? 'Discussão em Thread' : 'Equipe — Interno'}
               </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
                 className="h-6 w-6 hover:bg-amber-100 text-amber-600" 
-                onClick={() => setIsExpanded(false)}
+                onClick={() => {
+                  setIsExpanded(false);
+                  setActiveThreadId(null);
+                }}
                 aria-label="Fechar sussurro"
               >
                 <X className="w-3.5 h-3.5" />
