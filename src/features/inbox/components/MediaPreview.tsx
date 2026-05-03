@@ -133,7 +133,7 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
     return (
       <div ref={ref}>
         <div className="space-y-2">
-          <motion.div whileHover={{ scale: 1.02 }} className="relative rounded-lg overflow-hidden max-w-[300px] cursor-pointer" onClick={() => setShowFullscreen(true)}>
+          <motion.div whileHover={{ scale: 1.02 }} className="relative rounded-md overflow-hidden max-w-full w-auto cursor-pointer bg-[#202c33]" onClick={() => setShowFullscreen(true)}>
             {(!isLoaded || refresh.isRefreshing) && (
               <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center" aria-busy={refresh.isRefreshing || undefined}>
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
