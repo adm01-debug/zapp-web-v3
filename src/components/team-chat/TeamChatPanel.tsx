@@ -117,6 +117,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {showStats && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="p-4 bg-muted/30 border-b border-border">
+            <ParticipantStatsGraph conversationId={conversation.id} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div ref={s.scrollRef} className="flex-1 overflow-auto p-4 space-y-1 bg-muted/5" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
         {!isDeptMember ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
