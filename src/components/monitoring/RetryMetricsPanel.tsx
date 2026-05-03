@@ -491,11 +491,11 @@ function TopReasonsChart({ reasons, previousReasons = [], compareMode = false, w
                 fontSize: 11,
                 color: 'hsl(var(--popover-foreground))',
               }}
-              formatter={(value: number, name: string) => {
+              formatter={(value: any, name: any) => {
                 const label = name === 'previous' ? 'Período anterior' : 'Período atual';
-                return [`${value} retries`, label];
+                return [String(value) + ' retries', label];
               }}
-              labelFormatter={(label: string) => label}
+              labelFormatter={(label: any) => String(label)}
             />
             {compareMode && (
               <Legend
