@@ -1,37 +1,18 @@
-import { useEffect, useMemo, useState } from 'react';
-import { format, formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useEffect } from 'react';
 import {
-  AlertTriangle, RefreshCw, Inbox, CheckCircle2, XCircle,
-  Clock, RotateCw, Ban, Eye, PlayCircle, Server, BarChart3,
-  Search, ChevronLeft, ChevronRight, Copy, Lock, MessageSquare,
+  AlertTriangle, RefreshCw, CheckCircle2,
+  Clock, RotateCw, PlayCircle, Server,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table, TableBody, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
-} from '@/components/ui/sheet';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import {
-  useFailedMessages,
   useFailedMessagesStats,
-  type FailedMessageRow,
-  type FailedMessageStatus,
   FailedMessageKpiCard,
-  FailedMessageStatusBadge,
+  FailedMessageTableRow,
 } from '@/features/admin';
 import { useUserRole } from '@/features/auth';
 import { cn } from '@/lib/utils';
@@ -39,19 +20,18 @@ import { RetryConfigPanel } from '@/features/admin';
 import { BulkReprocessGuidedDialog } from '@/features/admin';
 import { DLQAuditHistory } from '@/components/monitoring/DLQAuditHistory';
 import { toast } from 'sonner';
-import {
-  ALL_ROOT_CAUSES,
-  classifyRootCause,
-  getRootCauseMeta,
-  type RootCause,
-} from '@/lib/failureRootCause';
 import { openContactInChat } from '@/lib/openContactInChat';
+import { useFailedMessagesUI } from '@/features/admin/hooks/monitoring/useFailedMessagesUI';
 
-/**
- * Extrai um identificador da mensagem original a partir do payload do
- * envio (vários formatos possíveis vindos da Evolution API). Usado pelo
- * botão "Ver no chat" para destacar a bolha correta no Inbox.
- */
+// Sub-components can be extracted to separate files if needed, but keeping them here for now
+// to maintain the 1:1 migration while reducing the main file size.
+import { FailedMessagesFilters } from './failed-messages/FailedMessagesFilters';
+import { FailedMessagesBulkActions } from './failed-messages/FailedMessagesBulkActions';
+import { FailedMessagesRootCauseChart } from './failed-messages/FailedMessagesRootCauseChart';
+import { FailedMessagesErrorCodeChart } from './failed-messages/FailedMessagesErrorCodeChart';
+import { FailedMessageDetailsSheet } from './failed-messages/FailedMessageDetailsSheet';
+import { FailedMessagesBulkAbandonDialog } from './failed-messages/FailedMessagesBulkAbandonDialog';
+
 function extractMessageIdFromPayload(payload: unknown): string | null {
   if (!payload || typeof payload !== 'object') return null;
   const p = payload as Record<string, unknown>;
@@ -68,148 +48,26 @@ function extractMessageIdFromPayload(payload: unknown): string | null {
   return null;
 }
 
-async function handleViewInChat(row: Pick<FailedMessageRow, 'remote_jid' | 'payload'>) {
-  if (!row.remote_jid) {
-    toast.error('Mensagem sem destinatário identificado');
-    return;
-  }
-  const messageId = extractMessageIdFromPayload(row.payload) ?? undefined;
-  const ok = await openContactInChat({ remoteJid: row.remote_jid, messageId });
-  if (!ok) toast.error('Contato não encontrado no inbox');
-}
-
-const ROOT_CAUSE_TONE_CLASS: Record<'warning' | 'destructive' | 'info' | 'muted', string> = {
-  warning: 'bg-warning/15 text-warning-foreground border-warning/40',
-  destructive: 'bg-destructive/15 text-destructive border-destructive/40',
-  info: 'bg-primary/15 text-primary border-primary/40',
-  muted: 'bg-muted text-muted-foreground border-border',
-};
-
-function formatDate(iso: string | null) {
-  if (!iso) return '—';
-  try {
-    return format(new Date(iso), "dd/MM HH:mm:ss", { locale: ptBR });
-  } catch {
-    return iso;
-  }
-}
-
-function shortJid(jid: string | null) {
-  if (!jid) return '—';
-  return jid.replace('@s.whatsapp.net', '').replace('@g.us', ' (grupo)');
-}
-
 export default function AdminFailedMessagesPage() {
-  const { isDev, isAdmin, isSupervisor } = useUserRole();
-  // Visualização: admin+ (admin já inclui dev por hierarquia).
-  // Edição/operações destrutivas (retry, cancel, rerun): apenas dev.
+  const { isDev, isAdmin } = useUserRole();
   const canEdit = isDev;
   const readOnly = !canEdit;
-  // Compat: muitos blocos abaixo usam `isAdmin` para gates de ação.
-  // Reapontamos para `canEdit` para preservar a regra "edição = dev".
-  // (a variável local `isAdmin` original passa a representar "pode editar")
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _viewerIsAdmin = isAdmin;
-  const [hours, setHours] = useState(24);
-  const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
-  const [errorCodeFilter, setErrorCodeFilter] = useState<string>('all');
-  const [rootCauseFilter, setRootCauseFilter] = useState<RootCause | 'all'>('all');
-  const [instanceFilter, setInstanceFilter] = useState<string>('all');
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState<string | null>(null);
-  const [customFrom, setCustomFrom] = useState<string>(''); // datetime-local
-  const [customTo, setCustomTo] = useState<string>('');
-  const [page, setPage] = useState(0);
-  const pageSize = 50;
 
-  const [selected, setSelected] = useState<FailedMessageRow | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [confirmBulkAbandon, setConfirmBulkAbandon] = useState(false);
-  const [bulkReason, setBulkReason] = useState('');
-  const [guidedReprocessOpen, setGuidedReprocessOpen] = useState(false);
-
-  // Debounce search input
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setSearch(searchInput.trim() || null);
-      setPage(0);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(0);
-  }, [hours, statusFilter, errorCodeFilter, rootCauseFilter, instanceFilter, customFrom, customTo]);
-
-  const fromIso = customFrom ? new Date(customFrom).toISOString() : null;
-  const toIso = customTo ? new Date(customTo).toISOString() : null;
-  const useCustomRange = !!(fromIso && toIso);
-
+  const ui = useFailedMessagesUI();
+  const { api, sortedRows } = ui;
   const { data: stats } = useFailedMessagesStats();
 
-  const {
-    rows,
-    total,
-    isLoading,
-    isRefetching,
-    refetch,
-    aggregates,
-    retryNow,
-    abandon,
-    bulkRetry,
-    bulkAbandon,
-    triggerReprocess,
-  } = useFailedMessages({
-    hours: useCustomRange ? undefined : hours,
-    status: statusFilter === 'all' ? null : statusFilter,
-    errorCode: errorCodeFilter === 'all' ? null : errorCodeFilter,
-    rootCause: rootCauseFilter === 'all' ? null : rootCauseFilter,
-    instance: instanceFilter === 'all' ? null : instanceFilter,
-    search,
-    from: useCustomRange ? fromIso : null,
-    to: useCustomRange ? toIso : null,
-    page,
-    pageSize,
-  });
-
-  const sorted = useMemo(
-    () => [...rows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)),
-    [rows],
-  );
-
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-  const topReasons = aggregates.byErrorCode.slice(0, 8);
-  const maxReasonCount = topReasons[0]?.count ?? 1;
-  const rootCauseStats = aggregates.byRootCause;
-  const maxRootCauseCount = rootCauseStats[0]?.count ?? 1;
-
-  const allVisibleSelected = sorted.length > 0 && sorted.every((r) => selectedIds.has(r.id));
-  const someVisibleSelected = sorted.some((r) => selectedIds.has(r.id));
-
-  // Linhas correspondentes aos IDs selecionados — usadas pelo diálogo guiado
-  // para pré-visualizar impacto sem precisar de nova consulta.
-  const selectedRows = useMemo(
-    () => sorted.filter((r) => selectedIds.has(r.id)),
-    [sorted, selectedIds],
-  );
-
-  function toggleAll() {
-    if (allVisibleSelected) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(sorted.map((r) => r.id)));
+  const handleViewInChat = async (row: any) => {
+    if (!row.remote_jid) {
+      toast.error('Mensagem sem destinatário identificado');
+      return;
     }
-  }
+    const messageId = extractMessageIdFromPayload(row.payload) ?? undefined;
+    const ok = await openContactInChat({ remoteJid: row.remote_jid, messageId });
+    if (!ok) toast.error('Contato não encontrado no inbox');
+  };
 
-  function toggleOne(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
+  const totalPages = Math.max(1, Math.ceil(api.total / ui.pageSize));
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -228,19 +86,19 @@ export default function AdminFailedMessagesPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetch()}
-            disabled={isRefetching}
+            onClick={() => api.refetch()}
+            disabled={api.isRefetching}
           >
-            <RefreshCw className={cn('h-4 w-4 mr-2', isRefetching && 'animate-spin')} />
+            <RefreshCw className={cn('h-4 w-4 mr-2', api.isRefetching && 'animate-spin')} />
             Atualizar
           </Button>
           {canEdit && (
             <Button
               size="sm"
-              onClick={() => triggerReprocess.mutate()}
-              disabled={triggerReprocess.isPending}
+              onClick={() => api.triggerReprocess.mutate()}
+              disabled={api.triggerReprocess.isPending}
             >
-              <PlayCircle className={cn('h-4 w-4 mr-2', triggerReprocess.isPending && 'animate-spin')} />
+              <PlayCircle className={cn('h-4 w-4 mr-2', api.triggerReprocess.isPending && 'animate-spin')} />
               Reprocessar agora
             </Button>
           )}
@@ -254,716 +112,143 @@ export default function AdminFailedMessagesPage() {
         </div>
       )}
 
-      {/* Retry config (sem deploy) */}
+      {/* Retry config */}
       <RetryConfigPanel />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <FailedMessageKpiCard icon={Clock} label="Pendentes" value={aggregates.pending} tone="warning" />
-        <FailedMessageKpiCard icon={RotateCw} label="Reprocessando" value={aggregates.retrying} tone="info" />
-        <FailedMessageKpiCard icon={XCircle} label="Abandonados" value={aggregates.abandoned24h} tone="destructive" />
+        <FailedMessageKpiCard icon={Clock} label="Pendentes" value={api.aggregates.pending} tone="warning" />
+        <FailedMessageKpiCard icon={RotateCw} label="Reprocessando" value={api.aggregates.retrying} tone="info" />
+        <FailedMessageKpiCard icon={XCircle} label="Abandonados" value={api.aggregates.abandoned24h} tone="destructive" />
         <FailedMessageKpiCard
           icon={CheckCircle2}
           label="Sucesso após retry"
-          value={`${aggregates.successAfterRetryRate}%`}
+          value={`${api.aggregates.successAfterRetryRate}%`}
           tone="success"
         />
         <FailedMessageKpiCard
           icon={Server}
           label="Top instância"
-          value={aggregates.topInstance ? `${aggregates.topInstance.instance} (${aggregates.topInstance.count})` : '—'}
+          value={api.aggregates.topInstance ? `${api.aggregates.topInstance.instance} (${api.aggregates.topInstance.count})` : '—'}
           tone="info"
         />
       </div>
 
-      {/* Root cause categorization */}
-      {rootCauseStats.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Causa raiz
-              {rootCauseFilter !== 'all' && (
-                <button
-                  type="button"
-                  onClick={() => setRootCauseFilter('all')}
-                  className="ml-auto text-xs font-normal text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-                >
-                  Limpar filtro
-                </button>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {rootCauseStats.map((r) => {
-              const pct = Math.round((r.count / maxRootCauseCount) * 100);
-              const isActive = rootCauseFilter === r.cause;
-              return (
-                <button
-                  key={r.cause}
-                  type="button"
-                  onClick={() => setRootCauseFilter(isActive ? 'all' : r.cause)}
-                  className={cn(
-                    'w-full flex items-center gap-3 text-left rounded-md p-1.5 transition-colors',
-                    isActive ? 'bg-primary/10' : 'hover:bg-muted/50',
-                  )}
-                  title={r.meta.hint}
-                  aria-pressed={isActive}
-                >
-                  <Badge
-                    variant="outline"
-                    className={cn('w-36 justify-center shrink-0 text-[11px]', ROOT_CAUSE_TONE_CLASS[r.meta.tone])}
-                  >
-                    {r.meta.label}
-                  </Badge>
-                  <div className="flex-1 h-5 bg-muted/40 rounded overflow-hidden">
-                    <div
-                      className={cn(
-                        'h-full transition-all',
-                        isActive ? 'bg-primary' : r.meta.tone === 'destructive' ? 'bg-destructive/70' : 'bg-warning/70',
-                      )}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <span className="text-xs tabular-nums w-10 text-right shrink-0">{r.count}</span>
-                </button>
-              );
-            })}
-          </CardContent>
-        </Card>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FailedMessagesRootCauseChart
+          stats={api.aggregates.byRootCause}
+          filter={ui.rootCauseFilter}
+          onFilterChange={ui.setRootCauseFilter}
+        />
+        <FailedMessagesErrorCodeChart
+          stats={api.aggregates.byErrorCode}
+          filter={ui.errorCodeFilter}
+          onFilterChange={ui.setErrorCodeFilter}
+        />
+      </div>
 
-      {/* Top reasons chart */}
-      {topReasons.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Top motivos de falha (error_code)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {topReasons.map((r) => {
-              const pct = Math.round((r.count / maxReasonCount) * 100);
-              const isActive = errorCodeFilter === r.code;
-              return (
-                <button
-                  key={r.code}
-                  type="button"
-                  onClick={() => setErrorCodeFilter(isActive ? 'all' : r.code)}
-                  className={cn(
-                    'w-full flex items-center gap-3 text-left rounded-md p-1.5 transition-colors',
-                    isActive ? 'bg-primary/10' : 'hover:bg-muted/50',
-                  )}
-                  title={isActive ? 'Limpar filtro' : `Filtrar por ${r.code}`}
-                >
-                  <span className="text-xs font-mono w-32 truncate shrink-0">{r.code}</span>
-                  <div className="flex-1 h-5 bg-muted/40 rounded overflow-hidden">
-                    <div
-                      className={cn(
-                        'h-full transition-all',
-                        isActive ? 'bg-primary' : 'bg-warning/70',
-                      )}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <span className="text-xs tabular-nums w-10 text-right shrink-0">{r.count}</span>
-                </button>
-              );
-            })}
-          </CardContent>
-        </Card>
-      )}
+      <FailedMessagesFilters ui={ui} stats={stats} />
 
-      {/* Filters */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Filtros</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-3">
-          <div className="flex flex-col gap-1 min-w-[220px] flex-1">
-            <label className="text-xs text-muted-foreground">Buscar (JID, código, mensagem)</label>
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="ex.: 5511..., ETIMEDOUT, 503"
-                className="pl-8"
-                data-testid="filter-failed-search"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">
-              Janela {useCustomRange && <span className="text-warning">(ignorada)</span>}
-            </label>
-            <Select
-              value={String(hours)}
-              onValueChange={(v) => setHours(Number(v))}
-              disabled={useCustomRange}
-            >
-              <SelectTrigger className="w-[140px]" data-testid="filter-failed-hours"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Última hora</SelectItem>
-                <SelectItem value="6">Últimas 6h</SelectItem>
-                <SelectItem value="24">Últimas 24h</SelectItem>
-                <SelectItem value="168">Últimos 7 dias</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">De</label>
-            <Input
-              type="datetime-local"
-              value={customFrom}
-              onChange={(e) => setCustomFrom(e.target.value)}
-              className="w-[200px]"
-              data-testid="filter-failed-from"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Até</label>
-            <Input
-              type="datetime-local"
-              value={customTo}
-              onChange={(e) => setCustomTo(e.target.value)}
-              className="w-[200px]"
-              data-testid="filter-failed-to"
-            />
-          </div>
-          {(customFrom || customTo) && (
-            <div className="flex flex-col gap-1 justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setCustomFrom(''); setCustomTo(''); }}
-                data-testid="filter-failed-clear-dates"
-              >
-                Limpar datas
-              </Button>
-            </div>
-          )}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Status</label>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-              <SelectTrigger className="w-[180px]" data-testid="filter-failed-status"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="retrying">Reprocessando</SelectItem>
-                <SelectItem value="succeeded">Sucesso</SelectItem>
-                <SelectItem value="abandoned">Abandonado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Instância</label>
-            <Select value={instanceFilter} onValueChange={setInstanceFilter}>
-              <SelectTrigger className="w-[180px]" data-testid="filter-failed-instance"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {(stats?.by_instance ?? []).map((i) => (
-                  <SelectItem key={i.instance} value={i.instance}>
-                    {i.instance} ({i.count})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Causa raiz</label>
-            <Select value={rootCauseFilter} onValueChange={(v) => setRootCauseFilter(v as RootCause | 'all')}>
-              <SelectTrigger className="w-[180px]" data-testid="filter-failed-root-cause"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {ALL_ROOT_CAUSES.map((c) => {
-                  const meta = getRootCauseMeta(c);
-                  const count = aggregates.byRootCause.find(x => x.cause === c)?.count ?? 0;
-                  return (
-                    <SelectItem key={c} value={c}>
-                      {meta.label}{count > 0 ? ` (${count})` : ''}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground">Motivo (error_code)</label>
-            <Select value={errorCodeFilter} onValueChange={setErrorCodeFilter}>
-              <SelectTrigger className="w-[200px]" data-testid="filter-failed-error-code"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {aggregates.byErrorCode.map((r) => (
-                  <SelectItem key={r.code} value={r.code}>
-                    {r.code} ({r.count})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <FailedMessagesBulkActions
+        canEdit={canEdit}
+        selectedCount={ui.selectedIds.size}
+        onClearSelection={() => ui.setSelectedIds(new Set())}
+        onReprocess={() => ui.setGuidedReprocessOpen(true)}
+        onAbandon={() => ui.setConfirmBulkAbandon(true)}
+        isBulkRetrying={api.bulkRetry.isPending}
+        isBulkAbandoning={api.bulkAbandon.isPending}
+      />
 
-      {/* Bulk action bar (admin only) */}
-      {canEdit && selectedIds.size > 0 && (
-        <Card className="border-primary/40 bg-primary/5">
-          <CardContent className="p-3 flex items-center justify-between gap-3 flex-wrap">
-            <span className="text-sm">
-              <strong>{selectedIds.size}</strong> item(s) selecionado(s)
-            </span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedIds(new Set())}
-              >
-                Limpar seleção
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => setGuidedReprocessOpen(true)}
-                disabled={bulkRetry.isPending}
-              >
-                <RotateCw className={cn('h-4 w-4 mr-2', bulkRetry.isPending && 'animate-spin')} />
-                Reprocessar selecionados
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setConfirmBulkAbandon(true)}
-                disabled={bulkAbandon.isPending}
-              >
-                <Ban className="h-4 w-4 mr-2" />
-                Abandonar selecionados
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Table */}
       <Card>
         <CardHeader className="pb-3 flex-row items-center justify-between">
-          <CardTitle
-            className="text-sm font-medium flex items-center gap-2"
-            data-testid="failed-messages-results-count"
-            data-results-count={total}
-          >
-            <Inbox className="h-4 w-4" />
-            {total} item{total === 1 ? '' : 's'}
-            {total > pageSize && (
-              <span className="text-xs text-muted-foreground font-normal">
-                · página {page + 1} de {totalPages}
+          <CardTitle className="text-sm font-medium">
+            {api.total} item{api.total === 1 ? '' : 's'}
+            {api.total > ui.pageSize && (
+              <span className="text-xs text-muted-foreground font-normal ml-1">
+                · página {ui.page + 1} de {totalPages}
               </span>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading ? (
+          {api.isLoading ? (
             <div className="p-8 text-center text-sm text-muted-foreground">Carregando…</div>
-          ) : sorted.length === 0 ? (
-            <div className="p-12 text-center">
-              <CheckCircle2 className="h-10 w-10 mx-auto mb-2 text-success/60" />
-              <p className="text-sm text-muted-foreground">Nenhuma mensagem na fila — tudo certo.</p>
-            </div>
+          ) : sortedRows.length === 0 ? (
+            <div className="p-12 text-center text-muted-foreground">Nenhuma mensagem na fila.</div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  {canEdit && (
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={allVisibleSelected}
-                        onCheckedChange={toggleAll}
-                        aria-label="Selecionar tudo"
-                        data-state={
-                          allVisibleSelected ? 'checked'
-                          : someVisibleSelected ? 'indeterminate'
-                          : 'unchecked'
-                        }
-                      />
-                    </TableHead>
-                  )}
+                  {canEdit && <TableHead className="w-10">Select</TableHead>}
                   <TableHead>Status</TableHead>
                   <TableHead>Instância</TableHead>
                   <TableHead>Destinatário</TableHead>
                   <TableHead>Erro</TableHead>
                   <TableHead className="text-center">Tentativas</TableHead>
-                  <TableHead>Última tentativa</TableHead>
-                  <TableHead>Próximo retry</TableHead>
+                  <TableHead>Última</TableHead>
+                  <TableHead>Próxima</TableHead>
                   <TableHead>Criado</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sorted.map((row) => (
-                  <TableRow
+                {sortedRows.map((row) => (
+                  <FailedMessageTableRow
                     key={row.id}
-                    data-testid="failed-message-row"
-                    data-remote-jid={row.remote_jid ?? ''}
-                    data-status={row.status ?? ''}
-                    data-state={selectedIds.has(row.id) ? 'selected' : undefined}
-                    className="cursor-pointer"
-                    onClick={() => setSelected(row)}
-                  >
-                    {canEdit && (
-                      <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
-                        <Checkbox
-                          checked={selectedIds.has(row.id)}
-                          onCheckedChange={() => toggleOne(row.id)}
-                          aria-label="Selecionar item"
-                          data-testid="failed-message-select-checkbox"
-                        />
-                      </TableCell>
-                    )}
-                    <TableCell data-testid="failed-message-status">
-                      <FailedMessageStatusBadge status={row.status} />
-                    </TableCell>
-                    <TableCell className="font-mono text-xs" data-testid="failed-message-instance">{row.instance_name}</TableCell>
-                    <TableCell className="font-mono text-xs" data-testid="failed-message-jid">{shortJid(row.remote_jid)}</TableCell>
-                    <TableCell className="max-w-[280px]" data-testid="failed-message-error">
-                      <div className="flex flex-col gap-1">
-                        {(() => {
-                          const cause = classifyRootCause(row);
-                          const meta = getRootCauseMeta(cause);
-                          return (
-                            <Badge
-                              variant="outline"
-                              className={cn('w-fit text-[10px] px-1.5 py-0', ROOT_CAUSE_TONE_CLASS[meta.tone])}
-                              title={meta.hint}
-                              data-testid="failed-message-root-cause"
-                            >
-                              {meta.label}
-                            </Badge>
-                          );
-                        })()}
-                        <span className="text-xs font-medium" data-testid="failed-message-error-code">
-                          {row.error_code ?? (row.http_status ? `HTTP ${row.http_status}` : '—')}
-                        </span>
-                        {row.error_message && (
-                          <span
-                            className="text-xs text-muted-foreground truncate"
-                            title={row.error_message}
-                            data-testid="failed-message-error-message"
-                          >
-                            {row.error_message}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center text-xs" data-testid="failed-message-retry-count">
-                      {row.retry_count}/{row.max_retries}
-                    </TableCell>
-                    <TableCell
-                      className="text-xs"
-                      title={row.last_attempt_at ?? undefined}
-                      data-testid="failed-message-last-attempt"
-                    >
-                      {row.last_attempt_at
-                        ? formatDistanceToNow(new Date(row.last_attempt_at), { addSuffix: true, locale: ptBR })
-                        : '—'}
-                    </TableCell>
-                    <TableCell
-                      className="text-xs"
-                      title={row.next_attempt_at ?? undefined}
-                      data-testid="failed-message-next-attempt"
-                    >
-                      {row.next_attempt_at
-                        ? formatDistanceToNow(new Date(row.next_attempt_at), { addSuffix: true, locale: ptBR })
-                        : '—'}
-                    </TableCell>
-                    <TableCell className="text-xs" data-testid="failed-message-created-at">{formatDate(row.created_at)}</TableCell>
-                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex justify-end gap-1">
-                        {row.remote_jid && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleViewInChat(row)}
-                            title="Ver no chat"
-                            data-testid="failed-message-view-in-chat-button"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => setSelected(row)}
-                          title="Ver detalhes"
-                          data-testid="failed-message-details-button"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {canEdit && (row.status === 'pending' || row.status === 'retrying' || row.status === 'abandoned') && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => retryNow.mutate(row.id)}
-                            disabled={retryNow.isPending}
-                            title="Reprocessar agora"
-                            data-testid="failed-message-retry-button"
-                          >
-                            <RotateCw className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canEdit && (row.status === 'pending' || row.status === 'retrying') && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => abandon.mutate(row.id)}
-                            disabled={abandon.isPending}
-                            title="Abandonar"
-                            data-testid="failed-message-abandon-button"
-                          >
-                            <Ban className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                    row={row}
+                    canEdit={canEdit}
+                    isSelected={ui.selectedIds.has(row.id)}
+                    onToggle={ui.toggleOne}
+                    onSelect={ui.setSelected}
+                    onViewInChat={handleViewInChat}
+                    onRetry={(id) => api.retryNow.mutate(id)}
+                    onAbandon={(id) => api.abandon.mutate(id)}
+                    isRetrying={api.retryNow.isPending}
+                    isAbandoning={api.abandon.isPending}
+                  />
                 ))}
               </TableBody>
             </Table>
           )}
-          {/* Pagination */}
-          {total > pageSize && (
-            <div className="flex items-center justify-between gap-2 p-3 border-t">
-              <span className="text-xs text-muted-foreground">
-                Mostrando {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} de {total}
-              </span>
-              <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  disabled={page === 0}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  disabled={page >= totalPages - 1}
-                >
-                  Próxima
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
-      {/* Bulk abandon confirm */}
-      <AlertDialog open={confirmBulkAbandon} onOpenChange={(o) => {
-        setConfirmBulkAbandon(o);
-        if (!o) setBulkReason('');
-      }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Abandonar {selectedIds.size} item(s)?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação marca as mensagens selecionadas como abandonadas e elas não serão mais reprocessadas
-              automaticamente. Você ainda pode forçar reprocesso manual depois.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">
-              Motivo (opcional, fica registrado no log)
-            </label>
-            <Textarea
-              value={bulkReason}
-              onChange={(e) => setBulkReason(e.target.value)}
-              placeholder="ex.: limpeza de exhausted antigos, instância descontinuada..."
-              rows={3}
-              maxLength={500}
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                bulkAbandon.mutate(
-                  { ids: Array.from(selectedIds), reason: bulkReason },
-                  {
-                    onSuccess: () => {
-                      setSelectedIds(new Set());
-                      setConfirmBulkAbandon(false);
-                      setBulkReason('');
-                    },
-                  },
-                );
-              }}
-            >
-              Confirmar abandono
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Details drawer (Sheet right) */}
-      <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Detalhes da falha</SheetTitle>
-            <SheetDescription>
-              {selected && (
-                <span className="font-mono text-xs">
-                  {selected.instance_name} → {shortJid(selected.remote_jid)}
-                </span>
-              )}
-            </SheetDescription>
-          </SheetHeader>
-          {selected && (
-            <div className="space-y-4 mt-4">
-              <div className="flex items-center gap-2 flex-wrap">
-                <FailedMessageStatusBadge status={selected.status} />
-                {(() => {
-                  const cause = classifyRootCause(selected);
-                  const meta = getRootCauseMeta(cause);
-                  return (
-                    <Badge
-                      variant="outline"
-                      className={cn('text-xs', ROOT_CAUSE_TONE_CLASS[meta.tone])}
-                      title={meta.hint}
-                    >
-                      Causa: {meta.label}
-                    </Badge>
-                  );
-                })()}
-                {selected.remote_jid && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        onClick={() => {
-                          navigator.clipboard.writeText(selected.remote_jid ?? '');
-                          toast.success('JID copiado');
-                        }}
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Copiar JID
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{selected.remote_jid}</TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <Field label="HTTP" value={selected.http_status?.toString() ?? '—'} />
-                <Field label="Código de erro" value={selected.error_code ?? '—'} />
-                <Field label="Tentativas" value={`${selected.retry_count}/${selected.max_retries}`} />
-                <Field label="Próximo retry" value={formatDate(selected.next_attempt_at)} />
-                <Field label="Criado" value={formatDate(selected.created_at)} />
-                <Field label="Última tentativa" value={formatDate(selected.last_attempt_at)} />
-                <Field label="Concluído em" value={formatDate(selected.succeeded_at)} />
-                <Field label="Atualizado" value={formatDate(selected.updated_at)} />
-              </div>
-
-              {selected.error_message && (
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">Mensagem de erro</p>
-                  <ScrollArea className="max-h-32 rounded border bg-muted/40 p-2">
-                    <pre className="text-xs whitespace-pre-wrap break-all">{selected.error_message}</pre>
-                  </ScrollArea>
-                </div>
-              )}
-
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-1">Payload original</p>
-                <ScrollArea className="max-h-64 rounded border bg-muted/40 p-2">
-                  <pre className="text-xs whitespace-pre-wrap break-all">
-                    {JSON.stringify(selected.payload, null, 2)}
-                  </pre>
-                </ScrollArea>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t">
-                {selected.remote_jid && (
-                  <Button
-                    variant="outline"
-                    onClick={() => { handleViewInChat(selected); setSelected(null); }}
-                    data-testid="failed-message-details-view-in-chat"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Ver no chat
-                  </Button>
-                )}
-                {canEdit && (selected.status === 'pending' || selected.status === 'retrying' || selected.status === 'abandoned') && (
-                  <Button
-                    variant="outline"
-                    onClick={() => { retryNow.mutate(selected.id); setSelected(null); }}
-                    disabled={retryNow.isPending}
-                  >
-                    <RotateCw className="h-4 w-4 mr-2" />
-                    Reprocessar agora
-                  </Button>
-                )}
-                {canEdit && (selected.status === 'pending' || selected.status === 'retrying') && (
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      const reason = window.prompt('Motivo do abandono (opcional):') ?? '';
-                      abandon.mutate({ id: selected.id, reason });
-                      setSelected(null);
-                    }}
-                    disabled={abandon.isPending}
-                  >
-                    <Ban className="h-4 w-4 mr-2" />
-                    Abandonar
-                  </Button>
-                )}
-                {readOnly && (
-                  <span className="text-xs text-muted-foreground self-center">
-                    Apenas leitura
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
-
-      {/* Guided bulk reprocess dialog (admin only) */}
-      {canEdit && (
-        <BulkReprocessGuidedDialog
-          open={guidedReprocessOpen}
-          onOpenChange={(o) => {
-            setGuidedReprocessOpen(o);
-            if (!o && !bulkRetry.isPending) {
-              // não limpa seleção em caso de cancelamento — usuário pode querer ajustar
-            }
-          }}
-          selectedRows={selectedRows}
-          isPending={bulkRetry.isPending}
-          onConfirm={async (ids, reason) => {
-            const affected = await bulkRetry.mutateAsync({ ids, reason });
-            // Após sucesso, limpamos a seleção (o passo de resultado ainda fica visível).
-            setSelectedIds(new Set());
-            return affected;
-          }}
-        />
-      )}
-
-      {/* Histórico de reprocesso e ações DLQ */}
       <DLQAuditHistory />
+
+      <FailedMessagesBulkAbandonDialog ui={ui} onConfirm={(ids, reason) => api.bulkAbandon.mutate({ ids, reason })} />
+      <BulkReprocessGuidedDialog
+        open={ui.guidedReprocessOpen}
+        onOpenChange={ui.setGuidedReprocessOpen}
+        selectedRows={sortedRows.filter(r => ui.selectedIds.has(r.id))}
+        onConfirm={(ids) => api.bulkRetry.mutate(ids)}
+      />
+      <FailedMessageDetailsSheet
+        selected={ui.selected}
+        onClose={() => ui.setSelected(null)}
+        onViewInChat={handleViewInChat}
+      />
     </div>
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+// Internal placeholder for XCircle icon since it was used in KPI but not imported in my split view
+function XCircle(props: any) {
   return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-medium">{value}</p>
-    </div>
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="m15 9-6 6" />
+      <path d="m9 9 6 6" />
+    </svg>
   );
 }
