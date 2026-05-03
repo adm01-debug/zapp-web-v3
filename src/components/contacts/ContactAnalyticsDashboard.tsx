@@ -240,6 +240,40 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
           </CardContent>
         </Card>
       </div>
+
+      {/* Actionable Insights Section */}
+      <div className="pt-4 border-t border-border/50">
+        <div className="flex items-center gap-2 mb-4">
+          <Lightbulb className="w-4 h-4 text-amber-500" />
+          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Insights Acionáveis</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {analytics.insights.map((insight, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + (i * 0.1) }}
+              className={cn("p-4 rounded-xl border border-border/40 flex items-start gap-3", insight.bg)}
+            >
+              <div className={cn("p-2 rounded-lg bg-background shadow-sm", insight.color)}>
+                <insight.icon className="w-4 h-4" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-bold leading-none">{insight.title}</p>
+                <p className="text-xs text-muted-foreground leading-tight">{insight.description}</p>
+              </div>
+            </motion.div>
+          ))}
+          {analytics.insights.length === 0 && (
+            <div className="col-span-full p-8 border border-dashed border-border/50 rounded-xl flex flex-col items-center justify-center text-center">
+              <Sparkles className="w-8 h-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground font-medium">Sua base está saudável!</p>
+              <p className="text-xs text-muted-foreground/60">Continue mantendo os dados atualizados para gerar novos insights.</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
