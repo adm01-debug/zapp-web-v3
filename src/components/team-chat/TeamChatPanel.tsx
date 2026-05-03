@@ -99,7 +99,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         showSearch={s.showSearch} isMuted={s.isMuted} onBack={onBack} onToggleDetails={onToggleDetails}
         onToggleSearch={() => { s.setShowSearch(!s.showSearch); if (s.showSearch) s.setSearchQuery(''); }}
         onAddMembers={() => s.setShowAddMembers(true)} onVoiceChange={s.tts.setVoiceId} onSpeedChange={s.tts.setSpeed}
-        onToggleMute={() => s.muteMutation.mutate({ conversationId: conversation.id, muted: !s.isMuted })} />
+        onToggleMute={() => s.muteMutation.mutate({ conversationId: conversation.id, muted: !s.isMuted })}
+        onToggleStats={() => setShowStats(!showStats)} showStats={showStats} />
 
       <AnimatePresence>
         {s.showSearch && (
