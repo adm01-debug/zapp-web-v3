@@ -19,7 +19,9 @@ interface ReactionMutationOptions {
  */
 const trackReactionEvent = (action: 'add' | 'remove' | 'open_picker', data: { messageId: string; emoji?: string; status?: string; code?: number | string }) => {
   if (!data.messageId) return;
-  mutationLog.info(`[Analytics] Reaction Event: ${action}`, data);
+  // Use unique key to prevent duplicate tracking of same event in rapid succession
+  const eventKey = `${action}-${data.messageId}-${data.emoji || 'no-emoji'}-${Date.now()}`;
+  mutationLog.info(`[Analytics] Reaction Event: ${action}`, { ...data, eventKey });
 };
 
 export function useReactionMutations(

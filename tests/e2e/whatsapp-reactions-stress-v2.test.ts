@@ -64,14 +64,14 @@ test.describe('WhatsApp Message Reactions Advanced E2E', () => {
     const pickerEvents = logs.filter(l => l.includes('open_picker'));
     const addEvents = logs.filter(l => l.includes('add'));
 
-    // Check Singleton: even with double click, UI usually handles popover state, but hook must be clean.
-    // If popover was already open, second click might close it, but our logic in handleReact tracks it.
+    // Check Singleton: popover state management prevents multiple 'open' transitions
     expect(pickerEvents.length).toBe(1);
     
-    // Validate Payload Integrity (Regex check on JSON-like string from logger)
+    // Validate Payload Integrity
     expect(pickerEvents[0]).toContain(`"messageId":"${messageId}"`);
     expect(addEvents[0]).toContain(`"emoji":"👍"`);
     expect(addEvents[0]).toContain(`"status":"success"`);
+    expect(addEvents[0]).toContain(`"eventKey"`); // Ensure eventKey exists
   });
 
   test('should verify real-time dashboard events appear without refresh', async ({ browser }) => {
