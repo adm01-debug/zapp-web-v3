@@ -255,9 +255,11 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
       case 'quick': toast({ title: '⚡ Resposta Rápida', description: 'Use / seguido do atalho para respostas rápidas.' }); break;
       case 'summary': handleSetActiveTool('aiAssistant'); break;
       case 'produto': openDialog('catalogDirect'); break;
+      case 'internal-note': setIsWhisper(prev => !prev); break;
+      case 'internal-file': handleSetActiveTool('teamFiles'); break;
       default: toast({ title: `Comando: ${command.label}`, description: command.description }); break;
     }
-  }, [closeDialog, openDialog, handleSetActiveTool]);
+  }, [closeDialog, openDialog, handleSetActiveTool, setIsWhisper]);
 
   const handleSendProduct = useCallback((product: ExternalProduct) => {
     const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.sale_price);
