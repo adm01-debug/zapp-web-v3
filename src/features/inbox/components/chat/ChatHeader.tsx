@@ -91,7 +91,7 @@ export const ChatHeader = memo(function ChatHeader({
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
-              className="object-cover"
+              className="object-cover w-full h-full"
               onError={(e) => {
                 (e.target as HTMLImageElement).removeAttribute('src');
               }}

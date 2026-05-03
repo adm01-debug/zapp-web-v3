@@ -204,7 +204,7 @@ export function ChatMessageBubble({
         <motion.div
           whileHover={{ scale: 1.005 }}
           className={cn(
-            'relative rounded-2xl shadow-sm transition-all overflow-hidden border border-transparent',
+            'relative rounded-lg shadow-sm transition-all overflow-hidden border border-transparent',
             (message.type === 'image' || message.type === 'video') && !message.content
               ? 'p-0'
               : density === 'comfortable' ? 'px-4 py-2.5' : density === 'compact' ? 'px-3 py-1.5' : 'px-2 py-1',
@@ -317,7 +317,7 @@ export function ChatMessageBubble({
                   Sussurro Interno
                 </div>
               )}
-              <TextWithLinks text={message.content} className={cn("text-[13px] font-normal tracking-tight whitespace-pre-wrap leading-snug", message.isWhisper && "italic")} maxPreviews={2} />
+              <TextWithLinks text={message.content} className={cn("text-[14.2px] font-normal tracking-tight whitespace-pre-wrap leading-snug", message.isWhisper && "italic")} maxPreviews={2} />
             </div>
           )}
 
@@ -325,7 +325,7 @@ export function ChatMessageBubble({
           <div
             className={cn(
               'flex items-center justify-end gap-1 mt-0.5',
-              isSent ? 'text-primary-foreground/60' : 'text-muted-foreground/50'
+              isSent ? 'text-[#8696a0]' : 'text-[#8696a0]'
             )}
           >
             <span className="text-[10px]">

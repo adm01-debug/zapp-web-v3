@@ -133,18 +133,18 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
     <QuickPeek preview={quickPeekPreview} enabled={!isSelected} delay={500}>
       <motion.div ref={rootRef} onClick={() => onSelect(conversation)} whileHover={{ x: 3 }} whileTap={{ scale: 0.99 }} transition={{ duration: 0.2, ease: "easeOut" }}
         className={cn(
-          'relative p-4 rounded-2xl cursor-pointer transition-all duration-300 group h-full mx-2 my-0.5', 
+          'relative p-3 rounded-none cursor-pointer transition-all duration-300 group h-full mx-0 border-b border-border/50', 
           isSelected 
-            ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10' 
-            : 'hover:bg-background/60 hover:shadow-sm border border-transparent hover:border-border/5'
+            ? 'bg-[#2a3942] dark:bg-[#2a3942]' 
+            : 'hover:bg-[#202c33] dark:hover:bg-[#202c33] bg-[#111b21] dark:bg-[#111b21]'
         )}>
-        {isSelected && <motion.div layoutId="conversationActive" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.4)]" />}
+        {/* {isSelected && <motion.div layoutId="conversationActive" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.4)]" />} */}
         <div className="flex items-start gap-3.5 relative z-10">
           <div className="relative flex-shrink-0">
             <ChannelBadge type={conversation.contact.contact_type} />
             <Avatar className={cn(
-              "w-12 h-12 ring-2 transition-all duration-500", 
-              isSelected ? "ring-primary/20 scale-105" : "ring-border/10 group-hover:ring-primary/10"
+              "w-[50px] h-[50px] ring-0 transition-all duration-500", 
+              isSelected ? "scale-100" : "group-hover:scale-100"
             )}>
               <AvatarImage src={conversation.contact.avatar} className="object-cover" />
               <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold tracking-tighter">
@@ -168,11 +168,11 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className={cn("font-normal text-[15px] truncate transition-colors", isSelected ? "text-primary" : "text-foreground")}>{conversation.contact.name}</span>
+                <span className={cn("font-normal text-[17px] truncate transition-colors", isSelected ? "text-primary-foreground" : "text-[#e9edef]")}>{conversation.contact.name}</span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <span className="text-[12px] text-muted-foreground tabular-nums">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
+                <span className="text-[12px] text-[#8696a0] tabular-nums">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -192,7 +192,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               ) : (
                 <p className={cn(
                   "text-[14px] truncate pr-4 transition-colors duration-300",
-                  conversation.unreadCount > 0 ? "text-foreground" : "text-muted-foreground"
+                  conversation.unreadCount > 0 ? "text-[#e9edef]" : "text-[#8696a0]"
                 )}>
                   {conversation.lastMessage?.content || 'Sem mensagens'}
                 </p>
