@@ -159,7 +159,28 @@ export function MessageReactions({
           role="dialog"
           aria-label="Escolher um emoji"
         >
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-1" role="grid">
+          <div 
+            className="grid grid-cols-4 sm:grid-cols-6 gap-1 outline-none" 
+            role="grid"
+            onKeyDown={(e) => {
+              const buttons = Array.from(e.currentTarget.querySelectorAll('button'));
+              const activeIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+              if (activeIndex === -1) return;
+
+              let nextIndex = -1;
+              const cols = window.innerWidth < 640 ? 4 : 6;
+
+              if (e.key === 'ArrowRight') nextIndex = (activeIndex + 1) % buttons.length;
+              if (e.key === 'ArrowLeft') nextIndex = (activeIndex - 1 + buttons.length) % buttons.length;
+              if (e.key === 'ArrowDown') nextIndex = (activeIndex + cols) % buttons.length;
+              if (e.key === 'ArrowUp') nextIndex = (activeIndex - cols + buttons.length) % buttons.length;
+
+              if (nextIndex !== -1) {
+                e.preventDefault();
+                buttons[nextIndex]?.focus();
+              }
+            }}
+          >
             {availableReactions.map((emoji) => {
               const userHasReacted = hasReacted(emoji);
 
@@ -279,7 +300,26 @@ export function QuickReactionBar({
             role="dialog"
             aria-label="Escolher reações estendidas"
           >
-            <div className="grid grid-cols-4 gap-1" role="grid">
+            <div 
+              className="grid grid-cols-4 gap-1 outline-none" 
+              role="grid"
+              onKeyDown={(e) => {
+                const buttons = Array.from(e.currentTarget.querySelectorAll('button'));
+                const activeIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+                if (activeIndex === -1) return;
+
+                let nextIndex = -1;
+                if (e.key === 'ArrowRight') nextIndex = (activeIndex + 1) % buttons.length;
+                if (e.key === 'ArrowLeft') nextIndex = (activeIndex - 1 + buttons.length) % buttons.length;
+                if (e.key === 'ArrowDown') nextIndex = (activeIndex + 4) % buttons.length;
+                if (e.key === 'ArrowUp') nextIndex = (activeIndex - 4 + buttons.length) % buttons.length;
+
+                if (nextIndex !== -1) {
+                  e.preventDefault();
+                  buttons[nextIndex]?.focus();
+                }
+              }}
+            >
               {EXTENDED_REACTIONS.map((emoji) => (
                 <button
                   key={emoji}
