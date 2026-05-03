@@ -153,14 +153,14 @@ export function WhisperMode({ contactId, targetAgentId, className }: WhisperMode
               </Button>
             </div>
 
-            <div className="max-h-[300px] overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-amber-50/20 to-transparent">
+            <div className="max-h-[300px] overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-amber-50/20 to-transparent flex flex-col-reverse">
               {whispers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center space-y-2">
                   <EyeOff className="w-8 h-8 text-amber-200" />
                   <p className="text-xs text-amber-600/60 font-medium">Nenhum sussurro registrado para esta conversa.</p>
                 </div>
               ) : (
-                whispers.slice().reverse().map((w, idx) => (
+                whispers.map((w, idx) => (
                   <motion.div 
                     key={w.id} 
                     initial={{ opacity: 0, x: -10 }}
