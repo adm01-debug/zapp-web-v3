@@ -163,8 +163,9 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   useEffect(() => {
     if (messageIds.length === 0) return;
 
+    // Listen for both reactions and status updates
     const channel = supabase
-      .channel(`chat-reactions:${messageIds[0] ?? 'empty'}`)
+      .channel(`chat-updates:${messageIds[0] ?? 'empty'}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -173,10 +174,19 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
         const nextMessageId = (payload.new as { message_id?: string } | null)?.message_id;
         const prevMessageId = (payload.old as { message_id?: string } | null)?.message_id;
         const reactionMessageId = nextMessageId ?? prevMessageId;
-
         if (!reactionMessageId || !messageIdsSet.has(reactionMessageId)) return;
-
         queryClient.invalidateQueries({ queryKey: ['message-reactions', reactionMessageId] });
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+      }, (payload) => {
+        const updatedMsg = payload.new as { id: string, status?: string };
+        if (updatedMsg.id && messageIdsSet.has(updatedMsg.id)) {
+          // Invalidate messages query to refresh statuses
+          queryClient.invalidateQueries({ queryKey: ['messages'] });
+        }
       })
       .subscribe();
 
