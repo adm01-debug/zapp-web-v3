@@ -297,7 +297,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     onNextConversation: () => {}, // Handled in Sidebar
     onPrevConversation: () => {}, // Handled in Sidebar
     onArchive: () => {}, // Handled in Sidebar
-    onTransfer: () => handlers.handleOpenTransfer(),
+    onTransfer: () => handlers.handleSlashCommand({ id: 'transfer' } as any),
     onRefresh: () => {}, // Handled in Sidebar
   });
 
