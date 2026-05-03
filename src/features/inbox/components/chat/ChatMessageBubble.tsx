@@ -127,6 +127,7 @@ export function ChatMessageBubble({
   registerRef,
   instanceName,
   contactJid,
+  density = 'comfortable',
 }: ChatMessageBubbleProps) {
   const isSent = message.sender === 'agent';
   const mediaRefreshKey = (instanceName && contactJid && message.external_id)
@@ -146,7 +147,11 @@ export function ChatMessageBubble({
   return (
     <div 
       ref={(el) => registerRef(message.id, el)}
-      className={cn('flex group', isSent ? 'justify-end' : 'justify-start')}
+      className={cn(
+        'flex group', 
+        isSent ? 'justify-end' : 'justify-start',
+        density === 'comfortable' ? 'mb-4' : density === 'compact' ? 'mb-1.5' : 'mb-0.5'
+      )}
       {...swipeHandlers}
     >
       <motion.div
@@ -157,12 +162,16 @@ export function ChatMessageBubble({
           scale: 1 
         }}
         transition={swipeState.isSwiping ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 25 }}
-        className="max-w-[70%] space-y-1 relative"
+        className={cn(
+          "max-w-[85%] sm:max-w-[70%] space-y-1 relative",
+          density === 'dense' && "max-w-[90%] sm:max-w-[80%]"
+        )}
       >
-        {/* Message Actions (visible on hover) */}
+        {/* Message Actions (visible on hover/focus) */}
         <div className={cn(
-          "absolute top-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10",
-          isSent ? "right-full mr-2" : "left-full ml-2"
+          "absolute top-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10",
+          isSent ? "right-full mr-2" : "left-full ml-2",
+          density !== 'comfortable' && "scale-90"
         )}>
           <Tooltip>
             <TooltipTrigger asChild>
