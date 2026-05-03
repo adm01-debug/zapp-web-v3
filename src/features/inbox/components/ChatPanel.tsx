@@ -416,9 +416,9 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             failuresOnly={failuresOnly}
             failuresCount={failedMessages.length}
             onToggleFailuresOnly={() => setFailuresOnly((v) => !v)}
-        onOpenWhisper={() => dispatch({ type: 'TOGGLE', key: 'whisper' })}
-        whisperCount={0}
-      />
+            onOpenWhisper={() => dispatch({ type: 'TOGGLE', key: 'whisper' })}
+            whisperCount={0}
+          />
         )}
 
         <ChatSearchBar messages={messages} isOpen={activeTool === 'chatSearch'}
