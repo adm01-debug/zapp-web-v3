@@ -18,6 +18,7 @@ interface ReactionMutationOptions {
  * Analytics helper
  */
 const trackReactionEvent = (action: 'add' | 'remove' | 'open_picker', data: { messageId: string; emoji?: string; status?: string; code?: number | string }) => {
+  if (!data.messageId) return;
   mutationLog.info(`[Analytics] Reaction Event: ${action}`, data);
 };
 
