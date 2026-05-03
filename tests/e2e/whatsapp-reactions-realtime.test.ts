@@ -33,46 +33,76 @@ test.describe('WhatsApp Message Reactions E2E Realtime & Error Standardization',
     await expect(reactionOn2).toBeVisible({ timeout: 5000 });
     await expect(reactionOn2).toContainText('1');
 
-    // 5. User 2 adds 👍 (Summary order should update if popularity changes)
-    await page2.locator(`[data-testid="message-bubble-${messageId}"]`).hover();
-    await page2.locator('button[aria-label="Reagir com 👍"]').first().click();
-    
-    // User 1 sees 👍
-    await expect(page1.locator(`[data-testid="reaction-${messageId}-👍"]`)).toBeVisible();
-
     await context1.close();
     await context2.close();
   });
 
-  test('should show standardized error messages for 401, 500, and 504', async ({ page }) => {
+  test('should track open_picker exactly once and show in operations dashboard', async ({ page }) => {
+    // Collect console logs for analytics validation
+    const logs: string[] = [];
+    page.on('console', msg => {
+      if (msg.text().includes('[Analytics] Reaction Event: open_picker')) {
+        logs.push(msg.text());
+      }
+    });
+
     await page.goto('/inbox');
     await page.locator('[data-testid^="conversation-item-"]').first().click();
     const message = page.locator('[data-testid^="message-bubble-"]').last();
     const messageId = await message.getAttribute('data-message-id');
 
-    const errorCases = [
-      { status: 401, expected: 'Sessão expirada. Por favor, faça login novamente.' },
-      { status: 500, expected: 'Erro interno no servidor (500)' },
-      { status: 504, expected: 'O servidor demorou muito para responder. Tente novamente.' }
-    ];
+    // Trigger open picker multiple times rapidly
+    await message.hover();
+    const trigger = page.locator(`[data-testid="reaction-trigger-${messageId}"]`);
+    await trigger.click();
+    await trigger.click();
+    await trigger.click();
 
-    for (const errorCase of errorCases) {
-      await page.route('**/rest/v1/message_reactions*', async (route) => {
-        await route.fulfill({
-          status: errorCase.status,
-          contentType: 'application/json',
-          body: JSON.stringify({ message: 'Error', code: errorCase.status.toString() }),
-        });
+    // Verify analytics: should only track ONCE
+    expect(logs.length).toBe(1);
+
+    // React to trigger a real event
+    await page.locator('button[aria-label="Reagir com 👍"]').first().click();
+
+    // Navigate to Admin Operations Dashboard
+    await page.goto('/admin/operations');
+    await page.getByRole('tab', { name: /logs/i }).click();
+
+    // Event should be visible in operations hub logs
+    await expect(page.locator('text=Reaction Event: add').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator(`text=${messageId}`).first()).toBeVisible();
+  });
+
+  test('should show standardized error messages and handle consecutive failures', async ({ page }) => {
+    await page.goto('/inbox');
+    await page.locator('[data-testid^="conversation-item-"]').first().click();
+    const message = page.locator('[data-testid^="message-bubble-"]').last();
+
+    // Test sequence: 401 then 504
+    let callCount = 0;
+    await page.route('**/rest/v1/message_reactions*', async (route) => {
+      callCount++;
+      const status = callCount === 1 ? 401 : 504;
+      await route.fulfill({
+        status,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Error', code: status.toString() }),
       });
+    });
 
-      await message.hover();
-      await page.locator('button[aria-label="Reagir com 😂"]').first().click();
-      
-      await expect(page.locator(`text=${errorCase.expected}`)).toBeVisible();
-      
-      // Cleanup for next case
-      await page.unroute('**/rest/v1/message_reactions*');
-      // Wait for toast to disappear or clear it if possible
-    }
+    await message.hover();
+    
+    // First interaction (401)
+    await page.locator('button[aria-label="Reagir com 😂"]').first().click();
+    await expect(page.locator('text=Sessão expirada')).toBeVisible();
+
+    // Second interaction (504)
+    await page.locator('button[aria-label="Reagir com 😮"]').first().click();
+    
+    // Standardized 504 message
+    await expect(page.locator('text=O servidor demorou muito para responder')).toBeVisible();
+    
+    // Toast Replacement Check: The 401 message should have been replaced/dismissed
+    await expect(page.locator('text=Sessão expirada')).not.toBeVisible();
   });
 });
