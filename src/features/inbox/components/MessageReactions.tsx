@@ -194,6 +194,8 @@ export function QuickReactionBar({
   disableRealtime,
 }: QuickReactionBarProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const [isMobileActive, setIsMobileActive] = useState(false);
+
   const { addReaction, removeReaction, hasReacted } = useMessageReactions(messageId, {
     instanceName,
     contactJid,
