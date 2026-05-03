@@ -18,7 +18,7 @@ import { AdvancedMessageMenu } from '@/features/inbox/components/AdvancedMessage
 import { ExternalProductCatalog } from '@/components/catalog/ExternalProductCatalog';
 import { ExternalProduct } from '@/hooks/useExternalCatalog';
 import { Message } from '@/types/chat';
-import { Package, Layers, MapPin, Clock, Zap, PenTool, Check, Lock, Unlock } from 'lucide-react';
+import { Package, Layers, MapPin, Clock, Zap, PenTool, Check, Lock, Unlock, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
