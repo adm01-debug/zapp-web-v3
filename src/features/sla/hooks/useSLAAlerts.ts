@@ -5,7 +5,7 @@ import { useSLAAlertPreferences } from './useSLAAlertPreferences';
 
 type SLAStatus = 'ok' | 'warning' | 'breached' | 'na';
 type SLAScope = 'current' | 'queue' | 'agent' | 'none';
-type AlertKind = 'first_response' | 'resolution';
+type AlertKind = 'first_response' | 'resolution' | 'delivery_delay';
 type AlertSeverity = 'warning' | 'breached';
 
 interface SLAAlertParams {
@@ -17,6 +17,8 @@ interface SLAAlertParams {
   ruleName: string | null;
   awaitingMs: number | null;
   resolutionDurationMs: number | null;
+  /** Optional delivery delay context */
+  deliveryDelayMs?: number | null;
   /** Optional callback wired to the toast's "Abrir conversa" action button. */
   onOpenConversation?: () => void;
 }
@@ -121,6 +123,7 @@ export function useSLAAlerts(params: SLAAlertParams) {
   const firedRef = useRef<Set<string>>(new Set());
   const inflightRef = useRef<Set<string>>(new Set());
   const { preferences } = useSLAAlertPreferences();
+  const [deliveryStatus, setDeliveryStatus] = (params as any).deliveryDelayStatus ? [(params as any).deliveryDelayStatus, (params as any).deliveryDelayMs] : [null, null];
 
   useEffect(() => {
     if (params.scope === 'none' || !params.contactId) return;
@@ -131,7 +134,8 @@ export function useSLAAlerts(params: SLAAlertParams) {
     const fire = async (kind: AlertKind, severity: AlertSeverity, durationMs: number | null) => {
       // Respect per-user preferences. Defaults are all-on, so users without a row keep current behavior.
       const kindEnabled =
-        kind === 'first_response' ? preferences.alert_first_response : preferences.alert_resolution;
+        kind === 'first_response' ? preferences.alert_first_response : 
+        kind === 'delivery_delay' ? true : preferences.alert_resolution;
       const severityEnabled =
         severity === 'breached' ? preferences.severity_breached : preferences.severity_warning;
       if (!kindEnabled || !severityEnabled) return;
@@ -162,8 +166,12 @@ export function useSLAAlerts(params: SLAAlertParams) {
         markFiredLocal(key);
 
         const isBreach = severity === 'breached';
-        const kindLabel = kind === 'first_response' ? '1ª resposta' : 'Resolução';
-        const title = `SLA ${isBreach ? 'violado' : 'em risco'} — ${params.contactName}`;
+        const kindLabel = 
+          kind === 'first_response' ? '1ª resposta' : 
+          kind === 'delivery_delay' ? 'Atraso na leitura' : 'Resolução';
+        const title = kind === 'delivery_delay' 
+          ? `Mensagem não lida — ${params.contactName}`
+          : `SLA ${isBreach ? 'violado' : 'em risco'} — ${params.contactName}`;
         const description = `${kindLabel} · ${formatDurationMs(durationMs)} · ${params.ruleName ?? 'regra padrão'}`;
 
         const action = params.onOpenConversation
@@ -235,6 +243,10 @@ export function useSLAAlerts(params: SLAAlertParams) {
     }
     if (params.resolutionStatus === 'warning' || params.resolutionStatus === 'breached') {
       void fire('resolution', params.resolutionStatus, params.resolutionDurationMs);
+    }
+    const dStatus = (params as any).deliveryDelayStatus;
+    if (dStatus === 'warning' || dStatus === 'breached') {
+      void fire('delivery_delay', dStatus, (params as any).deliveryDelayMs);
     }
   }, [
     params.contactId,
