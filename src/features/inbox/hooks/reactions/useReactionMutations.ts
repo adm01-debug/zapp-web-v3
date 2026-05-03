@@ -14,6 +14,15 @@ interface ReactionMutationOptions {
   senderType?: 'contact' | 'agent';
 }
 
+/**
+ * Analytics helper (inlined for now as requested)
+ */
+const trackReactionEvent = (action: 'add' | 'remove' | 'open_picker', data: any) => {
+  // Simulates sending to dashboard/telemetry
+  mutationLog.info(`[Analytics] Reaction Event: ${action}`, data);
+  // In a real scenario, this would call window.plausible, window.gtag, etc.
+};
+
 export function useReactionMutations(
   messageId: string,
   profileId: string | undefined,
@@ -91,8 +100,9 @@ export function useReactionMutations(
       }
       return { previous };
     },
-    onSuccess: () => {
+    onSuccess: (data, emoji) => {
       queryClient.invalidateQueries({ queryKey: ['message-reactions', messageId] });
+      trackReactionEvent('add', { messageId, emoji, status: 'success' });
     },
     onError: (error: any, emoji, context) => {
       if (context?.previous) {
@@ -101,12 +111,18 @@ export function useReactionMutations(
       mutationLog.error('Failed to add reaction', error);
       
       const status = error?.status || error?.code || (error?.message?.includes('401') ? 401 : 500);
-      const message = status === 401 ? 'Não autorizado' : 'Erro interno no servidor (500)';
+      let errorMsg = 'Erro interno no servidor (500)';
       
-      toast.error(`Erro ao adicionar reação: ${message}`, {
+      if (status === 401) errorMsg = 'Sessão expirada. Por favor, faça login novamente.';
+      else if (status === 504 || status === 'PGRST116') errorMsg = 'O servidor demorou muito para responder. Tente novamente.';
+      else if (status === 403) errorMsg = 'Você não tem permissão para reagir nesta mensagem.';
+      
+      toast.error(`Erro ao adicionar reação: ${errorMsg}`, {
         id: `reaction-error-${messageId}`,
-        className: "bg-destructive text-destructive-foreground",
+        className: "bg-destructive text-destructive-foreground font-medium",
       });
+
+      trackReactionEvent('add', { messageId, emoji, status: 'error', code: status });
     },
   });
 
@@ -150,19 +166,21 @@ export function useReactionMutations(
       }
       return { previous };
     },
-    onSuccess: () => {
+    onSuccess: (data, emoji) => {
       queryClient.invalidateQueries({ queryKey: ['message-reactions', messageId] });
+      trackReactionEvent('remove', { messageId, emoji, status: 'success' });
     },
     onError: (error: any, emoji, context) => {
       if (context?.previous) {
         queryClient.setQueryData(['message-reactions', messageId], context.previous);
       }
-      toast.error('Erro ao remover reação', {
+      toast.error('Não foi possível remover sua reação. Verifique sua conexão.', {
         id: `reaction-remove-error-${messageId}`,
-        className: "bg-destructive text-destructive-foreground",
+        className: "bg-destructive text-destructive-foreground font-medium",
       });
+      trackReactionEvent('remove', { messageId, emoji, status: 'error' });
     }
   });
 
-  return { addMutation, removeMutation };
+  return { addMutation, removeMutation, trackReactionEvent };
 }
