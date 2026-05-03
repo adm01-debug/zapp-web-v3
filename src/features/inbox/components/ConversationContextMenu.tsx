@@ -249,6 +249,14 @@ export function ConversationContextMenu({
           Ver resumo IA
         </ContextMenuItem>
 
+        <ContextMenuItem
+          onClick={() => onOpenSLASettings?.(conversationId)}
+          className="gap-2 cursor-pointer"
+        >
+          <ShieldAlert className="w-4 h-4" />
+          Configurar SLA
+        </ContextMenuItem>
+
         <ContextMenuSeparator />
 
         {/* Archive & Delete */}
