@@ -13,31 +13,31 @@ export function useTeamConversations() {
     queryFn: async () => {
       if (!profile) return [];
 
-      const { data: memberships, error: memErr } = await supabase
-        .from('team_conversation_members')
-        .select('conversation_id, last_read_at')
-        .eq('profile_id', profile.id);
+      // Fetch conversations directly - RLS will filter to what the user can see
+      const { data: conversations, error: convErr } = await supabase
+        .from('team_conversations')
+        .select('*')
+        .order('updated_at', { ascending: false });
 
-      if (memErr) throw memErr;
-      if (!memberships?.length) return [];
+      if (convErr) throw convErr;
+      if (!conversations?.length) return [];
 
-      const convIds = memberships.map(m => m.conversation_id);
-      const lastReadMap = new Map(memberships.map(m => [m.conversation_id, m.last_read_at]));
+      const convIds = conversations.map(c => c.id);
 
-      const [convResult, membersResult] = await Promise.all([
+      // Fetch memberships and profiles for these conversations
+      const [membershipsResult, membersResult] = await Promise.all([
         supabase
-          .from('team_conversations')
-          .select('*')
-          .in('id', convIds)
-          .order('updated_at', { ascending: false }),
+          .from('team_conversation_members')
+          .select('conversation_id, last_read_at')
+          .eq('profile_id', profile.id)
+          .in('conversation_id', convIds),
         supabase
           .from('team_conversation_members')
           .select('*, profile:profiles(id, name, email, avatar_url, is_active)')
           .in('conversation_id', convIds),
       ]);
 
-      if (convResult.error) throw convResult.error;
-      const conversations = convResult.data || [];
+      const lastReadMap = new Map(membershipsResult.data?.map(m => [m.conversation_id, m.last_read_at]) || []);
       const allMembers = membersResult.data || [];
 
       const { data: recentMessages } = await supabase
@@ -85,7 +85,7 @@ export function useTeamConversations() {
 
         return {
           ...conv,
-          type: conv.type as 'direct' | 'group',
+          type: conv.type as 'direct' | 'group' | 'department',
           name: displayName,
           avatar_url: conv.type === 'direct' && !conv.avatar_url
             ? members.find(m => m.profile_id !== profile.id)?.profile?.avatar_url

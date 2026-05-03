@@ -62,7 +62,7 @@ export function useCreateTeamConversation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ type, name, memberIds }: { type: 'direct' | 'group'; name?: string; memberIds: string[] }) => {
+    mutationFn: async ({ type, name, memberIds = [], departmentId }: { type: 'direct' | 'group' | 'department'; name?: string; memberIds?: string[]; departmentId?: string }) => {
       if (!profile) throw new Error('Not authenticated');
 
       if (type === 'direct' && memberIds.length === 1) {
@@ -79,11 +79,37 @@ export function useCreateTeamConversation() {
         }
       }
 
-      const { data: conv, error: convErr } = await supabase.from('team_conversations').insert({ type, name: name || null, created_by: profile.id }).select().single();
+      // If it's a department conversation, check if it already exists
+      if (type === 'department' && departmentId) {
+        const { data: existingDeptConv } = await supabase
+          .from('team_conversations')
+          .select('*')
+          .eq('department_id', departmentId)
+          .maybeSingle();
+        
+        if (existingDeptConv) return existingDeptConv;
+      }
+
+      const { data: conv, error: convErr } = await supabase.from('team_conversations').insert({ 
+        type, 
+        name: name || null, 
+        created_by: profile.id,
+        department_id: departmentId || null
+      }).select().single();
+      
       if (convErr) throw convErr;
-      const allMembers = [profile.id, ...memberIds.filter(id => id !== profile.id)];
-      const { error: memError } = await supabase.from('team_conversation_members').insert(allMembers.map(pid => ({ conversation_id: conv.id, profile_id: pid })));
-      if (memError) throw memError;
+      
+      // If it's a group or direct, add specified members
+      if (type !== 'department') {
+        const allMembers = [profile.id, ...memberIds.filter(id => id !== profile.id)];
+        const { error: memError } = await supabase.from('team_conversation_members').insert(allMembers.map(pid => ({ conversation_id: conv.id, profile_id: pid })));
+        if (memError) throw memError;
+      } else {
+        // For department conversations, we can still add the creator for UI consistency in some lists
+        const { error: memError } = await supabase.from('team_conversation_members').insert({ conversation_id: conv.id, profile_id: profile.id });
+        if (memError) throw memError;
+      }
+      
       return conv;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['team-conversations'] }); },

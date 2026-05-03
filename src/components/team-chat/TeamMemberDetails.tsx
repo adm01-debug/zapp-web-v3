@@ -50,20 +50,29 @@ export function TeamMemberDetails({ conversation, onClose }: TeamMemberDetailsPr
 
   const memberIds = conversation.members?.map(m => m.profile_id) || [];
   const { data: groupMembers = [] } = useQuery({
-    queryKey: ['team-group-members', conversation.id, memberIds.join(',')],
+    queryKey: ['team-group-members', conversation.id, conversation.type, conversation.department_id, memberIds.join(',')],
     queryFn: async () => {
+      if (conversation.type === 'department' && conversation.department_id) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, name, email, phone, avatar_url, job_title, department, role, is_active, created_at, birthday')
+          .eq('department_id', conversation.department_id);
+        if (error) throw error;
+        return (data || []) as MemberProfile[];
+      }
+      
       if (memberIds.length === 0) return [];
       const { data, error } = await supabase.from('profiles').select('id, name, email, phone, avatar_url, job_title, department, role, is_active, created_at, birthday').in('id', memberIds);
       if (error) throw error;
       return (data || []) as MemberProfile[];
     },
-    enabled: conversation.type === 'group' && memberIds.length > 0,
+    enabled: (conversation.type === 'group' && memberIds.length > 0) || (conversation.type === 'department' && !!conversation.department_id),
   });
 
   return (
     <div className="w-[300px] border-l border-border flex flex-col bg-card h-full" role="complementary" aria-label="Detalhes da conversa">
       <div className="flex items-center justify-between p-3 border-b border-border">
-        <h3 className="text-sm font-semibold flex items-center gap-1.5"><span className="w-1 h-4 bg-primary rounded-full" />{conversation.type === 'direct' ? 'Detalhes do Colaborador' : 'Detalhes do Grupo'}</h3>
+        <h3 className="text-sm font-semibold flex items-center gap-1.5"><span className="w-1 h-4 bg-primary rounded-full" />{conversation.type === 'direct' ? 'Detalhes do Colaborador' : conversation.type === 'department' ? 'Detalhes do Departamento' : 'Detalhes do Grupo'}</h3>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleAll} title="Recolher/Expandir"><ChevronsDownUp className="w-3.5 h-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Fechar"><X className="w-3.5 h-3.5" /></Button>
@@ -88,9 +97,9 @@ export function TeamMemberDetails({ conversation, onClose }: TeamMemberDetailsPr
           </Collapsible>
         )}
 
-        {conversation.type === 'group' && (
+        {(conversation.type === 'group' || conversation.type === 'department') && (
           <Collapsible open={sections.team} onOpenChange={(o) => setSections(s => ({ ...s, team: o }))}>
-            <SectionHeader icon={Users} label={`Membros (${groupMembers.length})`} open={sections.team} onToggle={() => setSections(s => ({ ...s, team: !s.team }))} />
+            <SectionHeader icon={Users} label={conversation.type === 'department' ? `Membros do Depto (${groupMembers.length})` : `Membros (${groupMembers.length})`} open={sections.team} onToggle={() => setSections(s => ({ ...s, team: !s.team }))} />
             <CollapsibleContent>
               <div className="px-2 pb-3 space-y-0.5">
                 {groupMembers.map(member => {
@@ -118,7 +127,7 @@ export function TeamMemberDetails({ conversation, onClose }: TeamMemberDetailsPr
           </Collapsible>
         )}
 
-        {conversation.type === 'group' && groupMembers.length > 0 && (
+        {(conversation.type === 'group' || conversation.type === 'department') && groupMembers.length > 0 && (
           <Collapsible open={sections.activity} onOpenChange={(o) => setSections(s => ({ ...s, activity: o }))}>
             <SectionHeader icon={Cake} label="Próximos Aniversários" open={sections.activity} onToggle={() => setSections(s => ({ ...s, activity: !s.activity }))} />
             <CollapsibleContent>

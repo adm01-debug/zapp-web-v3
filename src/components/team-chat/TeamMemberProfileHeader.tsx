@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Cake, Shield, Users } from 'lucide-react';
+import { Cake, Shield, Users, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, differenceInYears, isSameDay, addYears } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -119,10 +119,14 @@ export function GroupProfileHeader({ conversation }: { conversation: TeamConvers
     <div className="flex flex-col items-center py-6 px-4">
       <Avatar className="h-20 w-20 mb-3 ring-2 ring-border">
         <AvatarImage src={conversation.avatar_url || undefined} />
-        <AvatarFallback className="text-xl bg-primary/10 text-primary"><Users className="w-8 h-8" /></AvatarFallback>
+        <AvatarFallback className="text-xl bg-primary/10 text-primary">
+          {conversation.type === 'department' ? <Building2 className="w-8 h-8" /> : <Users className="w-8 h-8" />}
+        </AvatarFallback>
       </Avatar>
       <h3 className="text-base font-bold text-foreground">{conversation.name}</h3>
-      <p className="text-xs text-muted-foreground mt-0.5">{conversation.members?.length || 0} membros</p>
+      <p className="text-xs text-muted-foreground mt-0.5">
+        {conversation.type === 'department' ? 'Grupo de Departamento' : `${conversation.members?.length || 0} membros`}
+      </p>
     </div>
   );
 }
