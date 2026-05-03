@@ -221,14 +221,14 @@ export function MessageBubble({
               {message.type === 'sticker' && message.mediaUrl && <div className="mb-1 group/sticker relative"><img src={message.mediaUrl} alt="Sticker" className="max-w-[160px] max-h-[160px] object-contain drop-shadow-lg" loading="lazy" /></div>}
               {!showUnsupportedFallback && message.content && !['audio','location','video','document','sticker'].includes(message.type) && <p className="text-[13.5px] whitespace-pre-wrap leading-[1.45]">{searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}</p>}
               <div className={cn(
-                'flex items-center justify-end gap-1 mt-0.5 -mb-0.5', 
+                'flex items-center justify-end gap-1 mt-1 -mb-0.5', 
                 (message.type === 'image' || message.type === 'video') && !message.content 
-                  ? 'absolute bottom-2 right-3 text-white drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm' 
-                  : isSent ? 'text-[hsl(var(--primary-foreground)/0.7)]' : 'text-muted-foreground/70'
+                  ? 'absolute bottom-2 right-2 text-white drop-shadow-md bg-black/30 px-1.5 py-0.5 rounded-full backdrop-blur-xs' 
+                  : isSent ? 'text-[#667781] dark:text-[#8696a0]' : 'text-[#667781] dark:text-[#8696a0]'
               )}>
                 {message.isEdited && <span className="text-[9px] italic mr-0.5">editada</span>}
-                <span className="text-[10px] font-medium leading-none">{formatMessageTime(message.timestamp)}</span>
-                <div className="flex items-center min-w-[14px]">
+                <span className="text-[11px] font-normal leading-none">{formatMessageTime(message.timestamp)}</span>
+                <div className="flex items-center min-w-[15px]">
                   {isSent ? <MessageStatusInline message={message} /> : <MessageReadStatus message={message} />}
                 </div>
               </div>
