@@ -20,8 +20,8 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-      "@typescript-eslint/no-unused-vars": "off",
-      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+      "no-console": ["error", { allow: ["warn", "error"] }],
       // Estratégia gradual de strict typing — Fase 1
       // `any` explícito vira warn em todo o código (visível em PRs sem
       // quebrar a build). Será promovido a `error` em fases futuras à

@@ -111,6 +111,8 @@ export default function AdminGmailStatusPage() {
     return () => clearInterval(interval);
   }, [filters]);
 
+  const [isRetrying, setIsRetrying] = useState<Record<string, boolean>>({});
+
   const handleRevalidate = async () => {
     const revalidatePromise = async () => {
       const projectUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -134,6 +136,29 @@ export default function AdminGmailStatusPage() {
     });
     
     setTimeout(loadHealth, 2000);
+  };
+
+  const handleAction = async (action: 'markRead' | 'rpc_test', id: string) => {
+    setIsRetrying(prev => ({ ...prev, [id]: true }));
+    try {
+      if (action === 'markRead') {
+        const { error } = await supabase.rpc('rpc_gmail_mark_thread_read', {
+          p_thread_id: id,
+          p_read: true
+        });
+        if (error) throw error;
+        toast.success('Thread marcada como lida no servidor.');
+      } else if (action === 'rpc_test') {
+        const { error } = await supabase.rpc('rpc_gmail_token_status');
+        if (error) throw error;
+        toast.success('RPC de status de token validada com sucesso.');
+      }
+      await loadHealth();
+    } catch (err: any) {
+      toast.error(`Falha na etapa ${action}: ${err.message || 'Erro desconhecido'}`);
+    } finally {
+      setIsRetrying(prev => ({ ...prev, [id]: false }));
+    }
   };
 
   const getStatusIcon = (status?: string) => {
@@ -293,6 +318,7 @@ export default function AdminGmailStatusPage() {
                     <th className="px-4 py-2 text-left font-medium">Request ID</th>
                     <th className="px-4 py-2 text-left font-medium">Recurso</th>
                     <th className="px-4 py-2 text-left font-medium">Erro</th>
+                    <th className="px-4 py-2 text-left font-medium">Ações</th>
                     <th className="px-4 py-2 text-left font-medium">Horário</th>
                   </tr>
                 </thead>
@@ -308,6 +334,32 @@ export default function AdminGmailStatusPage() {
                       </td>
                       <td className="px-4 py-2 text-destructive max-w-[300px] truncate" title={failure.error}>
                         {failure.error}
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8" 
+                            onClick={() => handleAction('rpc_test', failure.requestId)}
+                            disabled={isRetrying[failure.requestId]}
+                            title="Tentar RPC novamente"
+                          >
+                            <RefreshCcw className={`h-3 w-3 ${isRetrying[failure.requestId] ? 'animate-spin' : ''}`} />
+                          </Button>
+                          {failure.resource.includes('thread') && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8" 
+                              onClick={() => handleAction('markRead', failure.resource.split(':')[1] || failure.requestId)}
+                              disabled={isRetrying[failure.requestId]}
+                              title="Marcar como lido"
+                            >
+                              <CheckCircle2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-2 text-muted-foreground">
                         {new Date(failure.timestamp).toLocaleTimeString()}
