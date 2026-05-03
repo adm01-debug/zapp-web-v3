@@ -23,6 +23,7 @@ import {
 
 import type { LoadOlderProps } from './loadOlderTypes';
 import { dbFrom } from '@/integrations/datasource/db';
+import { useDensity } from '@/hooks/useDensity';
 
 interface ChatMessagesAreaProps extends LoadOlderProps {
   messages: Message[];
