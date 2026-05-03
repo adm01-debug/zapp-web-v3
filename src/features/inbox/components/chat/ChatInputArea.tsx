@@ -282,33 +282,40 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 ml-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button onClick={logic.handleSendWithAnimation}
                   disabled={(!logic.hasText && logic.attachments.length === 0 && !editingMessage) || logic.isOverLimit || isSending}
                   size="icon"
-                  className={cn("rounded-full shrink-0 disabled:opacity-40 touch-manipulation active:scale-95 transition-all",
-                    "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40",
-                    isWhisper && "bg-amber-500 hover:bg-amber-600 shadow-amber-500/25",
-                    logic.isMobile ? "w-11 h-11" : "w-10 h-10", logic.sendAnimation && "motion-safe:animate-pulse")}
+                  className={cn(
+                    "rounded-full shrink-0 disabled:opacity-30 touch-manipulation active:scale-90 transition-all duration-300 shadow-md hover:shadow-lg",
+                    "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20",
+                    isWhisper && "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20",
+                    logic.isMobile ? "w-11 h-11" : "w-10 h-10", 
+                    logic.sendAnimation && "motion-safe:animate-bounce"
+                  )}
                   aria-label={editingMessage ? "Confirmar edição" : "Enviar mensagem"}>
-                  {isSending ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : editingMessage ? <Check className="w-[18px] h-[18px]" /> : <Send className="w-[18px] h-[18px]" />}
+                  {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : editingMessage ? <Check className="w-5 h-5" /> : <Send className="w-4.5 h-4.5 translate-x-0.5" />}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{editingMessage ? 'Confirmar edição' : 'Enviar (Enter)'}</TooltipContent>
+              <TooltipContent side="top" className="text-[10px] font-medium">Enviar</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button size="icon"
-                  className={cn("shrink-0 touch-manipulation active:scale-95 rounded-full transition-all",
+                  className={cn(
+                    "shrink-0 touch-manipulation active:scale-90 rounded-full transition-all duration-300 shadow-md hover:shadow-lg",
                     logic.isMobile ? "w-11 h-11" : "w-10 h-10",
-                    isRecordingAudio ? "bg-destructive text-destructive-foreground shadow-lg shadow-destructive/30 hover:bg-destructive/90" : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30")}
+                    isRecordingAudio 
+                      ? "bg-destructive text-destructive-foreground shadow-destructive/20 hover:bg-destructive/90" 
+                      : "bg-muted text-muted-foreground hover:text-primary hover:bg-primary/5 shadow-none border border-border/20"
+                  )}
                   onClick={onRecordToggle} aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}>
-                  <Mic className={cn("w-5 h-5", isRecordingAudio && "motion-safe:animate-pulse")} />
+                  <Mic className={cn("w-4.5 h-4.5", isRecordingAudio && "animate-pulse")} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{isRecordingAudio ? 'Parar gravação' : 'Gravar áudio'}</TooltipContent>
+              <TooltipContent side="top" className="text-[10px] font-medium">Áudio</TooltipContent>
             </Tooltip>
           </div>
 
