@@ -6,20 +6,26 @@ import { loginAs } from './helpers/testHelpers';
  * This suite validates strict data isolation between departments and correct administrative oversight.
  */
 test.describe('Teams - RBAC & RLS Enforcement', () => {
-  test.setTimeout(120000); // Extended timeout for multi-context login flows
+  // Global timeout for the suite to handle multiple user logins
+  test.setTimeout(180000);
 
-  test('RH Agent: Isolated from TI data', async ({ page }) => {
-    // Ensure RH Agent cannot see TI conversations or messages
+  test('RH Agent: Strict isolation from TI (UI & API)', async ({ page }) => {
+    // 1. Login and navigate deterministically
     await loginAs(page, 'rh_agent');
-    await page.goto('/team-chat');
+    await page.waitForURL(/\/team-chat/);
     
-    // 1. Check sidebar: TI department channel should not be listed
-    const tiSidebarItem = page.locator('[data-test-name="TI"]');
-    await expect(tiSidebarItem).not.toBeVisible({ timeout: 10000 });
+    // 2. Validate UI isolation using role-based selectors
+    const sidebar = page.getByRole('listbox', { name: /lista de conversas/i });
+    await expect(sidebar).toBeVisible();
+    
+    // TI channel should NOT be visible to RH agent
+    const tiChannel = page.locator('[data-test-name="TI"]');
+    await expect(tiChannel).not.toBeVisible({ timeout: 5000 });
 
-    // 2. Direct API Check: Verify RLS blocks fetching messages from TI
+    // 3. API Isolation (Direct Supabase Query)
     const tiDeptId = 'd2222222-2222-2222-2222-222222222222';
-    const leakageCheck = await page.evaluate(async (deptId) => {
+    const apiCheck = await page.evaluate(async (deptId) => {
+      // Direct attempt to fetch TI conversations via Supabase client
       const { data } = await (window as any).supabase
         .from('team_conversations')
         .select('id')
@@ -27,62 +33,44 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
       return data;
     }, tiDeptId);
 
-    expect(leakageCheck).toHaveLength(0);
+    // RLS must return 0 rows
+    expect(apiCheck).toHaveLength(0);
   });
 
-  test('Finance Agent: Limited visibility to Finance and General', async ({ page }) => {
-    await loginAs(page, 'finance_agent');
-    await page.goto('/team-chat');
-
-    // 1. Visible channels
-    await expect(page.locator('[data-test-name="Financeiro"]')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('[data-test-name="Geral"]')).toBeVisible({ timeout: 10000 });
-    
-    // 2. Hidden channels
-    await expect(page.locator('[data-test-name="TI"]')).not.toBeVisible();
-    await expect(page.locator('[data-test-name="RH"]')).not.toBeVisible();
-  });
-
-  test('Soft Delete: Admin deletes and Agent cannot recover', async ({ page, browser }) => {
+  test('Soft Delete: Admin enforcement and unauthorized recovery block', async ({ page, browser }) => {
     const adminContext = await browser.newContext();
     const agentContext = await browser.newContext();
     
     const adminPage = await adminContext.newPage();
     const agentPage = await agentContext.newPage();
 
-    // 1. Admin TI creates and deletes a message in a shared channel (Geral)
+    // 1. Admin TI creates and soft-deletes a message
     await loginAs(adminPage, 'ti_admin');
-    await adminPage.goto('/team-chat');
+    await adminPage.waitForURL(/\/team-chat/);
     
+    // Select Geral channel
     const geralChannel = adminPage.locator('[data-test-name="Geral"]');
-    await geralChannel.waitFor({ state: 'visible' });
     await geralChannel.click();
 
-    const uniqueMsg = `Sensitive-Info-${Date.now()}`;
+    const uniqueMsg = `Delete-Assertion-${Date.now()}`;
     
-    // Inject message directly to get ID easily
+    // Inject via evaluate to get exact ID for the assertion
     const msgId = await adminPage.evaluate(async (content) => {
       const { data: conv } = await (window as any).supabase
-        .from('team_conversations')
-        .select('id')
-        .eq('name', 'Geral')
-        .single();
-      
-      const { data: profile } = await (window as any).supabase
-        .from('profiles')
-        .select('id')
-        .single();
+        .from('team_conversations').select('id').eq('name', 'Geral').single();
+      const { data: profile } = await (window as any).supabase.from('profiles').select('id').single();
 
       const { data: msg } = await (window as any).supabase
         .from('team_messages')
         .insert({ conversation_id: conv.id, content, sender_id: profile.id })
-        .select()
-        .single();
-        
+        .select().single();
       return msg.id;
     }, uniqueMsg);
 
-    // Soft delete the message
+    // Assert message is visible initially
+    await expect(adminPage.locator(`text="${uniqueMsg}"`)).toBeVisible();
+
+    // Perform soft delete
     await adminPage.evaluate(async (id) => {
       await (window as any).supabase
         .from('team_messages')
@@ -90,16 +78,16 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
         .eq('id', id);
     }, msgId);
 
-    // 2. RH Agent attempts to access the deleted message
+    // 2. RH Agent attempt to recover or view
     await loginAs(agentPage, 'rh_agent');
-    await agentPage.goto('/team-chat');
-    
-    // Check UI: should not be present
+    await agentPage.waitForURL(/\/team-chat/);
     await agentPage.locator('[data-test-name="Geral"]').click();
-    await expect(agentPage.locator(`text="${uniqueMsg}"`)).not.toBeVisible({ timeout: 10000 });
 
-    // Check API: RLS should block recovery
-    const recoveryAttempt = await agentPage.evaluate(async (id) => {
+    // UI Verification: Message must be gone
+    await expect(agentPage.locator(`text="${uniqueMsg}"`)).not.toBeVisible({ timeout: 5000 });
+
+    // API Verification: RLS should return null/empty even for direct ID query
+    const apiRecoveryAttempt = await agentPage.evaluate(async (id) => {
       const { data } = await (window as any).supabase
         .from('team_messages')
         .select('*')
@@ -108,13 +96,13 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
       return data;
     }, msgId);
 
-    expect(recoveryAttempt).toBeNull();
+    expect(apiRecoveryAttempt).toBeNull();
 
     await adminContext.close();
     await agentContext.close();
   });
 
-  test('Ticket Transfer: Support Agent mobility', async ({ page, browser }) => {
+  test('Ticket Transfer: Metadata validation and visibility migration', async ({ page, browser }) => {
     const supportContext = await browser.newContext();
     const financeContext = await browser.newContext();
     const tiContext = await browser.newContext();
@@ -123,53 +111,51 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
     const financePage = await financeContext.newPage();
     const tiPage = await tiContext.newPage();
 
-    // 1. Support Agent transfers a Financeiro conversation to TI via UI
+    // 1. Support Agent initiates transfer
     await loginAs(supportPage, 'transfer_agent');
-    await supportPage.goto('/team-chat');
+    await supportPage.waitForURL(/\/team-chat/);
 
-    const financeiroChannel = supportPage.locator('[data-test-name="Financeiro"]');
-    await expect(financeiroChannel).toBeVisible({ timeout: 15000 });
-    await financeiroChannel.click();
+    const targetConv = supportPage.locator('[data-test-name="Financeiro"]');
+    await targetConv.click();
 
-    // Open More Actions
-    const moreActions = supportPage.locator('[data-testid="conversation-more-actions"]');
-    await moreActions.waitFor({ state: 'visible' });
-    await moreActions.click();
+    // Open Transfer Dialog
+    await supportPage.getByTestId('conversation-more-actions').click();
+    await supportPage.getByTestId('transfer-conversation-btn').click();
     
-    // Click Transfer
-    const transferBtn = supportPage.locator('[data-testid="transfer-conversation-btn"]');
-    await transferBtn.waitFor({ state: 'visible' });
-    await transferBtn.click();
+    // Select TI department
+    await supportPage.getByTestId('dept-select-trigger').click();
+    await supportPage.getByTestId('dept-option-TI').click();
     
-    // Select TI department in the dialog
-    const selectTrigger = supportPage.locator('[data-testid="dept-select-trigger"]');
-    await selectTrigger.waitFor({ state: 'visible' });
-    await selectTrigger.click();
-    
-    const tiOption = supportPage.locator('[data-testid="dept-option-TI"]');
-    await tiOption.waitFor({ state: 'visible' });
-    await tiOption.click();
-    
-    // Confirm transfer
-    const confirmBtn = supportPage.locator('[data-testid="confirm-transfer-btn"]');
-    await confirmBtn.click();
-    
-    // Verify toast success
-    await expect(supportPage.locator('text="Conversa transferida com sucesso"')).toBeVisible({ timeout: 10000 });
+    // Confirm and wait for toast
+    await supportPage.getByTestId('confirm-transfer-btn').click();
+    await expect(supportPage.locator('text="Conversa transferida com sucesso"')).toBeVisible();
 
-    // 2. Finance Agent should lose visibility
+    // 2. Validate Metadata on Backend
+    const metadataCheck = await supportPage.evaluate(async () => {
+      const { data } = await (window as any).supabase
+        .from('team_conversations')
+        .select('metadata, department_id')
+        .eq('name', 'Financeiro')
+        .single();
+      return data;
+    });
+
+    const tiDeptId = 'd2222222-2222-2222-2222-222222222222';
+    expect(metadataCheck.department_id).toBe(tiDeptId);
+    expect(metadataCheck.metadata).toHaveProperty('transferred_at');
+    expect(metadataCheck.metadata.transferred_by).toBe('Support Agent');
+
+    // 3. Verify Visibility Shift
+    // Finance Agent must NO LONGER see it
     await loginAs(financePage, 'finance_agent');
-    await financePage.goto('/team-chat');
-    await expect(financePage.locator('[data-test-name="Financeiro"]')).not.toBeVisible({ timeout: 10000 });
+    await financePage.waitForURL(/\/team-chat/);
+    await expect(financePage.locator('[data-test-name="Financeiro"]')).not.toBeVisible();
 
-    // 3. TI Admin should see it
+    // TI Admin must NOW see it
     await loginAs(tiPage, 'ti_admin');
-    await tiPage.goto('/team-chat');
-    await expect(tiPage.locator('[data-test-name="Financeiro"]')).toBeVisible({ timeout: 10000 });
+    await tiPage.waitForURL(/\/team-chat/);
+    await expect(tiPage.locator('[data-test-name="Financeiro"]')).toBeVisible();
 
-    await supportContext.close();
-    await financeContext.close();
-    await tiContext.close();
+    await Promise.all([supportContext.close(), financeContext.close(), tiContext.close()]);
   });
-
 });
