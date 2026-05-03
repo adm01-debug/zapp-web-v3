@@ -32,8 +32,10 @@ describe('Visual Consistency — ChatHeader', () => {
     id: 'conv-1',
     status: 'open',
     contact: { name: 'John Doe', phone: '5511999999999' },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastMessage: null,
+    priority: 'medium',
   } as any;
 
   it('renders with Segoe UI font and correct WhatsApp colors', () => {
