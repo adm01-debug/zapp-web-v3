@@ -23,10 +23,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CheckCheck, Check, Clock, AlertCircle, Eye } from 'lucide-react';
+import { CheckCheck, Check, Clock, AlertCircle, Eye, TrendingUp } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useDeliveryStats } from '@/hooks/useDeliveryStats';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import type { Message } from '@/types/chat';
 
 interface MessageStatusPanelProps {
@@ -115,6 +125,9 @@ export const MessageStatusPanel = memo(function MessageStatusPanel({
   children,
   message,
 }: MessageStatusPanelProps) {
+  const { data: stats } = useDeliveryStats(
+    message.sender === 'agent' ? (message as any).remote_jid : (message as any).contact_id
+  );
   const isSent = message.sender === 'agent';
   const isFailed = TERMINAL_FAILURES.has(message.status as never);
 
@@ -220,6 +233,63 @@ export const MessageStatusPanel = memo(function MessageStatusPanel({
               </p>
             )}
             {message.error_reason && <p className="mt-0.5">{message.error_reason}</p>}
+          </div>
+        )}
+
+        {stats?.timeline && stats.timeline.length > 1 && (
+          <div className="mt-4 border-t border-border/40 pt-3">
+            <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <TrendingUp className="h-3 w-3" />
+              Evolução da entrega
+            </h4>
+            <div className="h-28 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={stats.timeline}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="time" 
+                    hide 
+                  />
+                  <YAxis 
+                    hide 
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--popover))', 
+                      borderColor: 'hsl(var(--border))',
+                      fontSize: '10px',
+                      borderRadius: '6px'
+                    }}
+                    itemStyle={{ padding: '0px' }}
+                    labelFormatter={(label) => format(new Date(label), 'HH:mm')}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="sent" 
+                    stroke="hsl(var(--muted-foreground))" 
+                    strokeWidth={2} 
+                    dot={false}
+                    name="Enviadas"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="delivered" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2} 
+                    dot={false}
+                    name="Entregues"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="read" 
+                    stroke="hsl(var(--info))" 
+                    strokeWidth={2} 
+                    dot={false}
+                    name="Lidas"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
       </PopoverContent>
