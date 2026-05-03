@@ -32,10 +32,6 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   } = opts;
   const { profile } = useAuth();
   const [inputValue, setInputValue] = useState('');
-  const [internalSlashCommands, setInternalSlashCommands] = useState<SlashCommand[]>([
-    { id: 'internal-file', label: 'Arquivos da Equipe', description: 'Abre a central de documentos internos', shortcut: 'file', category: 'internal' },
-    { id: 'internal-note', label: 'Nota Privada', description: 'Transforma o input em modo sussurro', shortcut: 'note', category: 'internal' },
-  ]);
   const [isWhisper, setIsWhisper] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
