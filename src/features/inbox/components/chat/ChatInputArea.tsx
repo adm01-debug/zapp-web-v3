@@ -115,6 +115,11 @@ export function ChatInputArea(props: ChatInputAreaProps) {
     />
   ), [instanceName, contactPhone, contactName, messages, quickReplies, onOpenInteractiveBuilder, onOpenLocationPicker, onOpenSchedule, onSendProduct, onSelectSuggestion, onSelectTemplate, signatureEnabled, signatureName, onToggleSignature, onPollSent, onContactSent]);
 
+  const typingNotification = useMemo(() => {
+    if (isWhisper) return "Modo Sussurro: Notas internas invisíveis ao cliente";
+    return null;
+  }, [isWhisper]);
+
   return (
     <>
       <RichTextToolbar
