@@ -5691,6 +5691,63 @@ export type Database = {
         }
         Relationships: []
       }
+      media_upload_queue: {
+        Row: {
+          agent_id: string | null
+          caption: string | null
+          contact_id: string
+          created_at: string | null
+          error_message: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          id: string
+          max_retries: number | null
+          metadata: Json | null
+          progress: number | null
+          retry_count: number | null
+          status: string | null
+          storage_path: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          caption?: string | null
+          contact_id: string
+          created_at?: string | null
+          error_message?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          max_retries?: number | null
+          metadata?: Json | null
+          progress?: number | null
+          retry_count?: number | null
+          status?: string | null
+          storage_path?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          caption?: string | null
+          contact_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          max_retries?: number | null
+          metadata?: Json | null
+          progress?: number | null
+          retry_count?: number | null
+          status?: string | null
+          storage_path?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       message_reactions: {
         Row: {
           contact_id: string | null
