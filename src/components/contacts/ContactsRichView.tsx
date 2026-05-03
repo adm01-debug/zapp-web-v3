@@ -221,15 +221,18 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
 
         {/* ── Header + ação rápida ────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent sm:text-4xl">
               Hub de Contatos
             </h1>
-            <p className="text-sm text-muted-foreground flex items-center gap-2 mt-0.5">
-              <span>{totalCount.toLocaleString('pt-BR')} registros</span>
-              <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-              <span className="text-primary/80 font-medium">Hana Smart View</span>
-            </p>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5 font-medium text-foreground/80">
+                <Users className="w-4 h-4 text-primary/60" />
+                {totalCount.toLocaleString('pt-BR')} registros
+              </span>
+              <span className="w-1 h-1 rounded-full bg-border" />
+              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wider uppercase">Hana Smart View</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
