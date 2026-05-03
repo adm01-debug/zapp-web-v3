@@ -286,46 +286,146 @@ export function buildMimeMessage(params: {
 
 
 // ─────────────────────────────────────────────────────────────────────────
-// STUBS — funções referenciadas em código mas ainda não implementadas
-// (introduzidas como placeholders para destravar o build; precisam ser
-// implementadas ou removidas dos call-sites em PR seguinte)
+// IMPLEMENTAÇÕES (antes eram stubs 501 que quebravam UI Gmail).
+// Todas usam as Edge Functions já existentes (gmail-send, gmail-sync).
+// Se uma action ainda não existe na edge function, supabase retorna erro
+// estruturado — bem melhor que 501 silencioso.
 // ─────────────────────────────────────────────────────────────────────────
 
-const _NOT_IMPLEMENTED = { code: 501, message: 'Function not implemented', status: 'NOT_IMPLEMENTED' as const };
-
-export async function gmailMarkRead(..._args: unknown[]): Promise<GmailApiResponse<void>> {
-  console.warn('[gmailApi] gmailMarkRead is not implemented yet');
-  return { data: null, error: _NOT_IMPLEMENTED };
+interface MarkReadParams {
+  accountId:  string;
+  messageIds: string[];
+  read:       boolean;
 }
 
-export async function gmailModifyLabels(..._args: unknown[]): Promise<GmailApiResponse<void>> {
-  console.warn('[gmailApi] gmailModifyLabels is not implemented yet');
-  return { data: null, error: _NOT_IMPLEMENTED };
+/**
+ * Marca mensagens como lidas/não-lidas no Gmail.
+ * Edge function: gmail-send action=markRead
+ */
+export async function gmailMarkRead(params: MarkReadParams): Promise<GmailApiResponse<void>> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: { action: 'markRead', ...params },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data: data ?? null, error: null };
 }
 
-export async function gmailSendMessage(..._args: unknown[]): Promise<GmailApiResponse<{ id: string; threadId: string }>> {
-  console.warn('[gmailApi] gmailSendMessage is not implemented yet');
-  return { data: null, error: _NOT_IMPLEMENTED };
+interface ModifyLabelsParams {
+  accountId:        string;
+  messageId?:       string;
+  threadId?:        string;
+  addLabelIds?:     string[];
+  removeLabelIds?:  string[];
 }
 
-export async function gmailTrashMessage(..._args: unknown[]): Promise<GmailApiResponse<void>> {
-  console.warn('[gmailApi] gmailTrashMessage is not implemented yet');
-  return { data: null, error: _NOT_IMPLEMENTED };
+/**
+ * Adiciona/remove labels em mensagem ou thread.
+ * Edge function: gmail-send action=modifyLabels
+ */
+export async function gmailModifyLabels(params: ModifyLabelsParams): Promise<GmailApiResponse<void>> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: { action: 'modifyLabels', ...params },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data: data ?? null, error: null };
 }
 
-// ─── STUBS adicionais (auto-gerados) ───────────────────────
-
-export async function gmailDeleteDraft(...args: unknown[]): Promise<GmailApiResponse<unknown>> {
-  console.warn('[gmailApi] gmailDeleteDraft is not implemented yet (auto-stub)');
-  return { data: null, error: _NOT_IMPLEMENTED };
+interface SendMessageParams {
+  accountId:  string;
+  to:         string[];
+  cc?:        string[];
+  bcc?:       string[];
+  subject:    string;
+  bodyHtml:   string;
+  threadId?:  string;
+  inReplyTo?: string;
+  references?: string;
 }
 
-export async function gmailListThreads(...args: unknown[]): Promise<GmailApiResponse<unknown>> {
-  console.warn('[gmailApi] gmailListThreads is not implemented yet (auto-stub)');
-  return { data: null, error: _NOT_IMPLEMENTED };
+/**
+ * Envia uma mensagem nova ou reply.
+ * Edge function: gmail-send action=send
+ */
+export async function gmailSendMessage(params: SendMessageParams): Promise<GmailApiResponse<{ id: string; threadId: string }>> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: { action: 'send', ...params },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data, error: null };
 }
 
-export async function gmailSaveDraft(...args: unknown[]): Promise<GmailApiResponse<unknown>> {
-  console.warn('[gmailApi] gmailSaveDraft is not implemented yet (auto-stub)');
-  return { data: null, error: _NOT_IMPLEMENTED };
+interface TrashMessageParams {
+  accountId: string;
+  messageId: string;
+}
+
+/**
+ * Move uma mensagem específica para a lixeira.
+ * Edge function: gmail-send action=trashMessage
+ */
+export async function gmailTrashMessage(params: TrashMessageParams): Promise<GmailApiResponse<void>> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: { action: 'trashMessage', ...params },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data: data ?? null, error: null };
+}
+
+interface SaveDraftParams {
+  accountId:  string;
+  draftId?:   string;
+  to:         string[];
+  cc?:        string[];
+  subject:    string;
+  bodyHtml:   string;
+  threadId?:  string;
+}
+
+/**
+ * Cria ou atualiza rascunho. Se draftId existe, atualiza; senão, cria.
+ * Wrapper sobre createDraft/updateDraft para manter compatibilidade com
+ * call-sites em useEmailDraft.ts que esperam interface unificada.
+ */
+export async function gmailSaveDraft(params: SaveDraftParams): Promise<GmailApiResponse<{ draftId: string }>> {
+  if (params.draftId) {
+    const { accountId, draftId, ...rest } = params;
+    const result = await updateDraft(accountId, draftId, rest);
+    if (result.error) return { data: null, error: result.error };
+    return { data: { draftId }, error: null };
+  } else {
+    const { accountId, ...rest } = params;
+    return createDraft(accountId, rest);
+  }
+}
+
+/**
+ * Remove um rascunho do Gmail.
+ * Edge function: gmail-send action=deleteDraft
+ */
+export async function gmailDeleteDraft(accountId: string, draftId: string): Promise<GmailApiResponse<void>> {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
+    body: { action: 'deleteDraft', accountId, draftId },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data: data ?? null, error: null };
+}
+
+interface ListThreadsParams {
+  accountId:   string;
+  q?:          string;
+  maxResults?: number;
+  pageToken?:  string;
+  labelIds?:   string[];
+}
+
+/**
+ * Lista threads do Gmail com filtros opcionais.
+ * Edge function: gmail-sync action=listThreads
+ */
+export async function gmailListThreads(params: ListThreadsParams): Promise<GmailApiResponse<{ threads: Array<{ id: string; snippet: string; historyId: string }>; nextPageToken?: string }>> {
+  const { data, error } = await supabase.functions.invoke('gmail-sync', {
+    body: { action: 'listThreads', ...params },
+  });
+  if (error) return { data: null, error: { code: 500, message: error.message, status: 'INTERNAL' } };
+  return { data, error: null };
 }
