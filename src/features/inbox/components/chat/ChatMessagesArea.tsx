@@ -89,6 +89,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   const [cancelReason, setCancelReason] = useState<LoadOlderCancelReason>('reverse-scroll');
   const cancelBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevContactJidRef = useRef<string | undefined>(contactJid);
+  const { density } = useDensity();
 
   const flagCancelled = useCallback((reason: LoadOlderCancelReason = 'reverse-scroll') => {
     setCancelReason(reason);
