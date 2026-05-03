@@ -12,7 +12,7 @@ test.describe('Chat E2E Flow', () => {
     
     // 2. Abrir Busca
     await page.locator('button[aria-label="Buscar (Ctrl+K)"]').click();
-    const searchInput = page.placeholder('Buscar na conversa...');
+    const searchInput = page.getByPlaceholder('Buscar na conversa...');
     await expect(searchInput).toBeVisible();
 
     // 3. Digitar busca
