@@ -34,13 +34,7 @@ export function MessageReactions({
   disableRealtime,
 }: MessageReactionsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const {
-    reactions,
-    addReaction,
-    removeReaction,
-    hasReacted,
-    currentProfileId,
-  } = useMessageReactions(messageId, {
+  const reactionState = useMessageReactions(messageId, {
     instanceName,
     contactJid,
     externalId,
@@ -48,6 +42,14 @@ export function MessageReactions({
     refreshKey,
     disableRealtime,
   });
+  
+  const {
+    reactions,
+    addReaction,
+    removeReaction,
+    hasReacted,
+    currentProfileId,
+  } = reactionState;
 
   const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
 
@@ -227,7 +229,7 @@ export function QuickReactionBar({
   forceShow,
 }: QuickReactionBarProps) {
   const [showPicker, setShowPicker] = useState(false);
-  const { addReaction, removeReaction, hasReacted, currentProfileId } = useMessageReactions(messageId, {
+  const reactionState = useMessageReactions(messageId, {
     instanceName,
     contactJid,
     externalId,
@@ -235,6 +237,8 @@ export function QuickReactionBar({
     refreshKey,
     disableRealtime,
   });
+  
+  const { addReaction, removeReaction, hasReacted, currentProfileId } = reactionState;
   
   const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
 

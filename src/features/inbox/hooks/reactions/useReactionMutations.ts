@@ -22,6 +22,19 @@ const trackReactionEvent = (action: 'add' | 'remove' | 'open_picker', data: { me
   // Use unique key to prevent duplicate tracking of same event in rapid succession
   const eventKey = `${action}-${data.messageId}-${data.emoji || 'no-emoji'}-${Date.now()}`;
   mutationLog.info(`[Analytics] Reaction Event: ${action}`, { ...data, eventKey });
+  
+  // Forward to Operations Audit Log (audit_logs table)
+  void supabase.from('audit_logs').insert({
+    action: `Reaction Event: ${action}`,
+    entity_type: 'message_reaction',
+    entity_id: data.messageId,
+    details: {
+      emoji: data.emoji,
+      status: data.status,
+      code: data.code,
+      event_key: eventKey
+    }
+  });
 };
 
 export function useReactionMutations(

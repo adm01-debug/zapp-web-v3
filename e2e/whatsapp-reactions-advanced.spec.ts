@@ -26,16 +26,72 @@ test.describe('WhatsApp Message Reactions Advanced', () => {
     const thumbsUp = page.locator('button[aria-label="Reagir com 👍"]').first();
     await thumbsUp.click();
 
-    // Verify optimistic update (should appear briefly)
-    const reactionSummary = page.locator(`[data-testid="reaction-${messageId}-👍"]`);
-    // Note: This might be too fast to catch without a small delay in the mock, 
-    // but the rollback should definitely happen.
-    
-    // Verify toast error
+    // Verify standardized toast message
     await expect(page.locator('text=Erro ao adicionar reação: Erro interno no servidor (500)')).toBeVisible();
     
     // Verify rollback
+    const reactionSummary = page.locator(`[data-testid="reaction-${messageId}-👍"]`);
     await expect(reactionSummary).not.toBeVisible();
+  });
+
+  test('should display session expired for 401 errors', async ({ page }) => {
+    await page.goto('/inbox');
+    await page.locator('[data-testid^="conversation-item-"]').first().click();
+    const message = page.locator('[data-testid^="message-bubble-"]').last();
+
+    await page.route('**/rest/v1/message_reactions*', (route) => route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'unauthorized' })
+    }));
+
+    await message.hover();
+    await page.locator('button[aria-label="Reagir com ❤️"]').first().click();
+
+    await expect(page.locator('text=Sessão expirada. Por favor, faça login novamente.')).toBeVisible();
+  });
+
+  test('should handle timeout 504 with specific message', async ({ page }) => {
+    await page.goto('/inbox');
+    await page.locator('[data-testid^="conversation-item-"]').first().click();
+    const message = page.locator('[data-testid^="message-bubble-"]').last();
+
+    await page.route('**/rest/v1/message_reactions*', (route) => route.fulfill({
+      status: 504,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'timeout' })
+    }));
+
+    await message.hover();
+    await page.locator('button[aria-label="Reagir com 😂"]').first().click();
+
+    await expect(page.locator('text=O servidor demorou muito para responder. Tente novamente.')).toBeVisible();
+  });
+
+  test('should replace consecutive error toasts with a single instance', async ({ page }) => {
+    await page.goto('/inbox');
+    await page.locator('[data-testid^="conversation-item-"]').first().click();
+    const message = page.locator('[data-testid^="message-bubble-"]').last();
+
+    let callCount = 0;
+    await page.route('**/rest/v1/message_reactions*', (route) => {
+      callCount++;
+      return route.fulfill({ status: callCount === 1 ? 500 : 401 });
+    });
+
+    await message.hover();
+    
+    // Trigger first error
+    await page.locator('button[aria-label="Reagir com 👍"]').first().click();
+    await expect(page.locator('text=Erro interno no servidor')).toBeVisible();
+
+    // Trigger second error immediately
+    await page.locator('button[aria-label="Reagir com ❤️"]').first().click();
+    await expect(page.locator('text=Sessão expirada')).toBeVisible();
+    
+    // Standard Sonner/UI check: Should only be one visible error toast if ID is stable
+    // This is a heuristic check, we look for the presence of the specific message
+    await expect(page.locator('text=Erro interno no servidor')).not.toBeVisible();
   });
 
   test('should sync reactions in real-time between two clients', async ({ browser }) => {
