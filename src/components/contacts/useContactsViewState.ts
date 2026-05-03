@@ -99,6 +99,7 @@ export function useContactsViewState() {
   return {
     crud,
     viewMode, setViewMode,
+    highContrast, setHighContrast,
     gridColumns, setGridColumns,
     isImportOpen, setIsImportOpen,
     isMergeOpen, setIsMergeOpen,
