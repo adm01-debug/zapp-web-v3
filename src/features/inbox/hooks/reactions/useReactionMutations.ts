@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { log } from '@/lib/logger';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { dbFrom } from '@/integrations/datasource/db';
@@ -71,12 +71,38 @@ export function useReactionMutations(
 
       return data;
     },
+    onMutate: async (emoji) => {
+      await queryClient.cancelQueries({ queryKey: ['message-reactions', messageId] });
+      const previous = queryClient.getQueryData(['message-reactions', messageId]);
+      
+      if (profileId) {
+        queryClient.setQueryData(['message-reactions', messageId], (old: any) => [
+          ...(old || []),
+          {
+            id: 'temp-' + Date.now(),
+            message_id: messageId,
+            user_id: profileId,
+            emoji,
+            created_at: new Date().toISOString(),
+            user_name: 'Você'
+          }
+        ]);
+      }
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['message-reactions', messageId] });
     },
-    onError: (error) => {
+    onError: (error: any, emoji, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['message-reactions', messageId], context.previous);
+      }
       log.error('Failed to add reaction', error);
-      toast({ title: 'Erro ao adicionar reação', variant: 'destructive' });
+      
+      const status = error?.status || error?.code;
+      const message = status === 401 ? 'Não autorizado' : 'Erro interno no servidor (500)';
+      
+      toast.error(`Erro ao adicionar reação: ${message}`);
     },
   });
 
@@ -109,9 +135,26 @@ export function useReactionMutations(
         }
       }
     },
+    onMutate: async (emoji) => {
+      await queryClient.cancelQueries({ queryKey: ['message-reactions', messageId] });
+      const previous = queryClient.getQueryData(['message-reactions', messageId]);
+      
+      if (profileId) {
+        queryClient.setQueryData(['message-reactions', messageId], (old: any) => 
+          (old || []).filter((r: any) => !(r.user_id === profileId && r.emoji === emoji))
+        );
+      }
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['message-reactions', messageId] });
     },
+    onError: (error: any, emoji, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['message-reactions', messageId], context.previous);
+      }
+      toast.error('Erro ao remover reação');
+    }
   });
 
   return { addMutation, removeMutation };

@@ -68,7 +68,6 @@ export function MessageReactions({
     return acc;
   }, {} as Record<string, { emoji: string; count: number; users: string[]; hasCurrentUser: boolean }>);
 
-  // Ordenar por popularidade
   const reactionsList = Object.values(groupedReactions).sort((a, b) => b.count - a.count);
   const availableReactions = showExtended ? EXTENDED_REACTIONS : WHATSAPP_REACTIONS;
 
@@ -181,6 +180,7 @@ interface QuickReactionBarProps {
   senderType?: 'contact' | 'agent';
   refreshKey?: string;
   disableRealtime?: boolean;
+  forceShow?: boolean;
 }
 
 export function QuickReactionBar({
@@ -192,6 +192,7 @@ export function QuickReactionBar({
   senderType,
   refreshKey,
   disableRealtime,
+  forceShow,
 }: QuickReactionBarProps) {
   const [showPicker, setShowPicker] = useState(false);
   const { addReaction, removeReaction, hasReacted } = useMessageReactions(messageId, {
@@ -212,17 +213,17 @@ export function QuickReactionBar({
     setShowPicker(false);
   };
 
-  // Mobile support: Detect long press or single tap based on environment if needed, 
-  // but standard hover + popover already provides a baseline. 
-  // For mobile "tap to open", the Popover trigger handles it.
-
   return (
-    <div className={cn(
-      'absolute -top-9 flex items-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-20',
-      'group-focus-within:opacity-100', // Keyboard accessibility
-      showPicker && 'opacity-100',
-      isSent ? 'right-0' : 'left-0'
-    )}>
+    <div 
+      className={cn(
+        'absolute -top-9 flex items-center transition-all duration-200 z-20',
+        'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+        forceShow && 'opacity-100 pointer-events-auto',
+        showPicker && 'opacity-100',
+        isSent ? 'right-0' : 'left-0'
+      )}
+      onClick={(e) => e.stopPropagation()}
+    >
       <motion.div
         initial={{ opacity: 0, y: 4, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
