@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, UserPlus, UserMinus, Shield, Loader2, History } from 'lucide-react';
+import { Search, UserPlus, UserMinus, Shield, Loader2, History, Link2, Copy, Trash2, Download, FileSpreadsheet } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
