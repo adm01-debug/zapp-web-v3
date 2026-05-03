@@ -213,6 +213,19 @@ export function ChatInputArea(props: ChatInputAreaProps) {
 
         <SlashCommands inputValue={inputValue} onSelectCommand={onSlashCommand} onClose={onCloseSlashCommands} isOpen={showSlashCommands} />
 
+        {typingNotification && (
+          <motion.div 
+            initial={{ opacity: 0, y: 5 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="absolute -top-6 left-4 flex items-center gap-1.5"
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200/50">
+              {typingNotification}
+            </span>
+          </motion.div>
+        )}
+
         <div className="flex items-end gap-1.5" role="toolbar" aria-label="Barra de mensagem">
           <Popover>
             <PopoverTrigger asChild>
