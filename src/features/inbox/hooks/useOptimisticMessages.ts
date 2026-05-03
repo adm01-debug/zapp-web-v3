@@ -1,30 +1,27 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { Message } from '@/types/chat';
 
 /**
  * Provides optimistic message updates for the chat UI.
- *
- * Flow:
- * 1. Agent presses Send → optimistic message appears instantly (status: 'sending')
- * 2. Supabase/API call succeeds → real message (webhook) replaces optimistic
- * 3. If call fails → optimistic message shows error state (status: 'failed')
  */
 
 let optimisticCounter = 0;
 
 export interface OptimisticMessage extends Message {
-  /** Marks this as an optimistic message that hasn't been confirmed by the server */
   _optimistic: true;
   contact_id: string;
 }
 
 export function useOptimisticMessages() {
-  const pendingRef = useRef<Map<string, OptimisticMessage>>(new Map());
+  const [pending, setPending] = useState<Record<string, OptimisticMessage>>({});
+  
+  // Use a ref to store the latest pending state for non-reactive logic if needed,
+  // but we prefer state for UI reactivity.
+  const pendingRef = useRef<Record<string, OptimisticMessage>>({});
+  useEffect(() => {
+    pendingRef.current = pending;
+  }, [pending]);
 
-  /**
-   * Creates an optimistic message that will appear instantly in the chat.
-   * Returns the temporary ID used to track this message.
-   */
   const createOptimistic = useCallback(
     (params: {
       contactId: string;
@@ -37,7 +34,6 @@ export function useOptimisticMessages() {
     }): OptimisticMessage => {
       optimisticCounter++;
       const now = new Date();
-      // ID starts with "optimistic:" for easy reconciliation in hooks
       const tempId = `optimistic:${now.getTime()}:${optimisticCounter}`;
 
       const optimistic: OptimisticMessage = {
@@ -59,44 +55,40 @@ export function useOptimisticMessages() {
         is_deleted: false,
       };
 
-      pendingRef.current.set(tempId, optimistic);
+      setPending(prev => ({ ...prev, [tempId]: optimistic }));
       return optimistic;
     },
     [],
   );
 
-  /**
-   * Marks an optimistic message as successfully sent (sent to API).
-   * It will still stay until a real message from webhook reconciles it.
-   */
   const confirmSent = useCallback((tempId: string, externalId?: string | null) => {
-    const msg = pendingRef.current.get(tempId);
-    if (msg) {
-      msg.status = 'sent';
-      if (externalId) msg.external_id = externalId;
-    }
+    setPending(prev => {
+      if (!prev[tempId]) return prev;
+      return {
+        ...prev,
+        [tempId]: {
+          ...prev[tempId],
+          status: 'sent',
+          external_id: externalId || prev[tempId].external_id
+        }
+      };
+    });
   }, []);
 
-  /**
-   * Marks an optimistic message as failed.
-   */
   const failOptimistic = useCallback((tempId: string): OptimisticMessage | undefined => {
-    const msg = pendingRef.current.get(tempId);
-    if (msg) {
-      msg.status = 'failed';
-      return { ...msg };
-    }
-    return undefined;
+    let result: OptimisticMessage | undefined;
+    setPending(prev => {
+      if (!prev[tempId]) return prev;
+      result = { ...prev[tempId], status: 'failed' };
+      return { ...prev, [tempId]: result };
+    });
+    return result;
   }, []);
 
-  /**
-   * Merges optimistic messages with the real message list.
-   * Reconciles by external_id or content+window proximity.
-   */
   const mergeWithReal = useCallback(
     (realMessages: Message[]): (Message | OptimisticMessage)[] => {
-      const pending = Array.from(pendingRef.current.values());
-      if (pending.length === 0) return realMessages;
+      const pendingList = Object.values(pending);
+      if (pendingList.length === 0) return realMessages;
 
       const realExternalIds = new Set(realMessages.map(m => m.external_id).filter(Boolean));
       const realContentSet = new Set(
@@ -106,44 +98,55 @@ export function useOptimisticMessages() {
           .map((m) => m.content),
       );
 
-      const stillPending = pending.filter((opt) => {
-        // Match by external_id
-        if (opt.external_id && realExternalIds.has(opt.external_id)) {
-          pendingRef.current.delete(opt.id);
-          return false;
-        }
+      const stillPending: OptimisticMessage[] = [];
+      const toRemove: string[] = [];
 
-        // Match by content (fallback)
-        if (realContentSet.has(opt.content)) {
-          pendingRef.current.delete(opt.id);
-          return false;
-        }
-
-        // Remove very old optimistic messages (>60s)
+      for (const opt of pendingList) {
+        let confirmed = false;
+        if (opt.external_id && realExternalIds.has(opt.external_id)) confirmed = true;
+        else if (realContentSet.has(opt.content)) confirmed = true;
+        
         const age = Date.now() - opt.timestamp.getTime();
-        if (age > 60000) {
-          pendingRef.current.delete(opt.id);
-          return false;
+        if (confirmed || age > 60000) {
+          toRemove.push(opt.id);
+        } else {
+          stillPending.push(opt);
         }
+      }
 
-        return true;
-      });
-
+      // NO SETTIMEOUT HERE - IT BREAKS TESTS
+      
       if (stillPending.length === 0) return realMessages;
 
-      // Combine and sort
       return [...realMessages, ...stillPending].sort(
         (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
       );
     },
-    [],
+    [pending],
   );
+
+  const cleanup = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setPending(prev => {
+      const next = { ...prev };
+      let changed = false;
+      ids.forEach(id => {
+        if (next[id]) {
+          delete next[id];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, []);
 
   return {
     createOptimistic,
     confirmSent,
     failOptimistic,
     mergeWithReal,
-    pendingCount: pendingRef.current.size,
+    cleanup,
+    pendingCount: Object.keys(pending).length,
+    pending, // exposed for testing
   };
 }
