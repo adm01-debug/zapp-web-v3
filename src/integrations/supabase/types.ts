@@ -4078,6 +4078,13 @@ export type Database = {
             referencedRelation: "gmail_accounts_safe"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "email_labels_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_email_accounts_unified"
+            referencedColumns: ["id"]
+          },
         ]
       }
       email_messages: {
@@ -4172,6 +4179,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "email_messages_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_email_accounts_unified"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "email_messages_thread_id_fkey"
             columns: ["thread_id"]
             isOneToOne: false
@@ -4261,6 +4275,13 @@ export type Database = {
             columns: ["gmail_account_id"]
             isOneToOne: false
             referencedRelation: "gmail_accounts_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_threads_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_email_accounts_unified"
             referencedColumns: ["id"]
           },
         ]
@@ -10847,6 +10868,51 @@ export type Database = {
           is_active?: boolean | null
           job_title?: string | null
           name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      v_email_accounts_unified: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string | null
+          is_active: boolean | null
+          last_error: string | null
+          last_sync_at: string | null
+          provider: string | null
+          sla_breached: number | null
+          sync_status: string | null
+          unread_threads: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          provider?: never
+          sla_breached?: never
+          sync_status?: string | null
+          unread_threads?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          provider?: never
+          sla_breached?: never
+          sync_status?: string | null
+          unread_threads?: never
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
