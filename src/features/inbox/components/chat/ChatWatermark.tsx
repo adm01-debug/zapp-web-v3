@@ -47,7 +47,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
             </g>
 
             {/* Check marks */}
-            <g opacity="0.022" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+            <g opacity="0.05" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-foreground">
               <polyline points="20,120 24,124 32,116" />
               <polyline points="28,120 32,124 40,116" />
             </g>
