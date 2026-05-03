@@ -48,7 +48,7 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_contact_notes', { p_contact_id: contactId, p_limit: 30 });
+      const { data, error: rpcErr } = await (supabase as any).rpc('get_contact_notes', { p_contact_id: contactId, p_limit: 30 });
       setNotes((data ?? []) as Note[]);
     } finally { setLoading(false); }
   }, [contactId]);
