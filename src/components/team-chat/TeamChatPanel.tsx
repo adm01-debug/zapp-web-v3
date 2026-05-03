@@ -21,6 +21,7 @@ import { memo } from 'react';
 import { TeamMessage } from '@/hooks/useTeamChat';
 import { isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MessageStatus } from '@/features/inbox/components/MessageStatus';
 
 function formatTime(dateStr: string) { return format(new Date(dateStr), 'HH:mm'); }
 function formatDateSep(dateStr: string) {
