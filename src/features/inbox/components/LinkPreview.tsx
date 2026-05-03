@@ -26,13 +26,32 @@ export function LinkPreview({ url, className, compact = false, showRemove, onRem
 
   useEffect(() => {
     setIsLoading(true); setError(false);
-    try {
-      if (isImageUrl(url)) { setMetadata({ url, type: 'image', image: url, title: url.split('/').pop() || 'Image' }); setIsLoading(false); return; }
-      if (isVideoUrl(url)) { setMetadata({ url, type: 'video', title: url.split('/').pop() || 'Video' }); setIsLoading(false); return; }
-      if (isYouTubeUrl(url)) { setMetadata({ url, type: 'video', title: 'YouTube Video', image: getYouTubeThumbnail(url) || undefined, siteName: 'YouTube', favicon: 'https://www.youtube.com/favicon.ico' }); setIsLoading(false); return; }
-      setMetadata({ url, type: 'website', title: getDomain(url), siteName: getDomain(url), favicon: getFavicon(url) });
-      setIsLoading(false);
-    } catch { setError(true); setIsLoading(false); }
+    
+    // Check for direct media URLs first
+    if (isImageUrl(url)) { setMetadata({ url, type: 'image', image: url, title: url.split('/').pop() || 'Image' }); setIsLoading(false); return; }
+    if (isVideoUrl(url)) { setMetadata({ url, type: 'video', title: url.split('/').pop() || 'Video' }); setIsLoading(false); return; }
+    if (isYouTubeUrl(url)) { setMetadata({ url, type: 'video', title: 'YouTube Video', image: getYouTubeThumbnail(url) || undefined, siteName: 'YouTube', favicon: 'https://www.youtube.com/favicon.ico' }); setIsLoading(false); return; }
+
+    // Use a metadata API if available, or fallback to domain-based info
+    // For now, we enhance the "singelo" experience by showing at least the domain and favicon
+    const fetchMetadata = async () => {
+      try {
+        // Enforce singelo appearance: minimal metadata
+        setMetadata({ 
+          url, 
+          type: 'website', 
+          title: getDomain(url), 
+          siteName: getDomain(url), 
+          favicon: getFavicon(url) 
+        });
+        setIsLoading(false);
+      } catch {
+        setError(true);
+        setIsLoading(false);
+      }
+    };
+
+    fetchMetadata();
   }, [url]);
 
   if (isLoading) return (
