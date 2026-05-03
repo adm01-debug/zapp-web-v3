@@ -78,7 +78,8 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
-  const [highContrast, setHighContrast] = useState(false);
+  // const [highContrast, setHighContrast] = useState(false); // Removed, now in useContactsViewState
+  const { highContrast, setHighContrast } = state;
   const [quickViewContact, setQuickViewContact] = useState<Contact | null>(null);
 
   // Keyboard Shortcuts Logic
@@ -389,6 +390,25 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
           />
         </motion.div>
       </div>
+
+      {/* ── Quick View lateral ─────────────────────────────────────── */}
+      <ContactQuickView
+        contact={quickViewContact}
+        isOpen={!!quickViewContact}
+        onClose={() => setQuickViewContact(null)}
+        onEdit={(c) => {
+          setQuickViewContact(null);
+          openEditDialog(c as never);
+        }}
+        onDelete={(c) => {
+          setQuickViewContact(null);
+          setDeleteTarget(c as never);
+        }}
+        onOpenChat={(phone, name) => {
+          setQuickViewContact(null);
+          openContactChat(quickViewContact?.id || "");
+        }}
+      />
 
       {/* ── Dialogs (Adicionar, Editar, Sucesso, Excluir) ─────────────── */}
       {/* ── Shortcut Help Overlay ───────────────────────────────────── */}

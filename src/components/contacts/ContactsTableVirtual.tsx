@@ -1,159 +1,174 @@
-/**
- * ContactsTableVirtual.tsx
- * High-performance virtualized contacts table using @tanstack/react-virtual.
- * Renders 100k+ contacts at 60fps — only DOM nodes for visible rows.
- *
- * Drops in as replacement for ContactsTable.tsx when contact count > 500.
- * Below 500 contacts, ContactsTable.tsx is sufficient.
- */
-import React, { useRef, useCallback, memo } from 'react';
+import React, { useRef, useCallback, memo, useMemo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, MoreHorizontal, Phone, Mail } from 'lucide-react';
+import { MessageSquare, MoreVertical, Phone, Mail, Briefcase, Tag, Edit, Trash2 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { sanitizeText } from '@/lib/sanitize';
-import { formatPhoneForDisplay } from '@/lib/phoneUtils';
-import { type ContactListItem } from './useContactsPagination';
+import { cn } from '@/lib/utils';
+import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
+import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
+import { CompanyLogo } from './CompanyLogo';
+import { HighlightText } from './HighlightText';
+import { type Contact } from './types';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface ContactsTableVirtualProps {
-  contacts:           ContactListItem[];
-  selectedIds:        Set<string>;
-  onSelectToggle:     (id: string) => void;
-  onSelectAll:        () => void;
-  onClearSelection:   () => void;
-  onOpenChat:         (contact: ContactListItem) => void;
-  onEdit:             (contact: ContactListItem) => void;
-  onDelete:           (contact: ContactListItem) => void;
+  contacts:           Contact[];
+  selectedIds:        string[];
+  onSelectIds:        (ids: string[]) => void;
+  onOpenChat:         (id: string) => void;
+  onEdit:             (contact: Contact) => void;
+  onDelete:           (contact: Contact) => void;
+  getCRMData?:        (phone: string) => any;
+  searchQuery?:       string;
   loadMoreRef?:       React.RefObject<HTMLDivElement>;
   loadingMore?:       boolean;
 }
 
-const ROW_HEIGHT = 64; // px — keep consistent with CSS
+const ROW_HEIGHT = 64; // px
 
 // ── Row Component (memoized for perf) ──────────────────────────────────────
 
 const ContactRow = memo(({
-  contact, isSelected, onSelect, onOpenChat, onEdit, onDelete,
+  contact, isSelected, onToggleSelect, onOpenChat, onEdit, onDelete, getCRMData, searchQuery
 }: {
-  contact:     ContactListItem;
+  contact:     Contact;
   isSelected:  boolean;
-  onSelect:    () => void;
-  onOpenChat:  () => void;
-  onEdit:      () => void;
-  onDelete:    () => void;
+  onToggleSelect: (id: string, selected: boolean) => void;
+  onOpenChat:  (id: string) => void;
+  onEdit:      (contact: Contact) => void;
+  onDelete:    (contact: Contact) => void;
+  getCRMData?: (phone: string) => any;
+  searchQuery?: string;
 }) => {
-  const initials = sanitizeText(contact.name)
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((n) => n[0].toUpperCase())
-    .join('');
-
-  const channelColor: Record<string, string> = {
-    whatsapp:  'bg-green-100 text-green-800',
-    instagram: 'bg-pink-100 text-pink-800',
-    telegram:  'bg-blue-100 text-blue-800',
-    email:     'bg-gray-100 text-gray-800',
-  };
+  const avatarColors = getAvatarColor(contact.name);
+  const typeConfig = CONTACT_TYPE_CONFIG[contact.contact_type || 'cliente'] || CONTACT_TYPE_CONFIG.cliente;
+  const crmData = getCRMData?.(contact.phone);
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 border-b transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-muted/30'}`}
+      className={cn(
+        "flex items-center gap-3 px-4 border-b transition-colors cursor-pointer group",
+        isSelected ? 'bg-primary/5 border-l-2 border-l-primary' : 'hover:bg-muted/30'
+      )}
       style={{ height: ROW_HEIGHT }}
       role="row"
       aria-selected={isSelected}
+      onClick={() => onOpenChat(contact.id)}
     >
       {/* Checkbox */}
-      <Checkbox
-        checked={isSelected}
-        onCheckedChange={onSelect}
-        aria-label={`Selecionar ${sanitizeText(contact.name)}`}
-        className="shrink-0"
-      />
+      <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={(checked) => onToggleSelect(contact.id, !!checked)}
+          aria-label={`Selecionar ${contact.name}`}
+        />
+      </div>
 
-      {/* Avatar */}
-      <Avatar className="h-9 w-9 shrink-0">
-        {contact.avatar_url && <AvatarImage src={sanitizeText(contact.avatar_url)} alt="" />}
-        <AvatarFallback className="text-xs font-medium">{initials || '?'}</AvatarFallback>
-      </Avatar>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-medium text-sm truncate">{sanitizeText(contact.name)}</p>
-          {contact.channel && (
-            <Badge variant="outline" className={`text-xs shrink-0 ${channelColor[contact.channel] ?? 'bg-gray-100'}`}>
-              {sanitizeText(contact.channel)}
-            </Badge>
-          )}
+      {/* Avatar & Info */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="relative shrink-0">
+          <Avatar className="w-9 h-9">
+            <AvatarImage src={contact.avatar_url || undefined} />
+            <AvatarFallback className={cn('font-semibold text-xs', avatarColors.bg, avatarColors.text)}>
+              {getInitials(contact.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className={cn(
+            "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background",
+            typeConfig.dotBg
+          )} />
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-          {contact.phone && (
-            <span className="flex items-center gap-1 truncate">
-              <Phone className="h-3 w-3 shrink-0" aria-hidden="true" />
-              {formatPhoneForDisplay(contact.phone)}
-            </span>
-          )}
-          {contact.email && (
-            <span className="flex items-center gap-1 truncate">
-              <Mail className="h-3 w-3 shrink-0" aria-hidden="true" />
-              {sanitizeText(contact.email)}
-            </span>
-          )}
+        <div className="min-w-0">
+          <HighlightText 
+            text={`${contact.name} ${contact.surname || ''}`.trim()} 
+            highlight={searchQuery} 
+            className="font-medium text-sm block truncate" 
+          />
+          <div className="flex items-center gap-2 mt-0.5">
+            <Badge variant="outline" className={cn("text-[10px] h-4 px-1 font-medium gap-1", typeConfig.badgeClass)}>
+              {typeConfig.iconNode}
+              {typeConfig.label}
+            </Badge>
+            {contact.nickname && <span className="text-[10px] text-muted-foreground italic truncate">({contact.nickname})</span>}
+          </div>
         </div>
       </div>
 
-      {/* Tags */}
-      <div className="hidden lg:flex items-center gap-1 shrink-0 max-w-[140px]">
-        {contact.tags.slice(0, 2).map((tag) => (
-          <Badge key={tag} variant="secondary" className="text-xs truncate max-w-[60px]">
-            {sanitizeText(tag)}
-          </Badge>
-        ))}
-        {contact.tags.length > 2 && (
-          <Badge variant="secondary" className="text-xs">+{contact.tags.length - 2}</Badge>
+      {/* Professional */}
+      <div className="hidden lg:flex flex-col min-w-[120px] max-w-[180px]">
+        {contact.company ? (
+          <div className="flex items-center gap-1.5 text-xs font-medium">
+            <CompanyLogo
+              logoUrl={crmData?.logo_url}
+              companyName={crmData?.company_name}
+              fallbackCompanyName={contact.company}
+              size="xs"
+            />
+            <HighlightText text={crmData?.company_name || contact.company} highlight={searchQuery} className="truncate" />
+          </div>
+        ) : <span className="text-muted-foreground/30 text-xs">—</span>}
+        {contact.job_title && (
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-0.5">
+            <Briefcase className="w-2.5 h-2.5" />
+            <HighlightText text={contact.job_title} highlight={searchQuery} className="truncate" />
+          </div>
         )}
       </div>
 
-      {/* Last seen */}
-      <span className="text-xs text-muted-foreground shrink-0 hidden md:block w-20 text-right">
-        {contact.last_seen_at
-          ? new Date(contact.last_seen_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-          : '—'}
-      </span>
+      {/* Contact Details */}
+      <div className="hidden md:flex flex-col min-w-[140px] max-w-[200px]">
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono">
+          <Phone className="w-3 h-3" />
+          <HighlightText text={contact.phone} highlight={searchQuery} />
+        </div>
+        {contact.email && (
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground truncate mt-0.5">
+            <Mail className="w-3 h-3" />
+            <HighlightText text={contact.email} highlight={searchQuery} />
+          </div>
+        )}
+      </div>
+
+      {/* Tags */}
+      <div className="hidden xl:flex items-center gap-1 shrink-0 max-w-[120px]">
+        {contact.tags?.slice(0, 2).map((tag) => (
+          <Badge key={tag} variant="secondary" className="text-[10px] h-4 px-1 truncate">
+            {tag}
+          </Badge>
+        ))}
+        {(contact.tags?.length || 0) > 2 && (
+          <Badge variant="secondary" className="text-[10px] h-4 px-1">+{(contact.tags?.length || 0) - 2}</Badge>
+        )}
+      </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1 shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={onOpenChat}
-          aria-label={`Abrir conversa com ${sanitizeText(contact.name)}`}
+      <div className="flex items-center justify-end gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 hover:bg-primary/10 hover:text-primary" 
+          onClick={() => onOpenChat(contact.id)}
         >
-          <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
+          <MessageSquare className="h-4 w-4" />
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Mais ações">
-              <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onEdit}>Editar contato</DropdownMenuItem>
-            <DropdownMenuItem onClick={onOpenChat}>Abrir conversa</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(contact)}><Edit className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
+            <DropdownMenuItem><Tag className="w-4 h-4 mr-2" />Gerenciar etiquetas</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-              Excluir contato
-            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onClick={() => onDelete(contact)}><Trash2 className="w-4 h-4 mr-2" />Excluir</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -166,37 +181,39 @@ ContactRow.displayName = 'ContactRow';
 // ── Table Header ───────────────────────────────────────────────────────────
 
 const TableHeader = memo(({
-  allSelected, someSelected, total, selectedCount, onSelectAll, onClearSelection,
+  contacts, selectedIds, onSelectIds
 }: {
-  allSelected: boolean; someSelected: boolean; total: number; selectedCount: number;
-  onSelectAll: () => void; onClearSelection: () => void;
-}) => (
-  <div className="flex items-center gap-3 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground" role="rowgroup">
-    <Checkbox
-      checked={allSelected}
-      ref={(el) => { if (el) (el as HTMLElement & { indeterminate?: boolean }).indeterminate = someSelected && !allSelected; }}
-      onCheckedChange={allSelected || someSelected ? onClearSelection : onSelectAll}
-      aria-label={allSelected ? 'Desmarcar todos' : 'Selecionar todos'}
-      className="shrink-0"
-    />
-    <div className="flex-1">
-      {selectedCount > 0
-        ? `${selectedCount} de ${total.toLocaleString('pt-BR')} selecionado${selectedCount !== 1 ? 's' : ''}`
-        : `${total.toLocaleString('pt-BR')} contato${total !== 1 ? 's' : ''}`}
+  contacts: Contact[];
+  selectedIds: string[];
+  onSelectIds: (ids: string[]) => void;
+}) => {
+  const allSelected = selectedIds.length === contacts.length && contacts.length > 0;
+  const someSelected = selectedIds.length > 0 && selectedIds.length < contacts.length;
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 border-b text-[11px] font-semibold uppercase tracking-wider text-muted-foreground" role="rowgroup">
+      <div className="shrink-0 w-4">
+        <Checkbox
+          checked={allSelected}
+          onCheckedChange={(checked) => onSelectIds(checked ? contacts.map(c => c.id) : [])}
+          aria-label={allSelected ? 'Desmarcar todos' : 'Selecionar todos'}
+        />
+      </div>
+      <div className="flex-1">Contato</div>
+      <div className="hidden lg:block min-w-[120px] max-w-[180px]">Profissional</div>
+      <div className="hidden md:block min-w-[140px] max-w-[200px]">Contato</div>
+      <div className="hidden xl:block w-[120px]">Etiquetas</div>
+      <div className="w-[72px] text-right">Ações</div>
     </div>
-    <span className="hidden lg:block w-[140px]">Tags</span>
-    <span className="hidden md:block w-20 text-right">Último contato</span>
-    <div className="w-[72px]" />
-  </div>
-));
+  );
+});
 
 TableHeader.displayName = 'TableHeader';
 
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export const ContactsTableVirtual: React.FC<ContactsTableVirtualProps> = ({
-  contacts, selectedIds, onSelectToggle, onSelectAll, onClearSelection,
-  onOpenChat, onEdit, onDelete, loadMoreRef, loadingMore,
+  contacts, selectedIds, onSelectIds, onOpenChat, onEdit, onDelete, getCRMData, searchQuery, loadMoreRef, loadingMore,
 }) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -204,75 +221,66 @@ export const ContactsTableVirtual: React.FC<ContactsTableVirtualProps> = ({
     count:           contacts.length,
     getScrollElement: () => parentRef.current,
     estimateSize:    () => ROW_HEIGHT,
-    overscan:        10, // pre-render 10 rows above/below viewport
+    overscan:        15,
   });
 
   const items = virtualizer.getVirtualItems();
 
-  const toggleAll = useCallback(() => {
-    if (selectedIds.size === contacts.length) onClearSelection();
-    else onSelectAll();
-  }, [selectedIds.size, contacts.length, onClearSelection, onSelectAll]);
+  const handleToggleSelect = useCallback((id: string, selected: boolean) => {
+    if (selected) {
+      onSelectIds([...selectedIds, id]);
+    } else {
+      onSelectIds(selectedIds.filter(i => i !== id));
+    }
+  }, [selectedIds, onSelectIds]);
 
   return (
-    <div className="flex flex-col h-full" role="table" aria-label="Lista de contatos">
-      {/* Header */}
+    <div className="flex flex-col h-[600px] border border-border/30 rounded-xl overflow-hidden bg-card" role="table" aria-label="Lista de contatos">
       <TableHeader
-        allSelected={selectedIds.size === contacts.length && contacts.length > 0}
-        someSelected={selectedIds.size > 0 && selectedIds.size < contacts.length}
-        total={contacts.length}
-        selectedCount={selectedIds.size}
-        onSelectAll={onSelectAll}
-        onClearSelection={onClearSelection}
+        contacts={contacts}
+        selectedIds={selectedIds}
+        onSelectIds={onSelectIds}
       />
 
-      {/* Virtualized body */}
       <div
         ref={parentRef}
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto scrollbar-thin"
         role="rowgroup"
-        aria-label="Contatos"
       >
-        {contacts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-            <p className="text-sm">Nenhum contato encontrado.</p>
-          </div>
-        ) : (
-          <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
-            {items.map((virtualItem) => {
-              const contact = contacts[virtualItem.index];
-              return (
-                <div
-                  key={virtualItem.key}
-                  style={{
-                    position:  'absolute',
-                    top:       virtualItem.start,
-                    left:      0,
-                    right:     0,
-                    height:    ROW_HEIGHT,
-                  }}
-                >
-                  <ContactRow
-                    contact={contact}
-                    isSelected={selectedIds.has(contact.id)}
-                    onSelect={() => onSelectToggle(contact.id)}
-                    onOpenChat={() => onOpenChat(contact)}
-                    onEdit={() => onEdit(contact)}
-                    onDelete={() => onDelete(contact)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
+          {items.map((virtualItem) => {
+            const contact = contacts[virtualItem.index];
+            if (!contact) return null;
+            return (
+              <div
+                key={virtualItem.key}
+                style={{
+                  position:  'absolute',
+                  top:       0,
+                  left:      0,
+                  width:     '100%',
+                  height:    ROW_HEIGHT,
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <ContactRow
+                  contact={contact}
+                  isSelected={selectedIds.includes(contact.id)}
+                  onToggleSelect={handleToggleSelect}
+                  onOpenChat={onOpenChat}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  getCRMData={getCRMData}
+                  searchQuery={searchQuery}
+                />
+              </div>
+            );
+          })}
+        </div>
 
-        {/* Infinite scroll trigger */}
         {loadMoreRef && (
-          <div ref={loadMoreRef} className="h-4" aria-hidden="true" />
-        )}
-        {loadingMore && (
-          <div className="flex justify-center py-3 text-xs text-muted-foreground" aria-live="polite">
-            Carregando mais contatos...
+          <div ref={loadMoreRef} className="h-10 flex items-center justify-center p-4">
+            {loadingMore && <div className="text-xs text-muted-foreground animate-pulse">Carregando mais...</div>}
           </div>
         )}
       </div>

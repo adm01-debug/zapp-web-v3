@@ -2,18 +2,6 @@
  * ContactsPageV3.tsx — ZAPP WEB v3.0
  * Complete contacts management page integrating all new features.
  * Replaces ContactsView.tsx as the main contacts route component.
- *
- * Features:
- * ✅ Server-side pagination (useContactsPagination)
- * ✅ Advanced filter bar (ContactFilterBar)
- * ✅ Virtual scroll table (ContactsTableVirtual)
- * ✅ Skeleton loading states (ContactsPageSkeleton)
- * ✅ Bulk actions with undo toast (BulkActionsBar + useContactUndo)
- * ✅ Export dialog (ContactExportDialog)
- * ✅ Duplicate scan tab (DuplicateContactsPanel)
- * ✅ Recycle bin tab (ContactRecycleBin)
- * ✅ Error boundary (ContactsErrorBoundary)
- * ✅ Infinite scroll loadMore
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
@@ -31,61 +19,42 @@ import ContactsErrorBoundary from './ContactsErrorBoundary';
 import { ContactsPageSkeleton } from './ContactSkeletonLoader';
 import { ContactFormV3 } from './ContactFormV3';
 import { type ContactListItem } from './useContactsPagination';
-import { sanitizeHtml, sanitizeText } from '@/lib/sanitize';
-import { useToast } from '@/hooks/use-toast';
-
-// ── Types ──────────────────────────────────────────────────────────────────
+import { sanitizeHtml } from '@/lib/sanitize';
+import { type Contact } from './types';
 
 interface ContactsPageV3Props {
   workspaceId:   string;
   onOpenChat?:   (contactId: string) => void;
 }
 
-// ── Component ──────────────────────────────────────────────────────────────
-
 export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
   workspaceId, onOpenChat,
 }) => {
-  // Pagination + search
   const {
     contacts, loading, loadingMore, hasMore, total, filters,
     loadContacts, loadMore, updateFilters,
   } = useContactsPagination(workspaceId);
 
-  // Load on mount
   useEffect(() => { loadContacts(); }, [loadContacts]);
 
-  // Selection
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }, []);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const selectAll = useCallback(() => {
-    setSelectedIds(new Set(contacts.map((c) => c.id)));
+    setSelectedIds(contacts.map((c) => c.id));
   }, [contacts]);
 
-  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+  const clearSelection = useCallback(() => setSelectedIds([]), []);
 
-  // Undo-aware delete
   const { softDeleteWithUndo } = useContactUndo({
     onCommitted: () => { clearSelection(); loadContacts(); },
     onUndone:    () => loadContacts(),
   });
 
   const handleBulkDelete = () => {
-    const ids = Array.from(selectedIds);
-    softDeleteWithUndo(ids, `${ids.length} contato${ids.length !== 1 ? 's' : ''}`);
-    // Optimistic: remove from list immediately
+    softDeleteWithUndo(selectedIds, `${selectedIds.length} contato${selectedIds.length !== 1 ? 's' : ''}`);
     clearSelection();
   };
 
-  // Infinite scroll
   const loadMoreRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -96,7 +65,6 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
     return () => observer.disconnect();
   }, [hasMore, loadingMore, loadMore]);
 
-  // Dialogs
   const [exportOpen, setExportOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editContact, setEditContact] = useState<ContactListItem | null>(null);
@@ -104,7 +72,6 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
   return (
     <ContactsErrorBoundary onReset={loadContacts}>
       <div className="flex flex-col h-full">
-        {/* ── Header ── */}
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
@@ -121,7 +88,6 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
               size="sm"
               onClick={() => setExportOpen(true)}
               className="gap-1"
-              aria-label="Exportar contatos"
             >
               <Download className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">Exportar</span>
@@ -130,7 +96,6 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
               size="sm"
               onClick={() => setCreateOpen(true)}
               className="gap-1"
-              aria-label="Criar novo contato"
             >
               <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">Novo contato</span>
@@ -138,7 +103,6 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
           </div>
         </div>
 
-        {/* ── Tabs ── */}
         <Tabs defaultValue="contacts" className="flex-1 flex flex-col overflow-hidden">
           <div className="border-b px-4">
             <TabsList className="h-9 bg-transparent p-0 gap-4">
@@ -154,7 +118,6 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
             </TabsList>
           </div>
 
-          {/* ── Contacts Tab ── */}
           <TabsContent value="contacts" className="flex-1 flex flex-col overflow-hidden mt-0 p-0">
             <div className="p-4 border-b">
               <ContactFilterBar
@@ -164,11 +127,10 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
               />
             </div>
 
-            {/* Bulk actions bar */}
-            {selectedIds.size > 0 && (
+            {selectedIds.length > 0 && (
               <div className="px-4 py-2 bg-primary/5 border-b flex items-center gap-2">
                 <span className="text-sm font-medium">
-                  {selectedIds.size} selecionado{selectedIds.size !== 1 ? 's' : ''}
+                  {selectedIds.length} selecionado{selectedIds.length !== 1 ? 's' : ''}
                 </span>
                 <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-1 ml-2">
                   <Download className="h-3.5 w-3.5" />Exportar
@@ -182,19 +144,16 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
               </div>
             )}
 
-            {/* Table */}
             <div className="flex-1 overflow-hidden">
               {loading && contacts.length === 0 ? (
                 <ContactsPageSkeleton />
               ) : (
                 <ContactsTableVirtual
-                  contacts={contacts}
+                  contacts={contacts as unknown as Contact[]}
                   selectedIds={selectedIds}
-                  onSelectToggle={toggleSelect}
-                  onSelectAll={selectAll}
-                  onClearSelection={clearSelection}
-                  onOpenChat={(c) => onOpenChat?.(c.id)}
-                  onEdit={(c) => setEditContact(c)}
+                  onSelectIds={setSelectedIds}
+                  onOpenChat={(id) => onOpenChat?.(id)}
+                  onEdit={(c) => setEditContact(c as unknown as ContactListItem)}
                   onDelete={(c) => softDeleteWithUndo([c.id], sanitizeHtml(c.name))}
                   loadMoreRef={loadMoreRef}
                   loadingMore={loadingMore}
@@ -203,27 +162,23 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
             </div>
           </TabsContent>
 
-          {/* ── Duplicates Tab ── */}
           <TabsContent value="duplicates" className="p-4 overflow-y-auto">
             <DuplicateContactsPanel workspaceId={workspaceId} onMergeComplete={loadContacts} />
           </TabsContent>
 
-          {/* ── Trash Tab ── */}
           <TabsContent value="trash" className="p-4 overflow-y-auto">
             <ContactRecycleBin workspaceId={workspaceId} onRestored={() => { loadContacts(); }} />
           </TabsContent>
         </Tabs>
 
-        {/* ── Export Dialog ── */}
         <ContactExportDialog
           open={exportOpen}
           onOpenChange={setExportOpen}
           workspaceId={workspaceId}
           activeFilters={filters}
-          selectedIds={selectedIds.size > 0 ? Array.from(selectedIds) : undefined}
+          selectedIds={selectedIds.length > 0 ? selectedIds : undefined}
         />
 
-        {/* ── Create Contact Sheet ── */}
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetContent side="right" className="w-full sm:w-[480px] overflow-y-auto">
             <SheetHeader className="mb-4">
@@ -240,7 +195,6 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
           </SheetContent>
         </Sheet>
 
-        {/* ── Edit Contact Sheet ── */}
         <Sheet open={!!editContact} onOpenChange={(v) => { if (!v) setEditContact(null); }}>
           <SheetContent side="right" className="w-full sm:w-[480px] overflow-y-auto">
             <SheetHeader className="mb-4">
