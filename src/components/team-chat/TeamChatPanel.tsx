@@ -53,6 +53,11 @@ interface Props { conversation: TeamConversation; onBack: () => void; onToggleDe
 
 export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetails }: Props) {
   const s = useTeamChatPanel(conversation);
+  const isDeptMember = useMemo(() => {
+    if (conversation.type !== 'department') return true;
+    if (s.profile?.role === 'admin') return true;
+    return s.profile?.department_id === conversation.department_id;
+  }, [conversation, s.profile]);
 
   useEffect(() => {
     if (s.isNearBottomRef.current && s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight;
