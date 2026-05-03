@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { SmilePlus, X } from 'lucide-react';
 import { useMessageReactions } from '@/features/inbox/hooks/useMessageReactions';
+import { useReactionMutations } from '@/features/inbox/hooks/reactions/useReactionMutations';
 
 const WHATSAPP_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 const EXTENDED_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🎉', '👏', '💯', '✅', '❌'];
@@ -48,6 +49,8 @@ export function MessageReactions({
     disableRealtime,
   });
 
+  const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
+
   const groupedReactions = reactions.reduce((acc, reaction) => {
     if (!acc[reaction.emoji]) {
       acc[reaction.emoji] = {
@@ -80,6 +83,9 @@ export function MessageReactions({
       await addReaction(emoji);
     }
 
+    if (typeof trackReactionEvent === 'function') {
+      trackReactionEvent('open_picker', { messageId });
+    }
     setIsOpen(false);
   };
 
@@ -195,7 +201,7 @@ export function QuickReactionBar({
   forceShow,
 }: QuickReactionBarProps) {
   const [showPicker, setShowPicker] = useState(false);
-  const { addReaction, removeReaction, hasReacted } = useMessageReactions(messageId, {
+  const { addReaction, removeReaction, hasReacted, currentProfileId } = useMessageReactions(messageId, {
     instanceName,
     contactJid,
     externalId,
@@ -203,12 +209,17 @@ export function QuickReactionBar({
     refreshKey,
     disableRealtime,
   });
+  
+  const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
 
   const handleReact = async (emoji: string) => {
     if (hasReacted(emoji)) {
       await removeReaction(emoji);
     } else {
       await addReaction(emoji);
+    }
+    if (typeof trackReactionEvent === 'function') {
+      trackReactionEvent('open_picker', { messageId });
     }
     setShowPicker(false);
   };
