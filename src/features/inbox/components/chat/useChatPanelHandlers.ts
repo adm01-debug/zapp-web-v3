@@ -14,7 +14,7 @@ interface UseChatPanelHandlersOptions {
   contactId: string;
   contactPhone: string;
   instanceName?: string;
-  onSendMessage: (content: string, attachments?: File[]) => void;
+  onSendMessage: (content: string, attachments?: File[], onProgress?: (p: number) => void) => void;
   editMessageApi: (instance: string, params: { number: string; messageId: string; text: string }) => Promise<any>;
   applySignature: (text: string) => string;
   handleTypingStart: () => void;
@@ -47,6 +47,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     onSendAudio: (blob: Blob) => Promise<void>;
   } | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+  const [sendProgress, setSendProgress] = useState(0);
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -108,7 +109,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
 
     const messageContent = applySignature(currentInput.trim());
     const wasReply = replyToMessageRef.current;
-    setIsSending(true); setInputValue(''); setReplyToMessage(null); handleTypingStop();
+    setIsSending(true); setSendProgress(0); setInputValue(''); setReplyToMessage(null); handleTypingStop();
     setLastSendError(null);
     if (wasReply) log.debug('Sending reply to:', wasReply.id);
 
@@ -128,7 +129,8 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
         toast({ title: '🤫 Sussurro enviado', description: 'Nota interna registrada com sucesso.' });
         setIsWhisper(false); // Reset whisper mode after sending
       } else {
-        await Promise.resolve(onSendMessage(messageContent, attachments));
+        await Promise.resolve(onSendMessage(messageContent, attachments, (p) => setSendProgress(p)));
+        setSendProgress(100);
       }
       lastFailedPayloadRef.current = null;
       undoToast({
@@ -306,7 +308,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   }, []);
 
   return {
-    inputValue, setInputValue, isSending, isRecordingAudio, setIsRecordingAudio,
+    inputValue, setInputValue, isSending, sendProgress, isRecordingAudio, setIsRecordingAudio,
     replyToMessage, setReplyToMessage, forwardMessage, editingMessage,
     inputRef,
     handleEditStart, handleCancelEdit, handleSend,
