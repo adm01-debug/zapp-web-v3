@@ -19,8 +19,9 @@ import { CrmBadges } from './CrmBadges';
 import { BusinessHoursBadge } from '@/features/inbox/components/BusinessHoursBadge';
 import { AnalysisBadges } from '@/features/inbox/components/AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench } from 'lucide-react';
+import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2 } from 'lucide-react';
 import { useContactAvatar } from '@/features/inbox';
+import { useDensity } from '@/hooks/useDensity';
 
 const contactTypeConfig: Record<string, { label: string; icon: typeof Users; color: string }> = {
   cliente: { label: 'Cliente', icon: Users, color: 'bg-info/10 text-info border-info/30' },
