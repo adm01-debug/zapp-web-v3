@@ -108,7 +108,7 @@ export const ChatHeader = memo(function ChatHeader({
             </h3>
             <div className="flex-shrink-0 flex items-center gap-1">
               <SLAIndicatorForContact conversation={conversation} />
-              <Badge variant="outline" className="text-[9px] h-4 px-1 capitalize border border-border/20 bg-muted/20 text-muted-foreground whitespace-nowrap">
+              <Badge variant="outline" className="text-[10px] h-4 px-1.5 capitalize border-none bg-[#202c33] text-[#8696a0] whitespace-nowrap rounded-sm">
                 {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
               </Badge>
             </div>
