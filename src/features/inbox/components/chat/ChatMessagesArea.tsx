@@ -23,6 +23,7 @@ import {
 
 import type { LoadOlderProps } from './loadOlderTypes';
 import { dbFrom } from '@/integrations/datasource/db';
+import { useDensity } from '@/hooks/useDensity';
 
 interface ChatMessagesAreaProps extends LoadOlderProps {
   messages: Message[];
@@ -88,6 +89,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   const [cancelReason, setCancelReason] = useState<LoadOlderCancelReason>('reverse-scroll');
   const cancelBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevContactJidRef = useRef<string | undefined>(contactJid);
+  const { density } = useDensity();
 
   const flagCancelled = useCallback((reason: LoadOlderCancelReason = 'reverse-scroll') => {
     setCancelReason(reason);
@@ -477,6 +479,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
                     onEditStart={onEditStart}
                     onMessageDeleted={handleMessageDeleted}
                     registerRef={(el) => { messageRefs.current[message.id] = el; }}
+                    density={density}
                   />
                 </StaggeredItem>
               );

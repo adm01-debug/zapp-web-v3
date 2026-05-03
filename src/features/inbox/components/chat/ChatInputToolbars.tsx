@@ -8,6 +8,7 @@ import { StickerPicker } from '@/features/inbox/components/StickerPicker';
 import { AudioMemePicker } from '@/features/inbox/components/AudioMemePicker';
 import { VoiceChangerPicker } from '@/features/inbox/components/VoiceChangerPicker';
 import { CustomEmojiPicker } from '@/features/inbox/components/CustomEmojiPicker';
+import { EmojiPicker } from '@/features/inbox/components/EmojiPicker';
 import { FileUploader, FileUploaderRef } from '@/features/inbox/components/FileUploader';
 import { VoiceDictationButton } from '@/components/mobile/VoiceDictationButton';
 import { TextToAudioButton } from '@/features/inbox/components/TextToAudioButton';
@@ -64,6 +65,25 @@ export function SecondaryToolbar({
       <AudioMemePicker onSendAudio={onSendAudioMeme} />
       <VoiceChangerPicker onSendAudio={onSendAudioMeme} />
       <CustomEmojiPicker onSendEmoji={onSendCustomEmoji} />
+      <EmojiPicker onSelect={(emoji) => {
+        const el = inputRef.current;
+        if (!el) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const text = el.value;
+        const newText = text.substring(0, start) + emoji + text.substring(end);
+        
+        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+        if (nativeSetter) {
+          nativeSetter.call(el, newText);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          // Restore cursor position
+          setTimeout(() => {
+            el.focus();
+            el.setSelectionRange(start + emoji.length, start + emoji.length);
+          }, 0);
+        }
+      }} />
       {onOpenCatalog && (
         <Tooltip>
           <TooltipTrigger asChild>

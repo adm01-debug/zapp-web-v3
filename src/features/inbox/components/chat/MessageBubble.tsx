@@ -60,13 +60,14 @@ interface MessageBubbleProps {
   onEditStart?: (message: Message) => void;
   onMessageDeleted: (messageId: string) => void;
   registerRef: (el: HTMLDivElement | null) => void;
+  density?: 'comfortable' | 'compact' | 'dense';
 }
 
 export function MessageBubble({
   message, isFirstInGroup, isLastInGroup, contactAvatar, instanceName, contactJid,
   ttsLoading, ttsPlaying, ttsMessageId, highlightedMessageIds, activeHighlightId, searchQuery,
   onSpeak, onStop, onReply, onForward, onCopy, onScrollToMessage, onInteractiveButtonClick,
-  onEditStart, onMessageDeleted, registerRef,
+  onEditStart, onMessageDeleted, registerRef, density = 'comfortable',
 }: MessageBubbleProps) {
   const { toast } = useToast();
   const { profile } = useAuth();
@@ -106,7 +107,7 @@ export function MessageBubble({
           className={cn(
             'flex group gap-2.5 transition-all duration-300',
             isSent ? 'justify-end' : 'justify-start',
-            !isLastInGroup && 'mb-0.5',
+            density === 'comfortable' ? 'mb-4' : density === 'compact' ? 'mb-1.5' : 'mb-0.5',
             highlightedMessageIds?.has(message.id) && 'relative',
             activeHighlightId === message.id && 'ring-2 ring-[hsl(var(--warning))] ring-offset-1 ring-offset-background rounded-2xl animate-[pulse_1.5s_ease-in-out_1]',
             highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-[hsl(var(--warning)/0.08)] rounded-2xl',
@@ -178,7 +179,7 @@ export function MessageBubble({
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 className={cn(
                   'relative transition-all overflow-hidden',
-                  (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0' : 'px-3.5 py-2',
+                  (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0' : density === 'comfortable' ? 'px-3.5 py-2' : density === 'compact' ? 'px-2.5 py-1.5' : 'px-2 py-1',
                   isSent
                     ? cn('bg-primary text-primary-foreground shadow-sm',
                         isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-br-md',

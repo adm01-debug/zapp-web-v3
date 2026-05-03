@@ -17,17 +17,12 @@ import { TextWithLinks } from '@/features/inbox/components/LinkPreview';
 // Lazy-load mapbox-heavy LocationMessage component
 const LocationMessageDisplay = lazy(() => import('../LocationMessage').then(m => ({ default: m.LocationMessageDisplay })));
 import {
-  Check,
-  CheckCheck,
-  Clock,
-  X,
   Reply,
   Forward,
   Copy,
-  ShieldAlert,
-  RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { MessageStatusIcon } from './messageUtils';
 
 interface ChatMessageBubbleProps {
   message: Message;
@@ -43,46 +38,23 @@ interface ChatMessageBubbleProps {
   onScrollToMessage: (messageId: string) => void;
   onInteractiveButtonClick: (button: InteractiveButton) => void;
   registerRef: (messageId: string, el: HTMLDivElement | null) => void;
-  /** Optional — when provided, enables auto-refresh of expired media URLs. */
   instanceName?: string;
-  /** Optional — when provided, enables auto-refresh of expired media URLs. */
   contactJid?: string;
+  density?: 'comfortable' | 'compact' | 'dense';
 }
 
 // Message status icon — wrapped in tooltip for failure states so the user
 // gets actionable guidance (re-authenticate / retry).
-function MessageStatusIcon({ status }: { status: Message['status'] }) {
-  let icon: JSX.Element;
-  let tooltip: string | null = null;
+function MessageStatusIconWithTooltip({ status }: { status: Message['status'] }) {
+  const tooltip = status === 'failed_auth' 
+    ? 'Falha de autenticação na conexão do WhatsApp. Reconecte a instância em Canais para reenviar.'
+    : status === 'failed_retries'
+    ? 'A mensagem falhou após várias tentativas automáticas. Toque para tentar reenviar manualmente.'
+    : status === 'failed'
+    ? 'Falha ao enviar a mensagem. Verifique a conexão e tente novamente.'
+    : null;
 
-  switch (status) {
-    case 'sent':
-      icon = <Check className="w-3 h-3" />;
-      break;
-    case 'delivered':
-      icon = <CheckCheck className="w-3 h-3" />;
-      break;
-    case 'read':
-    case 'played':
-      icon = <CheckCheck className="w-3 h-3 text-info" />;
-      break;
-    case 'failed_auth':
-      icon = <ShieldAlert className="w-3 h-3 text-destructive" />;
-      tooltip = 'Falha de autenticação na conexão do WhatsApp. Reconecte a instância em Canais para reenviar.';
-      break;
-    case 'failed_retries':
-      icon = <RefreshCw className="w-3 h-3 text-destructive" />;
-      tooltip = 'A mensagem falhou após várias tentativas automáticas. Toque para tentar reenviar manualmente.';
-      break;
-    case 'failed':
-      icon = <X className="w-3 h-3 text-destructive" />;
-      tooltip = 'Falha ao enviar a mensagem. Verifique a conexão e tente novamente.';
-      break;
-    default:
-      icon = <Clock className="w-3 h-3 animate-pulse" />;
-  }
-
-  if (!tooltip) return icon;
+  if (!tooltip) return <MessageStatusIcon status={status} />;
 
   return (
     <Tooltip>
@@ -93,7 +65,7 @@ function MessageStatusIcon({ status }: { status: Message['status'] }) {
           aria-label={tooltip}
           className="inline-flex cursor-help"
         >
-          {icon}
+          <MessageStatusIcon status={status} />
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-xs text-xs">
@@ -123,6 +95,7 @@ export function ChatMessageBubble({
   registerRef,
   instanceName,
   contactJid,
+  density = 'comfortable',
 }: ChatMessageBubbleProps) {
   const isSent = message.sender === 'agent';
   const mediaRefreshKey = (instanceName && contactJid && message.external_id)
@@ -142,7 +115,11 @@ export function ChatMessageBubble({
   return (
     <div 
       ref={(el) => registerRef(message.id, el)}
-      className={cn('flex group', isSent ? 'justify-end' : 'justify-start')}
+      className={cn(
+        'flex group', 
+        isSent ? 'justify-end' : 'justify-start',
+        density === 'comfortable' ? 'mb-4' : density === 'compact' ? 'mb-1.5' : 'mb-0.5'
+      )}
       {...swipeHandlers}
     >
       <motion.div
@@ -153,12 +130,16 @@ export function ChatMessageBubble({
           scale: 1 
         }}
         transition={swipeState.isSwiping ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 25 }}
-        className="max-w-[70%] space-y-1 relative"
+        className={cn(
+          "max-w-[85%] sm:max-w-[70%] space-y-1 relative",
+          density === 'dense' && "max-w-[90%] sm:max-w-[80%]"
+        )}
       >
-        {/* Message Actions (visible on hover) */}
+        {/* Message Actions (visible on hover/focus) */}
         <div className={cn(
-          "absolute top-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10",
-          isSent ? "right-full mr-2" : "left-full ml-2"
+          "absolute top-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity z-10",
+          isSent ? "right-full mr-2" : "left-full ml-2",
+          density !== 'comfortable' && "scale-90"
         )}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -220,15 +201,15 @@ export function ChatMessageBubble({
         </div>
 
         <motion.div
-          whileHover={{ scale: 1.01 }}
+          whileHover={{ scale: 1.005 }}
           className={cn(
-            'relative rounded-2xl shadow-sm transition-all overflow-hidden',
+            'relative rounded-2xl shadow-sm transition-all overflow-hidden border border-transparent',
             (message.type === 'image' || message.type === 'video') && !message.content
               ? 'p-0'
-              : 'px-4 py-2.5',
+              : density === 'comfortable' ? 'px-4 py-2.5' : density === 'compact' ? 'px-3 py-1.5' : 'px-2 py-1',
             isSent 
               ? 'rounded-br-md bg-chat-sent text-chat-sent-foreground' 
-              : 'rounded-bl-md bg-chat-received border border-border/30 text-chat-received-foreground'
+              : 'rounded-bl-md bg-chat-received border-border/30 text-chat-received-foreground'
           )}
         >
 
@@ -339,7 +320,7 @@ export function ChatMessageBubble({
             <span className="text-[10px]">
               {formatMessageTime(message.timestamp)}
             </span>
-            {isSent && <MessageStatusIcon status={message.status} />}
+            {isSent && <MessageStatusIconWithTooltip status={message.status} />}
           </div>
         </motion.div>
 

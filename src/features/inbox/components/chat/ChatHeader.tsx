@@ -19,8 +19,9 @@ import { CrmBadges } from './CrmBadges';
 import { BusinessHoursBadge } from '@/features/inbox/components/BusinessHoursBadge';
 import { AnalysisBadges } from '@/features/inbox/components/AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench } from 'lucide-react';
+import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2 } from 'lucide-react';
 import { useContactAvatar } from '@/features/inbox';
+import { useDensity } from '@/hooks/useDensity';
 
 const contactTypeConfig: Record<string, { label: string; icon: typeof Users; color: string }> = {
   cliente: { label: 'Cliente', icon: Users, color: 'bg-info/10 text-info border-info/30' },
@@ -60,9 +61,13 @@ export function ChatHeader({
   const { data: intel } = useContactIntelligence(isExternalConfigured ? conversation.contact.phone : undefined);
   const briefing = intel?.found ? intel.briefing : null;
   const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
+  const { density, cycleDensity } = useDensity();
 
   return (
-    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between px-4 py-3 border-b border-border/20 bg-card">
+    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className={cn(
+      "flex items-center justify-between px-4 border-b border-border/20 bg-card",
+      density === 'comfortable' ? 'py-3' : 'py-1.5'
+    )}>
       <div className="flex items-center gap-3">
         <motion.div whileHover={{ scale: 1.05 }}>
           <Avatar className="w-10 h-10 ring-2 ring-border/30">
@@ -191,6 +196,23 @@ export function ChatHeader({
         </Tooltip>
 
         <VoiceSelector selectedVoiceId={voiceId} onVoiceChange={onVoiceChange} />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-muted-foreground hover:text-primary hover:bg-primary/10" 
+                onClick={cycleDensity} 
+                aria-label={`Densidade: ${density}`}
+              >
+                {density === 'comfortable' ? <Maximize2 className="w-4 h-4" /> : density === 'compact' ? <LayoutGrid className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+              </Button>
+            </motion.div>
+          </TooltipTrigger>
+          <TooltipContent>Densidade: {density === 'comfortable' ? 'Confortável' : density === 'compact' ? 'Compacto' : 'Denso'}</TooltipContent>
+        </Tooltip>
+
         <KeyboardShortcutsHelp />
 
         <DropdownMenu>
