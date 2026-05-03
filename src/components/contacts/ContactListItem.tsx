@@ -97,13 +97,13 @@ export function ContactListItem({
                 fallbackCompanyName={contact.company}
                 size="xs"
               />
-              <span className="truncate max-w-[120px]">{companyName || contact.company}</span>
+              <HighlightText text={companyName || contact.company || ""} highlight={searchQuery} className="truncate max-w-[120px]" />
             </span>
           )}
           {contact.job_title && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <Briefcase className="w-3 h-3" />
-              {contact.job_title}
+              <HighlightText text={contact.job_title} highlight={searchQuery} />
             </span>
           )}
         </div>
@@ -119,7 +119,7 @@ export function ContactListItem({
           className="font-mono text-[11px] hover:text-primary hover:underline transition-colors"
           title="Abrir no WhatsApp"
         >
-          {contact.phone}
+          <HighlightText text={contact.phone} highlight={searchQuery} />
         </a>
       </div>
 
@@ -133,7 +133,7 @@ export function ContactListItem({
               className="truncate text-[11px] hover:text-primary hover:underline transition-colors"
               title="Enviar email"
             >
-              {contact.email}
+              <HighlightText text={contact.email} highlight={searchQuery} />
             </a>
           </>
         ) : (

@@ -184,14 +184,14 @@ export function ContactsTable({
                 <td className="p-3">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Phone className="w-3.5 h-3.5 shrink-0" />
-                    <span className="font-mono text-[11px]">{contact.phone}</span>
+                    <HighlightText text={contact.phone} highlight={searchQuery} className="font-mono text-[11px]" />
                   </div>
                 </td>
                 <td className="p-3">
                   {contact.email ? (
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Mail className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate max-w-[160px] text-[11px]">{contact.email}</span>
+                      <HighlightText text={contact.email} highlight={searchQuery} className="truncate max-w-[160px] text-[11px]" />
                     </div>
                   ) : <span className="text-muted-foreground/30">—</span>}
                 </td>
@@ -204,7 +204,7 @@ export function ContactsTable({
                         fallbackCompanyName={contact.company}
                         size="xs"
                       />
-                      <span className="truncate max-w-[140px]">{crmData?.company_name || contact.company}</span>
+                      <HighlightText text={crmData?.company_name || contact.company} highlight={searchQuery} className="truncate max-w-[140px]" />
                     </div>
                   ) : <span className="text-muted-foreground/30">—</span>}
                 </td>
@@ -212,7 +212,7 @@ export function ContactsTable({
                   {contact.job_title ? (
                     <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                       <Briefcase className="w-3 h-3 shrink-0" />
-                      <span className="truncate max-w-[140px]">{contact.job_title}</span>
+                      <HighlightText text={contact.job_title} highlight={searchQuery} className="truncate max-w-[140px]" />
                     </div>
                   ) : <span className="text-muted-foreground/30">—</span>}
                 </td>

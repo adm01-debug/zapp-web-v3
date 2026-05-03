@@ -145,13 +145,13 @@ export function ContactCard({
                   fallbackCompanyName={contact.company}
                   size="sm"
                 />
-                <span className="truncate">{companyName || contact.company}</span>
+                <HighlightText text={companyName || contact.company || ""} highlight={searchQuery} className="truncate" />
               </div>
             )}
             {contact.job_title && (
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <Briefcase className="w-3 h-3 shrink-0" />
-                <span className="truncate">{contact.job_title}</span>
+                <HighlightText text={contact.job_title} highlight={searchQuery} className="truncate" />
               </div>
             )}
           </div>
@@ -168,7 +168,7 @@ export function ContactCard({
               className="font-mono text-[11px] truncate hover:text-primary hover:underline transition-colors"
               title="Abrir no WhatsApp"
             >
-              {contact.phone}
+              <HighlightText text={contact.phone} highlight={searchQuery} />
             </a>
           </div>
           {contact.email && (
@@ -179,7 +179,7 @@ export function ContactCard({
                 className="truncate text-[11px] hover:text-primary hover:underline transition-colors"
                 title="Enviar email"
               >
-                {contact.email}
+                <HighlightText text={contact.email} highlight={searchQuery} />
               </a>
             </div>
           )}
