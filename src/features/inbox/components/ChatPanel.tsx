@@ -534,6 +534,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           onPollSent={async (poll) => { await dbFrom('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📊 *Enquete:* ${poll.name}\n${poll.options.map((o, i) => `${i + 1}. ${o}`).join('\n')}`, message_type: 'text', sender: 'agent', status: 'sending' }); }}
           onContactSent={async (contactName) => { await dbFrom('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📇 Cartão de contato: ${contactName}`, message_type: 'text', sender: 'agent', status: 'sending' }); }}
           onOpenCatalog={() => openDialog('catalogDirect')} onSelectSuggestion={(text) => handlers.setInputValue(text)} onSelectTemplate={(text) => handlers.setInputValue(text)}
+          onOpenTeamFiles={() => handleSetActiveTool('teamFiles')}
           fileUploaderRef={fileUploaderRef} inputRef={handlers.inputRef} />
 
         <ChatDialogs
