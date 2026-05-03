@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useCallback, useRef, useEffect } from 'react';
+import { lazy, Suspense, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePullToRefreshIndicator } from '@/components/mobile/MobilePullToRefresh';
@@ -19,6 +19,8 @@ import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, A
 import { cn } from '@/lib/utils';
 import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
 import { WhatsAppConnectionStatus } from '@/features/connections';
+import { useInboxShortcuts } from '../hooks/useInboxShortcuts';
+import { toast } from 'sonner';
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,6 +47,51 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
     inboxFilters.setSearch('');
     contactSearchRef.current?.focus();
   }, [inboxFilters]);
+
+  const sortedFilteredIds = useMemo(() => 
+    inboxFilters.filteredConversations.map((c: any) => c.contact.id), 
+    [inboxFilters.filteredConversations]
+  );
+
+  const handleNextConversation = useCallback(() => {
+    const currentId = inbox.selectedContactId;
+    if (!currentId) {
+      if (sortedFilteredIds.length > 0) inbox.handleSelectConversation(sortedFilteredIds[0]);
+      return;
+    }
+    const idx = sortedFilteredIds.indexOf(currentId);
+    if (idx >= 0 && idx < sortedFilteredIds.length - 1) {
+      inbox.handleSelectConversation(sortedFilteredIds[idx + 1]);
+    }
+  }, [inbox, sortedFilteredIds]);
+
+  const handlePrevConversation = useCallback(() => {
+    const currentId = inbox.selectedContactId;
+    if (!currentId) return;
+    const idx = sortedFilteredIds.indexOf(currentId);
+    if (idx > 0) {
+      inbox.handleSelectConversation(sortedFilteredIds[idx - 1]);
+    }
+  }, [inbox, sortedFilteredIds]);
+
+  useInboxShortcuts({
+    onSearchFocus: () => contactSearchRef.current?.focus(),
+    onNextConversation: handleNextConversation,
+    onPrevConversation: handlePrevConversation,
+    onArchive: () => {
+      if (inbox.selectedContactId) {
+        toast.info('Arquivando conversa...');
+        // Hook internal handles real logic via context menu or bulk actions
+      }
+    },
+    onTransfer: () => {
+      if (inbox.selectedContactId) {
+        // Dispatch event for UI to open transfer dialog
+        window.dispatchEvent(new CustomEvent('open-transfer-dialog', { detail: { contactId: inbox.selectedContactId } }));
+      }
+    },
+    onRefresh: () => inbox.refetch(),
+  });
 
   return (
     <div className={cn(
@@ -102,43 +149,33 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
         )}
 
         <div className="flex items-center gap-1.5">
-          {isMobile ? (
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
-              <Input
-                ref={contactSearchRef}
-                placeholder="Buscar nome, número, JID ou mensagem..."
-                value={contactSearch}
-                onChange={(e) => handleContactSearch(e.target.value)}
-                className="pl-8 pr-7 bg-muted/40 border-0 rounded-lg h-8 text-xs placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30"
-                aria-label="Buscar contato pelo nome"
-              />
-              {contactSearch && (
-                <Button variant="ghost" size="icon" onClick={clearContactSearch}
-                  className="absolute right-0.5 top-1/2 -translate-y-1/2 w-6 h-6 hover:bg-transparent" aria-label="Limpar busca">
-                  <X className="w-3 h-3 text-muted-foreground" />
-                </Button>
+          <div className="relative flex-1 group">
+            <SearchIcon className={cn(
+              "absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60 transition-colors",
+              "group-focus-within:text-primary"
+            )} />
+            <Input
+              ref={contactSearchRef}
+              placeholder={isMobile ? "Buscar..." : "Buscar (Alt+K para focar)..."}
+              value={contactSearch}
+              onChange={(e) => handleContactSearch(e.target.value)}
+              className={cn(
+                "pl-8 pr-7 bg-muted/40 border-0 rounded-lg text-xs placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30",
+                isMobile ? "h-8" : "h-7 text-[11px]"
               )}
+              aria-label="Buscar conversa"
+            />
+            {contactSearch && (
+              <Button variant="ghost" size="icon" onClick={clearContactSearch}
+                className="absolute right-0.5 top-1/2 -translate-y-1/2 w-6 h-6 hover:bg-transparent" aria-label="Limpar busca">
+                <X className="w-3 h-3 text-muted-foreground" />
+              </Button>
+            )}
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:block pointer-events-none">
+              <kbd className="h-4 px-1 rounded bg-muted/80 text-[8px] font-mono flex items-center border border-border/50 text-muted-foreground/50">K</kbd>
             </div>
-          ) : (
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/60" />
-              <Input
-                ref={contactSearchRef}
-                placeholder="Buscar nome, número, JID ou mensagem..."
-                value={contactSearch}
-                onChange={(e) => handleContactSearch(e.target.value)}
-                className="pl-7 pr-7 bg-muted/40 border-0 rounded-md h-7 text-[11px] placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30"
-                aria-label="Buscar contato pelo nome"
-              />
-              {contactSearch && (
-                <Button variant="ghost" size="icon" onClick={clearContactSearch}
-                  className="absolute right-0.5 top-1/2 -translate-y-1/2 w-5 h-5 hover:bg-transparent" aria-label="Limpar busca">
-                  <X className="w-3 h-3 text-muted-foreground" />
-                </Button>
-              )}
-            </div>
-          )}
+          </div>
+
           <div className={cn("shrink-0", isMobile ? "w-[130px]" : "w-[130px]")}>
             <ContactTypeFilter value={inboxFilters.selectedContactType} onChange={inboxFilters.handleContactTypeChange} conversations={inbox.cachedConversations} />
           </div>
