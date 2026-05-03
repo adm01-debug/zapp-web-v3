@@ -266,5 +266,12 @@ export function useRealtimeMessages() {
     dismissNotification, setSelectedContact, setSoundEnabled,
     conversationSendState,
     batcherStatus,
+    /**
+     * @deprecated Use the hook directly where needed
+     */
+    optimistic: {
+      pendingCount: 0,
+      mergeWithReal: (m: any) => m
+    }
   };
 }

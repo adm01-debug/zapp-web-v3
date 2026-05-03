@@ -123,7 +123,8 @@ export async function sendMessageToContact(
   content: string,
   messageType = 'text',
   mediaUrl?: string,
-  mediaPayload?: string
+  mediaPayload?: string,
+  opts: { optimisticId?: string } = {}
 ): Promise<SendMessageResult> {
   const { data: profile } = await supabase
     .from('profiles')
@@ -131,6 +132,11 @@ export async function sendMessageToContact(
     .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
     .single();
 
+  // If we already have an optimisticId (local bubble already created), we don't insert yet.
+  // We'll update the record after the API call or use the existing one if we were doing server-side optimistic.
+  // However, the current flow is: DB Insert -> emit 'sending' -> API call -> update DB status.
+  // To reach 10/10 velocity, we should ideally call API FIRST or concurrently, but we need the DB record for the ID.
+  
   const { data, error } = await dbFrom('messages')
     .insert({
       contact_id: contactId,
@@ -150,7 +156,8 @@ export async function sendMessageToContact(
     throw error;
   }
 
-  emitSendStatus(data.id, { status: 'sending' }, { contactId, source: 'messageSender' });
+  const effectiveId = opts.optimisticId || data.id;
+  emitSendStatus(effectiveId, { status: 'sending' }, { contactId, source: 'messageSender' });
 
   try {
     const { data: contact } = await dbFrom('contacts')
@@ -172,6 +179,10 @@ export async function sendMessageToContact(
     }
 
     const { action, body } = buildEvolutionPayload(connection.instance_id, phone, content, messageType, mediaUrl, mediaPayload);
+    
+    if (opts.optimisticId) {
+      emitSendStatus(opts.optimisticId, { status: 'sending' }, { contactId, source: 'messageSender' });
+    }
 
     // Stable idempotency key per logical message. We prefer a content-aware
     // fingerprint (contact + type + content + media + 5min bucket) so that:
@@ -201,7 +212,8 @@ export async function sendMessageToContact(
         idempotencyKey: idemKey,
         maxRetries: MAX_RETRIES,
         onRetry: (attempt, total) => {
-          emitSendStatus(data.id, { status: 'retrying', attempt, totalRetries: total }, { contactId, source: 'messageSender' });
+          const sid = opts.optimisticId || data.id;
+          emitSendStatus(sid, { status: 'retrying', attempt, totalRetries: total }, { contactId, source: 'messageSender' });
           // Persist counters so the "2/3" indicator survives a page reload.
           // Fire-and-forget — never block the retry loop.
           dbFrom('messages').update({
@@ -236,14 +248,16 @@ export async function sendMessageToContact(
           error_code: auth.code ? String(auth.code) : null,
           error_reason: auth.reason || reason,
         }).eq('id', data.id);
-        emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender' });
+        const sid = opts.optimisticId || data.id;
+        emitSendStatus(sid, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender' });
       } else {
         await dbFrom('messages').update({
           status: 'failed',
           whatsapp_connection_id: resolvedConnectionId,
           error_reason: reason,
         }).eq('id', data.id);
-        emitSendStatus(data.id, { status: 'failed', errorReason: reason }, { contactId, source: 'messageSender' });
+        const sid = opts.optimisticId || data.id;
+        emitSendStatus(sid, { status: 'failed', errorReason: reason }, { contactId, source: 'messageSender' });
       }
       throw new Error(reason);
     }
@@ -256,18 +270,20 @@ export async function sendMessageToContact(
       retry_attempt: null,
       retry_total: null,
     }).eq('id', data.id);
-    emitSendStatus(data.id, { status: 'sent' }, { contactId, source: 'messageSender' });
+    const finalSid = opts.optimisticId || data.id;
+    emitSendStatus(finalSid, { status: 'sent' }, { contactId, source: 'messageSender' });
   } catch (evolutionError) {
     log.error('Error sending via Evolution API:', evolutionError);
     const auth = classifyAuthError(evolutionError);
     const reason = evolutionError instanceof Error ? evolutionError.message : 'Falha ao enviar mensagem';
+    const sid = opts.optimisticId || data.id;
     if (auth.isAuth) {
       await dbFrom('messages').update({
         status: 'failed_auth',
         error_code: auth.code ? String(auth.code) : null,
         error_reason: auth.reason || reason,
       }).eq('id', data.id);
-      emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender' });
+      emitSendStatus(sid, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender' });
     } else {
       // If error came from withRetry exhausting attempts, mark failed_retries.
       // Persist final attempt counters so the badge stays after a reload.
@@ -277,7 +293,7 @@ export async function sendMessageToContact(
         retry_attempt: MAX_RETRIES,
         retry_total: MAX_RETRIES,
       }).eq('id', data.id);
-      emitSendStatus(data.id, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason }, { contactId, source: 'messageSender' });
+      emitSendStatus(sid, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason }, { contactId, source: 'messageSender' });
     }
     throw evolutionError;
   }

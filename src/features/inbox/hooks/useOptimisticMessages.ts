@@ -4,28 +4,18 @@ import { Message } from '@/types/chat';
 /**
  * Provides optimistic message updates for the chat UI.
  *
- * Problem: When an agent sends a message, there's a ~200-500ms delay before
- * the message appears because we wait for the Supabase insert + realtime event.
- * This creates a "laggy" feeling, especially on slower connections.
- *
- * Solution: This hook creates a temporary "optimistic" message that appears
- * instantly in the UI, then gets replaced by the real message when the
- * Supabase insert completes and the realtime event arrives.
- *
  * Flow:
  * 1. Agent presses Send → optimistic message appears instantly (status: 'sending')
- * 2. Supabase insert succeeds → optimistic message is replaced by real message
- * 3. If insert fails → optimistic message shows error state (status: 'failed')
+ * 2. Supabase/API call succeeds → real message (webhook) replaces optimistic
+ * 3. If call fails → optimistic message shows error state (status: 'failed')
  */
 
 let optimisticCounter = 0;
 
-export interface OptimisticMessage extends Omit<Message, 'timestamp'> {
+export interface OptimisticMessage extends Message {
   /** Marks this as an optimistic message that hasn't been confirmed by the server */
   _optimistic: true;
-  timestamp: Date;
-  contact_id?: string;
-  [key: string]: unknown;
+  contact_id: string;
 }
 
 export function useOptimisticMessages() {
@@ -38,44 +28,57 @@ export function useOptimisticMessages() {
   const createOptimistic = useCallback(
     (params: {
       contactId: string;
+      conversationId: string;
       content: string;
-      messageType?: string;
+      messageType?: Message['type'];
       replyToId?: string | null;
+      mediaUrl?: string | null;
+      contactAvatar?: string | null;
     }): OptimisticMessage => {
       optimisticCounter++;
-      const tempId = `_optimistic_${Date.now()}_${optimisticCounter}`;
+      const now = new Date();
+      // ID starts with "optimistic:" for easy reconciliation in hooks
+      const tempId = `optimistic:${now.getTime()}:${optimisticCounter}`;
 
-      const optimistic = {
+      const optimistic: OptimisticMessage = {
         id: tempId,
         _optimistic: true,
         contact_id: params.contactId,
+        conversationId: params.conversationId,
         content: params.content,
-        message_type: (params.messageType || 'text') as Message['message_type'],
+        type: params.messageType || 'text',
         sender: 'agent',
         status: 'sending',
-        timestamp: new Date(),
-        external_id: null,
-        media_url: null,
-        quoted_message_id: params.replyToId || null,
+        timestamp: now,
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+        external_id: undefined,
+        mediaUrl: params.mediaUrl || undefined,
+        replyTo: params.replyToId ? { messageId: params.replyToId, content: '', sender: 'contact' } : undefined,
+        contactAvatar: params.contactAvatar || null,
+        is_deleted: false,
       };
 
-      pendingRef.current.set(tempId, optimistic as unknown as OptimisticMessage);
-      return optimistic as unknown as OptimisticMessage;
+      pendingRef.current.set(tempId, optimistic);
+      return optimistic;
     },
     [],
   );
 
   /**
-   * Marks an optimistic message as successfully sent.
-   * Call this when the Supabase insert returns the real message ID.
+   * Marks an optimistic message as successfully sent (sent to API).
+   * It will still stay until a real message from webhook reconciles it.
    */
-  const confirmOptimistic = useCallback((tempId: string) => {
-    pendingRef.current.delete(tempId);
+  const confirmSent = useCallback((tempId: string, externalId?: string | null) => {
+    const msg = pendingRef.current.get(tempId);
+    if (msg) {
+      msg.status = 'sent';
+      if (externalId) msg.external_id = externalId;
+    }
   }, []);
 
   /**
    * Marks an optimistic message as failed.
-   * Updates the status so the UI can show an error indicator.
    */
   const failOptimistic = useCallback((tempId: string): OptimisticMessage | undefined => {
     const msg = pendingRef.current.get(tempId);
@@ -88,32 +91,37 @@ export function useOptimisticMessages() {
 
   /**
    * Merges optimistic messages with the real message list.
-   * Optimistic messages that have a matching real message (by content+timestamp proximity)
-   * are automatically removed.
+   * Reconciles by external_id or content+window proximity.
    */
   const mergeWithReal = useCallback(
     (realMessages: Message[]): (Message | OptimisticMessage)[] => {
       const pending = Array.from(pendingRef.current.values());
       if (pending.length === 0) return realMessages;
 
-      // Remove optimistic messages that have been confirmed by real messages
+      const realExternalIds = new Set(realMessages.map(m => m.external_id).filter(Boolean));
       const realContentSet = new Set(
         realMessages
           .filter((m) => m.sender === 'agent')
-          .slice(-10) // Only check recent messages
+          .slice(-20)
           .map((m) => m.content),
       );
 
       const stillPending = pending.filter((opt) => {
-        // If a real message with the same content exists, this optimistic is confirmed
+        // Match by external_id
+        if (opt.external_id && realExternalIds.has(opt.external_id)) {
+          pendingRef.current.delete(opt.id);
+          return false;
+        }
+
+        // Match by content (fallback)
         if (realContentSet.has(opt.content)) {
           pendingRef.current.delete(opt.id);
           return false;
         }
 
-        // Remove very old optimistic messages (>30s) — they're stale
+        // Remove very old optimistic messages (>60s)
         const age = Date.now() - opt.timestamp.getTime();
-        if (age > 30000) {
+        if (age > 60000) {
           pendingRef.current.delete(opt.id);
           return false;
         }
@@ -123,18 +131,19 @@ export function useOptimisticMessages() {
 
       if (stillPending.length === 0) return realMessages;
 
-      // Append pending optimistic messages at the end
-      return [...realMessages, ...stillPending];
+      // Combine and sort
+      return [...realMessages, ...stillPending].sort(
+        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+      );
     },
     [],
   );
 
   return {
     createOptimistic,
-    confirmOptimistic,
+    confirmSent,
     failOptimistic,
     mergeWithReal,
-    /** Number of messages still pending confirmation */
     pendingCount: pendingRef.current.size,
   };
 }
