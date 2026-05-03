@@ -110,6 +110,9 @@ export function useTeamConversations() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'team_messages' }, () => {
         queryClient.invalidateQueries({ queryKey: ['team-conversations'] });
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_conversations' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['team-conversations'] });
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [profile, queryClient]);
