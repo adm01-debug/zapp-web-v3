@@ -168,12 +168,12 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
 
       } else if (mode === 'edit' && form.id && forceOverwrite) {
         // Force overwrite after conflict resolution
-        const { error: res6297Err } = await dbFrom('contacts').update(payload).eq('id', form.id);
+        const { error } = await (dbFrom('contacts') as any).update(payload).eq('id', form.id);
         if (error) throw error;
 
       } else {
         // Insert new contact
-        const { data, error: res6461Err } = await dbFrom('contacts')
+        const { data, error } = await (dbFrom('contacts') as any)
           .insert({ ...payload, created_at: new Date().toISOString() })
           .select()
           .single();
