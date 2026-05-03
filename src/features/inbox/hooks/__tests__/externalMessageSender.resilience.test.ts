@@ -17,6 +17,20 @@ vi.mock('@/lib/logger', () => ({
   }),
 }));
 
+// Mock jidToPhone
+vi.mock('@/adapters/evolutionAdapter', () => ({
+  jidToPhone: vi.fn((jid) => jid.split('@')[0]),
+}));
+
+// Mock parseEvolutionError
+vi.mock('../../index', () => ({
+  parseEvolutionError: vi.fn((err) => ({
+    reason: err.message || 'Instância não encontrada',
+    detail: err.detail || null,
+    status: err.status || 500
+  })),
+}));
+
 describe('externalMessageSender Load & Resilience Simulation', () => {
   const remoteJid = '5511999999999@s.whatsapp.net';
   
