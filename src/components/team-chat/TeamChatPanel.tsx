@@ -145,7 +145,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             return (
               <ContextMenu key={msg.id}>
                 <ContextMenuTrigger asChild>
-                  <div>
+                  <div data-testid={`message-container-${msg.id}`}>
                     {showDate && <div className="flex justify-center py-2"><span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border border-border/20">{formatDateSep(msg.created_at)}</span></div>}
                     <div 
                       key={msg.id}
