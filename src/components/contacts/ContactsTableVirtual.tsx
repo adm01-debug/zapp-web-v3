@@ -19,19 +19,22 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatPhoneForDisplay } from '@/lib/phoneUtils';
-import { type ContactListItem } from './useContactsPagination';
-
-// ── Types ──────────────────────────────────────────────────────────────────
+import { type Contact } from './types';
+import { HighlightText } from './HighlightText';
+import { CompanyLogo } from './CompanyLogo';
+import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
+import { cn } from '@/lib/utils';
+import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
 
 interface ContactsTableVirtualProps {
-  contacts:           ContactListItem[];
-  selectedIds:        Set<string>;
-  onSelectToggle:     (id: string) => void;
-  onSelectAll:        () => void;
-  onClearSelection:   () => void;
-  onOpenChat:         (contact: ContactListItem) => void;
-  onEdit:             (contact: ContactListItem) => void;
-  onDelete:           (contact: ContactListItem) => void;
+  contacts:           Contact[];
+  selectedIds:        string[];
+  onSelectIds:        (ids: string[]) => void;
+  onOpenChat:         (id: string) => void;
+  onEdit:             (contact: Contact) => void;
+  onDelete:           (contact: Contact) => void;
+  getCRMData?:        (phone: string) => any;
+  searchQuery?:       string;
   loadMoreRef?:       React.RefObject<HTMLDivElement>;
   loadingMore?:       boolean;
 }
