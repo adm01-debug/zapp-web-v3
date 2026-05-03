@@ -236,7 +236,7 @@ jobs:
     name: 🎭 E2E Tests (Standard)
     runs-on: ubuntu-latest
     needs: build
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -244,25 +244,41 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
       - name: 📚 Install dependencies
         run: npm install --no-audit --no-fund
+
       - name: 📦 Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
+
+      - name: 🎭 Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: 🎭 Install Playwright dependencies & browsers
         run: |
           sudo apt-get update && sudo apt-get install -y libglib2.0-0
           npx playwright install --with-deps chromium
+
       - name: 🚀 Start preview server
         run: |
           npx vite preview --port 4173 --host &
           npx wait-on http://localhost:4173 --timeout 60000
+
       - name: 🧪 Run Playwright tests (Standard Shard ${{ matrix.shard }})
         run: npx playwright test --shard=${{ matrix.shard }} --grep-invert "@teams"
         env:
@@ -273,11 +289,21 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
+      - name: 📊 Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-standard-shard-${{ strategy.job-index }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
   e2e-teams-matrix:
     name: 👥 Teams E2E (Role: ${{ matrix.role }})
     runs-on: ubuntu-latest
     needs: build
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -285,34 +311,48 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
       - name: 📚 Install dependencies
         run: npm install --no-audit --no-fund
+
       - name: 📦 Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
+
+      - name: 🎭 Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
       - name: 🎭 Install Playwright dependencies & browsers
         run: |
           sudo apt-get update && sudo apt-get install -y libglib2.0-0
           npx playwright install --with-deps chromium
+
       - name: 🚀 Start preview server
         run: |
           npx vite preview --port 4173 --host &
           npx wait-on http://localhost:4173 --timeout 60000
+
       - name: 🧪 Run Teams E2E for ${{ matrix.role }}
-        run: npx playwright test e2e/teams-security-integration.spec.ts --project=chromium
+        run: npx playwright test e2e/teams-security-integration.spec.ts --project=chromium --reporter=list,json
         env:
           CI: true
           E2E_BASE_URL: http://localhost:4173
           E2E_ROLE_UNDER_TEST: ${{ matrix.role }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          # Use specific credentials if available, otherwise fallback
+          # Fallback to standard credentials if role-specific ones aren't provided
           E2E_USER_EMAIL: ${{ secrets[format('E2E_EMAIL_{0}', matrix.role)] || secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets[format('E2E_PASS_{0}', matrix.role)] || secrets.E2E_USER_PASSWORD }}
 
@@ -325,6 +365,28 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  e2e-teams-summary:
+    name: 📈 Teams Test Summary
+    runs-on: ubuntu-latest
+    needs: e2e-teams-matrix
+    if: always()
+    steps:
+      - name: 📝 Aggregate Reports
+        run: |
+          echo "### 📈 Teams E2E Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Role | Status | Artifact Link |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          
+          # This is a bit of a manual hack as GH Actions doesn't easily provide artifact URLs via env
+          # But we can provide the artifact name for the user to find.
+          ROLES="rh_agent finance_agent ti_admin transfer_agent"
+          for ROLE in $ROLES; do
+            echo "| $ROLE | Pending Review | [playwright-report-teams-$ROLE] |" >> $GITHUB_STEP_SUMMARY
+          done
+          
+          echo "⚠️ Check 'Actions' artifacts for full traces and screenshots." >> $GITHUB_STEP_SUMMARY
+
 
 
   # ===========================================
