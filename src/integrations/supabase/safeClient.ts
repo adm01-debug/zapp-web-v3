@@ -54,7 +54,7 @@ export const safeClient = {
         }
       }
 
-      const { data, error } = await queryBuilder(supabase.from(table) as any);
+      const { data, error } = await queryBuilder(supabase.from(table as any));
       if (error) {
         this.log(requestId, 'error', `Erro na query from ${table}`, error);
         this.recordFailure(requestId, 'from', table, error.message || 'Erro desconhecido');
@@ -90,7 +90,7 @@ export const safeClient = {
         }
       }
 
-      const { data, error } = await queryBuilder(supabase.from(table) as any).single();
+      const { data, error } = await queryBuilder(supabase.from(table as any)).single();
       if (error) {
         this.log(requestId, 'error', `Erro single query ${table}`, error);
         this.recordFailure(requestId, 'single', table, error.message || 'Erro desconhecido');
