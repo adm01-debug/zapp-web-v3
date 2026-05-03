@@ -3,7 +3,6 @@ import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
-import { evaluateAutoRefresh } from '@/hooks/connections/qrAutoRefresh';
 import { whatsappConnectionRepository } from '@/features/connections/data-access/whatsappConnectionRepository';
 import { whatsappConnectionService } from '@/features/connections/services/whatsappConnectionService';
 import { useConnectionsState } from './parts/useConnectionsState';
@@ -49,7 +48,6 @@ export interface QrCodeDialogState {
   ttlSource: QrTtlSource | null;
 }
 
-const QR_TTL_DEFAULT_MS = 60_000;
 const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
 
 export function useConnectionsManager() {
@@ -68,7 +66,28 @@ export function useConnectionsManager() {
     deleteInstance,
   } = useEvolutionApi();
 
-  // Helper local function since actions need it
+  const generateQr = useCallback(async (connection: WhatsAppConnection) => {
+    if (!connection.instance_id) return;
+    const attemptId = await whatsappConnectionService.logQrAttempt(connection.id, connection.instance_id, connection.name);
+    try {
+      const result = await whatsappConnectionService.requestQrCode(connection.instance_id);
+      const { ttlMs, source: ttlSource } = whatsappConnectionService.detectQrTtlMs(result);
+      const expiresAt = Date.now() + ttlMs;
+      
+      setQrCodeDialog((prev) => ({
+        ...prev,
+        qrCode: result?.qrcode?.base64 || prev.qrCode,
+        status: 'pending',
+        expiresAt,
+        attemptId: (attemptId as any).data?.id || null,
+        ttlSeconds: Math.round(ttlMs / 1000),
+        ttlSource: ttlSource as QrTtlSource,
+      }));
+    } catch (error: any) {
+      setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage: error.message }));
+    }
+  }, [setQrCodeDialog]);
+
   const handleShowQrCode = useCallback(async (connection: WhatsAppConnection) => {
     if ((connection.api_type ?? 'evolution') === 'official') {
       toast({
@@ -94,11 +113,10 @@ export function useConnectionsManager() {
       ttlSource: null,
     });
     
-    // Inicia geração do QR
     if (connection.status !== 'connected') {
       await generateQr(connection);
     }
-  }, [setQrCodeDialog]);
+  }, [setQrCodeDialog, generateQr]);
 
   const actions = useConnectionsActions(
     connections, setConnections, setIsCreating, setIsAddDialogOpen, setNewConnection,
@@ -118,37 +136,14 @@ export function useConnectionsManager() {
   }, [qrCodeDialog]);
 
   useEffect(() => {
+    const fetchConnections = async () => {
+      setLoading(true);
+      const { data, error } = await whatsappConnectionRepository.fetchConnections();
+      if (!error && data) setConnections(data as any[]);
+      setLoading(false);
+    };
     fetchConnections();
-  }, []);
-
-  const fetchConnections = async () => {
-    setLoading(true);
-    const { data, error } = await whatsappConnectionRepository.fetchConnections();
-    if (!error && data) setConnections(data as unknown as WhatsAppConnection[]);
-    setLoading(false);
-  };
-
-  const generateQr = async (connection: WhatsAppConnection) => {
-    if (!connection.instance_id) return;
-    const attemptId = await whatsappConnectionService.logQrAttempt(connection.id, connection.instance_id, connection.name);
-    try {
-      const result = await whatsappConnectionService.requestQrCode(connection.instance_id);
-      const { ttlMs, source: ttlSource } = whatsappConnectionService.detectQrTtlMs(result);
-      const expiresAt = Date.now() + ttlMs;
-      
-      setQrCodeDialog((prev) => ({
-        ...prev,
-        qrCode: result?.qrcode?.base64 || prev.qrCode,
-        status: 'pending',
-        expiresAt,
-        attemptId: attemptId.data?.id || null,
-        ttlSeconds: Math.round(ttlMs / 1000),
-        ttlSource,
-      }));
-    } catch (error: any) {
-      setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage: error.message }));
-    }
-  };
+  }, [setConnections, setLoading]);
 
   const handleRefreshQrCode = async () => {
     if (refreshInFlightRef.current) return;
