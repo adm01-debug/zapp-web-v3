@@ -216,13 +216,13 @@ export function ChatHeader({
         ].map(({ icon: Icon, label, onClick }) => (
           <Tooltip key={label}>
             <TooltipTrigger asChild>
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={onClick} aria-label={label}>
+              <motion.div whileHover={{ scale: 1.1, y: -1 }} whileTap={{ scale: 0.9 }}>
+                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-all" onClick={onClick} aria-label={label}>
                   <Icon className="w-4 h-4" />
                 </Button>
               </motion.div>
             </TooltipTrigger>
-            <TooltipContent>{label}</TooltipContent>
+            <TooltipContent className="text-[10px] font-medium">{label}</TooltipContent>
           </Tooltip>
         ))}
 
