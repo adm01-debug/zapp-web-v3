@@ -8715,6 +8715,83 @@ export type Database = {
         }
         Relationships: []
       }
+      sla_delivery_rules: {
+        Row: {
+          breach_threshold_minutes: number
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          warning_threshold_minutes: number
+        }
+        Insert: {
+          breach_threshold_minutes?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          warning_threshold_minutes?: number
+        }
+        Update: {
+          breach_threshold_minutes?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          warning_threshold_minutes?: number
+        }
+        Relationships: []
+      }
+      sla_delivery_violations: {
+        Row: {
+          contact_id: string
+          delivered_at: string
+          detected_at: string | null
+          id: string
+          is_resolved: boolean | null
+          message_id: string
+          metadata: Json | null
+          resolved_at: string | null
+          rule_id: string | null
+          severity: string | null
+        }
+        Insert: {
+          contact_id: string
+          delivered_at: string
+          detected_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message_id: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          rule_id?: string | null
+          severity?: string | null
+        }
+        Update: {
+          contact_id?: string
+          delivered_at?: string
+          detected_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message_id?: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          rule_id?: string | null
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_delivery_violations_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "sla_delivery_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sla_risk_acknowledgements: {
         Row: {
           acknowledged_at: string
