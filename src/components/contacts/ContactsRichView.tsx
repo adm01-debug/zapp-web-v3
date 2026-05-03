@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   UserPlus, Upload, Trash2, GitMerge, Keyboard, 
-  Search, Grid, List, Table, Map, BarChart3, Info, X
+  Search, Grid, List, Table, Map, BarChart3, Info, X, Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 
