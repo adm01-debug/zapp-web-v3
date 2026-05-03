@@ -48,6 +48,12 @@ vi.mock('@/lib/logger', () => ({
 }));
 vi.mock('@/lib/undoToast', () => ({ undoToast: vi.fn() }));
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn(), useToast: () => ({ toast: vi.fn() }) }));
+vi.mock('@/features/auth', () => ({
+  useAuth: () => ({
+    profile: { id: 'agent-123', name: 'Test Agent', role: 'admin' },
+    user: { id: 'user-123' },
+  }),
+}));
 
 const { useChatPanelHandlers } = await import('../useChatPanelHandlers');
 
