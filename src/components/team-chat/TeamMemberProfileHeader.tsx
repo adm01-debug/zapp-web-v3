@@ -124,7 +124,9 @@ export function GroupProfileHeader({ conversation }: { conversation: TeamConvers
         </AvatarFallback>
       </Avatar>
       <h3 className="text-base font-bold text-foreground">{conversation.name}</h3>
-      <p className="text-xs text-muted-foreground mt-0.5">{conversation.members?.length || 0} membros</p>
+      <p className="text-xs text-muted-foreground mt-0.5">
+        {conversation.type === 'department' ? 'Grupo de Departamento' : `${conversation.members?.length || 0} membros`}
+      </p>
     </div>
   );
 }
