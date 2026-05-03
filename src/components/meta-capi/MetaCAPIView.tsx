@@ -62,7 +62,7 @@ export function MetaCAPIView() {
   // Load config from global_settings
   useEffect(() => {
     const loadConfig = async () => {
-      const { data, error: res2564Err } = await supabase
+      const { data, error: configErr } = await supabase
         .from('global_settings')
         .select('key, value')
         .in('key', ['meta_pixel_id', 'meta_capi_auto_track']);
@@ -92,13 +92,13 @@ export function MetaCAPIView() {
   };
 
   const sendTestEvent = async (eventName: string) => {
-    const { error: res3704Err } = await supabase.from('meta_capi_events').insert({
+    const { error: insertErr } = await supabase.from('meta_capi_events').insert({
       event_name: eventName,
       pixel_id: pixelId || null,
       action_source: 'chat',
       custom_data: { test: true, value: 0 },
     });
-    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
+    if (insertErr) { toast({ title: 'Erro', description: insertErr.message, variant: 'destructive' }); return; }
     toast({ title: `Evento "${eventName}" registrado!` });
     fetchEvents();
   };
