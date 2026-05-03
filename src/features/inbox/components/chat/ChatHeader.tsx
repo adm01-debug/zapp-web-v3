@@ -115,9 +115,9 @@ export const ChatHeader = memo(function ChatHeader({
           </div>
           <div className="flex items-center h-4">
             {isContactTyping ? (
-              <span className="text-[11px] text-primary font-medium animate-pulse">digitando...</span>
+              <span className="text-[12px] text-[#00a884] dark:text-[#00a884] font-normal">digitando...</span>
             ) : (
-              <span className="text-[11px] text-muted-foreground/60">{conversation.contact.phone}</span>
+              <span className="text-[12px] text-[#667781] dark:text-[#8696a0] font-normal">{conversation.contact.phone}</span>
             )}
           </div>
         </div>
