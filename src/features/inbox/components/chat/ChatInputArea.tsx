@@ -203,7 +203,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-4 py-2 bg-[#f0f2f5] dark:bg-[#202c33] relative transition-all duration-500", 
+        "px-4 py-2 bg-[#f0f2f5] dark:bg-[#202c33] relative flex flex-col gap-2", 
         isWhisper && "bg-amber-50/40 dark:bg-amber-950/10 border-t border-amber-200/30",
         logic.isMobile && "px-2 py-2 safe-area-bottom"
       )}>
@@ -228,7 +228,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           </motion.div>
         )}
 
-        <div className="flex items-end gap-2" role="toolbar" aria-label="Barra de mensagem">
+        <div className="flex items-end gap-1.5" role="toolbar" aria-label="Barra de mensagem">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon"
@@ -263,9 +263,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               rows={1}
               className={cn(
                 "w-full bg-white dark:bg-[#2a3942] border-none rounded-lg outline-none text-[15px] font-normal tracking-tight text-foreground shadow-none",
-                "placeholder:text-[#8696a0] dark:placeholder:text-[#8696a0] placeholder:font-normal resize-none transition-all duration-200",
+                "placeholder:text-[#8696a0] dark:placeholder:text-[#8696a0] placeholder:font-normal resize-none transition-none",
                 "focus:bg-white dark:focus:bg-[#2a3942] focus:ring-0",
-                logic.isMobile ? "px-3 py-2.5 text-[16px] min-h-[42px] max-h-[200px]" : "px-3 py-2.5 min-h-[42px] max-h-[200px]",
+                logic.isMobile ? "px-3 py-2.5 text-[16px] min-h-[42px] max-h-[200px]" : "px-3 py-[9px] min-h-[42px] max-h-[200px]",
                 isWhisper && "bg-amber-500/10",
                 logic.isOverLimit && "text-destructive",
                 isSending && "opacity-60 pointer-events-none"
@@ -291,7 +291,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   size="icon"
                   variant="ghost"
                   className={cn(
-                    "rounded-full shrink-0 touch-manipulation active:scale-90 transition-all duration-200",
+                    "rounded-full shrink-0 touch-manipulation active:scale-95 transition-colors duration-200",
                     isRecordingAudio 
                       ? "bg-destructive text-white hover:bg-destructive/90 shadow-lg" 
                       : "text-[#8696a0] dark:text-[#8696a0] hover:text-muted-foreground",
