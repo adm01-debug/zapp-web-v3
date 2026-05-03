@@ -331,15 +331,21 @@ export async function gmailModifyLabels(params: ModifyLabelsParams): Promise<Gma
 }
 
 interface SendMessageParams {
-  accountId:  string;
-  to:         string[];
-  cc?:        string[];
-  bcc?:       string[];
-  subject:    string;
-  bodyHtml:   string;
-  threadId?:  string;
-  inReplyTo?: string;
+  accountId:   string;
+  to:          string[];
+  cc?:         string[];
+  bcc?:        string[];
+  subject:     string;
+  bodyHtml:    string;
+  bodyPlain?:  string;
+  threadId?:   string;
+  inReplyTo?:  string;
   references?: string;
+  attachments?: Array<{
+    name:     string;
+    mimeType: string;
+    data:     string; // base64
+  }>;
 }
 
 /**
