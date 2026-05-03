@@ -9,6 +9,11 @@ vi.mock('@/lib/logger', () => ({
     debug: vi.fn(),
     warn: vi.fn(),
   },
+  getLogger: () => ({
+    error: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+  }),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
