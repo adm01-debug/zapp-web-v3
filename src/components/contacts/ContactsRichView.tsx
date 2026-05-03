@@ -361,6 +361,92 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
       </div>
 
       {/* ── Dialogs (Adicionar, Editar, Sucesso, Excluir) ─────────────── */}
+      {/* ── Shortcut Help Overlay ───────────────────────────────────── */}
+      <AnimatePresence>
+        {showShortcutHelp && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
+            onClick={() => setShowShortcutHelp(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-md w-full relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Keyboard className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Atalhos de Teclado</h2>
+                  <p className="text-sm text-muted-foreground">Aumente sua produtividade</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="ml-auto" 
+                  onClick={() => setShowShortcutHelp(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Ações</p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><UserPlus className="w-3.5 h-3.5" /> Novo Registro</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">N</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Search className="w-3.5 h-3.5" /> Buscar</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">F</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Info className="w-3.5 h-3.5" /> Ajuda</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">?</kbd>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Visualizações</p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Grid className="w-3.5 h-3.5" /> Grid</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">G</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><List className="w-3.5 h-3.5" /> Lista</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">L</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Table className="w-3.5 h-3.5" /> Tabela</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">T</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Map className="w-3.5 h-3.5" /> Mapa</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">M</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5" /> Analytics</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">A</kbd>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t border-border/50 text-center">
+                  <p className="text-xs text-muted-foreground italic">Pressione <kbd className="px-1 py-0.5 rounded bg-muted text-[9px] font-mono">Esc</kbd> para fechar</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <ContactDialogs
         isAddDialogOpen={isAddDialogOpen}
         setIsAddDialogOpen={setIsAddDialogOpen}
