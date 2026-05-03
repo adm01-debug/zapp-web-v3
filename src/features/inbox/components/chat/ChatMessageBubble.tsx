@@ -211,8 +211,8 @@ export function ChatMessageBubble({
             message.isWhisper
               ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200/50 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 shadow-inner'
               : isSent 
-                ? 'rounded-br-md bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-primary/20' 
-                : 'rounded-bl-md bg-chat-received border-border/30 text-chat-received-foreground'
+                ? 'rounded-br-sm bg-primary text-primary-foreground shadow-sm' 
+                : 'rounded-bl-sm bg-muted/20 border-border/20 text-foreground'
           )}
         >
 
