@@ -61,9 +61,13 @@ export function ChatHeader({
   const { data: intel } = useContactIntelligence(isExternalConfigured ? conversation.contact.phone : undefined);
   const briefing = intel?.found ? intel.briefing : null;
   const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
+  const { density, cycleDensity } = useDensity();
 
   return (
-    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between px-4 py-3 border-b border-border/20 bg-card">
+    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className={cn(
+      "flex items-center justify-between px-4 border-b border-border/20 bg-card",
+      density === 'comfortable' ? 'py-3' : 'py-1.5'
+    )}>
       <div className="flex items-center gap-3">
         <motion.div whileHover={{ scale: 1.05 }}>
           <Avatar className="w-10 h-10 ring-2 ring-border/30">
