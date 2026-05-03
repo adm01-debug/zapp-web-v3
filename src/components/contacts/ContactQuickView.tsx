@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
 import { calculateContactHealth, getHealthColor } from '@/lib/contact-health';
 import type { Contact } from './types';
@@ -30,6 +31,10 @@ interface ContactQuickViewProps {
 export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
   contact, isOpen, onClose, onEdit, onDelete, onOpenChat
 }) => {
+  if (!contact) return null;
+
+  const typeCfg = contact.contact_type ? CONTACT_TYPE_CONFIG[contact.contact_type] : null;
+  const initials = contact.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const health = useMemo(() => contact ? calculateContactHealth(contact) : 0, [contact]);
   const healthColor = getHealthColor(health);
 
