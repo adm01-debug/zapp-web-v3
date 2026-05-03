@@ -16,9 +16,9 @@ export default defineConfig({
     : [['html', { open: 'never' }], ['list']],
   use: {
     baseURL: BASE_URL,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    trace: 'retain-on-failure',
+    screenshot: 'on',
+    video: 'on-first-retry',
     actionTimeout: 10_000,
     navigationTimeout: 15_000,
   },

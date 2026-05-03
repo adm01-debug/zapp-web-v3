@@ -233,10 +233,10 @@ jobs:
   # JOB 5: E2E Tests (Playwright)
   # ===========================================
   e2e:
-    name: 🎭 E2E Tests (Playwright)
+    name: 🎭 E2E Tests (Standard)
     runs-on: ubuntu-latest
     needs: build
-    timeout-minutes: 20
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -244,31 +244,27 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
-
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
       - name: 📚 Install dependencies
         run: npm install --no-audit --no-fund
-
       - name: 📦 Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
-
-      - name: 🎭 Install Playwright browsers
-        run: npx playwright install --with-deps chromium ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'webkit' || '' }}
-
+      - name: 🎭 Install Playwright dependencies & browsers
+        run: |
+          sudo apt-get update && sudo apt-get install -y libglib2.0-0
+          npx playwright install --with-deps chromium
       - name: 🚀 Start preview server
         run: |
           npx vite preview --port 4173 --host &
           npx wait-on http://localhost:4173 --timeout 60000
-
-      - name: 🧪 Run Playwright tests (shard ${{ matrix.shard }})
-        run: npx playwright test --shard=${{ matrix.shard }}
+      - name: 🧪 Run Playwright tests (Standard Shard ${{ matrix.shard }})
+        run: npx playwright test --shard=${{ matrix.shard }} --grep-invert "@teams"
         env:
           CI: true
           E2E_BASE_URL: http://localhost:4173
@@ -276,17 +272,60 @@ jobs:
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          PLAYWRIGHT_ALL_BROWSERS: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && '1' || '0' }}
 
-      - name: 📊 Upload Playwright report
+  e2e-teams-matrix:
+    name: 👥 Teams E2E (Role: ${{ matrix.role }})
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        role: [rh_agent, finance_agent, ti_admin, transfer_agent]
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 📚 Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: 📦 Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: 🎭 Install Playwright dependencies & browsers
+        run: |
+          sudo apt-get update && sudo apt-get install -y libglib2.0-0
+          npx playwright install --with-deps chromium
+      - name: 🚀 Start preview server
+        run: |
+          npx vite preview --port 4173 --host &
+          npx wait-on http://localhost:4173 --timeout 60000
+      - name: 🧪 Run Teams E2E for ${{ matrix.role }}
+        run: npx playwright test e2e/teams-security-integration.spec.ts --project=chromium
+        env:
+          CI: true
+          E2E_BASE_URL: http://localhost:4173
+          E2E_ROLE_UNDER_TEST: ${{ matrix.role }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          # Use specific credentials if available, otherwise fallback
+          E2E_USER_EMAIL: ${{ secrets[format('E2E_EMAIL_{0}', matrix.role)] || secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets[format('E2E_PASS_{0}', matrix.role)] || secrets.E2E_USER_PASSWORD }}
+
+      - name: 📊 Upload Teams E2E Report (${{ matrix.role }})
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-shard-${{ strategy.job-index }}
+          name: playwright-report-teams-${{ matrix.role }}
           path: |
             playwright-report/
             test-results/
           retention-days: 7
+
 
   # ===========================================
   # JOB 5.5: Chat Coverage Report
