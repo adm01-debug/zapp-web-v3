@@ -174,15 +174,35 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                         )}
                       </div>
                     </div>
+                    <MessageReactions
+                      messageId={msg.id}
+                      reactions={aggregate(msg.id)}
+                      isMine={isMine}
+                      onToggle={(emoji) => toggleReaction({ messageId: msg.id, emoji })}
+                    />
                   </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
+                  <ContextMenuSub>
+                    <ContextMenuSubTrigger className="gap-2"><SmilePlus className="w-3.5 h-3.5" /> Reagir</ContextMenuSubTrigger>
+                    <ContextMenuSubContent>
+                      <div className="grid grid-cols-8 gap-1 p-1">
+                        {['👍','❤️','😂','😮','😢','🙏','🔥','🎉'].map(e => (
+                          <button key={e} onClick={() => toggleReaction({ messageId: msg.id, emoji: e })}
+                            className="h-8 w-8 text-lg hover:scale-125 transition-transform rounded">
+                            {e}
+                          </button>
+                        ))}
+                      </div>
+                    </ContextMenuSubContent>
+                  </ContextMenuSub>
                   <ContextMenuItem onClick={() => s.setReplyTo(msg)} className="gap-2"><Reply className="w-3.5 h-3.5" /> Responder</ContextMenuItem>
                   {msg.content && <ContextMenuItem onClick={() => s.handleCopyMessage(msg.content)} className="gap-2"><Copy className="w-3.5 h-3.5" /> Copiar</ContextMenuItem>}
                   {cleanText && <ContextMenuItem onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className="gap-2"><Volume2 className="w-3.5 h-3.5" /> {isThisTtsPlaying ? 'Parar' : 'Ouvir'}</ContextMenuItem>}
                   {isMine && !isEditing && (<><ContextMenuSeparator />{!hasMedia && <ContextMenuItem onClick={() => s.handleStartEdit(msg)} className="gap-2"><Pencil className="w-3.5 h-3.5" /> Editar</ContextMenuItem>}<ContextMenuItem onClick={() => s.handleDelete(msg.id)} className="gap-2 text-destructive focus:text-destructive"><Trash2 className="w-3.5 h-3.5" /> Excluir</ContextMenuItem></>)}
                 </ContextMenuContent>
               </ContextMenu>
+
             );
           })
         )}
