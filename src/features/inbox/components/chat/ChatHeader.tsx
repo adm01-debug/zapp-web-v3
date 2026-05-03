@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { motion } from '@/components/ui/motion';
 import { TypingIndicatorCompact } from '@/features/inbox/components/TypingIndicator';
 import { SLAIndicatorForContact } from '@/features/inbox/components/SLAIndicatorForContact';
+import { ConversationHealth } from '@/features/inbox/components/ConversationHealth';
 import { VoiceSelector } from '@/features/inbox/components/VoiceSelector';
 import { KeyboardShortcutsHelp } from '@/features/inbox/components/KeyboardShortcutsHelp';
 import { QueuePositionNotifier } from '@/features/inbox/components/QueuePositionNotifier';
@@ -33,6 +34,7 @@ const contactTypeConfig: Record<string, { label: string; icon: typeof Users; col
 
 interface ChatHeaderProps {
   conversation: Conversation;
+  messages: Message[];
   isContactTyping: boolean;
   showAIAssistant: boolean;
   showDetails: boolean;
@@ -49,7 +51,7 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({
-  conversation, isContactTyping, showAIAssistant, showDetails,
+  conversation, messages, isContactTyping, showAIAssistant, showDetails,
   voiceId, onToggleAIAssistant, onToggleDetails, onStartCall, onOpenSearch,
   onOpenTransfer, onOpenSchedule, onVoiceChange,
 }: ChatHeaderProps) {
@@ -150,6 +152,9 @@ export function ChatHeader({
             {isContactTyping ? <TypingIndicatorCompact isVisible={true} /> : conversation.contact.phone}
           </p>
           <QueuePositionNotifier contactId={conversation.contact.id} className="mt-0.5" />
+        </div>
+        <div className="hidden lg:block border-l border-border/20 pl-4 ml-1">
+          <ConversationHealth conversation={conversation} messages={messages} />
         </div>
       </div>
 
