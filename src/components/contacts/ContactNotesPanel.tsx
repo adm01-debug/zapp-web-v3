@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 import { StickyNote, Pin, RefreshCw, Send, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { dbList, dbRpc } from '@/integrations/datasource/db';
