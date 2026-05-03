@@ -251,7 +251,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           </div>
           {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
         </div>
-      </motion.div>
+      </div>
     </QuickPeek>
   );
 }
