@@ -32,7 +32,7 @@ export function StickerPicker({ onSendSticker, disabled }: StickerPickerProps) {
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setPendingUpload(null); setSearch(''); } }}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0" disabled={disabled} aria-label="Figurinhas" title="Figurinhas">
-          <Sticker className="w-[18px] h-[18px]" />
+          <Sticker className="w-[18px] h-[18px]" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
           <PopoverContent className={cn('w-[380px] p-0 bg-popover border-border', isDragOver && 'ring-2 ring-primary ring-offset-2')} align="end" side="top" sideOffset={8} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
