@@ -28,6 +28,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { MessageStatusIcon } from './messageUtils';
 
 interface ChatMessageBubbleProps {
   message: Message;
