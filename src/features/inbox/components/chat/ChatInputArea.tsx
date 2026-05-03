@@ -233,11 +233,11 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon"
                 className={cn(
-                  "text-muted-foreground/50 hover:text-primary hover:bg-primary/5 shrink-0 transition-all rounded-full active:scale-90", 
-                  logic.isMobile ? "w-10 h-10" : "w-9 h-9"
+                  "text-muted-foreground/70 hover:text-muted-foreground shrink-0 transition-all rounded-full active:scale-90", 
+                  logic.isMobile ? "w-10 h-10" : "w-10 h-10"
                 )}
                 aria-label="Mais opções de mensagem">
-                <Plus className="w-5 h-5" />
+                <Plus className="w-6 h-6" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in zoom-in-95 duration-200" align="start" side="top">{tertiaryTools}</PopoverContent>
