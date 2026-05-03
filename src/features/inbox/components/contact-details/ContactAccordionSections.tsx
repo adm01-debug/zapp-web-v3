@@ -12,6 +12,7 @@ import { ContactInfoSection } from './ContactInfoSection';
 import { AssignmentSection } from './AssignmentSection';
 import { ContactStatsSection } from './ContactStatsSection';
 import { SLAAndAITagsSection } from './SLAAndAITagsSection';
+import { SLADeliveryConfigSection } from './SLADeliveryConfigSection';
 import { ExternalContact360Panel } from './ExternalContact360Panel';
 import { ContactIntelligencePanel } from './ContactIntelligencePanel';
 import { WhatsAppStatusSection } from './WhatsAppStatusSection';
@@ -84,6 +85,10 @@ export function ContactAccordionSections({ contact, conversation, enrichedData, 
           <SLAAndAITagsSection slaInfo={slaInfo} aiTags={aiTags} />
         </Section>
       )}
+
+      <Section index={1.2} value="sla-config" icon={<Clock className="w-3.5 h-3.5 text-primary" />} label="Configurações de SLA">
+        <SLADeliveryConfigSection contactId={contact.id} />
+      </Section>
 
       {isExternalConfigured && (
         <>

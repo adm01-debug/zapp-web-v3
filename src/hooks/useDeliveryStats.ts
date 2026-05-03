@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
-import { startOfHour, format, parseISO } from 'date-fns';
+import { startOfHour, format, parseISO, addHours, subHours } from 'date-fns';
 
 export interface ParticipantStats {
   participantJid: string;
@@ -12,6 +12,7 @@ export interface ParticipantStats {
   lastSentAt: string | null;
   lastDeliveredAt: string | null;
   lastReadAt: string | null;
+  timeline: DeliveryTimelinePoint[];
 }
 
 export interface DeliveryTimelinePoint {
@@ -79,12 +80,55 @@ function extractParticipant(msg: Record<string, unknown>): { jid: string; name: 
   return { jid: remoteJid, name: pushName || remoteJid.split('@')[0] };
 }
 
+// SIMULATION DATA GENERATOR
+function generateMockData(remoteJid: string): DeliveryStatsResult {
+  const isGroup = isGroupJid(remoteJid);
+  const now = new Date();
+  const timeline: DeliveryTimelinePoint[] = [];
+  
+  for (let i = 24; i >= 0; i--) {
+    const time = format(subHours(now, i), 'yyyy-MM-dd HH:00');
+    timeline.push({
+      time,
+      sent: Math.floor(Math.random() * 50) + 10,
+      delivered: Math.floor(Math.random() * 40) + 5,
+      read: Math.floor(Math.random() * 30),
+    });
+  }
+
+  const participants: ParticipantStats[] = isGroup ? [
+    { participantJid: 'p1@s.whatsapp.net', displayName: 'Mock Member 1', sent: 150, delivered: 140, read: 120, lastSentAt: now.toISOString(), lastDeliveredAt: now.toISOString(), lastReadAt: now.toISOString(), timeline: timeline.map(t => ({ ...t, read: Math.floor(t.read * 0.4) })) },
+    { participantJid: 'p2@s.whatsapp.net', displayName: 'Mock Member 2', sent: 200, delivered: 190, read: 180, lastSentAt: now.toISOString(), lastDeliveredAt: now.toISOString(), lastReadAt: now.toISOString(), timeline: timeline.map(t => ({ ...t, read: Math.floor(t.read * 0.6) })) }
+  ] : [];
+
+  return {
+    isGroup,
+    totalMessages: 500,
+    totals: {
+      sent: timeline.reduce((acc, t) => acc + t.sent, 0),
+      delivered: timeline.reduce((acc, t) => acc + t.delivered, 0),
+      read: timeline.reduce((acc, t) => acc + t.read, 0),
+      lastSentAt: now.toISOString(),
+      lastDeliveredAt: now.toISOString(),
+      lastReadAt: now.toISOString(),
+    },
+    participants,
+    timeline
+  };
+}
+
 export function useDeliveryStats(remoteJid: string | undefined, instance = 'wpp2') {
   return useQuery<DeliveryStatsResult>({
     queryKey: ['delivery-stats', remoteJid, instance],
     enabled: !!remoteJid,
     staleTime: 30_000,
     queryFn: async () => {
+      // Check for simulation mode via localStorage
+      const isSimulating = localStorage.getItem('zappweb:sla-simulation') === 'true';
+      if (isSimulating && remoteJid) {
+        return generateMockData(remoteJid);
+      }
+
       const { data, error } = await dbList(RPC.listMessages, {
         p_remote_jid: remoteJid!,
         p_instance: instance,
@@ -136,17 +180,38 @@ export function useDeliveryStats(remoteJid: string | undefined, instance = 'wpp2
             displayName: name,
             sent: 0, delivered: 0, read: 0,
             lastSentAt: null, lastDeliveredAt: null, lastReadAt: null,
+            timeline: [], // Initial state for participant timeline
           });
         }
         const p = byParticipant.get(jid)!;
         if (name && name.length > p.displayName.length) p.displayName = name;
+
+        // Participant timeline aggregation
+        if (tsString) {
+          const date = parseISO(tsString);
+          const hourKey = format(startOfHour(date), 'yyyy-MM-dd HH:00');
+          let pPoint = p.timeline.find(pt => pt.time === hourKey);
+          if (!pPoint) {
+            pPoint = { time: hourKey, sent: 0, delivered: 0, read: 0 };
+            p.timeline.push(pPoint);
+          }
+          if (rank >= 1) pPoint.sent++;
+          if (rank >= 2) pPoint.delivered++;
+          if (rank >= 3) pPoint.read++;
+        }
 
         if (rank >= 1) { p.sent++; totals.sent++; p.lastSentAt = maxDate(p.lastSentAt, tsString); totals.lastSentAt = maxDate(totals.lastSentAt, tsString); }
         if (rank >= 2) { p.delivered++; totals.delivered++; p.lastDeliveredAt = maxDate(p.lastDeliveredAt, tsString); totals.lastDeliveredAt = maxDate(totals.lastDeliveredAt, tsString); }
         if (rank >= 3) { p.read++; totals.read++; p.lastReadAt = maxDate(p.lastReadAt, tsString); totals.lastReadAt = maxDate(totals.lastReadAt, tsString); }
       }
 
-      const participants = Array.from(byParticipant.values()).sort((a, b) => b.sent - a.sent);
+      const participants = Array.from(byParticipant.values())
+        .map(p => ({
+          ...p,
+          timeline: p.timeline.sort((a, b) => a.time.localeCompare(b.time))
+        }))
+        .sort((a, b) => b.sent - a.sent);
+        
       const timeline = Array.from(timelineMap.values()).sort((a, b) => a.time.localeCompare(b.time));
 
       return { isGroup, totals, participants, timeline, totalMessages: messages.length };

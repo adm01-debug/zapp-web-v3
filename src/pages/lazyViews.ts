@@ -78,6 +78,7 @@ export const AdminGmailStatusPage = lazyWithRetry(() => import('@/pages/admin/Ad
 export const AdminGmailAuditPage = lazyWithRetry(() => import('@/pages/admin/AdminGmailAuditPage'));
 
 export const InboxPage = lazyWithRetry(() => import('@/pages/inbox/InboxPage'));
+export const SLAHistory = lazyWithRetry(() => import('@/pages/SLAHistory'));
 export const AchievementsSystemLazy = lazyWithRetry(async () => {
   const m = await import('@/components/gamification/AchievementsSystem');
   return { default: m.AchievementsSystem };

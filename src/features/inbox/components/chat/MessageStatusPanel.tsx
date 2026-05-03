@@ -23,11 +23,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CheckCheck, Check, Clock, AlertCircle, Eye, TrendingUp } from 'lucide-react';
+import { CheckCheck, Check, Clock, AlertCircle, Eye, TrendingUp, Users } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useDeliveryStats } from '@/hooks/useDeliveryStats';
+import { useDeliveryStats, DeliveryTimelinePoint } from '@/hooks/useDeliveryStats';
 import {
   LineChart,
   Line,
@@ -221,6 +221,42 @@ export const MessageStatusPanel = memo(function MessageStatusPanel({
             <TimelineRow key={r.label} {...r} />
           ))}
         </ol>
+
+        {stats?.isGroup && stats.participants.length > 0 && (
+          <div className="mt-4 border-t border-border/40 pt-3">
+            <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <Users className="h-3 w-3" />
+              Status por participante
+            </h4>
+            <div className="space-y-3 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+              {stats.participants.map((p) => (
+                <div key={p.participantJid} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-medium truncate max-w-[120px]" title={p.displayName}>
+                      {p.displayName}
+                    </span>
+                    <div className="flex gap-2 text-[10px] text-muted-foreground">
+                      <span title="Enviadas">↑{p.sent}</span>
+                      <span title="Entregues">✓{p.delivered}</span>
+                      <span title="Lidas" className="text-info">✓✓{p.read}</span>
+                    </div>
+                  </div>
+                  {p.timeline.length > 1 && (
+                    <div className="h-10 w-full opacity-60 hover:opacity-100 transition-opacity">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={p.timeline}>
+                          <Line type="monotone" dataKey="read" stroke="hsl(var(--info))" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                          <XAxis dataKey="time" hide />
+                          <YAxis hide />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {isFailed && (message.error_code || message.error_reason) && (
           <div

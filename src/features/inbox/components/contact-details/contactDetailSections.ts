@@ -13,6 +13,7 @@ export const CONTACT_DETAIL_SECTIONS: AccordionSectionConfig[] = [
   { value: 'info', label: 'Informações', icon: Info, customIndex: 0 },
   { value: 'whatsapp-status', label: 'Status WhatsApp', icon: Smartphone, customIndex: 1 },
   { value: 'sla-ai', label: 'SLA & Inteligência', icon: Brain, customIndex: 1 },
+  { value: 'sla-config', label: 'Configurações de SLA', icon: Clock, customIndex: 1.2 },
   { value: 'crm-360', label: 'CRM 360°', icon: Sparkles, customIndex: 2 },
   { value: 'intelligence', label: 'Inteligência Comercial', icon: Brain, customIndex: 2.5 },
   { value: 'tags', label: 'Tags', icon: Tag, customIndex: 3 },
