@@ -89,31 +89,36 @@ export function useOptimisticMessages() {
           .map((m) => m.content),
       );
 
-      let changed = false;
+      let stillPendingCount = 0;
       const stillPending = pending.filter((opt) => {
+        // If it was already confirmed in a previous merge run, skip
+        if (opt.isConfirmed) return false;
+
+        // Match by external_id
         if (opt.external_id && realExternalIds.has(opt.external_id)) {
-          pendingRef.current.delete(opt.id);
-          changed = true;
+          opt.isConfirmed = true;
           return false;
         }
 
+        // Match by content (fallback)
         if (realContentSet.has(opt.content)) {
-          pendingRef.current.delete(opt.id);
-          changed = true;
+          opt.isConfirmed = true;
           return false;
         }
 
+        // Remove very old optimistic messages (>60s)
         const age = Date.now() - opt.timestamp.getTime();
         if (age > 60000) {
-          pendingRef.current.delete(opt.id);
-          changed = true;
           return false;
         }
 
+        stillPendingCount++;
         return true;
       });
 
-      if (changed) setPendingCount(pendingRef.current.size);
+      if (stillPendingCount !== pendingCount) {
+        setPendingCount(stillPendingCount);
+      }
       if (stillPending.length === 0) return realMessages;
 
       return [...realMessages, ...stillPending].sort(
