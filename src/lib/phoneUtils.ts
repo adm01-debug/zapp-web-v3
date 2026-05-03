@@ -53,9 +53,10 @@ export function normalizePhone(raw: unknown): string | null {
   if (raw === null || raw === undefined) return null;
   const input = typeof raw === 'string' ? raw : String(raw);
 
-  if (/^\+?(?!55)\d{11,}$/.test(input.replace(/[\s()-]/g, ''))) {
-    return input.replace(/\D/g, '');
-  }
+  // If it starts with a plus but not +55, or it's longer than 11 digits without 55, it's international
+  const digitsOnly = input.replace(/\D/g, '');
+  if (input.startsWith('+') && !input.startsWith('+55')) return digitsOnly;
+  if (digitsOnly.length > 11 && !digitsOnly.startsWith('55')) return digitsOnly;
 
   let digits = input.replace(/\D/g, '');
   if (!digits) return null;
@@ -157,7 +158,8 @@ export function formatPhoneForDisplay(phone: unknown): string {
   if (!phone) return '';
   const raw = String(phone);
   const digitsOnly = raw.replace(/\D/g, '');
-  if (/^\+?(?!55)\d{11,}$/.test(raw.replace(/[\s()-]/g, ''))) return raw;
+  const isInternational = raw.startsWith('+') ? !raw.startsWith('+55') : (digitsOnly.length > 11 && !digitsOnly.startsWith('55'));
+  if (isInternational) return raw;
 
   const normalized = normalizePhone(phone) ?? digitsOnly;
   if (!normalized || normalized.length < 10) return raw;
