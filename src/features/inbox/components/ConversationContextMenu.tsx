@@ -82,8 +82,9 @@ export function ConversationContextMenu({
   onSnooze,
   onDelete,
   onSetPriority,
-  onOpenSummary,
-}: ConversationContextMenuProps) {
+    onOpenSummary,
+    onOpenSLASettings,
+  }: ConversationContextMenuProps) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
