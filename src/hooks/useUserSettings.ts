@@ -193,6 +193,9 @@ export function useUserSettings() {
         compact_mode: settings.compact_mode,
         tts_voice_id: settings.tts_voice_id,
         tts_speed: settings.tts_speed,
+        global_sla_warning_minutes: settings.global_sla_warning_minutes,
+        global_sla_critical_minutes: settings.global_sla_critical_minutes,
+        global_sla_notification_message: settings.global_sla_notification_message,
       };
 
       const { error } = await supabase
