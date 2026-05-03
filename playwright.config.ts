@@ -16,7 +16,7 @@ export default defineConfig({
     : [['html', { open: 'never' }], ['list']],
   use: {
     baseURL: BASE_URL,
-    trace: 'retain-on-failure',
+    trace: 'on',
     screenshot: 'on',
     video: 'on',
     outputDir: 'test-results/',
