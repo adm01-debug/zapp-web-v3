@@ -138,7 +138,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             ? 'bg-[#2a3942] dark:bg-[#2a3942]' 
             : 'hover:bg-[#202c33] dark:hover:bg-[#202c33] bg-[#111b21] dark:bg-[#111b21]'
         )}>
-        {isSelected && <motion.div layoutId="conversationActive" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.4)]" />}
+        {/* {isSelected && <motion.div layoutId="conversationActive" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.4)]" />} */}
         <div className="flex items-start gap-3.5 relative z-10">
           <div className="relative flex-shrink-0">
             <ChannelBadge type={conversation.contact.contact_type} />
