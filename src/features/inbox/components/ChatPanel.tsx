@@ -227,6 +227,14 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
       const WARNING_THRESHOLD = (customRule?.warning_threshold_minutes || 30) * 60 * 1000;
       const BREACH_THRESHOLD = (customRule?.breach_threshold_minutes || 60) * 60 * 1000;
       const customMsg = customRule?.custom_message;
+      
+      // Simulation mode: force alert if enabled
+      const isSimulating = localStorage.getItem('zappweb:sla-simulation') === 'true';
+      if (isSimulating) {
+        window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
+          detail: { contactId: conversation.contact.id, status: 'warning', delay: 35 * 60 * 1000, message: 'SIMULAÇÃO: Esta é uma mensagem de teste.' } 
+        }));
+      }
       // Pega a última mensagem outbound que está entregue mas não lida
       const lastOutbound = [...messages].reverse().find(m => 
         m.sender === 'agent' && 

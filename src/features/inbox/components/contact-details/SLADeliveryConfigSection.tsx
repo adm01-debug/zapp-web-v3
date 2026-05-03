@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Clock, MessageSquare, Save, Loader2 } from 'lucide-react';
+import { Clock, MessageSquare, Save, Loader2, Beaker } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SLADeliveryConfigSectionProps {
@@ -129,6 +129,24 @@ export function SLADeliveryConfigSection({ contactId }: SLADeliveryConfigSection
         {upsertMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Save className="w-3 h-3 mr-2" />}
         Salvar Configuração
       </Button>
+
+      <div className="pt-2 border-t border-border/40">
+        <Button 
+          variant="outline" 
+          className="w-full h-8 text-[10px] border-dashed text-primary hover:bg-primary/5" 
+          size="sm"
+          onClick={() => {
+            const current = localStorage.getItem('zappweb:sla-simulation') === 'true';
+            localStorage.setItem('zappweb:sla-simulation', String(!current));
+            toast.info(`Modo Simulação ${!current ? 'ATIVADO' : 'DESATIVADO'}`);
+            queryClient.invalidateQueries({ queryKey: ['delivery-stats'] });
+          }}
+        >
+          <Beaker className="w-3 h-3 mr-2" />
+          {localStorage.getItem('zappweb:sla-simulation') === 'true' ? 'Desativar Simulação' : 'Testar com Dados Mock'}
+        </Button>
+        <p className="text-[9px] text-muted-foreground mt-1 text-center italic">Use para testar gráficos e alertas sem dados reais.</p>
+      </div>
     </Card>
   );
 }
