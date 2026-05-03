@@ -225,12 +225,12 @@ export function useStickerPicker(onSendSticker: (url: string) => void) {
     setOpen(false);
 
     // FALHA 7 FIX: Error handling on use_count update
-    const { error } = await supabase
+    const { error: countError } = await supabase
       .from('stickers')
       .update({ use_count: (sticker.use_count || 0) + 1 })
       .eq('id', sticker.id);
-    if (error) {
-      log.error('[handleSend] use_count update failed:', error.message);
+    if (countError) {
+      log.error('[handleSend] use_count update failed:', countError.message);
     }
   }, [onSendSticker]);
 

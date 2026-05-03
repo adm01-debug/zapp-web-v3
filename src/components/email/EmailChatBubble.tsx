@@ -106,7 +106,7 @@ export function EmailChatBubble({
     const wasRead = isRead;
     setIsRead(!wasRead);
     try {
-      await gmailMarkRead({ accountId, messageIds: [message.message_id], read: !wasRead } as any);
+      await gmailMarkRead({ accountId, messageIds: [message.message_id], read: !wasRead });
     } catch (err) {
       setIsRead(wasRead);
     }

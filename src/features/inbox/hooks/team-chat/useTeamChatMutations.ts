@@ -97,7 +97,8 @@ export function useToggleMuteConversation() {
   return useMutation({
     mutationFn: async ({ conversationId, muted }: { conversationId: string; muted: boolean }) => {
       if (!profile) throw new Error('Not authenticated');
-      const { error } = await supabase.from('team_conversation_members').update({ is_muted: muted }).eq('conversation_id', conversationId).eq('profile_id', profile.id);
+      const { error: muteError } = await supabase.from('team_conversation_members').update({ is_muted: muted }).eq('conversation_id', conversationId).eq('profile_id', profile.id);
+      if (muteError) throw muteError;
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['team-conversations'] }); },

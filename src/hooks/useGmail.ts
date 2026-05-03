@@ -273,6 +273,7 @@ export function useGmail() {
     const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_mark_thread_read', {
       p_thread_id: threadId,
       p_read:      read,
+      p_message_ids: null // Adicionado para bater com assinatura
     });
 
     if (!rpcErr) {
