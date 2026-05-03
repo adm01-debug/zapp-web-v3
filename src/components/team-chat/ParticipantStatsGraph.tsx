@@ -36,17 +36,14 @@ export function ParticipantStatsGraph({ conversationId }: ParticipantStatsGraphP
       }
 
       // Real data query
-      const { data: receipts, error } = await supabase
         .from('team_message_receipts')
         .select(`
           status,
           profile_id,
-          profiles(display_name)
+          profiles(name)
         `)
-        .eq('message_id', conversationId); // Wait, this should probably be per conversation, not per message
+        .eq('message_id', conversationId);
       
-      // Actually, we need to aggregate across all messages in the conversation
-      // Let's adjust the query to fetch all messages in the conversation and their receipts
       const { data: messages, error: msgError } = await supabase
         .from('team_messages')
         .select('id, sender_id')
@@ -61,16 +58,14 @@ export function ParticipantStatsGraph({ conversationId }: ParticipantStatsGraphP
         .select(`
           status,
           profile_id,
-          profiles(display_name)
+          profiles(name)
         `)
         .in('message_id', messageIds);
 
       if (recError) throw recError;
 
-      // Aggregate
       const statsMap: Record<string, any> = {};
       
-      // Count sent by each member
       messages.forEach(m => {
         const senderId = m.sender_id;
         if (!statsMap[senderId]) {
@@ -79,16 +74,15 @@ export function ParticipantStatsGraph({ conversationId }: ParticipantStatsGraphP
         statsMap[senderId].sent++;
       });
 
-      // Count delivered/read for each recipient
-      allReceipts.forEach(r => {
+      allReceipts.forEach((r: any) => {
         const pid = r.profile_id;
         if (!statsMap[pid]) {
-          statsMap[pid] = { name: r.profiles?.display_name || 'Unknown', sent: 0, delivered: 0, read: 0 };
+          statsMap[pid] = { name: r.profiles?.name || 'Unknown', sent: 0, delivered: 0, read: 0 };
         }
-        statsMap[pid].name = r.profiles?.display_name || 'Unknown';
+        statsMap[pid].name = r.profiles?.name || 'Unknown';
         if (r.status === 'delivered') statsMap[pid].delivered++;
         if (r.status === 'read') {
-          statsMap[pid].delivered++; // If read, it was delivered
+          statsMap[pid].delivered++;
           statsMap[pid].read++;
         }
       });
