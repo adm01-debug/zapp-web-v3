@@ -364,7 +364,7 @@ jobs:
           path: |
             playwright-report/
             test-results/
-          retention-days: 7
+          retention-days: 14
 
   e2e-teams-summary:
     name: 📈 Teams Test Summary
@@ -372,20 +372,27 @@ jobs:
     needs: e2e-teams-matrix
     if: always()
     steps:
-      - name: 📝 Aggregate Reports
-        run: |
-          echo "### 📈 Teams E2E Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Role | Status | Artifact Link |" >> $GITHUB_STEP_SUMMARY
-          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-          
-          # This is a bit of a manual hack as GH Actions doesn't easily provide artifact URLs via env
-          # But we can provide the artifact name for the user to find.
-          ROLES="rh_agent finance_agent ti_admin transfer_agent"
-          for ROLE in $ROLES; do
-            echo "| $ROLE | Pending Review | [playwright-report-teams-$ROLE] |" >> $GITHUB_STEP_SUMMARY
-          done
-          
-          echo "⚠️ Check 'Actions' artifacts for full traces and screenshots." >> $GITHUB_STEP_SUMMARY
+      - name: 📝 Generate Final Summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run_id = context.runId;
+            const repo = context.repo.owner + '/' + context.repo.repo;
+            const artifacts_url = `https://github.com/${repo}/actions/runs/${run_id}#artifacts`;
+            
+            let summary = `### 📈 Teams E2E Test Final Summary\n\n`;
+            summary += `| Role | Artifact Section |\n`;
+            summary += `| :--- | :--- |\n`;
+            
+            const roles = ["rh_agent", "finance_agent", "ti_admin", "transfer_agent"];
+            for (const role of roles) {
+              summary += `| **${role.toUpperCase()}** | [View All Artifacts & Traces](${artifacts_url}) |\n`;
+            }
+            
+            summary += `\n\n⚠️ **Note:** Trace and Video are **ALWAYS** captured for Teams tests to speed up debugging. download the specific artifact named \`playwright-report-teams-<role>\` to view.`;
+            
+            core.summary.addRaw(summary).write();
+
 
 
 
