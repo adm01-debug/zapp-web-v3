@@ -56,7 +56,9 @@ interface Props { conversation: TeamConversation; onBack: () => void; onToggleDe
 
 export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetails }: Props) {
   const s = useTeamChatPanel(conversation);
-  const { profile: liveProfile } = useAuth(); // Use useAuth for real-time profile updates
+  const { profile: liveProfile } = useAuth();
+  const { aggregate, toggle: toggleReaction } = useTeamMessageReactions(conversation.id);
+
   
   const isDeptMember = useMemo(() => {
     if (conversation.type !== 'department') return true;
