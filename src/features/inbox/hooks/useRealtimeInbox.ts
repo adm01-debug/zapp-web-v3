@@ -233,7 +233,7 @@ export function useRealtimeInbox() {
     await Promise.all([refetch(), refetchSelectedMessages()]);
   }, [refetch, refetchSelectedMessages]);
 
-  const handleSendMessage = useCallback(async (content: string, attachments?: File[]) => {
+  const handleSendMessage = useCallback(async (content: string, attachments?: File[], onProgress?: (p: number) => void) => {
     if (!selectedContactId) return;
     if (USE_EXTERNAL_DB) {
       // External path: envio via evolution-api + bolha otimista no cursor.
@@ -242,15 +242,26 @@ export function useRealtimeInbox() {
       
       try {
         if (attachments && attachments.length > 0) {
-          for (const file of attachments) {
+          for (let i = 0; i < attachments.length; i++) {
+            const file = attachments[i];
             const { optimistic } = await sendExternalMedia(selectedContactId, file, { 
               contactAvatar: currentAvatar,
-              caption: file === attachments[0] ? content : undefined // Use text as caption for the first file
+              caption: file === attachments[0] ? content : undefined,
+              onProgress: (p) => {
+                if (onProgress) {
+                  // Total progress across all files
+                  const total = ((i / attachments.length) * 100) + (p / attachments.length);
+                  onProgress(total);
+                }
+              }
             });
             try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
           }
         } else {
-          const { optimistic } = await sendExternalText(selectedContactId, content, { contactAvatar: currentAvatar });
+          const { optimistic } = await sendExternalText(selectedContactId, content, { 
+            contactAvatar: currentAvatar,
+            onProgress: (p) => { if (onProgress) onProgress(p); }
+          });
           try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
         }
       } catch (err) {
