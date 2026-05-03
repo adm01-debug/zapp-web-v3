@@ -2,7 +2,7 @@
 import { supabase as _supabase } from './client';
 import { PostgrestError } from '@supabase/supabase-js';
 
-const supabase = _supabase as any;
+const supabase = _supabase;
 
 /**
  * Interface para retorno padronizado do safeClient
@@ -54,7 +54,7 @@ export const safeClient = {
         }
       }
 
-      const { data, error } = await queryBuilder(supabase.from(table) as any);
+      const { data, error } = await queryBuilder(supabase.from(table as any));
       if (error) {
         this.log(requestId, 'error', `Erro na query from ${table}`, error);
         this.recordFailure(requestId, 'from', table, error.message || 'Erro desconhecido');
@@ -90,7 +90,7 @@ export const safeClient = {
         }
       }
 
-      const { data, error } = await queryBuilder(supabase.from(table) as any).single();
+      const { data, error } = await queryBuilder(supabase.from(table as any)).single();
       if (error) {
         this.log(requestId, 'error', `Erro single query ${table}`, error);
         this.recordFailure(requestId, 'single', table, error.message || 'Erro desconhecido');
@@ -126,7 +126,7 @@ export const safeClient = {
         }
       }
 
-      const { data, error } = await (supabase as any).rpc(name, params);
+      const { data, error } = await supabase.rpc(name as any, params);
       if (error) {
         this.log(requestId, 'error', `Erro ao executar RPC ${name}`, error);
         this.recordFailure(requestId, 'rpc', name, error.message || 'Erro desconhecido');
@@ -162,10 +162,10 @@ export const safeClient = {
     try {
       let exists = false;
       if (type === 'table') {
-        const { error } = await (supabase.from(name) as any).select('count', { count: 'exact', head: true }).limit(0);
+        const { error } = await (supabase.from(name as any) as any).select('count', { count: 'exact', head: true }).limit(0);
         exists = !error || !error.message || !error.message.toLowerCase().includes('does not exist');
       } else {
-        const { error } = await (supabase as any).rpc(name).limit(0);
+        const { error } = await supabase.rpc(name as any).limit(0);
         if (!error) {
           exists = true;
         } else {
@@ -196,7 +196,7 @@ export const safeClient = {
 
     try {
       // Usar a flag SECURITY DEFINER via RPC para atualizar o estado sem depender de RLS complexo no insert direto
-      await (supabase as any).rpc('rpc_update_gmail_health_state', {
+      await supabase.rpc('rpc_update_gmail_health_state' as any, {
         p_status: status,
         p_failure_count: telemetry.recentFailures.length,
         p_metadata: {
@@ -301,7 +301,7 @@ export const safeClient = {
 
     // Persistir falha no banco para monitoramento assíncrono
     try {
-      await supabase.rpc('rpc_log_gmail_health', {
+      await supabase.rpc('rpc_log_gmail_health' as any, {
         p_status: 'error',
         p_operation: operation,
         p_resource: resource,
