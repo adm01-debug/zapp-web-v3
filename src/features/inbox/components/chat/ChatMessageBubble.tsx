@@ -326,7 +326,7 @@ export function ChatMessageBubble({
             <span className="text-[10px]">
               {formatMessageTime(message.timestamp)}
             </span>
-            {isSent && <MessageStatusIcon status={message.status} />}
+            {isSent && <MessageStatusIconWithTooltip status={message.status} />}
           </div>
         </motion.div>
 
