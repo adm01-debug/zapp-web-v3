@@ -133,10 +133,10 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
     <QuickPeek preview={quickPeekPreview} enabled={!isSelected} delay={500}>
       <motion.div ref={rootRef} onClick={() => onSelect(conversation)} whileHover={{ x: 3 }} whileTap={{ scale: 0.99 }} transition={{ duration: 0.2, ease: "easeOut" }}
         className={cn(
-          'relative p-4 rounded-2xl cursor-pointer transition-all duration-300 group h-full mx-2 my-0.5', 
+          'relative p-3 rounded-none cursor-pointer transition-all duration-300 group h-full mx-0 border-b border-border/50', 
           isSelected 
-            ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10' 
-            : 'hover:bg-background/60 hover:shadow-sm border border-transparent hover:border-border/5'
+            ? 'bg-[#2a3942] dark:bg-[#2a3942]' 
+            : 'hover:bg-[#202c33] dark:hover:bg-[#202c33] bg-[#111b21] dark:bg-[#111b21]'
         )}>
         {isSelected && <motion.div layoutId="conversationActive" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.4)]" />}
         <div className="flex items-start gap-3.5 relative z-10">
