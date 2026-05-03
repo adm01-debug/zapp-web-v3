@@ -13,7 +13,18 @@ export async function login(page: Page, email = 'test@zappweb.com', password = '
   await page.fill('[data-testid=email-input]', email);
   await page.fill('[data-testid=password-input]', password);
   await page.click('[data-testid=login-button]');
-  await page.waitForURL(/\/(inbox|dashboard)/);
+  // Wait for session or specific redirect
+  await page.waitForSelector('.inbox-container, .dashboard-container, [data-testid=chat-panel]', { timeout: 15000 });
+}
+
+/** Login with a specific role (simulated by email) */
+export async function loginAs(page: Page, role: 'admin' | 'agent' | 'viewer') {
+  const credentials = {
+    admin: { email: 'admin@zappweb.com', pass: 'admin123' },
+    agent: { email: 'agent@zappweb.com', pass: 'agent123' },
+    viewer: { email: 'viewer@zappweb.com', pass: 'viewer123' },
+  };
+  await login(page, credentials[role].email, credentials[role].pass);
 }
 
 /** Navigate to a specific inbox conversation */
