@@ -103,7 +103,7 @@ export function useContactDuplicateDetector({
 
         // Check by email
         if (normalizedEmail && normalizedEmail.includes('@')) {
-          const { data: emailMatches , error: emailMatchesErr } = await supabase
+          const { data: emailMatches , error: emailMatchesErr } = await (supabase as any)
             .from('contacts')
             .select('id, name, phone, email, avatar_url')
             .eq('workspace_id', workspaceId)
