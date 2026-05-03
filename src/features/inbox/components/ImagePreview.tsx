@@ -161,7 +161,7 @@ export function MessageImage({ src, alt = 'Image', refreshKey }: MessageImagePro
           onError={refresh.onError}
           initial={{ opacity: 0 }}
           animate={{ opacity: isLoaded ? 1 : 0 }}
-          className="max-w-[280px] max-h-[200px] object-cover rounded-lg"
+          className="max-w-full w-auto max-h-[400px] object-cover rounded-md"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
           <span className="text-primary-foreground text-xs font-medium">Clique para expandir</span>
