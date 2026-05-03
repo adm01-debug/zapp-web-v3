@@ -20,9 +20,9 @@ interface SLAIndicatorProps {
 }
 
 const statusStyles: Record<SLAStatus, { bg: string; text: string; border: string; icon: React.ElementType; ring: string }> = {
-  ok: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/30', icon: CheckCircle, ring: 'stroke-success' },
-  warning: { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/30', icon: Clock, ring: 'stroke-warning' },
-  breached: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/30', icon: AlertTriangle, ring: 'stroke-destructive' },
+  ok: { bg: 'bg-emerald-500/5', text: 'text-emerald-500', border: 'border-emerald-500/10', icon: CheckCircle, ring: 'stroke-emerald-500' },
+  warning: { bg: 'bg-amber-500/5', text: 'text-amber-500', border: 'border-amber-500/10', icon: Clock, ring: 'stroke-amber-500' },
+  breached: { bg: 'bg-rose-500/5', text: 'text-rose-500', border: 'border-rose-500/10', icon: AlertTriangle, ring: 'stroke-rose-500' },
 };
 
 function SLAProgressRing({ status, percent, size = 28 }: { status: SLAStatus; percent: number; size?: number }) {
@@ -86,12 +86,12 @@ export function SLAIndicator({
             <motion.div
               role="status"
               aria-label={`SLA ${sla.worstStatus === 'breached' ? 'violado' : sla.worstStatus === 'warning' ? 'em alerta' : 'dentro do prazo'}`}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
               className={cn(
-                'flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium border',
+                'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-tight border shadow-sm transition-all duration-300',
                 style.bg, style.text, style.border,
-                sla.worstStatus === 'breached' && 'animate-pulse',
+                sla.worstStatus === 'breached' && 'animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.2)]',
                 className
               )}
             >

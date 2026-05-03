@@ -36,10 +36,10 @@ const statusConfig: Record<MessageStatusValue, { icon: typeof Check; label: stri
   pending: { icon: Clock, label: 'Enviando…', color: 'text-muted-foreground' },
   sending: { icon: Clock, label: 'Enviando…', color: 'text-muted-foreground' },
   retrying: { icon: RefreshCw, label: 'Tentando reenviar…', color: 'text-warning', iconClass: 'animate-spin' },
-  sent: { icon: Check, label: 'Enviada', color: 'text-muted-foreground' },
-  delivered: { icon: CheckCheck, label: 'Entregue', color: 'text-muted-foreground' },
-  read: { icon: CheckCheck, label: 'Visualizada', color: 'text-info' },
-  played: { icon: CheckCheck, label: 'Reproduzida', color: 'text-info' },
+  sent: { icon: Check, label: 'Enviada', color: 'text-muted-foreground/30' },
+  delivered: { icon: CheckCheck, label: 'Entregue', color: 'text-muted-foreground/40' },
+  read: { icon: CheckCheck, label: 'Visualizada', color: 'text-primary/70' },
+  played: { icon: CheckCheck, label: 'Reproduzida', color: 'text-primary/70' },
   failed: { icon: AlertCircle, label: 'Falha no envio', color: 'text-destructive' },
   failed_auth: { icon: ShieldAlert, label: 'Falha de autenticação', color: 'text-destructive' },
   failed_retries: { icon: AlertCircle, label: 'Falhou após várias tentativas', color: 'text-destructive' },
@@ -101,8 +101,8 @@ export const MessageStatus: React.FC<MessageStatusProps> = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={cn('inline-flex items-center gap-1', className)}>
-            <Icon className={cn('h-3.5 w-3.5', config.color, config.iconClass)} />
+          <span className={cn('inline-flex items-center gap-1 transition-opacity duration-300', className)}>
+            <Icon className={cn('h-3 w-3', config.color, config.iconClass)} />
             {showLabel && (
               <span className={cn('text-xs', config.color)}>{label}</span>
             )}
