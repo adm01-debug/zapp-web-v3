@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
+import { useState } from 'react';
 
 import {
   DropdownMenu,
@@ -62,6 +62,11 @@ export function TeamChatHeader({
   onSpeedChange,
   onToggleMute,
 }: TeamChatHeaderProps) {
+  const [showTransfer, setShowTransfer] = useState(false);
+  const { profile } = useAuth();
+  
+  const canTransfer = profile?.role === 'admin' || profile?.department === 'Suporte';
+
   return (
     <div className="flex items-center justify-between px-3 md:px-5 h-[56px] md:h-[65px] pr-24 border-b border-border bg-card shrink-0" role="banner" aria-label="Cabeçalho da conversa">
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
@@ -128,9 +133,6 @@ export function TeamChatHeader({
           </Tooltip>
         )}
 
-        
-        
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -139,6 +141,7 @@ export function TeamChatHeader({
               className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted"
               aria-label="Mais ações"
               title="Mais ações"
+              data-testid="conversation-more-actions"
             >
               <MoreVertical className="w-[18px] h-[18px]" />
             </Button>
@@ -159,6 +162,14 @@ export function TeamChatHeader({
                 )}
               </DropdownMenuItem>
             )}
+            
+            {canTransfer && conversation.type === 'department' && (
+              <DropdownMenuItem onClick={() => setShowTransfer(true)} data-testid="transfer-conversation-btn">
+                <ArrowRightLeft className="w-4 h-4 mr-2" />
+                Transferir
+              </DropdownMenuItem>
+            )}
+
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled className="opacity-50">
               <Pin className="w-4 h-4 mr-2" />
@@ -171,6 +182,12 @@ export function TeamChatHeader({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <TransferConversationDialog 
+        open={showTransfer} 
+        onOpenChange={setShowTransfer} 
+        conversation={conversation} 
+      />
     </div>
   );
 }
