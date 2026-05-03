@@ -18,10 +18,11 @@ import { StickerPicker } from '@/features/inbox/components/StickerPicker';
 import { CustomEmojiPicker } from '@/features/inbox/components/CustomEmojiPicker';
 import { RichTextToggle } from './RichTextToolbar';
 import { FileUploader } from '@/features/inbox/components/FileUploader';
-import { Send, Mic, Check, Plus, Loader2 } from 'lucide-react';
+import { Send, Mic, Check, Plus, Loader2, X, Image as ImageIcon, FileText, FileVideo, FileAudio } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { InputPreviewBars } from './InputPreviewBars';
 import { useChatInputLogic, setNativeValue } from './useChatInputLogic';
+import { formatFileSize } from '@/utils/whatsappFileTypes';
 
 interface QuickReplyItem {
   id: string;
@@ -46,10 +47,11 @@ interface ChatInputAreaProps {
   messages: Message[];
   quickReplies: QuickReplyItem[];
   isSending?: boolean;
+  sendProgress?: number;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onBlur: () => void;
-  onSend: () => void;
+  onSend: (attachments?: File[]) => void;
   onCancelReply: () => void;
   onCancelEdit?: () => void;
   onSlashCommand: (command: SlashCommand, subCommand?: string) => void;
@@ -125,7 +127,74 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         replyToMessage={replyToMessage} editingMessage={editingMessage}
         onCancelReply={onCancelReply} onCancelEdit={onCancelEdit}
       />
+      <AnimatePresence>
+        {logic.attachments.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-2 border-t border-border/50 bg-background/80 backdrop-blur-sm"
+          >
+            <div className="flex flex-wrap gap-2">
+              {logic.attachments.map((att) => (
+                <motion.div
+                  key={att.id}
+                  layout
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  className="relative group w-20 h-20 rounded-lg overflow-hidden border border-border bg-muted flex items-center justify-center"
+                >
+                  {att.preview ? (
+                    <img src={att.preview} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground p-1">
+                      {att.category === 'video' ? <FileVideo className="w-6 h-6" /> :
+                       att.category === 'audio' ? <FileAudio className="w-6 h-6" /> :
+                       att.category === 'image' ? <ImageIcon className="w-6 h-6" /> :
+                       <FileText className="w-6 h-6" />}
+                      <span className="text-[8px] truncate max-w-full text-center">{att.file.name}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => logic.removeAttachment(att.id)}
+                    className="absolute top-1 right-1 p-0.5 rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  <div className="absolute bottom-0 left-0 right-0 bg-background/60 backdrop-blur-xs py-0.5 px-1">
+                    <span className="text-[8px] block truncate font-medium">{formatFileSize(att.file.size)}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      <AnimatePresence>
+        {isSending && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-1.5 bg-primary/5 border-t border-primary/10"
+          >
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <span className="text-[10px] font-medium text-primary uppercase tracking-wider">Enviando...</span>
+              <span className="text-[10px] font-bold text-primary">{Math.round(sendProgress)}%</span>
+            </div>
+            <div className="h-1 w-full bg-primary/10 rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-primary"
+                initial={{ width: 0 }}
+                animate={{ width: `${sendProgress}%` }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className={cn(
         "px-4 py-3 border-t border-border bg-card relative transition-colors duration-300", 
         isWhisper && "bg-amber-50/30 dark:bg-amber-950/10 border-amber-200/30",
@@ -175,8 +244,10 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                 "focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
                 logic.isMobile ? "px-3 py-2.5 text-[16px] min-h-[42px] max-h-[200px]" : "px-3 py-2 min-h-[40px] max-h-[200px]",
                 isWhisper && "border-amber-500/50 focus:border-amber-500 focus:ring-amber-500/20 bg-amber-500/5",
-                logic.isOverLimit && "border-destructive/50 focus:border-destructive focus:ring-destructive/20"
+                logic.isOverLimit && "border-destructive/50 focus:border-destructive focus:ring-destructive/20",
+                isSending && "opacity-50 pointer-events-none"
               )}
+              disabled={isSending}
               aria-label={editingMessage ? "Editar mensagem" : replyToMessage ? "Responder mensagem" : "Digite sua mensagem"}
               aria-describedby={logic.charCount > 0 ? "char-counter" : undefined}
             />
@@ -192,7 +263,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button onClick={logic.handleSendWithAnimation}
-                  disabled={(!logic.hasText && !editingMessage) || logic.isOverLimit || isSending}
+                  disabled={(!logic.hasText && logic.attachments.length === 0 && !editingMessage) || logic.isOverLimit || isSending}
                   size="icon"
                   className={cn("rounded-full shrink-0 disabled:opacity-40 touch-manipulation active:scale-95 transition-all",
                     "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40",
@@ -225,6 +296,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
               fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
               contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
+              onFileSelect={logic.handleFileSelect}
               isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
             />
           )}
@@ -233,8 +305,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             <div className="flex items-center gap-0.5 shrink-0">
               <FileUploader ref={fileUploaderRef} instanceName={instanceName || ''} recipientNumber={contactPhone}
                 contactId={contactId} connectionId={undefined}
-                onFileSelect={(file, category) => toast({ title: 'Arquivo selecionado', description: `${file.name} (${category}) será enviado.` })}
+                onFileSelect={logic.handleFileSelect}
                 onFileSent={() => toast({ title: 'Arquivo enviado!', description: 'O arquivo foi enviado com sucesso.' })}
+                showDialog={false}
               />
             </div>
           )}
