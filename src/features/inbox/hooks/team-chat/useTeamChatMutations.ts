@@ -131,7 +131,7 @@ export function useToggleMuteConversation() {
   });
 }
 
-export function useTransferConversation() {
+export function useTransferTeamConversation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ conversationId, departmentId, metadata }: { conversationId: string; departmentId: string; metadata?: any }) => {
