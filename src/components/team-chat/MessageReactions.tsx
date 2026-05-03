@@ -41,7 +41,7 @@ export function MessageReactions({ messageId, reactions, isMine, onToggle }: Pro
             'flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs border transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary',
             'hover:scale-110 active:scale-95',
             r.reactedByMe
-              ? 'bg-primary/20 border-primary/50 text-primary font-bold shadow-sm'
+              ? 'bg-primary/20 border-primary/50 text-primary font-bold shadow-md ring-1 ring-primary/20'
               : 'bg-background/80 border-border/40 text-foreground hover:bg-muted'
           )}
           aria-pressed={r.reactedByMe}

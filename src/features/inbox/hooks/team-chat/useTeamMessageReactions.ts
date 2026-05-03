@@ -123,7 +123,10 @@ export function useTeamMessageReactions(conversationId: string | undefined) {
       if (profile && r.profile_id === profile.id) cur.reactedByMe = true;
       map.set(r.emoji, cur);
     }
-    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+    return Array.from(map.values()).sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.emoji.localeCompare(b.emoji);
+    });
   }
 
   return { reactions, aggregate, toggle: toggle.mutate, isToggling: toggle.isPending };
