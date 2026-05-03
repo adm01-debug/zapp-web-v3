@@ -3,10 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/features/auth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { EyeOff, Send, X } from 'lucide-react';
+import { EyeOff, Send, X, MessageSquare, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
