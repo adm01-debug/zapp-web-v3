@@ -76,10 +76,41 @@ export function useTeamMessageReactions(conversationId: string | undefined) {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onMutate: async ({ messageId, emoji }) => {
+      await queryClient.cancelQueries({ queryKey: ['team-reactions', conversationId] });
+      const previousReactions = queryClient.getQueryData<TeamReaction[]>(['team-reactions', conversationId]);
+
+      if (profile && previousReactions) {
+        const existingIdx = previousReactions.findIndex(
+          (r) => r.message_id === messageId && r.profile_id === profile.id && r.emoji === emoji
+        );
+
+        let newReactions = [...previousReactions];
+        if (existingIdx > -1) {
+          newReactions.splice(existingIdx, 1);
+        } else {
+          newReactions.push({
+            id: 'temp-' + Math.random(),
+            message_id: messageId,
+            profile_id: profile.id,
+            emoji,
+            created_at: new Date().toISOString(),
+          });
+        }
+        queryClient.setQueryData(['team-reactions', conversationId], newReactions);
+      }
+
+      return { previousReactions };
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['team-reactions', conversationId] });
     },
-    onError: () => toast({ title: 'Erro ao reagir', variant: 'destructive' }),
+    onError: (err, variables, context) => {
+      if (context?.previousReactions) {
+        queryClient.setQueryData(['team-reactions', conversationId], context.previousReactions);
+      }
+      toast({ title: 'Erro ao reagir', variant: 'destructive' });
+    },
   });
 
   function aggregate(messageId: string): AggregatedReaction[] {
