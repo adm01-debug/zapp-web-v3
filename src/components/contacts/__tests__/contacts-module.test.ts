@@ -102,8 +102,8 @@ describe('Security: CSV Injection Prevention', () => {
       { key: 'email' as const, label: 'E-mail' },
     ];
     const csv = buildCsvString(rows, cols);
-    expect(csv).not.toContain('=HYPERLINK');
-    expect(csv).toContain('\t=HYPERLINK');
+    // The utility adds a TAB (\t) before formula characters
+    expect(csv).toContain('"\t=HYPERLINK');
   });
 
   it('detects Windows-1252 encoding issues', () => {
