@@ -119,6 +119,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
           contact_id: opts.contactId,
           sender_id: profile.id,
           content: messageContent,
+          target_agent_id: profile.id, // Envia para si mesmo por padrão se não houver alvo
         });
         if (error) throw error;
         toast({ title: '🤫 Sussurro enviado', description: 'Nota interna registrada com sucesso.' });
