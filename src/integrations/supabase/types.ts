@@ -8718,7 +8718,9 @@ export type Database = {
       sla_delivery_rules: {
         Row: {
           breach_threshold_minutes: number
+          contact_id: string | null
           created_at: string | null
+          custom_message: string | null
           id: string
           is_active: boolean | null
           name: string
@@ -8727,7 +8729,9 @@ export type Database = {
         }
         Insert: {
           breach_threshold_minutes?: number
+          contact_id?: string | null
           created_at?: string | null
+          custom_message?: string | null
           id?: string
           is_active?: boolean | null
           name: string
@@ -8736,7 +8740,9 @@ export type Database = {
         }
         Update: {
           breach_threshold_minutes?: number
+          contact_id?: string | null
           created_at?: string | null
+          custom_message?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
@@ -8754,7 +8760,9 @@ export type Database = {
           is_resolved: boolean | null
           message_id: string
           metadata: Json | null
+          resolution_notes: string | null
           resolved_at: string | null
+          resolved_by: string | null
           rule_id: string | null
           severity: string | null
         }
@@ -8766,7 +8774,9 @@ export type Database = {
           is_resolved?: boolean | null
           message_id: string
           metadata?: Json | null
+          resolution_notes?: string | null
           resolved_at?: string | null
+          resolved_by?: string | null
           rule_id?: string | null
           severity?: string | null
         }
@@ -8778,7 +8788,9 @@ export type Database = {
           is_resolved?: boolean | null
           message_id?: string
           metadata?: Json | null
+          resolution_notes?: string | null
           resolved_at?: string | null
+          resolved_by?: string | null
           rule_id?: string | null
           severity?: string | null
         }
