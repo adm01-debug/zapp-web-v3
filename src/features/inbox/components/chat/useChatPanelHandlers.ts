@@ -14,7 +14,7 @@ interface UseChatPanelHandlersOptions {
   contactId: string;
   contactPhone: string;
   instanceName?: string;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string, attachments?: File[], onProgress?: (p: number) => void) => void;
   editMessageApi: (instance: string, params: { number: string; messageId: string; text: string }) => Promise<any>;
   applySignature: (text: string) => string;
   handleTypingStart: () => void;
@@ -47,6 +47,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     onSendAudio: (blob: Blob) => Promise<void>;
   } | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+  const [sendProgress, setSendProgress] = useState(0);
   const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -83,7 +84,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   const handleCancelEdit = useCallback(() => { setEditingMessage(null); setInputValue(''); }, []);
 
   // handleSend now reads from refs → deps are stable → no re-render cascade
-  const handleSend = useCallback(async () => {
+  const handleSend = useCallback(async (attachments?: File[]) => {
     const currentInput = inputValueRef.current;
     if (!currentInput.trim() || isSendingRef.current) return;
 
@@ -108,12 +109,15 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
 
     const messageContent = applySignature(currentInput.trim());
     const wasReply = replyToMessageRef.current;
-    setIsSending(true); setInputValue(''); setReplyToMessage(null); handleTypingStop();
+    setIsSending(true); setSendProgress(0); setInputValue(''); setReplyToMessage(null); handleTypingStop();
     setLastSendError(null);
     if (wasReply) log.debug('Sending reply to:', wasReply.id);
 
     try {
       if (isWhisperRef.current) {
+        if (attachments && attachments.length > 0) {
+          toast({ title: 'Aviso', description: 'Arquivos não são suportados em modo sussurro no momento.', variant: 'destructive' });
+        }
         if (!profile?.id) throw new Error('Usuário não autenticado');
         const { error } = await supabase.from('whisper_messages').insert({
           contact_id: opts.contactId,
@@ -125,7 +129,8 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
         toast({ title: '🤫 Sussurro enviado', description: 'Nota interna registrada com sucesso.' });
         setIsWhisper(false); // Reset whisper mode after sending
       } else {
-        await Promise.resolve(onSendMessage(messageContent));
+        await Promise.resolve(onSendMessage(messageContent, attachments, (p) => setSendProgress(p)));
+        setSendProgress(100);
       }
       lastFailedPayloadRef.current = null;
       undoToast({
@@ -303,7 +308,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   }, []);
 
   return {
-    inputValue, setInputValue, isSending, isRecordingAudio, setIsRecordingAudio,
+    inputValue, setInputValue, isSending, sendProgress, isRecordingAudio, setIsRecordingAudio,
     replyToMessage, setReplyToMessage, forwardMessage, editingMessage,
     inputRef,
     handleEditStart, handleCancelEdit, handleSend,

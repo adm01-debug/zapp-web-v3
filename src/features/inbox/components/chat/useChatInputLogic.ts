@@ -1,8 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { validateFile } from '@/utils/whatsappFileTypes';
+import { toast } from '@/hooks/use-toast';
 
 const DRAFT_KEY_PREFIX = 'chat_draft_';
 const CHAR_LIMIT = 4096;
+
+export interface ChatInputAttachment {
+  id: string;
+  file: File;
+  preview?: string;
+  category: string;
+}
 
 interface UseChatInputLogicParams {
   inputValue: string;
@@ -10,7 +19,7 @@ interface UseChatInputLogicParams {
   editingMessage: { content: string } | null | undefined;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   fileUploaderRef: React.RefObject<{ handleExternalFiles: (files: File[]) => void } | null>;
-  onSend: () => void;
+  onSend: (attachments?: File[]) => void;
   onPasteFiles?: (files: File[]) => void;
 }
 
@@ -20,6 +29,7 @@ export function useChatInputLogic({
   const [showRichToolbar, setShowRichToolbar] = useState(false);
   const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
   const [sendAnimation, setSendAnimation] = useState(false);
+  const [attachments, setAttachments] = useState<ChatInputAttachment[]>([]);
   const isMobile = useIsMobile();
 
   const hasText = inputValue.trim().length > 0;
@@ -62,23 +72,49 @@ export function useChatInputLogic({
     }
   }, [contactId]);
 
+  const handleFileSelect = useCallback((file: File) => {
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      toast({ title: 'Arquivo inválido', description: validation.error, variant: 'destructive' });
+      return;
+    }
+    
+    const preview = (validation.category === 'image' || file.type === 'application/pdf') 
+      ? URL.createObjectURL(file) 
+      : undefined;
+      
+    setAttachments(prev => [...prev, {
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      preview,
+      category: validation.category || 'document'
+    }]);
+  }, []);
+
+  const removeAttachment = useCallback((id: string) => {
+    setAttachments(prev => {
+      const att = prev.find(a => a.id === id);
+      if (att?.preview) URL.revokeObjectURL(att.preview);
+      return prev.filter(a => a.id !== id);
+    });
+  }, []);
+
   // Paste images
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
     const files: File[] = [];
     for (let i = 0; i < items.length; i++) {
-      if (items[i].type.startsWith('image/')) {
+      if (items[i].type.startsWith('image/') || items[i].kind === 'file') {
         const file = items[i].getAsFile();
         if (file) files.push(file);
       }
     }
     if (files.length > 0) {
       e.preventDefault();
-      if (onPasteFiles) onPasteFiles(files);
-      else if (fileUploaderRef.current) fileUploaderRef.current.handleExternalFiles(files);
+      files.forEach(handleFileSelect);
     }
-  }, [onPasteFiles, fileUploaderRef]);
+  }, [handleFileSelect]);
 
   // Voice dictation
   const handleVoiceDictation = useCallback((text: string) => {
@@ -91,13 +127,14 @@ export function useChatInputLogic({
 
   // Send with animation
   const handleSendWithAnimation = useCallback(() => {
-    if (!hasText || isOverLimit) return;
+    if ((!hasText && attachments.length === 0 && !editingMessage) || isOverLimit) return;
     setSendAnimation(true);
     try { localStorage.removeItem(`${DRAFT_KEY_PREFIX}${contactId}`); } catch { /* storage unavailable */ }
     if (isMobile && navigator.vibrate) navigator.vibrate(50);
-    onSend();
+    onSend(attachments.map(a => a.file));
+    setAttachments([]);
     setTimeout(() => setSendAnimation(false), 400);
-  }, [hasText, isOverLimit, contactId, isMobile, onSend]);
+  }, [hasText, attachments, isOverLimit, contactId, isMobile, onSend, editingMessage]);
 
   return {
     showRichToolbar, setShowRichToolbar,
@@ -105,6 +142,7 @@ export function useChatInputLogic({
     sendAnimation, isMobile,
     hasText, charCount, isNearLimit, isOverLimit,
     CHAR_LIMIT,
+    attachments, removeAttachment, handleFileSelect,
     handlePaste, handleVoiceDictation, handleSendWithAnimation,
   };
 }

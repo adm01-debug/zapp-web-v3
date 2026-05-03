@@ -43,13 +43,14 @@ interface SecondaryToolbarProps {
   onVoiceDictation: (text: string) => void;
   isWhisper?: boolean;
   onToggleWhisper?: () => void;
+  onFileSelect?: (file: File, category: string) => void;
 }
 
 export function SecondaryToolbar({
   inputRef, inputValue, showRichToolbar, onToggleRichToolbar, isRecordingAudio,
   onSendSticker, onSendAudioMeme, onSendCustomEmoji, onOpenCatalog, onAudioSend,
   fileUploaderRef, instanceName, contactPhone, contactId, contactName, onVoiceDictation,
-  isWhisper, onToggleWhisper,
+  isWhisper, onToggleWhisper, onFileSelect,
 }: SecondaryToolbarProps) {
   const handleRewrite = (newText: string) => {
     const el = inputRef.current;
@@ -133,11 +134,13 @@ export function SecondaryToolbar({
         contactId={contactId}
         connectionId={undefined}
         onFileSelect={(file, category) => {
-          toast({ title: 'Arquivo selecionado', description: `${file.name} (${category}) será enviado.` });
+          if (onFileSelect) onFileSelect(file, category);
+          else toast({ title: 'Arquivo selecionado', description: `${file.name} (${category}) será enviado.` });
         }}
         onFileSent={() => {
           toast({ title: 'Arquivo enviado!', description: 'O arquivo foi enviado com sucesso.' });
         }}
+        showDialog={!onFileSelect}
       />
       <RichTextToggle active={showRichToolbar} onToggle={onToggleRichToolbar} />
       <VoiceDictationButton onTranscript={onVoiceDictation} disabled={isRecordingAudio} />
