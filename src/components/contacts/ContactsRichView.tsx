@@ -188,7 +188,7 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
           sortBy={sortBy}
           setSortBy={setSortBy}
           showFilters={showFilters}
-          setShowFilters={crud.setShowFilters}
+          setShowFilters={setShowFilters}
           activeFiltersCount={activeFiltersCount}
           clearFilters={clearFilters}
           activeTab={activeTab}
