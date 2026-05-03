@@ -158,14 +158,14 @@ export function MessageBubble({
             </div>
           )}
 
-          <div className={cn('max-w-[68%] space-y-0.5 relative', isSent && 'items-end')}>
+          <div className={cn('max-w-[85%] sm:max-w-[70%] space-y-0.5 relative', isSent && 'items-end')}>
             {!isSent && isFirstInGroup && (
               <span className="text-[11px] font-semibold text-primary/80 ml-1 block">{senderName}</span>
             )}
             {message.isWhisper && (
-              <div className="flex items-center gap-1 mb-0.5 ml-1">
-                <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Sussurro Interno</span>
+              <div className="flex items-center gap-1.5 mb-1 ml-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-full w-fit border border-amber-500/20">
+                <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400 animate-pulse" />
+                <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Equipe — Sussurro Interno</span>
               </div>
             )}
 
@@ -222,7 +222,7 @@ export function MessageBubble({
                         isFirstInGroup && !isLastInGroup && 'rounded-2xl rounded-bl-sm',
                         !isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-tl-sm rounded-bl-md',
                         !isFirstInGroup && !isLastInGroup && 'rounded-xl rounded-tl-sm rounded-bl-sm'),
-                  message.isWhisper && 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 shadow-inner ring-1 ring-amber-500/20',
+                  message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 shadow-[inset_0_1px_2px_rgba(251,191,36,0.1)] ring-1 ring-amber-500/30 border-dashed',
                   isFailedTerminal && 'ring-1 ring-destructive/50 border border-destructive/40'
                 )}
               >

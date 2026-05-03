@@ -79,7 +79,14 @@ export function SecondaryToolbar({
               onClick={onToggleWhisper}
               aria-label={isWhisper ? "Desativar modo sussurro" : "Ativar modo sussurro (nota interna)"}
             >
-              {isWhisper ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+              {isWhisper ? (
+                <div className="relative">
+                  <Lock className="w-4 h-4" />
+                  <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                </div>
+              ) : (
+                <Unlock className="w-4 h-4" />
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">
