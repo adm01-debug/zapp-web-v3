@@ -155,7 +155,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className={cn("font-medium text-sm truncate transition-colors", isSelected ? "text-primary" : "text-foreground")}>{conversation.contact.name}</span>
+                <span className={cn("font-normal text-[13px] tracking-tight truncate transition-colors", isSelected ? "text-primary" : "text-foreground/90")}>{conversation.contact.name}</span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
