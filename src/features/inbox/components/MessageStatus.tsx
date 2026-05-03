@@ -101,8 +101,8 @@ export const MessageStatus: React.FC<MessageStatusProps> = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={cn('inline-flex items-center gap-1', className)}>
-            <Icon className={cn('h-3.5 w-3.5', config.color, config.iconClass)} />
+          <span className={cn('inline-flex items-center gap-1 transition-opacity duration-300', className)}>
+            <Icon className={cn('h-3 w-3', config.color, config.iconClass)} />
             {showLabel && (
               <span className={cn('text-xs', config.color)}>{label}</span>
             )}
