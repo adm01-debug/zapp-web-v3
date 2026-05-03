@@ -117,7 +117,7 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     showScrollDown, showAddMembers, setShowAddMembers,
     showSearch, setShowSearch, searchQuery, setSearchQuery,
     scrollRef, isNearBottomRef, searchInputRef,
-    tts, muteMutation, sendMutation,
+    tts, muteMutation, sendMutation, updateStatusMutation,
     checkNearBottom, scrollToBottom, handleSend, handleSendSticker, handleSendAudioMeme,
     handleSendCustomEmoji, handleFileSent, handleAudioSend,
     handleDelete, handleStartEdit, handleSaveEdit, handleCancelEdit, handleCopyMessage,
