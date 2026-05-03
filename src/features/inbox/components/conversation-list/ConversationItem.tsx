@@ -155,11 +155,11 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className={cn("font-medium text-sm truncate transition-colors", isSelected ? "text-primary" : "text-foreground")}>{conversation.contact.name}</span>
+                <span className={cn("font-normal text-[13px] tracking-tight truncate transition-colors", isSelected ? "text-primary" : "text-foreground/90")}>{conversation.contact.name}</span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <span className="text-xs text-muted-foreground">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
+                <span className="text-[10.5px] font-light tracking-tight text-muted-foreground/80">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -177,7 +177,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               {isTyping ? (
                 <TypingIndicatorCompact isVisible={true} />
               ) : (
-                <p className="text-sm text-muted-foreground truncate pr-2">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
+                <p className="text-[12px] font-light tracking-tight text-muted-foreground/75 truncate pr-2">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
               )}
               {conversation.unreadCount > 0 && <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-primary-foreground">{conversation.unreadCount}</span>}
             </div>
