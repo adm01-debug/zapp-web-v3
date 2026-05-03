@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useFailedMessages, FailedMessageRow, FailedMessageStatus } from '@/features/admin';
+import { RootCause } from '@/lib/failureRootCause';
 
 export function useFailedMessagesUI() {
   const [hours, setHours] = useState(24);
   const [statusFilter, setStatusFilter] = useState<FailedMessageStatus | 'all'>('all');
   const [errorCodeFilter, setErrorCodeFilter] = useState<string>('all');
-  const [rootCauseFilter, setRootCauseFilter] = useState<any | 'all'>('all'); // RootCause type
+  const [rootCauseFilter, setRootCauseFilter] = useState<RootCause | 'all'>('all');
   const [instanceFilter, setInstanceFilter] = useState<string>('all');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState<string | null>(null);
