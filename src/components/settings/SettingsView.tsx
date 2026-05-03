@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Clock, MessageSquare, Bell, Palette, Save, RefreshCw, Loader2,
   Keyboard, Volume2, ArrowRight, Package, Globe, TrendingUp, Settings,
-  Tags, MessageSquareHeart, Bot, Brain, Users,
+  Tags, MessageSquareHeart, Bot, Brain, Users, ShieldAlert
 } from 'lucide-react';
 import { AIAutoTagsConfig } from '@/components/settings/AIAutoTagsConfig';
 import { AIProvidersManager } from '@/components/settings/AIProvidersManager';
@@ -28,6 +28,7 @@ import { ScheduleSettings } from '@/components/settings/ScheduleSettings';
 import { MessagesSettings } from '@/components/settings/MessagesSettings';
 import { AutomationSettings } from '@/components/settings/AutomationSettings';
 import { AppearanceSettings } from '@/components/settings/AppearanceSettings';
+import { SLASettings } from '@/components/settings/SLASettings';
 import { PageTemplate } from '@/components/layout/PageTemplate';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useOnboarding } from '@/hooks/useOnboarding';
@@ -111,6 +112,7 @@ export function SettingsView() {
               <TabsTrigger value="csat" className="gap-2 whitespace-nowrap"><MessageSquareHeart className="w-4 h-4" />CSAT</TabsTrigger>
               <TabsTrigger value="chatbot-l1" className="gap-2 whitespace-nowrap"><Bot className="w-4 h-4" />Chatbot L1</TabsTrigger>
               <TabsTrigger value="routing" className="gap-2 whitespace-nowrap"><Users className="w-4 h-4" />Roteamento</TabsTrigger>
+              <TabsTrigger value="sla" className="gap-2 whitespace-nowrap"><ShieldAlert className="w-4 h-4" />SLA</TabsTrigger>
               <TabsTrigger value="ai-providers" className="gap-2 whitespace-nowrap"><Brain className="w-4 h-4" />Gestão IA</TabsTrigger>
             </TabsList>
           </div>
@@ -194,6 +196,10 @@ export function SettingsView() {
 
         <TabsContent value="routing">
           <SkillBasedRoutingSettings />
+        </TabsContent>
+
+        <TabsContent value="sla">
+          <SLASettings settings={settings} updateSettings={updateSettings} />
         </TabsContent>
 
         <TabsContent value="ai-providers">

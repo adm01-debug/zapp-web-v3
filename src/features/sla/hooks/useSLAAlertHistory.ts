@@ -1,63 +1,89 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export type SLAAlertKind = 'first_response' | 'resolution';
-export type SLAAlertSeverity = 'warning' | 'breached';
+export type SLAAlertSeverity = 'risk' | 'violated';
 
 export interface SLAAlertHistoryEntry {
   id: string;
-  contactId: string | null;
+  threadId: string;
   contactName: string;
   contactPhone: string | null;
-  kind: SLAAlertKind | null;
-  severity: SLAAlertSeverity | null;
-  ruleName: string | null;
-  scope: string | null;
-  durationMs: number | null;
+  status: SLAAlertSeverity;
+  isResolved: boolean;
+  resolvedAt: string | null;
+  alertTime: string;
   createdAt: string;
-}
-
-interface RawRow {
-  id: string;
-  contact_id: string | null;
-  metadata: Record<string, unknown> | null;
-  created_at: string;
-  contacts: { name: string | null; phone: string | null } | null;
+  metadata: any;
 }
 
 const PAGE_SIZE = 100;
 
 async function fetchHistory(): Promise<SLAAlertHistoryEntry[]> {
   const { data, error } = await supabase
-    .from('conversation_events')
-    .select('id, contact_id, metadata, created_at, contacts(name, phone)')
-    .eq('event_type', 'sla_alert')
+    .from('sla_history')
+    .select(`
+      id,
+      thread_id,
+      status,
+      is_resolved,
+      resolved_at,
+      alert_time,
+      created_at,
+      metadata,
+      conversation_threads(
+        remote_jid,
+        contacts:external_contact_id(name, phone)
+      )
+    `)
     .order('created_at', { ascending: false })
     .limit(PAGE_SIZE);
 
   if (error) throw error;
 
-  return ((data ?? []) as unknown as RawRow[]).map((row) => {
-    const meta = (row.metadata ?? {}) as Record<string, unknown>;
+  return (data ?? []).map((row: any) => {
+    const thread = row.conversation_threads;
+    const contact = thread?.contacts;
+    
     return {
       id: row.id,
-      contactId: row.contact_id,
-      contactName: row.contacts?.name ?? row.contacts?.phone ?? 'Contato desconhecido',
-      contactPhone: row.contacts?.phone ?? null,
-      kind: (meta.kind as SLAAlertKind) ?? null,
-      severity: (meta.severity as SLAAlertSeverity) ?? null,
-      ruleName: typeof meta.rule_name === 'string' ? (meta.rule_name as string) : null,
-      scope: typeof meta.scope === 'string' ? (meta.scope as string) : null,
-      durationMs: typeof meta.duration_ms === 'number' ? (meta.duration_ms as number) : null,
+      threadId: row.thread_id,
+      contactName: contact?.name ?? thread?.remote_jid ?? 'Conversa desconhecida',
+      contactPhone: contact?.phone ?? null,
+      status: row.status as SLAAlertSeverity,
+      isResolved: row.is_resolved,
+      resolvedAt: row.resolved_at,
+      alertTime: row.alert_time,
       createdAt: row.created_at,
+      metadata: row.metadata,
     };
   });
 }
 
 export function useSLAAlertHistory() {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ['sla-alert-history'],
     queryFn: fetchHistory,
     staleTime: 30_000,
   });
+
+  const resolveMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('sla_history')
+        .update({ is_resolved: true, resolved_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sla-alert-history'] });
+    },
+  });
+
+  return {
+    ...query,
+    resolveAlert: resolveMutation.mutate,
+    isResolving: resolveMutation.isPending,
+  };
 }

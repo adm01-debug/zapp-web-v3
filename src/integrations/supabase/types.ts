@@ -3630,6 +3630,10 @@ export type Database = {
           message_count: number
           metadata: Json
           remote_jid: string
+          sla_critical_threshold_minutes: number | null
+          sla_enabled: boolean | null
+          sla_notification_message: string | null
+          sla_warning_threshold_minutes: number | null
           status: string
           unread_count: number
           updated_at: string
@@ -3647,6 +3651,10 @@ export type Database = {
           message_count?: number
           metadata?: Json
           remote_jid: string
+          sla_critical_threshold_minutes?: number | null
+          sla_enabled?: boolean | null
+          sla_notification_message?: string | null
+          sla_warning_threshold_minutes?: number | null
           status?: string
           unread_count?: number
           updated_at?: string
@@ -3664,6 +3672,10 @@ export type Database = {
           message_count?: number
           metadata?: Json
           remote_jid?: string
+          sla_critical_threshold_minutes?: number | null
+          sla_enabled?: boolean | null
+          sla_notification_message?: string | null
+          sla_warning_threshold_minutes?: number | null
           status?: string
           unread_count?: number
           updated_at?: string
@@ -8804,6 +8816,50 @@ export type Database = {
           },
         ]
       }
+      sla_history: {
+        Row: {
+          alert_time: string | null
+          created_at: string | null
+          id: string
+          is_resolved: boolean | null
+          metadata: Json | null
+          resolved_at: string | null
+          status: string
+          thread_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          alert_time?: string | null
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          status: string
+          thread_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          alert_time?: string | null
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          status?: string
+          thread_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_history_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sla_risk_acknowledgements: {
         Row: {
           acknowledged_at: string
@@ -9736,6 +9792,55 @@ export type Database = {
           },
         ]
       }
+      team_message_receipts: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string | null
+          profile_id: string | null
+          status: string
+          timestamp: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          profile_id?: string | null
+          status: string
+          timestamp?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          profile_id?: string | null
+          status?: string
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_message_receipts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "team_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_message_receipts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_message_receipts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_messages: {
         Row: {
           content: string
@@ -10068,6 +10173,9 @@ export type Database = {
           closing_message: string | null
           compact_mode: boolean | null
           created_at: string
+          global_sla_critical_minutes: number | null
+          global_sla_notification_message: string | null
+          global_sla_warning_minutes: number | null
           goal_sound_type: string | null
           id: string
           inactivity_timeout: number | null
@@ -10081,6 +10189,7 @@ export type Database = {
           sentiment_alert_enabled: boolean | null
           sentiment_alert_threshold: number | null
           sentiment_consecutive_count: number | null
+          simulation_mode_enabled: boolean | null
           sla_sound_type: string | null
           sound_enabled: boolean | null
           theme: string | null
@@ -10105,6 +10214,9 @@ export type Database = {
           closing_message?: string | null
           compact_mode?: boolean | null
           created_at?: string
+          global_sla_critical_minutes?: number | null
+          global_sla_notification_message?: string | null
+          global_sla_warning_minutes?: number | null
           goal_sound_type?: string | null
           id?: string
           inactivity_timeout?: number | null
@@ -10118,6 +10230,7 @@ export type Database = {
           sentiment_alert_enabled?: boolean | null
           sentiment_alert_threshold?: number | null
           sentiment_consecutive_count?: number | null
+          simulation_mode_enabled?: boolean | null
           sla_sound_type?: string | null
           sound_enabled?: boolean | null
           theme?: string | null
@@ -10142,6 +10255,9 @@ export type Database = {
           closing_message?: string | null
           compact_mode?: boolean | null
           created_at?: string
+          global_sla_critical_minutes?: number | null
+          global_sla_notification_message?: string | null
+          global_sla_warning_minutes?: number | null
           goal_sound_type?: string | null
           id?: string
           inactivity_timeout?: number | null
@@ -10155,6 +10271,7 @@ export type Database = {
           sentiment_alert_enabled?: boolean | null
           sentiment_alert_threshold?: number | null
           sentiment_consecutive_count?: number | null
+          simulation_mode_enabled?: boolean | null
           sla_sound_type?: string | null
           sound_enabled?: boolean | null
           theme?: string | null

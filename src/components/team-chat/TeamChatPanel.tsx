@@ -13,6 +13,7 @@ import { MarkdownPreview } from '@/features/inbox';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AddMembersDialog } from './AddMembersDialog';
 import { TeamChatHeader } from './TeamChatHeader';
+import { ParticipantStatsGraph } from './ParticipantStatsGraph';
 import { TeamChatInputArea } from './TeamChatInputArea';
 import { useTeamChatPanel } from './useTeamChatPanel';
 import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
@@ -56,6 +57,7 @@ const MediaTypeIcon = memo(function MediaTypeIcon({ type }: { type: string | nul
 interface Props { conversation: TeamConversation; onBack: () => void; onToggleDetails?: () => void; showDetails?: boolean; }
 
 export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetails }: Props) {
+  const [showStats, setShowStats] = useState(false);
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
   const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
@@ -97,7 +99,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         showSearch={s.showSearch} isMuted={s.isMuted} onBack={onBack} onToggleDetails={onToggleDetails}
         onToggleSearch={() => { s.setShowSearch(!s.showSearch); if (s.showSearch) s.setSearchQuery(''); }}
         onAddMembers={() => s.setShowAddMembers(true)} onVoiceChange={s.tts.setVoiceId} onSpeedChange={s.tts.setSpeed}
-        onToggleMute={() => s.muteMutation.mutate({ conversationId: conversation.id, muted: !s.isMuted })} />
+        onToggleMute={() => s.muteMutation.mutate({ conversationId: conversation.id, muted: !s.isMuted })}
+        onToggleStats={() => setShowStats(!showStats)} showStats={showStats} />
 
       <AnimatePresence>
         {s.showSearch && (
@@ -110,6 +113,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
               {s.searchQuery && <span className="text-xs text-muted-foreground whitespace-nowrap">{s.filteredMessages.length} resultado{s.filteredMessages.length !== 1 ? 's' : ''}</span>}
               <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => { s.setShowSearch(false); s.setSearchQuery(''); }}><X className="w-3.5 h-3.5" /></Button>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showStats && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="p-4 bg-muted/30 border-b border-border">
+            <ParticipantStatsGraph conversationId={conversation.id} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -135,6 +135,11 @@ export interface Conversation {
   // Sentiment tracking
   sentiment?: 'positive' | 'neutral' | 'negative' | 'critical';
   sentimentScore?: number;
+  // SLA Overrides
+  sla_warning_threshold_minutes?: number;
+  sla_critical_threshold_minutes?: number;
+  sla_notification_message?: string;
+  sla_enabled?: boolean;
 }
 
 export interface Agent {

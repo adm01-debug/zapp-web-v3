@@ -27,6 +27,7 @@ import {
   Pin,
   Building2,
   ArrowRightLeft,
+  BarChart3,
 } from 'lucide-react';
 import { TransferConversationDialog } from './TransferConversationDialog';
 import { useAuth } from '@/features/auth';
@@ -45,6 +46,8 @@ interface TeamChatHeaderProps {
   onVoiceChange: (voiceId: string) => void;
   onSpeedChange: (speed: number) => void;
   onToggleMute?: () => void;
+  onToggleStats?: () => void;
+  showStats?: boolean;
 }
 
 export function TeamChatHeader({
@@ -61,6 +64,8 @@ export function TeamChatHeader({
   onVoiceChange,
   onSpeedChange,
   onToggleMute,
+  onToggleStats,
+  showStats,
 }: TeamChatHeaderProps) {
   const [showTransfer, setShowTransfer] = useState(false);
   const { profile } = useAuth();
@@ -114,6 +119,22 @@ export function TeamChatHeader({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">Adicionar membros</TooltipContent>
+          </Tooltip>
+        )}
+
+        {(conversation.type === 'group' || conversation.type === 'department') && onToggleStats && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted", showStats && "text-primary bg-primary/10")}
+                onClick={onToggleStats}
+              >
+                <BarChart3 className="w-[18px] h-[18px]" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Estatísticas do grupo</TooltipContent>
           </Tooltip>
         )}
 

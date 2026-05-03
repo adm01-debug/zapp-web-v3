@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
-import { History, Search, AlertTriangle, XCircle, Reply, CheckCircle2, RefreshCw } from 'lucide-react';
+import { History, Search, AlertTriangle, XCircle, CheckCircle2, RefreshCw, CheckCheck, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   useSLAAlertHistory,
@@ -19,27 +19,15 @@ import {
 
 type SeverityFilter = 'all' | SLAAlertSeverity;
 
-function formatDurationMs(ms: number | null): string {
-  if (ms === null) return '—';
-  if (ms < 60_000) return `${Math.round(ms / 1000)}s`;
-  if (ms < 3_600_000) return `${Math.round(ms / 60_000)}min`;
-  if (ms < 86_400_000) return `${Math.round(ms / 3_600_000)}h`;
-  return `${Math.round(ms / 86_400_000)}d`;
-}
-
-const KIND_LABEL: Record<string, string> = {
-  first_response: '1ª resposta',
-  resolution: 'Resolução',
-};
-
-function HistoryRow({ entry }: { entry: SLAAlertHistoryEntry }) {
-  const isBreach = entry.severity === 'breached';
-  const Icon = entry.kind === 'resolution' ? CheckCircle2 : Reply;
+function HistoryRow({ entry, onResolve, isResolving }: { entry: SLAAlertHistoryEntry; onResolve: (id: string) => void; isResolving: boolean }) {
+  const isBreach = entry.status === 'violated';
+  
   return (
     <div
       className={cn(
         'flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors',
         isBreach ? 'border-destructive/30' : 'border-warning/30',
+        entry.isResolved && 'opacity-60 grayscale-[0.5]'
       )}
       role="listitem"
     >
@@ -47,9 +35,18 @@ function HistoryRow({ entry }: { entry: SLAAlertHistoryEntry }) {
         className={cn(
           'mt-0.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0',
           isBreach ? 'bg-destructive/10' : 'bg-warning/10',
+          entry.isResolved && 'bg-success/10'
         )}
       >
-        <Icon className={cn('w-4 h-4', isBreach ? 'text-destructive' : 'text-warning')} />
+        {entry.isResolved ? (
+          <CheckCircle2 className="w-4 h-4 text-success" />
+        ) : (
+          isBreach ? (
+            <XCircle className="w-4 h-4 text-destructive" />
+          ) : (
+            <AlertTriangle className="w-4 h-4 text-warning" />
+          )
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -61,52 +58,48 @@ function HistoryRow({ entry }: { entry: SLAAlertHistoryEntry }) {
               isBreach
                 ? 'bg-destructive/15 text-destructive border-destructive/30'
                 : 'bg-warning/15 text-warning border-warning/30',
+              entry.isResolved && 'bg-success/15 text-success border-success/30'
             )}
           >
-            {isBreach ? (
-              <XCircle className="w-3 h-3" aria-hidden />
-            ) : (
-              <AlertTriangle className="w-3 h-3" aria-hidden />
-            )}
-            {isBreach ? 'Violado' : 'Em risco'}
+            {entry.isResolved ? 'Resolvido' : (isBreach ? 'Violado' : 'Em risco')}
           </Badge>
-          <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-            {entry.kind ? KIND_LABEL[entry.kind] ?? entry.kind : '—'}
-          </Badge>
+          {entry.isResolved && entry.resolvedAt && (
+            <span className="text-[10px] text-muted-foreground">
+              Resolvido em {format(new Date(entry.resolvedAt), "dd/MM HH:mm", { locale: ptBR })}
+            </span>
+          )}
         </div>
         <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
           {entry.contactPhone && <span>{entry.contactPhone}</span>}
-          {entry.ruleName && (
-            <>
-              <span className="text-foreground/40">·</span>
-              <span>
-                Regra: <span className="text-foreground/80 font-medium">{entry.ruleName}</span>
-              </span>
-            </>
-          )}
-          {entry.durationMs !== null && (
-            <>
-              <span className="text-foreground/40">·</span>
-              <span>{formatDurationMs(entry.durationMs)}</span>
-            </>
-          )}
-          {entry.scope && (
-            <>
-              <span className="text-foreground/40">·</span>
-              <span>Escopo: {entry.scope}</span>
-            </>
-          )}
+          <span className="text-foreground/40">·</span>
+          <span>
+            Thread ID: <span className="text-foreground/80 font-medium font-mono text-[10px]">{entry.threadId.slice(0, 8)}...</span>
+          </span>
         </div>
       </div>
-      <div className="text-[11px] text-muted-foreground whitespace-nowrap">
-        {format(new Date(entry.createdAt), "dd/MM HH:mm", { locale: ptBR })}
+      <div className="flex flex-col items-end gap-2">
+        <div className="text-[11px] text-muted-foreground whitespace-nowrap">
+          {format(new Date(entry.alertTime), "dd/MM HH:mm", { locale: ptBR })}
+        </div>
+        {!entry.isResolved && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-7 px-2 text-[10px] gap-1 hover:bg-success/10 hover:text-success hover:border-success/50"
+            onClick={() => onResolve(entry.id)}
+            disabled={isResolving}
+          >
+            {isResolving ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3 h-3" />}
+            Resolver
+          </Button>
+        )}
       </div>
     </div>
   );
 }
 
 export default function SLAAlertHistory() {
-  const { data, isLoading, refetch, isFetching } = useSLAAlertHistory();
+  const { data, isLoading, refetch, isFetching, resolveAlert, isResolving } = useSLAAlertHistory();
   const [search, setSearch] = useState('');
   const [severity, setSeverity] = useState<SeverityFilter>('all');
   const [currentView, setCurrentView] = useState('sla-history');
@@ -115,13 +108,12 @@ export default function SLAAlertHistory() {
     const items = data ?? [];
     const q = search.trim().toLowerCase();
     return items.filter((entry) => {
-      if (severity !== 'all' && entry.severity !== severity) return false;
+      if (severity !== 'all' && entry.status !== severity) return false;
       if (!q) return true;
       const haystack = [
         entry.contactName,
         entry.contactPhone ?? '',
-        entry.ruleName ?? '',
-        entry.kind ? KIND_LABEL[entry.kind] ?? entry.kind : '',
+        entry.threadId,
       ]
         .join(' ')
         .toLowerCase();
@@ -142,7 +134,7 @@ export default function SLAAlertHistory() {
                 Histórico de alertas de SLA
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Últimos disparos de alertas registrados em <code className="text-[11px]">conversation_events</code>.
+                Monitoramento de respostas em tempo real por conversa.
               </p>
             </div>
             <Button
@@ -160,7 +152,7 @@ export default function SLAAlertHistory() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Filtros</CardTitle>
-              <CardDescription>Busque por contato ou nome da regra de SLA.</CardDescription>
+              <CardDescription>Busque por contato ou thread ID.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="relative">
@@ -168,7 +160,7 @@ export default function SLAAlertHistory() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar por contato, telefone ou regra..."
+                  placeholder="Buscar por contato ou thread ID..."
                   className="pl-9"
                   aria-label="Buscar alertas"
                 />
@@ -186,13 +178,13 @@ export default function SLAAlertHistory() {
                   Todos
                 </ToggleGroupItem>
                 <ToggleGroupItem
-                  value="warning"
+                  value="risk"
                   className="h-7 px-3 text-xs data-[state=on]:bg-warning/15 data-[state=on]:text-warning"
                 >
                   <AlertTriangle className="w-3 h-3 mr-1" />Em risco
                 </ToggleGroupItem>
                 <ToggleGroupItem
-                  value="breached"
+                  value="violated"
                   className="h-7 px-3 text-xs data-[state=on]:bg-destructive/15 data-[state=on]:text-destructive"
                 >
                   <XCircle className="w-3 h-3 mr-1" />Violado
@@ -204,7 +196,7 @@ export default function SLAAlertHistory() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center justify-between">
-                <span>Disparos recentes</span>
+                <span>Alertas Recentes</span>
                 <Badge variant="outline" className="text-[10px]">
                   {filtered.length} {filtered.length === 1 ? 'alerta' : 'alertas'}
                 </Badge>
@@ -231,7 +223,12 @@ export default function SLAAlertHistory() {
               ) : (
                 <div role="list" className="space-y-2">
                   {filtered.map((entry) => (
-                    <HistoryRow key={entry.id} entry={entry} />
+                    <HistoryRow 
+                      key={entry.id} 
+                      entry={entry} 
+                      onResolve={resolveAlert}
+                      isResolving={isResolving}
+                    />
                   ))}
                 </div>
               )}

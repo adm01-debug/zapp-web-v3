@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   Volume2,
   VolumeX,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface ConversationContextMenuProps {
@@ -55,6 +56,7 @@ interface ConversationContextMenuProps {
   onDelete?: (id: string) => void;
   onSetPriority?: (id: string, priority: 'high' | 'medium' | 'low') => void;
   onOpenSummary?: (id: string) => void;
+  onOpenSLASettings?: (id: string) => void;
 }
 
 export function ConversationContextMenu({
@@ -80,8 +82,9 @@ export function ConversationContextMenu({
   onSnooze,
   onDelete,
   onSetPriority,
-  onOpenSummary,
-}: ConversationContextMenuProps) {
+    onOpenSummary,
+    onOpenSLASettings,
+  }: ConversationContextMenuProps) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -245,6 +248,14 @@ export function ConversationContextMenu({
         >
           <MessageSquare className="w-4 h-4" />
           Ver resumo IA
+        </ContextMenuItem>
+
+        <ContextMenuItem
+          onClick={() => onOpenSLASettings?.(conversationId)}
+          className="gap-2 cursor-pointer"
+        >
+          <ShieldAlert className="w-4 h-4" />
+          Configurar SLA
         </ContextMenuItem>
 
         <ContextMenuSeparator />

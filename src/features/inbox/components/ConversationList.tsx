@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
 import { SLAIndicatorForContact } from './SLAIndicatorForContact';
 import { ConversationContextMenu } from './ConversationContextMenu';
+import { ThreadSLASettingsDialog } from './ThreadSLASettingsDialog';
 import { useExternalContact360Batch, CRMBatchResult } from '@/hooks/useExternalContact360Batch';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import {
@@ -65,6 +66,8 @@ export function ConversationList({
 }: ConversationListProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const [slaSettingsThreadId, setSlaSettingsThreadId] = useState<string | null>(null);
+  const [isSlaDialogOpen, setIsSlaDialogOpen] = useState(false);
 
   // Batch CRM lookup: collect all phones, make 1 single RPC call
   const allPhones = useMemo(
