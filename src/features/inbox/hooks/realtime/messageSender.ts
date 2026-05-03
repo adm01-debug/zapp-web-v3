@@ -179,6 +179,10 @@ export async function sendMessageToContact(
     }
 
     const { action, body } = buildEvolutionPayload(connection.instance_id, phone, content, messageType, mediaUrl, mediaPayload);
+    
+    if (opts.optimisticId) {
+      emitSendStatus(opts.optimisticId, { status: 'sending' }, { contactId, source: 'messageSender' });
+    }
 
     // Stable idempotency key per logical message. We prefer a content-aware
     // fingerprint (contact + type + content + media + 5min bucket) so that:
