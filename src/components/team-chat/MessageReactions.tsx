@@ -5,8 +5,8 @@ import { SmilePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AggregatedReaction } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
 
-const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🎉'];
-const EXTENDED_EMOJIS = [
+export const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🎉'];
+export const EXTENDED_EMOJIS = [
   ...QUICK_EMOJIS,
   '👏', '💯', '✅', '❌', '👀', '🤔', '😍', '😎',
   '🚀', '💪', '🙌', '👌', '✨', '⭐', '💡', '☕',
