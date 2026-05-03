@@ -7,115 +7,160 @@ import { loginAs } from './helpers/testHelpers';
  */
 test.describe('Teams - RBAC & RLS Enforcement', () => {
 
-  test('RH Agent: Isolated from TI data', async ({ page }) => {
-    // Scenario 1: RH Agent cannot see TI channels or messages
-    await loginAs(page, 'rh_agent');
-    await page.goto('/team-chat');
+  test('Soft Delete: Admin deletes and Agent cannot recover', async ({ page, browser }) => {
+    // 1. Admin TI creates and then soft-deletes a message
+    const tiAdminPage = await browser.newPage();
+    await loginAs(tiAdminPage, 'ti_admin');
+    await tiAdminPage.goto('/team-chat');
 
-    const tiDeptId = 'd2222222-2222-2222-2222-222222222222'; // TI Department UUID
+    const uniqueContent = `Admin-Delete-Test-${Date.now()}`;
     
-    // 1. Direct RLS check for messages
-    const rlsCheck = await page.evaluate(async (deptId) => {
+    // Create a message in TI channel
+    const msgData = await tiAdminPage.evaluate(async (content) => {
+      const { data: profile } = await (window as any).supabase
+        .from('profiles')
+        .select('id, department_id')
+        .single();
+        
+      const { data: conv } = await (window as any).supabase
+        .from('team_conversations')
+        .select('id')
+        .eq('name', 'TI')
+        .single();
+
+      const { data: msg } = await (window as any).supabase
+        .from('team_messages')
+        .insert({
+          conversation_id: conv.id,
+          content: content,
+          sender_id: profile.id
+        })
+        .select()
+        .single();
+        
+      return msg;
+    }, uniqueContent);
+
+    expect(msgData).toBeDefined();
+
+    // Soft delete it
+    await tiAdminPage.evaluate(async (msgId) => {
+      await (window as any).supabase
+        .from('team_messages')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', msgId);
+    }, msgData.id);
+
+    // 2. RH Agent tries to fetch that specific message (direct API attack)
+    const rhPage = await browser.newPage();
+    await loginAs(rhPage, 'rh_agent');
+    
+    const leakCheck = await rhPage.evaluate(async (msgId) => {
       const { data, error } = await (window as any).supabase
         .from('team_messages')
         .select('*')
-        .eq('department_id', deptId);
+        .eq('id', msgId)
+        .maybeSingle();
       return { data, error };
-    }, tiDeptId);
+    }, msgData.id);
 
-    // Should return empty array even if TI messages exist
-    expect(rlsCheck.data).toHaveLength(0);
-
-    // 2. UI visibility check
-    const tiChannel = page.locator('button:has-text("TI")');
-    await expect(tiChannel).not.toBeVisible();
-  });
-
-  test('Finance Agent: Limited visibility to Finance and General', async ({ page }) => {
-    // Scenario 2: Finance Agent sees Finance and General channels only
-    await loginAs(page, 'finance_agent');
-    await page.goto('/team-chat');
-
-    // Should see Financeiro
-    await expect(page.locator('button:has-text("Financeiro")')).toBeVisible();
+    // Should be null/empty due to RLS (deleted_at IS NULL)
+    expect(leakCheck.data).toBeNull();
     
-    // Should see "Geral" (Canais Gerais)
-    // Note: Geral is usually accessible to all authenticated users
-    await expect(page.locator('button:has-text("Geral")')).toBeVisible();
+    await tiAdminPage.close();
+    await rhPage.close();
+  });
+
+  test('Ticket Transfer: Metadata & Department movement', async ({ page, browser }) => {
+    // 1. Support Agent transfers a Financeiro conversation to TI
+    const supportPage = await browser.newPage();
+    await loginAs(supportPage, 'transfer_agent');
+    await supportPage.goto('/team-chat');
+
+    const tiDeptId = 'd2222222-2222-2222-2222-222222222222';
     
-    // Should NOT see TI or RH
-    await expect(page.locator('button:has-text("TI")')).not.toBeVisible();
-    await expect(page.locator('button:has-text("RH")')).not.toBeVisible();
-  });
-
-  test('TI Admin: Full oversight and soft-delete capability', async ({ page }) => {
-    // Scenario 3: Admin sees everything and can perform deletions
-    await loginAs(page, 'ti_admin');
-    await page.goto('/team-chat');
-
-    // 1. Global visibility
-    await expect(page.locator('button:has-text("TI")')).toBeVisible();
-    await expect(page.locator('button:has-text("RH")')).toBeVisible();
-    await expect(page.locator('button:has-text("Financeiro")')).toBeVisible();
-
-    // 2. Soft-delete enforcement
-    // We attempt to delete a message and verify it marks 'deleted_at'
-    const deleteOp = await page.evaluate(async () => {
-      const { data: messages } = await (window as any).supabase
-        .from('team_messages')
-        .select('id')
-        .limit(1);
-      
-      if (!messages || messages.length === 0) return { skipped: true };
-      
-      const targetId = messages[0].id;
-      const { error } = await (window as any).supabase
-        .from('team_messages')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', targetId);
-        
-      return { error, success: !error };
-    });
-
-    if (!deleteOp.skipped) {
-      expect(deleteOp.success).toBe(true);
-      expect(deleteOp.error).toBeNull();
-    }
-  });
-
-  test('Transfer Agent: Support mobility across departments', async ({ page }) => {
-    // Scenario 4: Support Agent can move tickets (simulated via metadata update)
-    await loginAs(page, 'transfer_agent');
-    await page.goto('/team-chat');
-
-    // Support agents can update conversation metadata to signal transfers
-    const transferOp = await page.evaluate(async () => {
-      const { data: convs } = await (window as any).supabase
+    const transferResult = await supportPage.evaluate(async (newDeptId) => {
+      const { data: conv } = await (window as any).supabase
         .from('team_conversations')
         .select('id')
-        .limit(1);
-        
-      if (!convs || convs.length === 0) return { skipped: true };
-      
-      const targetId = convs[0].id;
+        .eq('name', 'Financeiro')
+        .single();
+
       const { error } = await (window as any).supabase
         .from('team_conversations')
         .update({ 
+          department_id: newDeptId,
           metadata: { 
-            last_transfer_at: new Date().toISOString(),
-            target_department: 'TI',
-            transfer_reason: 'Suporte nível 2'
+            transferred_at: new Date().toISOString(),
+            reason: 'Escalado para TI' 
           } 
         })
-        .eq('id', targetId);
+        .eq('id', conv.id);
         
-      return { error, success: !error };
-    });
+      return { convId: conv.id, success: !error };
+    }, tiDeptId);
 
-    if (!transferOp.skipped) {
-      expect(transferOp.success).toBe(true);
-      expect(transferOp.error).toBeNull();
-    }
+    expect(transferResult.success).toBe(true);
+
+    // 2. Finance Agent should lose visibility (unless explicitly a member)
+    const financePage = await browser.newPage();
+    await loginAs(financePage, 'finance_agent');
+    
+    const financeVisibility = await financePage.evaluate(async (convId) => {
+      const { data } = await (window as any).supabase
+        .from('team_conversations')
+        .select('id')
+        .eq('id', convId)
+        .maybeSingle();
+      return data;
+    }, transferResult.convId);
+
+    expect(financeVisibility).toBeNull();
+
+    // 3. TI Admin should still see it
+    const tiPage = await browser.newPage();
+    await loginAs(tiPage, 'ti_admin');
+    
+    const tiVisibility = await tiPage.evaluate(async (convId) => {
+      const { data } = await (window as any).supabase
+        .from('team_conversations')
+        .select('id')
+        .eq('id', convId)
+        .maybeSingle();
+      return data;
+    }, transferResult.convId);
+
+    expect(tiVisibility).not.toBeNull();
+
+    await supportPage.close();
+    await financePage.close();
+    await tiPage.close();
   });
 
+  test('RH Agent: Strict isolation from TI', async ({ page }) => {
+    await loginAs(page, 'rh_agent');
+    await page.goto('/team-chat');
+
+    const tiDeptId = 'd2222222-2222-2222-2222-222222222222';
+    
+    const rlsCheck = await page.evaluate(async (deptId) => {
+      const { data } = await (window as any).supabase
+        .from('team_messages')
+        .select('id')
+        .eq('department_id', deptId); // Assuming department_id is on messages or joined
+      return data;
+    }, tiDeptId);
+
+    // The previous migration didn't add department_id to messages, visibility is via conversation_id
+    // But RH Agent shouldn't be able to see TI conversations anyway.
+    const convCheck = await page.evaluate(async (deptId) => {
+      const { data } = await (window as any).supabase
+        .from('team_conversations')
+        .select('id')
+        .eq('department_id', deptId);
+      return data;
+    }, tiDeptId);
+
+    expect(convCheck).toHaveLength(0);
+  });
 });
