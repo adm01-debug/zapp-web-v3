@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { File, Download, Trash2, Loader2, UploadCloud, EyeOff } from 'lucide-react';
+import { File, Download, Trash2, Loader2, UploadCloud, EyeOff, Search as SearchIcon, Filter, Calendar, ExternalLink, Image as ImageIcon, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search as SearchIcon, Filter, Calendar } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useAuth } from '@/features/auth';
 
 interface TeamFilesProps {
   contactId: string;
@@ -169,6 +170,35 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
                 </p>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {file.file_type?.startsWith('image/') && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-600 hover:bg-amber-200">
+                        <Eye className="w-3.5 h-3.5" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl border-amber-100">
+                      <DialogHeader>
+                        <DialogTitle className="text-sm font-bold text-amber-700">{file.file_name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex items-center justify-center p-2 bg-amber-50/20 rounded-xl overflow-hidden min-h-[300px]">
+                        <img 
+                          src={file.file_url} 
+                          alt={file.file_name} 
+                          className="max-w-full max-h-[70vh] object-contain shadow-lg rounded-lg" 
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" className="h-8 text-[11px] gap-2 border-amber-200 text-amber-700" asChild>
+                          <a href={file.file_url} download={file.file_name} target="_blank" rel="noreferrer">
+                            <Download className="w-3.5 h-3.5" />
+                            Baixar Original
+                          </a>
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-600 hover:bg-amber-200" asChild>
                   <a href={file.file_url} download={file.file_name} target="_blank" rel="noreferrer">
                     <Download className="w-3.5 h-3.5" />
