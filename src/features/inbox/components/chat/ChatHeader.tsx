@@ -54,6 +54,8 @@ interface ChatHeaderProps {
   failuresOnly?: boolean;
   onToggleFailuresOnly?: () => void;
   failuresCount?: number;
+  onOpenWhisper?: () => void;
+  whisperCount?: number;
 }
 
 export function ChatHeader({
