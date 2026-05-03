@@ -9548,6 +9548,7 @@ export type Database = {
           deleted_at: string | null
           department_id: string | null
           id: string
+          metadata: Json | null
           name: string | null
           type: string
           updated_at: string
@@ -9559,6 +9560,7 @@ export type Database = {
           deleted_at?: string | null
           department_id?: string | null
           id?: string
+          metadata?: Json | null
           name?: string | null
           type?: string
           updated_at?: string
@@ -9570,6 +9572,7 @@ export type Database = {
           deleted_at?: string | null
           department_id?: string | null
           id?: string
+          metadata?: Json | null
           name?: string | null
           type?: string
           updated_at?: string

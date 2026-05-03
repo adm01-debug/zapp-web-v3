@@ -10,6 +10,7 @@ export interface Profile {
   role: string;
   max_chats: number;
   department_id: string | null;
+  department: string | null;
 }
 
 export const authService = {

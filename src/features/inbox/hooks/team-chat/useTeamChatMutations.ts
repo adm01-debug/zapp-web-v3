@@ -130,3 +130,23 @@ export function useToggleMuteConversation() {
     onError: () => { toast({ title: 'Erro ao alterar silenciar', variant: 'destructive' }); },
   });
 }
+
+export function useTransferTeamConversation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ conversationId, departmentId, metadata }: { conversationId: string; departmentId: string; metadata?: any }) => {
+      const { data, error } = await supabase.from('team_conversations').update({
+        department_id: departmentId,
+        metadata: metadata || {},
+        updated_at: new Date().toISOString()
+      }).eq('id', conversationId).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team-conversations'] });
+      toast({ title: 'Conversa transferida com sucesso' });
+    },
+    onError: () => { toast({ title: 'Erro ao transferir conversa', variant: 'destructive' }); },
+  });
+}
