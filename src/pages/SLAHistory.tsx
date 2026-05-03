@@ -3,7 +3,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { SLAHistoryDashboard, SLADeliveryHistoryDashboard } from '@/features/sla';
 import { FloatingParticles } from '@/components/dashboard/FloatingParticles';
 import { AuroraBorealis } from '@/components/effects/AuroraBorealis';
-import { Tabs, TabsContent, TableList, TabsTrigger, TabsList } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsTrigger, TabsList } from '@/components/ui/tabs';
 
 const SLAHistory = () => {
   const [currentView, setCurrentView] = useState('sla-history');

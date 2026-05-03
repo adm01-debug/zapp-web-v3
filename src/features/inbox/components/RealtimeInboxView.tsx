@@ -62,6 +62,8 @@ export function RealtimeInboxView() {
     // @ts-ignore - Propriedades estendidas
     deliveryDelayStatus: inbox.deliveryAlert?.status,
     deliveryDelayMs: inbox.deliveryAlert?.delay,
+    // @ts-ignore
+    customMessage: (inbox.deliveryAlert as any)?.message,
   });
   // Realtime sync of evolution_contacts (FATOR X) → React Query caches
   useRealtimeContacts({ instance: 'wpp2' });

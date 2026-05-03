@@ -214,11 +214,19 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   useEffect(() => {
     if (!conversation.contact.id || !messages.length) return;
     
-    // Thresholds fixos conforme pedido: 30/60 min
-    const WARNING_THRESHOLD = 30 * 60 * 1000;
-    const BREACH_THRESHOLD = 60 * 60 * 1000;
-    
-    const checkDeliveryDelay = () => {
+    // Thresholds padrão ou customizados
+    const checkDeliveryDelay = async () => {
+      // 1. Busca regra customizada para o contato
+      const { data: customRule } = await supabase
+        .from('sla_delivery_rules')
+        .select('*')
+        .eq('contact_id', conversation.contact.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      const WARNING_THRESHOLD = (customRule?.warning_threshold_minutes || 30) * 60 * 1000;
+      const BREACH_THRESHOLD = (customRule?.breach_threshold_minutes || 60) * 60 * 1000;
+      const customMsg = customRule?.custom_message;
       // Pega a última mensagem outbound que está entregue mas não lida
       const lastOutbound = [...messages].reverse().find(m => 
         m.sender === 'agent' && 
@@ -232,11 +240,21 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
       
       if (delay >= BREACH_THRESHOLD) {
         window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
-          detail: { contactId: conversation.contact.id, status: 'breached', delay } 
+          detail: { 
+            contactId: conversation.contact.id, 
+            status: 'breached', 
+            delay,
+            message: customMsg || undefined 
+          } 
         }));
       } else if (delay >= WARNING_THRESHOLD) {
         window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
-          detail: { contactId: conversation.contact.id, status: 'warning', delay } 
+          detail: { 
+            contactId: conversation.contact.id, 
+            status: 'warning', 
+            delay,
+            message: customMsg || undefined
+          } 
         }));
       }
     };

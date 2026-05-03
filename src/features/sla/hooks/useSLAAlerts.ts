@@ -169,10 +169,13 @@ export function useSLAAlerts(params: SLAAlertParams) {
         const kindLabel = 
           kind === 'first_response' ? '1ª resposta' : 
           kind === 'delivery_delay' ? 'Atraso na leitura' : 'Resolução';
+        
+        const customMsg = (params as any).customMessage;
         const title = kind === 'delivery_delay' 
           ? `Mensagem não lida — ${params.contactName}`
           : `SLA ${isBreach ? 'violado' : 'em risco'} — ${params.contactName}`;
-        const description = `${kindLabel} · ${formatDurationMs(durationMs)} · ${params.ruleName ?? 'regra padrão'}`;
+        
+        const description = customMsg || `${kindLabel} · ${formatDurationMs(durationMs)} · ${params.ruleName ?? 'regra padrão'}`;
 
         const action = params.onOpenConversation
           ? { label: 'Abrir conversa', onClick: () => params.onOpenConversation?.() }
