@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Bloquear bots conhecidos de scraping
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
