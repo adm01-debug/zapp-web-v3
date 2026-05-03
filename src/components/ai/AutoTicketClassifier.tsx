@@ -117,7 +117,7 @@ export function AutoTicketClassifier() {
   const runBatchClassification = async () => {
     setClassifying(true);
     try {
-      const { data, error: res4861Err } = await supabase.functions.invoke('ai-classify-tickets', {
+      const { data, error } = await supabase.functions.invoke('ai-classify-tickets', {
         body: { limit: 50 }
       });
       if (error) throw error;

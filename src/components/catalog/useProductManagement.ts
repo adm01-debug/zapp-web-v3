@@ -76,11 +76,11 @@ export function useProductManagement() {
       };
 
       if (editingProduct) {
-        const { error: res2716Err } = await supabase.from('products').update(payload).eq('id', editingProduct.id);
+        const { error } = await supabase.from('products').update(payload).eq('id', editingProduct.id);
         if (error) throw error;
         toast({ title: 'Produto atualizado com sucesso!' });
       } else {
-        const { error: res2927Err } = await supabase.from('products').insert(payload);
+        const { error } = await supabase.from('products').insert(payload);
         if (error) throw error;
         toast({ title: 'Produto criado com sucesso!' });
       }
@@ -103,7 +103,7 @@ export function useProductManagement() {
   const handleDelete = useCallback(async () => {
     if (!deleteProduct) return;
     try {
-      const { error: res3615Err } = await supabase.from('products').delete().eq('id', deleteProduct.id);
+      const { error } = await supabase.from('products').delete().eq('id', deleteProduct.id);
       if (error) throw error;
       toast({ title: 'Produto excluído com sucesso!' });
       setDeleteProduct(null);

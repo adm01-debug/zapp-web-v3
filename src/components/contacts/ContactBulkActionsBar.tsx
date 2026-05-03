@@ -69,7 +69,7 @@ export const ContactBulkActionsBar: React.FC<Props> = ({
     const tag = tagInput.trim();
     if (!tag) return;
     withLoading('tag', async () => {
-      const { error: res2563Err } = await dbRpc(RPC.bulkAddTag, {
+      const { error } = await dbRpc(RPC.bulkAddTag, {
         p_contact_ids: selectedIds, p_tag: tag,
       });
       if (error) throw error;
