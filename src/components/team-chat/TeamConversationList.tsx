@@ -90,7 +90,7 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
                 <Avatar className="w-10 h-10 shrink-0">
                   <AvatarImage src={conv.avatar_url || undefined} />
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    {conv.type === 'group' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                    {conv.type === 'department' ? <Building2 className="w-4 h-4" /> : conv.type === 'group' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
