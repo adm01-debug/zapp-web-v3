@@ -209,9 +209,7 @@ export function QuickReactionBar({
     refreshKey,
     disableRealtime,
   });
-
-  const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
-
+  
   const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
 
   const handleReact = async (emoji: string) => {
@@ -220,7 +218,6 @@ export function QuickReactionBar({
     } else {
       await addReaction(emoji);
     }
-    trackReactionEvent('open_picker', { messageId });
     if (typeof trackReactionEvent === 'function') {
       trackReactionEvent('open_picker', { messageId });
     }
