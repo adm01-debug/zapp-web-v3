@@ -36,7 +36,7 @@ interface ChatMessageInputProps {
   messages: Message[];
   quickReplies: QuickReply[];
   onInputChange: (value: string) => void;
-  onSend: () => void;
+  onSend: (attachments?: File[]) => void;
   onCancelReply: () => void;
   onSlashCommand: (command: SlashCommand, subCommand?: string) => void;
   onCloseSlashCommands: () => void;
@@ -72,6 +72,39 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileUploaderRef = useRef<FileUploaderRef>(null);
   const isMobile = useIsMobile();
+  const [attachments, setAttachments] = useState<QueuedFile[]>([]);
+
+  const handleFileSelect = useCallback((file: File) => {
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      toast({ title: 'Arquivo inválido', description: validation.error, variant: 'destructive' });
+      return;
+    }
+    
+    const preview = (validation.category === 'image' || file.type === 'application/pdf') 
+      ? URL.createObjectURL(file) 
+      : undefined;
+      
+    setAttachments(prev => [...prev, {
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      preview,
+      category: validation.category || 'document'
+    }]);
+  }, []);
+
+  const removeAttachment = useCallback((id: string) => {
+    setAttachments(prev => {
+      const att = prev.find(a => a.id === id);
+      if (att?.preview) URL.revokeObjectURL(att.preview);
+      return prev.filter(a => a.id !== id);
+    });
+  }, []);
+
+  const handleSend = () => {
+    onSend(attachments.map(a => a.file));
+    setAttachments([]);
+  };
 
   useImperativeHandle(ref, () => ({
     focus: () => textareaRef.current?.focus(),
@@ -93,7 +126,7 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (showSlashCommands && (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown')) return;
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(); }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
     if (e.key === 'Escape' && showSlashCommands) onCloseSlashCommands();
   };
 
@@ -117,6 +150,51 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
     <>
       <AnimatePresence>
         {replyToMessage && <ReplyPreview message={replyToMessage} onCancel={onCancelReply} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {attachments.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-2 border-t border-border/50 bg-background/80 backdrop-blur-sm"
+          >
+            <div className="flex flex-wrap gap-2">
+              {attachments.map((att) => (
+                <motion.div
+                  key={att.id}
+                  layout
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  className="relative group w-20 h-20 rounded-lg overflow-hidden border border-border bg-muted flex items-center justify-center"
+                >
+                  {att.preview ? (
+                    <img src={att.preview} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground p-1">
+                      {att.category === 'video' ? <FileVideo className="w-6 h-6" /> :
+                       att.category === 'audio' ? <FileAudio className="w-6 h-6" /> :
+                       att.category === 'image' ? <ImageIcon className="w-6 h-6" /> :
+                       <FileText className="w-6 h-6" />}
+                      <span className="text-[8px] truncate max-w-full text-center">{att.file.name}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => removeAttachment(att.id)}
+                    className="absolute top-1 right-1 p-0.5 rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  <div className="absolute bottom-0 left-0 right-0 bg-background/60 backdrop-blur-xs py-0.5 px-1">
+                    <span className="text-[8px] block truncate font-medium">{formatFileSize(att.file.size)}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -146,8 +224,9 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("glass-strong border-t border-border/50", isMobile ? "p-2 safe-area-bottom" : "p-4")}>
         <div className="flex items-end gap-1">
           <FileUploader ref={fileUploaderRef} instanceName={contactId} recipientNumber={contactPhone} contactId={contactId} connectionId={undefined}
-            onFileSelect={(file, category) => toast({ title: 'Arquivo selecionado', description: `${file.name} (${category}) será enviado.` })}
+            onFileSelect={handleFileSelect}
             onFileSent={() => toast({ title: 'Arquivo enviado!', description: 'O arquivo foi enviado com sucesso via WhatsApp.' })}
+            showDialog={false}
           />
 
           {isMobile ? (
@@ -186,7 +265,7 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
           </div>
 
           <div className="flex-shrink-0">
-            <Button onClick={onSend} disabled={!inputValue.trim() || isSending} size="icon"
+            <Button onClick={handleSend} disabled={(!inputValue.trim() && attachments.length === 0) || isSending} size="icon"
               className={cn("text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all disabled:opacity-50 touch-manipulation active:scale-95", isMobile ? "w-10 h-10 rounded-full" : "w-9 h-9")}
               style={{ background: 'var(--gradient-primary)' }} aria-label="Enviar mensagem">
               {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
