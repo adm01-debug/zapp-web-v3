@@ -1,135 +1,166 @@
 /**
- * ContactBitrix24Panel.tsx
- * Bitrix24 CRM integration panel for the contact sidebar.
- * Solves Gap #10: No Bitrix24 data visible in the chat.
+ * ContactBitrix24Panel.tsx — CRM enrichment from EXTERNAL database
  *
- * Shows active deals, last activities, and company info from Bitrix24.
+ * FIXED: Now reads bitrix_contact_id, company data, and deals from the
+ * EXTERNAL CRM database (GESTÃO DE CLIENTES) instead of Lovable Cloud.
+ *
+ * Shows:
+ * - Bitrix24 contact ID with direct link
+ * - Company info from companies table
+ * - Recent interactions from interactions table
+ * - Relationship stage and score
  */
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Building2, ExternalLink, Users, TrendingUp, MessageSquare } from 'lucide-react';
+import { contactsDB, type ExternalContact } from '@/lib/contactsDB';
+import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, Briefcase, DollarSign, Loader2, RefreshCw, Building2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { sanitizeText } from '@/lib/sanitize';
 
-interface Bitrix24Deal {
+interface ContactBitrix24PanelProps {
+  contact: ExternalContact | null;
+}
+
+interface CompanyInfo {
   id: string;
-  title: string;
-  stage: string;
-  amount: number | null;
-  currency: string;
-  assigned_to: string | null;
+  name: string | null;
+  cnpj: string | null;
+  segment: string | null;
+}
+
+interface InteractionSummary {
+  id: string;
+  interaction_type: string;
+  description: string | null;
   created_at: string;
 }
 
-interface Bitrix24ContactData {
-  bitrix_id: string | null;
-  company_name: string | null;
-  deals: Bitrix24Deal[];
-  last_activity: string | null;
-}
-
-interface ContactBitrix24PanelProps {
-  contactId: string;
-  workspaceId: string;
-  contactPhone: string | null;
-  contactEmail: string | null;
-}
-
-export const ContactBitrix24Panel: React.FC<ContactBitrix24PanelProps> = ({
-  contactId, workspaceId, contactPhone, contactEmail,
-}) => {
-  const [data, setData] = useState<Bitrix24ContactData | null>(null);
+export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
+  const [company, setCompany] = useState<CompanyInfo | null>(null);
+  const [interactions, setInteractions] = useState<InteractionSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchBitrixData = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data: result, error: fnError } = await supabase.functions.invoke('bitrix24-contact-lookup', {
-        body: {
-          contact_id: contactId,
-          workspace_id: workspaceId,
-          phone: contactPhone,
-          email: contactEmail,
-        },
-      });
-      if (fnError) throw fnError;
-      setData(result as Bitrix24ContactData);
-    } catch (err) {
-      setError('Bitrix24 indispon\u00edvel');
-      console.warn('[Bitrix24Panel] Lookup failed:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
-    if (contactPhone || contactEmail) fetchBitrixData();
-  }, [contactId]);
+    if (!contact || !isExternalConfigured) return;
+    let cancelled = false;
+    setIsLoading(true);
 
-  if (!contactPhone && !contactEmail) return null;
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-        <Loader2 className="h-3 w-3 animate-spin" /> Buscando dados Bitrix24...
-      </div>
-    );
-  }
-  if (error || !data) return null;
-  if (!data.bitrix_id && data.deals.length === 0) return null;
+    const loadData = async () => {
+      const client = getExternalSupabase();
+      if (!client) return;
+
+      // Load company
+      if (contact.company_id) {
+        const { data: companyData } = await client
+          .from('companies')
+          .select('id, name, cnpj, segment')
+          .eq('id', contact.company_id)
+          .maybeSingle();
+        if (!cancelled && companyData) setCompany(companyData as CompanyInfo);
+      }
+
+      // Load recent interactions
+      const { data: intData } = await client
+        .from('interactions')
+        .select('id, interaction_type, description, created_at')
+        .eq('contact_id', contact.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (!cancelled && intData) setInteractions(intData as InteractionSummary[]);
+
+      if (!cancelled) setIsLoading(false);
+    };
+
+    loadData().catch(console.error);
+    return () => { cancelled = true; };
+  }, [contact?.id, contact?.company_id]);
+
+  if (!contact || !isExternalConfigured) return null;
+
+  const bitrixUrl = contact.bitrix_contact_id
+    ? `https://promobrindes.bitrix24.com.br/crm/contact/details/${contact.bitrix_contact_id}/`
+    : null;
+
+  const stageColor: Record<string, string> = {
+    unknown: 'bg-gray-100 text-gray-700',
+    lead: 'bg-blue-100 text-blue-700',
+    prospect: 'bg-indigo-100 text-indigo-700',
+    customer: 'bg-green-100 text-green-700',
+    advocate: 'bg-emerald-100 text-emerald-700',
+    churned: 'bg-red-100 text-red-700',
+  };
 
   return (
-    <div className="space-y-2" role="region" aria-label="Dados Bitrix24">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-          <Briefcase className="h-3 w-3" /> Bitrix24 CRM
-        </p>
-        <Button size="icon" variant="ghost" className="h-5 w-5" onClick={fetchBitrixData} aria-label="Atualizar Bitrix24">
-          <RefreshCw className="h-3 w-3" />
-        </Button>
-      </div>
-
-      {data.company_name && (
-        <div className="flex items-center gap-1.5 text-xs">
-          <Building2 className="h-3 w-3 text-muted-foreground" />
-          <span className="font-medium">{sanitizeText(data.company_name)}</span>
+    <div className="space-y-3">
+      {/* Relationship Stage */}
+      {contact.relationship_stage && (
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <Badge className={stageColor[contact.relationship_stage] ?? stageColor.unknown}>
+            {contact.relationship_stage}
+          </Badge>
+          {contact.relationship_score != null && (
+            <span className="text-xs text-muted-foreground">Score: {contact.relationship_score}/100</span>
+          )}
         </div>
       )}
 
-      {data.deals.length > 0 && (
+      {/* Bitrix24 Link */}
+      {bitrixUrl && (
+        <a
+          href={bitrixUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          Bitrix24 #{contact.bitrix_contact_id}
+        </a>
+      )}
+
+      {/* Company */}
+      {company && (
+        <div className="flex items-start gap-2 p-2 bg-muted/50 rounded-lg">
+          <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{company.name}</p>
+            {company.cnpj && <p className="text-xs text-muted-foreground">{company.cnpj}</p>}
+            {company.segment && <Badge variant="outline" className="text-xs mt-1">{company.segment}</Badge>}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Interactions */}
+      {interactions.length > 0 && (
         <div className="space-y-1">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Neg\u00f3cios Ativos</p>
-          {data.deals.slice(0, 5).map((deal) => (
-            <div key={deal.id} className="bg-muted/20 rounded p-1.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-medium truncate">{sanitizeText(deal.title)}</span>
-                <Badge variant="outline" className="text-[10px] px-1">{deal.stage}</Badge>
-              </div>
-              {deal.amount && (
-                <div className="flex items-center gap-1 mt-0.5 text-muted-foreground">
-                  <DollarSign className="h-3 w-3" />
-                  <span>{deal.amount.toLocaleString('pt-BR', { style: 'currency', currency: deal.currency || 'BRL' })}</span>
-                </div>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MessageSquare className="h-3 w-3" />
+            \u00daltimas intera\u00e7\u00f5es
+          </div>
+          {interactions.map((int) => (
+            <div key={int.id} className="text-xs p-1.5 bg-muted/30 rounded">
+              <span className="font-medium">{int.interaction_type}</span>
+              {int.description && (
+                <span className="text-muted-foreground"> \u2014 {int.description.slice(0, 60)}...</span>
               )}
+              <span className="text-muted-foreground block">
+                {new Date(int.created_at).toLocaleDateString('pt-BR')}
+              </span>
             </div>
           ))}
         </div>
       )}
 
-      {data.bitrix_id && (
-        <a
-          href={`https://promobrindes.bitrix24.com.br/crm/contact/details/${data.bitrix_id}/`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-primary hover:underline flex items-center gap-1"
-        >
-          <ExternalLink className="h-3 w-3" /> Abrir no Bitrix24
-        </a>
+      {/* Sentiment */}
+      {contact.sentiment && contact.sentiment !== 'neutral' && (
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <Badge variant={contact.sentiment === 'positive' ? 'default' : 'destructive'}>
+            {contact.sentiment}
+          </Badge>
+        </div>
       )}
     </div>
   );
-};
+}
 
 export default ContactBitrix24Panel;
