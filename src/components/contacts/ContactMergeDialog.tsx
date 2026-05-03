@@ -126,9 +126,35 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [resolution, setResolution] = useState<FieldResolution>({
-    name: 'primary', phone: 'primary', email: 'primary',
-    company: 'primary', notes: 'primary',
+  
+  // Calculate Confidence Score
+  const confidenceScore = useMemo(() => {
+    let score = 0;
+    if (primaryContact.name === secondaryContact.name) score += 40;
+    if (primaryContact.phone === secondaryContact.phone && primaryContact.phone) score += 30;
+    if (primaryContact.email === secondaryContact.email && primaryContact.email) score += 20;
+    if (primaryContact.company === secondaryContact.company && primaryContact.company) score += 10;
+    return score || 15; // minimum base score
+  }, [primaryContact, secondaryContact]);
+
+  // Auto-selection logic (Predictive)
+  const [resolution, setResolution] = useState<FieldResolution>(() => {
+    const res: Partial<FieldResolution> = {};
+    const fields: Array<keyof FieldResolution> = ['name', 'phone', 'email', 'company', 'notes'];
+    
+    fields.forEach(field => {
+      const pVal = (primaryContact as any)[field];
+      const sVal = (secondaryContact as any)[field];
+      
+      // If primary is empty but secondary isn't, prefer secondary
+      if (!pVal && sVal) {
+        res[field] = 'secondary';
+      } else {
+        res[field] = 'primary';
+      }
+    });
+    
+    return res as FieldResolution;
   });
 
   const pick = useCallback((field: keyof FieldResolution): string => {
