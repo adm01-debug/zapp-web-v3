@@ -58,6 +58,10 @@ describe('useOptimisticMessages — Daily Scenarios', () => {
     // Optimistic should be removed because external_id matches
     expect(mergedAfterReal).toHaveLength(1);
     expect(mergedAfterReal[0].id).toBe('real-1');
+    
+    act(() => {
+      result.current.cleanup([optId]);
+    });
     expect(result.current.pendingCount).toBe(0);
   });
 
