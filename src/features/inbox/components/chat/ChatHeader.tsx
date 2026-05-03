@@ -194,6 +194,30 @@ export function ChatHeader({
         )}
 
         <RealtimeCollaboration contactId={conversation.contact.id} className="mr-1" />
+        
+        {onOpenWhisper && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-100/50"
+                onClick={onOpenWhisper}
+              >
+                <div className="relative">
+                  <EyeOff className="w-4 h-4" />
+                  {whisperCount !== undefined && whisperCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 h-3.5 min-w-[14px] px-0.5 rounded-full bg-amber-500 text-[8px] font-bold text-white flex items-center justify-center ring-1 ring-white">
+                      {whisperCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-tight hidden sm:inline">Equipe</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Abrir Modo Sussurro (Chat Interno)</TooltipContent>
+          </Tooltip>
+        )}
         {[
           { icon: Search, label: 'Buscar (Ctrl+K)', onClick: onOpenSearch },
           { icon: PhoneCall, label: 'Iniciar chamada', onClick: onStartCall },
