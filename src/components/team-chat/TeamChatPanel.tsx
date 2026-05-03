@@ -155,11 +155,23 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
 
       {s.showScrollDown && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10"><Button size="icon" variant="secondary" className="rounded-full shadow-lg h-8 w-8" onClick={s.scrollToBottom}><ArrowDown className="w-4 h-4" /></Button></div>}
 
-      <TeamChatInputArea conversationId={conversation.id} text={s.text} setText={s.setText} replyTo={s.replyTo}
-        isRecordingAudio={s.isRecordingAudio} isPending={s.sendMutation.isPending} onSend={s.handleSend}
-        onCancelReply={() => s.setReplyTo(null)} onRecordToggle={() => s.setIsRecordingAudio(!s.isRecordingAudio)}
-        onAudioSend={s.handleAudioSend} onSendSticker={s.handleSendSticker} onSendAudioMeme={s.handleSendAudioMeme}
-        onSendCustomEmoji={s.handleSendCustomEmoji} onFileSent={s.handleFileSent} />
+      {isDeptMember ? (
+        <TeamChatInputArea conversationId={conversation.id} text={s.text} setText={s.setText} replyTo={s.replyTo}
+          isRecordingAudio={s.isRecordingAudio} isPending={s.sendMutation.isPending} onSend={s.handleSend}
+          onCancelReply={() => s.setReplyTo(null)} onRecordToggle={() => s.setIsRecordingAudio(!s.isRecordingAudio)}
+          onAudioSend={s.handleAudioSend} onSendSticker={s.handleSendSticker} onSendAudioMeme={s.handleSendAudioMeme}
+          onSendCustomEmoji={s.handleSendCustomEmoji} onFileSent={s.handleFileSent} />
+      ) : (
+        <div className="p-6 bg-muted/30 border-t border-border flex flex-col items-center justify-center text-center gap-2">
+          <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+            <Lock className="w-5 h-5 text-destructive" />
+          </div>
+          <p className="text-sm font-semibold text-foreground">Acesso Restrito ao Departamento</p>
+          <p className="text-xs text-muted-foreground max-w-xs">
+            Você não faz parte deste departamento e não tem permissão para visualizar ou enviar mensagens.
+          </p>
+        </div>
+      )}
 
       <AddMembersDialog open={s.showAddMembers} onOpenChange={s.setShowAddMembers} conversation={conversation} />
     </div>
