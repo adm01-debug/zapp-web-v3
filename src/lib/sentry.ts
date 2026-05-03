@@ -1,0 +1,79 @@
+/**
+ * Sentry SDK initialization — guarded by VITE_SENTRY_DSN env var.
+ *
+ * Behavior:
+ * - If VITE_SENTRY_DSN is empty/undefined → noop (zero overhead, zero network calls)
+ * - If VITE_SENTRY_DSN is set → init with sane defaults for SPA + Supabase backend
+ *
+ * Activation: defina VITE_SENTRY_DSN no .env.local + rebuild
+ *
+ * Tags automaticamente:
+ * - environment: prod (mode=production) | dev (mode=development) | preview
+ * - release: VITE_APP_VERSION ou commit hash via VITE_GIT_SHA (se disponível)
+ */
+import * as Sentry from "@sentry/react";
+
+const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+const ENV = (import.meta.env.MODE === "production" ? "prod" : import.meta.env.MODE) as string;
+const RELEASE = (import.meta.env.VITE_GIT_SHA || import.meta.env.VITE_APP_VERSION || "unknown") as string;
+
+let initialized = false;
+
+export function initSentry(): boolean {
+  if (initialized) return true;
+  if (!DSN || DSN.trim() === "" || DSN === "PLACEHOLDER") {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.info("[sentry] DSN not configured — Sentry disabled (defina VITE_SENTRY_DSN no .env.local pra ativar)");
+    }
+    return false;
+  }
+
+  try {
+    Sentry.init({
+      dsn: DSN,
+      environment: ENV,
+      release: RELEASE,
+      // Tracing: sample 10% in prod, 100% in dev
+      tracesSampleRate: ENV === "prod" ? 0.1 : 1.0,
+      // Replay: 1% das sessions, 100% das que tiverem erro
+      replaysSessionSampleRate: 0.01,
+      replaysOnErrorSampleRate: 1.0,
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration({ maskAllText: false, blockAllMedia: false }),
+      ],
+      // Don't send if user opted out (LGPD friendly)
+      beforeSend(event) {
+        // Filtra erros de extensões browser e ResizeObserver loop
+        const msg = event.exception?.values?.[0]?.value || event.message || "";
+        if (
+          msg.includes("ResizeObserver loop") ||
+          msg.includes("chrome-extension://") ||
+          msg.includes("moz-extension://") ||
+          msg.includes("Non-Error promise rejection")
+        ) {
+          return null;
+        }
+        return event;
+      },
+      // Domínios pra distributed tracing (Supabase backend self-hosted)
+      tracePropagationTargets: [
+        /^\//,
+        /^https:\/\/zapp\.atomicabr\.com\.br/,
+        /^https:\/\/supabase\.atomicabr\.com\.br/,
+        /^https:\/\/.*\.atomicabr\.com\.br/,
+      ],
+    });
+
+    initialized = true;
+    return true;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("[sentry] init failed:", err);
+    return false;
+  }
+}
+
+export const SentryErrorBoundary = Sentry.ErrorBoundary;
+export { Sentry };
