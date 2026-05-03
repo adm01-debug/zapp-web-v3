@@ -64,6 +64,9 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   const replyToMessageRef = useRef(replyToMessage);
   replyToMessageRef.current = replyToMessage;
 
+  const isWhisperRef = useRef(isWhisper);
+  isWhisperRef.current = isWhisper;
+
   const EDIT_WINDOW_MINUTES = 15;
 
   const handleEditStart = useCallback((message: Message) => {
