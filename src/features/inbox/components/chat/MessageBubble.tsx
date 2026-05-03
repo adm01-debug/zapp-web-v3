@@ -222,7 +222,7 @@ export function MessageBubble({
                         isFirstInGroup && !isLastInGroup && 'rounded-2xl rounded-bl-sm',
                         !isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-tl-sm rounded-bl-md',
                         !isFirstInGroup && !isLastInGroup && 'rounded-xl rounded-tl-sm rounded-bl-sm'),
-                  message.isWhisper && 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 shadow-inner ring-1 ring-amber-500/20',
+                  message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 shadow-[inset_0_1px_2px_rgba(251,191,36,0.1)] ring-1 ring-amber-500/30 border-dashed',
                   isFailedTerminal && 'ring-1 ring-destructive/50 border border-destructive/40'
                 )}
               >
