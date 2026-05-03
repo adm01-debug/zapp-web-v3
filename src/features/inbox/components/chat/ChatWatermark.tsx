@@ -53,7 +53,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
             </g>
 
             {/* Smile */}
-            <g opacity="0.02" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-muted-foreground">
+            <g opacity="0.05" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-foreground">
               <circle cx="180" cy="150" r="10" />
               <circle cx="177" cy="148" r="1" fill="currentColor" />
               <circle cx="183" cy="148" r="1" fill="currentColor" />
