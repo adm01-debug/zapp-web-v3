@@ -216,6 +216,7 @@ export function MessageBubble({
                         isFirstInGroup && !isLastInGroup && 'rounded-2xl rounded-bl-sm',
                         !isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-tl-sm rounded-bl-md',
                         !isFirstInGroup && !isLastInGroup && 'rounded-xl rounded-tl-sm rounded-bl-sm'),
+                  message.isWhisper && 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 shadow-inner ring-1 ring-amber-500/20',
                   isFailedTerminal && 'ring-1 ring-destructive/50 border border-destructive/40'
                 )}
               >
