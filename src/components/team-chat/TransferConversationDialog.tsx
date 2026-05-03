@@ -36,7 +36,7 @@ export function TransferConversationDialog({ open, onOpenChange, conversation }:
       metadata: {
         ...(conversation.metadata || {}),
         transferred_at: new Date().toISOString(),
-        transferred_by: 'Support Agent', // This would be dynamic in real use
+        transferred_by: 'Support Agent',
         original_department_id: conversation.department_id
       }
     }, {
@@ -56,12 +56,17 @@ export function TransferConversationDialog({ open, onOpenChange, conversation }:
 
         <div className="py-4">
           <Select value={selectedDeptId} onValueChange={setSelectedDeptId}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" data-testid="dept-select-trigger">
               <SelectValue placeholder="Selecione um departamento" />
             </SelectTrigger>
             <SelectContent>
               {departments.map((dept) => (
-                <SelectItem key={dept.id} value={dept.id} disabled={dept.id === conversation.department_id}>
+                <SelectItem 
+                  key={dept.id} 
+                  value={dept.id} 
+                  disabled={dept.id === conversation.department_id}
+                  data-testid={`dept-option-${dept.name}`}
+                >
                   {dept.name}
                 </SelectItem>
               ))}
@@ -77,6 +82,7 @@ export function TransferConversationDialog({ open, onOpenChange, conversation }:
             onClick={handleTransfer} 
             disabled={!selectedDeptId || transferMutation.isPending}
             className="gap-2"
+            data-testid="confirm-transfer-btn"
           >
             {transferMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Building2 className="w-4 h-4" />}
             Transferir
