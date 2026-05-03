@@ -18,15 +18,17 @@ import { Button } from '@/components/ui/button';
 
 interface ContactDuplicateIndicatorProps {
   contactId: string;
-  phone: string | null;
-  name: string | null;
+  contactPhone: string | null;
+  contactName: string | null;
+  contactEmail?: string | null;
+  workspaceId?: string;
   onMerge?: (duplicateId: string) => void;
 }
 
 export function ContactDuplicateIndicator({
   contactId,
-  phone,
-  name,
+  contactPhone,
+  contactName,
   onMerge,
 }: ContactDuplicateIndicatorProps) {
   const [duplicates, setDuplicates] = useState<ExternalContact[]>([]);

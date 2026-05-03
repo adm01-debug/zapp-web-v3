@@ -98,12 +98,11 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Auto-fetch WhatsApp avatar
-  const { fetchAvatar } = useContactAvatarFetch({
-    contactId: contact?.id ?? '',
-    phone: contact?.phone ?? null,
-    currentAvatarUrl: contact?.avatar_url ?? null,
-    workspaceId,
-  });
+  const { fetchAvatar } = useContactAvatarFetch(
+    contact?.id ?? '',
+    contact?.phone ?? null,
+    contact?.avatar_url ?? null
+  );
 
   useEffect(() => {
     if (contact && !contact.avatar_url && contact.phone) {
