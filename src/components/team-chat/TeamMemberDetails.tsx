@@ -50,14 +50,23 @@ export function TeamMemberDetails({ conversation, onClose }: TeamMemberDetailsPr
 
   const memberIds = conversation.members?.map(m => m.profile_id) || [];
   const { data: groupMembers = [] } = useQuery({
-    queryKey: ['team-group-members', conversation.id, memberIds.join(',')],
+    queryKey: ['team-group-members', conversation.id, conversation.type, conversation.department_id, memberIds.join(',')],
     queryFn: async () => {
+      if (conversation.type === 'department' && conversation.department_id) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, name, email, phone, avatar_url, job_title, department, role, is_active, created_at, birthday')
+          .eq('department_id', conversation.department_id);
+        if (error) throw error;
+        return (data || []) as MemberProfile[];
+      }
+      
       if (memberIds.length === 0) return [];
       const { data, error } = await supabase.from('profiles').select('id, name, email, phone, avatar_url, job_title, department, role, is_active, created_at, birthday').in('id', memberIds);
       if (error) throw error;
       return (data || []) as MemberProfile[];
     },
-    enabled: conversation.type === 'group' && memberIds.length > 0,
+    enabled: (conversation.type === 'group' && memberIds.length > 0) || (conversation.type === 'department' && !!conversation.department_id),
   });
 
   return (
