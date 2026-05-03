@@ -35,6 +35,7 @@ const ENTITY_TYPES = [
   { value: "queue", label: "Filas" },
   { value: "channel_queue", label: "Vínculo canal↔fila" },
   { value: "sticky_assignment", label: "Sticky" },
+  { value: "message_reaction", label: "Reações (Analytics)" },
 ];
 
 const PML_STATUS = [
@@ -103,6 +104,7 @@ function AuditPanel() {
         "queue",
         "channel_queue",
         "sticky_assignment",
+        "message_reaction",
       ]);
     } else {
       q = q.eq("entity_type", entity);
