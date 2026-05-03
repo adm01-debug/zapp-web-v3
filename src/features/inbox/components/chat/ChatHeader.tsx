@@ -76,8 +76,8 @@ export function ChatHeader({
 
   return (
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className={cn(
-      "flex items-center justify-between px-6 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-30",
-      density === 'comfortable' ? 'py-4' : 'py-2'
+      "flex items-center justify-between px-4 sm:px-6 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-30",
+      density === 'comfortable' ? 'py-3' : 'py-2'
     )}>
       <div className="flex items-center gap-3">
         {onBack && (
