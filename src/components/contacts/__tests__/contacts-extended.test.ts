@@ -8,7 +8,7 @@ import { escapeCsvCell, buildCsvString } from '@/lib/csvUtils';
 import { formatBRPhone, validatePhone } from '@/lib/phoneUtils';
 
 describe('XSS Regression — Extended', () => {
-  it('blocks XSS #1', () => expect(sanitizeText('<script>alert(1)</script>')).toBe('alert(1)'));
+  it('blocks XSS #1', () => expect(sanitizeText('<script>alert(1)</script>')).toBe(''));
   it('blocks XSS #2', () => expect(sanitizeText('<img src=x onerror=alert(1)>')).toBe(''));
   it('blocks XSS #3', () => expect(sanitizeText('<iframe src="javascript:alert(1)"></iframe>')).toBe(''));
   it('blocks XSS #4', () => expect(sanitizeText('<svg/onload=alert(1)>')).toBe(''));
@@ -17,7 +17,7 @@ describe('XSS Regression — Extended', () => {
   it('blocks XSS #7', () => expect(sanitizeText('<a href="javascript:alert(1)">')).toBe(''));
   it('blocks XSS #8', () => expect(sanitizeText('<form action="javascript:alert(1)">')).toBe(''));
   it('blocks XSS #9', () => expect(sanitizeText('<input autofocus onfocus=alert(1)>')).toBe(''));
-  it('blocks XSS #10', () => expect(sanitizeText('<video><source onerror="alert(1)">')).toBe('<video><source></video>'));
+  it('blocks XSS #10', () => expect(sanitizeText('<video><source onerror="alert(1)">')).toBe(''));
   it('preserves accented chars', () => expect(sanitizeText('João Conceição')).toBe('João Conceição'));
   it('preservers emojis', () => expect(sanitizeText('🎯 Rocket')).toBe('🎯 Rocket'));
 });
