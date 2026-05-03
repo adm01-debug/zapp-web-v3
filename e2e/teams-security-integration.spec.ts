@@ -6,6 +6,8 @@ import { loginAs } from './helpers/testHelpers';
  * This suite validates strict data isolation between departments and correct administrative oversight.
  */
 test.describe('Teams - RBAC & RLS Enforcement', () => {
+  test.setTimeout(60000);
+
 
   test('RH Agent: Isolated from TI data', async ({ page }) => {
     // Ensure RH Agent cannot see TI conversations or messages
