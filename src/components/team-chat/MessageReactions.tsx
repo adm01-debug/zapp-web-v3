@@ -141,7 +141,7 @@ export function TeamQuickReactionBar({
         initial={{ opacity: 0, y: 4, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.12 }}
-        className="flex items-center gap-0.5 px-1.5 py-1 rounded-full bg-card/95 dark:bg-[hsl(var(--card)/0.95)] border border-border/40 shadow-lg backdrop-blur-sm"
+        className="flex items-center gap-0.5 px-1 py-1 rounded-full bg-card/95 dark:bg-[hsl(var(--card)/0.95)] border border-border/40 shadow-xl backdrop-blur-md"
       >
         {QUICK_EMOJIS.map((emoji) => (
           <button
@@ -149,7 +149,7 @@ export function TeamQuickReactionBar({
             onClick={() => handleReact(emoji)}
             aria-label={`Reagir com ${emoji}`}
             className={cn(
-              'w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted/80 hover:scale-125 transition-all text-base focus-visible:ring-2 focus-visible:ring-primary outline-none',
+              'w-6 h-6 flex items-center justify-center rounded-full hover:bg-muted/80 hover:scale-125 transition-all text-sm focus-visible:ring-1 focus-visible:ring-primary outline-none',
               hasReacted(emoji) && 'bg-primary/10 ring-1 ring-primary/30'
             )}
           >
