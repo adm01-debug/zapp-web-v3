@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { SLAHistoryDashboard } from '@/features/sla';
+import { SLAHistoryDashboard, SLADeliveryHistoryDashboard } from '@/features/sla';
 import { FloatingParticles } from '@/components/dashboard/FloatingParticles';
 import { AuroraBorealis } from '@/components/effects/AuroraBorealis';
+import { Tabs, TabsContent, TableList, TabsTrigger, TabsList } from '@/components/ui/tabs';
 
 const SLAHistory = () => {
   const [currentView, setCurrentView] = useState('sla-history');
@@ -14,7 +15,18 @@ const SLAHistory = () => {
         <AuroraBorealis />
         <FloatingParticles />
         <div className="relative z-10">
-          <SLAHistoryDashboard />
+          <Tabs defaultValue="standard" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="standard">Atendimento</TabsTrigger>
+              <TabsTrigger value="delivery">Entregas & Leituras</TabsTrigger>
+            </TabsList>
+            <TabsContent value="standard">
+              <SLAHistoryDashboard />
+            </TabsContent>
+            <TabsContent value="delivery">
+              <SLADeliveryHistoryDashboard />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>

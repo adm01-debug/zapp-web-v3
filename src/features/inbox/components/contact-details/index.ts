@@ -13,4 +13,5 @@ export * from './SLAAndAITagsSection';
 export * from './SLATimelineSection';
 export * from './StoryViewer';
 export * from './WhatsAppStatusSection';
+export * from './SLADeliveryConfigSection';
 export * from './contactDetailSections';
