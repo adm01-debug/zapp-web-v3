@@ -111,7 +111,7 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
 
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
 
-export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed }: ChatPanelProps) {
+export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0 }: ChatPanelProps) {
   const [dialogs, dispatch] = useReducer(dialogReducer, initialDialogState);
   const openDialog = useCallback((key: DialogKey) => dispatch({ type: 'OPEN', key }), []);
   const closeDialog = useCallback((key: DialogKey) => dispatch({ type: 'CLOSE', key }), []);
