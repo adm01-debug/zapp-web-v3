@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -68,7 +68,8 @@ export function MessageReactions({
     return acc;
   }, {} as Record<string, { emoji: string; count: number; users: string[]; hasCurrentUser: boolean }>);
 
-  const reactionsList = Object.values(groupedReactions);
+  // Ordenar por popularidade
+  const reactionsList = Object.values(groupedReactions).sort((a, b) => b.count - a.count);
   const availableReactions = showExtended ? EXTENDED_REACTIONS : WHATSAPP_REACTIONS;
 
   const handleReact = async (emoji: string) => {
@@ -84,7 +85,7 @@ export function MessageReactions({
   };
 
   return (
-    <div className={cn('flex items-center gap-1 flex-wrap', isSent ? 'justify-end' : 'justify-start')}>
+    <div className={cn('flex items-center gap-1 flex-wrap mt-1', isSent ? 'justify-end' : 'justify-start')}>
       <TooltipProvider>
         {reactionsList.map((reaction) => (
           <Tooltip key={reaction.emoji}>
@@ -92,22 +93,19 @@ export function MessageReactions({
               <button
                 onClick={() => handleReact(reaction.emoji)}
                 className={cn(
-                  'flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs',
-                  'border transition-all cursor-pointer hover:scale-110 active:scale-90',
+                  'flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs transition-all',
+                  'border cursor-pointer hover:scale-110 active:scale-90',
                   reaction.hasCurrentUser
-                    ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20'
-                    : 'bg-muted/80 hover:bg-muted border-border/50'
+                    ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20 text-primary font-bold'
+                    : 'bg-muted/80 hover:bg-muted border-border/50 text-foreground'
                 )}
+                aria-pressed={reaction.hasCurrentUser}
+                data-testid={`reaction-${messageId}-${reaction.emoji}`}
               >
                 <span className="text-sm">{reaction.emoji}</span>
-                {reaction.count > 1 && (
-                  <span className={cn(
-                    'text-[10px] font-medium',
-                    reaction.hasCurrentUser ? 'text-primary' : 'text-muted-foreground'
-                  )}>
-                    {reaction.count}
-                  </span>
-                )}
+                <span className="text-[10px] font-semibold tabular-nums">
+                  {reaction.count}
+                </span>
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs">
@@ -127,46 +125,44 @@ export function MessageReactions({
               'p-1 rounded-full transition-all hover:scale-110 active:scale-90',
               'hover:bg-muted/80 text-muted-foreground hover:text-foreground',
               reactionsList.length === 0
-                ? 'opacity-0 group-hover:opacity-100'
+                ? 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
                 : 'opacity-60 hover:opacity-100'
             )}
+            aria-label="Adicionar reação"
+            data-testid={`reaction-trigger-${messageId}`}
           >
             <SmilePlus className="w-3.5 h-3.5" />
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto p-2 bg-popover"
+          className="w-auto p-2 bg-popover border-border shadow-xl animate-in fade-in zoom-in duration-150"
           align={isSent ? 'end' : 'start'}
           sideOffset={4}
+          role="dialog"
+          aria-label="Escolher um emoji"
         >
-          <div className="flex flex-wrap items-center gap-1 max-w-[200px]">
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-1" role="grid">
             {availableReactions.map((emoji) => {
               const userHasReacted = hasReacted(emoji);
 
               return (
-                <motion.button
+                <button
                   key={emoji}
-                  whileHover={{ scale: 1.25 }}
-                  whileTap={{ scale: 0.9 }}
+                  role="gridcell"
+                  aria-label={`Reagir com ${emoji}`}
                   onClick={() => handleReact(emoji)}
                   className={cn(
-                    'p-1.5 rounded-md transition-all text-lg relative',
-                    userHasReacted
-                      ? 'bg-primary/10 ring-1 ring-primary/30'
-                      : 'hover:bg-muted'
+                    'w-9 h-9 flex items-center justify-center rounded-md transition-all text-xl hover:scale-125 hover:bg-muted relative focus-visible:ring-2 focus-visible:ring-primary outline-none',
+                    userHasReacted && 'bg-primary/10 ring-1 ring-primary/30'
                   )}
                 >
                   {emoji}
                   {userHasReacted && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full flex items-center justify-center"
-                    >
+                    <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
                       <X className="w-2 h-2 text-primary-foreground" />
-                    </motion.div>
+                    </div>
                   )}
-                </motion.button>
+                </button>
               );
             })}
           </div>
@@ -216,9 +212,14 @@ export function QuickReactionBar({
     setShowPicker(false);
   };
 
+  // Mobile support: Detect long press or single tap based on environment if needed, 
+  // but standard hover + popover already provides a baseline. 
+  // For mobile "tap to open", the Popover trigger handles it.
+
   return (
     <div className={cn(
       'absolute -top-9 flex items-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-20',
+      'group-focus-within:opacity-100', // Keyboard accessibility
       showPicker && 'opacity-100',
       isSent ? 'right-0' : 'left-0'
     )}>
@@ -232,8 +233,9 @@ export function QuickReactionBar({
           <button
             key={emoji}
             onClick={() => handleReact(emoji)}
+            aria-label={`Reagir com ${emoji}`}
             className={cn(
-              'w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted/80 hover:scale-125 transition-all text-base',
+              'w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted/80 hover:scale-125 transition-all text-base focus-visible:ring-2 focus-visible:ring-primary outline-none',
               hasReacted(emoji) && 'bg-primary/10 ring-1 ring-primary/30'
             )}
           >
@@ -243,22 +245,29 @@ export function QuickReactionBar({
 
         <Popover open={showPicker} onOpenChange={setShowPicker}>
           <PopoverTrigger asChild>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted/80 transition-all text-muted-foreground hover:text-foreground">
+            <button 
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted/80 transition-all text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary outline-none"
+              aria-label="Mais reações"
+            >
               <SmilePlus className="w-4 h-4" />
             </button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-auto p-2 bg-popover"
+            className="w-auto p-2 bg-popover border-border shadow-xl animate-in fade-in zoom-in duration-150"
             align={isSent ? 'end' : 'start'}
             sideOffset={4}
+            role="dialog"
+            aria-label="Escolher reações estendidas"
           >
-            <div className="flex flex-wrap items-center gap-1 max-w-[220px]">
+            <div className="grid grid-cols-4 gap-1" role="grid">
               {EXTENDED_REACTIONS.map((emoji) => (
                 <button
                   key={emoji}
+                  role="gridcell"
+                  aria-label={`Reagir com ${emoji}`}
                   onClick={() => handleReact(emoji)}
                   className={cn(
-                    'w-8 h-8 flex items-center justify-center rounded-md text-lg hover:bg-muted transition-all hover:scale-110',
+                    'w-9 h-9 flex items-center justify-center rounded-md text-lg hover:bg-muted transition-all hover:scale-125 focus-visible:ring-2 focus-visible:ring-primary outline-none',
                     hasReacted(emoji) && 'bg-primary/10 ring-1 ring-primary/30'
                   )}
                 >
