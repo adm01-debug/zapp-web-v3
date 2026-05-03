@@ -183,6 +183,22 @@ export function MessageBubble({
               />
             </AnimatePresence>
 
+            {/* Reactions summary displayed below the bubble */}
+            {!message.is_deleted && (
+              <div className="mt-1">
+                <MessageReactions
+                  messageId={message.id}
+                  isSent={isSent}
+                  instanceName={instanceName}
+                  contactJid={contactJid}
+                  externalId={message.external_id}
+                  senderType={message.sender}
+                  refreshKey={message.updated_at}
+                  disableRealtime
+                />
+              </div>
+            )}
+
             {/* Pill toolbar — WhatsApp Web style */}
             <MessageHoverToolbar
               message={message}
