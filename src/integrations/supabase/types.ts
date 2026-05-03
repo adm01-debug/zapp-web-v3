@@ -9749,6 +9749,7 @@ export type Database = {
           message_type: string
           reply_to_id: string | null
           sender_id: string
+          status: string | null
           updated_at: string
         }
         Insert: {
@@ -9763,6 +9764,7 @@ export type Database = {
           message_type?: string
           reply_to_id?: string | null
           sender_id: string
+          status?: string | null
           updated_at?: string
         }
         Update: {
@@ -9777,6 +9779,7 @@ export type Database = {
           message_type?: string
           reply_to_id?: string | null
           sender_id?: string
+          status?: string | null
           updated_at?: string
         }
         Relationships: [
