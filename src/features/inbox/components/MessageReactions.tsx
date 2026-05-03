@@ -80,6 +80,7 @@ export function MessageReactions({
       await addReaction(emoji);
     }
 
+    trackReactionEvent('open_picker', { messageId });
     setIsOpen(false);
   };
 
@@ -195,7 +196,7 @@ export function QuickReactionBar({
   forceShow,
 }: QuickReactionBarProps) {
   const [showPicker, setShowPicker] = useState(false);
-  const { addReaction, removeReaction, hasReacted } = useMessageReactions(messageId, {
+  const { addReaction, removeReaction, hasReacted, currentProfileId } = useMessageReactions(messageId, {
     instanceName,
     contactJid,
     externalId,
@@ -203,6 +204,8 @@ export function QuickReactionBar({
     refreshKey,
     disableRealtime,
   });
+  
+  const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
 
   const handleReact = async (emoji: string) => {
     if (hasReacted(emoji)) {
@@ -210,6 +213,7 @@ export function QuickReactionBar({
     } else {
       await addReaction(emoji);
     }
+    trackReactionEvent('open_picker', { messageId });
     setShowPicker(false);
   };
 
