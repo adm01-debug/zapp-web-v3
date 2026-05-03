@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   Volume2,
   VolumeX,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface ConversationContextMenuProps {
