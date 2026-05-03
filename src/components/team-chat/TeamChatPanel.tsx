@@ -4,7 +4,7 @@ import { TeamConversation } from '@/hooks/useTeamChat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowDown, Pencil, Trash2, X, Check, Reply, Image as ImageIcon, Music, FileText, Video, Copy, Volume2, VolumeX, Loader2, Search, Lock } from 'lucide-react';
+import { ArrowDown, Pencil, Trash2, X, Check, Reply, Image as ImageIcon, Music, FileText, Video, Copy, Volume2, VolumeX, Loader2, Search, Lock, Shield, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -105,9 +105,23 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
               <Lock className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-bold mb-2">Conteúdo Protegido</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              As mensagens deste departamento são privadas. Entre em contato com um administrador se você precisar de acesso.
+            <p className="text-sm text-muted-foreground max-w-sm mb-6">
+              As mensagens deste departamento são privadas e restritas aos seus membros.
             </p>
+            <div className="flex flex-col gap-3 w-full max-w-[280px]">
+              <div className="bg-card border border-border/50 p-3 rounded-xl text-left shadow-sm">
+                <p className="text-xs font-semibold mb-1 flex items-center gap-1.5"><Shield className="w-3 h-3 text-primary" /> Solicitar Acesso</p>
+                <p className="text-[11px] text-muted-foreground leading-normal">
+                  Contate o administrador do sistema para que ele associe seu perfil a este departamento.
+                </p>
+              </div>
+              <div className="bg-card border border-border/50 p-3 rounded-xl text-left shadow-sm">
+                <p className="text-xs font-semibold mb-1 flex items-center gap-1.5"><Link2 className="w-3 h-3 text-primary" /> Entrar via Código</p>
+                <p className="text-[11px] text-muted-foreground leading-normal">
+                  Se você recebeu um código de convite, utilize-o para entrar automaticamente através do link oficial.
+                </p>
+              </div>
+            </div>
           </div>
         ) : s.isLoading ? (
           <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}><Skeleton className="h-10 rounded-2xl" style={{ width: 120 + (i % 3) * 60 }} /></div>)}</div>
@@ -180,9 +194,15 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             <Lock className="w-5 h-5 text-destructive" />
           </div>
           <p className="text-sm font-semibold text-foreground">Acesso Restrito ao Departamento</p>
-          <p className="text-xs text-muted-foreground max-w-xs">
+          <p className="text-xs text-muted-foreground max-w-xs mb-4">
             Você não faz parte deste departamento e não tem permissão para visualizar ou enviar mensagens.
           </p>
+          <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 max-w-xs">
+            <p className="text-xs font-medium text-primary mb-1">Como obter acesso?</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Solicite ao administrador da sua conta ou ao gestor do departamento que inclua você via painel de membros ou enviando um código de convite.
+            </p>
+          </div>
         </div>
       )}
 
