@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { SmilePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { AggregatedReaction } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
 
-export const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🎉'];
+export const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 export const EXTENDED_EMOJIS = [
   ...QUICK_EMOJIS,
-  '👏', '💯', '✅', '❌', '👀', '🤔', '😍', '😎',
+  '🔥', '🎉', '👏', '💯', '✅', '❌', '👀', '🤔', '😍', '😎',
   '🚀', '💪', '🙌', '👌', '✨', '⭐', '💡', '☕',
 ];
 
@@ -44,8 +45,8 @@ export function MessageReactions({ messageId, reactions, isMine, isToggling, onT
             'flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs border transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary',
             'hover:scale-110 active:scale-95',
             r.reactedByMe
-              ? 'bg-primary/20 border-primary/50 text-primary font-bold shadow-md ring-1 ring-primary/20'
-              : 'bg-background/80 border-border/40 text-foreground hover:bg-muted'
+              ? 'bg-primary/10 border-primary/30 text-primary font-bold shadow-sm ring-1 ring-primary/20'
+              : 'bg-muted/80 border-border/50 text-foreground hover:bg-muted'
           )}
           aria-pressed={r.reactedByMe}
           aria-label={`${r.emoji}, ${r.count} reações. ${r.reactedByMe ? 'Você reagiu.' : 'Clique para reagir.'}`}
@@ -60,9 +61,12 @@ export function MessageReactions({ messageId, reactions, isMine, isToggling, onT
         <PopoverTrigger asChild>
           <button
             className={cn(
-              'opacity-0 group-hover:opacity-100 transition-opacity focus-visible:opacity-100',
-              'h-6 w-6 rounded-full flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary',
-              'border border-border/40 bg-background/80 hover:bg-muted text-muted-foreground'
+              'transition-all focus-visible:opacity-100',
+              'p-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              'hover:bg-muted/80 text-muted-foreground hover:text-foreground',
+              reactions.length === 0
+                ? 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+                : 'opacity-60 hover:opacity-100'
             )}
             aria-label="Adicionar reação"
             data-testid={`reaction-trigger-${messageId}`}
@@ -94,6 +98,97 @@ export function MessageReactions({ messageId, reactions, isMine, isToggling, onT
           </div>
         </PopoverContent>
       </Popover>
+    </div>
+  );
+}
+
+export function TeamQuickReactionBar({
+  messageId,
+  isMine,
+  onToggle,
+  reactions = []
+}: {
+  messageId: string;
+  isMine: boolean;
+  onToggle: (emoji: string) => void;
+  reactions?: AggregatedReaction[];
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+
+  const handleReact = useCallback((emoji: string) => {
+    onToggle(emoji);
+    setShowPicker(false);
+  }, [onToggle]);
+
+  const hasReacted = useCallback((emoji: string) => {
+    return reactions.some(r => r.emoji === emoji && r.reactedByMe);
+  }, [reactions]);
+
+  return (
+    <div 
+      className={cn(
+        'absolute -top-9 flex items-center transition-all duration-200 z-20',
+        'opacity-0 group-hover/msg:opacity-100 group-focus-within/msg:opacity-100',
+        showPicker && 'opacity-100',
+        isMine ? 'right-0' : 'left-0'
+      )}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 4, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.12 }}
+        className="flex items-center gap-0.5 px-1.5 py-1 rounded-full bg-card/95 dark:bg-[hsl(var(--card)/0.95)] border border-border/40 shadow-lg backdrop-blur-sm"
+      >
+        {QUICK_EMOJIS.map((emoji) => (
+          <button
+            key={emoji}
+            onClick={() => handleReact(emoji)}
+            aria-label={`Reagir com ${emoji}`}
+            className={cn(
+              'w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted/80 hover:scale-125 transition-all text-base focus-visible:ring-2 focus-visible:ring-primary outline-none',
+              hasReacted(emoji) && 'bg-primary/10 ring-1 ring-primary/30'
+            )}
+          >
+            {emoji}
+          </button>
+        ))}
+
+        <Popover open={showPicker} onOpenChange={setShowPicker}>
+          <PopoverTrigger asChild>
+            <button 
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted/80 transition-all text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary outline-none"
+              aria-label="Mais reações"
+            >
+              <SmilePlus className="w-4 h-4" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-auto p-2 bg-popover border-border shadow-xl animate-in fade-in zoom-in duration-150"
+            align={isMine ? 'end' : 'start'}
+            sideOffset={4}
+            role="dialog"
+            aria-label="Escolher reações estendidas"
+          >
+            <div className="grid grid-cols-6 gap-1 outline-none" role="grid">
+              {EXTENDED_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  role="gridcell"
+                  aria-label={`Reagir com ${emoji}`}
+                  onClick={() => handleReact(emoji)}
+                  className={cn(
+                    'w-9 h-9 flex items-center justify-center rounded-md text-lg hover:bg-muted transition-all hover:scale-125 focus-visible:ring-2 focus-visible:ring-primary outline-none',
+                    hasReacted(emoji) && 'bg-primary/10 ring-1 ring-primary/30'
+                  )}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </motion.div>
     </div>
   );
 }
