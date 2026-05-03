@@ -72,6 +72,9 @@ describe('Chat Improvements Regression Tests', () => {
                 onInteractiveButtonClick={vi.fn()}
                 onMessageDeleted={vi.fn()}
                 registerRef={vi.fn()}
+                ttsLoading={false}
+                ttsPlaying={false}
+                ttsMessageId={null}
               />
             </TooltipProvider>
           </BrowserRouter>
