@@ -25,6 +25,7 @@ import {
   Bell,
   BellOff,
   Pin,
+  Building2,
 } from 'lucide-react';
 
 interface TeamChatHeaderProps {
