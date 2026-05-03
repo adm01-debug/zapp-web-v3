@@ -16,7 +16,7 @@ import { CRMAutoSync } from './CRMAutoSync';
 import { useAmbientColor } from '@/hooks/useAmbientColor';
 import { ChatToolPanels } from './chat/ChatToolPanels';
 import { ChatDialogs } from './chat/ChatDialogs';
-import { ChatPanelHeader } from './chat/ChatPanelHeader';
+import { ChatHeader } from './chat/ChatHeader';
 import { ChatAssignedBar } from './chat/ChatAssignedBar';
 import { TicketActionsBar } from './chat/TicketActionsBar';
 import { TicketHistorySheet } from './TicketHistorySheet';
