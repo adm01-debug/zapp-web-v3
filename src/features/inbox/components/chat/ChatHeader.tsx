@@ -231,7 +231,7 @@ export const ChatHeader = memo(function ChatHeader({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <motion.div>
               <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/10" aria-label="Mais opções">
                 <MoreVertical className="w-4 h-4" />
               </Button>
