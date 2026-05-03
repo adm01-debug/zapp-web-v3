@@ -43,10 +43,9 @@ interface ChatMessageBubbleProps {
   onScrollToMessage: (messageId: string) => void;
   onInteractiveButtonClick: (button: InteractiveButton) => void;
   registerRef: (messageId: string, el: HTMLDivElement | null) => void;
-  /** Optional — when provided, enables auto-refresh of expired media URLs. */
   instanceName?: string;
-  /** Optional — when provided, enables auto-refresh of expired media URLs. */
   contactJid?: string;
+  density?: 'comfortable' | 'compact' | 'dense';
 }
 
 // Message status icon — wrapped in tooltip for failure states so the user
