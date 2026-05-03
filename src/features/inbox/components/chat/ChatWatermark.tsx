@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { motion } from 'framer-motion';
 
 /**
  * Subtle space-themed chat watermark inspired by WhatsApp Web's doodle pattern.
@@ -11,7 +12,10 @@ export const ChatWatermark = memo(function ChatWatermark() {
       className="absolute inset-0 overflow-hidden pointer-events-none select-none"
       aria-hidden="true"
     >
-      <svg
+      <motion.svg
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.5 }}
         className="absolute inset-0 w-full h-full text-foreground"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="none"
@@ -131,7 +135,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
         </defs>
 
         <rect width="100%" height="100%" fill="url(#chat-pattern)" />
-      </svg>
+      </motion.svg>
     </div>
   );
 });
