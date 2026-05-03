@@ -1,4 +1,4 @@
-import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState, useId } from 'react';
+import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState, useId, CSSProperties } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Ban, RotateCw, Navigation2, AlertCircle, Info, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
