@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Search as SearchIcon, Filter, Calendar } from 'lucide-react';
 
 interface TeamFilesProps {
   contactId: string;
