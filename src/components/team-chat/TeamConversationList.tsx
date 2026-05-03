@@ -2,13 +2,15 @@ import { TeamConversation } from '@/hooks/useTeamChat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Users, User, Building2 } from 'lucide-react';
+import { Plus, Search, Users, User, Building2, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useMemo, forwardRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/features/auth';
+import { DepartmentManagementDialog } from './DepartmentManagementDialog';
 
 interface Props {
   conversations: TeamConversation[];
@@ -19,7 +21,11 @@ interface Props {
 }
 
 export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function TeamConversationList({ conversations, isLoading, selectedId, onSelect, onNewConversation }, _ref) {
+  const { profile } = useAuth();
   const [search, setSearch] = useState('');
+  const [mgmtDept, setMgmtDept] = useState<{ id: string, name: string } | null>(null);
+
+  const isAdmin = profile?.role === 'admin';
 
   const filtered = useMemo(() => {
     if (!search.trim()) return conversations;
@@ -107,15 +113,31 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground truncate">
+                  <div className="flex items-center justify-between gap-1.5 mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate flex-1">
                       {conv.last_message?.content || 'Sem mensagens'}
                     </p>
-                    {(conv.unread_count ?? 0) > 0 && (
-                      <Badge variant="default" className="ml-2 h-5 min-w-5 px-1.5 text-[10px] shrink-0">
-                        {conv.unread_count}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {isAdmin && conv.type === 'department' && conv.department_id && (
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-6 w-6 text-muted-foreground hover:text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMgmtDept({ id: conv.department_id!, name: conv.name || 'Departamento' });
+                          }}
+                          title="Gerenciar membros"
+                        >
+                          <Settings2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                      {(conv.unread_count ?? 0) > 0 && (
+                        <Badge variant="default" className="h-5 min-w-5 px-1.5 text-[10px]">
+                          {conv.unread_count}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </button>
@@ -123,6 +145,14 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
           </div>
         )}
       </div>
+
+      {mgmtDept && (
+        <DepartmentManagementDialog 
+          department={mgmtDept}
+          open={!!mgmtDept}
+          onOpenChange={(open) => !open && setMgmtDept(null)}
+        />
+      )}
     </>
   );
 });

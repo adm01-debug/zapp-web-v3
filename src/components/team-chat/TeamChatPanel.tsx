@@ -1,9 +1,9 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TeamConversation } from '@/hooks/useTeamChat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowDown, Pencil, Trash2, X, Check, Reply, Image as ImageIcon, Music, FileText, Video, Copy, Volume2, VolumeX, Loader2, Search } from 'lucide-react';
+import { ArrowDown, Pencil, Trash2, X, Check, Reply, Image as ImageIcon, Music, FileText, Video, Copy, Volume2, VolumeX, Loader2, Search, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -53,6 +53,11 @@ interface Props { conversation: TeamConversation; onBack: () => void; onToggleDe
 
 export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetails }: Props) {
   const s = useTeamChatPanel(conversation);
+  const isDeptMember = useMemo(() => {
+    if (conversation.type !== 'department') return true;
+    if (s.profile?.role === 'admin') return true;
+    return s.profile?.department_id === conversation.department_id;
+  }, [conversation, s.profile]);
 
   useEffect(() => {
     if (s.isNearBottomRef.current && s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight;
@@ -91,7 +96,17 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
       </AnimatePresence>
 
       <div ref={s.scrollRef} className="flex-1 overflow-auto p-4 space-y-1 bg-muted/5" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
-        {s.isLoading ? (
+        {!isDeptMember ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-bold mb-2">Conteúdo Protegido</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              As mensagens deste departamento são privadas. Entre em contato com um administrador se você precisar de acesso.
+            </p>
+          </div>
+        ) : s.isLoading ? (
           <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}><Skeleton className="h-10 rounded-2xl" style={{ width: 120 + (i % 3) * 60 }} /></div>)}</div>
         ) : s.filteredMessages.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-12">{s.searchQuery ? 'Nenhuma mensagem encontrada' : 'Envie a primeira mensagem!'}</div>
@@ -150,11 +165,23 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
 
       {s.showScrollDown && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10"><Button size="icon" variant="secondary" className="rounded-full shadow-lg h-8 w-8" onClick={s.scrollToBottom}><ArrowDown className="w-4 h-4" /></Button></div>}
 
-      <TeamChatInputArea conversationId={conversation.id} text={s.text} setText={s.setText} replyTo={s.replyTo}
-        isRecordingAudio={s.isRecordingAudio} isPending={s.sendMutation.isPending} onSend={s.handleSend}
-        onCancelReply={() => s.setReplyTo(null)} onRecordToggle={() => s.setIsRecordingAudio(!s.isRecordingAudio)}
-        onAudioSend={s.handleAudioSend} onSendSticker={s.handleSendSticker} onSendAudioMeme={s.handleSendAudioMeme}
-        onSendCustomEmoji={s.handleSendCustomEmoji} onFileSent={s.handleFileSent} />
+      {isDeptMember ? (
+        <TeamChatInputArea conversationId={conversation.id} text={s.text} setText={s.setText} replyTo={s.replyTo}
+          isRecordingAudio={s.isRecordingAudio} isPending={s.sendMutation.isPending} onSend={s.handleSend}
+          onCancelReply={() => s.setReplyTo(null)} onRecordToggle={() => s.setIsRecordingAudio(!s.isRecordingAudio)}
+          onAudioSend={s.handleAudioSend} onSendSticker={s.handleSendSticker} onSendAudioMeme={s.handleSendAudioMeme}
+          onSendCustomEmoji={s.handleSendCustomEmoji} onFileSent={s.handleFileSent} />
+      ) : (
+        <div className="p-6 bg-muted/30 border-t border-border flex flex-col items-center justify-center text-center gap-2">
+          <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+            <Lock className="w-5 h-5 text-destructive" />
+          </div>
+          <p className="text-sm font-semibold text-foreground">Acesso Restrito ao Departamento</p>
+          <p className="text-xs text-muted-foreground max-w-xs">
+            Você não faz parte deste departamento e não tem permissão para visualizar ou enviar mensagens.
+          </p>
+        </div>
+      )}
 
       <AddMembersDialog open={s.showAddMembers} onOpenChange={s.setShowAddMembers} conversation={conversation} />
     </div>

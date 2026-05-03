@@ -11406,6 +11406,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      manage_department_member: {
+        Args: {
+          _action: string
+          _admin_user_id: string
+          _department_id: string
+          _target_profile_id: string
+        }
+        Returns: undefined
+      }
       mark_pause_investigated: {
         Args: { p_notes?: string; p_pause_id: string }
         Returns: {
