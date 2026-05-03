@@ -137,6 +137,9 @@ export function useUserSettings() {
             compact_mode: data.compact_mode ?? DEFAULT_SETTINGS.compact_mode,
             tts_voice_id: data.tts_voice_id ?? DEFAULT_SETTINGS.tts_voice_id,
             tts_speed: data.tts_speed ?? DEFAULT_SETTINGS.tts_speed,
+            global_sla_warning_minutes: data.global_sla_warning_minutes ?? DEFAULT_SETTINGS.global_sla_warning_minutes,
+            global_sla_critical_minutes: data.global_sla_critical_minutes ?? DEFAULT_SETTINGS.global_sla_critical_minutes,
+            global_sla_notification_message: data.global_sla_notification_message ?? DEFAULT_SETTINGS.global_sla_notification_message,
           });
         }
       } catch (err) {
