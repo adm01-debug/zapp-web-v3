@@ -1,0 +1,99 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/features/auth';
+import { toast } from '@/hooks/use-toast';
+
+export interface TeamReaction {
+  id: string;
+  message_id: string;
+  profile_id: string;
+  emoji: string;
+  created_at: string;
+}
+
+export interface AggregatedReaction {
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+  profileIds: string[];
+}
+
+export function useTeamMessageReactions(conversationId: string | undefined) {
+  const queryClient = useQueryClient();
+  const { profile } = useAuth();
+
+  const { data: reactions = [] } = useQuery({
+    queryKey: ['team-reactions', conversationId],
+    queryFn: async () => {
+      if (!conversationId) return [];
+      // Fetch all reactions for messages in this conversation
+      const { data: msgs } = await supabase
+        .from('team_messages')
+        .select('id')
+        .eq('conversation_id', conversationId);
+      const ids = (msgs || []).map((m: any) => m.id);
+      if (!ids.length) return [];
+      const { data, error } = await supabase
+        .from('team_message_reactions')
+        .select('*')
+        .in('message_id', ids);
+      if (error) throw error;
+      return (data || []) as TeamReaction[];
+    },
+    enabled: !!conversationId,
+  });
+
+  // Realtime sync
+  useEffect(() => {
+    if (!conversationId) return;
+    const channel = supabase
+      .channel(`team-reactions-${conversationId}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'team_message_reactions' },
+        () => queryClient.invalidateQueries({ queryKey: ['team-reactions', conversationId] })
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [conversationId, queryClient]);
+
+  const toggle = useMutation({
+    mutationFn: async ({ messageId, emoji }: { messageId: string; emoji: string }) => {
+      if (!profile) throw new Error('Not authenticated');
+      const existing = reactions.find(
+        (r) => r.message_id === messageId && r.profile_id === profile.id && r.emoji === emoji
+      );
+      if (existing) {
+        const { error } = await supabase
+          .from('team_message_reactions')
+          .delete()
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('team_message_reactions')
+          .insert({ message_id: messageId, profile_id: profile.id, emoji });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team-reactions', conversationId] });
+    },
+    onError: () => toast({ title: 'Erro ao reagir', variant: 'destructive' }),
+  });
+
+  function aggregate(messageId: string): AggregatedReaction[] {
+    const filtered = reactions.filter((r) => r.message_id === messageId);
+    const map = new Map<string, AggregatedReaction>();
+    for (const r of filtered) {
+      const cur = map.get(r.emoji) || { emoji: r.emoji, count: 0, reactedByMe: false, profileIds: [] };
+      cur.count += 1;
+      cur.profileIds.push(r.profile_id);
+      if (profile && r.profile_id === profile.id) cur.reactedByMe = true;
+      map.set(r.emoji, cur);
+    }
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }
+
+  return { reactions, aggregate, toggle: toggle.mutate, isToggling: toggle.isPending };
+}
