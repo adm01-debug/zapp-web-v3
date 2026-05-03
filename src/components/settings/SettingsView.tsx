@@ -198,6 +198,10 @@ export function SettingsView() {
           <SkillBasedRoutingSettings />
         </TabsContent>
 
+        <TabsContent value="sla">
+          <SLASettings settings={settings} updateSettings={updateSettings} />
+        </TabsContent>
+
         <TabsContent value="ai-providers">
           <AIProvidersManager />
         </TabsContent>
