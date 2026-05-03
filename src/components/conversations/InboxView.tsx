@@ -123,16 +123,30 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
                 </DropdownMenu>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-end">
-              <div className="text-center text-muted-foreground py-8">
-                <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Mensagens de {sanitizeText(selectedConv.remote_jid)}</p>
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col bg-[#efeae2] dark:bg-background/95 relative">
+              <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.02] pointer-events-none" 
+                style={{ backgroundImage: 'url("https://wweb.static.whatsapp.net/7/7b/7b2e3e9d8e7e1c1f1f1f1f1f1f1f1f1f.png")' }} />
+              
+              <div className="flex-1 flex flex-col justify-end gap-3 z-10">
+                <div className="text-center text-muted-foreground py-8">
+                  <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm font-medium">Início da conversa com {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid?.split('@')[0] ?? 'este contato')}</p>
+                  <p className="text-xs opacity-60">As mensagens são protegidas com criptografia de ponta a ponta.</p>
+                </div>
               </div>
             </div>
-            <div className="border-t px-4 py-3 shrink-0">
-              <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-                <span className="text-sm text-muted-foreground flex-1">Responder...</span>
-                <Button size="sm" className="h-7 gap-1"><MessageCircle className="h-3.5 w-3.5" />Enviar</Button>
+            <div className="bg-[#f0f2f5] dark:bg-muted/30 px-4 py-2.5 shrink-0 z-10">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-2 rounded-lg bg-background px-4 py-2 shadow-sm border border-transparent focus-within:border-primary/20 transition-all">
+                  <input 
+                    type="text" 
+                    placeholder="Digite uma mensagem..." 
+                    className="bg-transparent border-none outline-none text-sm w-full placeholder:text-muted-foreground/60"
+                  />
+                </div>
+                <Button size="icon" className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 shadow-sm shrink-0">
+                  <MessageCircle className="h-5 w-5" />
+                </Button>
               </div>
             </div>
           </>
