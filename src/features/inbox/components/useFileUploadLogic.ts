@@ -41,8 +41,9 @@ export function useFileUploadLogic(opts: {
   connectionId?: string;
   onFileSelect?: (file: File, category: string) => void;
   onFileSent?: (messageData: FileMessageData) => void;
+  showDialog?: boolean;
 }) {
-  const { instanceName, recipientNumber, contactId, connectionId, onFileSelect, onFileSent } = opts;
+  const { instanceName, recipientNumber, contactId, connectionId, onFileSelect, onFileSent, showDialog = true } = opts;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filePreview, setFilePreview] = useState<FilePreview | null>(null);
@@ -233,7 +234,7 @@ export function useFileUploadLogic(opts: {
     setIsMultiMode(false);
     setFileQueue([]);
     setCaption('');
-    setIsDialogOpen(true);
+    setIsDialogOpen(showDialog);
   }, []);
 
   const handleExternalFiles = useCallback((files: File[]) => {
@@ -247,7 +248,7 @@ export function useFileUploadLogic(opts: {
     }
     setCaption('');
     setCurrentQueueIndex(0);
-    setIsDialogOpen(true);
+    setIsDialogOpen(showDialog);
   }, [handleExternalFile, processFilesToQueue]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -258,7 +259,7 @@ export function useFileUploadLogic(opts: {
     if (validation.valid && (validation.category === 'image' || file.type === 'application/pdf')) preview = URL.createObjectURL(file);
     setFilePreview({ file, validation, preview });
     setCaption('');
-    setIsDialogOpen(true);
+    setIsDialogOpen(showDialog);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 

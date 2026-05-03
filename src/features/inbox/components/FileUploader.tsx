@@ -29,6 +29,7 @@ interface FileUploaderProps {
   onFileSelect?: (file: File, category: string) => void;
   onFileSent?: (messageData: FileMessageData) => void;
   disabled?: boolean;
+  showDialog?: boolean;
 }
 
 export interface FileUploaderRef {
@@ -90,9 +91,9 @@ function QueueFileItem({ queuedFile, onRemove, disabled }: { queuedFile: QueuedF
 }
 
 export const FileUploader = forwardRef<FileUploaderRef, FileUploaderProps>(({
-  instanceName, recipientNumber, contactId, connectionId, onFileSelect, onFileSent, disabled,
+  instanceName, recipientNumber, contactId, connectionId, onFileSelect, onFileSent, disabled, showDialog = true,
 }, ref) => {
-  const logic = useFileUploadLogic({ instanceName, recipientNumber, contactId, connectionId, onFileSelect, onFileSent });
+  const logic = useFileUploadLogic({ instanceName, recipientNumber, contactId, connectionId, onFileSelect, onFileSent, showDialog });
 
   useImperativeHandle(ref, () => ({
     handleExternalFile: logic.handleExternalFile,
