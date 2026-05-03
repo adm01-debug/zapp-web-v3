@@ -162,7 +162,7 @@ export function ContactSearchWithSuggestions({
             )}
 
             {/* Suggestions */}
-            {suggestions.length > 0 && (
+            {suggestions.length > 0 ? (
               <div className="p-2 border-t border-border/30">
                 <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2">
                   Sugestões
@@ -176,13 +176,19 @@ export function ContactSearchWithSuggestions({
                       className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs hover:bg-muted/50 transition-colors text-left mt-0.5"
                     >
                       <Icon className="w-3 h-3 shrink-0 text-muted-foreground" />
-                      <span className="truncate text-foreground">{item.label}</span>
-                      <Badge variant="secondary" className="text-[9px] h-4 px-1 ml-auto shrink-0">
+                      <span className="truncate text-foreground font-medium">{item.label}</span>
+                      <Badge variant="secondary" className="text-[9px] h-4 px-1 ml-auto shrink-0 bg-primary/10 text-primary border-none">
                         {item.type === 'company' ? 'Empresa' : 'Tag'}
                       </Badge>
                     </button>
                   );
                 })}
+              </div>
+            ) : value.trim().length > 1 && (
+              <div className="p-4 text-center border-t border-border/30">
+                <Search className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground">Nenhuma sugestão para "{value}"</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-1">Pressione Enter para buscar em todos os campos</p>
               </div>
             )}
           </motion.div>
