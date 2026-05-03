@@ -11,6 +11,7 @@
  * - Optimistic UI with rollback on error
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { cn } from '@/lib/utils';
 import { Check, X, Pencil } from 'lucide-react';
 import { contactsDB } from '@/lib/contactsDB';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';
@@ -25,6 +26,9 @@ interface ContactInlineEditProps {
   required?: boolean;
   placeholder?: string;
   onSaved?: (newValue: string) => void;
+  className?: string;
+  readonly?: boolean;
+  validate?: (v: any) => string | null;
 }
 
 export function ContactInlineEdit({
@@ -36,6 +40,9 @@ export function ContactInlineEdit({
   required = false,
   placeholder,
   onSaved,
+  className,
+  readonly = false,
+  validate: customValidate,
 }: ContactInlineEditProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value ?? '');
@@ -50,14 +57,16 @@ export function ContactInlineEdit({
   }, [isEditing]);
 
   const validate = useCallback((val: string): string | null => {
+    if (customValidate) return customValidate(val);
     if (required && !val.trim()) return `${label} \u00e9 obrigat\u00f3rio`;
     if (type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return 'Email inv\u00e1lido';
     if (type === 'tel' && val && !/^\+?[\d\s()-]{8,}$/.test(val)) return 'Telefone inv\u00e1lido';
     if (type === 'url' && val && !/^https?:\/\/.+/.test(val)) return 'URL inv\u00e1lida';
     return null;
-  }, [required, label, type]);
+  }, [required, label, type, customValidate]);
 
   const save = useCallback(async () => {
+    if (readonly) return;
     const trimmed = editValue.trim();
     const err = validate(trimmed);
     if (err) {
@@ -111,7 +120,7 @@ export function ContactInlineEdit({
           onBlur={() => setTimeout(cancel, 150)}
           disabled={isSaving}
           placeholder={placeholder ?? label}
-          className="flex-1 min-w-0 px-2 py-1 text-sm border rounded bg-background focus:ring-2 focus:ring-primary/50 outline-none disabled:opacity-50"
+          className={cn("flex-1 min-w-0 px-2 py-1 text-sm border rounded bg-background focus:ring-2 focus:ring-primary/50 outline-none disabled:opacity-50", className)}
           aria-label={`Editar ${label}`}
         />
         <button
@@ -136,14 +145,15 @@ export function ContactInlineEdit({
 
   return (
     <button
-      onClick={() => setIsEditing(true)}
-      className="group flex items-center gap-1 text-sm text-left w-full hover:bg-muted/50 rounded px-1 py-0.5 transition-colors"
+      onClick={() => !readonly && setIsEditing(true)}
+      className={cn("group flex items-center gap-1 text-sm text-left w-full hover:bg-muted/50 rounded px-1 py-0.5 transition-colors", className)}
       aria-label={`Editar ${label}: ${value || 'vazio'}`}
+      disabled={readonly}
     >
       <span className={value ? 'text-foreground' : 'text-muted-foreground italic'}>
         {value || placeholder || `Adicionar ${label.toLowerCase()}`}
       </span>
-      <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+      {!readonly && <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />}
     </button>
   );
 }

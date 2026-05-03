@@ -61,7 +61,7 @@ export function ScheduledReportsManager() {
   const createConfig = useMutation({
     mutationFn: async () => {
       const recipients = formRecipients.split(',').map(r => r.trim()).filter(Boolean);
-      const { error: res2385Err } = await supabase.from('scheduled_report_configs').insert({
+      const { error } = await supabase.from('scheduled_report_configs').insert({
         name: formName,
         report_type: formType,
         frequency: formFrequency,
@@ -83,7 +83,7 @@ export function ScheduledReportsManager() {
 
   const toggleActive = useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      const { error: res3093Err } = await supabase.from('scheduled_report_configs').update({ is_active: !isActive }).eq('id', id);
+      const { error } = await supabase.from('scheduled_report_configs').update({ is_active: !isActive }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -94,7 +94,7 @@ export function ScheduledReportsManager() {
 
   const deleteConfig = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res3486Err } = await supabase.from('scheduled_report_configs').delete().eq('id', id);
+      const { error } = await supabase.from('scheduled_report_configs').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {

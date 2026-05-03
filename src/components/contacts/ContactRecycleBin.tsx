@@ -69,7 +69,7 @@ export const ContactRecycleBin: React.FC<ContactRecycleBinProps> = ({ workspaceI
   const restore = async (id: string, name: string) => {
     setRestoring(id);
     try {
-      const { data, error: res2755Err } = await dbRpc(RPC.restoreContact, { p_contact_id: id });
+      const { data, error } = await dbRpc(RPC.restoreContact, { p_contact_id: id });
       if (error) throw error;
       const result = (data ?? {}) as Record<string, unknown>;
       if (result?.error) throw new Error(String(result.error));

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 import { StickyNote, Pin, RefreshCw, Send, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { dbList, dbRpc } from '@/integrations/datasource/db';
@@ -48,7 +49,7 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_contact_notes', { p_contact_id: contactId, p_limit: 30 });
+      const { data, error: rpcErr } = await (supabase as any).rpc('get_contact_notes', { p_contact_id: contactId, p_limit: 30 });
       setNotes((data ?? []) as Note[]);
     } finally { setLoading(false); }
   }, [contactId]);
@@ -60,7 +61,7 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
     if (!content) return;
     setSaving(true);
     try {
-      const { data, error: res2587Err } = await dbRpc(RPC.addContactNote, {
+      const { data, error } = await dbRpc(RPC.addContactNote, {
         p_contact_id: contactId,
         p_content:    sanitizeHtml(content),
         p_note_type:  noteType,

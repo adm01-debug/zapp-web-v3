@@ -77,7 +77,7 @@ export const ContactDuplicatesPanel: React.FC<ContactDuplicatesPanelProps> = ({ 
 
   const openMerge = useCallback(async (group: DuplicateGroup) => {
     // Load full contact data for the first two contacts in the group
-    const { data, error: res2953Err } = await dbFrom('contacts')
+    const { data, error } = await (dbFrom('contacts') as any)
       .select('id, name, phone, email, company, tags, channel, avatar_url, created_at, notes, lgpd_consent_at')
       .in('id', group.contact_ids.slice(0, 2))
       .is('deleted_at', null);

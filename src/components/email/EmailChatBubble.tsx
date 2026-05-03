@@ -91,9 +91,9 @@ export function EmailChatBubble({
     const wasStarred = isStarred;
     setIsStarred(!wasStarred);
     try {
-      await (gmailModifyLabels as any)({
+      await gmailModifyLabels({
         accountId,
-        messageId: (message as any).message_id,
+        messageId: message.message_id,
         addLabels: wasStarred ? [] : ['STARRED'],
         removeLabels: wasStarred ? ['STARRED'] : [],
       });

@@ -71,7 +71,7 @@ export function useContactsPaginationV2(workspaceId: string) {
     try {
       let q = buildQuery(filters);
       q = filters.sortOrder === 'asc' ? q.gt(filters.sortField, cursorRef.current!) : q.lt(filters.sortField, cursorRef.current!);
-      const { data, error: res3665Err } = await q;
+      const { data, error } = await q;
       if (error) throw error;
       const newItems = (data ?? []).map(toItem);
       const last = newItems[newItems.length - 1];

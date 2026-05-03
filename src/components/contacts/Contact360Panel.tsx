@@ -98,12 +98,11 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Auto-fetch WhatsApp avatar
-  const { fetchAvatar } = useContactAvatarFetch({
-    contactId: contact?.id ?? '',
-    phone: contact?.phone ?? null,
-    currentAvatarUrl: contact?.avatar_url ?? null,
-    workspaceId,
-  });
+  const { fetchAvatar } = useContactAvatarFetch(
+    contact?.id ?? '',
+    contact?.phone ?? null,
+    contact?.avatar_url ?? null
+  );
 
   useEffect(() => {
     if (contact && !contact.avatar_url && contact.phone) {
@@ -171,6 +170,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
             readonly={readonly}
             onSaved={(v) => onContactUpdated?.('name', v)}
             validate={(v) => v.length < 2 ? 'Mínimo 2 caracteres' : null}
+            label="Nome"
           />
 
           {contact.phone && (
@@ -257,6 +257,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
                   readonly={readonly}
                   onSaved={(v) => onContactUpdated?.('email', v)}
                   placeholder="Adicionar e-mail"
+                  label="E-mail"
                 />
               </div>
             )}
@@ -271,6 +272,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
                   readonly={readonly}
                   onSaved={(v) => onContactUpdated?.('company', v)}
                   placeholder="Adicionar empresa"
+                  label="Empresa"
                 />
               </div>
             )}

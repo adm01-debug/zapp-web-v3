@@ -13,9 +13,9 @@ export class SupabaseQueryError extends Error {
   }
 
   static from(error: PostgrestError, context?: string): SupabaseQueryError {
-    const prefix = context ? \`[\${context}] \` : '';
+    const prefix = context ? `[${context}] ` : '';
     return new SupabaseQueryError(
-      \`\${prefix}\${error.message}\`,
+      `${prefix}${error.message}`,
       error.code,
       error.details,
       error.hint
@@ -39,7 +39,7 @@ export async function safeQuery<T>(
 ): Promise<T> {
   const { data, error } = await query;
   if (error) {
-    console.error(\`[Supabase] \${context || 'query'} failed:\`, error);
+    console.error(`[Supabase] ${context || 'query'} failed:`, error);
     throw SupabaseQueryError.from(error, context);
   }
   return data as T;
@@ -52,10 +52,10 @@ export async function safeQueryOrNull<T>(
   query: PromiseLike<{ data: T | null; error: PostgrestError | null }>,
   context?: string
 ): Promise<T | null> {
-  const { data, error: res1543Err } = await query;
+  const { data, error } = await query;
   if (error) {
     if (error.code === 'PGRST116') return null; // not found
-    console.error(\`[Supabase] \${context || 'query'} failed:\`, error);
+    console.error(`[Supabase] ${context || 'query'} failed:`, error);
     throw SupabaseQueryError.from(error, context);
   }
   return data;

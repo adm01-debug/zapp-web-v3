@@ -82,8 +82,8 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
 
   const load = async () => {
     setIsLoading(true);
-    const { data: rows , error } = await supabase
-      .from('v_gmail_sla_dashboard')
+    const { data: rows , error } = await (supabase
+      .from('v_gmail_sla_dashboard' as any) as any)
       .select('*');
     setData((rows ?? []) as SLADashboardData[]);
     setLastRefresh(new Date());

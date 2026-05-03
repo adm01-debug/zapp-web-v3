@@ -26,9 +26,9 @@ export const ContactQuickNotePanel: React.FC<ContactQuickNotePanelProps> = ({
   const [text, setText] = useState('');
   const [expanded, setExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { notes, isLoading, isSaving, loadNotes, addNote, deleteNote } = useContactQuickNote({
-    contactId, workspaceId,
-  });
+  const { notes, isLoading, isSaving, loadNotes, addNote, deleteNote } = useContactQuickNote(
+    contactId, workspaceId
+  );
 
   useEffect(() => { loadNotes(); }, [loadNotes]);
 
@@ -88,9 +88,9 @@ export const ContactQuickNotePanel: React.FC<ContactQuickNotePanelProps> = ({
         <div className="space-y-1.5">
           {visibleNotes.map((note) => (
             <div key={note.id} className="group bg-muted/30 rounded p-2 text-xs relative">
-              <p className="whitespace-pre-wrap break-words pr-6">{sanitizeText(note.text)}</p>
+              <p className="whitespace-pre-wrap break-words pr-6">{sanitizeText(note.content)}</p>
               <div className="flex items-center gap-1 mt-1 text-[10px] text-muted-foreground">
-                <span className="font-medium">{sanitizeText(note.agent_name)}</span>
+                <span className="font-medium">{sanitizeText(note.author_name || 'Agente')}</span>
                 <span>&middot;</span>
                 <span>{formatDistanceToNow(new Date(note.created_at), { addSuffix: true, locale: ptBR })}</span>
               </div>

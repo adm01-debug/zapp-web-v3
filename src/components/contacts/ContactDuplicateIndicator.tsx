@@ -18,15 +18,17 @@ import { Button } from '@/components/ui/button';
 
 interface ContactDuplicateIndicatorProps {
   contactId: string;
-  phone: string | null;
-  name: string | null;
+  contactPhone: string | null;
+  contactName: string | null;
+  contactEmail?: string | null;
+  workspaceId?: string;
   onMerge?: (duplicateId: string) => void;
 }
 
 export function ContactDuplicateIndicator({
   contactId,
-  phone,
-  name,
+  contactPhone,
+  contactName,
   onMerge,
 }: ContactDuplicateIndicatorProps) {
   const [duplicates, setDuplicates] = useState<ExternalContact[]>([]);
@@ -34,13 +36,13 @@ export function ContactDuplicateIndicator({
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!isExternalConfigured || (!phone && !name)) return;
+    if (!isExternalConfigured || (!contactPhone && !contactName)) return;
 
     let cancelled = false;
     setIsLoading(true);
 
     contactsDB.duplicates
-      .findSimilar(phone ?? '', name ?? '', 5)
+      .findSimilar(contactPhone ?? '', contactName ?? '', 5)
       .then((results) => {
         if (cancelled) return;
         // Filter out the current contact
@@ -54,7 +56,7 @@ export function ContactDuplicateIndicator({
       });
 
     return () => { cancelled = true; };
-  }, [contactId, phone, name]);
+  }, [contactId, contactPhone, contactName]);
 
   if (isLoading || duplicates.length === 0) return null;
 

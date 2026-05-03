@@ -73,6 +73,7 @@ export interface ContactNote {
   contact_id: string;
   user_id: string;
   content: string;
+  author_name?: string; // Virtual field for display
   note_type: string | null;
   created_at: string;
   updated_at: string;

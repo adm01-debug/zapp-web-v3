@@ -45,7 +45,7 @@ export function ChannelRoutingRules() {
   const { data: queues = [] } = useQuery({
     queryKey: ['queues-for-routing'],
     queryFn: async () => {
-      const { data, error: res1890Err } = await supabase
+      const { data, error } = await supabase
         .from('queues')
         .select('id, name')
         .eq('is_active', true)
@@ -57,7 +57,7 @@ export function ChannelRoutingRules() {
 
   const toggleRule = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error: res2229Err } = await supabase
+      const { error } = await supabase
         .from('channel_routing_rules')
         .update({ is_active })
         .eq('id', id);
@@ -70,7 +70,7 @@ export function ChannelRoutingRules() {
 
   const deleteRule = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res2588Err } = await supabase
+      const { error } = await supabase
         .from('channel_routing_rules')
         .delete()
         .eq('id', id);
@@ -84,7 +84,7 @@ export function ChannelRoutingRules() {
 
   const createRule = useMutation({
     mutationFn: async (rule: typeof newRule) => {
-      const { error: res2983Err } = await supabase
+      const { error } = await supabase
         .from('channel_routing_rules')
         .insert({
           channel_type: rule.channel_type as Database["public"]["Enums"]["channel_type"],
