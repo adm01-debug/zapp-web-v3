@@ -47,11 +47,12 @@ html, body, #root {
 @tailwind utilities;
 
 /* ===== ACCESSIBILITY ===== */
-/* Global focus-visible ring for all interactive elements */
+/* Global focus-visible ring for all interactive elements - High Contrast & Premium */
 :focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 2px;
-  border-radius: inherit;
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px hsla(var(--primary), 0.15);
+  transition: outline-offset 0.2s, box-shadow 0.2s;
 }
 
 :focus:not(:focus-visible) {
