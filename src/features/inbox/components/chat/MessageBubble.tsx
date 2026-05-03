@@ -67,7 +67,7 @@ export function MessageBubble({
   message, isFirstInGroup, isLastInGroup, contactAvatar, instanceName, contactJid,
   ttsLoading, ttsPlaying, ttsMessageId, highlightedMessageIds, activeHighlightId, searchQuery,
   onSpeak, onStop, onReply, onForward, onCopy, onScrollToMessage, onInteractiveButtonClick,
-  onEditStart, onMessageDeleted, registerRef,
+  onEditStart, onMessageDeleted, registerRef, density = 'comfortable',
 }: MessageBubbleProps) {
   const { toast } = useToast();
   const { profile } = useAuth();
