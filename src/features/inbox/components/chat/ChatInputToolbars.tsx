@@ -65,6 +65,25 @@ export function SecondaryToolbar({
       <AudioMemePicker onSendAudio={onSendAudioMeme} />
       <VoiceChangerPicker onSendAudio={onSendAudioMeme} />
       <CustomEmojiPicker onSendEmoji={onSendCustomEmoji} />
+      <EmojiPicker onSelect={(emoji) => {
+        const el = inputRef.current;
+        if (!el) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const text = el.value;
+        const newText = text.substring(0, start) + emoji + text.substring(end);
+        
+        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+        if (nativeSetter) {
+          nativeSetter.call(el, newText);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          // Restore cursor position
+          setTimeout(() => {
+            el.focus();
+            el.setSelectionRange(start + emoji.length, start + emoji.length);
+          }, 0);
+        }
+      }} />
       {onOpenCatalog && (
         <Tooltip>
           <TooltipTrigger asChild>
