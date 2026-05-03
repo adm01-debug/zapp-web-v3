@@ -114,6 +114,18 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     if (wasReply) log.debug('Sending reply to:', wasReply.id);
 
     try {
+      // DEBUG: Simulação de latência e falha
+      const simulateLatency = typeof localStorage !== 'undefined' && localStorage.getItem('ZAPP_CHAT_SIMULATE_LATENCY') === 'true';
+      const simulateFailure = typeof localStorage !== 'undefined' && localStorage.getItem('ZAPP_CHAT_SIMULATE_FAILURE') === 'true';
+      
+      if (simulateLatency) {
+        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+      }
+      
+      if (simulateFailure && Math.random() > 0.5) {
+        throw new Error('Falha simulada no envio via WhatsApp API (Debug Mode)');
+      }
+
       if (isWhisperRef.current) {
         if (attachments && attachments.length > 0) {
           toast({ title: 'Aviso', description: 'Arquivos não são suportados em modo sussurro no momento.', variant: 'destructive' });
