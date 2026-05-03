@@ -324,8 +324,8 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                     ref={inputRef}
                     value={message}
                     onChange={e => setMessage(e.target.value)}
-                    placeholder="Escreva uma orientação privada..."
-                    aria-label="Mensagem de sussurro"
+                    placeholder={activeThreadId ? "Responder na thread..." : "Escreva uma orientação privada..."}
+                    aria-label={activeThreadId ? "Resposta de thread" : "Mensagem de sussurro"}
                     className="flex-1 min-h-[40px] max-h-[120px] bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-amber-400 rounded-xl p-2.5 text-xs resize-none placeholder:text-muted-foreground/50 transition-all"
                     onKeyDown={e => {
                       if (e.key === 'Enter' && !e.shiftKey) {
