@@ -119,7 +119,7 @@ export function useContactsCRUD() {
     setIsSubmitting(true);
     await feedback.withFeedback(
       async () => {
-        const { error: res4477Err } = await dbFrom('contacts')
+        const { error } = await dbFrom('contacts')
           .update({
             name: editingContact.name,
             nickname: editingContact.nickname,
@@ -155,7 +155,7 @@ export function useContactsCRUD() {
   const handleDeleteContact = async (id: string) => {
     await feedback.withFeedback(
       async () => {
-        const { error: res5682Err } = await dbFrom('contacts').delete().eq('id', id);
+        const { error } = await dbFrom('contacts').delete().eq('id', id);
         if (error) throw error;
       },
       {
