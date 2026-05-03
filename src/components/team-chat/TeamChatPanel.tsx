@@ -57,6 +57,7 @@ const MediaTypeIcon = memo(function MediaTypeIcon({ type }: { type: string | nul
 interface Props { conversation: TeamConversation; onBack: () => void; onToggleDetails?: () => void; showDetails?: boolean; }
 
 export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetails }: Props) {
+  const [showStats, setShowStats] = useState(false);
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
   const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
