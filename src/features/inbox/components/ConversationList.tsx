@@ -79,8 +79,10 @@ export function ConversationList({
   const filteredConversations = useMemo(() => {
     const q = search.toLowerCase();
     return conversations.filter((conv) => {
-      const matchesSearch = !q || conv.contact.name.toLowerCase().includes(q) ||
-        conv.contact.phone.includes(q);
+      const matchesSearch = !q || 
+        conv.contact.name.toLowerCase().includes(q) ||
+        conv.contact.phone.includes(q) ||
+        (conv.lastMessage?.content?.toLowerCase().includes(q));
       const matchesFilter = filter === 'all' || conv.status === filter;
       return matchesSearch && matchesFilter;
     });
