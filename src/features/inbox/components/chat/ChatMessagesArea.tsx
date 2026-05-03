@@ -479,6 +479,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
                     onEditStart={onEditStart}
                     onMessageDeleted={handleMessageDeleted}
                     registerRef={(el) => { messageRefs.current[message.id] = el; }}
+                    density={density}
                   />
                 </StaggeredItem>
               );
