@@ -226,12 +226,24 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
             />
             {/* Progress bar with actual playback tracking */}
             <div
-              className="flex-1 h-2 bg-muted rounded-full overflow-hidden cursor-pointer"
+              className="flex-1 h-2 bg-muted rounded-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              role="slider"
+              aria-label="Progresso da gravação"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={playbackProgress}
+              tabIndex={0}
               onClick={(e) => {
                 const audio = audioRef.current;
                 if (!audio || !audio.duration) return;
                 const rect = e.currentTarget.getBoundingClientRect();
                 audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+              }}
+              onKeyDown={(e) => {
+                const audio = audioRef.current;
+                if (!audio || !audio.duration) return;
+                if (e.key === 'ArrowRight') audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+                if (e.key === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5);
               }}
             >
               <motion.div

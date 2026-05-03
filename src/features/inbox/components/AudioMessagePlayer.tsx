@@ -111,7 +111,33 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
           </Button>
         </motion.div>
         <div className="flex-1 space-y-1">
-          <div className="relative h-8 cursor-pointer" onClick={handleSeek}>
+          <div 
+            className="relative h-8 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded outline-none" 
+            onClick={handleSeek}
+            role="slider"
+            aria-label="Progresso do áudio"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                // Simula clique no centro se não houver coordenadas
+                handleSeek({ currentTarget: e.currentTarget, clientX: e.currentTarget.getBoundingClientRect().left + (e.currentTarget.clientWidth * (progress / 100)) } as any);
+              }
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                const newTime = Math.min(duration, currentTime + 5);
+                audioRef.current!.currentTime = newTime;
+              }
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                const newTime = Math.max(0, currentTime - 5);
+                audioRef.current!.currentTime = newTime;
+              }
+            }}
+          >
             <div className="absolute inset-y-0 left-0 right-0 flex items-center gap-[2px]">
               {waveformHeights.map((height, i) => {
                 const isActive = (i / 30) * 100 <= progress;
