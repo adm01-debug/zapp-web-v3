@@ -203,9 +203,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-5 py-4 border-t border-border/10 bg-background/80 backdrop-blur-xl relative transition-all duration-500", 
-        isWhisper && "bg-amber-50/20 dark:bg-amber-950/5 border-amber-200/20",
-        logic.isMobile && "px-3 py-3 safe-area-bottom"
+        "px-4 py-2 bg-[#f0f2f5] dark:bg-[#111b21] relative transition-all duration-500", 
+        isWhisper && "bg-amber-50/40 dark:bg-amber-950/10 border-t border-amber-200/30",
+        logic.isMobile && "px-2 py-2 safe-area-bottom"
       )}>
         <AnimatePresence>
           {isRecordingAudio && (
