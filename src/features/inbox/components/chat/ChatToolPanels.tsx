@@ -56,13 +56,10 @@ export function ChatToolPanels({ activeTool, onSetActiveTool, messages, contactI
         </Suspense>
       )}
 
-      {activeTool === 'summary' && (
+      {activeTool === 'teamFiles' && (
         <Suspense fallback={null}>
-          <ToolPanel isOpen onClose={() => onSetActiveTool('summary')} icon={<FileText className="w-4 h-4 text-primary" />} title="Resumo da Conversa" subtitle="Análise e pontos-chave da conversa">
-            <ConversationSummary
-              messages={messages.map(m => ({ id: m.id, sender: m.sender, content: m.content, created_at: m.timestamp.toISOString() }))}
-              contactName={contactName} contactId={contactId}
-            />
+          <ToolPanel isOpen onClose={() => onSetActiveTool('teamFiles')} icon={<Share2 className="w-4 h-4 text-amber-600" />} title="Arquivos da Equipe" subtitle="Compartilhamento interno seguro" className="border-amber-100 bg-amber-50/10">
+            <TeamFiles contactId={contactId} />
           </ToolPanel>
         </Suspense>
       )}
