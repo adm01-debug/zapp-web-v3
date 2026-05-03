@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter, DialogDescription,
@@ -8,11 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { AlertTriangle, Merge, Check, User, GitMerge } from 'lucide-react';
+import { AlertTriangle, Merge, Check, User, GitMerge, Zap, ShieldCheck, Info } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import { dbFrom } from '@/integrations/datasource/db';
+import { cn } from '@/lib/utils';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -96,19 +99,35 @@ function FieldSelector({ fieldKey, label, primaryValue, secondaryValue, value, o
   primaryValue: string; secondaryValue: string;
   value: FieldChoice; onChange: (v: FieldChoice) => void;
 }) {
+  if (!primaryValue && !secondaryValue) return null;
   if (primaryValue === secondaryValue) return null; // no conflict
+  
+  // Logic to determine if a choice is "recommended"
+  const isSecondaryRecommended = !primaryValue && !!secondaryValue;
+
   return (
-    <div className="space-y-2 py-2">
-      <p className="text-sm font-medium flex items-center gap-1">
-        <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-        {label}
-      </p>
-      <RadioGroup value={value} onValueChange={(v) => onChange(v as FieldChoice)} className="flex gap-4 flex-wrap">
+    <div className="space-y-2 py-3 px-1 border-b border-border/30 last:border-0">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold flex items-center gap-1.5">
+          <Info className="h-3.5 w-3.5 text-primary/60" />
+          {label}
+        </p>
+        {isSecondaryRecommended && (
+          <Badge variant="outline" className="text-[8px] bg-green-500/5 text-green-600 border-green-500/20">
+            Recomendado: Secundário
+          </Badge>
+        )}
+      </div>
+      <RadioGroup value={value} onValueChange={(v) => onChange(v as FieldChoice)} className="grid grid-cols-1 gap-2">
         {([['primary', primaryValue], ['secondary', secondaryValue]] as const).map(([side, val]) => (
-          <div key={side} className="flex items-center gap-2">
+          <div key={side} className={cn(
+            "flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer",
+            value === side ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border/50 hover:bg-muted/50"
+          )} onClick={() => onChange(side)}>
             <RadioGroupItem value={side} id={`${fieldKey}-${side}`} />
-            <Label htmlFor={`${fieldKey}-${side}`} className="text-sm cursor-pointer">
+            <Label htmlFor={`${fieldKey}-${side}`} className="text-xs flex-1 cursor-pointer">
               {val || <span className="italic text-muted-foreground">vazio</span>}
+              {side === 'primary' && val && <span className="ml-2 text-[9px] text-muted-foreground">(Principal)</span>}
             </Label>
           </div>
         ))}
@@ -124,9 +143,35 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [resolution, setResolution] = useState<FieldResolution>({
-    name: 'primary', phone: 'primary', email: 'primary',
-    company: 'primary', notes: 'primary',
+  
+  // Calculate Confidence Score
+  const confidenceScore = useMemo(() => {
+    let score = 0;
+    if (primaryContact.name === secondaryContact.name) score += 40;
+    if (primaryContact.phone === secondaryContact.phone && primaryContact.phone) score += 30;
+    if (primaryContact.email === secondaryContact.email && primaryContact.email) score += 20;
+    if (primaryContact.company === secondaryContact.company && primaryContact.company) score += 10;
+    return score || 15; // minimum base score
+  }, [primaryContact, secondaryContact]);
+
+  // Auto-selection logic (Predictive)
+  const [resolution, setResolution] = useState<FieldResolution>(() => {
+    const res: Partial<FieldResolution> = {};
+    const fields: Array<keyof FieldResolution> = ['name', 'phone', 'email', 'company', 'notes'];
+    
+    fields.forEach(field => {
+      const pVal = (primaryContact as any)[field];
+      const sVal = (secondaryContact as any)[field];
+      
+      // If primary is empty but secondary isn't, prefer secondary
+      if (!pVal && sVal) {
+        res[field] = 'secondary';
+      } else {
+        res[field] = 'primary';
+      }
+    });
+    
+    return res as FieldResolution;
   });
 
   const pick = useCallback((field: keyof FieldResolution): string => {
@@ -223,22 +268,47 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
           <ContactCard contact={secondaryContact} label="Secundário" badge="Será excluído" />
         </div>
 
+        {/* Confidence Score Panel */}
+        <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-bold tracking-tight">Score de Confiança</span>
+            </div>
+            <Badge variant={confidenceScore > 60 ? "default" : "secondary"} className="font-mono">
+              {confidenceScore}%
+            </Badge>
+          </div>
+          <Progress value={confidenceScore} className="h-2" />
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+            <ShieldCheck className="h-3 w-3 text-primary" />
+            Sugestão baseada na similaridade de dados e completude de campos.
+          </p>
+        </div>
+
         {conflictCount > 0 && (
           <>
             <Separator />
-            <div className="space-y-1">
-              <p className="text-sm font-semibold">Resolver conflitos de campos</p>
-              {fields.map(([field, label, k]) => (
-                <FieldSelector
-                  key={field}
-                  fieldKey={field}
-                  label={label}
-                  primaryValue={sanitizeText(primaryContact[k] as string ?? '')}
-                  secondaryValue={sanitizeText(secondaryContact[k] as string ?? '')}
-                  value={resolution[field]}
-                  onChange={(v) => setResolution((r) => ({ ...r, [field]: v }))}
-                />
-              ))}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold">Resolver conflitos de campos</p>
+                <Badge variant="outline" className="text-[9px] uppercase border-primary/20 text-primary bg-primary/5">
+                  Sugestões Inteligentes Aplicadas
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 gap-1">
+                {fields.map(([field, label, k]) => (
+                  <FieldSelector
+                    key={field}
+                    fieldKey={field}
+                    label={label}
+                    primaryValue={sanitizeText(primaryContact[k] as string ?? '')}
+                    secondaryValue={sanitizeText(secondaryContact[k] as string ?? '')}
+                    value={resolution[field]}
+                    onChange={(v) => setResolution((r) => ({ ...r, [field]: v }))}
+                  />
+                ))}
+              </div>
             </div>
           </>
         )}

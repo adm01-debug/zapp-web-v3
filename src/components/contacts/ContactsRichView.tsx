@@ -8,12 +8,17 @@
  * Substitui visualmente o `ContactsView.tsx` antigo (Todos/Duplicados/Lixeira)
  * usando exclusivamente componentes que já existem no projeto.
  */
-import React, { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Upload, Trash2, GitMerge } from 'lucide-react';
+import { 
+  UserPlus, Upload, Trash2, GitMerge, Keyboard, 
+  Search, Grid, List, Table, Map, BarChart3, Info, X, Zap
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 import { useContactsViewState } from './useContactsViewState';
 import { ContactStatsCards } from './ContactStatsCards';
@@ -21,6 +26,7 @@ import { ContactBirthdayPanel } from './ContactBirthdayPanel';
 import { ContactToolbar } from './ContactToolbar';
 import { ContactContentArea } from './ContactContentArea';
 import { ContactDialogs } from './ContactDialogs';
+import { ContactQuickView } from './ContactQuickView';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
 import type { Contact } from './types';
 
@@ -71,15 +77,106 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
   } = crud;
 
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
+  const [quickViewContact, setQuickViewContact] = useState<Contact | null>(null);
 
-  // Stub de CRM batch — a versão rica original consulta empresa/logo por
-  // telefone; aqui devolvemos null para manter UI estável sem custo extra.
+  // Keyboard Shortcuts Logic
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement ||
+        (e.target as HTMLElement).isContentEditable
+      ) {
+        if (e.key === 'Escape') {
+          (e.target as HTMLElement).blur();
+        }
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      
+      // Modal-agnostic shortcuts
+      if (e.key === '?') {
+        e.preventDefault();
+        setShowShortcutHelp(prev => !prev);
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        setShowShortcutHelp(false);
+        return;
+      }
+
+      // Action shortcuts
+      switch (key) {
+        case 'n':
+          e.preventDefault();
+          setIsAddDialogOpen(true);
+          toast.info("Atalho: Novo Registro", { duration: 1000 });
+          break;
+        case 'f':
+          e.preventDefault();
+          const searchInput = document.querySelector('input[placeholder*="Buscar"]') as HTMLInputElement;
+          if (searchInput) {
+            searchInput.focus();
+            toast.info("Atalho: Focar Busca", { duration: 1000 });
+          }
+          break;
+        case 'g':
+          e.preventDefault();
+          state.setViewMode('grid');
+          toast.info("Visualização: Grid", { duration: 1000 });
+          break;
+        case 'l':
+          e.preventDefault();
+          state.setViewMode('list');
+          toast.info("Visualização: Lista", { duration: 1000 });
+          break;
+        case 't':
+          e.preventDefault();
+          state.setViewMode('table');
+          toast.info("Visualização: Tabela", { duration: 1000 });
+          break;
+        case 'm':
+          e.preventDefault();
+          state.setViewMode('map');
+          toast.info("Visualização: Mapa", { duration: 1000 });
+          break;
+        case 'a':
+          e.preventDefault();
+          state.setViewMode('analytics');
+          toast.info("Visualização: Analytics", { duration: 1000 });
+          break;
+        case 'p':
+          e.preventDefault();
+          state.setViewMode('kanban');
+          toast.info("Visualização: Pipeline (Kanban)", { duration: 1000 });
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setIsAddDialogOpen, state]);
+
+  // Stub de CRM batch
   const getCRMData = (_phone: string) => null;
 
   const contactsForContent: Contact[] = useMemo(
     () => (contacts as Contact[]) ?? [],
     [contacts],
   );
+
+  const handleContactClick = useCallback((contactId: string) => {
+    const contact = contactsForContent.find(c => c.id === contactId);
+    if (contact) {
+      setQuickViewContact(contact);
+    }
+  }, [contactsForContent]);
 
   const contactsForBirthday = useMemo(
     () => contactsForContent.map((c) => ({
@@ -101,7 +198,10 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-background">
+    <div className={cn(
+      "flex flex-col h-full overflow-y-auto bg-background transition-all duration-300",
+      highContrast && "high-contrast-mode"
+    )}>
       <div className="px-4 py-4 lg:px-6 space-y-4 max-w-[1600px] w-full mx-auto">
         {/* ── KPIs + Aniversários ─────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
@@ -132,6 +232,29 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant={highContrast ? "default" : "outline"}
+              size="sm"
+              onClick={() => setHighContrast(!highContrast)}
+              className={cn(
+                "hidden md:flex gap-2 transition-all",
+                !highContrast ? "border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5" : "bg-foreground text-background hover:bg-foreground/90"
+              )}
+              title="Alto Contraste"
+            >
+              <Zap className={cn("w-4 h-4", highContrast ? "text-yellow-400" : "text-muted-foreground")} />
+              <span className="sr-only">Contraste</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowShortcutHelp(true)}
+              className="hidden md:flex gap-2 border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5 transition-all"
+              title="Atalhos de Teclado (?)"
+            >
+              <Keyboard className="w-4 h-4 text-muted-foreground" />
+              <span className="sr-only">Atalhos</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -249,7 +372,7 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
             search={searchInput}
             activeFiltersCount={activeFiltersCount}
             onToggleSelect={state.handleToggleSelect}
-            onContactClick={openContactChat}
+            onContactClick={handleContactClick}
             onEdit={(c) => openEditDialog(c as never)}
             onDelete={(c) => setDeleteTarget(c as never)}
             onSelectIds={crud.setSelectedIds}
@@ -265,6 +388,92 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
       </div>
 
       {/* ── Dialogs (Adicionar, Editar, Sucesso, Excluir) ─────────────── */}
+      {/* ── Shortcut Help Overlay ───────────────────────────────────── */}
+      <AnimatePresence>
+        {showShortcutHelp && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
+            onClick={() => setShowShortcutHelp(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-md w-full relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Keyboard className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Atalhos de Teclado</h2>
+                  <p className="text-sm text-muted-foreground">Aumente sua produtividade</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="ml-auto" 
+                  onClick={() => setShowShortcutHelp(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Ações</p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><UserPlus className="w-3.5 h-3.5" /> Novo Registro</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">N</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Search className="w-3.5 h-3.5" /> Buscar</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">F</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Info className="w-3.5 h-3.5" /> Ajuda</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">?</kbd>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Visualizações</p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Grid className="w-3.5 h-3.5" /> Grid</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">G</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><List className="w-3.5 h-3.5" /> Lista</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">L</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Table className="w-3.5 h-3.5" /> Tabela</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">T</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><Map className="w-3.5 h-3.5" /> Mapa</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">M</kbd>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5" /> Analytics</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">A</kbd>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t border-border/50 text-center">
+                  <p className="text-xs text-muted-foreground italic">Pressione <kbd className="px-1 py-0.5 rounded bg-muted text-[9px] font-mono">Esc</kbd> para fechar</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <ContactDialogs
         isAddDialogOpen={isAddDialogOpen}
         setIsAddDialogOpen={setIsAddDialogOpen}
@@ -283,6 +492,24 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
         deleteTarget={deleteTarget}
         setDeleteTarget={setDeleteTarget}
         handleDeleteContact={handleDeleteContact}
+      />
+
+      <ContactQuickView
+        contact={quickViewContact}
+        isOpen={!!quickViewContact}
+        onClose={() => setQuickViewContact(null)}
+        onEdit={(c) => {
+          setQuickViewContact(null);
+          openEditDialog(c as never);
+        }}
+        onDelete={(c) => {
+          setQuickViewContact(null);
+          setDeleteTarget(c as never);
+        }}
+        onOpenChat={(phone, name) => {
+          setQuickViewContact(null);
+          openContactChat(phone);
+        }}
       />
     </div>
   );

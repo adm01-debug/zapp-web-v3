@@ -1,4 +1,4 @@
-import { LayoutGrid, List, Table2, Settings2, MapPin, BarChart3 } from 'lucide-react';
+import { LayoutGrid, List, Table2, Settings2, MapPin, BarChart3, GitGraph } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
@@ -20,6 +20,7 @@ const VIEW_MODES = [
   { value: 'list' as const, label: 'Lista', icon: List },
   { value: 'table' as const, label: 'Tabela', icon: Table2 },
   { value: 'map' as const, label: 'Mapa', icon: MapPin },
+  { value: 'kanban' as const, label: 'Pipeline', icon: GitGraph },
   { value: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
 ];
 

@@ -47,11 +47,12 @@ html, body, #root {
 @tailwind utilities;
 
 /* ===== ACCESSIBILITY ===== */
-/* Global focus-visible ring for all interactive elements */
+/* Global focus-visible ring for all interactive elements - High Contrast & Premium */
 :focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 2px;
-  border-radius: inherit;
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px hsla(var(--primary), 0.15);
+  transition: outline-offset 0.2s, box-shadow 0.2s;
 }
 
 :focus:not(:focus-visible) {
@@ -72,6 +73,45 @@ html, body, #root {
   .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
   .overscroll-contain { overscroll-behavior: contain; }
   .will-change-transform { will-change: transform; }
+}
+
+/* ===== HIGH CONTRAST MODE (WCAG AAA Goal) ===== */
+.high-contrast-mode {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 0%;
+  --primary: 221 83% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 90%;
+  --secondary-foreground: 0 0% 0%;
+  --muted: 0 0% 90%;
+  --muted-foreground: 0 0% 10%;
+  --accent: 0 0% 90%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 0 84% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 0%;
+  --input: 0 0% 0%;
+  --ring: 0 0% 0%;
+}
+
+.high-contrast-mode * {
+  border-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+.high-contrast-mode .badge,
+.high-contrast-mode [role="badge"] {
+  border-width: 2px !important;
+  color: #000 !important;
+  background-color: #fff !important;
+  border-color: #000 !important;
+}
+
+.high-contrast-mode button:not(.primary) {
+  border: 2px solid #000 !important;
 }
 
 /* Modular design system imports already loaded at the top of this file. */
