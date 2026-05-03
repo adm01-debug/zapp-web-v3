@@ -121,6 +121,7 @@ export function useReactionMutations(
       toast.error(`Erro ao adicionar reação: ${errorMsg}`, {
         id: `reaction-error-${messageId}`,
         className: "bg-destructive text-destructive-foreground font-medium",
+        duration: 4000,
       });
 
       trackReactionEvent('add', { messageId, emoji, status: 'error', code: status });
@@ -178,6 +179,7 @@ export function useReactionMutations(
       toast.error('Não foi possível remover sua reação. Verifique sua conexão.', {
         id: `reaction-remove-error-${messageId}`,
         className: "bg-destructive text-destructive-foreground font-medium",
+        duration: 4000,
       });
       trackReactionEvent('remove', { messageId, emoji, status: 'error' });
     }
