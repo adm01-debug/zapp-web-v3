@@ -418,7 +418,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             failuresCount={failedMessages.length}
             onToggleFailuresOnly={() => setFailuresOnly((v) => !v)}
             onOpenWhisper={() => dispatch({ type: 'TOGGLE', key: 'whisper' })}
-            whisperCount={0}
+            whisperCount={whisperCount}
           />
         )}
 
