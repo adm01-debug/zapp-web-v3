@@ -9,14 +9,15 @@
  * usando exclusivamente componentes que já existem no projeto.
  */
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   UserPlus, Upload, Trash2, GitMerge, Keyboard, 
-  Search, Grid, List, Table, Map, BarChart3, Info, X, Zap, Users
+  Search, Grid, List, Table, Map, BarChart3, Info, X, Zap, Users,
+  CheckCircle2, Tag as TagIcon, Download, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 
