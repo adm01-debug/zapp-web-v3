@@ -16,6 +16,8 @@ interface TeamFilesProps {
 export function TeamFiles({ contactId }: TeamFilesProps) {
   const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ['team-files', contactId],
