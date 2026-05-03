@@ -36,13 +36,13 @@ export function ContactDuplicateIndicator({
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!isExternalConfigured || (!phone && !name)) return;
+    if (!isExternalConfigured || (!contactPhone && !contactName)) return;
 
     let cancelled = false;
     setIsLoading(true);
 
     contactsDB.duplicates
-      .findSimilar(phone ?? '', name ?? '', 5)
+      .findSimilar(contactPhone ?? '', contactName ?? '', 5)
       .then((results) => {
         if (cancelled) return;
         // Filter out the current contact
@@ -56,7 +56,7 @@ export function ContactDuplicateIndicator({
       });
 
     return () => { cancelled = true; };
-  }, [contactId, phone, name]);
+  }, [contactId, contactPhone, contactName]);
 
   if (isLoading || duplicates.length === 0) return null;
 
