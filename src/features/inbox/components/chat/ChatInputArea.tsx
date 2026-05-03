@@ -203,13 +203,13 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-4 py-3 border-t border-border bg-card relative transition-colors duration-300", 
-        isWhisper && "bg-amber-50/30 dark:bg-amber-950/10 border-amber-200/30",
-        logic.isMobile && "px-2.5 py-2 safe-area-bottom"
+        "px-5 py-4 border-t border-border/10 bg-background/80 backdrop-blur-xl relative transition-all duration-500", 
+        isWhisper && "bg-amber-50/20 dark:bg-amber-950/5 border-amber-200/20",
+        logic.isMobile && "px-3 py-3 safe-area-bottom"
       )}>
         <AnimatePresence>
           {isRecordingAudio && (
-            <div className="mb-3"><AudioRecorder onSend={onAudioSend} onCancel={onAudioCancel} /></div>
+            <div className="mb-4"><AudioRecorder onSend={onAudioSend} onCancel={onAudioCancel} /></div>
           )}
         </AnimatePresence>
 
@@ -217,27 +217,30 @@ export function ChatInputArea(props: ChatInputAreaProps) {
 
         {typingNotification && (
           <motion.div 
-            initial={{ opacity: 0, y: 5 }} 
+            initial={{ opacity: 0, y: 10 }} 
             animate={{ opacity: 1, y: 0 }} 
-            className="absolute -top-6 left-4 flex items-center gap-1.5"
+            className="absolute -top-7 left-6 flex items-center gap-2"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200/50">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse" />
+            <span className="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest bg-amber-50/80 dark:bg-amber-950/60 backdrop-blur-sm px-2.5 py-0.5 rounded-full border border-amber-200/30">
               {typingNotification}
             </span>
           </motion.div>
         )}
 
-        <div className="flex items-end gap-1.5" role="toolbar" aria-label="Barra de mensagem">
+        <div className="flex items-end gap-2" role="toolbar" aria-label="Barra de mensagem">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon"
-                className={cn("text-muted-foreground hover:text-foreground hover:bg-muted shrink-0 touch-manipulation active:scale-95", logic.isMobile ? "w-10 h-10" : "w-9 h-9")}
+                className={cn(
+                  "text-muted-foreground/50 hover:text-primary hover:bg-primary/5 shrink-0 transition-all rounded-full active:scale-90", 
+                  logic.isMobile ? "w-10 h-10" : "w-9 h-9"
+                )}
                 aria-label="Mais opções de mensagem">
-                <Plus className="w-[18px] h-[18px]" />
+                <Plus className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-56 p-2 bg-popover border-border" align="start" side="top">{tertiaryTools}</PopoverContent>
+            <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in zoom-in-95 duration-200" align="start" side="top">{tertiaryTools}</PopoverContent>
           </Popover>
 
           <div className="flex-1 min-w-0 relative">
