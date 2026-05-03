@@ -56,7 +56,7 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
       )}
       onClick={handleOpen}
     >
-      <div className={cn("flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center", isSent ? "bg-primary-foreground/20" : "bg-card")}>
+      <div className={cn("flex-shrink-0 w-12 h-12 rounded-md flex items-center justify-center bg-[#111b21]")}>
         {getFileIcon(fileName)}
       </div>
       <div className="flex-1 min-w-0">
