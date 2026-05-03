@@ -60,7 +60,10 @@ jobs:
           fi
 
       - name: 🔎 Run TypeScript check
-        run: npx tsc --noEmit
+        run: npm run typecheck
+        env:
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         continue-on-error: false
 
       - name: 🛡️ Verify Domain Boundaries
