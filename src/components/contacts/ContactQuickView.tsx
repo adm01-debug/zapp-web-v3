@@ -86,13 +86,24 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
                   <p className="text-[10px] text-muted-foreground font-medium uppercase">WhatsApp / Celular</p>
                   <p className="font-semibold truncate">{contact.phone}</p>
                 </div>
-                <Button 
-                  size="sm" 
-                  className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => onOpenChat(contact.phone, contact.name)}
-                >
-                  Conversar
-                </Button>
+                <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    size="sm" 
+                    variant="secondary"
+                    className="h-8 w-8 p-0 rounded-full"
+                    onClick={() => window.open(`tel:${contact.phone}`)}
+                    title="Ligar"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="h-8 px-3 rounded-full"
+                    onClick={() => onOpenChat(contact.phone, contact.name)}
+                  >
+                    Chat
+                  </Button>
+                </div>
               </div>
 
               {contact.email && (
@@ -104,6 +115,15 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
                     <p className="text-[10px] text-muted-foreground font-medium uppercase">E-mail</p>
                     <p className="font-semibold truncate">{contact.email}</p>
                   </div>
+                  <Button 
+                    size="sm" 
+                    variant="secondary"
+                    className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => window.open(`mailto:${contact.email}`)}
+                    title="Enviar e-mail"
+                  >
+                    <Mail className="w-4 h-4" />
+                  </Button>
                 </div>
               )}
             </div>
