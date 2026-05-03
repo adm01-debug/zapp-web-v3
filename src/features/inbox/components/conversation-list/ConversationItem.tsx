@@ -205,20 +205,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             </div>
             
             {/* Actions hidden to match WhatsApp Web list simplicity */}
-            <div className="mt-1">
-              <SLAIndicatorForContact conversation={conversation} compact />
-            </div>
-            {conversation.lastMessage && (
-              <div className="mt-1 flex items-center">
-                <RetryFailureBadge message={conversation.lastMessage} />
-              </div>
-            )}
-            {conversation.tags.length > 0 && (
-              <div className="flex items-center gap-1 mt-2 flex-wrap">
-                {conversation.tags.slice(0, 2).map((tag) => <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0 bg-muted/50 border-border/20">{tag}</Badge>)}
-                {conversation.tags.length > 2 && <span className="text-[10px] text-muted-foreground">+{conversation.tags.length - 2}</span>}
-              </div>
-            )}
+            {/* SLA and Tags hidden to match WhatsApp Web list simplicity */}
           </div>
           {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
         </div>
