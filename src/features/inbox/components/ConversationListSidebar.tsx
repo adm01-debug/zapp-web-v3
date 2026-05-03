@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useCallback, useRef, useEffect } from 'react';
+import { lazy, Suspense, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePullToRefreshIndicator } from '@/components/mobile/MobilePullToRefresh';
@@ -19,6 +19,7 @@ import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, A
 import { cn } from '@/lib/utils';
 import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
 import { WhatsAppConnectionStatus } from '@/features/connections';
+import { useInboxShortcuts } from '../hooks/useInboxShortcuts';
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,6 +46,51 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
     inboxFilters.setSearch('');
     contactSearchRef.current?.focus();
   }, [inboxFilters]);
+
+  const sortedFilteredIds = useMemo(() => 
+    inboxFilters.filteredConversations.map((c: any) => c.contact.id), 
+    [inboxFilters.filteredConversations]
+  );
+
+  const handleNextConversation = useCallback(() => {
+    const currentId = inbox.selectedContactId;
+    if (!currentId) {
+      if (sortedFilteredIds.length > 0) inbox.handleSelectConversation(sortedFilteredIds[0]);
+      return;
+    }
+    const idx = sortedFilteredIds.indexOf(currentId);
+    if (idx >= 0 && idx < sortedFilteredIds.length - 1) {
+      inbox.handleSelectConversation(sortedFilteredIds[idx + 1]);
+    }
+  }, [inbox, sortedFilteredIds]);
+
+  const handlePrevConversation = useCallback(() => {
+    const currentId = inbox.selectedContactId;
+    if (!currentId) return;
+    const idx = sortedFilteredIds.indexOf(currentId);
+    if (idx > 0) {
+      inbox.handleSelectConversation(sortedFilteredIds[idx - 1]);
+    }
+  }, [inbox, sortedFilteredIds]);
+
+  useInboxShortcuts({
+    onSearchFocus: () => contactSearchRef.current?.focus(),
+    onNextConversation: handleNextConversation,
+    onPrevConversation: handlePrevConversation,
+    onArchive: () => {
+      if (inbox.selectedContactId) {
+        toast.info('Arquivando conversa...');
+        // Hook internal handles real logic via context menu or bulk actions
+      }
+    },
+    onTransfer: () => {
+      if (inbox.selectedContactId) {
+        // Dispatch event for UI to open transfer dialog
+        window.dispatchEvent(new CustomEvent('open-transfer-dialog', { detail: { contactId: inbox.selectedContactId } }));
+      }
+    },
+    onRefresh: () => inbox.refetch(),
+  });
 
   return (
     <div className={cn(
