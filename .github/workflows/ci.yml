@@ -289,6 +289,36 @@ jobs:
           retention-days: 7
 
   # ===========================================
+  # JOB 5.5: Chat Coverage Report
+  # ===========================================
+  chat-coverage:
+    name: 📊 Chat Coverage Report
+    runs-on: ubuntu-latest
+    needs: [test, e2e]
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 📚 Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: 📊 Generate Chat Coverage Report
+        run: npm run report:coverage > chat-coverage-report.md
+      - name: 📝 Post Coverage to PR
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: chat-coverage-report.md
+          comment_tag: chat_coverage_report
+      - name: 📊 Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-coverage-report
+          path: chat-coverage-report.md
+
+  # ===========================================
   # JOB 6: Security Audit
   # ===========================================
   security:
