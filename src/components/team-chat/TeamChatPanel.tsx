@@ -16,7 +16,7 @@ import { TeamChatHeader } from './TeamChatHeader';
 import { TeamChatInputArea } from './TeamChatInputArea';
 import { useTeamChatPanel } from './useTeamChatPanel';
 import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
-import { MessageReactions, QUICK_EMOJIS } from './MessageReactions';
+import { MessageReactions, QUICK_EMOJIS, TeamQuickReactionBar } from './MessageReactions';
 import { memo } from 'react';
 import { TeamMessage } from '@/hooks/useTeamChat';
 import { isToday, isYesterday } from 'date-fns';
@@ -145,7 +145,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             return (
               <ContextMenu key={msg.id}>
                 <ContextMenuTrigger asChild>
-                  <div data-testid={`message-container-${msg.id}`} className="group">
+                  <div data-testid={`message-container-${msg.id}`} className="group/msg relative">
                     {showDate && <div className="flex justify-center py-2"><span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border border-border/20">{formatDateSep(msg.created_at)}</span></div>}
                     <div 
                       key={msg.id}
@@ -153,25 +153,36 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                       className={cn("flex gap-2 py-0.5", isMine ? "justify-end" : "justify-start")}
                     >
                       {!isMine && <Avatar className="w-7 h-7 mt-1 shrink-0"><AvatarImage src={msg.sender?.avatar_url || undefined} /><AvatarFallback className="text-[10px] bg-muted">{msg.sender?.name?.charAt(0) || '?'}</AvatarFallback></Avatar>}
-                      <div className={cn("max-w-[70%] rounded-2xl px-3.5 py-2 shadow-sm relative", isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card border border-border/30 text-foreground rounded-bl-md")}>
-                        {!isMine && conversation.type === 'group' && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.sender?.name}</p>}
-                        {repliedMsg && <div className={cn("text-[10px] mb-1.5 px-2 py-1 rounded border-l-2", isMine ? "bg-primary-foreground/10 border-primary-foreground/30" : "bg-muted/50 border-muted-foreground/30")}><span className="font-medium">{repliedMsg.sender?.name}</span><p className="truncate opacity-80 flex items-center gap-1">{repliedMsg.media_type && <MediaTypeIcon type={repliedMsg.media_type} />}{repliedMsg.content || 'Mídia'}</p></div>}
-                        {isEditing ? (
-                          <div className="space-y-1.5">
-                            <Input value={s.editText} onChange={e => s.setEditText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') s.handleSaveEdit(); if (e.key === 'Escape') s.handleCancelEdit(); }} className="h-7 text-sm bg-background text-foreground" autoFocus />
-                            <div className="flex gap-1 justify-end"><Button size="icon" variant="ghost" className="h-5 w-5" onClick={s.handleCancelEdit}><X className="w-3 h-3" /></Button><Button size="icon" variant="ghost" className="h-5 w-5" onClick={s.handleSaveEdit}><Check className="w-3 h-3" /></Button></div>
-                          </div>
-                        ) : (
-                          <>
-                            {hasMedia && <MediaContent msg={msg} />}
-                            {msg.content && (!hasMedia || msg.media_type === 'document') && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words"><MarkdownPreview text={msg.content} className="inline" /></p>}
-                            {msg.content && hasMedia && msg.media_type !== 'document' && !['🎨 Figurinha', '🎵 Áudio meme', '😀 Emoji', '🎤 Mensagem de áudio'].includes(msg.content) && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words mt-1">{msg.content}</p>}
-                            <div className={cn("flex items-center gap-1 mt-0.5", isMine ? "justify-end" : "justify-between")}>
-                              {cleanText && <button onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className={cn("opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded-full", isMine ? "text-primary-foreground/60 hover:text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>{isThisTtsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isThisTtsPlaying ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}</button>}
-                              <span className={cn("text-[10px]", isMine ? "text-primary-foreground/60" : "text-muted-foreground")}>{formatTime(msg.created_at)}{msg.is_edited && ' · editado'}</span>
+                      
+                      <div className={cn("max-w-[70%] space-y-1 relative")}>
+                        {/* Quick Reaction Bar (WhatsApp style) */}
+                        <TeamQuickReactionBar 
+                          messageId={msg.id}
+                          isMine={isMine}
+                          onToggle={(emoji) => toggleReaction({ messageId: msg.id, emoji })}
+                          reactions={aggregate(msg.id)}
+                        />
+
+                        <div className={cn("rounded-2xl px-3.5 py-2 shadow-sm relative", isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card border border-border/30 text-foreground rounded-bl-md")}>
+                          {!isMine && conversation.type === 'group' && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.sender?.name}</p>}
+                          {repliedMsg && <div className={cn("text-[10px] mb-1.5 px-2 py-1 rounded border-l-2", isMine ? "bg-primary-foreground/10 border-primary-foreground/30" : "bg-muted/50 border-muted-foreground/30")}><span className="font-medium">{repliedMsg.sender?.name}</span><p className="truncate opacity-80 flex items-center gap-1">{repliedMsg.media_type && <MediaTypeIcon type={repliedMsg.media_type} />}{repliedMsg.content || 'Mídia'}</p></div>}
+                          {isEditing ? (
+                            <div className="space-y-1.5">
+                              <Input value={s.editText} onChange={e => s.setEditText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') s.handleSaveEdit(); if (e.key === 'Escape') s.handleCancelEdit(); }} className="h-7 text-sm bg-background text-foreground" autoFocus />
+                              <div className="flex gap-1 justify-end"><Button size="icon" variant="ghost" className="h-5 w-5" onClick={s.handleCancelEdit}><X className="w-3 h-3" /></Button><Button size="icon" variant="ghost" className="h-5 w-5" onClick={s.handleSaveEdit}><Check className="w-3 h-3" /></Button></div>
                             </div>
-                          </>
-                        )}
+                          ) : (
+                            <>
+                              {hasMedia && <MediaContent msg={msg} />}
+                              {msg.content && (!hasMedia || msg.media_type === 'document') && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words"><MarkdownPreview text={msg.content} className="inline" /></p>}
+                              {msg.content && hasMedia && msg.media_type !== 'document' && !['🎨 Figurinha', '🎵 Áudio meme', '😀 Emoji', '🎤 Mensagem de áudio'].includes(msg.content) && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words mt-1">{msg.content}</p>}
+                              <div className={cn("flex items-center gap-1 mt-0.5", isMine ? "justify-end" : "justify-between")}>
+                                {cleanText && <button onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className={cn("opacity-0 group-hover/msg:opacity-100 transition-opacity p-0.5 rounded-full", isMine ? "text-primary-foreground/60 hover:text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>{isThisTtsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isThisTtsPlaying ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}</button>}
+                                <span className={cn("text-[10px]", isMine ? "text-primary-foreground/60" : "text-muted-foreground")}>{formatTime(msg.created_at)}{msg.is_edited && ' · editado'}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <MessageReactions
