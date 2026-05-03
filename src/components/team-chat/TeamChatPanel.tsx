@@ -145,12 +145,12 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             return (
               <ContextMenu key={msg.id}>
                 <ContextMenuTrigger asChild>
-                  <div data-testid={`message-container-${msg.id}`}>
+                  <div data-testid={`message-container-${msg.id}`} className="group">
                     {showDate && <div className="flex justify-center py-2"><span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border border-border/20">{formatDateSep(msg.created_at)}</span></div>}
                     <div 
                       key={msg.id}
                       data-testid={`message-${msg.id}`}
-                      className={cn("flex gap-2 py-0.5 group", isMine ? "justify-end" : "justify-start")}
+                      className={cn("flex gap-2 py-0.5", isMine ? "justify-end" : "justify-start")}
                     >
                       {!isMine && <Avatar className="w-7 h-7 mt-1 shrink-0"><AvatarImage src={msg.sender?.avatar_url || undefined} /><AvatarFallback className="text-[10px] bg-muted">{msg.sender?.name?.charAt(0) || '?'}</AvatarFallback></Avatar>}
                       <div className={cn("max-w-[70%] rounded-2xl px-3.5 py-2 shadow-sm relative", isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card border border-border/30 text-foreground rounded-bl-md")}>
