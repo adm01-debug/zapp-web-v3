@@ -270,18 +270,20 @@ export async function sendMessageToContact(
       retry_attempt: null,
       retry_total: null,
     }).eq('id', data.id);
-    emitSendStatus(data.id, { status: 'sent' }, { contactId, source: 'messageSender' });
+    const finalSid = opts.optimisticId || data.id;
+    emitSendStatus(finalSid, { status: 'sent' }, { contactId, source: 'messageSender' });
   } catch (evolutionError) {
     log.error('Error sending via Evolution API:', evolutionError);
     const auth = classifyAuthError(evolutionError);
     const reason = evolutionError instanceof Error ? evolutionError.message : 'Falha ao enviar mensagem';
+    const sid = opts.optimisticId || data.id;
     if (auth.isAuth) {
       await dbFrom('messages').update({
         status: 'failed_auth',
         error_code: auth.code ? String(auth.code) : null,
         error_reason: auth.reason || reason,
       }).eq('id', data.id);
-      emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender' });
+      emitSendStatus(sid, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender' });
     } else {
       // If error came from withRetry exhausting attempts, mark failed_retries.
       // Persist final attempt counters so the badge stays after a reload.
@@ -291,7 +293,7 @@ export async function sendMessageToContact(
         retry_attempt: MAX_RETRIES,
         retry_total: MAX_RETRIES,
       }).eq('id', data.id);
-      emitSendStatus(data.id, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason }, { contactId, source: 'messageSender' });
+      emitSendStatus(sid, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason }, { contactId, source: 'messageSender' });
     }
     throw evolutionError;
   }
