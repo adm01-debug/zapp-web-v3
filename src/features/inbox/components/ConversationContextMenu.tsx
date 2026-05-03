@@ -56,6 +56,7 @@ interface ConversationContextMenuProps {
   onDelete?: (id: string) => void;
   onSetPriority?: (id: string, priority: 'high' | 'medium' | 'low') => void;
   onOpenSummary?: (id: string) => void;
+  onOpenSLASettings?: (id: string) => void;
 }
 
 export function ConversationContextMenu({
