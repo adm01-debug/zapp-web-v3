@@ -72,9 +72,4 @@ export const messageService = {
       throw err;
     }
   },
-    } catch (err) {
-      log.error(`Critical error in getAllMessagesForContact for ${contactId}:`, err);
-      throw err;
-    }
-  },
 };
