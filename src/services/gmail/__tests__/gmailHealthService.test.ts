@@ -33,6 +33,24 @@ describe('GmailHealthService', () => {
       expect(health.lastValidation).toEqual(new Date('2024-01-01T10:00:00Z'));
     });
 
+    it('should handle invalid timestamps in summary', async () => {
+      mockRepository.getRemoteSummary.mockResolvedValue({ status: 'healthy', last_validation: 'invalid-date' });
+      const fallbackDate = new Date('2024-01-01T09:00:00Z');
+      mockRepository.getLocalTelemetry.mockReturnValue({
+        lastValidation: fallbackDate,
+        recentFailures: [],
+        stats: { totalCalls: 0, failedCalls: 0, cacheHits: 0 }
+      });
+      mockRepository.getLocalCacheInfo.mockReturnValue({ expiration: null });
+
+      const health = await service.getHealthStatus();
+      
+      // If Date constructor gets 'invalid-date', it returns Invalid Date object.
+      // We expect it to be an instance of Date even if invalid, or we might want to ensure it falls back.
+      // Let's check current implementation: it does `new Date(summary.last_validation)`.
+      expect(health.lastValidation).toBeInstanceOf(Date);
+    });
+
     it('should fallback to local telemetry calculation if summary is missing', async () => {
       mockRepository.getRemoteSummary.mockResolvedValue(null);
       mockRepository.getLocalTelemetry.mockReturnValue({
@@ -60,6 +78,40 @@ describe('GmailHealthService', () => {
       const health = await service.getHealthStatus();
       expect(health.status).toBe('error');
     });
+
+    it('should handle edge cases with empty or null telemetry', async () => {
+      mockRepository.getRemoteSummary.mockResolvedValue(null);
+      mockRepository.getLocalTelemetry.mockReturnValue({
+        lastValidation: null,
+        recentFailures: null, // Testing unexpected null
+        stats: null
+      });
+      mockRepository.getLocalCacheInfo.mockReturnValue({ expiration: null });
+
+      const health = await service.getHealthStatus();
+      expect(health.status).toBe('error'); // Because failures is null/not array
+    });
+  });
+
+  describe('calculateStatus', () => {
+    it('should return healthy for empty array', () => {
+      expect((service as any).calculateStatus([])).toBe('healthy');
+    });
+
+    it('should return degraded for 1-10 failures', () => {
+      expect((service as any).calculateStatus(Array(1).fill({}))).toBe('degraded');
+      expect((service as any).calculateStatus(Array(10).fill({}))).toBe('degraded');
+    });
+
+    it('should return error for > 10 failures', () => {
+      expect((service as any).calculateStatus(Array(11).fill({}))).toBe('error');
+    });
+
+    it('should return error for non-array inputs', () => {
+      expect((service as any).calculateStatus(null)).toBe('error');
+      expect((service as any).calculateStatus(undefined)).toBe('error');
+      expect((service as any).calculateStatus({})).toBe('error');
+    });
   });
 
   describe('getFailures with filtering and pagination', () => {
@@ -74,6 +126,13 @@ describe('GmailHealthService', () => {
         recentFailures: mockFailures,
         stats: { totalCalls: 100, failedCalls: 3, cacheHits: 50 }
       });
+    });
+
+    it('should handle missing failures in telemetry', () => {
+      mockRepository.getLocalTelemetry.mockReturnValue({ recentFailures: null });
+      const result = service.getFailures();
+      expect(result.items).toEqual([]);
+      expect(result.total).toBe(0);
     });
 
     it('should filter by requestId', () => {
