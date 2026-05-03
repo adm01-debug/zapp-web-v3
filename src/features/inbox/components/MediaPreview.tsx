@@ -76,7 +76,7 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
       >
         {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
       </motion.button>
-    </motion.div>
+    </div>
   );
 }
 
