@@ -233,6 +233,19 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button
+              variant={highContrast ? "default" : "outline"}
+              size="sm"
+              onClick={() => setHighContrast(!highContrast)}
+              className={cn(
+                "hidden md:flex gap-2 transition-all",
+                !highContrast ? "border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5" : "bg-foreground text-background hover:bg-foreground/90"
+              )}
+              title="Alto Contraste"
+            >
+              <Zap className={cn("w-4 h-4", highContrast ? "text-yellow-400" : "text-muted-foreground")} />
+              <span className="sr-only">Contraste</span>
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={() => setShowShortcutHelp(true)}
