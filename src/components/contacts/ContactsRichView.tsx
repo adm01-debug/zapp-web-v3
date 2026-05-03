@@ -75,9 +75,91 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
   } = crud;
 
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
 
-  // Stub de CRM batch — a versão rica original consulta empresa/logo por
-  // telefone; aqui devolvemos null para manter UI estável sem custo extra.
+  // Keyboard Shortcuts Logic
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement ||
+        (e.target as HTMLElement).isContentEditable
+      ) {
+        if (e.key === 'Escape') {
+          (e.target as HTMLElement).blur();
+        }
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      
+      // Modal-agnostic shortcuts
+      if (e.key === '?') {
+        e.preventDefault();
+        setShowShortcutHelp(prev => !prev);
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        setShowShortcutHelp(false);
+        return;
+      }
+
+      // Action shortcuts
+      switch (key) {
+        case 'n':
+          e.preventDefault();
+          setIsAddDialogOpen(true);
+          toast.info("Atalho: Novo Registro", { duration: 1000 });
+          break;
+        case 'f':
+          e.preventDefault();
+          const searchInput = document.querySelector('input[placeholder*="Buscar"]') as HTMLInputElement;
+          if (searchInput) {
+            searchInput.focus();
+            toast.info("Atalho: Focar Busca", { duration: 1000 });
+          }
+          break;
+        case 'g':
+          e.preventDefault();
+          state.setViewMode('grid');
+          toast.info("Visualização: Grid", { duration: 1000 });
+          break;
+        case 'l':
+          e.preventDefault();
+          state.setViewMode('list');
+          toast.info("Visualização: Lista", { duration: 1000 });
+          break;
+        case 't':
+          e.preventDefault();
+          state.setViewMode('table');
+          toast.info("Visualização: Tabela", { duration: 1000 });
+          break;
+        case 'm':
+          e.preventDefault();
+          state.setViewMode('map');
+          toast.info("Visualização: Mapa", { duration: 1000 });
+          break;
+        case 'a':
+          e.preventDefault();
+          state.setViewMode('analytics');
+          toast.info("Visualização: Analytics", { duration: 1000 });
+          break;
+        case 'p':
+          e.preventDefault();
+          state.setViewMode('pipeline');
+          toast.info("Visualização: Pipeline", { duration: 1000 });
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setIsAddDialogOpen, state]);
+
+  // Stub de CRM batch
   const getCRMData = (_phone: string) => null;
 
   const contactsForContent: Contact[] = useMemo(
