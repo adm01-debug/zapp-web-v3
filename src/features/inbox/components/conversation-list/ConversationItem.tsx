@@ -191,8 +191,8 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 <TypingIndicatorCompact isVisible={true} />
               ) : (
                 <p className={cn(
-                  "text-[13px] truncate pr-4 transition-colors duration-300",
-                  conversation.unreadCount > 0 ? "text-foreground font-normal" : "text-muted-foreground"
+                  "text-[14px] truncate pr-4 transition-colors duration-300",
+                  conversation.unreadCount > 0 ? "text-foreground" : "text-muted-foreground"
                 )}>
                   {conversation.lastMessage?.content || 'Sem mensagens'}
                 </p>
