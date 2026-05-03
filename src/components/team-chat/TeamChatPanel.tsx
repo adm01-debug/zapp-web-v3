@@ -69,7 +69,18 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
 
   useEffect(() => {
     if (s.isNearBottomRef.current && s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight;
-  }, [s.filteredMessages.length]);
+    
+    // Mark unread messages as read
+    const unreadIds = s.filteredMessages
+      .filter(m => m.sender_id !== s.profile?.id && m.status !== 'read')
+      .map(m => m.id);
+    
+    if (unreadIds.length > 0) {
+      unreadIds.forEach(id => {
+        s.updateStatusMutation.mutate({ messageId: id, status: 'read', conversationId: conversation.id });
+      });
+    }
+  }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => { if (s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight; }, [conversation.id]);
   useEffect(() => { if (s.showSearch) s.searchInputRef.current?.focus(); }, [s.showSearch]);
