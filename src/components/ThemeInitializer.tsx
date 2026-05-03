@@ -59,14 +59,9 @@ export function ThemeInitializer() {
         cssVarsCache[key] = value;
       }
 
-      // Fonte por skin: opcional, fallback no :root do tokens.css.
-      if (preset.font) {
-        root.style.setProperty('--font-sans', preset.font);
-        root.style.setProperty('--font-display', preset.font);
-      } else {
-        root.style.removeProperty('--font-sans');
-        root.style.removeProperty('--font-display');
-      }
+      // Force standard font for consistency across all skins
+      root.style.setProperty('--font-sans', "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif");
+      root.style.setProperty('--font-display', "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif");
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({

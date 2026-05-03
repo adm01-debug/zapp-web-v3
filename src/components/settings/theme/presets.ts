@@ -356,7 +356,7 @@ const applyGxGlass = (preset: ThemePreset, h: number, s: number, l: number): The
 
 // Tipografia geométrica usada pelo Opera GX (sans-serif tech/gamer).
 // Rajdhani é nativamente geométrica e largamente usada em UIs de jogos.
-const GX_FONT_STACK = "'Rajdhani', 'Outfit', system-ui, sans-serif";
+const GX_FONT_STACK = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 
 const buildGxPreset = (p: PresetParams): ThemePreset => {
   const preset = applyGxGlass(
