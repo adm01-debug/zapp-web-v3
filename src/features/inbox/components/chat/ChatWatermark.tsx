@@ -42,7 +42,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
             </g>
 
             {/* Heart icon — subtle */}
-            <g opacity="0.018" fill="none" stroke="currentColor" strokeWidth="0.9" className="text-primary">
+            <g opacity="0.04" fill="none" stroke="currentColor" strokeWidth="0.9" className="text-foreground">
               <path d="M95 90 C95 86 90 82 86 82 C80 82 78 88 78 88 C78 88 76 82 70 82 C66 82 61 86 61 90 C61 98 78 108 78 108 C78 108 95 98 95 90 Z" />
             </g>
 
