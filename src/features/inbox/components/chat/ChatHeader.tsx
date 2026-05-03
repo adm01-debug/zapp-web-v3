@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 import { Conversation, Message } from '@/types/chat';
