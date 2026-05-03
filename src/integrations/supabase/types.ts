@@ -9545,6 +9545,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           department_id: string | null
           id: string
           name: string | null
@@ -9555,6 +9556,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           department_id?: string | null
           id?: string
           name?: string | null
@@ -9565,6 +9567,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           department_id?: string | null
           id?: string
           name?: string | null
@@ -9600,6 +9603,7 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          deleted_at: string | null
           id: string
           is_edited: boolean | null
           media_type: string | null
@@ -9613,6 +9617,7 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_edited?: boolean | null
           media_type?: string | null
@@ -9626,6 +9631,7 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_edited?: boolean | null
           media_type?: string | null

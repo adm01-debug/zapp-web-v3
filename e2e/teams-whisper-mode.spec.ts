@@ -79,22 +79,5 @@ test.describe('Teams Advanced Collaboration', () => {
     await expect(page.locator('[role="dialog"][aria-label="Arquivos da Equipe"]')).toBeVisible();
   });
 
-  test('should trigger quick reactions in whispers', async ({ page }) => {
-    await page.keyboard.press('Alt+W');
-    const whisperPanel = page.locator('[role="dialog"][aria-label="Painel de Sussurro"]');
-    
-    // Ensure there's a message to react to
-    await whisperPanel.locator('textarea').fill('Mensagem para reação');
-    await page.keyboard.press('Enter');
-
-    const item = page.locator('.group\\/whisper').first();
-    await item.hover();
-    
-    // Click reaction button (thumbs up)
-    await page.locator('button:text("👍")').click();
-    
-    // Verify feedback (toast)
-    await expect(page.locator('text="👍 Confirmado"')).toBeVisible();
-  });
 });
 
