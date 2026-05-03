@@ -33,7 +33,7 @@ export function MessageStatusIcon({ status, className }: { status: Message['stat
       );
     case 'delivered':
       return (
-        <CheckCheck className={cn('w-[14px] h-[14px] transition-all duration-300 ease-out', className)} strokeWidth={2.5} />
+        <CheckCheck className={cn('w-[16px] h-[16px] transition-all duration-300 ease-out', className)} strokeWidth={1.8} />
       );
     case 'read':
       return (
