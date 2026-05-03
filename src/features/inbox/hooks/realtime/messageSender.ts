@@ -248,14 +248,16 @@ export async function sendMessageToContact(
           error_code: auth.code ? String(auth.code) : null,
           error_reason: auth.reason || reason,
         }).eq('id', data.id);
-        emitSendStatus(data.id, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender' });
+        const sid = opts.optimisticId || data.id;
+        emitSendStatus(sid, { status: 'failed_auth', errorCode: auth.code, errorReason: auth.reason || reason }, { contactId, source: 'messageSender' });
       } else {
         await dbFrom('messages').update({
           status: 'failed',
           whatsapp_connection_id: resolvedConnectionId,
           error_reason: reason,
         }).eq('id', data.id);
-        emitSendStatus(data.id, { status: 'failed', errorReason: reason }, { contactId, source: 'messageSender' });
+        const sid = opts.optimisticId || data.id;
+        emitSendStatus(sid, { status: 'failed', errorReason: reason }, { contactId, source: 'messageSender' });
       }
       throw new Error(reason);
     }
