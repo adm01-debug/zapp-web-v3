@@ -119,12 +119,12 @@ export function MessageBubble({
         data-testid={`message-bubble-${message.id}`}
         data-message-id={message.id}
         className={cn(
-          'flex group gap-2.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+          'flex group gap-2 transition-all duration-300 focus-visible:outline-none',
           isSent ? 'justify-end' : 'justify-start',
-          density === 'comfortable' ? 'mb-4' : density === 'compact' ? 'mb-1.5' : 'mb-0.5',
+          density === 'comfortable' ? 'mb-1.5' : density === 'compact' ? 'mb-1' : 'mb-0.5',
           highlightedMessageIds?.has(message.id) && 'relative',
-          activeHighlightId === message.id && 'ring-2 ring-[hsl(var(--warning))] ring-offset-1 ring-offset-background rounded-2xl animate-[pulse_1.5s_ease-in-out_1]',
-          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-[hsl(var(--warning)/0.08)] rounded-2xl',
+          activeHighlightId === message.id && 'ring-2 ring-[#ffeeb1] ring-offset-0 rounded-lg animate-[pulse_1.5s_ease-in-out_1]',
+          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-[#ffeeb1]/30 rounded-lg',
         )}
       >
         {!isSent && (
