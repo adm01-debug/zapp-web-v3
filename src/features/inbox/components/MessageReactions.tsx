@@ -181,6 +181,7 @@ interface QuickReactionBarProps {
   senderType?: 'contact' | 'agent';
   refreshKey?: string;
   disableRealtime?: boolean;
+  forceShow?: boolean;
 }
 
 export function QuickReactionBar({
