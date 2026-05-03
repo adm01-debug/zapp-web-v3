@@ -201,10 +201,10 @@ export function MessageBubble({
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={cn(
                 'relative transition-all overflow-hidden',
-                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0' : density === 'comfortable' ? 'px-3 py-2' : density === 'compact' ? 'px-2 py-1.5' : 'px-1.5 py-1',
+                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2 py-1.5' : density === 'compact' ? 'px-1.5 py-1' : 'px-1.5 py-1',
                 isSent
-                  ? cn('bg-primary text-primary-foreground shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg rounded-br-none' : isFirstInGroup ? 'rounded-lg rounded-br-none' : isLastInGroup ? 'rounded-lg rounded-tr-none' : 'rounded-lg rounded-tr-none rounded-br-none')
-                  : cn('bg-card border-none text-foreground shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg rounded-bl-none' : isFirstInGroup ? 'rounded-lg rounded-bl-none' : isLastInGroup ? 'rounded-lg rounded-tl-none' : 'rounded-lg rounded-tl-none rounded-bl-none'),
+                  ? cn('bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg' : isFirstInGroup ? 'rounded-lg rounded-tr-none' : isLastInGroup ? 'rounded-lg rounded-tr-none' : 'rounded-lg rounded-tr-none')
+                  : cn('bg-white dark:bg-[#202c33] border-none text-[#111b21] dark:text-[#e9edef] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg' : isFirstInGroup ? 'rounded-lg rounded-tl-none' : isLastInGroup ? 'rounded-lg rounded-tl-none' : 'rounded-lg rounded-tl-none'),
                 message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 shadow-[inset_0_1px_2px_rgba(251,191,36,0.1)] ring-1 ring-amber-500/30 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border border-destructive/40'
               )}
