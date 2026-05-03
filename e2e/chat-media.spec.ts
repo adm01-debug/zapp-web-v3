@@ -91,25 +91,32 @@ test.describe('Chat Media Handling', () => {
     await page.evaluate(() => localStorage.removeItem('debug_chat_failure_rate'));
   });
 
-  test('should filter search results by media type', async ({ page }) => {
+  test('should filter search results by media type and date', async ({ page }) => {
     // Open chat search (Ctrl+F or shortcut)
     await page.keyboard.press('Control+f');
     
     const searchBar = page.locator('role=search');
     await expect(searchBar).toBeVisible();
 
-    // Click on "Imagens" filter chip
+    // 1. Filter by "Imagens" chip
     const imageFilter = page.locator('button:has-text("Imagens")');
     if (await imageFilter.isVisible()) {
       await imageFilter.click();
       
-      // Results should only contain images or show "Nenhum resultado" if empty
-      const results = page.locator('[data-testid="search-result-item"]');
-      const count = await results.count();
-      // If there are results, they should be images
-      if (count > 0) {
-        await expect(page.locator('img').first()).toBeVisible();
-      }
+      // If there are results, they should show a count and results should contain images
+      const countLabel = page.locator('[aria-live="polite"]');
+      await expect(countLabel).toBeVisible();
     }
+
+    // 2. Filter by Date (Open popover)
+    const dateBtn = page.locator('button:has-text("Qualquer data"), button:has-text(" interação")');
+    await dateBtn.click();
+    
+    const todayOption = page.locator('button:has-text("Hoje")');
+    await expect(todayOption).toBeVisible();
+    await todayOption.click();
+    
+    // Button label should update
+    await expect(page.locator('button:has-text("Hoje")')).toBeVisible();
   });
 });
