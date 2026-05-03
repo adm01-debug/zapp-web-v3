@@ -112,6 +112,8 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
 type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | null;
 
 export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0 }: ChatPanelProps) {
+  const { templates: quickReplyTemplates } = useQuickReplies();
+  const [selectedQuickReplyIndex, setSelectedQuickReplyIndex] = useState(0);
   const [dialogs, dispatch] = useReducer(dialogReducer, initialDialogState);
   const openDialog = useCallback((key: DialogKey) => dispatch({ type: 'OPEN', key }), []);
   const closeDialog = useCallback((key: DialogKey) => dispatch({ type: 'CLOSE', key }), []);
@@ -585,7 +587,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           showSlashCommands={dialogs.slashCommands} contactId={conversation.contact.id} contactPhone={conversation.contact.phone}
           contactName={conversation.contact.name} instanceName={instanceName} messages={messages} quickReplies={dbQuickReplies} isSending={handlers.isSending} sendProgress={handlers.sendProgress}
           isWhisper={handlers.isWhisper} onToggleWhisper={() => handlers.setIsWhisper(!handlers.isWhisper)}
-          onInputChange={handlers.handleInputChange} onKeyDown={(e) => handlers.handleKeyDown(e, dialogs.slashCommands)} onBlur={handleTypingStop} onSend={(att) => handlers.handleSend(att)}
+          onInputChange={handleInputChange} onKeyDown={handleKeyDown} onBlur={handleTypingStop} onSend={(att) => handlers.handleSend(att)}
           onCancelReply={() => handlers.setReplyToMessage(null)} onCancelEdit={handlers.handleCancelEdit} onSlashCommand={handlers.handleSlashCommand}
           onCloseSlashCommands={() => closeDialog('slashCommands')} onQuickReply={handleQuickReply}
           onRecordToggle={() => handlers.setIsRecordingAudio(!handlers.isRecordingAudio)} onAudioSend={(blob) => handlers.handleAudioSend(blob, onSendAudio)} onAudioCancel={() => handlers.setIsRecordingAudio(false)}
