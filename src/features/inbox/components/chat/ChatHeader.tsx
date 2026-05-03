@@ -77,7 +77,7 @@ export const ChatHeader = memo(function ChatHeader({
 
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className={cn(
-      "flex items-center justify-between px-4 sm:px-4 border-b border-border/5 bg-[#f0f2f5] dark:bg-[#202c33] sticky top-0 z-30 shadow-none h-[60px]",
+      "flex items-center justify-between px-4 sm:px-4 border-b border-[#222d34] bg-[#202c33] dark:bg-[#202c33] sticky top-0 z-30 shadow-none h-[59px]",
       density === 'comfortable' ? 'py-1.5' : 'py-1'
     )}>
       <div className="flex items-center gap-3">
@@ -103,7 +103,7 @@ export const ChatHeader = memo(function ChatHeader({
         </motion.div>
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
-            <h3 className="font-sans font-normal text-[16px] text-[#e9edef] truncate max-w-[180px] sm:max-w-md">
+            <h3 className="font-sans font-normal text-[16px] text-[#e9edef] truncate max-w-[240px] sm:max-w-md">
               {conversation.contact.name}
             </h3>
             <div className="flex-shrink-0 flex items-center gap-1">
@@ -177,7 +177,7 @@ export const ChatHeader = memo(function ChatHeader({
           <Tooltip key={label}>
             <TooltipTrigger asChild>
               <motion.div>
-                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-[#667781] dark:text-[#8696a0] hover:bg-transparent transition-all" onClick={onClick} aria-label={label}>
+                <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-[#aebac1] hover:bg-transparent active:scale-95 transition-all" onClick={onClick} aria-label={label}>
                   <Icon className="w-4 h-4" />
                 </Button>
               </motion.div>
