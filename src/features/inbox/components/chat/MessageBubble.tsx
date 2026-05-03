@@ -201,11 +201,11 @@ export function MessageBubble({
               whileHover={{ scale: 1.002 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={cn(
-                'relative transition-all overflow-hidden border border-transparent shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]',
-                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2 py-1.5' : 'px-1.5 py-1',
+                'relative transition-all overflow-hidden border border-transparent shadow-[0_1.5px_2px_rgba(0,0,0,0.15)]',
+                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2.5 py-2' : 'px-2 py-1.5',
                 isSent
-                  ? cn('bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef]', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
-                  : cn('bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef]', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
+                  ? cn('bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
+                  : cn('bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
                 message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 ring-1 ring-amber-500/30 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
