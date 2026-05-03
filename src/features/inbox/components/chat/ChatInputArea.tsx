@@ -232,16 +232,19 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           <div className="flex items-center">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon"
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
                   className={cn(
-                    "text-[#8696a0] dark:text-[#aebac1] hover:bg-transparent shrink-0 transition-all rounded-full active:scale-95", 
+                    "inline-flex items-center justify-center text-[#8696a0] dark:text-[#aebac1] hover:bg-transparent shrink-0 transition-all rounded-full outline-none", 
                     logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]"
                   )}
-                  aria-label="Mais opções de mensagem">
+                  aria-label="Mais opções de mensagem"
+                >
                   <Plus className="w-6 h-6" />
-                </Button>
+                </motion.button>
               </PopoverTrigger>
-              <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in zoom-in-95 duration-200" align="start" side="top">{tertiaryTools}</PopoverContent>
+              <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-300" align="start" side="top">{tertiaryTools}</PopoverContent>
             </Popover>
 
             {!logic.isMobile && (
