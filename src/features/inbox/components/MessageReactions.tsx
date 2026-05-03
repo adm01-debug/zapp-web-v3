@@ -177,15 +177,7 @@ export function MessageReactions({
   );
 }
 
-interface QuickReactionBarProps {
-  messageId: string;
-  isSent?: boolean;
-  instanceName?: string;
-  contactJid?: string;
-  externalId?: string;
-  senderType?: 'contact' | 'agent';
-  refreshKey?: string;
-  disableRealtime?: boolean;
+interface QuickReactionBarProps extends MessageReactionsProps {
   forceShow?: boolean;
 }
 

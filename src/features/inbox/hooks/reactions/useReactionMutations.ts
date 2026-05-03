@@ -15,12 +15,10 @@ interface ReactionMutationOptions {
 }
 
 /**
- * Analytics helper (inlined for now as requested)
+ * Analytics helper
  */
-const trackReactionEvent = (action: 'add' | 'remove' | 'open_picker', data: any) => {
-  // Simulates sending to dashboard/telemetry
+const trackReactionEvent = (action: 'add' | 'remove' | 'open_picker', data: { messageId: string; emoji?: string; status?: string; code?: number | string }) => {
   mutationLog.info(`[Analytics] Reaction Event: ${action}`, data);
-  // In a real scenario, this would call window.plausible, window.gtag, etc.
 };
 
 export function useReactionMutations(
