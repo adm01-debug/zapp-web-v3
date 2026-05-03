@@ -475,6 +475,24 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
         setDeleteTarget={setDeleteTarget}
         handleDeleteContact={handleDeleteContact}
       />
+
+      <ContactQuickView
+        contact={quickViewContact}
+        isOpen={!!quickViewContact}
+        onClose={() => setQuickViewContact(null)}
+        onEdit={(c) => {
+          setQuickViewContact(null);
+          openEditDialog(c as never);
+        }}
+        onDelete={(c) => {
+          setQuickViewContact(null);
+          setDeleteTarget(c as never);
+        }}
+        onOpenChat={(phone, name) => {
+          setQuickViewContact(null);
+          openContactChat(phone);
+        }}
+      />
     </div>
   );
 };
