@@ -262,13 +262,13 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Mensagem... (/ para comandos, @ para mencionar)"}
               rows={1}
               className={cn(
-                "w-full bg-muted/10 border border-border/20 rounded-2xl outline-none text-[13px] font-normal tracking-tight text-foreground",
-                "placeholder:text-muted-foreground/40 placeholder:font-light resize-none transition-all duration-300",
-                "focus:bg-background focus:border-primary/20 focus:ring-4 focus:ring-primary/5 shadow-sm",
-                logic.isMobile ? "px-4 py-3 text-[16px] min-h-[44px] max-h-[220px]" : "px-4 py-2.5 min-h-[42px] max-h-[220px]",
-                isWhisper && "border-amber-500/20 focus:border-amber-500/40 focus:ring-amber-500/5 bg-amber-500/5",
-                logic.isOverLimit && "border-destructive/30 focus:border-destructive/50 focus:ring-destructive/5",
-                isSending && "opacity-40 pointer-events-none grayscale"
+                "w-full bg-background dark:bg-[#2a3933]/10 border-none rounded-lg outline-none text-[15px] font-normal tracking-tight text-foreground shadow-none",
+                "placeholder:text-muted-foreground/60 placeholder:font-normal resize-none transition-all duration-200",
+                "focus:bg-background focus:ring-0",
+                logic.isMobile ? "px-3 py-2.5 text-[16px] min-h-[40px] max-h-[200px]" : "px-3 py-2 min-h-[40px] max-h-[200px]",
+                isWhisper && "bg-amber-500/10",
+                logic.isOverLimit && "text-destructive",
+                isSending && "opacity-60 pointer-events-none"
               )}
               disabled={isSending}
               aria-label={editingMessage ? "Editar mensagem" : replyToMessage ? "Responder mensagem" : "Digite sua mensagem"}
