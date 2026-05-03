@@ -72,6 +72,7 @@ interface ChatPanelProps extends LoadOlderProps {
    *  - Modo externo: fornecer ambos; loadingOlder/hasMoreOlder refletem o
    *    estado real do fetcher remoto.
    */
+  whisperCount?: number;
 }
 
 type DialogKey = 'quickReplies' | 'slashCommands' | 'transferDialog' | 'scheduleDialog' | 
