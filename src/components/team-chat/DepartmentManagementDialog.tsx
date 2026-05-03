@@ -75,6 +75,66 @@ export function DepartmentManagementDialog({ department, open, onOpenChange }: P
     enabled: open && view === 'audit',
   });
 
+  const { data: invitations = [], isLoading: loadingInvites } = useQuery({
+    queryKey: ['dept-invitations', department.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('department_invitations')
+        .select('*')
+        .eq('department_id', department.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && view === 'invites',
+  });
+
+  const createInviteMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentUser) return;
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const { error } = await supabase.from('department_invitations').insert({
+        department_id: department.id,
+        created_by: currentUser.id,
+        code,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dept-invitations', department.id] });
+      toast({ title: 'Link de convite criado' });
+    }
+  });
+
+  const deleteInviteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('department_invitations').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dept-invitations', department.id] });
+      toast({ title: 'Convite revogado' });
+    }
+  });
+
+  const exportAuditCsv = () => {
+    if (auditLogs.length === 0) return;
+    const headers = ['Data', 'Ação', 'Usuário', 'ID'];
+    const rows = auditLogs.map(l => [
+      format(new Date(l.created_at), 'dd/MM/yyyy HH:mm'),
+      l.action,
+      l.details.profile_name || 'Desconhecido',
+      l.id
+    ]);
+    const csvContent = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `audit_${department.name}_${format(new Date(), 'yyyyMMdd')}.csv`;
+    link.click();
+  };
+
   const manageMemberMutation = useMutation({
     mutationFn: async ({ profileId, action }: { profileId: string, action: 'add' | 'remove' }) => {
       if (!currentUser) throw new Error('Not authenticated');
