@@ -68,7 +68,6 @@ export function MessageReactions({
     return acc;
   }, {} as Record<string, { emoji: string; count: number; users: string[]; hasCurrentUser: boolean }>);
 
-  // Ordenar por popularidade
   const reactionsList = Object.values(groupedReactions).sort((a, b) => b.count - a.count);
   const availableReactions = showExtended ? EXTENDED_REACTIONS : WHATSAPP_REACTIONS;
 
@@ -193,10 +192,9 @@ export function QuickReactionBar({
   senderType,
   refreshKey,
   disableRealtime,
+  forceShow,
 }: QuickReactionBarProps) {
   const [showPicker, setShowPicker] = useState(false);
-  const [isMobileActive, setIsMobileActive] = useState(false);
-
   const { addReaction, removeReaction, hasReacted } = useMessageReactions(messageId, {
     instanceName,
     contactJid,
@@ -219,9 +217,8 @@ export function QuickReactionBar({
     <div 
       className={cn(
         'absolute -top-9 flex items-center transition-all duration-200 z-20',
-        'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100', // Keyboard/Hover
-        'md:opacity-0', // Default hidden on desktop unless hover
-        'max-md:opacity-100 max-md:pointer-events-auto', // Always reachable on mobile
+        'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+        forceShow && 'opacity-100 pointer-events-auto',
         showPicker && 'opacity-100',
         isSent ? 'right-0' : 'left-0'
       )}
