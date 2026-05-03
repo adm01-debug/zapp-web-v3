@@ -29,7 +29,7 @@ export function MessageStatusIcon({ status, className }: { status: Message['stat
   switch (status) {
     case 'sent':
       return (
-        <Check className={cn('w-[14px] h-[14px] transition-all duration-300 ease-out', className)} strokeWidth={2.5} />
+        <Check className={cn('w-[15px] h-[15px] transition-all duration-300 ease-out', className)} strokeWidth={1.8} />
       );
     case 'delivered':
       return (
