@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { File, Download, Trash2, Loader2, UploadCloud, EyeOff } from 'lucide-react';
+import { File, Download, Trash2, Loader2, UploadCloud, EyeOff, Search as SearchIcon, Filter, Calendar, ExternalLink, Image as ImageIcon, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Search as SearchIcon, Filter, Calendar } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useAuth } from '@/features/auth';
 
 interface TeamFilesProps {
   contactId: string;
