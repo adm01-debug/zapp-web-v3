@@ -249,29 +249,71 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                   <p className="text-xs text-amber-600/60 font-medium">Nenhum sussurro registrado para esta conversa.</p>
                 </div>
               ) : (
-                whispers.map((w, idx) => (
-                  <motion.div 
-                    key={w.id} 
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="flex flex-col gap-1 group/whisper"
-                  >
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-[10px] font-bold text-amber-600/80">{w.sender_name}</span>
-                      <span className="text-[9px] text-muted-foreground/60">{new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                    <div className="relative text-xs p-2.5 rounded-2xl bg-amber-100/50 border border-amber-200/30 text-amber-900 shadow-sm leading-relaxed group-hover/whisper:bg-amber-100 transition-colors">
-                      {w.content}
-                      {/* Futuro suporte a reações rápidas e threads */}
-                      <div className="absolute -bottom-1.5 -right-1 opacity-0 group-hover/whisper:opacity-100 transition-opacity flex items-center gap-0.5 bg-background border border-amber-100 rounded-full px-1 shadow-sm">
-                        <button onClick={() => toast({ title: '👍 Confirmado' })} className="hover:scale-120 transition-transform">👍</button>
-                        <button onClick={() => toast({ title: '👀 Ciente' })} className="hover:scale-120 transition-transform">👀</button>
-                        <button onClick={() => toast({ title: '✅ Resolvido' })} className="hover:scale-120 transition-transform">✅</button>
+                whispers.map((w, idx) => {
+                  const isParent = w.id === activeThreadId;
+                  return (
+                    <motion.div 
+                      key={w.id} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className={cn(
+                        "flex flex-col gap-1 group/whisper",
+                        isParent && "border-l-2 border-amber-400 pl-3 py-1 bg-amber-100/30 rounded-r-xl"
+                      )}
+                    >
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[10px] font-bold text-amber-600/80">
+                          {w.sender_name} {isParent && <Badge variant="outline" className="text-[8px] h-3 px-1 ml-1 bg-amber-200 border-amber-300">PAI</Badge>}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground/60">{new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                    </div>
-                  </motion.div>
-                ))
+                      <div className="relative text-xs p-2.5 rounded-2xl bg-amber-100/50 border border-amber-200/30 text-amber-900 shadow-sm leading-relaxed group-hover/whisper:bg-amber-100 transition-colors">
+                        {w.content}
+                        
+                        <div className="absolute -bottom-1.5 -right-1 opacity-0 group-hover/whisper:opacity-100 transition-opacity flex items-center gap-0.5 bg-background border border-amber-100 rounded-full px-1 shadow-sm z-20">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button onClick={() => toast({ title: '👍 Confirmado' })} className="hover:scale-120 transition-transform">👍</button>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-[10px] p-1">Confirmar</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button onClick={() => toast({ title: '👀 Ciente' })} className="hover:scale-120 transition-transform">👀</button>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-[10px] p-1">Ciente</TooltipContent>
+                            </Tooltip>
+                            {!activeThreadId && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button 
+                                    onClick={() => setActiveThreadId(w.id)} 
+                                    className="hover:scale-120 transition-transform text-amber-600 ml-0.5 p-0.5"
+                                  >
+                                    <MessageSquare className="w-3 h-3" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-[10px] p-1">Responder em Thread</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </TooltipProvider>
+                        </div>
+                        
+                        {!activeThreadId && w.reply_count && w.reply_count > 0 ? (
+                          <button 
+                            onClick={() => setActiveThreadId(w.id)}
+                            className="mt-1 flex items-center gap-1 text-[9px] font-bold text-amber-600 hover:text-amber-700 transition-colors"
+                          >
+                            <MessageSquare className="w-2.5 h-2.5" />
+                            {w.reply_count} {w.reply_count === 1 ? 'resposta' : 'respostas'}
+                          </button>
+                        ) : null}
+                      </div>
+                    </motion.div>
+                  );
+                })
               )}
             </div>
 
