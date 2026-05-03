@@ -20,9 +20,9 @@ interface SLAIndicatorProps {
 }
 
 const statusStyles: Record<SLAStatus, { bg: string; text: string; border: string; icon: React.ElementType; ring: string }> = {
-  ok: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/30', icon: CheckCircle, ring: 'stroke-success' },
-  warning: { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/30', icon: Clock, ring: 'stroke-warning' },
-  breached: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/30', icon: AlertTriangle, ring: 'stroke-destructive' },
+  ok: { bg: 'bg-emerald-500/5', text: 'text-emerald-500', border: 'border-emerald-500/10', icon: CheckCircle, ring: 'stroke-emerald-500' },
+  warning: { bg: 'bg-amber-500/5', text: 'text-amber-500', border: 'border-amber-500/10', icon: Clock, ring: 'stroke-amber-500' },
+  breached: { bg: 'bg-rose-500/5', text: 'text-rose-500', border: 'border-rose-500/10', icon: AlertTriangle, ring: 'stroke-rose-500' },
 };
 
 function SLAProgressRing({ status, percent, size = 28 }: { status: SLAStatus; percent: number; size?: number }) {
