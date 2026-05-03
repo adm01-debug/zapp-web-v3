@@ -4,6 +4,9 @@ import { toast } from 'sonner';
 import { log } from '@/lib/logger';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { dbFrom } from '@/integrations/datasource/db';
+import { getLogger } from '@/lib/logger';
+
+const mutationLog = getLogger('useReactionMutations');
 
 interface ReactionMutationOptions {
   instanceName?: string;
