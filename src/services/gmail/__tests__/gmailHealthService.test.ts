@@ -95,22 +95,22 @@ describe('GmailHealthService', () => {
 
   describe('calculateStatus', () => {
     it('should return healthy for empty array', () => {
-      expect((service as any).calculateStatus([])).toBe('healthy');
+      expect(service.calculateStatus([])).toBe('healthy');
     });
 
     it('should return degraded for 1-10 failures', () => {
-      expect((service as any).calculateStatus(Array(1).fill({}))).toBe('degraded');
-      expect((service as any).calculateStatus(Array(10).fill({}))).toBe('degraded');
+      expect(service.calculateStatus(Array(1).fill({}))).toBe('degraded');
+      expect(service.calculateStatus(Array(10).fill({}))).toBe('degraded');
     });
 
     it('should return error for > 10 failures', () => {
-      expect((service as any).calculateStatus(Array(11).fill({}))).toBe('error');
+      expect(service.calculateStatus(Array(11).fill({}))).toBe('error');
     });
 
     it('should return error for non-array inputs', () => {
-      expect((service as any).calculateStatus(null)).toBe('error');
-      expect((service as any).calculateStatus(undefined)).toBe('error');
-      expect((service as any).calculateStatus({})).toBe('error');
+      expect(service.calculateStatus(null)).toBe('error');
+      expect(service.calculateStatus(undefined)).toBe('error');
+      expect(service.calculateStatus({} as any)).toBe('error');
     });
   });
 

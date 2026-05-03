@@ -16,7 +16,7 @@ export class GmailHealthService {
 
     if (summary) {
       return {
-        status: summary.status as any,
+        status: (summary.status as 'healthy' | 'degraded' | 'error') || 'healthy',
         lastValidation: summary.last_validation ? new Date(summary.last_validation) : telemetry.lastValidation,
         cacheExpiration: cacheInfo.expiration,
         recentFailures: telemetry.recentFailures,
@@ -60,7 +60,7 @@ export class GmailHealthService {
     await this.repository.forceRevalidation(criticalResources);
   }
 
-  private calculateStatus(failures: GmailFailure[]): 'healthy' | 'degraded' | 'error' {
+  calculateStatus(failures: GmailFailure[] | null | undefined): 'healthy' | 'degraded' | 'error' {
     if (!Array.isArray(failures)) return 'error';
     const count = failures.length;
     if (count > 10) return 'error';
