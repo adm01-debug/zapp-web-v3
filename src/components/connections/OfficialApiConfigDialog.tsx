@@ -70,13 +70,13 @@ export function OfficialApiConfigDialog({
       return;
     }
     setSaving(true);
-    const { data: u , error: uErr } = await supabase.auth.getUser();
-    const { error: res73Err } = await supabase
+    const { data: userData , error: userError } = await supabase.auth.getUser();
+    const { error } = await supabase
       .from('whatsapp_official_credentials')
       .upsert({
         connection_id: connectionId,
         ...form,
-        created_by: u.user?.id ?? null,
+        created_by: userData.user?.id ?? null,
       }, { onConflict: 'connection_id' });
     setSaving(false);
     if (error) {
@@ -89,7 +89,7 @@ export function OfficialApiConfigDialog({
   const handleTest = async () => {
     if (!instanceId) return;
     setTesting(true);
-    const { data, error: res3207Err } = await supabase.functions.invoke('whatsapp-cloud-api', {
+    const { data, error } = await supabase.functions.invoke('whatsapp-cloud-api', {
       body: { action: 'ping', instanceName: instanceId },
     });
     setTesting(false);
