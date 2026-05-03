@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import {
   AlertTriangle, RefreshCw, CheckCircle2,
   Clock, RotateCw, PlayCircle, Server,
-  Lock,
+  Lock, XCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -228,27 +228,5 @@ export default function AdminFailedMessagesPage() {
         onViewInChat={handleViewInChat}
       />
     </div>
-  );
-}
-
-// Internal placeholder for XCircle icon since it was used in KPI but not imported in my split view
-function XCircle(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="m15 9-6 6" />
-      <path d="m9 9 6 6" />
-    </svg>
   );
 }
