@@ -25,7 +25,7 @@ test.describe('WhatsApp Message Reactions Advanced Validation', () => {
     await page.locator('button[aria-label="Reagir com 👍"]').first().click();
     
     // Check for "Não autorizado" toast
-    await expect(page.locator('text=Erro ao adicionar reação: Não autorizado')).toBeVisible();
+    await expect(page.locator('text=Sessão expirada. Por favor, faça login novamente.')).toBeVisible();
     // Rollback check
     await expect(page.locator(`[data-testid="reaction-${messageId}-👍"]`)).not.toBeVisible();
 
