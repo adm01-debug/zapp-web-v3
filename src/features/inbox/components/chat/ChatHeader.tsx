@@ -76,8 +76,8 @@ export function ChatHeader({
 
   return (
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className={cn(
-      "flex items-center justify-between px-6 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-30",
-      density === 'comfortable' ? 'py-4' : 'py-2'
+      "flex items-center justify-between px-4 sm:px-6 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-30",
+      density === 'comfortable' ? 'py-3' : 'py-2'
     )}>
       <div className="flex items-center gap-3">
         {onBack && (
@@ -100,22 +100,24 @@ export function ChatHeader({
             </AvatarFallback>
           </Avatar>
         </motion.div>
-        <div className="flex flex-col">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <h3 className="font-display font-bold text-[14.5px] tracking-tight text-foreground/90 truncate max-w-[200px] sm:max-w-md">
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
+            <h3 className="font-display font-bold text-[15px] tracking-tight text-foreground/90 truncate max-w-[180px] sm:max-w-md">
               {conversation.contact.name}
             </h3>
-            <SLAIndicatorForContact conversation={conversation} />
+            <div className="flex-shrink-0 flex items-center gap-1">
+              <SLAIndicatorForContact conversation={conversation} />
+              <Badge variant="outline" className="text-[9px] h-4 px-1 capitalize border border-border/20 bg-muted/20 text-muted-foreground whitespace-nowrap">
+                {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
+              </Badge>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center h-4">
             {isContactTyping ? (
-              <span className="text-[11px] text-primary font-medium">digitando...</span>
+              <span className="text-[11px] text-primary font-medium animate-pulse">digitando...</span>
             ) : (
               <span className="text-[11px] text-muted-foreground/60">{conversation.contact.phone}</span>
             )}
-            <Badge variant="outline" className={cn('text-[9px] h-4 px-1 capitalize border border-border/20 bg-muted/20 text-muted-foreground')}>
-              {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
-            </Badge>
           </div>
         </div>
       </div>
