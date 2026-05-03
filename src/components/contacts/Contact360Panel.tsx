@@ -171,6 +171,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
             readonly={readonly}
             onSaved={(v) => onContactUpdated?.('name', v)}
             validate={(v) => v.length < 2 ? 'Mínimo 2 caracteres' : null}
+            label="Nome"
           />
 
           {contact.phone && (
@@ -257,6 +258,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
                   readonly={readonly}
                   onSaved={(v) => onContactUpdated?.('email', v)}
                   placeholder="Adicionar e-mail"
+                  label="E-mail"
                 />
               </div>
             )}
@@ -271,6 +273,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
                   readonly={readonly}
                   onSaved={(v) => onContactUpdated?.('company', v)}
                   placeholder="Adicionar empresa"
+                  label="Empresa"
                 />
               </div>
             )}

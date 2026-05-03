@@ -26,9 +26,9 @@ export const ContactQuickNotePanel: React.FC<ContactQuickNotePanelProps> = ({
   const [text, setText] = useState('');
   const [expanded, setExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { notes, isLoading, isSaving, loadNotes, addNote, deleteNote } = useContactQuickNote({
-    contactId, workspaceId,
-  });
+  const { notes, isLoading, isSaving, loadNotes, addNote, deleteNote } = useContactQuickNote(
+    contactId, workspaceId
+  );
 
   useEffect(() => { loadNotes(); }, [loadNotes]);
 
