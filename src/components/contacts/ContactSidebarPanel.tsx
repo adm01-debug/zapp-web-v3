@@ -36,6 +36,18 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
   const initials = displayName.split(' ').filter(Boolean).slice(0, 2).map((n) => n[0].toUpperCase()).join('');
   const hasConsent = !!contact.lgpd_consent_at && !contact.lgpd_opt_out_at;
 
+  // Provide defaults for potentially missing fields to avoid crashes when passed partial data
+  const safeContact = {
+    tags: [],
+    lead_status: 'novo',
+    lead_score: 0,
+    version: 1,
+    created_at: new Date().toISOString(),
+    instance_name: 'default',
+    remote_jid: '',
+    ...contact
+  };
+
   return (
     <div className="h-full flex flex-col overflow-hidden" role="complementary" aria-label={`Detalhes: ${displayName}`}>
       {/* ── Contact Header ── */}
