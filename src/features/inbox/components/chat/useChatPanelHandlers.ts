@@ -234,6 +234,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
     if (e.key === 'k' && e.ctrlKey) { e.preventDefault(); openDialog('globalSearch'); }
     if (e.key === 'f' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleSetActiveTool('chatSearch'); }
+    if (e.key === 'w' && e.altKey) { e.preventDefault(); setIsWhisper(prev => !prev); }
     if (e.key === 'Escape' && slashCommandsOpen) closeDialog('slashCommands');
   }, [handleSend, openDialog, closeDialog, handleSetActiveTool]);
 

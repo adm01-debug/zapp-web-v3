@@ -215,7 +215,7 @@ export function ChatHeader({
                 <span className="text-[10px] font-bold uppercase tracking-tight hidden sm:inline">Equipe</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Abrir Modo Sussurro (Chat Interno)</TooltipContent>
+            <TooltipContent>Abrir Modo Sussurro (Chat Interno - Alt+W)</TooltipContent>
           </Tooltip>
         )}
         {[
