@@ -181,7 +181,7 @@ export function TertiaryToolsMenu({
   instanceName, contactPhone, contactName, messages, quickReplies,
   onOpenInteractiveBuilder, onOpenLocationPicker, onOpenSchedule,
   onSendProduct, onSelectSuggestion, onSelectTemplate, onQuickReply,
-  signatureEnabled, signatureName, onToggleSignature, onPollSent, onContactSent,
+  signatureEnabled, signatureName, onToggleSignature, onPollSent, onContactSent, onOpenTeamFiles,
 }: TertiaryToolsMenuProps) {
   const quickRepliesList = useMemo(() => (
     quickReplies.slice(0, 50).map((reply) => (
