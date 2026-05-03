@@ -148,7 +148,7 @@ export function ChatMessageBubble({
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onReply(message)}
-                className="p-1.5 rounded-full bg-card border border-border/50 text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-sm"
+                className="p-1.5 rounded-full bg-card/60 backdrop-blur-md border border-border/50 text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-sm"
                 aria-label="Responder"
               >
                 <Reply className="w-3.5 h-3.5" />
@@ -208,9 +208,11 @@ export function ChatMessageBubble({
             (message.type === 'image' || message.type === 'video') && !message.content
               ? 'p-0'
               : density === 'comfortable' ? 'px-4 py-2.5' : density === 'compact' ? 'px-3 py-1.5' : 'px-2 py-1',
-            isSent 
-              ? 'rounded-br-md bg-chat-sent text-chat-sent-foreground' 
-              : 'rounded-bl-md bg-chat-received border-border/30 text-chat-received-foreground'
+            message.isWhisper
+              ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200/50 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 shadow-inner'
+              : isSent 
+                ? 'rounded-br-md bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-primary/20' 
+                : 'rounded-bl-md bg-chat-received border-border/30 text-chat-received-foreground'
           )}
         >
 
@@ -308,7 +310,15 @@ export function ChatMessageBubble({
 
           {/* Text content */}
           {message.content && message.type !== 'audio' && message.type !== 'location' && message.type !== 'video' && message.type !== 'document' && message.type !== 'sticker' && (
-            <TextWithLinks text={message.content} className="text-sm whitespace-pre-wrap leading-relaxed" maxPreviews={2} />
+            <div className="flex flex-col gap-1">
+              {message.isWhisper && (
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold opacity-70 mb-0.5">
+                  <Lock className="w-2.5 h-2.5" />
+                  Sussurro Interno
+                </div>
+              )}
+              <TextWithLinks text={message.content} className={cn("text-sm whitespace-pre-wrap leading-relaxed", message.isWhisper && "italic")} maxPreviews={2} />
+            </div>
           )}
 
           {/* Timestamp and status */}
