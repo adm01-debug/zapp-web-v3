@@ -8,12 +8,16 @@
  * Substitui visualmente o `ContactsView.tsx` antigo (Todos/Duplicados/Lixeira)
  * usando exclusivamente componentes que já existem no projeto.
  */
-import React, { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Upload, Trash2, GitMerge } from 'lucide-react';
+import { 
+  UserPlus, Upload, Trash2, GitMerge, Keyboard, 
+  Search, Grid, List, Table, Map, BarChart3, Info
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 import { useContactsViewState } from './useContactsViewState';
 import { ContactStatsCards } from './ContactStatsCards';
