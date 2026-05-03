@@ -17,15 +17,9 @@ import { TextWithLinks } from '@/features/inbox/components/LinkPreview';
 // Lazy-load mapbox-heavy LocationMessage component
 const LocationMessageDisplay = lazy(() => import('../LocationMessage').then(m => ({ default: m.LocationMessageDisplay })));
 import {
-  Check,
-  CheckCheck,
-  Clock,
-  X,
   Reply,
   Forward,
   Copy,
-  ShieldAlert,
-  RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { MessageStatusIcon } from './messageUtils';
