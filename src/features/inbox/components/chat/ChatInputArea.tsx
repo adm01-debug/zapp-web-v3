@@ -203,13 +203,13 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-4 py-3 border-t border-border bg-card relative transition-colors duration-300", 
-        isWhisper && "bg-amber-50/30 dark:bg-amber-950/10 border-amber-200/30",
-        logic.isMobile && "px-2.5 py-2 safe-area-bottom"
+        "px-5 py-4 border-t border-border/10 bg-background/80 backdrop-blur-xl relative transition-all duration-500", 
+        isWhisper && "bg-amber-50/20 dark:bg-amber-950/5 border-amber-200/20",
+        logic.isMobile && "px-3 py-3 safe-area-bottom"
       )}>
         <AnimatePresence>
           {isRecordingAudio && (
-            <div className="mb-3"><AudioRecorder onSend={onAudioSend} onCancel={onAudioCancel} /></div>
+            <div className="mb-4"><AudioRecorder onSend={onAudioSend} onCancel={onAudioCancel} /></div>
           )}
         </AnimatePresence>
 
@@ -217,27 +217,30 @@ export function ChatInputArea(props: ChatInputAreaProps) {
 
         {typingNotification && (
           <motion.div 
-            initial={{ opacity: 0, y: 5 }} 
+            initial={{ opacity: 0, y: 10 }} 
             animate={{ opacity: 1, y: 0 }} 
-            className="absolute -top-6 left-4 flex items-center gap-1.5"
+            className="absolute -top-7 left-6 flex items-center gap-2"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200/50">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse" />
+            <span className="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest bg-amber-50/80 dark:bg-amber-950/60 backdrop-blur-sm px-2.5 py-0.5 rounded-full border border-amber-200/30">
               {typingNotification}
             </span>
           </motion.div>
         )}
 
-        <div className="flex items-end gap-1.5" role="toolbar" aria-label="Barra de mensagem">
+        <div className="flex items-end gap-2" role="toolbar" aria-label="Barra de mensagem">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon"
-                className={cn("text-muted-foreground hover:text-foreground hover:bg-muted shrink-0 touch-manipulation active:scale-95", logic.isMobile ? "w-10 h-10" : "w-9 h-9")}
+                className={cn(
+                  "text-muted-foreground/50 hover:text-primary hover:bg-primary/5 shrink-0 transition-all rounded-full active:scale-90", 
+                  logic.isMobile ? "w-10 h-10" : "w-9 h-9"
+                )}
                 aria-label="Mais opções de mensagem">
-                <Plus className="w-[18px] h-[18px]" />
+                <Plus className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-56 p-2 bg-popover border-border" align="start" side="top">{tertiaryTools}</PopoverContent>
+            <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in zoom-in-95 duration-200" align="start" side="top">{tertiaryTools}</PopoverContent>
           </Popover>
 
           <div className="flex-1 min-w-0 relative">
@@ -245,9 +248,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
 
             <AnimatePresence>
               {logic.showMarkdownPreview && logic.hasText && logic.showRichToolbar && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                  className="mb-1 px-3 py-2 border border-border/50 rounded-lg bg-muted/30 text-sm max-h-[100px] overflow-y-auto">
-                  <MarkdownPreview text={inputValue} className="text-foreground leading-relaxed" />
+                <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }}
+                  className="mb-2 px-4 py-3 border border-border/10 rounded-2xl bg-muted/20 backdrop-blur-sm text-[13px] max-h-[120px] overflow-y-auto shadow-sm">
+                  <MarkdownPreview text={inputValue} className="text-foreground/90 leading-snug" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -256,56 +259,63 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               onChange={(e) => { onInputChange(e); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
               onKeyDown={onKeyDown} onBlur={onBlur} onPaste={logic.handlePaste}
               onClick={(e) => { const t = e.target as HTMLTextAreaElement; checkForMention(t.value, t.selectionStart ?? 0); }}
-              placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes verão)..." : "Digite uma mensagem... (/ para comandos, @ para mencionar)"}
+              placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Mensagem... (/ para comandos, @ para mencionar)"}
               rows={1}
               className={cn(
-                "w-full bg-transparent border border-border/50 rounded-xl outline-none text-sm text-foreground",
-                "placeholder:text-muted-foreground resize-none transition-all",
-                "focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
-                logic.isMobile ? "px-3 py-2.5 text-[16px] min-h-[42px] max-h-[200px]" : "px-3 py-2 min-h-[40px] max-h-[200px]",
-                isWhisper && "border-amber-500/50 focus:border-amber-500 focus:ring-amber-500/20 bg-amber-500/5",
-                logic.isOverLimit && "border-destructive/50 focus:border-destructive focus:ring-destructive/20",
-                isSending && "opacity-50 pointer-events-none"
+                "w-full bg-muted/10 border border-border/20 rounded-2xl outline-none text-[13px] font-normal tracking-tight text-foreground",
+                "placeholder:text-muted-foreground/40 placeholder:font-light resize-none transition-all duration-300",
+                "focus:bg-background focus:border-primary/20 focus:ring-4 focus:ring-primary/5 shadow-sm",
+                logic.isMobile ? "px-4 py-3 text-[16px] min-h-[44px] max-h-[220px]" : "px-4 py-2.5 min-h-[42px] max-h-[220px]",
+                isWhisper && "border-amber-500/20 focus:border-amber-500/40 focus:ring-amber-500/5 bg-amber-500/5",
+                logic.isOverLimit && "border-destructive/30 focus:border-destructive/50 focus:ring-destructive/5",
+                isSending && "opacity-40 pointer-events-none grayscale"
               )}
               disabled={isSending}
               aria-label={editingMessage ? "Editar mensagem" : replyToMessage ? "Responder mensagem" : "Digite sua mensagem"}
               aria-describedby={logic.charCount > 0 ? "char-counter" : undefined}
             />
             {logic.charCount > 100 && (
-              <span id="char-counter" className={cn("absolute bottom-1 right-2 text-[10px] select-none pointer-events-none",
-                logic.isOverLimit ? "text-destructive font-medium" : logic.isNearLimit ? "text-warning" : "text-muted-foreground/50")}>
+              <span id="char-counter" className={cn("absolute bottom-2 right-4 text-[9px] font-mono tracking-tighter select-none pointer-events-none transition-colors",
+                logic.isOverLimit ? "text-destructive font-bold" : logic.isNearLimit ? "text-warning" : "text-muted-foreground/30")}>
                 {logic.charCount}/{logic.CHAR_LIMIT}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 ml-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button onClick={logic.handleSendWithAnimation}
                   disabled={(!logic.hasText && logic.attachments.length === 0 && !editingMessage) || logic.isOverLimit || isSending}
                   size="icon"
-                  className={cn("rounded-full shrink-0 disabled:opacity-40 touch-manipulation active:scale-95 transition-all",
-                    "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40",
-                    isWhisper && "bg-amber-500 hover:bg-amber-600 shadow-amber-500/25",
-                    logic.isMobile ? "w-11 h-11" : "w-10 h-10", logic.sendAnimation && "motion-safe:animate-pulse")}
+                  className={cn(
+                    "rounded-full shrink-0 disabled:opacity-30 touch-manipulation active:scale-90 transition-all duration-300 shadow-md hover:shadow-lg",
+                    "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20",
+                    isWhisper && "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20",
+                    logic.isMobile ? "w-11 h-11" : "w-10 h-10", 
+                    logic.sendAnimation && "motion-safe:animate-bounce"
+                  )}
                   aria-label={editingMessage ? "Confirmar edição" : "Enviar mensagem"}>
-                  {isSending ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : editingMessage ? <Check className="w-[18px] h-[18px]" /> : <Send className="w-[18px] h-[18px]" />}
+                  {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : editingMessage ? <Check className="w-5 h-5" /> : <Send className="w-4.5 h-4.5 translate-x-0.5" />}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{editingMessage ? 'Confirmar edição' : 'Enviar (Enter)'}</TooltipContent>
+              <TooltipContent side="top" className="text-[10px] font-medium">Enviar</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button size="icon"
-                  className={cn("shrink-0 touch-manipulation active:scale-95 rounded-full transition-all",
+                  className={cn(
+                    "shrink-0 touch-manipulation active:scale-90 rounded-full transition-all duration-300 shadow-md hover:shadow-lg",
                     logic.isMobile ? "w-11 h-11" : "w-10 h-10",
-                    isRecordingAudio ? "bg-destructive text-destructive-foreground shadow-lg shadow-destructive/30 hover:bg-destructive/90" : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30")}
+                    isRecordingAudio 
+                      ? "bg-destructive text-destructive-foreground shadow-destructive/20 hover:bg-destructive/90" 
+                      : "bg-muted text-muted-foreground hover:text-primary hover:bg-primary/5 shadow-none border border-border/20"
+                  )}
                   onClick={onRecordToggle} aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}>
-                  <Mic className={cn("w-5 h-5", isRecordingAudio && "motion-safe:animate-pulse")} />
+                  <Mic className={cn("w-4.5 h-4.5", isRecordingAudio && "animate-pulse")} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{isRecordingAudio ? 'Parar gravação' : 'Gravar áudio'}</TooltipContent>
+              <TooltipContent side="top" className="text-[10px] font-medium">Áudio</TooltipContent>
             </Tooltip>
           </div>
 
