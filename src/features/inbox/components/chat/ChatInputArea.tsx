@@ -73,6 +73,8 @@ interface ChatInputAreaProps {
   signatureEnabled?: boolean;
   signatureName?: string;
   onToggleSignature?: () => void;
+  isWhisper?: boolean;
+  onToggleWhisper?: () => void;
   fileUploaderRef: React.RefObject<FileUploaderRef | null>;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
 }
@@ -88,6 +90,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
     onOpenLocationPicker, onSendProduct, onSendSticker, onSendAudioMeme,
     onSendCustomEmoji, onOpenCatalog, onSelectSuggestion, onSelectTemplate,
     onPasteFiles, signatureEnabled, signatureName, onToggleSignature,
+    isWhisper, onToggleWhisper,
     fileUploaderRef, inputRef,
   } = props;
 
@@ -123,7 +126,11 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         onCancelReply={onCancelReply} onCancelEdit={onCancelEdit}
       />
 
-      <div className={cn("px-4 py-3 border-t border-border bg-card", logic.isMobile && "px-2.5 py-2 safe-area-bottom")}>
+      <div className={cn(
+        "px-4 py-3 border-t border-border bg-card relative transition-colors duration-300", 
+        isWhisper && "bg-amber-50/30 dark:bg-amber-950/10 border-amber-200/30",
+        logic.isMobile && "px-2.5 py-2 safe-area-bottom"
+      )}>
         <AnimatePresence>
           {isRecordingAudio && (
             <div className="mb-3"><AudioRecorder onSend={onAudioSend} onCancel={onAudioCancel} /></div>
