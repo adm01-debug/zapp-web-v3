@@ -3,7 +3,8 @@
  * Tests for the inline edit component.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { toast } from 'sonner';
 import { ContactInlineEdit } from '@/components/contacts/ContactInlineEdit';
 
 // Mock supabase
@@ -17,8 +18,12 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/hooks/useContactRealtime', () => ({
-  invalidateContactCache: vi.fn(),
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+  },
 }));
 
 describe('ContactInlineEdit', () => {
@@ -56,6 +61,6 @@ describe('ContactInlineEdit', () => {
     const input = screen.getByDisplayValue(/João/i);
     fireEvent.change(input, { target: { value: 'J' } });
     fireEvent.click(screen.getByLabelText('Salvar'));
-    expect(screen.getByText(/Mínimo 2/i)).toBeDefined();
+    expect(toast.error).toHaveBeenCalledWith('Mínimo 2');
   });
 });
