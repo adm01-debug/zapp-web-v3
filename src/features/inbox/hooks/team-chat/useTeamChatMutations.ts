@@ -99,7 +99,6 @@ export function useToggleMuteConversation() {
       if (!profile) throw new Error('Not authenticated');
       const { error: muteError } = await supabase.from('team_conversation_members').update({ is_muted: muted }).eq('conversation_id', conversationId).eq('profile_id', profile.id);
       if (muteError) throw muteError;
-      if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['team-conversations'] }); },
     onError: () => { toast({ title: 'Erro ao alterar silenciar', variant: 'destructive' }); },
