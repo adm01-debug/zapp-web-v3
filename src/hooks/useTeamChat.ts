@@ -8,4 +8,5 @@ export {
   useEditTeamMessage,
   useCreateTeamConversation,
   useToggleMuteConversation,
+  useTransferTeamConversation,
 } from '@/features/inbox/hooks/team-chat/useTeamChatMutations';
