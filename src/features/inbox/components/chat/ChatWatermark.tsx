@@ -30,7 +30,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
             </g>
 
             {/* Dot cluster */}
-            <g opacity="0.02" fill="currentColor" className="text-primary">
+            <g opacity="0.05" fill="currentColor" className="text-foreground">
               <circle cx="130" cy="30" r="2" />
               <circle cx="138" cy="30" r="2" />
               <circle cx="146" cy="30" r="2" />
