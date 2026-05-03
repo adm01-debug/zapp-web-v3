@@ -97,9 +97,9 @@ export function TeamMemberDetails({ conversation, onClose }: TeamMemberDetailsPr
           </Collapsible>
         )}
 
-        {conversation.type === 'group' && (
+        {(conversation.type === 'group' || conversation.type === 'department') && (
           <Collapsible open={sections.team} onOpenChange={(o) => setSections(s => ({ ...s, team: o }))}>
-            <SectionHeader icon={Users} label={`Membros (${groupMembers.length})`} open={sections.team} onToggle={() => setSections(s => ({ ...s, team: !s.team }))} />
+            <SectionHeader icon={Users} label={conversation.type === 'department' ? `Membros do Depto (${groupMembers.length})` : `Membros (${groupMembers.length})`} open={sections.team} onToggle={() => setSections(s => ({ ...s, team: !s.team }))} />
             <CollapsibleContent>
               <div className="px-2 pb-3 space-y-0.5">
                 {groupMembers.map(member => {
