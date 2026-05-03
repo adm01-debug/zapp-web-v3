@@ -63,7 +63,7 @@ export function SecondaryToolbar({
   };
 
   return (
-    <div className="flex items-center gap-0.5 shrink-0">
+    <div className="flex items-center gap-0.5 shrink-0 bg-muted/5 p-1 rounded-full border border-border/5 ml-1">
       {onToggleWhisper && (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -71,27 +71,25 @@ export function SecondaryToolbar({
               variant="ghost"
               size="icon"
               className={cn(
-                "w-8 h-8 transition-all duration-200",
+                "w-7 h-7 rounded-full transition-all duration-300",
                 isWhisper 
-                  ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 shadow-inner" 
-                  : "text-muted-foreground hover:text-primary"
+                  ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 shadow-sm" 
+                  : "text-muted-foreground/40 hover:text-amber-500 hover:bg-amber-500/5"
               )}
               onClick={onToggleWhisper}
               aria-label={isWhisper ? "Desativar modo sussurro" : "Ativar modo sussurro (nota interna)"}
             >
               {isWhisper ? (
                 <div className="relative">
-                  <Lock className="w-4 h-4" />
-                  <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <Lock className="w-3.5 h-3.5" />
+                  <span className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
                 </div>
               ) : (
-                <Unlock className="w-4 h-4" />
+                <Unlock className="w-3.5 h-3.5" />
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top">
-            {isWhisper ? "Modo Sussurro Ativo (Nota Interna)" : "Ativar Modo Sussurro"}
-          </TooltipContent>
+          <TooltipContent side="top" className="text-[10px] font-medium">Whisper</TooltipContent>
         </Tooltip>
       )}
       <AIRewriteButton inputValue={inputValue} onRewrite={handleRewrite} contactName={contactName} />
