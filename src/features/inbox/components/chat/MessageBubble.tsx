@@ -158,14 +158,14 @@ export function MessageBubble({
             </div>
           )}
 
-          <div className={cn('max-w-[68%] space-y-0.5 relative', isSent && 'items-end')}>
+          <div className={cn('max-w-[85%] sm:max-w-[70%] space-y-0.5 relative', isSent && 'items-end')}>
             {!isSent && isFirstInGroup && (
               <span className="text-[11px] font-semibold text-primary/80 ml-1 block">{senderName}</span>
             )}
             {message.isWhisper && (
-              <div className="flex items-center gap-1 mb-0.5 ml-1">
-                <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Sussurro Interno</span>
+              <div className="flex items-center gap-1.5 mb-1 ml-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-full w-fit border border-amber-500/20">
+                <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400 animate-pulse" />
+                <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Equipe — Sussurro Interno</span>
               </div>
             )}
 
