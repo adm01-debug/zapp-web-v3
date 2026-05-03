@@ -115,7 +115,7 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
                   </div>
                   <div className="flex items-center justify-between gap-1.5 mt-0.5">
                     <p className="text-xs text-muted-foreground truncate flex-1">
-                      {conv.last_message?.content || 'Sem mensagens'}
+                      {conv.last_message?.content || (conv.type === 'department' ? 'Canal do departamento' : 'Sem mensagens')}
                     </p>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {isAdmin && conv.type === 'department' && conv.department_id && (
