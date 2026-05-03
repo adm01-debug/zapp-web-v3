@@ -18,6 +18,8 @@ import { jidToPhone } from '@/adapters/evolutionAdapter';
 import type { RealtimeMessage } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
 import { parseEvolutionError } from '@/features/inbox';
+import { dbInsert } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 const log = getLogger('externalMessageSender');
 const DEFAULT_INSTANCE = 'wpp2';
