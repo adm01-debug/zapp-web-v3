@@ -221,6 +221,16 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setShowShortcutHelp(true)}
+              className="hidden md:flex gap-2 border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5 transition-all"
+              title="Atalhos de Teclado (?)"
+            >
+              <Keyboard className="w-4 h-4 text-muted-foreground" />
+              <span className="sr-only">Atalhos</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setIsImportOpen(true)}
               className="gap-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all"
             >
