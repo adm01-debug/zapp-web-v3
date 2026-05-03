@@ -18,11 +18,15 @@ export async function login(page: Page, email = 'test@zappweb.com', password = '
 }
 
 /** Login with a specific role (simulated by email) */
-export async function loginAs(page: Page, role: 'admin' | 'agent' | 'viewer') {
+export async function loginAs(page: Page, role: 'admin' | 'agent' | 'viewer' | 'rh_agent' | 'finance_agent' | 'ti_admin' | 'transfer_agent') {
   const credentials = {
     admin: { email: 'admin@zappweb.com', pass: 'admin123' },
     agent: { email: 'agent@zappweb.com', pass: 'agent123' },
     viewer: { email: 'viewer@zappweb.com', pass: 'viewer123' },
+    rh_agent: { email: 'agent_rh@zappweb.com', pass: 'rh123' },
+    finance_agent: { email: 'agent_fin@zappweb.com', pass: 'fin123' },
+    ti_admin: { email: 'admin_ti@zappweb.com', pass: 'ti123' },
+    transfer_agent: { email: 'agent_trans@zappweb.com', pass: 'trans123' },
   };
   await login(page, credentials[role].email, credentials[role].pass);
 }
