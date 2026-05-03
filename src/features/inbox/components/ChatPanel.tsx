@@ -518,9 +518,9 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
         <ChatInputArea inputValue={handlers.inputValue} replyToMessage={handlers.replyToMessage} editingMessage={handlers.editingMessage} isRecordingAudio={handlers.isRecordingAudio}
           showSlashCommands={dialogs.slashCommands} contactId={conversation.contact.id} contactPhone={conversation.contact.phone}
-          contactName={conversation.contact.name} instanceName={instanceName} messages={messages} quickReplies={dbQuickReplies} isSending={handlers.isSending}
+          contactName={conversation.contact.name} instanceName={instanceName} messages={messages} quickReplies={dbQuickReplies} isSending={handlers.isSending} sendProgress={handlers.sendProgress}
           isWhisper={handlers.isWhisper} onToggleWhisper={() => handlers.setIsWhisper(!handlers.isWhisper)}
-          onInputChange={handlers.handleInputChange} onKeyDown={(e) => handlers.handleKeyDown(e, dialogs.slashCommands)} onBlur={handleTypingStop} onSend={handlers.handleSend}
+          onInputChange={handlers.handleInputChange} onKeyDown={(e) => handlers.handleKeyDown(e, dialogs.slashCommands)} onBlur={handleTypingStop} onSend={(att) => handlers.handleSend(att)}
           onCancelReply={() => handlers.setReplyToMessage(null)} onCancelEdit={handlers.handleCancelEdit} onSlashCommand={handlers.handleSlashCommand}
           onCloseSlashCommands={() => closeDialog('slashCommands')} onQuickReply={handleQuickReply}
           onRecordToggle={() => handlers.setIsRecordingAudio(!handlers.isRecordingAudio)} onAudioSend={(blob) => handlers.handleAudioSend(blob, onSendAudio)} onAudioCancel={() => handlers.setIsRecordingAudio(false)}
