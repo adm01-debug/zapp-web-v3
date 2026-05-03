@@ -94,7 +94,7 @@ export async function sendExternalText(
   const optimistic = makeOptimisticBubble(remoteJid, content, { contactAvatar: opts.contactAvatar });
 
   // Log de auditoria (FATOR X)
-  void dbInsert(RPC.rpc_log_service_event as any, {
+  void dbInsert(RPC.rpc_log_service_event, {
     p_instance: instance,
     p_event_type: 'message_send',
     p_message: `Enviando texto para ${phone}`,
@@ -115,7 +115,7 @@ export async function sendExternalText(
     log.error('evolution-api send-text failed', error);
     const info = parseEvolutionError(error);
     
-    void dbInsert(RPC.rpc_log_service_event as any, {
+    void dbInsert(RPC.rpc_log_service_event, {
       p_instance: instance,
       p_event_type: 'error',
       p_level: 'error',
@@ -133,7 +133,7 @@ export async function sendExternalText(
     log.error('evolution-api send-text error envelope', envelope);
     const info = parseEvolutionError(envelope);
     
-    void dbInsert(RPC.rpc_log_service_event as any, {
+    void dbInsert(RPC.rpc_log_service_event, {
       p_instance: instance,
       p_event_type: 'error',
       p_level: 'error',
