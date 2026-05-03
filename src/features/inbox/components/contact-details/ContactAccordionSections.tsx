@@ -72,81 +72,81 @@ export function ContactAccordionSections({ contact, conversation, enrichedData, 
 
   return (
     <>
-      <Section index={0} value="info" icon={<Info className="w-3.5 h-3.5 text-primary" />} label="Informações">
+      <Section key="info" index={0} value="info" icon={<Info className="w-3.5 h-3.5 text-primary" />} label="Informações">
         <ContactInfoSection contact={contact} enrichedData={enrichedData} />
       </Section>
 
-      <Section index={1} value="whatsapp-status" icon={<Smartphone className="w-3.5 h-3.5 text-primary" />} label="Status WhatsApp">
+      <Section key="whatsapp-status" index={1} value="whatsapp-status" icon={<Smartphone className="w-3.5 h-3.5 text-primary" />} label="Status WhatsApp">
         <WhatsAppStatusSection phone={contact.phone} />
       </Section>
 
       {(slaInfo || aiTags.length > 0) && (
-        <Section index={1} value="sla-ai" icon={<Brain className="w-3.5 h-3.5 text-primary" />} label="SLA & Inteligência">
+        <Section key="sla-ai" index={1} value="sla-ai" icon={<Brain className="w-3.5 h-3.5 text-primary" />} label="SLA & Inteligência">
           <SLAAndAITagsSection slaInfo={slaInfo} aiTags={aiTags} />
         </Section>
       )}
 
-      <Section index={1.2} value="sla-config" icon={<Clock className="w-3.5 h-3.5 text-primary" />} label="Configurações de SLA">
+      <Section key="sla-config" index={1.2} value="sla-config" icon={<Clock className="w-3.5 h-3.5 text-primary" />} label="Configurações de SLA">
         <SLADeliveryConfigSection contactId={contact.id} />
       </Section>
 
       {isExternalConfigured && (
         <>
-          <Section index={2} value="crm-360" icon={<Sparkles className="w-3.5 h-3.5 text-primary" />} label="CRM 360°">
+          <Section key="crm-360" index={2} value="crm-360" icon={<Sparkles className="w-3.5 h-3.5 text-primary" />} label="CRM 360°">
             <ExternalContact360Panel phone={contact.phone} />
           </Section>
-          <Section index={2.5} value="intelligence" icon={<Brain className="w-3.5 h-3.5 text-primary" />} label="Inteligência Comercial">
+          <Section key="intelligence" index={2.5} value="intelligence" icon={<Brain className="w-3.5 h-3.5 text-primary" />} label="Inteligência Comercial">
             <ContactIntelligencePanel phone={contact.phone} />
           </Section>
         </>
       )}
 
-      <Section index={3} value="tags" icon={<Tag className="w-3.5 h-3.5 text-primary" />} label="Tags"
+      <Section key="tags" index={3} value="tags" icon={<Tag className="w-3.5 h-3.5 text-primary" />} label="Tags"
         badge={(contact.tags.length + conversation.tags.length) > 0 ? contact.tags.length + conversation.tags.length : undefined}>
         <TagsContent contact={contact} conversation={conversation} />
       </Section>
 
-      <Section index={4} value="assignment" icon={<User className="w-3.5 h-3.5 text-primary" />} label="Atribuição">
+      <Section key="assignment" index={4} value="assignment" icon={<User className="w-3.5 h-3.5 text-primary" />} label="Atribuição">
         <AssignmentSection conversation={conversation} />
       </Section>
 
-      <Section index={5.5} value="tasks" icon={<ListTodo className="w-3.5 h-3.5 text-primary" />} label="Tarefas">
+      <Section key="tasks" index={5.5} value="tasks" icon={<ListTodo className="w-3.5 h-3.5 text-primary" />} label="Tarefas">
         <ConversationTasksPanel contactId={contact.id} profileId={profileId} />
       </Section>
 
-      <Section index={5.7} value="reminders" icon={<Bell className="w-3.5 h-3.5 text-primary" />} label="Lembretes">
+      <Section key="reminders" index={5.7} value="reminders" icon={<Bell className="w-3.5 h-3.5 text-primary" />} label="Lembretes">
         <RemindersPanel contactId={contact.id} profileId={profileId} />
       </Section>
 
-      <Section index={5.9} value="memory" icon={<Brain className="w-3.5 h-3.5 text-primary" />} label="Memória Viva">
+      <Section key="memory" index={5.9} value="memory" icon={<Brain className="w-3.5 h-3.5 text-primary" />} label="Memória Viva">
         <ConversationMemoryPanel contactId={contact.id} profileId={profileId} />
       </Section>
 
-      <Section index={6} value="scoring" icon={<TrendingUp className="w-3.5 h-3.5 text-primary" />} label="Scoring & LGPD">
+      <Section key="scoring" index={6} value="scoring" icon={<TrendingUp className="w-3.5 h-3.5 text-primary" />} label="Scoring & LGPD">
         <LeadRiskScorePanel contactId={contact.id} />
       </Section>
 
-      <Section index={6.2} value="purchases" icon={<ShoppingBag className="w-3.5 h-3.5 text-primary" />} label="Compras & Propostas">
+      <Section key="purchases" index={6.2} value="purchases" icon={<ShoppingBag className="w-3.5 h-3.5 text-primary" />} label="Compras & Propostas">
         <ContactPurchasesPanel contactId={contact.id} profileId={profileId} />
       </Section>
 
-      <Section index={6} value="notes" icon={<FileText className="w-3.5 h-3.5 text-primary" />} label="Notas Privadas">
+      <Section key="notes" index={6} value="notes" icon={<FileText className="w-3.5 h-3.5 text-primary" />} label="Notas Privadas">
         <PrivateNotes contactId={contact.id} />
       </Section>
 
-      <Section index={6.8} value="timeline" icon={<GitBranch className="w-3.5 h-3.5 text-primary" />} label="Linha do Tempo">
+      <Section key="timeline" index={6.8} value="timeline" icon={<GitBranch className="w-3.5 h-3.5 text-primary" />} label="Linha do Tempo">
         <ConversationTimeline contactId={contact.id} />
       </Section>
 
-      <Section index={7} value="history" icon={<Clock className="w-3.5 h-3.5 text-primary" />} label="Histórico">
+      <Section key="history" index={7} value="history" icon={<Clock className="w-3.5 h-3.5 text-primary" />} label="Histórico">
         <ConversationHistory contactId={contact.id} contactPhone={contact.phone} onSelectConversation={(id) => log.debug('Selected conversation:', id)} />
       </Section>
 
-      <Section index={7.3} value="delivery-stats" icon={<CheckCheck className="w-3.5 h-3.5 text-primary" />} label="Entregas & Leituras">
+      <Section key="delivery-stats" index={7.3} value="delivery-stats" icon={<CheckCheck className="w-3.5 h-3.5 text-primary" />} label="Entregas & Leituras">
         <DeliveryStatsPanel remoteJid={contact.id} />
       </Section>
 
-      <Section index={7.5} value="sla-timeline" icon={<Activity className="w-3.5 h-3.5 text-primary" />} label="Linha do tempo do atendimento">
+      <Section key="sla-timeline" index={7.5} value="sla-timeline" icon={<Activity className="w-3.5 h-3.5 text-primary" />} label="Linha do tempo do atendimento">
         <SLATimelineSection conversation={conversation} />
       </Section>
 

@@ -37,6 +37,7 @@ interface ContactDetailsProps {
 
 export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
   const { contact } = conversation;
+  // Hook call before any conditionals
   const { enrichedData, aiTags, slaInfo } = useContactEnrichedData(contact.id);
   const { profileId } = useConversationActions();
   const panelRef = useRef<HTMLDivElement>(null);
