@@ -321,7 +321,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   }, [onLoadOlder, onCancelLoadOlder, hasMoreOlder, loadingOlder, flagCancelled, contactJid]);
 
   // Preserve scroll position after older messages prepend
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
@@ -331,13 +331,11 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     const wasPrepend = lengthIncreased && firstChanged;
 
     if (wasPrepend && prevScrollHeightRef.current !== null && !cancelledRef.current) {
-      const prev = prevScrollHeightRef.current;
-      requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight - prev;
-        prevScrollHeightRef.current = null;
-      });
+      const prevHeight = prevScrollHeightRef.current;
+      // Use synchronous scroll adjustment to prevent jump
+      container.scrollTop = container.scrollHeight - prevHeight;
+      prevScrollHeightRef.current = null;
     } else if (cancelledRef.current) {
-      // Cancelled mid-flight: respect user's current scroll position, no anchoring.
       prevScrollHeightRef.current = null;
       cancelledRef.current = false;
     }
