@@ -330,7 +330,7 @@ describe('LGPD Consent Logic', () => {
 
 describe('PII Masking', () => {
   const maskPhone = (phone: string) => {
-    if (!phone || phone.length < 4) return phone;
+    if (!phone || phone.length < 8) return phone;
     return phone.slice(0, 2) + '*'.repeat(Math.max(0, phone.length - 6)) + phone.slice(-4);
   };
 
