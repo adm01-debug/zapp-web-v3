@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { log } from '@/lib/logger';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { dbFrom } from '@/integrations/datasource/db';
+import { getLogger } from '@/lib/logger';
+
+const mutationLog = getLogger('useReactionMutations');
 
 interface ReactionMutationOptions {
   instanceName?: string;
@@ -63,9 +65,8 @@ export function useReactionMutations(
             },
             emoji
           );
-          log.info('Reaction sent via Evolution API', { emoji, messageId });
         } catch (err) {
-          log.error('Failed to send reaction via Evolution API', err);
+          mutationLog.error('Failed to send reaction via Evolution API', err);
         }
       }
 
@@ -97,12 +98,14 @@ export function useReactionMutations(
       if (context?.previous) {
         queryClient.setQueryData(['message-reactions', messageId], context.previous);
       }
-      log.error('Failed to add reaction', error);
+      mutationLog.error('Failed to add reaction', error);
       
-      const status = error?.status || error?.code;
+      const status = error?.status || error?.code || (error?.message?.includes('401') ? 401 : 500);
       const message = status === 401 ? 'Não autorizado' : 'Erro interno no servidor (500)';
       
-      toast.error(`Erro ao adicionar reação: ${message}`);
+      toast.error(`Erro ao adicionar reação: ${message}`, {
+        id: `reaction-error-${messageId}`,
+      });
     },
   });
 
@@ -131,7 +134,7 @@ export function useReactionMutations(
             ''
           );
         } catch (err) {
-          log.error('Failed to remove reaction via Evolution API', err);
+          mutationLog.error('Failed to remove reaction via Evolution API', err);
         }
       }
     },
@@ -153,7 +156,9 @@ export function useReactionMutations(
       if (context?.previous) {
         queryClient.setQueryData(['message-reactions', messageId], context.previous);
       }
-      toast.error('Erro ao remover reação');
+      toast.error('Erro ao remover reação', {
+        id: `reaction-remove-error-${messageId}`,
+      });
     }
   });
 
