@@ -103,6 +103,7 @@ export function useReactionMutations(
     },
     onSuccess: (data, emoji) => {
       queryClient.invalidateQueries({ queryKey: ['message-reactions', messageId] });
+      toast.dismiss(`reaction-error-${messageId}`); // Clear any previous errors on success
       trackReactionEvent('add', { messageId, emoji, status: 'success' });
     },
     onError: (error: any, emoji, context) => {
@@ -114,12 +115,12 @@ export function useReactionMutations(
       const status = error?.status || error?.code || (error?.message?.includes('401') ? 401 : 500);
       let errorMsg = 'Erro interno no servidor (500)';
       
-      if (status === 401) errorMsg = 'Sessão expirada. Por favor, faça login novamente.';
-      else if (status === 504 || status === 'PGRST116') errorMsg = 'O servidor demorou muito para responder. Tente novamente.';
-      else if (status === 403) errorMsg = 'Você não tem permissão para reagir nesta mensagem.';
+      if (status === 401 || status === '401') errorMsg = 'Sessão expirada. Por favor, faça login novamente.';
+      else if (status === 504 || status === '504' || status === 'PGRST116') errorMsg = 'O servidor demorou muito para responder. Tente novamente.';
+      else if (status === 403 || status === '403') errorMsg = 'Você não tem permissão para reagir nesta mensagem.';
       
       toast.error(`Erro ao adicionar reação: ${errorMsg}`, {
-        id: `reaction-error-${messageId}`,
+        id: `reaction-error-${messageId}`, // Stable ID for replacement
         className: "bg-destructive text-destructive-foreground font-medium",
         duration: 4000,
       });
@@ -170,6 +171,7 @@ export function useReactionMutations(
     },
     onSuccess: (data, emoji) => {
       queryClient.invalidateQueries({ queryKey: ['message-reactions', messageId] });
+      toast.dismiss(`reaction-error-${messageId}`);
       trackReactionEvent('remove', { messageId, emoji, status: 'success' });
     },
     onError: (error: any, emoji, context) => {
@@ -177,7 +179,7 @@ export function useReactionMutations(
         queryClient.setQueryData(['message-reactions', messageId], context.previous);
       }
       toast.error('Não foi possível remover sua reação. Verifique sua conexão.', {
-        id: `reaction-remove-error-${messageId}`,
+        id: `reaction-error-${messageId}`, // Same ID to replace add errors
         className: "bg-destructive text-destructive-foreground font-medium",
         duration: 4000,
       });
