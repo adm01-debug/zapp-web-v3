@@ -41,7 +41,7 @@ export function MessageStatusIcon({ status, className }: { status: Message['stat
       );
     case 'played':
       return (
-        <Headphones className={cn('w-[14px] h-[14px] text-[#53bdeb] transition-all duration-500 ease-out', className)} strokeWidth={2.5} aria-label="Reproduzido" />
+        <Headphones className={cn('w-[16px] h-[16px] text-[#53bdeb] transition-all duration-500 ease-out', className)} strokeWidth={1.8} aria-label="Reproduzido" />
       );
     case 'retrying':
       return (
