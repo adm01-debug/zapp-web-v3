@@ -197,7 +197,10 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-background">
+    <div className={cn(
+      "flex flex-col h-full overflow-y-auto bg-background transition-all duration-300",
+      highContrast && "high-contrast-mode"
+    )}>
       <div className="px-4 py-4 lg:px-6 space-y-4 max-w-[1600px] w-full mx-auto">
         {/* ── KPIs + Aniversários ─────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
