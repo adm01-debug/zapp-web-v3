@@ -3,10 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/features/auth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { EyeOff, Send, X } from 'lucide-react';
+import { EyeOff, Send, X, MessageSquare, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
@@ -24,6 +25,8 @@ interface WhisperMessage {
   sender_name?: string;
   is_read: boolean;
   created_at: string;
+  whisper_thread_id?: string;
+  reply_count?: number;
 }
 
 export function WhisperMode({ contactId, targetAgentId, className, defaultExpanded = false }: WhisperModeProps) {
@@ -31,6 +34,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const isSupervisor = profile?.role === 'admin' || profile?.role === 'supervisor';
@@ -39,12 +43,21 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
   const { data: whispers = [] } = useQuery({
     queryKey: ['whispers', contactId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('whisper_messages')
-        .select('id, content, sender_id, is_read, created_at')
+        .select(`
+          id, content, sender_id, is_read, created_at, whisper_thread_id
+        `)
         .eq('contact_id', contactId)
-        .order('created_at', { ascending: false })
-        .limit(20);
+        .order('created_at', { ascending: false });
+      
+      if (activeThreadId) {
+        query = query.or(`id.eq.${activeThreadId},whisper_thread_id.eq.${activeThreadId}`);
+      } else {
+        query = query.is('whisper_thread_id', null);
+      }
+
+      const { data, error } = await query.limit(50);
       
       if (!data) return [];
 
@@ -56,9 +69,25 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
 
       const nameMap = new Map((profiles || []).map(p => [p.id, p.name]));
       
+      let threadCounts: Record<string, number> = {};
+      if (!activeThreadId && data.length > 0) {
+        const parentIds = data.map(d => d.id);
+        const { data: counts } = await supabase
+          .from('whisper_messages')
+          .select('whisper_thread_id')
+          .in('whisper_thread_id', parentIds);
+        
+        counts?.forEach(c => {
+          if (c.whisper_thread_id) {
+            threadCounts[c.whisper_thread_id] = (threadCounts[c.whisper_thread_id] || 0) + 1;
+          }
+        });
+      }
+
       return data.map(w => ({
         ...w,
         sender_name: nameMap.get(w.sender_id) || 'Supervisor',
+        reply_count: threadCounts[w.id] || 0,
       })) as WhisperMessage[];
     },
     refetchInterval: 10000,
@@ -121,6 +150,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
       sender_id: profile.id,
       target_agent_id: agentId,
       content: message.trim(),
+      whisper_thread_id: activeThreadId,
     });
 
     if (error) {
@@ -174,14 +204,28 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
           >
             <div className="p-3 bg-amber-50/50 border-b border-amber-100 flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
-                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                Equipe — Interno
+                {activeThreadId ? (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 mr-1 text-amber-600 hover:bg-amber-100" 
+                    onClick={() => setActiveThreadId(null)}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                )}
+                {activeThreadId ? 'Discussão em Thread' : 'Equipe — Interno'}
               </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
                 className="h-6 w-6 hover:bg-amber-100 text-amber-600" 
-                onClick={() => setIsExpanded(false)}
+                onClick={() => {
+                  setIsExpanded(false);
+                  setActiveThreadId(null);
+                }}
                 aria-label="Fechar sussurro"
               >
                 <X className="w-3.5 h-3.5" />
@@ -205,29 +249,71 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                   <p className="text-xs text-amber-600/60 font-medium">Nenhum sussurro registrado para esta conversa.</p>
                 </div>
               ) : (
-                whispers.map((w, idx) => (
-                  <motion.div 
-                    key={w.id} 
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="flex flex-col gap-1 group/whisper"
-                  >
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-[10px] font-bold text-amber-600/80">{w.sender_name}</span>
-                      <span className="text-[9px] text-muted-foreground/60">{new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                    <div className="relative text-xs p-2.5 rounded-2xl bg-amber-100/50 border border-amber-200/30 text-amber-900 shadow-sm leading-relaxed group-hover/whisper:bg-amber-100 transition-colors">
-                      {w.content}
-                      {/* Futuro suporte a reações rápidas e threads */}
-                      <div className="absolute -bottom-1.5 -right-1 opacity-0 group-hover/whisper:opacity-100 transition-opacity flex items-center gap-0.5 bg-background border border-amber-100 rounded-full px-1 shadow-sm">
-                        <button onClick={() => toast({ title: '👍 Confirmado' })} className="hover:scale-120 transition-transform">👍</button>
-                        <button onClick={() => toast({ title: '👀 Ciente' })} className="hover:scale-120 transition-transform">👀</button>
-                        <button onClick={() => toast({ title: '✅ Resolvido' })} className="hover:scale-120 transition-transform">✅</button>
+                whispers.map((w, idx) => {
+                  const isParent = w.id === activeThreadId;
+                  return (
+                    <motion.div 
+                      key={w.id} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className={cn(
+                        "flex flex-col gap-1 group/whisper",
+                        isParent && "border-l-2 border-amber-400 pl-3 py-1 bg-amber-100/30 rounded-r-xl"
+                      )}
+                    >
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[10px] font-bold text-amber-600/80">
+                          {w.sender_name} {isParent && <Badge variant="outline" className="text-[8px] h-3 px-1 ml-1 bg-amber-200 border-amber-300">PAI</Badge>}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground/60">{new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                    </div>
-                  </motion.div>
-                ))
+                      <div className="relative text-xs p-2.5 rounded-2xl bg-amber-100/50 border border-amber-200/30 text-amber-900 shadow-sm leading-relaxed group-hover/whisper:bg-amber-100 transition-colors">
+                        {w.content}
+                        
+                        <div className="absolute -bottom-1.5 -right-1 opacity-0 group-hover/whisper:opacity-100 transition-opacity flex items-center gap-0.5 bg-background border border-amber-100 rounded-full px-1 shadow-sm z-20">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button onClick={() => toast({ title: '👍 Confirmado' })} className="hover:scale-120 transition-transform">👍</button>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-[10px] p-1">Confirmar</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button onClick={() => toast({ title: '👀 Ciente' })} className="hover:scale-120 transition-transform">👀</button>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-[10px] p-1">Ciente</TooltipContent>
+                            </Tooltip>
+                            {!activeThreadId && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button 
+                                    onClick={() => setActiveThreadId(w.id)} 
+                                    className="hover:scale-120 transition-transform text-amber-600 ml-0.5 p-0.5"
+                                  >
+                                    <MessageSquare className="w-3 h-3" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-[10px] p-1">Responder em Thread</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </TooltipProvider>
+                        </div>
+                        
+                        {!activeThreadId && w.reply_count && w.reply_count > 0 ? (
+                          <button 
+                            onClick={() => setActiveThreadId(w.id)}
+                            className="mt-1 flex items-center gap-1 text-[9px] font-bold text-amber-600 hover:text-amber-700 transition-colors"
+                          >
+                            <MessageSquare className="w-2.5 h-2.5" />
+                            {w.reply_count} {w.reply_count === 1 ? 'resposta' : 'respostas'}
+                          </button>
+                        ) : null}
+                      </div>
+                    </motion.div>
+                  );
+                })
               )}
             </div>
 
@@ -238,8 +324,8 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                     ref={inputRef}
                     value={message}
                     onChange={e => setMessage(e.target.value)}
-                    placeholder="Escreva uma orientação privada..."
-                    aria-label="Mensagem de sussurro"
+                    placeholder={activeThreadId ? "Responder na thread..." : "Escreva uma orientação privada..."}
+                    aria-label={activeThreadId ? "Resposta de thread" : "Mensagem de sussurro"}
                     className="flex-1 min-h-[40px] max-h-[120px] bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-amber-400 rounded-xl p-2.5 text-xs resize-none placeholder:text-muted-foreground/50 transition-all"
                     onKeyDown={e => {
                       if (e.key === 'Enter' && !e.shiftKey) {

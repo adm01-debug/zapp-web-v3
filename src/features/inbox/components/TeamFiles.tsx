@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Search as SearchIcon, Filter, Calendar } from 'lucide-react';
 
 interface TeamFilesProps {
   contactId: string;
@@ -15,6 +16,8 @@ interface TeamFilesProps {
 export function TeamFiles({ contactId }: TeamFilesProps) {
   const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ['team-files', contactId],
@@ -91,32 +94,70 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const filteredFiles = files.filter(file => {
+    const matchesSearch = file.file_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === 'all' || 
+      (typeFilter === 'image' && file.file_type?.startsWith('image/')) ||
+      (typeFilter === 'pdf' && file.file_type === 'application/pdf') ||
+      (typeFilter === 'doc' && (file.file_type?.includes('word') || file.file_type?.includes('document'))) ||
+      (typeFilter === 'other' && !file.file_type?.startsWith('image/') && file.file_type !== 'application/pdf' && !file.file_type?.includes('word'));
+    return matchesSearch && matchesType;
+  });
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h4 className="text-xs font-bold text-amber-700 uppercase tracking-widest flex items-center gap-2">
-          <EyeOff className="w-3 h-3" />
-          Documentos da Equipe
-        </h4>
-        <label className="cursor-pointer">
-          <Input type="file" className="hidden" onChange={handleFileChange} disabled={isUploading} />
-          <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50" disabled={isUploading}>
-            {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <UploadCloud className="w-3 h-3" />}
-            Novo Arquivo
-          </Button>
-        </label>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-bold text-amber-700 uppercase tracking-widest flex items-center gap-2">
+            <EyeOff className="w-3 h-3" />
+            Documentos da Equipe
+          </h4>
+          <label className="cursor-pointer">
+            <Input type="file" className="hidden" onChange={handleFileChange} disabled={isUploading} />
+            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50" disabled={isUploading}>
+              {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <UploadCloud className="w-3 h-3" />}
+              Novo Arquivo
+            </Button>
+          </label>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-amber-400" />
+            <Input 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Buscar arquivos..." 
+              className="pl-7 h-8 text-[11px] bg-amber-50/30 border-amber-100 focus-visible:ring-amber-200"
+            />
+          </div>
+          <select 
+            value={typeFilter}
+            onChange={e => setTypeFilter(e.target.value)}
+            className="h-8 text-[10px] bg-amber-50/30 border-amber-100 rounded-md px-2 text-amber-700 outline-none focus:ring-1 focus:ring-amber-200"
+          >
+            <option value="all">Todos</option>
+            <option value="image">Imagens</option>
+            <option value="pdf">PDFs</option>
+            <option value="doc">Docs</option>
+            <option value="other">Outros</option>
+          </select>
+        </div>
       </div>
 
       <div className="space-y-2 min-h-[100px]">
         {isLoading ? (
           <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-amber-200" /></div>
-        ) : files.length === 0 ? (
+        ) : filteredFiles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center opacity-40 grayscale">
             <File className="w-8 h-8 mb-2" />
-            <p className="text-[10px]">Nenhum arquivo interno compartilhado.</p>
+            <p className="text-[10px]">
+              {searchTerm || typeFilter !== 'all' ? 'Nenhum arquivo corresponde aos filtros.' : 'Nenhum arquivo interno compartilhado.'}
+            </p>
           </div>
         ) : (
-          files.map((file) => (
+          filteredFiles.map((file) => (
             <div key={file.id} className="flex items-center gap-3 p-2 rounded-xl bg-amber-50/50 border border-amber-100 hover:bg-amber-100/50 transition-colors group">
               <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
                 <File className="w-4 h-4 text-amber-600" />
