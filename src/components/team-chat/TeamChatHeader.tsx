@@ -122,6 +122,22 @@ export function TeamChatHeader({
           </Tooltip>
         )}
 
+        {(conversation.type === 'group' || conversation.type === 'department') && onToggleStats && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted", showStats && "text-primary bg-primary/10")}
+                onClick={onToggleStats}
+              >
+                <BarChart3 className="w-[18px] h-[18px]" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Estatísticas do grupo</TooltipContent>
+          </Tooltip>
+        )}
+
         {onToggleDetails && (
           <Tooltip>
             <TooltipTrigger asChild>
