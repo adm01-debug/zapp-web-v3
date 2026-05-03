@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Clock, AlertTriangle, ShieldAlert, FlaskConical } from 'lucide-react';
 import { UserSettings } from '@/hooks/useUserSettings';
 
 interface SLASettingsProps {
