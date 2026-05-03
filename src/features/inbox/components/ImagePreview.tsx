@@ -147,7 +147,7 @@ export function MessageImage({ src, alt = 'Image', refreshKey }: MessageImagePro
       <motion.div
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="relative cursor-pointer overflow-hidden rounded-lg"
+        className="relative cursor-pointer overflow-hidden rounded-md bg-[#202c33]"
         onClick={() => setShowPreview(true)}
       >
         {(!isLoaded || refresh.isRefreshing) && (
