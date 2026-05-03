@@ -46,7 +46,7 @@ export function ChatSearchBar({ messages, isOpen, onClose, onNavigateToMessage, 
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden border-b border-border/50 bg-background shrink-0">
+        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden border-b border-border/5 bg-[#f0f2f5] dark:bg-[#111b21] shrink-0">
           <div className="px-3 md:px-4 py-3 space-y-2.5" role="search">
             <div className="flex items-center gap-1.5">
               <div className="relative flex-1 min-w-0 flex items-center gap-2.5 bg-muted rounded-xl px-3.5 h-10 border border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200">
