@@ -60,7 +60,7 @@ export function ChatSearchBar({ messages, isOpen, onClose, onNavigateToMessage, 
                   </span>
                 )}
               </div>
-              <div className="flex items-center shrink-0 bg-background dark:bg-[#202c33]/50 rounded-xl border border-border/10">
+              <div className="flex items-center shrink-0 bg-[#2a3942] rounded-lg">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="w-8 h-10 rounded-l-xl rounded-r-none hover:bg-accent" onClick={navigateUp} disabled={results.length === 0} aria-label="Resultado anterior">
