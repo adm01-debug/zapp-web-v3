@@ -1,6 +1,6 @@
 import {
   ArrowRight, CheckCircle, FileText, StickyNote, Tag, AlertTriangle,
-  Users, Clock, Star, Archive, Bell, Zap, MessageSquare, Package,
+  Users, Clock, Star, Archive, Bell, Zap, MessageSquare, Package, EyeOff, Share2,
 } from 'lucide-react';
 
 export interface SlashCommand {
@@ -9,7 +9,7 @@ export interface SlashCommand {
   label: string;
   description: string;
   icon: typeof ArrowRight;
-  category: 'actions' | 'templates' | 'notes' | 'tags' | 'priority';
+  category: 'actions' | 'templates' | 'notes' | 'tags' | 'priority' | 'internal';
   color: string;
   shortcut?: string;
   subCommands?: { id: string; label: string; value: string }[];
