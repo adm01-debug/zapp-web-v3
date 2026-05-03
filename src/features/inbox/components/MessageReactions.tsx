@@ -120,6 +120,7 @@ export function MessageReactions({
       </TooltipProvider>
 
       <Popover open={isOpen} onOpenChange={(open) => {
+        if (open === isOpen) return; // Prevent unnecessary state updates
         setIsOpen(open);
         if (open && typeof trackReactionEvent === 'function') {
           trackReactionEvent('open_picker', { messageId });
@@ -246,6 +247,7 @@ export function QuickReactionBar({
         ))}
 
         <Popover open={showPicker} onOpenChange={(open) => {
+          if (open === showPicker) return;
           setShowPicker(open);
           if (open && typeof trackReactionEvent === 'function') {
             trackReactionEvent('open_picker', { messageId });
