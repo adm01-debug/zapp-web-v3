@@ -59,7 +59,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   const isDeptMember = useMemo(() => {
     if (conversation.type !== 'department') return true;
     if (liveProfile?.role === 'admin') return true;
-    return liveProfile?.department_id === conversation.department_id;
+    return (liveProfile as any)?.department_id === conversation.department_id;
   }, [conversation, liveProfile]);
 
   useEffect(() => {
