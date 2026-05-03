@@ -100,12 +100,17 @@ export function ChatHeader({
             </AvatarFallback>
           </Avatar>
         </motion.div>
-        <div className="flex flex-col">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <h3 className="font-display font-bold text-[14.5px] tracking-tight text-foreground/90 truncate max-w-[200px] sm:max-w-md">
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
+            <h3 className="font-display font-bold text-[15px] tracking-tight text-foreground/90 truncate max-w-[180px] sm:max-w-md">
               {conversation.contact.name}
             </h3>
-            <SLAIndicatorForContact conversation={conversation} />
+            <div className="flex-shrink-0 flex items-center gap-1">
+              <SLAIndicatorForContact conversation={conversation} />
+              <Badge variant="outline" className="text-[9px] h-4 px-1 capitalize border border-border/20 bg-muted/20 text-muted-foreground whitespace-nowrap">
+                {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
+              </Badge>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {isContactTyping ? (
