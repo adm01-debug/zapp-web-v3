@@ -16,7 +16,7 @@ import { TeamChatHeader } from './TeamChatHeader';
 import { TeamChatInputArea } from './TeamChatInputArea';
 import { useTeamChatPanel } from './useTeamChatPanel';
 import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
-import { MessageReactions } from './MessageReactions';
+import { MessageReactions, QUICK_EMOJIS } from './MessageReactions';
 import { memo } from 'react';
 import { TeamMessage } from '@/hooks/useTeamChat';
 import { isToday, isYesterday } from 'date-fns';
@@ -186,12 +186,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                   <ContextMenuSub>
                     <ContextMenuSubTrigger className="gap-2"><SmilePlus className="w-3.5 h-3.5" /> Reagir</ContextMenuSubTrigger>
                     <ContextMenuSubContent>
-                      <div className="grid grid-cols-8 gap-1 p-1">
-                        {['👍','❤️','😂','😮','😢','🙏','🔥','🎉'].map(e => (
-                          <button key={e} onClick={() => toggleReaction({ messageId: msg.id, emoji: e })}
-                            className="h-8 w-8 text-lg hover:scale-125 transition-transform rounded">
+                      <div className="grid grid-cols-4 gap-1 p-1">
+                        {QUICK_EMOJIS.map(e => (
+                          <Button key={e} size="icon" variant="ghost" onClick={() => toggleReaction({ messageId: msg.id, emoji: e })}
+                            className="h-9 w-9 text-xl hover:scale-125 transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                            aria-label={`Reagir com ${e}`}
+                          >
                             {e}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </ContextMenuSubContent>
