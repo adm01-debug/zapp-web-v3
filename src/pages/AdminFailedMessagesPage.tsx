@@ -86,7 +86,16 @@ const ROOT_CAUSE_TONE_CLASS: Record<'warning' | 'destructive' | 'info' | 'muted'
 };
 
 function formatDate(iso: string | null) {
-...
+  if (!iso) return '—';
+  try {
+    return format(new Date(iso), "dd/MM HH:mm:ss", { locale: ptBR });
+  } catch {
+    return iso;
+  }
+}
+
+function shortJid(jid: string | null) {
+  if (!jid) return '—';
   return jid.replace('@s.whatsapp.net', '').replace('@g.us', ' (grupo)');
 }
 
@@ -947,33 +956,6 @@ export default function AdminFailedMessagesPage() {
       {/* Histórico de reprocesso e ações DLQ */}
       <DLQAuditHistory />
     </div>
-  );
-}
-
-function KpiCard({
-  icon: Icon, label, value, tone,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string | number;
-  tone: 'warning' | 'info' | 'destructive' | 'success';
-}) {
-  const toneClasses = {
-    warning: 'text-warning',
-    info: 'text-primary',
-    destructive: 'text-destructive',
-    success: 'text-success',
-  }[tone];
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center justify-between">
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold mt-1 truncate">{value}</p>
-        </div>
-        <Icon className={cn('h-8 w-8 opacity-70 shrink-0', toneClasses)} />
-      </CardContent>
-    </Card>
   );
 }
 
