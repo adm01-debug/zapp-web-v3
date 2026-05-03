@@ -61,7 +61,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
             </g>
 
             {/* Paper plane */}
-            <g opacity="0.022" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" className="text-primary" transform="translate(100, 145) rotate(-15)">
+            <g opacity="0.05" fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" className="text-foreground" transform="translate(100, 145) rotate(-15)">
               <path d="M0 12 L24 0 L0 24 L6 12 Z" />
               <line x1="6" y1="12" x2="24" y2="0" />
             </g>
