@@ -324,8 +324,8 @@ export function ChatMessageBubble({
           {/* Timestamp and status */}
           <div
             className={cn(
-              'flex items-center justify-end gap-1.5 mt-1',
-              isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'
+              'flex items-center justify-end gap-1 mt-0.5',
+              isSent ? 'text-primary-foreground/60' : 'text-muted-foreground/50'
             )}
           >
             <span className="text-[10px]">
