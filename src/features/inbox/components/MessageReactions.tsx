@@ -49,6 +49,8 @@ export function MessageReactions({
     disableRealtime,
   });
 
+  const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
+
   const groupedReactions = reactions.reduce((acc, reaction) => {
     if (!acc[reaction.emoji]) {
       acc[reaction.emoji] = {
@@ -81,7 +83,9 @@ export function MessageReactions({
       await addReaction(emoji);
     }
 
-    trackReactionEvent('open_picker', { messageId });
+    if (typeof trackReactionEvent === 'function') {
+      trackReactionEvent('open_picker', { messageId });
+    }
     setIsOpen(false);
   };
 
