@@ -461,9 +461,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const contactAvatar = conversation.contact.avatar || undefined;
   const handleScrollToMessage = useCallback((id: string) => messagesAreaRef.current?.scrollToMessage(id), []);
 
-  const handleQuickReply = (reply: { id: string; title: string; shortcut: string; content: string; category: string }) => {
-    handlers.setInputValue(reply.content); closeDialog('quickReplies'); incrementUseCount(reply.id);
-  };
+  // Redundância removida: handleQuickReply já está definido acima como useCallback.
 
   const { transferConversation: handleTransfer } = useTransferConversation({
     contactId: conversation.contact.id,
