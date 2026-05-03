@@ -59,7 +59,7 @@ interface ChatHeaderProps {
   whisperCount?: number;
 }
 
-export function ChatHeader({
+export const ChatHeader = memo(function ChatHeader({
   conversation, messages, isContactTyping, showAIAssistant, showDetails,
   voiceId, onToggleAIAssistant, onToggleDetails, onStartCall, onOpenSearch,
   onOpenTransfer, onOpenSchedule, onVoiceChange, onBack, onCloseConversation,
