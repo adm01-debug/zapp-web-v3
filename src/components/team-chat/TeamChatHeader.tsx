@@ -68,7 +68,7 @@ export function TeamChatHeader({
         <Avatar className="w-9 h-9 md:w-10 md:h-10 shrink-0">
           <AvatarImage src={conversation.avatar_url || undefined} />
           <AvatarFallback className="bg-primary/10 text-primary">
-            {conversation.type === 'group' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
+            {conversation.type === 'department' ? <Building2 className="w-4 h-4" /> : conversation.type === 'group' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
