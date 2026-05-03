@@ -212,7 +212,8 @@ export async function sendMessageToContact(
         idempotencyKey: idemKey,
         maxRetries: MAX_RETRIES,
         onRetry: (attempt, total) => {
-          emitSendStatus(data.id, { status: 'retrying', attempt, totalRetries: total }, { contactId, source: 'messageSender' });
+          const sid = opts.optimisticId || data.id;
+          emitSendStatus(sid, { status: 'retrying', attempt, totalRetries: total }, { contactId, source: 'messageSender' });
           // Persist counters so the "2/3" indicator survives a page reload.
           // Fire-and-forget — never block the retry loop.
           dbFrom('messages').update({
