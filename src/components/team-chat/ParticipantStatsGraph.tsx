@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   BarChart,
   Bar,
@@ -36,20 +36,13 @@ export function ParticipantStatsGraph({ conversationId }: ParticipantStatsGraphP
       }
 
       // Real data query
-        .from('team_message_receipts')
-        .select(`
-          status,
-          profile_id,
-          profiles(name)
-        `)
-        .eq('message_id', conversationId);
-      
       const { data: messages, error: msgError } = await supabase
         .from('team_messages')
         .select('id, sender_id')
         .eq('conversation_id', conversationId);
 
       if (msgError) throw msgError;
+      if (!messages || messages.length === 0) return [];
 
       const messageIds = messages.map(m => m.id);
       
@@ -68,24 +61,30 @@ export function ParticipantStatsGraph({ conversationId }: ParticipantStatsGraphP
       
       messages.forEach(m => {
         const senderId = m.sender_id;
-        if (!statsMap[senderId]) {
-          statsMap[senderId] = { name: 'Unknown', sent: 0, delivered: 0, read: 0 };
+        if (senderId) {
+          if (!statsMap[senderId]) {
+            statsMap[senderId] = { name: 'Unknown', sent: 0, delivered: 0, read: 0 };
+          }
+          statsMap[senderId].sent++;
         }
-        statsMap[senderId].sent++;
       });
 
-      allReceipts.forEach((r: any) => {
-        const pid = r.profile_id;
-        if (!statsMap[pid]) {
-          statsMap[pid] = { name: r.profiles?.name || 'Unknown', sent: 0, delivered: 0, read: 0 };
-        }
-        statsMap[pid].name = r.profiles?.name || 'Unknown';
-        if (r.status === 'delivered') statsMap[pid].delivered++;
-        if (r.status === 'read') {
-          statsMap[pid].delivered++;
-          statsMap[pid].read++;
-        }
-      });
+      if (allReceipts) {
+        allReceipts.forEach((r: any) => {
+          const pid = r.profile_id;
+          if (pid) {
+            if (!statsMap[pid]) {
+              statsMap[pid] = { name: r.profiles?.name || 'Unknown', sent: 0, delivered: 0, read: 0 };
+            }
+            statsMap[pid].name = r.profiles?.name || 'Unknown';
+            if (r.status === 'delivered') statsMap[pid].delivered++;
+            if (r.status === 'read') {
+              statsMap[pid].delivered++;
+              statsMap[pid].read++;
+            }
+          }
+        });
+      }
 
       return Object.values(statsMap);
     },
