@@ -37,7 +37,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
             </g>
 
             {/* Speech bubble 2 — flipped */}
-            <g opacity="0.02" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-muted-foreground">
+            <g opacity="0.05" fill="none" stroke="currentColor" strokeWidth="0.8" className="text-foreground">
               <path d="M160 80 Q160 72 168 72 H192 Q200 72 200 80 V92 Q200 100 192 100 H178 L172 106 L174 100 H168 Q160 100 160 92 Z" />
             </g>
 
