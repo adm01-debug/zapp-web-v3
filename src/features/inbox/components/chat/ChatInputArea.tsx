@@ -288,15 +288,14 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                 <Button onClick={logic.handleSendWithAnimation}
                   disabled={(!logic.hasText && logic.attachments.length === 0 && !editingMessage) || logic.isOverLimit || isSending}
                   size="icon"
+                  variant="ghost"
                   className={cn(
-                    "rounded-full shrink-0 disabled:opacity-30 touch-manipulation active:scale-90 transition-all duration-300 shadow-md hover:shadow-lg",
-                    "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20",
-                    isWhisper && "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20",
-                    logic.isMobile ? "w-11 h-11" : "w-10 h-10", 
-                    logic.sendAnimation && "motion-safe:animate-bounce"
+                    "rounded-full shrink-0 disabled:opacity-30 touch-manipulation active:scale-90 transition-all duration-200",
+                    "text-muted-foreground/70 hover:text-muted-foreground",
+                    logic.isMobile ? "w-10 h-10" : "w-10 h-10"
                   )}
                   aria-label={editingMessage ? "Confirmar edição" : "Enviar mensagem"}>
-                  {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : editingMessage ? <Check className="w-5 h-5" /> : <Send className="w-4.5 h-4.5 translate-x-0.5" />}
+                  {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : editingMessage ? <Check className="w-5 h-5" /> : (logic.hasText || logic.attachments.length > 0 ? <Send className="w-6 h-6" /> : <Mic className="w-6 h-6" />)}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px] font-medium">Enviar</TooltipContent>
