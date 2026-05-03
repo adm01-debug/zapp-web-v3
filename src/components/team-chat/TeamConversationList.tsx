@@ -145,6 +145,14 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
           </div>
         )}
       </div>
+
+      {mgmtDept && (
+        <DepartmentManagementDialog 
+          department={mgmtDept}
+          open={!!mgmtDept}
+          onOpenChange={(open) => !open && setMgmtDept(null)}
+        />
+      )}
     </>
   );
 });
