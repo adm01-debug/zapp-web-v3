@@ -44,6 +44,11 @@ export interface UserSettings {
   // TTS
   tts_voice_id: string;
   tts_speed: number;
+
+  // SLA
+  global_sla_warning_minutes: number;
+  global_sla_critical_minutes: number;
+  global_sla_notification_message: string;
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -73,6 +78,10 @@ const DEFAULT_SETTINGS: UserSettings = {
   
   tts_voice_id: DEFAULT_TTS_VOICE_ID,
   tts_speed: DEFAULT_TTS_SPEED,
+
+  global_sla_warning_minutes: 30,
+  global_sla_critical_minutes: 60,
+  global_sla_notification_message: 'Alerta SLA: Tempo limite excedido para resposta.',
 };
 
 export function useUserSettings() {
