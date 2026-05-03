@@ -105,9 +105,23 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
               <Lock className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-bold mb-2">Conteúdo Protegido</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              As mensagens deste departamento são privadas. Entre em contato com um administrador se você precisar de acesso.
+            <p className="text-sm text-muted-foreground max-w-sm mb-6">
+              As mensagens deste departamento são privadas e restritas aos seus membros.
             </p>
+            <div className="flex flex-col gap-3 w-full max-w-[280px]">
+              <div className="bg-card border border-border/50 p-3 rounded-xl text-left shadow-sm">
+                <p className="text-xs font-semibold mb-1 flex items-center gap-1.5"><Shield className="w-3 h-3 text-primary" /> Solicitar Acesso</p>
+                <p className="text-[11px] text-muted-foreground leading-normal">
+                  Contate o administrador do sistema para que ele associe seu perfil a este departamento.
+                </p>
+              </div>
+              <div className="bg-card border border-border/50 p-3 rounded-xl text-left shadow-sm">
+                <p className="text-xs font-semibold mb-1 flex items-center gap-1.5"><Link2 className="w-3 h-3 text-primary" /> Entrar via Código</p>
+                <p className="text-[11px] text-muted-foreground leading-normal">
+                  Se você recebeu um código de convite, utilize-o para entrar automaticamente através do link oficial.
+                </p>
+              </div>
+            </div>
           </div>
         ) : s.isLoading ? (
           <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}><Skeleton className="h-10 rounded-2xl" style={{ width: 120 + (i % 3) * 60 }} /></div>)}</div>
