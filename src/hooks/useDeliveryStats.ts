@@ -12,6 +12,7 @@ export interface ParticipantStats {
   lastSentAt: string | null;
   lastDeliveredAt: string | null;
   lastReadAt: string | null;
+  timeline: DeliveryTimelinePoint[];
 }
 
 export interface DeliveryTimelinePoint {
@@ -136,17 +137,37 @@ export function useDeliveryStats(remoteJid: string | undefined, instance = 'wpp2
             displayName: name,
             sent: 0, delivered: 0, read: 0,
             lastSentAt: null, lastDeliveredAt: null, lastReadAt: null,
+            timeline: [], // Initial state for participant timeline
           });
         }
         const p = byParticipant.get(jid)!;
         if (name && name.length > p.displayName.length) p.displayName = name;
+
+        // Participant timeline aggregation
+        if (tsString) {
+          const date = parseISO(tsString);
+          const hourKey = format(startOfHour(date), 'yyyy-MM-dd HH:00');
+          let pPoint = p.timeline.find(pt => pt.time === hourKey);
+          if (!pPoint) {
+            pPoint = { time: hourKey, sent: 0, delivered: 0, read: 0 };
+            p.timeline.push(pPoint);
+          }
+          if (rank >= 1) pPoint.sent++;
+          if (rank >= 2) pPoint.delivered++;
+          if (rank >= 3) pPoint.read++;
+        }
 
         if (rank >= 1) { p.sent++; totals.sent++; p.lastSentAt = maxDate(p.lastSentAt, tsString); totals.lastSentAt = maxDate(totals.lastSentAt, tsString); }
         if (rank >= 2) { p.delivered++; totals.delivered++; p.lastDeliveredAt = maxDate(p.lastDeliveredAt, tsString); totals.lastDeliveredAt = maxDate(totals.lastDeliveredAt, tsString); }
         if (rank >= 3) { p.read++; totals.read++; p.lastReadAt = maxDate(p.lastReadAt, tsString); totals.lastReadAt = maxDate(totals.lastReadAt, tsString); }
       }
 
-      const participants = Array.from(byParticipant.values()).sort((a, b) => b.sent - a.sent);
+      const participants = Array.from(byParticipant.values())
+        .map(p => ({
+          ...p,
+          timeline: p.timeline.sort((a, b) => a.time.localeCompare(b.time))
+        }))
+        .sort((a, b) => b.sent - a.sent);
       const timeline = Array.from(timelineMap.values()).sort((a, b) => a.time.localeCompare(b.time));
 
       return { isGroup, totals, participants, timeline, totalMessages: messages.length };
