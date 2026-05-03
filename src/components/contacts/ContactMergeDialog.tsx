@@ -98,19 +98,35 @@ function FieldSelector({ fieldKey, label, primaryValue, secondaryValue, value, o
   primaryValue: string; secondaryValue: string;
   value: FieldChoice; onChange: (v: FieldChoice) => void;
 }) {
+  if (!primaryValue && !secondaryValue) return null;
   if (primaryValue === secondaryValue) return null; // no conflict
+  
+  // Logic to determine if a choice is "recommended"
+  const isSecondaryRecommended = !primaryValue && !!secondaryValue;
+
   return (
-    <div className="space-y-2 py-2">
-      <p className="text-sm font-medium flex items-center gap-1">
-        <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-        {label}
-      </p>
-      <RadioGroup value={value} onValueChange={(v) => onChange(v as FieldChoice)} className="flex gap-4 flex-wrap">
+    <div className="space-y-2 py-3 px-1 border-b border-border/30 last:border-0">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold flex items-center gap-1.5">
+          <Info className="h-3.5 w-3.5 text-primary/60" />
+          {label}
+        </p>
+        {isSecondaryRecommended && (
+          <Badge variant="outline" className="text-[8px] bg-green-500/5 text-green-600 border-green-500/20">
+            Recomendado: Secundário
+          </Badge>
+        )}
+      </div>
+      <RadioGroup value={value} onValueChange={(v) => onChange(v as FieldChoice)} className="grid grid-cols-1 gap-2">
         {([['primary', primaryValue], ['secondary', secondaryValue]] as const).map(([side, val]) => (
-          <div key={side} className="flex items-center gap-2">
+          <div key={side} className={cn(
+            "flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer",
+            value === side ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border/50 hover:bg-muted/50"
+          )} onClick={() => onChange(side)}>
             <RadioGroupItem value={side} id={`${fieldKey}-${side}`} />
-            <Label htmlFor={`${fieldKey}-${side}`} className="text-sm cursor-pointer">
+            <Label htmlFor={`${fieldKey}-${side}`} className="text-xs flex-1 cursor-pointer">
               {val || <span className="italic text-muted-foreground">vazio</span>}
+              {side === 'primary' && val && <span className="ml-2 text-[9px] text-muted-foreground">(Principal)</span>}
             </Label>
           </div>
         ))}
