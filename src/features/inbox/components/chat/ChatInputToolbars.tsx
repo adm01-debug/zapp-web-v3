@@ -174,6 +174,7 @@ interface TertiaryToolsMenuProps {
   onToggleSignature?: () => void;
   onPollSent?: (poll: { name: string; options: string[]; selectableCount: number }) => void;
   onContactSent?: (contactName: string) => void;
+  onOpenTeamFiles?: () => void;
 }
 
 export function TertiaryToolsMenu({
