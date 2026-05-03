@@ -33,11 +33,12 @@ export function ContactCard({
       layoutId={`contact-${contact.id}`}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, scale: 1.02 }}
       transition={{ delay: index * 0.03, duration: 0.3 }}
       className={cn(
         "group relative rounded-2xl border border-border/40 bg-card hover:bg-muted/30",
         "transition-all duration-200 cursor-pointer overflow-hidden",
-        "hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20",
+        "hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30",
         isSelected && "ring-2 ring-primary/50 border-primary/30 bg-primary/5"
       )}
       onClick={() => onOpenChat(contact.id)}
