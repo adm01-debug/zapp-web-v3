@@ -27,6 +27,7 @@ import {
   Pin,
   Building2,
   ArrowRightLeft,
+  BarChart3,
 } from 'lucide-react';
 import { TransferConversationDialog } from './TransferConversationDialog';
 import { useAuth } from '@/features/auth';
