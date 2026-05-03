@@ -86,12 +86,12 @@ export function SLAIndicator({
             <motion.div
               role="status"
               aria-label={`SLA ${sla.worstStatus === 'breached' ? 'violado' : sla.worstStatus === 'warning' ? 'em alerta' : 'dentro do prazo'}`}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
               className={cn(
-                'flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium border',
+                'flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-tight border shadow-sm transition-all duration-300',
                 style.bg, style.text, style.border,
-                sla.worstStatus === 'breached' && 'animate-pulse',
+                sla.worstStatus === 'breached' && 'animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.2)]',
                 className
               )}
             >
