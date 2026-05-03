@@ -142,14 +142,14 @@ export default function AdminGmailStatusPage() {
     setIsRetrying(prev => ({ ...prev, [id]: true }));
     try {
       if (action === 'markRead') {
-        const { error } = await supabase.rpc('rpc_gmail_mark_thread_read', {
+        const { error } = await (supabase as any).rpc('rpc_gmail_mark_thread_read', {
           p_thread_id: id,
           p_read: true
         });
         if (error) throw error;
         toast.success('Thread marcada como lida no servidor.');
       } else if (action === 'rpc_test') {
-        const { error } = await supabase.rpc('rpc_gmail_token_status');
+        const { error } = await (supabase as any).rpc('rpc_gmail_token_status');
         if (error) throw error;
         toast.success('RPC de status de token validada com sucesso.');
       }

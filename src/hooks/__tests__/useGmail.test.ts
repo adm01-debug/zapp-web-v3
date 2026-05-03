@@ -39,7 +39,7 @@ describe('useGmail', () => {
     const { result } = renderHook(() => useGmail());
 
     await act(async () => {
-      // O hook chama loadAccounts no useEffect
+      await new Promise(resolve => setTimeout(resolve, 0));
     });
 
     expect(result.current.accounts.length).toBe(1);
@@ -56,7 +56,7 @@ describe('useGmail', () => {
     const { result } = renderHook(() => useGmail());
 
     await act(async () => {
-      // useEffect trigger
+      await new Promise(resolve => setTimeout(resolve, 0));
     });
 
     expect(result.current.error).toContain('Database error');
@@ -69,7 +69,7 @@ describe('useGmail', () => {
     const { result } = renderHook(() => useGmail());
 
     await act(async () => {
-      // useEffect trigger
+      await new Promise(resolve => setTimeout(resolve, 0));
     });
 
     expect(result.current.accounts.length).toBe(0);

@@ -35,8 +35,8 @@ export default function WhatsAppProviderConfig() {
   const loadCurrentConfig = async () => {
     setIsLoading(true);
     try {
-      const { data: configs } = await supabase
-        .from('whatsapp_connections_safe' as any)
+      const { data: configs } = await (supabase as any)
+        .from('whatsapp_connections_safe')
         .select('*')
         .limit(1);
       
@@ -82,7 +82,7 @@ export default function WhatsAppProviderConfig() {
 
   const handleSave = async () => {
     try {
-      const { error } = await supabase.rpc('rpc_upsert_whatsapp_provider', {
+      const { error } = await (supabase as any).rpc('rpc_upsert_whatsapp_provider', {
         p_provider_type: provider,
         p_base_url: baseUrl,
         p_api_key: apiKey // O RPC deve tratar o armazenamento seguro (vault/env)
