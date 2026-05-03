@@ -84,7 +84,7 @@ export function useScheduledMessages(contactId?: string) {
 
   const cancelMutation = useMutation({
     mutationFn: async (messageId: string) => {
-      const { error: res2566Err } = await supabase
+      const { error } = await supabase
         .from('scheduled_messages')
         .update({ status: 'cancelled' })
         .eq('id', messageId);

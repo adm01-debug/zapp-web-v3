@@ -146,7 +146,7 @@ export function useDiagnosticsData() {
 
     let edgeFunctionsStatus: 'healthy' | 'degraded' | 'down' = 'healthy';
     try {
-      const { error: res5314Err } = await supabase.functions.invoke('connection-health-check');
+      const { error } = await supabase.functions.invoke('connection-health-check');
       if (error) edgeFunctionsStatus = 'degraded';
     } catch {
       edgeFunctionsStatus = 'degraded';

@@ -27,7 +27,7 @@ export function CSATAutoConfig() {
   const { data: config, isLoading } = useQuery({
     queryKey: ['csat-auto-config'],
     queryFn: async () => {
-      const { data, error: res1263Err } = await supabase.from('csat_auto_config').select('*').limit(1).maybeSingle();
+      const { data, error } = await supabase.from('csat_auto_config').select('*').limit(1).maybeSingle();
       return data;
     },
   });
@@ -59,10 +59,10 @@ export function CSATAutoConfig() {
       };
 
       if (config?.id) {
-        const { error: res2503Err } = await supabase.from('csat_auto_config').update(payload).eq('id', config.id);
+        const { error } = await supabase.from('csat_auto_config').update(payload).eq('id', config.id);
         if (error) throw error;
       } else {
-        const { error: res2653Err } = await supabase.from('csat_auto_config').insert(payload);
+        const { error } = await supabase.from('csat_auto_config').insert(payload);
         if (error) throw error;
       }
     },

@@ -54,7 +54,7 @@ export function useKnowledgeBase() {
       if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return false; }
       toast({ title: 'Artigo atualizado!' });
     } else {
-      const { error: res2076Err } = await supabase.from('knowledge_base_articles').insert(payload);
+      const { error } = await supabase.from('knowledge_base_articles').insert(payload);
       if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return false; }
       toast({ title: 'Artigo criado!' });
     }

@@ -104,7 +104,7 @@ export function useAdminData(activeTab: 'users' | 'audit' | 'crm') {
 
   const handleRoleChange = useCallback(async (userId: string, newRole: AppRole) => {
     await supabase.from('user_roles').delete().eq('user_id', userId);
-    const { error: res3630Err } = await supabase.from('user_roles').insert({ user_id: userId, role: newRole });
+    const { error } = await supabase.from('user_roles').insert({ user_id: userId, role: newRole });
     if (error) {
       toast.error('Erro ao atualizar role');
     } else {
@@ -114,7 +114,7 @@ export function useAdminData(activeTab: 'users' | 'audit' | 'crm') {
   }, [fetchData]);
 
   const handleToggleActive = useCallback(async (user: UserWithRole) => {
-    const { error: res3993Err } = await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ is_active: !user.is_active })
       .eq('id', user.id);
@@ -145,7 +145,7 @@ export function useAdminData(activeTab: 'users' | 'audit' | 'crm') {
       avatarUrl = urlData.publicUrl;
     }
 
-    const { error: res4998Err } = await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({
         name: editingUser.name,

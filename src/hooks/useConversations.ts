@@ -158,7 +158,7 @@ export function useConversations() {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      const { data, error: res6736Err } = await dbList(RPC.listConversations, {
+      const { data, error } = await dbList(RPC.listConversations, {
         p_instance: filters.instance_name,
         p_status: filters.status === 'all' ? null : filters.status,
         p_assigned_to: filters.assigned_to,
@@ -184,7 +184,7 @@ export function useConversations() {
   // ── Actions ───────────────────────────────────────────────────────────
 
   const assignConversation = useCallback(async (id: string, agentId: string) => {
-    const { data, error: res7830Err } = await (supabase as any).rpc('assign_conversation', {
+    const { data, error } = await (supabase as any).rpc('assign_conversation', {
       p_conversation_id: id, p_agent_id: agentId,
     });
     if (error) throw error;
@@ -193,7 +193,7 @@ export function useConversations() {
   }, []);
 
   const closeConversation = useCallback(async (id: string, note?: string) => {
-    const { data, error: res8203Err } = await (supabase as any).rpc('close_conversation', {
+    const { data, error } = await (supabase as any).rpc('close_conversation', {
       p_id: id, p_note: note ?? null,
     });
     if (error) throw error;

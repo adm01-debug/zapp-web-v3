@@ -63,7 +63,7 @@ export function useNPSSurveys() {
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
         .single();
 
-      const { error: res65Err } = await supabase
+      const { error } = await supabase
         .from('nps_surveys')
         .insert({
           contact_id: data.contact_id,

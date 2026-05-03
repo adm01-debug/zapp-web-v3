@@ -111,7 +111,7 @@ export function useQuickReplies() {
     mutationFn: async (input: CreateTemplateInput) => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      const { data, error: res3523Err } = await supabase
+      const { data, error } = await supabase
         .from('message_templates')
         .insert({
           title: input.title,
@@ -141,7 +141,7 @@ export function useQuickReplies() {
   // Update template mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...input }: { id: string } & Partial<CreateTemplateInput>) => {
-      const { data, error: res4437Err } = await supabase
+      const { data, error } = await supabase
         .from('message_templates')
         .update({
           title: input.title,
@@ -171,7 +171,7 @@ export function useQuickReplies() {
   // Delete template mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res5296Err } = await supabase
+      const { error } = await supabase
         .from('message_templates')
         .delete()
         .eq('id', id);

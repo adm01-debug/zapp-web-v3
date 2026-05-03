@@ -73,7 +73,7 @@ export function useGamificationMutations(profileId: string | undefined, currentS
         newStreak = 0;
       }
 
-      const { error: res3257Err } = await supabase
+      const { error } = await supabase
         .from('agent_stats')
         .update({ current_streak: newStreak, best_streak: newBestStreak, updated_at: new Date().toISOString() })
         .eq('profile_id', profileId);
@@ -89,7 +89,7 @@ export function useGamificationMutations(profileId: string | undefined, currentS
       const newSent = type === 'sent' ? (currentStats?.messages_sent || 0) + 1 : currentStats?.messages_sent || 0;
       const newReceived = type === 'received' ? (currentStats?.messages_received || 0) + 1 : currentStats?.messages_received || 0;
 
-      const { error: res4065Err } = await supabase
+      const { error } = await supabase
         .from('agent_stats')
         .update({ messages_sent: newSent, messages_received: newReceived, updated_at: new Date().toISOString() })
         .eq('profile_id', profileId);
@@ -104,7 +104,7 @@ export function useGamificationMutations(profileId: string | undefined, currentS
       if (!profileId) throw new Error('No profile ID');
       const newResolutions = (currentStats?.conversations_resolved || 0) + 1;
 
-      const { error: res4680Err } = await supabase
+      const { error } = await supabase
         .from('agent_stats')
         .update({ conversations_resolved: newResolutions, updated_at: new Date().toISOString() })
         .eq('profile_id', profileId);

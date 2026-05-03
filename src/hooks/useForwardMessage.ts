@@ -56,7 +56,7 @@ export function useForwardMessage(
 
   const fetchGroups = async () => {
     try {
-      const { data, error: res1661Err } = await supabase
+      const { data, error } = await supabase
         .from('whatsapp_groups')
         .select('id, name, avatar_url, participant_count')
         .order('name');

@@ -117,7 +117,7 @@ export function TicketHistorySheet({ contactId, open, onOpenChange }: TicketHist
   const { data: profiles = [] } = useQuery<Array<{ id: string; name: string }>>({
     queryKey: ['team-profiles-names'],
     queryFn: async () => {
-      const { data, error: res4727Err } = await supabase.rpc('get_team_profiles');
+      const { data, error } = await supabase.rpc('get_team_profiles');
       if (error) throw error;
       return (data ?? []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }));
     },

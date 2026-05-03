@@ -158,7 +158,7 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
     setOpen(true);
     const startedAt = performance.now();
     try {
-      const { data, error: res6012Err } = await supabase.functions.invoke('webhook-hmac-selftest', {
+      const { data, error } = await supabase.functions.invoke('webhook-hmac-selftest', {
         body: {
           instance: instance ?? 'selftest',
           include_negative: useNegative,

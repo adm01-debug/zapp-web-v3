@@ -76,12 +76,12 @@ export function useClientWallet() {
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
-    const { error: res3253Err } = await supabase.from('client_wallet_rules').update({ is_active: isActive }).eq('id', id);
+    const { error } = await supabase.from('client_wallet_rules').update({ is_active: isActive }).eq('id', id);
     if (!error) setRules(rules.map(r => r.id === id ? { ...r, is_active: isActive } : r));
   };
 
   const handleDeleteRule = async (id: string) => {
-    const { error: res3512Err } = await supabase.from('client_wallet_rules').delete().eq('id', id);
+    const { error } = await supabase.from('client_wallet_rules').delete().eq('id', id);
     if (!error) {
       setRules(rules.filter(r => r.id !== id));
       toast({ title: 'Regra excluída', description: 'A regra foi removida com sucesso.' });

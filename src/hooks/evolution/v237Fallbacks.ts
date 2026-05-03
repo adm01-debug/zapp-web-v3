@@ -78,7 +78,7 @@ export async function fallbackFindChats(instanceName: string, limit = 200): Prom
 
 export async function fallbackFindContacts(instanceName: string, limit = 500): Promise<unknown[]> {
   const client = ensureExternal();
-  const { data, error: res3017Err } = await client.rpc('rpc_list_contacts' as never, {
+  const { data, error } = await client.rpc('rpc_list_contacts' as never, {
     p_instance: instanceName,
     p_lead_status: null,
     p_assigned_to: null,
@@ -92,7 +92,7 @@ export async function fallbackFindContacts(instanceName: string, limit = 500): P
 
 export async function fallbackFetchProfile(remoteJid: string, instanceName: string): Promise<unknown | null> {
   const client = ensureExternal();
-  const { data, error: res3461Err } = await client.rpc('rpc_get_contact' as never, {
+  const { data, error } = await client.rpc('rpc_get_contact' as never, {
     p_remote_jid: remoteJid,
     p_instance: instanceName,
   } as never);

@@ -55,7 +55,7 @@ export function useReportsData() {
         .gte('created_at', previousDateRange.from.toISOString())
         .lte('created_at', previousDateRange.to.toISOString());
       if (selectedAgent !== 'all') query = query.eq('agent_id', selectedAgent);
-      const { data, error: res2295Err } = await query;
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -70,7 +70,7 @@ export function useReportsData() {
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString());
       if (selectedAgent !== 'all') query = query.eq('assigned_to', selectedAgent);
-      const { data, error: res2907Err } = await query;
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -84,7 +84,7 @@ export function useReportsData() {
         .gte('created_at', previousDateRange.from.toISOString())
         .lte('created_at', previousDateRange.to.toISOString());
       if (selectedAgent !== 'all') query = query.eq('assigned_to', selectedAgent);
-      const { data, error: res3531Err } = await query;
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },

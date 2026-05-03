@@ -68,7 +68,7 @@ export function PublicApiDashboard() {
     if (!newToken) return;
     setSaving(true);
     try {
-      const { error: res2366Err } = await supabase
+      const { error } = await supabase
         .from('global_settings')
         .upsert({ key: 'api_token', value: newToken, updated_at: new Date().toISOString() }, { onConflict: 'key' });
       if (error) throw error;

@@ -71,7 +71,7 @@ export function useConversationSummary(workspaceId: string) {
   }, [workspaceId]);
 
   const loadSummary = useCallback(async (conversationId: string) => {
-    const { data, error: res2373Err } = await (supabase as any)
+    const { data, error } = await (supabase as any)
       .from('conversation_summaries')
       .select('*')
       .eq('conversation_id', conversationId)

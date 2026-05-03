@@ -95,7 +95,7 @@ export function useCRUD<T extends BaseEntity>(config: CRUDConfig<T>) {
   const useGetById = (id: string) => useQuery({
     queryKey: [...queryKey, id],
     queryFn: async () => {
-      const { data, error: res2769Err } = await fromTable(tableName)
+      const { data, error } = await fromTable(tableName)
         .select('*')
         .eq('id', id)
         .single();
@@ -107,7 +107,7 @@ export function useCRUD<T extends BaseEntity>(config: CRUDConfig<T>) {
 
   const createMutation = useMutation({
     mutationFn: async (newData: Partial<T>) => {
-      const { data, error: res3063Err } = await fromTable(tableName)
+      const { data, error } = await fromTable(tableName)
         .insert(newData as Record<string, unknown>)
         .select()
         .single();
@@ -123,7 +123,7 @@ export function useCRUD<T extends BaseEntity>(config: CRUDConfig<T>) {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data: updateData }: { id: string; data: Partial<T> }) => {
-      const { data, error: res3631Err } = await fromTable(tableName)
+      const { data, error } = await fromTable(tableName)
         .update(updateData as Record<string, unknown>)
         .eq('id', id)
         .select()
@@ -140,7 +140,7 @@ export function useCRUD<T extends BaseEntity>(config: CRUDConfig<T>) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res4184Err } = await fromTable(tableName)
+      const { error } = await fromTable(tableName)
         .delete()
         .eq('id', id);
       if (error) throw error;
@@ -154,7 +154,7 @@ export function useCRUD<T extends BaseEntity>(config: CRUDConfig<T>) {
 
   const softDeleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res4634Err } = await fromTable(tableName)
+      const { error } = await fromTable(tableName)
         .update({ [softDeleteColumn]: new Date().toISOString() } as Record<string, unknown>)
         .eq('id', id);
       if (error) throw error;
@@ -166,7 +166,7 @@ export function useCRUD<T extends BaseEntity>(config: CRUDConfig<T>) {
   });
 
   const bulkDelete = async (ids: string[]) => {
-    const { error: res5019Err } = await fromTable(tableName)
+    const { error } = await fromTable(tableName)
       .delete()
       .in('id', ids);
     if (error) throw error;

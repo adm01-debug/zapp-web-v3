@@ -296,7 +296,7 @@ export function useConnectionsManager() {
       if (!isOfficial) {
         await createInstance({ instanceName });
       }
-      const { data, error: res11502Err } = await supabase.from('whatsapp_connections').insert({
+      const { data, error } = await supabase.from('whatsapp_connections').insert({
         name: newConnection.name,
         phone_number: newConnection.phone_number,
         instance_id: instanceName,
@@ -325,7 +325,7 @@ export function useConnectionsManager() {
 
   const handleSetApiType = async (connection: WhatsAppConnection, api_type: WhatsAppApiType) => {
     if ((connection.api_type ?? 'evolution') === api_type) return;
-    const { error: res12774Err } = await supabase
+    const { error } = await supabase
       .from('whatsapp_connections')
       .update({ api_type })
       .eq('id', connection.id);
@@ -370,7 +370,7 @@ export function useConnectionsManager() {
     if (!conn.instance_id) return null;
     try {
       const { data: userData , error: userDataErr } = await supabase.auth.getUser();
-      const { data, error: res372Err } = await supabase
+      const { data, error } = await supabase
         .from('qr_attempts')
         .insert({
           connection_id: conn.id,
@@ -414,7 +414,7 @@ export function useConnectionsManager() {
   };
 
   const requestConnectionQr = async (instanceId: string) => {
-    const { data, error: res16074Err } = await supabase.functions.invoke('evolution-api', {
+    const { data, error } = await supabase.functions.invoke('evolution-api', {
       body: { action: 'connect', instanceName: instanceId },
     });
 
@@ -592,7 +592,7 @@ export function useConnectionsManager() {
   const handleDelete = async (connection: WhatsAppConnection) => {
     try {
       if (connection.instance_id) await deleteInstance(connection.instance_id).catch(() => {});
-      const { error: res24122Err } = await supabase.from('whatsapp_connections').delete().eq('id', connection.id);
+      const { error } = await supabase.from('whatsapp_connections').delete().eq('id', connection.id);
       if (!error) {
         setConnections(connections.filter((conn) => conn.id !== connection.id));
         toast({ title: 'Conexão removida', description: 'A conexão foi excluída com sucesso.' });

@@ -28,7 +28,7 @@ export function useCampaigns() {
 
   const createCampaign = useMutation({
     mutationFn: async (campaign: Partial<Campaign>) => {
-      const { data, error: res1036Err } = await supabase
+      const { data, error } = await supabase
         .from('campaigns')
         .insert(campaign as unknown as CampaignInsert)
         .select()
@@ -45,7 +45,7 @@ export function useCampaigns() {
 
   const updateCampaign = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Campaign> & { id: string }) => {
-      const { data, error: res1601Err } = await supabase
+      const { data, error } = await supabase
         .from('campaigns')
         .update(updates as unknown as CampaignUpdate)
         .eq('id', id)
@@ -63,7 +63,7 @@ export function useCampaigns() {
 
   const deleteCampaign = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res2135Err } = await supabase
+      const { error } = await supabase
         .from('campaigns')
         .delete()
         .eq('id', id);
@@ -83,7 +83,7 @@ export function useCampaigns() {
         contact_id: contactId,
         status: 'pending',
       }));
-      const { error: res2794Err } = await supabase
+      const { error } = await supabase
         .from('campaign_contacts')
         .insert(records);
       if (error) throw error;

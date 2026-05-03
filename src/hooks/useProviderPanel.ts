@@ -87,7 +87,7 @@ export function useProviderPanel() {
   };
 
   const deleteProvider = async (id: string) => {
-    const { error: res2798Err } = await supabase.from('provider_configs').delete().eq('id', id);
+    const { error } = await supabase.from('provider_configs').delete().eq('id', id);
     if (error) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
       return;
@@ -97,7 +97,7 @@ export function useProviderPanel() {
   };
 
   const runHealthcheck = async () => {
-    const { data, error: res3110Err } = await supabase.functions.invoke('provider-healthcheck', { body: {} });
+    const { data, error } = await supabase.functions.invoke('provider-healthcheck', { body: {} });
     if (error) {
       toast({ title: 'Falha no healthcheck', description: error.message, variant: 'destructive' });
       return;

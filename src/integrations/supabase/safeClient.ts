@@ -90,7 +90,7 @@ export const safeClient = {
         }
       }
 
-      const { data, error: res3225Err } = await queryBuilder(supabase.from(table) as any).single();
+      const { data, error } = await queryBuilder(supabase.from(table) as any).single();
       if (error) {
         this.log(requestId, 'error', `Erro single query ${table}`, error);
         this.recordFailure(requestId, 'single', table, error.message || 'Erro desconhecido');
@@ -126,7 +126,7 @@ export const safeClient = {
         }
       }
 
-      const { data, error: res4764Err } = await (supabase as any).rpc(name, params);
+      const { data, error } = await (supabase as any).rpc(name, params);
       if (error) {
         this.log(requestId, 'error', `Erro ao executar RPC ${name}`, error);
         this.recordFailure(requestId, 'rpc', name, error.message || 'Erro desconhecido');
@@ -162,10 +162,10 @@ export const safeClient = {
     try {
       let exists = false;
       if (type === 'table') {
-        const { error: res6110Err } = await (supabase.from(name) as any).select('count', { count: 'exact', head: true }).limit(0);
+        const { error } = await (supabase.from(name) as any).select('count', { count: 'exact', head: true }).limit(0);
         exists = !error || !error.message || !error.message.toLowerCase().includes('does not exist');
       } else {
-        const { error: res6346Err } = await (supabase as any).rpc(name).limit(0);
+        const { error } = await (supabase as any).rpc(name).limit(0);
         if (!error) {
           exists = true;
         } else {

@@ -97,7 +97,7 @@ export function RateLimitConfigPanel() {
         is_active: r.is_active,
       }));
 
-      const { error: res3508Err } = await supabase.from('rate_limit_configs').insert(toInsert);
+      const { error } = await supabase.from('rate_limit_configs').insert(toInsert);
       if (error) throw error;
 
       toast.success('Regras de rate limit salvas!');

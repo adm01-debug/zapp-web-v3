@@ -41,7 +41,7 @@ export function useReactionMutations(
 
       const contactId = await resolveMessageContactId();
 
-      const { data, error: res1234Err } = await supabase
+      const { data, error } = await supabase
         .from('message_reactions')
         .upsert(
           { message_id: messageId, user_id: profileId, contact_id: contactId, emoji },
@@ -84,7 +84,7 @@ export function useReactionMutations(
     mutationFn: async (emoji: string) => {
       if (!profileId) throw new Error('Perfil não encontrado');
 
-      const { error: res2551Err } = await supabase
+      const { error } = await supabase
         .from('message_reactions')
         .delete()
         .eq('message_id', messageId)

@@ -88,7 +88,7 @@ async function checkSupabase(): Promise<HealthCheck> {
 async function checkAuth(): Promise<HealthCheck> {
   const start = performance.now();
   try {
-    const { data, error: res2428Err } = await supabase.auth.getSession();
+    const { data, error } = await supabase.auth.getSession();
     const latency = Math.round(performance.now() - start);
 
     return {

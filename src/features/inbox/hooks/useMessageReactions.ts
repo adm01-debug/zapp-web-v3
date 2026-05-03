@@ -54,7 +54,7 @@ export function useMessageReactions(messageId: string, options?: UseMessageReact
   const { data: reactions = [], isLoading, refetch } = useQuery({
     queryKey: ['message-reactions', messageId],
     queryFn: async () => {
-      const { data, error: res2089Err } = await supabase
+      const { data, error } = await supabase
         .from('message_reactions')
         .select('*')
         .eq('message_id', messageId);

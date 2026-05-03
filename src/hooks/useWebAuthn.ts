@@ -152,7 +152,7 @@ export function useWebAuthn() {
     if (!user) return { success: false };
     setLoading(true);
     try {
-      const { error: res7166Err } = await supabase.from('passkey_credentials').delete().eq('id', passkeyId).eq('user_id', user.id);
+      const { error } = await supabase.from('passkey_credentials').delete().eq('id', passkeyId).eq('user_id', user.id);
       if (error) throw error;
       toast.success('Passkey removida com sucesso');
       await fetchPasskeys();
@@ -167,7 +167,7 @@ export function useWebAuthn() {
   const renamePasskey = useCallback(async (passkeyId: string, newName: string) => {
     if (!user) return { success: false };
     try {
-      const { error: res7788Err } = await supabase.from('passkey_credentials').update({ friendly_name: newName }).eq('id', passkeyId).eq('user_id', user.id);
+      const { error } = await supabase.from('passkey_credentials').update({ friendly_name: newName }).eq('id', passkeyId).eq('user_id', user.id);
       if (error) throw error;
       toast.success('Passkey renomeada');
       await fetchPasskeys();

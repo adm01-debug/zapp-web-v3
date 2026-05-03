@@ -83,7 +83,7 @@ export function WhatsAppFlowsBuilder() {
         { id: crypto.randomUUID(), type: 'Footer', label: 'Continuar' },
       ],
     }];
-    const { error: res3345Err } = await supabase.from('whatsapp_flows').insert({
+    const { error } = await supabase.from('whatsapp_flows').insert({
       name: formName, description: formDescription || null,
       screens: defaultScreens as unknown as Json,
     });

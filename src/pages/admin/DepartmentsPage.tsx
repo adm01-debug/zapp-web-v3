@@ -172,7 +172,7 @@ export default function DepartmentsPage() {
   const handleDelete = async () => {
     if (!toDelete) return;
     setSaving(true);
-    const { error: res4588Err } = await supabase.from('departments').delete().eq('id', toDelete.id);
+    const { error } = await supabase.from('departments').delete().eq('id', toDelete.id);
     setSaving(false);
 
     if (error) {

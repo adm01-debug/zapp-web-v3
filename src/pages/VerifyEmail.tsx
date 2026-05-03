@@ -68,7 +68,7 @@ export default function VerifyEmail() {
   }, [searchParams]);
 
   const handleResendEmail = async () => {
-    const { error: res2278Err } = await supabase.auth.resend({
+    const { error } = await supabase.auth.resend({
       type: 'signup',
       email: email,
     });

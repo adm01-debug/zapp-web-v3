@@ -56,7 +56,7 @@ export function ScheduledReportConfigs() {
 
   const toggleConfig = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error: res1816Err } = await supabase
+      const { error } = await supabase
         .from('scheduled_report_configs')
         .update({ is_active })
         .eq('id', id);
@@ -69,7 +69,7 @@ export function ScheduledReportConfigs() {
 
   const deleteConfig = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res2183Err } = await supabase
+      const { error } = await supabase
         .from('scheduled_report_configs')
         .delete()
         .eq('id', id);

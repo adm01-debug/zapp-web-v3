@@ -52,7 +52,7 @@ export async function downloadAttachment(
   messageId: string,
   attachmentId: string,
 ): Promise<GmailApiResponse<{ data: string; mimeType: string; size: number }>> {
-  const { data, error: res1721Err } = await supabase.functions.invoke('gmail-sync', {
+  const { data, error } = await supabase.functions.invoke('gmail-sync', {
     body: { action: 'downloadAttachment', accountId, messageId, attachmentId },
   });
 
@@ -68,7 +68,7 @@ export async function createGmailLabel(
   name: string,
   color?: { backgroundColor: string; textColor: string },
 ): Promise<GmailApiResponse<{ labelId: string; name: string }>> {
-  const { data, error: res2255Err } = await supabase.functions.invoke('gmail-sync', {
+  const { data, error } = await supabase.functions.invoke('gmail-sync', {
     body: { action: 'createLabel', accountId, name, color },
   });
 
@@ -83,7 +83,7 @@ export async function moveThreadToTrash(
   accountId: string,
   gmailThreadId: string,
 ): Promise<GmailApiResponse<{ success: boolean }>> {
-  const { data, error: res2712Err } = await supabase.functions.invoke('gmail-send', {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
     body: { action: 'moveToTrash', accountId, threadId: gmailThreadId },
   });
 
@@ -100,7 +100,7 @@ export async function modifyThreadLabels(
   addLabels: string[],
   removeLabels: string[],
 ): Promise<GmailApiResponse<{ success: boolean }>> {
-  const { data, error: res3239Err } = await supabase.functions.invoke('gmail-send', {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
     body: {
       action: 'modifyLabels',
       accountId,
@@ -120,7 +120,7 @@ export async function modifyThreadLabels(
 export async function renewGmailWatch(
   accountId: string,
 ): Promise<GmailApiResponse<{ watchExpiry: string; historyId: string }>> {
-  const { data, error: res3810Err } = await supabase.functions.invoke('gmail-webhook', {
+  const { data, error } = await supabase.functions.invoke('gmail-webhook', {
     body: { action: 'renewWatch', accountId },
   });
 
@@ -134,7 +134,7 @@ export async function renewGmailWatch(
 export async function listGmailLabels(
   accountId: string,
 ): Promise<GmailApiResponse<Array<{ id: string; name: string; type: 'system' | 'user'; color?: unknown }>>> {
-  const { data, error: res4289Err } = await supabase.functions.invoke('gmail-sync', {
+  const { data, error } = await supabase.functions.invoke('gmail-sync', {
     body: { action: 'listLabels', accountId },
   });
 
@@ -155,7 +155,7 @@ export async function createDraft(
     threadId?: string;
   },
 ): Promise<GmailApiResponse<{ draftId: string }>> {
-  const { data, error: res4831Err } = await supabase.functions.invoke('gmail-send', {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
     body: { action: 'createDraft', accountId, ...params },
   });
 
@@ -176,7 +176,7 @@ export async function updateDraft(
     bodyHtml?: string;
   },
 ): Promise<GmailApiResponse<{ success: boolean }>> {
-  const { data, error: res5390Err } = await supabase.functions.invoke('gmail-send', {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
     body: { action: 'updateDraft', accountId, draftId, ...params },
   });
 
@@ -191,7 +191,7 @@ export async function sendDraft(
   accountId: string,
   draftId:   string,
 ): Promise<GmailApiResponse<{ messageId: string }>> {
-  const { data, error: res5844Err } = await supabase.functions.invoke('gmail-send', {
+  const { data, error } = await supabase.functions.invoke('gmail-send', {
     body: { action: 'sendDraft', accountId, draftId },
   });
 
@@ -206,7 +206,7 @@ export async function sendDraft(
 export async function gmailRefreshToken(
   accountId: string,
 ): Promise<GmailApiResponse<{ accessToken: string; expiresAt: string }>> {
-  const { data, error: res6362Err } = await supabase.functions.invoke('gmail-token-refresh', {
+  const { data, error } = await supabase.functions.invoke('gmail-token-refresh', {
     body: { accountId },
   });
 
@@ -220,7 +220,7 @@ export async function gmailRefreshToken(
 export async function gmailRevokeAccount(
   accountId: string,
 ): Promise<GmailApiResponse<{ success: boolean }>> {
-  const { data, error: res6813Err } = await supabase.functions.invoke('gmail-oauth', {
+  const { data, error } = await supabase.functions.invoke('gmail-oauth', {
     body: { action: 'revoke', accountId },
   });
 

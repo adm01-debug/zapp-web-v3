@@ -75,7 +75,7 @@ export function FollowUpSequences() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      const { error: res3056Err } = await supabase.from('followup_sequences').update({ is_active: isActive }).eq('id', id);
+      const { error } = await supabase.from('followup_sequences').update({ is_active: isActive }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['followup-sequences'] }),
@@ -83,7 +83,7 @@ export function FollowUpSequences() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res3381Err } = await supabase.from('followup_sequences').delete().eq('id', id);
+      const { error } = await supabase.from('followup_sequences').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {

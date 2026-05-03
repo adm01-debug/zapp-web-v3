@@ -92,7 +92,7 @@ export function VisibilityGrantsManager() {
       grantedBy = profile?.id;
     }
 
-    const { error: res94Err } = await supabase
+    const { error } = await supabase
       .from('agent_visibility_grants')
       .insert({
         agent_id: selectedSpecialAgent,
@@ -115,7 +115,7 @@ export function VisibilityGrantsManager() {
   };
 
   const handleRemoveGrant = async (grantId: string) => {
-    const { error: res3687Err } = await supabase
+    const { error } = await supabase
       .from('agent_visibility_grants')
       .delete()
       .eq('id', grantId);

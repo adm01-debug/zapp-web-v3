@@ -216,7 +216,7 @@ function PmlPanel() {
       .limit(100);
     if (status !== "all") q = q.eq("delivery_status", status);
     if (search.trim()) q = q.ilike("instance_name", `%${search.trim()}%`);
-    const { data, error: res6888Err } = await q;
+    const { data, error } = await q;
     if (error) toast.error("Erro ao carregar PML: " + error.message);
     setRows((data as PmlRow[]) ?? []);
     setLoading(false);

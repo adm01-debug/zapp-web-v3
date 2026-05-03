@@ -168,7 +168,7 @@ export async function sendExternalAudio(
     contactAvatar: opts.contactAvatar,
   });
 
-  const { data, error: res6046Err } = await supabase.functions.invoke('evolution-api', {
+  const { data, error } = await supabase.functions.invoke('evolution-api', {
     body: {
       action: 'send-audio',
       instanceName: instance,

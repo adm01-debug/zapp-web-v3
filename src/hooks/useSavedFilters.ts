@@ -76,7 +76,7 @@ export function useSavedFilters(entityType: string) {
           .eq('entity_type', entityType);
       }
 
-      const { data, error: res2216Err } = await supabase
+      const { data, error } = await supabase
         .from('saved_filters')
         .insert({
           user_id: user.id,
@@ -105,7 +105,7 @@ export function useSavedFilters(entityType: string) {
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...input }: SaveFilterInput & { id: string }) => {
       const updateData = { ...input, filters: input.filters as unknown as import('@/integrations/supabase/types').Json };
-      const { error: res3197Err } = await supabase
+      const { error } = await supabase
         .from('saved_filters')
         .update(updateData)
         .eq('id', id);
@@ -121,7 +121,7 @@ export function useSavedFilters(entityType: string) {
   // Deletar filtro
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res3592Err } = await supabase
+      const { error } = await supabase
         .from('saved_filters')
         .delete()
         .eq('id', id);
@@ -151,7 +151,7 @@ export function useSavedFilters(entityType: string) {
         .eq('entity_type', entityType);
       
       // Define novo padrão
-      const { error: res4428Err } = await supabase
+      const { error } = await supabase
         .from('saved_filters')
         .update({ is_default: true })
         .eq('id', id);
@@ -167,7 +167,7 @@ export function useSavedFilters(entityType: string) {
   // Alternar compartilhamento
   const shareMutation = useMutation({
     mutationFn: async ({ id, is_shared }: { id: string; is_shared: boolean }) => {
-      const { error: res4890Err } = await supabase
+      const { error } = await supabase
         .from('saved_filters')
         .update({ is_shared })
         .eq('id', id);

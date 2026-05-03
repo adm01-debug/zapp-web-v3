@@ -79,7 +79,7 @@ export function useCSAT(period: 'today' | 'week' | 'month' = 'month') {
 
   const submitSurvey = useMutation({
     mutationFn: async (data: { contact_id: string; agent_id?: string; rating: number; feedback?: string }) => {
-      const { error: res2423Err } = await supabase.from('csat_surveys').insert({
+      const { error } = await supabase.from('csat_surveys').insert({
         contact_id: data.contact_id,
         agent_id: data.agent_id || null,
         rating: data.rating,

@@ -127,7 +127,7 @@ export function useTags() {
   // Delete tag mutation
   const deleteMutation = useMutation({
     mutationFn: async (tagId: string) => {
-      const { error: res3599Err } = await supabase
+      const { error } = await supabase
         .from('tags')
         .delete()
         .eq('id', tagId);
@@ -173,7 +173,7 @@ export function useContactTags(contactId: string | undefined) {
     queryFn: async () => {
       if (!contactId) return [];
 
-      const { data, error: res4775Err } = await supabase
+      const { data, error } = await supabase
         .from('contact_tags')
         .select('tag_id, tags(*)')
         .eq('contact_id', contactId);
@@ -188,7 +188,7 @@ export function useContactTags(contactId: string | undefined) {
     mutationFn: async (tagId: string) => {
       if (!contactId) throw new Error('Contact ID is required');
 
-      const { error: res5206Err } = await supabase
+      const { error } = await supabase
         .from('contact_tags')
         .insert({ contact_id: contactId, tag_id: tagId });
 
@@ -204,7 +204,7 @@ export function useContactTags(contactId: string | undefined) {
     mutationFn: async (tagId: string) => {
       if (!contactId) throw new Error('Contact ID is required');
 
-      const { error: res5701Err } = await supabase
+      const { error } = await supabase
         .from('contact_tags')
         .delete()
         .eq('contact_id', contactId)
