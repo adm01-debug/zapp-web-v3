@@ -14,7 +14,7 @@ interface UseChatPanelHandlersOptions {
   contactId: string;
   contactPhone: string;
   instanceName?: string;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string, attachments?: File[]) => void;
   editMessageApi: (instance: string, params: { number: string; messageId: string; text: string }) => Promise<any>;
   applySignature: (text: string) => string;
   handleTypingStart: () => void;
@@ -83,7 +83,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
   const handleCancelEdit = useCallback(() => { setEditingMessage(null); setInputValue(''); }, []);
 
   // handleSend now reads from refs → deps are stable → no re-render cascade
-  const handleSend = useCallback(async () => {
+  const handleSend = useCallback(async (attachments?: File[]) => {
     const currentInput = inputValueRef.current;
     if (!currentInput.trim() || isSendingRef.current) return;
 
@@ -114,6 +114,9 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
 
     try {
       if (isWhisperRef.current) {
+        if (attachments && attachments.length > 0) {
+          toast({ title: 'Aviso', description: 'Arquivos não são suportados em modo sussurro no momento.', variant: 'destructive' });
+        }
         if (!profile?.id) throw new Error('Usuário não autenticado');
         const { error } = await supabase.from('whisper_messages').insert({
           contact_id: opts.contactId,
@@ -125,7 +128,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
         toast({ title: '🤫 Sussurro enviado', description: 'Nota interna registrada com sucesso.' });
         setIsWhisper(false); // Reset whisper mode after sending
       } else {
-        await Promise.resolve(onSendMessage(messageContent));
+        await Promise.resolve(onSendMessage(messageContent, attachments));
       }
       lastFailedPayloadRef.current = null;
       undoToast({
