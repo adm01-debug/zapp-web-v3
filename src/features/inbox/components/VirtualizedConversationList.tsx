@@ -52,23 +52,67 @@ export function VirtualizedConversationList({ conversations, selectedId, onSelec
 
   return (
     <div className="flex flex-col h-full bg-sidebar border-r border-border/30">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className={cn("p-4 border-b border-border/20", compactMode ? "space-y-2" : "space-y-4")}>
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.4, ease: "easeOut" }} 
+        className={cn("p-5 border-b border-border/10 bg-sidebar/50 backdrop-blur-md sticky top-0 z-20", compactMode ? "space-y-3" : "space-y-5")}
+      >
         <div className="flex items-center justify-between">
-          <h2 className={cn("font-semibold text-foreground", compactMode ? "text-base" : "text-lg")}>Conversas</h2>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button variant="ghost" size="icon" className="hover:bg-primary/10 text-muted-foreground hover:text-foreground"><Filter className="w-4 h-4" /></Button>
-          </motion.div>
+          <h2 className={cn("font-display font-bold tracking-tight text-foreground/90", compactMode ? "text-lg" : "text-xl")}>
+            Conversas
+          </h2>
+          <div className="flex items-center gap-1">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-primary/10 text-muted-foreground transition-all">
+                <Filter className="w-3.5 h-3.5" />
+              </Button>
+            </motion.div>
+          </div>
         </div>
+
         <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-          <Input placeholder="Buscar conversas..." value={search} onChange={(e) => setSearch(e.target.value)} className={cn("pl-9 bg-muted/30 border-border/30 focus:border-primary/50 focus:ring-primary/20 transition-all", compactMode && "h-8 text-sm")} />
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+            <Search className="w-3.5 h-3.5 text-muted-foreground/50 transition-colors group-focus-within:text-primary group-focus-within:scale-110 duration-300" />
+          </div>
+          <Input 
+            placeholder="Buscar por nome ou telefone..." 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)} 
+            className={cn(
+              "pl-10 h-9 bg-muted/20 border-border/20 rounded-full text-xs font-light tracking-tight transition-all duration-300",
+              "placeholder:text-muted-foreground/40",
+              "focus:bg-background focus:border-primary/30 focus:ring-4 focus:ring-primary/5 shadow-sm",
+              compactMode && "h-8"
+            )} 
+          />
         </div>
+
         <Tabs value={filter} onValueChange={setFilter} className="w-full">
-          <TabsList className={cn("w-full grid grid-cols-4 bg-muted/30 border border-border/20", compactMode && "h-8")}>
-            <TabsTrigger value="all" className={cn("text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", compactMode && "text-[10px] py-1")}>Todas ({counts.all})</TabsTrigger>
-            <TabsTrigger value="open" className={cn("text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", compactMode && "text-[10px] py-1")}>Abertas ({counts.open})</TabsTrigger>
-            <TabsTrigger value="pending" className={cn("text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", compactMode && "text-[10px] py-1")}>Pendentes ({counts.pending})</TabsTrigger>
-            <TabsTrigger value="waiting" className={cn("text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", compactMode && "text-[10px] py-1")}>Aguardando ({counts.waiting})</TabsTrigger>
+          <TabsList className={cn(
+            "w-full h-9 p-1 bg-muted/20 border-none rounded-lg gap-1", 
+            compactMode && "h-8"
+          )}>
+            {[
+              { id: 'all', label: 'Todas', count: counts.all },
+              { id: 'open', label: 'Abertas', count: counts.open },
+              { id: 'pending', label: 'Pendentes', count: counts.pending },
+              { id: 'waiting', label: 'Aguardando', count: counts.waiting }
+            ].map((t) => (
+              <TabsTrigger 
+                key={t.id}
+                value={t.id} 
+                className={cn(
+                  "flex-1 text-[11px] font-normal tracking-tight rounded-md transition-all duration-300",
+                  "data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium",
+                  "text-muted-foreground/70 hover:text-foreground/80",
+                  compactMode && "text-[9px] py-0.5"
+                )}
+              >
+                {t.label}
+                <span className="ml-1 opacity-50 font-light text-[10px]">{t.count}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
       </motion.div>
