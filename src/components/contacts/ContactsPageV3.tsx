@@ -56,21 +56,13 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
   useEffect(() => { loadContacts(); }, [loadContacts]);
 
   // Selection
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }, []);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const selectAll = useCallback(() => {
-    setSelectedIds(new Set(contacts.map((c) => c.id)));
+    setSelectedIds(contacts.map((c) => c.id));
   }, [contacts]);
 
-  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+  const clearSelection = useCallback(() => setSelectedIds([]), []);
 
   // Undo-aware delete
   const { softDeleteWithUndo } = useContactUndo({
