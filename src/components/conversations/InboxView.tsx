@@ -69,41 +69,55 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
         {selectedConv ? (
           <>
-            <div className="flex items-center justify-between px-4 py-3 border-b gap-2 shrink-0">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-sm truncate">
-                    {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid?.replace(/@.*$/, '') ?? 'Conversa')}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b gap-2 shrink-0 bg-background/95 backdrop-blur-sm z-10">
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar className="h-10 w-10 border border-border shrink-0">
+                  {selectedConv.contact_avatar && <AvatarImage src={selectedConv.contact_avatar} alt="" className="object-cover" />}
+                  <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
+                    {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid ?? '?').split(' ').filter(Boolean).slice(0,2).map(n => n[0].toUpperCase()).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-sm truncate leading-tight">
+                      {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid?.split('@')[0] ?? 'Conversa')}
+                    </p>
+                    {selectedConv.is_bot_active && (
+                      <Badge className="text-[10px] bg-blue-100 text-blue-700 h-4 px-1.5 border-none font-bold uppercase tracking-wider">Bot</Badge>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-tight">
+                    {formatPhoneForDisplay(selectedConv.contact_phone ?? selectedConv.remote_jid?.split('@')[0] ?? '')}
                   </p>
-                  <Badge className={`text-xs px-1.5 py-0 h-4 border ${PRIORITY_COLORS[selectedConv.priority] ?? ''}`}>
-                    {selectedConv.priority}
-                  </Badge>
-                  {selectedConv.is_bot_active && <Badge className="text-xs bg-blue-100 text-blue-700 h-4 px-1.5">Bot</Badge>}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {formatPhoneForDisplay(selectedConv.contact_phone ?? selectedConv.remote_jid?.replace(/@.*$/, '') ?? '')}
-                </p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button variant={showContact ? 'default' : 'ghost'} size="icon" className="h-8 w-8"
+                <Button variant={showContact ? 'default' : 'ghost'} size="icon" className="h-9 w-9 rounded-full"
                   onClick={() => setShowContact((v) => !v)} aria-pressed={showContact} title="CRM 360°">
-                  <Users className="h-4 w-4" />
+                  <Users className="h-4.5 w-4.5" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full"><MoreHorizontal className="h-4.5 w-4.5" /></Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="w-48">
                     {selectedConv.status === 'open' && (
-                      <DropdownMenuItem onClick={handleClose} disabled={closing} className="gap-2">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />{closing ? 'Encerrando...' : 'Encerrar'}
+                      <DropdownMenuItem onClick={handleClose} disabled={closing} className="gap-2 py-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span className="font-medium text-sm">{closing ? 'Encerrando...' : 'Encerrar conversa'}</span>
                       </DropdownMenuItem>
                     )}
                     {selectedConv.status === 'closed' && (
-                      <DropdownMenuItem className="gap-2"><RotateCcw className="h-3.5 w-3.5" />Reabrir</DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 py-2">
+                        <RotateCcw className="h-4 w-4" />
+                        <span className="font-medium text-sm">Reabrir conversa</span>
+                      </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="gap-2"><UserCheck className="h-3.5 w-3.5" />Atribuir agente</DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 py-2">
+                      <UserCheck className="h-4 w-4" />
+                      <span className="font-medium text-sm">Atribuir a um agente</span>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
