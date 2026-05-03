@@ -13,13 +13,13 @@ import { useMediaRefresh } from '@/features/inbox';
 
 function getFileIcon(fileName: string, mimeType?: string) {
   const extension = getFileExtension(fileName).toLowerCase();
-  if (['pdf'].includes(extension)) return <FileText className="w-8 h-8 text-destructive" />;
-  if (['doc', 'docx'].includes(extension)) return <FileText className="w-8 h-8 text-info" />;
-  if (['xls', 'xlsx'].includes(extension)) return <FileSpreadsheet className="w-8 h-8 text-success" />;
-  if (['ppt', 'pptx'].includes(extension)) return <FileText className="w-8 h-8 text-warning" />;
-  if (['zip', 'rar', '7z'].includes(extension)) return <FileArchive className="w-8 h-8 text-warning" />;
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return <FileImage className="w-8 h-8 text-primary" />;
-  return <File className="w-8 h-8 text-muted-foreground" />;
+  if (['pdf'].includes(extension)) return <FileText className="w-8 h-8 text-[#f1592a]" />;
+  if (['doc', 'docx'].includes(extension)) return <FileText className="w-8 h-8 text-[#2b72c4]" />;
+  if (['xls', 'xlsx'].includes(extension)) return <FileSpreadsheet className="w-8 h-8 text-[#1d6f42]" />;
+  if (['ppt', 'pptx'].includes(extension)) return <FileText className="w-8 h-8 text-[#d24726]" />;
+  if (['zip', 'rar', '7z'].includes(extension)) return <FileArchive className="w-8 h-8 text-[#f8bc34]" />;
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return <FileImage className="w-8 h-8 text-[#aebac1]" />;
+  return <File className="w-8 h-8 text-[#aebac1]" />;
 }
 
 // Document Preview Component
@@ -49,35 +49,30 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
   };
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
+    <div
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg min-w-[240px] max-w-[300px] cursor-pointer transition-all",
-        isSent ? "bg-primary-foreground/10 hover:bg-primary-foreground/15" : "bg-muted/50 hover:bg-muted/70 border border-border/30"
+        "flex items-center gap-3 p-2.5 rounded-md min-w-[240px] max-w-[320px] cursor-pointer transition-colors",
+        isSent ? "bg-[#005c4b]" : "bg-[#202c33] border border-[#222d34]"
       )}
       onClick={handleOpen}
     >
-      <div className={cn("flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center", isSent ? "bg-primary-foreground/20" : "bg-card")}>
+      <div className={cn("flex-shrink-0 w-12 h-12 rounded-md flex items-center justify-center bg-[#111b21]")}>
         {getFileIcon(fileName)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className={cn("text-sm font-medium truncate", isSent ? "text-primary-foreground" : "text-foreground")}>{fileName}</p>
-        <div className={cn("flex items-center gap-2 text-xs", isSent ? "text-primary-foreground/70" : "text-muted-foreground")}>
+        <p className="text-sm font-normal text-[#e9edef] truncate">{fileName}</p>
+        <div className="flex items-center gap-2 text-[12px] text-[#8696a0]">
           <span className="font-medium">{extension}</span>
           {fileSize && (<><span>•</span><span>{formatFileSize(fileSize)}</span></>)}
         </div>
       </div>
-      <motion.button
-        whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+      <button
         onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-        className={cn(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors",
-          isSent ? "bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground" : "bg-primary/10 hover:bg-primary/20 text-primary"
-        )}
+        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-[#aebac1] hover:bg-white/10"
       >
         {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-      </motion.button>
-    </motion.div>
+      </button>
+    </div>
   );
 }
 
@@ -177,8 +172,8 @@ export function StickerPreview({ url, isSent }: StickerPreviewProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   return (
     <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} className="relative">
-      {!isLoaded && <div className="w-[120px] h-[120px] bg-muted animate-pulse rounded-lg" />}
-      <motion.img src={url} alt="Sticker" onLoad={() => setIsLoaded(true)} whileHover={{ scale: 1.1 }} className={cn("max-w-[120px] max-h-[120px] object-contain", !isLoaded && "hidden")} />
+      {!isLoaded && <div className="w-[120px] h-[120px] bg-[#202c33] animate-pulse rounded-md" />}
+      <motion.img src={url} alt="Sticker" onLoad={() => setIsLoaded(true)} whileHover={{ scale: 1.05 }} className={cn("max-w-[120px] max-h-[120px] object-contain", !isLoaded && "hidden")} />
     </motion.div>
   );
 }
