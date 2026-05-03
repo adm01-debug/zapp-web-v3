@@ -395,10 +395,60 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     () => messages.map(m => ({ id: m.id, content: m.content, sender: m.sender, timestamp: m.timestamp.toISOString() })),
     [messages]
   );
-  const filteredQuickReplies = useMemo(
-    () => dbQuickReplies.filter(r => handlers.inputValue.startsWith('/') && r.shortcut.toLowerCase().includes(handlers.inputValue.toLowerCase())),
-    [dbQuickReplies, handlers.inputValue]
-  );
+  const handleQuickReply = useCallback((reply: any) => {
+    handlers.setInputValue(reply.content);
+    closeDialog('quickReplies');
+    setTimeout(() => handlers.inputRef.current?.focus(), 10);
+    incrementUseCount(reply.id);
+  }, [handlers.setInputValue, closeDialog, incrementUseCount]);
+
+  const filteredQuickReplies = useMemo(() => {
+    if (!handlers.inputValue.startsWith('/')) return [];
+    const query = handlers.inputValue.slice(1).toLowerCase();
+    return dbQuickReplies.filter(r => 
+      r.shortcut.toLowerCase().includes(query) || 
+      r.title.toLowerCase().includes(query)
+    );
+  }, [dbQuickReplies, handlers.inputValue]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (dialogs.quickReplies && filteredQuickReplies.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedQuickReplyIndex(prev => (prev + 1) % filteredQuickReplies.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedQuickReplyIndex(prev => (prev - 1 + filteredQuickReplies.length) % filteredQuickReplies.length);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const selected = filteredQuickReplies[selectedQuickReplyIndex];
+        if (selected) handleQuickReply(selected);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeDialog('quickReplies');
+        return;
+      }
+    }
+    handlers.handleKeyDown(e, dialogs.slashCommands);
+  }, [dialogs.quickReplies, dialogs.slashCommands, filteredQuickReplies, selectedQuickReplyIndex, handlers.handleKeyDown, handleQuickReply, closeDialog]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    handlers.handleInputChange(e);
+    
+    if (value.startsWith('/')) {
+      if (!dialogs.quickReplies) openDialog('quickReplies');
+      setSelectedQuickReplyIndex(0);
+    } else if (dialogs.quickReplies) {
+      closeDialog('quickReplies');
+    }
+  }, [handlers.handleInputChange, dialogs.quickReplies, openDialog, closeDialog]);
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key === 'f') { e.preventDefault(); handleSetActiveTool('chatSearch'); } };
