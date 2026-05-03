@@ -62,7 +62,7 @@ export function ChatHeader({
   conversation, messages, isContactTyping, showAIAssistant, showDetails,
   voiceId, onToggleAIAssistant, onToggleDetails, onStartCall, onOpenSearch,
   onOpenTransfer, onOpenSchedule, onVoiceChange, onBack, onCloseConversation,
-  onGenerateSummary, failuresOnly, onToggleFailuresOnly, failuresCount,
+  onGenerateSummary, failuresOnly, onToggleFailuresOnly, failuresCount, onOpenWhisper, whisperCount,
 }: ChatHeaderProps) {
   const { data: crmData } = useExternalContact360(isExternalConfigured ? conversation.contact.phone : undefined);
   const crmCompany = crmData?.found ? crmData.company : null;
