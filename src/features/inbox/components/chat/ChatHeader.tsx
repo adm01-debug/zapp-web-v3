@@ -112,15 +112,12 @@ export function ChatHeader({
               </Badge>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center h-4">
             {isContactTyping ? (
-              <span className="text-[11px] text-primary font-medium">digitando...</span>
+              <span className="text-[11px] text-primary font-medium animate-pulse">digitando...</span>
             ) : (
               <span className="text-[11px] text-muted-foreground/60">{conversation.contact.phone}</span>
             )}
-            <Badge variant="outline" className={cn('text-[9px] h-4 px-1 capitalize border border-border/20 bg-muted/20 text-muted-foreground')}>
-              {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
-            </Badge>
           </div>
         </div>
       </div>
