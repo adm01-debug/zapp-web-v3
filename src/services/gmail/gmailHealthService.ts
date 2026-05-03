@@ -35,7 +35,7 @@ export class GmailHealthService {
 
   getFailures(filters: GmailHealthFilters = {}): { items: GmailFailure[], total: number } {
     const telemetry = this.repository.getLocalTelemetry();
-    let failures: GmailFailure[] = telemetry.recentFailures;
+    let failures: GmailFailure[] = Array.isArray(telemetry?.recentFailures) ? telemetry.recentFailures : [];
 
     if (filters.requestId) {
       failures = failures.filter(f => f.requestId.includes(filters.requestId!));
@@ -61,6 +61,7 @@ export class GmailHealthService {
   }
 
   private calculateStatus(failures: GmailFailure[]): 'healthy' | 'degraded' | 'error' {
+    if (!Array.isArray(failures)) return 'error';
     const count = failures.length;
     if (count > 10) return 'error';
     if (count > 0) return 'degraded';
