@@ -52,7 +52,7 @@ export function ContactListItem({
       {/* Avatar with company logo overlay */}
       <div className="relative shrink-0">
         <motion.div layoutId={`avatar-${contact.id}`}>
-          <Avatar className="w-11 h-11">
+          <Avatar className="w-[53px] h-[53px]">
             <AvatarImage src={contact.avatar_url || undefined} />
             <AvatarFallback className={cn('font-semibold text-sm', avatarColors.bg, avatarColors.text)}>
               {getInitials(contact.name)}
