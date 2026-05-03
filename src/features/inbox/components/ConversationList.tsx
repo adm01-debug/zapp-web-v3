@@ -99,52 +99,52 @@ export function ConversationList({
   }, [conversations]);
 
   return (
-    <div className="flex flex-col h-full bg-sidebar border-r border-border/30">
+    <div className="flex flex-col h-full bg-[#111b21] border-r border-[#222d34]">
       {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="p-4 border-b border-border/20 space-y-4"
-      >
+      <div className="p-3 border-b border-[#222d34] bg-[#111b21] space-y-3 shrink-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Conversas</h2>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className="hover:bg-primary/10 text-muted-foreground hover:text-foreground">
+          <h2 className="text-xl font-bold text-[#e9edef]">Conversas</h2>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className="w-8 h-8 rounded-full text-[#8696a0] hover:bg-[#2a3942] hover:text-[#e9edef]">
               <Filter className="w-4 h-4" />
             </Button>
-          </motion.div>
+          </div>
         </div>
 
         {/* Search */}
         <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+            <Search className="w-4 h-4 text-[#8696a0] group-focus-within:text-[#00a884] transition-colors" />
+          </div>
           <Input
             placeholder="Buscar conversas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-muted/30 border-border/30 focus:border-primary/50 focus:ring-primary/20 transition-all"
+            className="pl-10 pr-4 h-[35px] bg-[#202c33] border-none rounded-lg text-sm text-[#e9edef] placeholder:text-[#8696a0] focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           />
         </div>
 
         {/* Tabs */}
         <Tabs value={filter} onValueChange={setFilter} className="w-full">
-          <TabsList className="w-full grid grid-cols-4 bg-muted/30 border border-border/20">
-            <TabsTrigger value="all" className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Todas ({counts.all})
-            </TabsTrigger>
-            <TabsTrigger value="open" className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Abertas ({counts.open})
-            </TabsTrigger>
-            <TabsTrigger value="pending" className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Pendentes ({counts.pending})
-            </TabsTrigger>
-            <TabsTrigger value="waiting" className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Aguardando ({counts.waiting})
-            </TabsTrigger>
+          <TabsList className="w-full h-8 p-1 bg-[#202c33] border-none rounded-lg">
+            {[
+              { id: 'all', label: 'Todas', count: counts.all },
+              { id: 'open', label: 'Abertas', count: counts.open },
+              { id: 'pending', label: 'Pendentes', count: counts.pending },
+              { id: 'waiting', label: 'Aguardando', count: counts.waiting }
+            ].map((t) => (
+              <TabsTrigger 
+                key={t.id}
+                value={t.id} 
+                className="flex-1 text-[11px] h-6 rounded-md data-[state=active]:bg-[#2a3942] data-[state=active]:text-[#00a884] text-[#8696a0] hover:text-[#e9edef] transition-all"
+              >
+                {t.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
-      </motion.div>
+      </div>
+
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto scrollbar-thin" role="listbox" aria-label="Lista de conversas">
@@ -170,146 +170,78 @@ export function ConversationList({
             </motion.div>
           </div>
         ) : (
-          <StaggeredList className="p-2 space-y-1">
+          <div className="p-0 space-y-0">
             {filteredConversations.map((conversation) => {
-              const StatusIcon = statusIcons[conversation.status];
               const isSelected = selectedId === conversation.id;
 
               return (
-                <StaggeredItem key={conversation.id}>
+                <div key={conversation.id} className="p-0">
                   <ConversationContextMenu
                     conversationId={conversation.id}
                     contactName={conversation.contact.name}
                     isMuted={conversation.is_muted}
                   >
-                  <motion.div
+                  <div
                     role="option"
                     tabIndex={0}
                     aria-selected={isSelected}
-                    aria-label={`${conversation.contact.name}${conversation.unreadCount > 0 ? `, ${conversation.unreadCount} não lidas` : ''}`}
                     onClick={() => onSelect(conversation)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(conversation); } }}
-                    whileHover={{ x: 2 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ duration: 0.15 }}
                     className={cn(
-                      'relative p-3 rounded-xl cursor-pointer transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-                      isSelected 
-                        ? 'bg-primary/10 border border-primary/30' 
-                        : 'hover:bg-muted/30 border border-transparent'
+                      'relative p-0 cursor-pointer transition-colors duration-200 outline-none',
+                      isSelected ? 'bg-[#2a3942]' : 'hover:bg-[#202c33] bg-[#111b21]'
                     )}
                   >
-                    {/* Selection indicator */}
-                    {isSelected && (
-                      <motion.div 
-                        layoutId="conversationActive"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-primary"
-                      />
-                    )}
+                    <div className="px-3">
+                      <div className="flex items-center gap-3 py-3 border-b border-[#222d34]">
 
-                    <div className="flex items-start gap-3 relative z-10">
-                      {/* Avatar */}
-                      <div className="relative flex-shrink-0">
-                        <Avatar className={cn(
-                          "w-11 h-11 ring-2 transition-all",
-                          isSelected ? "ring-primary/40" : "ring-border/30"
-                        )}>
-                          <AvatarImage 
-                            src={conversation.contact.avatar} 
-                            referrerPolicy="no-referrer" 
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).removeAttribute('src');
-                            }}
-                          />
-                          <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                            {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <motion.span
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className={cn(
-                            'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-sidebar',
-                            statusColors[conversation.status]
-                          )}
-                        >
-                          <StatusIcon className="w-2.5 h-2.5 text-primary-foreground" />
-                        </motion.span>
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className={cn(
-                            "font-medium text-sm truncate transition-colors",
-                            isSelected ? "text-primary" : "text-foreground"
-                          )}>
-                            {conversation.contact.name}
-                          </span>
-                          <span className="text-xs text-muted-foreground flex-shrink-0">
-                            {formatDistanceToNow(conversation.updatedAt, {
-                              addSuffix: false,
-                              locale: ptBR,
-                            })}
-                          </span>
+                        <div className="relative flex-shrink-0">
+                          <Avatar className="w-[49px] h-[49px] ring-0">
+                            <AvatarImage 
+                              src={conversation.contact.avatar} 
+                              referrerPolicy="no-referrer" 
+                              onError={(e) => { (e.target as HTMLImageElement).removeAttribute('src'); }}
+                            />
+                            <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold">
+                              {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-muted-foreground truncate pr-2">
-                            {conversation.lastMessage?.content || 'Sem mensagens'}
-                          </p>
-                          {conversation.unreadCount > 0 && (
-                            <motion.span 
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                              className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-primary-foreground"
-                            >
-                              {conversation.unreadCount}
-                            </motion.span>
-                          )}
-                        </div>
 
-                        {/* CRM company indicator (from batch — 1 RPC for all conversations) */}
-                        {isExternalConfigured && (
-                          <CRMConversationBadge crmInfo={crmLookup(conversation.contact.phone)} />
-                        )}
-                        <div className="mt-2">
-                          <SLAIndicatorForContact conversation={conversation} compact />
-                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-normal text-[17px] text-[#e9edef] truncate">
+                              {conversation.contact.name}
+                            </span>
+                            <span className="text-[12px] text-[#8696a0] tabular-nums">
+                              {formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}
+                            </span>
+                          </div>
 
-                        {/* Tags */}
-                        {conversation.tags.length > 0 && (
-                          <div className="flex items-center gap-1 mt-2 flex-wrap">
-                            {conversation.tags.slice(0, 2).map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="secondary"
-                                className="text-[10px] px-1.5 py-0 bg-muted/50 border-border/20"
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                            {conversation.tags.length > 2 && (
-                              <span className="text-[10px] text-muted-foreground">
-                                +{conversation.tags.length - 2}
+                          <div className="flex items-center justify-between">
+                            <p className={cn(
+                              "text-[14px] truncate pr-2",
+                              conversation.unreadCount > 0 ? "text-[#e9edef]" : "text-[#8696a0]"
+                            )}>
+                              {conversation.lastMessage?.content || 'Sem mensagens'}
+                            </p>
+                            {conversation.unreadCount > 0 && (
+                              <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-[#00a884] text-[#111b21]">
+                                {conversation.unreadCount}
                               </span>
                             )}
                           </div>
-                        )}
+                        </div>
                       </div>
-
-                      {/* Priority indicator */}
-                      {conversation.priority === 'high' && (
-                        <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />
-                      )}
                     </div>
-                  </motion.div>
+                  </div>
                   </ConversationContextMenu>
-                </StaggeredItem>
+                </div>
               );
             })}
-          </StaggeredList>
+          </div>
+
         )}
       </div>
     </div>
