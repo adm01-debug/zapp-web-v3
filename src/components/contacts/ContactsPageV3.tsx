@@ -71,7 +71,7 @@ export const ContactsPageV3: React.FC<ContactsPageV3Props> = ({
   });
 
   const handleBulkDelete = () => {
-    const ids = Array.from(selectedIds);
+    const ids = selectedIds;
     softDeleteWithUndo(ids, `${ids.length} contato${ids.length !== 1 ? 's' : ''}`);
     // Optimistic: remove from list immediately
     clearSelection();
