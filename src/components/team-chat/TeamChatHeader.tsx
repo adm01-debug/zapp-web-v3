@@ -26,7 +26,10 @@ import {
   BellOff,
   Pin,
   Building2,
+  ArrowRightLeft,
 } from 'lucide-react';
+import { TransferConversationDialog } from './TransferConversationDialog';
+import { useAuth } from '@/features/auth';
 
 interface TeamChatHeaderProps {
   conversation: TeamConversation;
