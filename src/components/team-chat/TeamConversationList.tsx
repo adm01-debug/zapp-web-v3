@@ -2,7 +2,7 @@ import { TeamConversation } from '@/hooks/useTeamChat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Users, User } from 'lucide-react';
+import { Plus, Search, Users, User, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useMemo, forwardRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
