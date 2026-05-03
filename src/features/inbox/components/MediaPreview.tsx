@@ -13,13 +13,13 @@ import { useMediaRefresh } from '@/features/inbox';
 
 function getFileIcon(fileName: string, mimeType?: string) {
   const extension = getFileExtension(fileName).toLowerCase();
-  if (['pdf'].includes(extension)) return <FileText className="w-8 h-8 text-destructive" />;
-  if (['doc', 'docx'].includes(extension)) return <FileText className="w-8 h-8 text-info" />;
-  if (['xls', 'xlsx'].includes(extension)) return <FileSpreadsheet className="w-8 h-8 text-success" />;
-  if (['ppt', 'pptx'].includes(extension)) return <FileText className="w-8 h-8 text-warning" />;
-  if (['zip', 'rar', '7z'].includes(extension)) return <FileArchive className="w-8 h-8 text-warning" />;
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return <FileImage className="w-8 h-8 text-primary" />;
-  return <File className="w-8 h-8 text-muted-foreground" />;
+  if (['pdf'].includes(extension)) return <FileText className="w-8 h-8 text-[#f1592a]" />;
+  if (['doc', 'docx'].includes(extension)) return <FileText className="w-8 h-8 text-[#2b72c4]" />;
+  if (['xls', 'xlsx'].includes(extension)) return <FileSpreadsheet className="w-8 h-8 text-[#1d6f42]" />;
+  if (['ppt', 'pptx'].includes(extension)) return <FileText className="w-8 h-8 text-[#d24726]" />;
+  if (['zip', 'rar', '7z'].includes(extension)) return <FileArchive className="w-8 h-8 text-[#f8bc34]" />;
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return <FileImage className="w-8 h-8 text-[#aebac1]" />;
+  return <File className="w-8 h-8 text-[#aebac1]" />;
 }
 
 // Document Preview Component
