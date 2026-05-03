@@ -113,15 +113,31 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground truncate">
+                  <div className="flex items-center justify-between gap-1.5 mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate flex-1">
                       {conv.last_message?.content || 'Sem mensagens'}
                     </p>
-                    {(conv.unread_count ?? 0) > 0 && (
-                      <Badge variant="default" className="ml-2 h-5 min-w-5 px-1.5 text-[10px] shrink-0">
-                        {conv.unread_count}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {isAdmin && conv.type === 'department' && conv.department_id && (
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-6 w-6 text-muted-foreground hover:text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMgmtDept({ id: conv.department_id!, name: conv.name || 'Departamento' });
+                          }}
+                          title="Gerenciar membros"
+                        >
+                          <Settings2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                      {(conv.unread_count ?? 0) > 0 && (
+                        <Badge variant="default" className="h-5 min-w-5 px-1.5 text-[10px]">
+                          {conv.unread_count}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </button>
