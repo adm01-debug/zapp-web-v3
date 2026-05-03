@@ -72,6 +72,8 @@ export function MessageBubble({
   const { toast } = useToast();
   const { profile } = useAuth();
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [isActionsActive, setIsActionsActive] = useState(false);
+
   const isSent = message.sender === 'agent';
   const senderName = isSent ? 'Você' : message.senderName || 'Contato';
   const { avatarUrl } = useContactAvatar(message.conversationId, message.contactAvatar || contactAvatar);
