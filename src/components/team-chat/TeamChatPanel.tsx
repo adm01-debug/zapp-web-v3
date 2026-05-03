@@ -180,9 +180,15 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             <Lock className="w-5 h-5 text-destructive" />
           </div>
           <p className="text-sm font-semibold text-foreground">Acesso Restrito ao Departamento</p>
-          <p className="text-xs text-muted-foreground max-w-xs">
+          <p className="text-xs text-muted-foreground max-w-xs mb-4">
             Você não faz parte deste departamento e não tem permissão para visualizar ou enviar mensagens.
           </p>
+          <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 max-w-xs">
+            <p className="text-xs font-medium text-primary mb-1">Como obter acesso?</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Solicite ao administrador da sua conta ou ao gestor do departamento que inclua você via painel de membros ou enviando um código de convite.
+            </p>
+          </div>
         </div>
       )}
 
