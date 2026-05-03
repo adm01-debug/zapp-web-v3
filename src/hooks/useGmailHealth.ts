@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { gmailHealthService, type GmailHealthInfo } from '@/services/gmailHealthService';
+import { gmailHealthService } from '@/services/gmail/gmailHealthService';
+import type { GmailHealthInfo } from '@/services/gmail/types';
 import { useToast } from '@/hooks/use-toast';
 
 export function useGmailHealth() {
