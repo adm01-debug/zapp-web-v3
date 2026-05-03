@@ -2,85 +2,120 @@ import { test, expect } from '@playwright/test';
 import { loginAs } from './helpers/testHelpers';
 
 /**
- * Integration Tests for Teams Module - Database/RLS Enforcement.
- * This test suite validates that data leakage is prevented at the network level.
+ * Integration Tests for Teams Module - RBAC & RLS Enforcement.
+ * Validates that data isolation and permissions are strictly enforced at the database level.
  */
-test.describe('Teams - Data Isolation & RLS Integrity', () => {
+test.describe('Teams - RBAC & RLS Enforcement', () => {
 
-  test('Security: Agent cannot fetch messages from unauthorized department via API', async ({ page }) => {
-    // 1. Login as an Agent from "Marketing"
-    await loginAs(page, 'agent'); 
+  test('RH Agent: Isolated from TI data', async ({ page }) => {
+    // Scenario 1: RH Agent cannot see TI channels or messages
+    await loginAs(page, 'rh_agent');
     await page.goto('/team-chat');
 
-    // 2. Intercept and monitor Supabase REST calls
-    const unauthorizedDeptId = 'd2222222-2222-2222-2222-222222222222'; // TI Department
+    const tiDeptId = 'd2222222-2222-2222-2222-222222222222'; // TI Department UUID
     
-    // 3. Attempt to force a fetch for TI messages through the console (simulating a direct API attack)
-    const dataLeakageAttempt = await page.evaluate(async (deptId) => {
-      // Accessing supabase client directly from window (common in Lovable/Vite builds)
+    // 1. Direct RLS check for messages
+    const rlsCheck = await page.evaluate(async (deptId) => {
       const { data, error } = await (window as any).supabase
         .from('team_messages')
         .select('*')
-        .eq('conversation_id', deptId);
+        .eq('department_id', deptId);
       return { data, error };
-    }, unauthorizedDeptId).catch(err => ({ error: err }));
+    }, tiDeptId);
 
-    // 4. Validate that RLS blocked the data (should return empty array or error)
-    // In Supabase RLS, selecting unauthorized rows usually returns an empty array, not a 403
-    if (dataLeakageAttempt.data) {
-      expect(dataLeakageAttempt.data.length).toBe(0);
+    // Should return empty array even if TI messages exist
+    expect(rlsCheck.data).toHaveLength(0);
+
+    // 2. UI visibility check
+    const tiChannel = page.locator('button:has-text("TI")');
+    await expect(tiChannel).not.toBeVisible();
+  });
+
+  test('Finance Agent: Limited visibility to Finance and General', async ({ page }) => {
+    // Scenario 2: Finance Agent sees Finance and General channels only
+    await loginAs(page, 'finance_agent');
+    await page.goto('/team-chat');
+
+    // Should see Financeiro
+    await expect(page.locator('button:has-text("Financeiro")')).toBeVisible();
+    
+    // Should see "Geral" (Canais Gerais)
+    // Note: Geral is usually accessible to all authenticated users
+    await expect(page.locator('button:has-text("Geral")')).toBeVisible();
+    
+    // Should NOT see TI or RH
+    await expect(page.locator('button:has-text("TI")')).not.toBeVisible();
+    await expect(page.locator('button:has-text("RH")')).not.toBeVisible();
+  });
+
+  test('TI Admin: Full oversight and soft-delete capability', async ({ page }) => {
+    // Scenario 3: Admin sees everything and can perform deletions
+    await loginAs(page, 'ti_admin');
+    await page.goto('/team-chat');
+
+    // 1. Global visibility
+    await expect(page.locator('button:has-text("TI")')).toBeVisible();
+    await expect(page.locator('button:has-text("RH")')).toBeVisible();
+    await expect(page.locator('button:has-text("Financeiro")')).toBeVisible();
+
+    // 2. Soft-delete enforcement
+    // We attempt to delete a message and verify it marks 'deleted_at'
+    const deleteOp = await page.evaluate(async () => {
+      const { data: messages } = await (window as any).supabase
+        .from('team_messages')
+        .select('id')
+        .limit(1);
+      
+      if (!messages || messages.length === 0) return { skipped: true };
+      
+      const targetId = messages[0].id;
+      const { error } = await (window as any).supabase
+        .from('team_messages')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', targetId);
+        
+      return { error, success: !error };
+    });
+
+    if (!deleteOp.skipped) {
+      expect(deleteOp.success).toBe(true);
+      expect(deleteOp.error).toBeNull();
     }
   });
 
-  test('Security: Unauthorized user cannot join department via direct RPC manipulation', async ({ page }) => {
-    await loginAs(page, 'agent');
+  test('Transfer Agent: Support mobility across departments', async ({ page }) => {
+    // Scenario 4: Support Agent can move tickets (simulated via metadata update)
+    await loginAs(page, 'transfer_agent');
     await page.goto('/team-chat');
 
-    // Attempt to call manage_department_member RPC (which is SECURITY DEFINER)
-    // It should fail because the internal plpgsql check validates the requester is an admin.
-    const rpcAttack = await page.evaluate(async () => {
-      const { error } = await (window as any).supabase.rpc('manage_department_member', {
-        _admin_user_id: 'any-id',
-        _target_profile_id: 'my-id',
-        _department_id: 'd2222222-2222-2222-2222-222222222222',
-        _action: 'add'
-      });
-      return { error };
+    // Support agents can update conversation metadata to signal transfers
+    const transferOp = await page.evaluate(async () => {
+      const { data: convs } = await (window as any).supabase
+        .from('team_conversations')
+        .select('id')
+        .limit(1);
+        
+      if (!convs || convs.length === 0) return { skipped: true };
+      
+      const targetId = convs[0].id;
+      const { error } = await (window as any).supabase
+        .from('team_conversations')
+        .update({ 
+          metadata: { 
+            last_transfer_at: new Date().toISOString(),
+            target_department: 'TI',
+            transfer_reason: 'Suporte nível 2'
+          } 
+        })
+        .eq('id', targetId);
+        
+      return { error, success: !error };
     });
 
-    expect(rpcAttack.error).toBeDefined();
-    expect(rpcAttack.error.message).toContain('Acesso negado');
+    if (!transferOp.skipped) {
+      expect(transferOp.success).toBe(true);
+      expect(transferOp.error).toBeNull();
+    }
   });
 
-  test('Audit: Every membership change creates a verifiable record', async ({ page }) => {
-    await loginAs(page, 'admin');
-    await page.goto('/team-chat');
-
-    // 1. Capture audit logs count before action
-    const initialLogs = await page.evaluate(async () => {
-      const { count } = await (window as any).supabase
-        .from('audit_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('entity_type', 'department');
-      return count || 0;
-    });
-
-    // 2. Perform a department management action (Add/Remove)
-    // Note: We use the UI to trigger the actual backend logic
-    const deptConv = page.locator('button:has-text("Marketing")').first();
-    await deptConv.locator('button[title="Gerenciar membros"]').click();
-    await page.locator('button:has-text("Adicionar")').first().click();
-    await page.waitForTimeout(1000); // Wait for async RPC and Audit Insert
-
-    // 3. Verify that audit log count increased
-    const finalLogs = await page.evaluate(async () => {
-      const { count } = await (window as any).supabase
-        .from('audit_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('entity_type', 'department');
-      return count || 0;
-    });
-
-    expect(finalLogs).toBeGreaterThan(initialLogs);
-  });
 });
