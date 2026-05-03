@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { ChatSearchBar } from '@/features/inbox/components/chat/ChatSearchBar';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { Message } from '@/types/chat';
 
 // Helper to create test messages
@@ -47,13 +48,15 @@ describe('ChatSearchBar', () => {
 
   const renderBar = (isOpen = true, msgs = MESSAGES) =>
     render(
-      <ChatSearchBar
-        messages={msgs}
-        isOpen={isOpen}
-        onClose={onClose}
-        onNavigateToMessage={onNavigateToMessage}
-        onHighlightChange={onHighlightChange}
-      />
+      <TooltipProvider>
+        <ChatSearchBar
+          messages={msgs}
+          isOpen={isOpen}
+          onClose={onClose}
+          onNavigateToMessage={onNavigateToMessage}
+          onHighlightChange={onHighlightChange}
+        />
+      </TooltipProvider>
     );
 
   // ── Rendering ──

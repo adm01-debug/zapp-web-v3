@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useChatPanelHandlers } from '@/features/inbox';
+import { useChatPanelHandlers } from '../useChatPanelHandlers';
 
 // Mock dependencies
 vi.mock('@/lib/logger', () => ({
@@ -9,6 +9,11 @@ vi.mock('@/lib/logger', () => ({
     debug: vi.fn(),
     warn: vi.fn(),
   },
+  getLogger: () => ({
+    error: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+  }),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
@@ -17,8 +22,16 @@ vi.mock('@/integrations/supabase/client', () => ({
       update: vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
       }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
     }),
   },
+}));
+
+vi.mock('@/features/auth', () => ({
+  useAuth: () => ({
+    profile: { id: 'agent-123', name: 'Test Agent', role: 'admin' },
+    user: { id: 'user-123' },
+  }),
 }));
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -81,7 +94,11 @@ describe('useChatPanelHandlers (covering useChatPanelDialogs)', () => {
       await result.current.handleSend();
     });
 
-    expect(mockOpts.onSendMessage).toHaveBeenCalledWith('Test message');
+    expect(mockOpts.onSendMessage).toHaveBeenCalledWith(
+      'Test message',
+      undefined,
+      expect.any(Function)
+    );
     expect(result.current.inputValue).toBe('');
   });
 
