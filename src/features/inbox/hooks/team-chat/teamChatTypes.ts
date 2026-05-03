@@ -1,11 +1,12 @@
 export interface TeamConversation {
   id: string;
-  type: 'direct' | 'group';
+  type: 'direct' | 'group' | 'department';
   name: string | null;
   avatar_url: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  department_id?: string | null;
   members?: TeamMember[];
   last_message?: TeamMessage | null;
   unread_count?: number;
