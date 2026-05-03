@@ -21,6 +21,7 @@ import { memo } from 'react';
 import { TeamMessage } from '@/hooks/useTeamChat';
 import { isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MessageStatus } from '@/features/inbox/components/MessageStatus';
 
 function formatTime(dateStr: string) { return format(new Date(dateStr), 'HH:mm'); }
 function formatDateSep(dateStr: string) {
@@ -68,7 +69,18 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
 
   useEffect(() => {
     if (s.isNearBottomRef.current && s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight;
-  }, [s.filteredMessages.length]);
+    
+    // Mark unread messages as read
+    const unreadIds = s.filteredMessages
+      .filter(m => m.sender_id !== s.profile?.id && m.status !== 'read')
+      .map(m => m.id);
+    
+    if (unreadIds.length > 0) {
+      unreadIds.forEach(id => {
+        s.updateStatusMutation.mutate({ messageId: id, status: 'read', conversationId: conversation.id });
+      });
+    }
+  }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => { if (s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight; }, [conversation.id]);
   useEffect(() => { if (s.showSearch) s.searchInputRef.current?.focus(); }, [s.showSearch]);
@@ -178,7 +190,11 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                               {msg.content && hasMedia && msg.media_type !== 'document' && !['🎨 Figurinha', '🎵 Áudio meme', '😀 Emoji', '🎤 Mensagem de áudio'].includes(msg.content) && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words mt-1">{msg.content}</p>}
                               <div className={cn("flex items-center gap-1 mt-0.5", isMine ? "justify-end" : "justify-between")}>
                                 {cleanText && <button onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className={cn("opacity-0 group-hover/msg:opacity-100 transition-opacity p-0.5 rounded-full", isMine ? "text-primary-foreground/60 hover:text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>{isThisTtsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isThisTtsPlaying ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}</button>}
-                                <span className={cn("text-[10px]", isMine ? "text-primary-foreground/60" : "text-muted-foreground")}>{formatTime(msg.created_at)}{msg.is_edited && ' · editado'}</span>
+                                <div className="flex items-center gap-1">
+                                  <span className={cn("text-[10px]", isMine ? "text-primary-foreground/60" : "text-muted-foreground")}>{formatTime(msg.created_at)}{msg.is_edited && ' · editado'}</span>
+                                  {isMine && <MessageStatus status={msg.status || 'sent'} className={cn("scale-75 origin-right", msg.status === 'read' ? "text-info" : "text-primary-foreground/60")} />}
+                                </div>
+
                               </div>
                             </>
                           )}

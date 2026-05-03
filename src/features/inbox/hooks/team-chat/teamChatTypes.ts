@@ -39,6 +39,7 @@ export interface TeamMessage {
   media_type: string | null;
   reply_to_id: string | null;
   is_edited: boolean;
+  status?: 'pending' | 'sending' | 'sent' | 'delivered' | 'read';
   created_at: string;
   updated_at: string;
   sender?: {
