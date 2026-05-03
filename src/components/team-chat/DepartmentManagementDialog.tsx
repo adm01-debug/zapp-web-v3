@@ -72,7 +72,7 @@ export function DepartmentManagementDialog({ department, open, onOpenChange }: P
       if (error) throw error;
       return data as AuditLog[];
     },
-    enabled: open && view === 'audit',
+    enabled: open && (view === 'audit' || view === 'members'),
   });
 
   const { data: invitations = [], isLoading: loadingInvites } = useQuery({
@@ -97,7 +97,7 @@ export function DepartmentManagementDialog({ department, open, onOpenChange }: P
         department_id: department.id,
         created_by: currentUser.id,
         code,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       });
       if (error) throw error;
     },
@@ -181,100 +181,50 @@ export function DepartmentManagementDialog({ department, open, onOpenChange }: P
               Gerenciar Departamento: {department.name}
             </DialogTitle>
             <div className="flex gap-1 bg-muted p-1 rounded-lg">
-              <Button 
-                variant={view === 'members' ? 'secondary' : 'ghost'} 
-                size="sm" 
-                className="h-7 text-xs"
-                onClick={() => setView('members')}
-              >
-                Membros
-              </Button>
-              <Button 
-                variant={view === 'audit' ? 'secondary' : 'ghost'} 
-                size="sm" 
-                className="h-7 text-xs"
-                onClick={() => setView('audit')}
-              >
-                Auditoria
-              </Button>
+              <Button variant={view === 'members' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setView('members')}>Membros</Button>
+              <Button variant={view === 'invites' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setView('invites')}>Convites</Button>
+              <Button variant={view === 'audit' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setView('audit')}>Auditoria</Button>
             </div>
           </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden flex flex-col">
-          {view === 'members' ? (
+          {view === 'members' && (
             <div className="flex flex-col h-full">
               <div className="px-6 py-2">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Buscar colaboradores..." 
-                    className="pl-8 h-9" 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
+                  <Input placeholder="Buscar colaboradores..." className="pl-8 h-9" value={search} onChange={(e) => setSearch(e.target.value)} />
                 </div>
               </div>
-
               <ScrollArea className="flex-1 px-6 pb-6">
                 <div className="space-y-6 pt-4">
                   {deptMembers.length > 0 && (
                     <section>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Membros do Departamento ({deptMembers.length})</h4>
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Membros ({deptMembers.length})</h4>
                       <div className="space-y-2">
                         {deptMembers.map(p => (
                           <div key={p.id} className="flex items-center justify-between p-3 rounded-xl border bg-accent/30">
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-9 w-9">
-                                <AvatarImage src={p.avatar_url || undefined} />
-                                <AvatarFallback>{p.name?.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="text-sm font-medium">{p.name}</p>
-                                <p className="text-xs text-muted-foreground">{p.email}</p>
-                              </div>
+                              <Avatar className="h-9 w-9"><AvatarImage src={p.avatar_url || undefined} /><AvatarFallback>{p.name?.charAt(0)}</AvatarFallback></Avatar>
+                              <div><p className="text-sm font-medium">{p.name}</p><p className="text-xs text-muted-foreground">{p.email}</p></div>
                             </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => manageMemberMutation.mutate({ profileId: p.id, action: 'remove' })}
-                              disabled={manageMemberMutation.isPending}
-                            >
-                              <UserMinus className="w-4 h-4 mr-2" /> Remover
-                            </Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => manageMemberMutation.mutate({ profileId: p.id, action: 'remove' })} disabled={manageMemberMutation.isPending}><UserMinus className="w-4 h-4 mr-2" /> Remover</Button>
                           </div>
                         ))}
                       </div>
                     </section>
                   )}
-
                   <section>
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Outros Colaboradores</h4>
                     <div className="space-y-2">
                       {otherProfiles.map(p => (
                         <div key={p.id} className="flex items-center justify-between p-3 rounded-xl border hover:bg-accent/20 transition-colors">
                           <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
-                              <AvatarImage src={p.avatar_url || undefined} />
-                              <AvatarFallback>{p.name?.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="text-sm font-medium">{p.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {p.email} {p.department_id && <Badge variant="outline" className="ml-1 text-[10px] py-0">Outro Depto</Badge>}
-                              </p>
-                            </div>
+                            <Avatar className="h-9 w-9"><AvatarImage src={p.avatar_url || undefined} /><AvatarFallback>{p.name?.charAt(0)}</AvatarFallback></Avatar>
+                            <div><p className="text-sm font-medium">{p.name}</p><p className="text-xs text-muted-foreground">{p.email} {p.department_id && <Badge variant="outline" className="ml-1 text-[10px] py-0">Outro Depto</Badge>}</p></div>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-primary hover:text-primary hover:bg-primary/10"
-                            onClick={() => manageMemberMutation.mutate({ profileId: p.id, action: 'add' })}
-                            disabled={manageMemberMutation.isPending}
-                          >
-                            <UserPlus className="w-4 h-4 mr-2" /> Adicionar
-                          </Button>
+                          <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10" onClick={() => manageMemberMutation.mutate({ profileId: p.id, action: 'add' })} disabled={manageMemberMutation.isPending}><UserPlus className="w-4 h-4 mr-2" /> Adicionar</Button>
                         </div>
                       ))}
                     </div>
@@ -282,37 +232,64 @@ export function DepartmentManagementDialog({ department, open, onOpenChange }: P
                 </div>
               </ScrollArea>
             </div>
-          ) : (
-            <ScrollArea className="flex-1 px-6 pb-6">
-              <div className="space-y-4 pt-4">
-                {loadingAudit ? (
-                  <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-                ) : auditLogs.length === 0 ? (
-                  <div className="text-center py-10 text-muted-foreground">Nenhum registro de auditoria encontrado.</div>
-                ) : (
-                  auditLogs.map(log => (
-                    <div key={log.id} className="flex gap-4 p-3 rounded-lg border bg-card">
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                        <History className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <Badge variant={log.action === 'ADD_MEMBER' ? 'default' : 'secondary'} className="text-[10px] h-5">
-                            {log.action === 'ADD_MEMBER' ? 'Inclusão' : 'Remoção'}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground">
-                            {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                          </span>
+          )}
+
+          {view === 'invites' && (
+            <div className="flex flex-col h-full px-6 py-4">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">Links de convite permitem que colaboradores entrem no departamento.</p>
+                <Button size="sm" onClick={() => createInviteMutation.mutate()} disabled={createInviteMutation.isPending}>
+                  <Link2 className="w-4 h-4 mr-2" /> Criar Link
+                </Button>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="space-y-3">
+                  {invitations.map((inv: any) => (
+                    <div key={inv.id} className="p-4 rounded-xl border bg-card space-y-3">
+                      <div className="flex items-center justify-between">
+                        <code className="bg-muted px-2 py-1 rounded text-sm font-bold">{inv.code}</code>
+                        <div className="flex gap-2">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { navigator.clipboard.writeText(inv.code); toast({ title: 'Código copiado' }); }}><Copy className="w-4 h-4" /></Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteInviteMutation.mutate(inv.id)}><Trash2 className="w-4 h-4" /></Button>
                         </div>
-                        <p className="text-sm">
-                          <span className="font-semibold">{log.details.profile_name}</span> foi {log.action === 'ADD_MEMBER' ? 'adicionado ao' : 'removido do'} departamento.
-                        </p>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Expira em: {format(new Date(inv.expires_at), 'dd/MM/yy')}</span>
+                        <span>Usos: {inv.uses}</span>
                       </div>
                     </div>
-                  ))
-                )}
+                  ))}
+                  {invitations.length === 0 && <div className="text-center py-10 text-muted-foreground">Nenhum convite ativo.</div>}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+
+          {view === 'audit' && (
+            <div className="flex flex-col h-full">
+              <div className="px-6 py-2 flex justify-end">
+                <Button variant="outline" size="sm" onClick={exportAuditCsv} disabled={auditLogs.length === 0}>
+                  <Download className="w-4 h-4 mr-2" /> Exportar CSV
+                </Button>
               </div>
-            </ScrollArea>
+              <ScrollArea className="flex-1 px-6 pb-6">
+                <div className="space-y-4 pt-4">
+                  {auditLogs.map(log => (
+                    <div key={log.id} className="flex gap-4 p-3 rounded-lg border bg-card">
+                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0"><History className="w-4 h-4 text-muted-foreground" /></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <Badge variant={log.action === 'ADD_MEMBER' ? 'default' : 'secondary'} className="text-[10px] h-5">{log.action === 'ADD_MEMBER' ? 'Inclusão' : 'Remoção'}</Badge>
+                          <span className="text-[10px] text-muted-foreground">{format(new Date(log.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
+                        </div>
+                        <p className="text-sm"><span className="font-semibold">{log.details.profile_name}</span> foi {log.action === 'ADD_MEMBER' ? 'adicionado ao' : 'removido do'} departamento.</p>
+                      </div>
+                    </div>
+                  ))}
+                  {auditLogs.length === 0 && <div className="text-center py-10 text-muted-foreground">Nenhum registro encontrado.</div>}
+                </div>
+              </ScrollArea>
+            </div>
           )}
         </div>
       </DialogContent>
