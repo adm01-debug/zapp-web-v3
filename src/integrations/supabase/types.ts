@@ -10559,6 +10559,7 @@ export type Database = {
           routing_mode: string
           status: string | null
           updated_at: string
+          whatsapp_instance_id: string | null
         }
         Insert: {
           api_type?: string
@@ -10586,6 +10587,7 @@ export type Database = {
           routing_mode?: string
           status?: string | null
           updated_at?: string
+          whatsapp_instance_id?: string | null
         }
         Update: {
           api_type?: string
@@ -10613,6 +10615,7 @@ export type Database = {
           routing_mode?: string
           status?: string | null
           updated_at?: string
+          whatsapp_instance_id?: string | null
         }
         Relationships: [
           {
@@ -10627,6 +10630,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_connections_whatsapp_instance_id_fkey"
+            columns: ["whatsapp_instance_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_instances"
             referencedColumns: ["id"]
           },
         ]
@@ -10789,6 +10799,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_instances: {
+        Row: {
+          api_token: string | null
+          api_url: string | null
+          config: Json | null
+          created_at: string | null
+          id: string
+          name: string
+          owner_id: string | null
+          provider: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_token?: string | null
+          api_url?: string | null
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_token?: string | null
+          api_url?: string | null
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       whatsapp_official_credentials: {
         Row: {
