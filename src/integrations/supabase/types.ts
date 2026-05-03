@@ -5629,6 +5629,7 @@ export type Database = {
           id: string
           message_id: string
           user_id: string | null
+          whisper_message_id: string | null
         }
         Insert: {
           contact_id?: string | null
@@ -5637,6 +5638,7 @@ export type Database = {
           id?: string
           message_id: string
           user_id?: string | null
+          whisper_message_id?: string | null
         }
         Update: {
           contact_id?: string | null
@@ -5645,6 +5647,7 @@ export type Database = {
           id?: string
           message_id?: string
           user_id?: string | null
+          whisper_message_id?: string | null
         }
         Relationships: [
           {
@@ -5673,6 +5676,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_whisper_message_id_fkey"
+            columns: ["whisper_message_id"]
+            isOneToOne: false
+            referencedRelation: "whisper_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -6648,6 +6658,7 @@ export type Database = {
           role: string | null
           session_invalidated_at: string | null
           signature: string | null
+          theme_config: Json | null
           updated_at: string
           user_id: string
         }
@@ -6671,6 +6682,7 @@ export type Database = {
           role?: string | null
           session_invalidated_at?: string | null
           signature?: string | null
+          theme_config?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -6694,6 +6706,7 @@ export type Database = {
           role?: string | null
           session_invalidated_at?: string | null
           signature?: string | null
+          theme_config?: Json | null
           updated_at?: string
           user_id?: string
         }
@@ -10599,6 +10612,42 @@ export type Database = {
           },
         ]
       }
+      whisper_files: {
+        Row: {
+          contact_id: string
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       whisper_messages: {
         Row: {
           contact_id: string
@@ -10608,6 +10657,7 @@ export type Database = {
           is_read: boolean | null
           sender_id: string
           target_agent_id: string
+          whisper_thread_id: string | null
         }
         Insert: {
           contact_id: string
@@ -10617,6 +10667,7 @@ export type Database = {
           is_read?: boolean | null
           sender_id: string
           target_agent_id: string
+          whisper_thread_id?: string | null
         }
         Update: {
           contact_id?: string
@@ -10626,6 +10677,7 @@ export type Database = {
           is_read?: boolean | null
           sender_id?: string
           target_agent_id?: string
+          whisper_thread_id?: string | null
         }
         Relationships: [
           {
@@ -10661,6 +10713,13 @@ export type Database = {
             columns: ["target_agent_id"]
             isOneToOne: false
             referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whisper_messages_whisper_thread_id_fkey"
+            columns: ["whisper_thread_id"]
+            isOneToOne: false
+            referencedRelation: "whisper_messages"
             referencedColumns: ["id"]
           },
         ]
