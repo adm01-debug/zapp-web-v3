@@ -13,8 +13,9 @@ export async function login(page: Page, email = 'test@zappweb.com', password = '
   await page.fill('[data-testid=email-input]', email);
   await page.fill('[data-testid=password-input]', password);
   await page.click('[data-testid=login-button]');
-  // Wait for session or specific redirect
-  await page.waitForSelector('.inbox-container, .dashboard-container, [data-testid=chat-panel]', { timeout: 15000 });
+  // Wait for session or specific redirect with enough timeout for cold starts
+  await page.waitForURL(/^(?!.*\/auth).*$/, { timeout: 30000 });
+  await page.waitForSelector('.inbox-container, .dashboard-container, [data-testid=chat-panel], .team-chat-container', { timeout: 30000 });
 }
 
 /** Login with a specific role (simulated by email) */
