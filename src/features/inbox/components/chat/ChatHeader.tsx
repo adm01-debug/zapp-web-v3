@@ -196,6 +196,23 @@ export function ChatHeader({
         </Tooltip>
 
         <VoiceSelector selectedVoiceId={voiceId} onVoiceChange={onVoiceChange} />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-muted-foreground hover:text-primary hover:bg-primary/10" 
+                onClick={cycleDensity} 
+                aria-label={`Densidade: ${density}`}
+              >
+                {density === 'comfortable' ? <Maximize2 className="w-4 h-4" /> : density === 'compact' ? <LayoutGrid className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+              </Button>
+            </motion.div>
+          </TooltipTrigger>
+          <TooltipContent>Densidade: {density === 'comfortable' ? 'Confortável' : density === 'compact' ? 'Compacto' : 'Denso'}</TooltipContent>
+        </Tooltip>
+
         <KeyboardShortcutsHelp />
 
         <DropdownMenu>
