@@ -1,37 +1,80 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useGmail } from '../useGmail';
+import { safeClient } from '@/integrations/supabase/safeClient';
+import { supabase } from '@/integrations/supabase/client';
 
-vi.mock('@/integrations/supabase/client', () => {
-  const mockChannel = {
-    on: vi.fn().mockReturnThis(),
-    subscribe: vi.fn().mockReturnValue({}),
-  };
-  return {
-    supabase: {
-      functions: { invoke: vi.fn().mockResolvedValue({ data: { success: true }, error: null }) },
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        update: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({ data: [], error: null }),
-        single: vi.fn().mockResolvedValue({ data: null, error: null }),
-      }),
-      rpc: vi.fn().mockImplementation((fn) => {
-        if (fn === 'rpc_gmail_token_status') return Promise.resolve({ data: [], error: null });
-        if (fn === 'rpc_gmail_search_threads') return Promise.resolve({ data: [], error: null });
-        return Promise.resolve({ data: null, error: null });
-      }),
-      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
-      channel: vi.fn().mockReturnValue(mockChannel),
-      removeChannel: vi.fn(),
+vi.mock('@/integrations/supabase/safeClient', () => ({
+  safeClient: {
+    from: vi.fn(),
+    rpc: vi.fn(),
+  }
+}));
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    functions: {
+      invoke: vi.fn(),
     },
-  };
-});
+    auth: {
+      getUser: vi.fn(),
+    },
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn(),
+    })),
+    removeChannel: vi.fn(),
+  }
+}));
 
 describe('useGmail', () => {
-  it('deve montar sem erros', async () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (safeClient.rpc as any).mockResolvedValue({ data: [], error: null });
+    (safeClient.from as any).mockResolvedValue({ data: [], error: null });
+  });
+
+  it('deve carregar contas com sucesso', async () => {
+    const mockAccounts = [{ id: '1', email: 'test@gmail.com', is_active: true }];
+    (safeClient.from as any).mockResolvedValue({ data: mockAccounts, error: null });
+
     const { result } = renderHook(() => useGmail());
-    expect(result.current).toBeDefined();
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect(result.current.accounts.length).toBe(1);
+    expect(result.current.accounts[0].email).toBe('test@gmail.com');
+  });
+
+  it('deve tratar erro ao carregar contas', async () => {
+    (safeClient.from as any).mockResolvedValue({ 
+      data: null, 
+      error: { message: 'Database error' },
+      requestId: 'req-123'
+    });
+
+    const { result } = renderHook(() => useGmail());
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 10));
+    });
+
+    expect(result.current.error?.toLowerCase()).toContain('database error');
+    expect(result.current.accounts.length).toBe(0);
+  });
+
+  it('deve lidar com retorno de dados vazio', async () => {
+    (safeClient.from as any).mockResolvedValue({ data: [], error: null });
+
+    const { result } = renderHook(() => useGmail());
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect(result.current.accounts.length).toBe(0);
+    expect(result.current.isLoading).toBe(false);
   });
 });
