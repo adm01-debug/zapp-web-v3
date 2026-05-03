@@ -204,17 +204,28 @@ export function ChatMessageBubble({
         <motion.div
           whileHover={{ scale: 1.005 }}
           className={cn(
-            'relative rounded-lg shadow-sm transition-all overflow-hidden border border-transparent',
+            'relative shadow-sm transition-all overflow-visible border border-transparent',
             (message.type === 'image' || message.type === 'video') && !message.content
               ? 'p-0'
-              : density === 'comfortable' ? 'px-4 py-2.5' : density === 'compact' ? 'px-3 py-1.5' : 'px-2 py-1',
+              : density === 'comfortable' ? 'px-3 py-1.5' : density === 'compact' ? 'px-2 py-1' : 'px-1.5 py-0.5',
             message.isWhisper
-              ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200/50 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 shadow-inner'
+              ? 'rounded-lg bg-amber-50 dark:bg-amber-950/30 border-amber-200/50 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 shadow-inner'
               : isSent 
-                ? 'rounded-br-sm bg-primary text-primary-foreground shadow-sm' 
-                : 'rounded-bl-sm bg-muted/20 border-border/20 text-foreground'
+                ? 'rounded-lg rounded-tr-none bg-[#005c4b] text-[#e9edef]' 
+                : 'rounded-lg rounded-tl-none bg-[#202c33] text-[#e9edef]'
           )}
         >
+          {!message.isWhisper && (
+            <div className={cn(
+              "absolute top-0 w-2 h-3 overflow-hidden",
+              isSent ? "left-full -translate-x-0.5" : "right-full translate-x-0.5"
+            )}>
+              <div className={cn(
+                "w-3 h-3 rotate-45 transform origin-top-left",
+                isSent ? "bg-[#005c4b]" : "bg-[#202c33]"
+              )} />
+            </div>
+          )}
 
           {/* Quoted message (reply) */}
           {message.replyTo && (
