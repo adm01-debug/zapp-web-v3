@@ -167,13 +167,14 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               onChange={(e) => { onInputChange(e); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
               onKeyDown={onKeyDown} onBlur={onBlur} onPaste={logic.handlePaste}
               onClick={(e) => { const t = e.target as HTMLTextAreaElement; checkForMention(t.value, t.selectionStart ?? 0); }}
-              placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : "Digite uma mensagem... (/ para comandos, @ para mencionar)"}
+              placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes verão)..." : "Digite uma mensagem... (/ para comandos, @ para mencionar)"}
               rows={1}
               className={cn(
                 "w-full bg-transparent border border-border/50 rounded-xl outline-none text-sm text-foreground",
                 "placeholder:text-muted-foreground resize-none transition-all",
                 "focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
                 logic.isMobile ? "px-3 py-2.5 text-[16px] min-h-[42px] max-h-[200px]" : "px-3 py-2 min-h-[40px] max-h-[200px]",
+                isWhisper && "border-amber-500/50 focus:border-amber-500 focus:ring-amber-500/20 bg-amber-500/5",
                 logic.isOverLimit && "border-destructive/50 focus:border-destructive focus:ring-destructive/20"
               )}
               aria-label={editingMessage ? "Editar mensagem" : replyToMessage ? "Responder mensagem" : "Digite sua mensagem"}
@@ -195,6 +196,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   size="icon"
                   className={cn("rounded-full shrink-0 disabled:opacity-40 touch-manipulation active:scale-95 transition-all",
                     "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40",
+                    isWhisper && "bg-amber-500 hover:bg-amber-600 shadow-amber-500/25",
                     logic.isMobile ? "w-11 h-11" : "w-10 h-10", logic.sendAnimation && "motion-safe:animate-pulse")}
                   aria-label={editingMessage ? "Confirmar edição" : "Enviar mensagem"}>
                   {isSending ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : editingMessage ? <Check className="w-[18px] h-[18px]" /> : <Send className="w-[18px] h-[18px]" />}
@@ -223,6 +225,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
               fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
               contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
+              isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
             />
           )}
 
