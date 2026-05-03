@@ -77,7 +77,7 @@ export const ChatHeader = memo(function ChatHeader({
 
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className={cn(
-      "flex items-center justify-between px-4 sm:px-6 border-b border-border/5 bg-[#f0f2f5] dark:bg-[#111b21] sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+      "flex items-center justify-between px-4 sm:px-4 border-b border-border/5 bg-[#f0f2f5] dark:bg-[#202c33] sticky top-0 z-30 shadow-none h-[60px]",
       density === 'comfortable' ? 'py-1.5' : 'py-1'
     )}>
       <div className="flex items-center gap-3">
