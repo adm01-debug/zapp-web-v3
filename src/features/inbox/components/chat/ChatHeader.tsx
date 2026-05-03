@@ -20,7 +20,7 @@ import { CrmBadges } from './CrmBadges';
 import { BusinessHoursBadge } from '@/features/inbox/components/BusinessHoursBadge';
 import { AnalysisBadges } from '@/features/inbox/components/AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2, ArrowLeft, XCircle, AlertCircle, EyeOff } from 'lucide-react';
+import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2, ArrowLeft, XCircle, AlertCircle, EyeOff, Share2 } from 'lucide-react';
 import { useContactAvatar } from '@/features/inbox';
 import { useDensity } from '@/hooks/useDensity';
 
@@ -50,7 +50,7 @@ interface ChatHeaderProps {
   onSpeedChange: (speed: number) => void;
   onBack?: () => void;
   onCloseConversation?: () => void;
-  onGenerateSummary?: () => void;
+  onGenerateSummary?: (tool?: any) => void;
   failuresOnly?: boolean;
   onToggleFailuresOnly?: () => void;
   failuresCount?: number;
@@ -299,6 +299,11 @@ export function ChatHeader({
             <DropdownMenuSeparator />
             <DropdownMenuItem><CheckCircle className="w-4 h-4 mr-2" />Marcar como resolvido</DropdownMenuItem>
             <DropdownMenuItem><Archive className="w-4 h-4 mr-2" />Arquivar</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onGenerateSummary?.('teamFiles')}>
+              <Share2 className="w-4 h-4 mr-2 text-amber-600" />
+              Arquivos da Equipe
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onCloseConversation} className="text-destructive">
               <XCircle className="w-4 h-4 mr-2" />Encerrar Conversa

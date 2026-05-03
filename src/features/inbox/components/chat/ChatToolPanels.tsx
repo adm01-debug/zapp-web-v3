@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Radar, GraduationCap, FileText } from 'lucide-react';
+import { Radar, GraduationCap, FileText, Share2 } from 'lucide-react';
 import { ToolPanel } from '@/features/inbox/components/ai-tools/ToolPanel';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 import { Message } from '@/types/chat';
@@ -8,8 +8,9 @@ const ConversationSummary = lazy(() => import('../ConversationSummary').then(m =
 const ObjectionDetector = lazy(() => import('../ObjectionDetector').then(m => ({ default: m.ObjectionDetector })));
 const UniversityHelp = lazy(() => import('../UniversityHelp').then(m => ({ default: m.UniversityHelp })));
 const AIConversationAssistant = lazy(() => import('../AIConversationAssistant').then(m => ({ default: m.AIConversationAssistant })));
+const TeamFiles = lazy(() => import('../TeamFiles').then(m => ({ default: m.TeamFiles })));
 
-type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
+type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | null;
 
 interface ChatToolPanelsProps {
   activeTool: ActiveTool;
@@ -55,13 +56,10 @@ export function ChatToolPanels({ activeTool, onSetActiveTool, messages, contactI
         </Suspense>
       )}
 
-      {activeTool === 'summary' && (
+      {activeTool === 'teamFiles' && (
         <Suspense fallback={null}>
-          <ToolPanel isOpen onClose={() => onSetActiveTool('summary')} icon={<FileText className="w-4 h-4 text-primary" />} title="Resumo da Conversa" subtitle="Análise e pontos-chave da conversa">
-            <ConversationSummary
-              messages={messages.map(m => ({ id: m.id, sender: m.sender, content: m.content, created_at: m.timestamp.toISOString() }))}
-              contactName={contactName} contactId={contactId}
-            />
+          <ToolPanel isOpen onClose={() => onSetActiveTool('teamFiles')} icon={<Share2 className="w-4 h-4 text-amber-600" />} title="Arquivos da Equipe" subtitle="Compartilhamento interno seguro" className="border-amber-100 bg-amber-50/10">
+            <TeamFiles contactId={contactId} />
           </ToolPanel>
         </Suspense>
       )}

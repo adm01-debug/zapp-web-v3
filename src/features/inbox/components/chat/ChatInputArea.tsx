@@ -79,6 +79,7 @@ interface ChatInputAreaProps {
   onToggleWhisper?: () => void;
   fileUploaderRef: React.RefObject<FileUploaderRef | null>;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  onOpenTeamFiles?: () => void;
 }
 
 export function ChatInputArea(props: ChatInputAreaProps) {
@@ -93,7 +94,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
     onSendCustomEmoji, onOpenCatalog, onSelectSuggestion, onSelectTemplate,
     onPasteFiles, signatureEnabled, signatureName, onToggleSignature,
     isWhisper, onToggleWhisper,
-    fileUploaderRef, inputRef,
+    fileUploaderRef, inputRef, onOpenTeamFiles,
   } = props;
 
   const logic = useChatInputLogic({
@@ -112,8 +113,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
       onQuickReply={onQuickReply} signatureEnabled={signatureEnabled}
       signatureName={signatureName} onToggleSignature={onToggleSignature}
       onPollSent={onPollSent} onContactSent={onContactSent}
+      onOpenTeamFiles={onOpenTeamFiles}
     />
-  ), [instanceName, contactPhone, contactName, messages, quickReplies, onOpenInteractiveBuilder, onOpenLocationPicker, onOpenSchedule, onSendProduct, onSelectSuggestion, onSelectTemplate, signatureEnabled, signatureName, onToggleSignature, onPollSent, onContactSent]);
+  ), [instanceName, contactPhone, contactName, messages, quickReplies, onOpenInteractiveBuilder, onOpenLocationPicker, onOpenSchedule, onSendProduct, onSelectSuggestion, onSelectTemplate, signatureEnabled, signatureName, onToggleSignature, onPollSent, onContactSent, onOpenTeamFiles]);
 
   const typingNotification = useMemo(() => {
     if (isWhisper) return "Modo Sussurro: Notas internas invisíveis ao cliente";
