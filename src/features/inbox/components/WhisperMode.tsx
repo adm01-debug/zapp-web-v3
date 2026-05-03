@@ -43,12 +43,21 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
   const { data: whispers = [] } = useQuery({
     queryKey: ['whispers', contactId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('whisper_messages')
-        .select('id, content, sender_id, is_read, created_at')
+        .select(`
+          id, content, sender_id, is_read, created_at, whisper_thread_id
+        `)
         .eq('contact_id', contactId)
-        .order('created_at', { ascending: false })
-        .limit(20);
+        .order('created_at', { ascending: false });
+      
+      if (activeThreadId) {
+        query = query.or(`id.eq.${activeThreadId},whisper_thread_id.eq.${activeThreadId}`);
+      } else {
+        query = query.is('whisper_thread_id', null);
+      }
+
+      const { data, error } = await query.limit(50);
       
       if (!data) return [];
 
@@ -60,9 +69,25 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
 
       const nameMap = new Map((profiles || []).map(p => [p.id, p.name]));
       
+      let threadCounts: Record<string, number> = {};
+      if (!activeThreadId && data.length > 0) {
+        const parentIds = data.map(d => d.id);
+        const { data: counts } = await supabase
+          .from('whisper_messages')
+          .select('whisper_thread_id')
+          .in('whisper_thread_id', parentIds);
+        
+        counts?.forEach(c => {
+          if (c.whisper_thread_id) {
+            threadCounts[c.whisper_thread_id] = (threadCounts[c.whisper_thread_id] || 0) + 1;
+          }
+        });
+      }
+
       return data.map(w => ({
         ...w,
         sender_name: nameMap.get(w.sender_id) || 'Supervisor',
+        reply_count: threadCounts[w.id] || 0,
       })) as WhisperMessage[];
     },
     refetchInterval: 10000,
