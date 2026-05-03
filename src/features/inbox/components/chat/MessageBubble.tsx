@@ -113,7 +113,9 @@ export function MessageBubble({
         break;
       case 'c':
         e.preventDefault();
-        onCopy(message.content || '');
+        if (message.content) {
+          onCopy(message.content);
+        }
         break;
     }
   };
