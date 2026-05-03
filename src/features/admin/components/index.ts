@@ -8,6 +8,7 @@ export * from './AdminView';
 export * from './BulkReprocessGuidedDialog';
 export * from './FailedMessageKpiCard';
 export * from './FailedMessageStatusBadge';
+export * from './FailedMessageTableRow';
 export * from './CrisisRoom';
 export * from './EvolutionFallbackStatusCard';
 export * from './ForceLogoutButton';
