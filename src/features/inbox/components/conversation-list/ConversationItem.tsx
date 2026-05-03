@@ -131,21 +131,17 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
 
   return (
     <QuickPeek preview={quickPeekPreview} enabled={!isSelected} delay={500}>
-      <motion.div ref={rootRef} onClick={() => onSelect(conversation)} whileHover={{ x: 3 }} whileTap={{ scale: 0.99 }} transition={{ duration: 0.2, ease: "easeOut" }}
+      <div ref={rootRef} onClick={() => onSelect(conversation)} 
         className={cn(
-          'relative p-3 rounded-none cursor-pointer transition-all duration-300 group h-full mx-0 border-b border-border/50', 
+          'relative p-3 cursor-pointer transition-colors duration-200 h-[72px] mx-0 border-b border-[#222d34]', 
           isSelected 
-            ? 'bg-[#2a3942] dark:bg-[#2a3942]' 
-            : 'hover:bg-[#202c33] dark:hover:bg-[#202c33] bg-[#111b21] dark:bg-[#111b21]'
+            ? 'bg-[#2a3942]' 
+            : 'hover:bg-[#202c33] bg-[#111b21]'
         )}>
-        {/* {isSelected && <motion.div layoutId="conversationActive" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.4)]" />} */}
         <div className="flex items-start gap-3.5 relative z-10">
           <div className="relative flex-shrink-0">
             <ChannelBadge type={conversation.contact.contact_type} />
-            <Avatar className={cn(
-              "w-[50px] h-[50px] ring-0 transition-all duration-500", 
-              isSelected ? "scale-100" : "group-hover:scale-100"
-            )}>
+            <Avatar className="w-[49px] h-[49px] ring-0">
               <AvatarImage src={conversation.contact.avatar} className="object-cover" />
               <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold tracking-tighter">
                 {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -168,7 +164,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className={cn("font-normal text-[17px] truncate transition-colors", isSelected ? "text-primary-foreground" : "text-[#e9edef]")}>{conversation.contact.name}</span>
+                <span className={cn("font-normal text-[17px] truncate", isSelected ? "text-[#e9edef]" : "text-[#e9edef]")}>{conversation.contact.name}</span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
@@ -208,51 +204,12 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               )}
             </div>
             
-            <div className="flex items-center gap-1 mt-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-              <TooltipProvider delayDuration={400}>
-                {[
-                  { icon: CheckCircle2, label: 'Resolver', color: 'hover:text-emerald-500 hover:bg-emerald-500/10' },
-                  { icon: UserCheck, label: 'Transferir', color: 'hover:text-primary hover:bg-primary/10' },
-                  { icon: Pin, label: 'Fixar', color: 'hover:text-amber-500 hover:bg-amber-500/10' },
-                  { icon: Star, label: 'Favoritar', color: 'hover:text-amber-400 hover:bg-amber-400/10' },
-                  { icon: AlarmClock, label: 'Adiar', color: 'hover:text-sky-500 hover:bg-sky-500/10' },
-                  { icon: Archive, label: 'Arquivar', color: 'hover:text-destructive hover:bg-destructive/10' }
-                ].map((action, idx) => (
-                  <Tooltip key={idx}>
-                    <TooltipTrigger asChild>
-                      <button 
-                        onClick={(e) => e.stopPropagation()} 
-                        className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/40 transition-all duration-200 active:scale-90",
-                          action.color
-                        )}
-                      >
-                        <action.icon className="w-3.5 h-3.5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-[10px] font-medium px-2 py-1">{action.label}</TooltipContent>
-                  </Tooltip>
-                ))}
-              </TooltipProvider>
-            </div>
-            <div className="mt-1">
-              <SLAIndicatorForContact conversation={conversation} compact />
-            </div>
-            {conversation.lastMessage && (
-              <div className="mt-1 flex items-center">
-                <RetryFailureBadge message={conversation.lastMessage} />
-              </div>
-            )}
-            {conversation.tags.length > 0 && (
-              <div className="flex items-center gap-1 mt-2 flex-wrap">
-                {conversation.tags.slice(0, 2).map((tag) => <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0 bg-muted/50 border-border/20">{tag}</Badge>)}
-                {conversation.tags.length > 2 && <span className="text-[10px] text-muted-foreground">+{conversation.tags.length - 2}</span>}
-              </div>
-            )}
+            {/* Actions hidden to match WhatsApp Web list simplicity */}
+            {/* SLA and Tags hidden to match WhatsApp Web list simplicity */}
           </div>
           {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
         </div>
-      </motion.div>
+      </div>
     </QuickPeek>
   );
 }
