@@ -1,4 +1,4 @@
-import { useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
+import { useRef, forwardRef, useImperativeHandle, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat';
 import { Button } from '@/components/ui/button';
@@ -11,17 +11,25 @@ import { AudioRecorder } from '@/features/inbox/components/AudioRecorder';
 import { FileUploader, FileUploaderRef } from '@/features/inbox/components/FileUploader';
 import { ExternalProduct } from '@/hooks/useExternalCatalog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Send, Smile, Plus, Loader2 } from 'lucide-react';
+import { Send, Smile, Plus, Loader2, X, Image as ImageIcon, FileText, FileVideo, FileAudio } from 'lucide-react';
 import { AIEnhanceButton } from './AIEnhanceButton';
 import { InputExtraTools } from './InputExtraTools';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { validateFile, formatFileSize } from '@/utils/whatsappFileTypes';
 
 interface QuickReply {
   id: string;
   title: string;
   shortcut: string;
   content: string;
+  category: string;
+}
+
+interface QueuedFile {
+  id: string;
+  file: File;
+  preview?: string;
   category: string;
 }
 
