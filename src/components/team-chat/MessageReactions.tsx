@@ -28,23 +28,28 @@ export function MessageReactions({ messageId, reactions, isMine, onToggle }: Pro
   };
 
   return (
-    <div className={cn('flex items-center gap-1 flex-wrap mt-1', isMine ? 'justify-end' : 'justify-start')}>
+    <div 
+      className={cn('flex items-center gap-1 flex-wrap mt-1', isMine ? 'justify-end' : 'justify-start')}
+      role="group"
+      aria-label="Reações da mensagem"
+    >
       {reactions.map((r) => (
         <button
           key={r.emoji}
           onClick={() => onToggle(r.emoji)}
           className={cn(
-            'flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs border transition-all',
+            'flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs border transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary',
             'hover:scale-110 active:scale-95',
             r.reactedByMe
-              ? 'bg-primary/15 border-primary/40 text-primary font-medium'
+              ? 'bg-primary/20 border-primary/50 text-primary font-bold shadow-sm'
               : 'bg-background/80 border-border/40 text-foreground hover:bg-muted'
           )}
-          aria-label={`${r.emoji} reagido por ${r.count} pessoa(s)`}
+          aria-pressed={r.reactedByMe}
+          aria-label={`${r.emoji}, ${r.count} reações. ${r.reactedByMe ? 'Você reagiu.' : 'Clique para reagir.'}`}
           data-testid={`reaction-${messageId}-${r.emoji}`}
         >
-          <span className="text-sm leading-none">{r.emoji}</span>
-          <span className="text-[10px] tabular-nums">{r.count}</span>
+          <span className="text-sm leading-none" aria-hidden="true">{r.emoji}</span>
+          <span className="text-[10px] tabular-nums font-semibold">{r.count}</span>
         </button>
       ))}
 
@@ -52,30 +57,33 @@ export function MessageReactions({ messageId, reactions, isMine, onToggle }: Pro
         <PopoverTrigger asChild>
           <button
             className={cn(
-              'opacity-0 group-hover:opacity-100 transition-opacity',
-              'h-6 w-6 rounded-full flex items-center justify-center',
+              'opacity-0 group-hover:opacity-100 transition-opacity focus-visible:opacity-100',
+              'h-6 w-6 rounded-full flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-primary',
               'border border-border/40 bg-background/80 hover:bg-muted text-muted-foreground'
             )}
             aria-label="Adicionar reação"
             data-testid={`reaction-trigger-${messageId}`}
           >
-            <SmilePlus className="w-3 h-3" />
+            <SmilePlus className="w-3.5 h-3.5" />
           </button>
         </PopoverTrigger>
         <PopoverContent
           side="top"
           align={isMine ? 'end' : 'start'}
-          className="w-auto p-2 bg-popover border-border"
+          className="w-auto p-2 bg-popover border-border shadow-xl animate-in fade-in zoom-in duration-150"
+          role="dialog"
+          aria-label="Escolher um emoji"
         >
-          <div className="grid grid-cols-8 gap-1">
+          <div className="grid grid-cols-6 sm:grid-cols-8 gap-1" role="grid">
             {EXTENDED_EMOJIS.map((emoji) => (
               <Button
                 key={emoji}
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-lg hover:scale-125 transition-transform"
+                className="h-9 w-9 text-xl hover:scale-125 hover:bg-muted transition-all focus-visible:ring-2 focus-visible:ring-primary"
                 onClick={() => handlePick(emoji)}
                 aria-label={`Reagir com ${emoji}`}
+                role="gridcell"
               >
                 {emoji}
               </Button>
