@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  BarChart3, Users, TrendingUp, Building, Tag,
+  BarChart3, Users, TrendingUp, Building, Tag, 
+  Lightbulb, AlertCircle, ArrowUpRight, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, subDays, startOfDay } from 'date-fns';
