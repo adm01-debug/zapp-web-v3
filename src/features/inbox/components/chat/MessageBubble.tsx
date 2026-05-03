@@ -128,6 +128,13 @@ export function MessageBubble({
           ref={registerRef}
           tabIndex={0}
           onKeyDown={handleKeyDown}
+          onClick={() => {
+            // No mobile, um toque alterna a visibilidade das reações/barra de ferramentas
+            if (window.innerWidth < 768) {
+              setIsActionsActive(!isActionsActive);
+            }
+          }}
+
           role="listitem"
           aria-label={`Mensagem de ${senderName} às ${formatMessageTime(message.timestamp)}. Pressione R para responder, F para encaminhar, C para copiar.`}
           data-search-highlight={highlightedMessageIds?.has(message.id) ? 'true' : undefined}
