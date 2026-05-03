@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { TeamConversation } from '@/hooks/useTeamChat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
