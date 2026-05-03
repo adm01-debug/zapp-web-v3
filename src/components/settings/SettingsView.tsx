@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Clock, MessageSquare, Bell, Palette, Save, RefreshCw, Loader2,
   Keyboard, Volume2, ArrowRight, Package, Globe, TrendingUp, Settings,
-  Tags, MessageSquareHeart, Bot, Brain, Users,
+  Tags, MessageSquareHeart, Bot, Brain, Users, ShieldAlert
 } from 'lucide-react';
 import { AIAutoTagsConfig } from '@/components/settings/AIAutoTagsConfig';
 import { AIProvidersManager } from '@/components/settings/AIProvidersManager';
