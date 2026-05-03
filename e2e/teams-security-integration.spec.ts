@@ -10,22 +10,24 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
   test.setTimeout(180000);
 
   test('RH Agent: Strict isolation from TI (UI & API)', async ({ page }) => {
-    // 1. Login and navigate deterministically
+    // 1. Login with role-based helper
     await loginAs(page, 'rh_agent');
-    await page.waitForURL(/\/team-chat/);
     
-    // 2. Validate UI isolation using role-based selectors
-    const sidebar = page.getByRole('listbox', { name: /lista de conversas/i });
-    await expect(sidebar).toBeVisible();
+    // 2. Wait for navigation and state stabilization
+    await page.waitForURL(/\/team-chat/, { waitUntil: 'networkidle' });
     
-    // TI channel should NOT be visible to RH agent
-    const tiChannel = page.locator('[data-test-name="TI"]');
+    // 3. Role-based UI assertion: check sidebar as a listbox
+    const conversationList = page.getByRole('listbox', { name: /lista de conversas/i });
+    await expect(conversationList).toBeVisible({ timeout: 15000 });
+    
+    // TI channel must NOT be present in the view for an RH agent
+    const tiChannel = page.getByRole('option').filter({ hasText: /^TI$/ });
     await expect(tiChannel).not.toBeVisible({ timeout: 5000 });
 
-    // 3. API Isolation (Direct Supabase Query)
+    // 4. Direct Database Isolation (Bypassing UI)
     const tiDeptId = 'd2222222-2222-2222-2222-222222222222';
-    const apiCheck = await page.evaluate(async (deptId) => {
-      // Direct attempt to fetch TI conversations via Supabase client
+    const databaseLeachCheck = await page.evaluate(async (deptId) => {
+      // Direct attempt to select data from unauthorized department
       const { data } = await (window as any).supabase
         .from('team_conversations')
         .select('id')
@@ -33,28 +35,29 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
       return data;
     }, tiDeptId);
 
-    // RLS must return 0 rows
-    expect(apiCheck).toHaveLength(0);
+    // RLS check: result must be empty
+    expect(databaseLeachCheck).toHaveLength(0);
   });
 
   test('Soft Delete: Admin enforcement and unauthorized recovery block', async ({ page, browser }) => {
+    // Setup isolated contexts for cleaner session management
     const adminContext = await browser.newContext();
     const agentContext = await browser.newContext();
     
     const adminPage = await adminContext.newPage();
     const agentPage = await agentContext.newPage();
 
-    // 1. Admin TI creates and soft-deletes a message
+    // STEP 1: Admin TI creates and soft-deletes a message
     await loginAs(adminPage, 'ti_admin');
     await adminPage.waitForURL(/\/team-chat/);
     
-    // Select Geral channel
-    const geralChannel = adminPage.locator('[data-test-name="Geral"]');
-    await geralChannel.click();
+    // Open shared channel
+    const sharedChannel = adminPage.getByRole('option', { name: /Geral/i });
+    await sharedChannel.click();
 
-    const uniqueMsg = `Delete-Assertion-${Date.now()}`;
+    const uniqueMsgContent = `Governed-Content-${Date.now()}`;
     
-    // Inject via evaluate to get exact ID for the assertion
+    // Inject message to ensure we have the exact ID for later RLS verification
     const msgId = await adminPage.evaluate(async (content) => {
       const { data: conv } = await (window as any).supabase
         .from('team_conversations').select('id').eq('name', 'Geral').single();
@@ -65,12 +68,12 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
         .insert({ conversation_id: conv.id, content, sender_id: profile.id })
         .select().single();
       return msg.id;
-    }, uniqueMsg);
+    }, uniqueMsgContent);
 
-    // Assert message is visible initially
-    await expect(adminPage.locator(`text="${uniqueMsg}"`)).toBeVisible();
+    // Verify visibility in UI
+    await expect(adminPage.getByText(uniqueMsgContent)).toBeVisible();
 
-    // Perform soft delete
+    // Perform Admin Soft Delete (setting deleted_at)
     await adminPage.evaluate(async (id) => {
       await (window as any).supabase
         .from('team_messages')
@@ -78,16 +81,16 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
         .eq('id', id);
     }, msgId);
 
-    // 2. RH Agent attempt to recover or view
+    // STEP 2: RH Agent (Unauthorized) attempt to access
     await loginAs(agentPage, 'rh_agent');
     await agentPage.waitForURL(/\/team-chat/);
-    await agentPage.locator('[data-test-name="Geral"]').click();
+    await agentPage.getByRole('option', { name: /Geral/i }).click();
 
-    // UI Verification: Message must be gone
-    await expect(agentPage.locator(`text="${uniqueMsg}"`)).not.toBeVisible({ timeout: 5000 });
+    // UI ASSERTION: Message must be gone for non-admins
+    await expect(agentPage.getByText(uniqueMsgContent)).not.toBeVisible({ timeout: 10000 });
 
-    // API Verification: RLS should return null/empty even for direct ID query
-    const apiRecoveryAttempt = await agentPage.evaluate(async (id) => {
+    // API ASSERTION: Direct query via Supabase must return null/empty (RLS check)
+    const directApiCheck = await agentPage.evaluate(async (id) => {
       const { data } = await (window as any).supabase
         .from('team_messages')
         .select('*')
@@ -96,10 +99,9 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
       return data;
     }, msgId);
 
-    expect(apiRecoveryAttempt).toBeNull();
+    expect(directApiCheck).toBeNull();
 
-    await adminContext.close();
-    await agentContext.close();
+    await Promise.all([adminContext.close(), agentContext.close()]);
   });
 
   test('Ticket Transfer: Metadata validation and visibility migration', async ({ page, browser }) => {
@@ -111,27 +113,28 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
     const financePage = await financeContext.newPage();
     const tiPage = await tiContext.newPage();
 
-    // 1. Support Agent initiates transfer
+    // 1. Support Agent initiates transfer via UI
     await loginAs(supportPage, 'transfer_agent');
     await supportPage.waitForURL(/\/team-chat/);
 
-    const targetConv = supportPage.locator('[data-test-name="Financeiro"]');
-    await targetConv.click();
+    const financeChannel = supportPage.getByRole('option', { name: /Financeiro/i });
+    await expect(financeChannel).toBeVisible({ timeout: 15000 });
+    await financeChannel.click();
 
-    // Open Transfer Dialog
-    await supportPage.getByTestId('conversation-more-actions').click();
-    await supportPage.getByTestId('transfer-conversation-btn').click();
+    // UI flow for transfer
+    await supportPage.getByLabel(/Mais ações/i).click();
+    await supportPage.getByRole('menuitem', { name: /Transferir/i }).click();
     
-    // Select TI department
-    await supportPage.getByTestId('dept-select-trigger').click();
-    await supportPage.getByTestId('dept-option-TI').click();
+    // Select Target Department (TI)
+    await supportPage.getByRole('combobox').click();
+    await supportPage.getByRole('option', { name: /^TI$/ }).click();
     
-    // Confirm and wait for toast
-    await supportPage.getByTestId('confirm-transfer-btn').click();
-    await expect(supportPage.locator('text="Conversa transferida com sucesso"')).toBeVisible();
+    // Submit Transfer
+    await supportPage.getByRole('button', { name: /Transferir/i }).click();
+    await expect(supportPage.getByText(/Conversa transferida com sucesso/i)).toBeVisible();
 
-    // 2. Validate Metadata on Backend
-    const metadataCheck = await supportPage.evaluate(async () => {
+    // 2. Validate Metadata & Destination state via API
+    const backendState = await supportPage.evaluate(async () => {
       const { data } = await (window as any).supabase
         .from('team_conversations')
         .select('metadata, department_id')
@@ -141,20 +144,20 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
     });
 
     const tiDeptId = 'd2222222-2222-2222-2222-222222222222';
-    expect(metadataCheck.department_id).toBe(tiDeptId);
-    expect(metadataCheck.metadata).toHaveProperty('transferred_at');
-    expect(metadataCheck.metadata.transferred_by).toBe('Support Agent');
+    expect(backendState.department_id).toBe(tiDeptId);
+    expect(backendState.metadata).toHaveProperty('transferred_at');
+    expect(backendState.metadata.transferred_by).toBe('Support Agent');
 
-    // 3. Verify Visibility Shift
-    // Finance Agent must NO LONGER see it
+    // 3. Verify Visibility Shift across users
+    // Finance Agent: Gone
     await loginAs(financePage, 'finance_agent');
     await financePage.waitForURL(/\/team-chat/);
-    await expect(financePage.locator('[data-test-name="Financeiro"]')).not.toBeVisible();
+    await expect(financePage.getByRole('option', { name: /Financeiro/i })).not.toBeVisible({ timeout: 5000 });
 
-    // TI Admin must NOW see it
+    // TI Admin: Present
     await loginAs(tiPage, 'ti_admin');
     await tiPage.waitForURL(/\/team-chat/);
-    await expect(tiPage.locator('[data-test-name="Financeiro"]')).toBeVisible();
+    await expect(tiPage.getByRole('option', { name: /Financeiro/i })).toBeVisible({ timeout: 5000 });
 
     await Promise.all([supportContext.close(), financeContext.close(), tiContext.close()]);
   });
