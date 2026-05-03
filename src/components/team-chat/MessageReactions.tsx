@@ -31,7 +31,10 @@ export function MessageReactions({ messageId, reactions, isMine, isToggling, onT
 
   return (
     <div 
-      className={cn('flex items-center gap-1 flex-wrap mt-1', isMine ? 'justify-end' : 'justify-start')}
+      className={cn(
+        'absolute -bottom-3 flex items-center gap-0.5 z-10',
+        isMine ? 'right-2' : 'left-2'
+      )}
       role="group"
       aria-label="Reações da mensagem"
       data-is-toggling={isToggling}
@@ -42,18 +45,18 @@ export function MessageReactions({ messageId, reactions, isMine, isToggling, onT
           key={r.emoji}
           onClick={() => onToggle(r.emoji)}
           className={cn(
-            'flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs border transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary',
-            'hover:scale-110 active:scale-95',
+            'flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] border transition-all outline-none focus-visible:ring-1 focus-visible:ring-primary',
+            'hover:scale-110 active:scale-95 shadow-sm',
             r.reactedByMe
-              ? 'bg-primary/10 border-primary/30 text-primary font-bold shadow-sm ring-1 ring-primary/20'
-              : 'bg-muted/80 border-border/50 text-foreground hover:bg-muted'
+              ? 'bg-primary border-primary/20 text-primary-foreground font-bold'
+              : 'bg-background border-border/50 text-foreground hover:bg-muted/80'
           )}
           aria-pressed={r.reactedByMe}
           aria-label={`${r.emoji}, ${r.count} reações. ${r.reactedByMe ? 'Você reagiu.' : 'Clique para reagir.'}`}
           data-testid={`reaction-${messageId}-${r.emoji}`}
         >
-          <span className="text-sm leading-none" aria-hidden="true">{r.emoji}</span>
-          <span className="text-[10px] tabular-nums font-semibold">{r.count}</span>
+          <span className="text-[11px] leading-none" aria-hidden="true">{r.emoji}</span>
+          {r.count > 1 && <span className="text-[9px] tabular-nums font-semibold ml-0.5">{r.count}</span>}
         </button>
       ))}
 
