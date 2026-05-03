@@ -1,76 +1,83 @@
 /**
- * useContactAvatarFetch.ts
- * Auto-fetch WhatsApp profile picture via Evolution API.
- * Solves Gap #3: Avatar shows only initials when no manual photo.
+ * useContactAvatarFetch.ts — Auto-fetch WhatsApp profile picture and save to EXTERNAL CRM
+ *
+ * FIXED: Now saves avatar_url to the EXTERNAL contacts table via contactsDB bridge,
+ * not to the Lovable Cloud DB.
+ *
+ * Flow:
+ * 1. Calls Edge Function `fetch-whatsapp-avatar` (runs on Lovable Cloud)
+ * 2. Edge Function calls Evolution API to get profile pic URL
+ * 3. Saves the URL to the EXTERNAL CRM contacts table
  */
-import { useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { dbFrom } from '@/integrations/datasource/db';
+import { contactsDB } from '@/lib/contactsDB';
+import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 
-const avatarCache = new Map<string, string | null>();
-const FETCH_COOLDOWN_MS = 60_000 * 30; // 30 min between refetches
-const lastFetchTime = new Map<string, number>();
-
-interface UseContactAvatarFetchOptions {
-  contactId: string;
-  phone: string | null;
-  currentAvatarUrl: string | null;
-  workspaceId: string;
-  instanceName?: string;
+interface AvatarFetchResult {
+  avatarUrl: string | null;
+  isFetching: boolean;
+  error: string | null;
+  fetchAvatar: () => Promise<string | null>;
 }
 
-export function useContactAvatarFetch({
-  contactId, phone, currentAvatarUrl, workspaceId, instanceName = 'wpp2',
-}: UseContactAvatarFetchOptions) {
-  const isFetching = useRef(false);
+export function useContactAvatarFetch(
+  contactId: string | undefined,
+  phone: string | undefined,
+  currentAvatarUrl: string | null | undefined
+): AvatarFetchResult {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(currentAvatarUrl ?? null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const cacheRef = useRef<Map<string, { url: string; ts: number }>>(new Map());
 
   const fetchAvatar = useCallback(async (): Promise<string | null> => {
-    // Skip if already has avatar or no phone
-    if (currentAvatarUrl || !phone || isFetching.current) return currentAvatarUrl;
+    if (!contactId || !phone || !isExternalConfigured) return null;
 
-    // Check cache
-    if (avatarCache.has(contactId)) return avatarCache.get(contactId)!;
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length < 10) return null;
 
-    // Cooldown check
-    const lastFetch = lastFetchTime.get(contactId);
-    if (lastFetch && Date.now() - lastFetch < FETCH_COOLDOWN_MS) return null;
+    // Check cache (30 min TTL)
+    const cached = cacheRef.current.get(cleaned);
+    if (cached && Date.now() - cached.ts < 30 * 60 * 1000) {
+      setAvatarUrl(cached.url);
+      return cached.url;
+    }
 
-    isFetching.current = true;
-    lastFetchTime.set(contactId, Date.now());
+    setIsFetching(true);
+    setError(null);
 
     try {
-      // Call Edge Function that wraps Evolution API fetchProfilePicture
-      const { data, error } = await supabase.functions.invoke('fetch-whatsapp-avatar', {
-        body: {
-          phone,
-          instance_name: instanceName,
-          contact_id: contactId,
-          workspace_id: workspaceId,
-        },
+      // Call Edge Function on Lovable Cloud (it has Evolution API access)
+      const { data, error: fnError } = await supabase.functions.invoke('fetch-whatsapp-avatar', {
+        body: { phone: cleaned },
       });
 
-      if (error) throw error;
+      if (fnError) throw fnError;
 
-      const avatarUrl = data?.avatar_url ?? null;
-      avatarCache.set(contactId, avatarUrl);
+      const url = data?.avatar_url;
+      if (url) {
+        setAvatarUrl(url);
+        cacheRef.current.set(cleaned, { url, ts: Date.now() });
 
-      // Persist to contact record if we got a URL
-      if (avatarUrl) {
-        await dbFrom('contacts')
-          .update({ avatar_url: avatarUrl })
-          .eq('id', contactId)
-          .eq('workspace_id', workspaceId);
+        // Save to EXTERNAL CRM database (not Lovable Cloud)
+        try {
+          await contactsDB.updateAvatar(contactId, url);
+        } catch (saveErr) {
+          console.warn('[AvatarFetch] Failed to save avatar to CRM DB:', saveErr);
+          // Don't throw — avatar was still fetched successfully
+        }
       }
 
-      return avatarUrl;
+      return url ?? null;
     } catch (err) {
-      console.warn('[AvatarFetch] Failed for', contactId, err);
-      avatarCache.set(contactId, null);
+      const msg = err instanceof Error ? err.message : 'Erro ao buscar avatar';
+      setError(msg);
       return null;
     } finally {
-      isFetching.current = false;
+      setIsFetching(false);
     }
-  }, [contactId, phone, currentAvatarUrl, workspaceId, instanceName]);
+  }, [contactId, phone]);
 
-  return { fetchAvatar };
+  return { avatarUrl, isFetching, error, fetchAvatar };
 }

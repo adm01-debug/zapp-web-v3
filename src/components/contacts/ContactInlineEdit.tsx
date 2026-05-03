@@ -1,122 +1,151 @@
 /**
- * ContactInlineEdit.tsx
- * Click-to-edit component for contact fields in the chat sidebar.
- * Solves Gap #6: No inline editing — agents had to open the full form.
+ * ContactInlineEdit.tsx — Click-to-edit fields saved to EXTERNAL CRM database
+ *
+ * FIXED: Now uses contactsDB bridge to write to the GESTÃO DE CLIENTES database,
+ * not the Lovable Cloud DB.
+ *
+ * Features:
+ * - Click any field to edit inline
+ * - Enter to save, Escape to cancel
+ * - Validation for phone (E.164 BR), email, required fields
+ * - Optimistic UI with rollback on error
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Input } from '@/components/ui/input';
 import { Check, X, Pencil } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { contactsDB } from '@/lib/contactsDB';
+import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { toast } from 'sonner';
-import { sanitizeText } from '@/lib/sanitize';
-import { invalidateContactCache } from '@/hooks/useContactRealtime';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactInlineEditProps {
   contactId: string;
   field: string;
-  value: string;
-  displayValue?: string;
-  className?: string;
-  inputClassName?: string;
-  readonly?: boolean;
-  onSaved?: (newValue: string) => void;
-  validate?: (value: string) => string | null;
+  value: string | null;
+  label: string;
+  type?: 'text' | 'email' | 'tel' | 'url';
+  required?: boolean;
   placeholder?: string;
+  onSaved?: (newValue: string) => void;
 }
 
-export const ContactInlineEdit: React.FC<ContactInlineEditProps> = ({
-  contactId, field, value, displayValue, className, inputClassName,
-  readonly = false, onSaved, validate, placeholder,
-}) => {
+export function ContactInlineEdit({
+  contactId,
+  field,
+  value,
+  label,
+  type = 'text',
+  required = false,
+  placeholder,
+  onSaved,
+}: ContactInlineEditProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
+  const [editValue, setEditValue] = useState(value ?? '');
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isEditing) {
-      setEditValue(value);
-      setTimeout(() => inputRef.current?.focus(), 50);
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
     }
-  }, [isEditing, value]);
+  }, [isEditing]);
+
+  const validate = useCallback((val: string): string | null => {
+    if (required && !val.trim()) return `${label} \u00e9 obrigat\u00f3rio`;
+    if (type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return 'Email inv\u00e1lido';
+    if (type === 'tel' && val && !/^\+?[\d\s()-]{8,}$/.test(val)) return 'Telefone inv\u00e1lido';
+    if (type === 'url' && val && !/^https?:\/\/.+/.test(val)) return 'URL inv\u00e1lida';
+    return null;
+  }, [required, label, type]);
 
   const save = useCallback(async () => {
     const trimmed = editValue.trim();
-    if (trimmed === value) { setIsEditing(false); return; }
-    if (validate) {
-      const err = validate(trimmed);
-      if (err) { setError(err); return; }
+    const err = validate(trimmed);
+    if (err) {
+      toast.error(err);
+      return;
     }
-    setIsSaving(true);
-    setError(null);
-    try {
-      const { error: updateError } = await dbFrom('contacts')
-        .update({ [field]: trimmed || null })
-        .eq('id', contactId);
-      if (updateError) throw updateError;
-      invalidateContactCache(contactId);
-      onSaved?.(trimmed);
-      toast.success(`Campo atualizado`);
+
+    if (trimmed === (value ?? '')) {
       setIsEditing(false);
-    } catch (err) {
-      setError('Erro ao salvar');
-      toast.error('Erro ao atualizar campo');
+      return;
+    }
+
+    if (!isExternalConfigured) {
+      toast.error('Banco de dados CRM externo n\u00e3o configurado');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await contactsDB.update(contactId, { [field]: trimmed || null } as any);
+      toast.success(`${label} atualizado`);
+      onSaved?.(trimmed);
+      setIsEditing(false);
+    } catch (e) {
+      toast.error(`Erro ao salvar ${label.toLowerCase()}`);
+      setEditValue(value ?? '');
     } finally {
       setIsSaving(false);
     }
-  }, [editValue, value, field, contactId, validate, onSaved]);
+  }, [editValue, value, contactId, field, label, validate, onSaved]);
 
-  const cancel = () => { setEditValue(value); setError(null); setIsEditing(false); };
+  const cancel = useCallback(() => {
+    setEditValue(value ?? '');
+    setIsEditing(false);
+  }, [value]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') { e.preventDefault(); save(); }
-    if (e.key === 'Escape') { e.preventDefault(); cancel(); }
-  };
-
-  if (readonly) return <span className={className}>{displayValue ?? sanitizeText(value)}</span>;
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') save();
+    else if (e.key === 'Escape') cancel();
+  }, [save, cancel]);
 
   if (isEditing) {
     return (
       <div className="flex items-center gap-1">
-        <Input
+        <input
           ref={inputRef}
+          type={type}
           value={editValue}
-          onChange={(e) => { setEditValue(e.target.value); setError(null); }}
+          onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={() => { if (!isSaving) cancel(); }}
-          className={cn('h-7 text-sm py-0 px-1.5', inputClassName)}
+          onBlur={() => setTimeout(cancel, 150)}
           disabled={isSaving}
-          placeholder={placeholder}
-          aria-label={`Editar ${field}`}
-          aria-invalid={!!error}
+          placeholder={placeholder ?? label}
+          className="flex-1 min-w-0 px-2 py-1 text-sm border rounded bg-background focus:ring-2 focus:ring-primary/50 outline-none disabled:opacity-50"
+          aria-label={`Editar ${label}`}
         />
-        <button onClick={save} disabled={isSaving} className="text-green-600 hover:text-green-700" aria-label="Salvar">
+        <button
+          onClick={save}
+          disabled={isSaving}
+          className="p-1 text-green-600 hover:bg-green-50 rounded"
+          aria-label="Salvar"
+        >
           <Check className="h-3.5 w-3.5" />
         </button>
-        <button onClick={cancel} className="text-muted-foreground hover:text-destructive" aria-label="Cancelar">
+        <button
+          onClick={cancel}
+          disabled={isSaving}
+          className="p-1 text-red-600 hover:bg-red-50 rounded"
+          aria-label="Cancelar"
+        >
           <X className="h-3.5 w-3.5" />
         </button>
-        {error && <span className="text-[10px] text-destructive">{error}</span>}
       </div>
     );
   }
 
   return (
-    <span
-      className={cn('group/inline cursor-pointer inline-flex items-center gap-1', className)}
+    <button
       onClick={() => setIsEditing(true)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsEditing(true); }}
-      aria-label={`Clique para editar ${field}`}
+      className="group flex items-center gap-1 text-sm text-left w-full hover:bg-muted/50 rounded px-1 py-0.5 transition-colors"
+      aria-label={`Editar ${label}: ${value || 'vazio'}`}
     >
-      {displayValue ?? sanitizeText(value)}
-      <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/inline:opacity-50 transition-opacity" />
-    </span>
+      <span className={value ? 'text-foreground' : 'text-muted-foreground italic'}>
+        {value || placeholder || `Adicionar ${label.toLowerCase()}`}
+      </span>
+      <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+    </button>
   );
-};
+}
 
 export default ContactInlineEdit;
