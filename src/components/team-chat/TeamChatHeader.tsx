@@ -64,6 +64,8 @@ export function TeamChatHeader({
   onVoiceChange,
   onSpeedChange,
   onToggleMute,
+  onToggleStats,
+  showStats,
 }: TeamChatHeaderProps) {
   const [showTransfer, setShowTransfer] = useState(false);
   const { profile } = useAuth();
