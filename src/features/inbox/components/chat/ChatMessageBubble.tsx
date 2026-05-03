@@ -211,8 +211,8 @@ export function ChatMessageBubble({
             message.isWhisper
               ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200/50 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 shadow-inner'
               : isSent 
-                ? 'rounded-br-md bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-primary/20' 
-                : 'rounded-bl-md bg-chat-received border-border/30 text-chat-received-foreground'
+                ? 'rounded-br-sm bg-primary text-primary-foreground shadow-sm' 
+                : 'rounded-bl-sm bg-muted/20 border-border/20 text-foreground'
           )}
         >
 
@@ -317,15 +317,15 @@ export function ChatMessageBubble({
                   Sussurro Interno
                 </div>
               )}
-              <TextWithLinks text={message.content} className={cn("text-sm whitespace-pre-wrap leading-relaxed", message.isWhisper && "italic")} maxPreviews={2} />
+              <TextWithLinks text={message.content} className={cn("text-[13px] font-normal tracking-tight whitespace-pre-wrap leading-snug", message.isWhisper && "italic")} maxPreviews={2} />
             </div>
           )}
 
           {/* Timestamp and status */}
           <div
             className={cn(
-              'flex items-center justify-end gap-1.5 mt-1',
-              isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'
+              'flex items-center justify-end gap-1 mt-0.5',
+              isSent ? 'text-primary-foreground/60' : 'text-muted-foreground/50'
             )}
           >
             <span className="text-[10px]">
