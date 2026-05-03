@@ -13,8 +13,8 @@
 
 /* ===== FONT VARIABLES ===== */
 :root {
-  --font-display: 'Outfit', system-ui, sans-serif;
-  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-display: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* ===== VIEWPORT LOCK — Must be outside @layer to win specificity ===== */
