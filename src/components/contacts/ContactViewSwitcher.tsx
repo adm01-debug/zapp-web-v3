@@ -20,6 +20,7 @@ const VIEW_MODES = [
   { value: 'list' as const, label: 'Lista', icon: List },
   { value: 'table' as const, label: 'Tabela', icon: Table2 },
   { value: 'map' as const, label: 'Mapa', icon: MapPin },
+  { value: 'kanban' as const, label: 'Pipeline', icon: GitGraph },
   { value: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
 ];
 
