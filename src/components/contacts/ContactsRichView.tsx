@@ -122,9 +122,13 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
         {/* ── Header + ação rápida ────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">Contatos</h1>
-            <p className="text-xs text-muted-foreground">
-              {totalCount.toLocaleString('pt-BR')} contato{totalCount !== 1 ? 's' : ''} no total
+            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Hub de Contatos
+            </h1>
+            <p className="text-sm text-muted-foreground flex items-center gap-2 mt-0.5">
+              <span>{totalCount.toLocaleString('pt-BR')} registros</span>
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+              <span className="text-primary/80 font-medium">Hana Smart View</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -132,18 +136,18 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
               variant="outline"
               size="sm"
               onClick={() => setIsImportOpen(true)}
-              className="gap-1.5"
+              className="gap-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all"
             >
-              <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">Importar CSV</span>
+              <Upload className="w-4 h-4 text-primary" />
+              <span className="hidden sm:inline font-medium">Importar CSV</span>
             </Button>
             <Button
               size="sm"
               onClick={() => setIsAddDialogOpen(true)}
-              className="gap-1.5"
+              className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all font-medium"
             >
               <UserPlus className="w-4 h-4" />
-              Novo Contato
+              Novo Registro
             </Button>
           </div>
         </div>
