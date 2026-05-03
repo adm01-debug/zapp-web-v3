@@ -172,7 +172,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <span className="text-[12px] text-muted-foreground tabular-nums">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
+                <span className="text-[12px] text-[#8696a0] tabular-nums">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
