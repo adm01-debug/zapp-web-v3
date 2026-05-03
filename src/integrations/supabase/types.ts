@@ -3630,6 +3630,10 @@ export type Database = {
           message_count: number
           metadata: Json
           remote_jid: string
+          sla_critical_threshold_minutes: number | null
+          sla_enabled: boolean | null
+          sla_notification_message: string | null
+          sla_warning_threshold_minutes: number | null
           status: string
           unread_count: number
           updated_at: string
@@ -3647,6 +3651,10 @@ export type Database = {
           message_count?: number
           metadata?: Json
           remote_jid: string
+          sla_critical_threshold_minutes?: number | null
+          sla_enabled?: boolean | null
+          sla_notification_message?: string | null
+          sla_warning_threshold_minutes?: number | null
           status?: string
           unread_count?: number
           updated_at?: string
@@ -3664,6 +3672,10 @@ export type Database = {
           message_count?: number
           metadata?: Json
           remote_jid?: string
+          sla_critical_threshold_minutes?: number | null
+          sla_enabled?: boolean | null
+          sla_notification_message?: string | null
+          sla_warning_threshold_minutes?: number | null
           status?: string
           unread_count?: number
           updated_at?: string
@@ -8804,6 +8816,50 @@ export type Database = {
           },
         ]
       }
+      sla_history: {
+        Row: {
+          alert_time: string | null
+          created_at: string | null
+          id: string
+          is_resolved: boolean | null
+          metadata: Json | null
+          resolved_at: string | null
+          status: string
+          thread_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          alert_time?: string | null
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          status: string
+          thread_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          alert_time?: string | null
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          status?: string
+          thread_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_history_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sla_risk_acknowledgements: {
         Row: {
           acknowledged_at: string
@@ -10068,6 +10124,9 @@ export type Database = {
           closing_message: string | null
           compact_mode: boolean | null
           created_at: string
+          global_sla_critical_minutes: number | null
+          global_sla_notification_message: string | null
+          global_sla_warning_minutes: number | null
           goal_sound_type: string | null
           id: string
           inactivity_timeout: number | null
@@ -10105,6 +10164,9 @@ export type Database = {
           closing_message?: string | null
           compact_mode?: boolean | null
           created_at?: string
+          global_sla_critical_minutes?: number | null
+          global_sla_notification_message?: string | null
+          global_sla_warning_minutes?: number | null
           goal_sound_type?: string | null
           id?: string
           inactivity_timeout?: number | null
@@ -10142,6 +10204,9 @@ export type Database = {
           closing_message?: string | null
           compact_mode?: boolean | null
           created_at?: string
+          global_sla_critical_minutes?: number | null
+          global_sla_notification_message?: string | null
+          global_sla_warning_minutes?: number | null
           goal_sound_type?: string | null
           id?: string
           inactivity_timeout?: number | null
