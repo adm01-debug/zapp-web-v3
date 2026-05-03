@@ -52,18 +52,21 @@ interface ChatMessageBubbleProps {
 // gets actionable guidance (re-authenticate / retry).
 function MessageStatusIcon({ status }: { status: Message['status'] }) {
   let icon: JSX.Element;
-  let tooltip: string | null = null;
+  let tooltip: string = '';
 
   switch (status) {
     case 'sent':
       icon = <Check className="w-3 h-3" />;
+      tooltip = 'Enviado';
       break;
     case 'delivered':
       icon = <CheckCheck className="w-3 h-3" />;
+      tooltip = 'Entregue';
       break;
     case 'read':
     case 'played':
       icon = <CheckCheck className="w-3 h-3 text-info" />;
+      tooltip = status === 'played' ? 'Reproduzido' : 'Lido';
       break;
     case 'failed_auth':
       icon = <ShieldAlert className="w-3 h-3 text-destructive" />;
@@ -79,23 +82,25 @@ function MessageStatusIcon({ status }: { status: Message['status'] }) {
       break;
     default:
       icon = <Clock className="w-3 h-3 animate-pulse" />;
+      tooltip = 'Enviando...';
   }
-
-  if (!tooltip) return icon;
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span
-          role="button"
+          role="status"
           tabIndex={0}
-          aria-label={tooltip}
-          className="inline-flex cursor-help"
+          aria-label={`Status: ${tooltip}`}
+          className={cn(
+            "inline-flex",
+            status?.startsWith('failed') ? "cursor-help" : "cursor-default"
+          )}
         >
           {icon}
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-xs text-xs">
+      <TooltipContent side="top" className="text-[10px] px-2 py-1">
         {tooltip}
       </TooltipContent>
     </Tooltip>
