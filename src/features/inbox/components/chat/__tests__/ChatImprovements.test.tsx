@@ -12,7 +12,9 @@ vi.mock('@/features/auth', () => ({ useAuth: () => ({ profile: { name: 'Agent', 
 vi.mock('@/features/inbox', () => ({ 
   useContactAvatar: () => ({ avatarUrl: null }),
   sendMessageToContact: vi.fn(),
-  useMediaRefresh: () => ({ url: null, failed: false })
+  useMediaRefresh: () => ({ url: null, failed: false }),
+  useInboxStatusPref: () => ({ showStatus: true }),
+  SLAIndicatorForContact: () => <div data-testid="sla-indicator">SLA</div>
 }));
 vi.mock('@/lib/logger', () => ({ getLogger: () => ({ info: vi.fn(), error: vi.fn(), warn: vi.fn() }) }));
 vi.mock('@/integrations/supabase/client', () => ({ 
