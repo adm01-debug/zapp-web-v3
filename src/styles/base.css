@@ -100,7 +100,7 @@
 
   p {
     @apply text-base leading-relaxed;
-    font-size: clamp(0.875rem, 0.825rem + 0.2vw, 1rem);
+    font-size: var(--text-base);
   }
 
   small {
