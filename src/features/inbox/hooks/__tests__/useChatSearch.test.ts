@@ -134,4 +134,17 @@ describe('useChatSearch Logic', () => {
     expect(result.current.results).toHaveLength(1);
     expect(result.current.results[0].content).toContain('Olá');
   });
+
+  it('should filter by date range', async () => {
+    const { result } = setup();
+
+    act(() => {
+      // Filter for messages after Jan 1st 10:03:30 (should find msg 5 and 6)
+      result.current.setDatePreset('custom');
+      result.current.setCustomDateFrom(new Date('2024-01-01T10:03:30Z'));
+    });
+
+    expect(result.current.results).toHaveLength(2);
+    expect(result.current.results.map(r => r.id)).toEqual(['5', '6']);
+  });
 });
