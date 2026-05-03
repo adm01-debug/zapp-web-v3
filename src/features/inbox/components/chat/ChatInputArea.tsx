@@ -94,7 +94,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
     onSendCustomEmoji, onOpenCatalog, onSelectSuggestion, onSelectTemplate,
     onPasteFiles, signatureEnabled, signatureName, onToggleSignature,
     isWhisper, onToggleWhisper,
-    fileUploaderRef, inputRef,
+    fileUploaderRef, inputRef, onOpenTeamFiles,
   } = props;
 
   const logic = useChatInputLogic({
