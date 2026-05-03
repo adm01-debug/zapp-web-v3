@@ -7,8 +7,19 @@ import React from 'react';
 
 // Mock dependencies
 vi.mock('@/hooks/use-mobile', () => ({ useIsMobile: () => false }));
-vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
+vi.mock('@/hooks/use-toast', () => ({ 
+  useToast: () => ({ toast: vi.fn() }),
+  toast: vi.fn()
+}));
+vi.mock('@/features/auth', () => ({ 
+  useAuth: () => ({ 
+    profile: { id: 'agent-1', name: 'Agent Test' },
+    isAuthenticated: true
+  }) 
+}));
 vi.mock('@/components/mobile/SwipeableMessage', () => ({ SwipeableMessage: ({children}: any) => <div>{children}</div> }));
+vi.mock('@/features/inbox/components/AISuggestions', () => ({ AISuggestions: () => <div data-testid="ai-suggestions">AI Suggestions</div> }));
+vi.mock('@/features/inbox/components/MessageTemplates', () => ({ MessageTemplates: () => <div data-testid="message-templates">Templates</div> }));
 vi.mock('@/features/inbox/hooks/useMentions', () => ({ useMentions: () => ({ isOpen: false, cursorPos: 0, checkForMention: vi.fn(), handleSelect: vi.fn(), close: vi.fn() }) }));
 
 describe('ChatInputArea — Interaction Scenarios', () => {
@@ -73,7 +84,7 @@ describe('ChatInputArea — Interaction Scenarios', () => {
     expect(screen.getByLabelText(/enviar mensagem/i)).toBeTruthy();
   });
 
-  it('Scenario 2: Plus button animation and menu open', async () => {
+  it('Scenario 2: Plus button opens menu', async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
@@ -88,8 +99,11 @@ describe('ChatInputArea — Interaction Scenarios', () => {
     // Simulate click
     fireEvent.click(plusButton);
     
-    // Check if popover menu items appear (e.g. from TertiaryToolsMenu)
-    // Note: Items depend on TertiaryToolsMenu implementation which is mocked/partial here
+    // We expect some tools or placeholders to be visible in the popover
+    await waitFor(() => {
+      expect(screen.getByTestId('ai-suggestions')).toBeTruthy();
+      expect(screen.getByTestId('message-templates')).toBeTruthy();
+    });
   });
 
   it('Scenario 3: Character counter visibility', () => {
