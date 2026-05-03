@@ -519,6 +519,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
         <ChatInputArea inputValue={handlers.inputValue} replyToMessage={handlers.replyToMessage} editingMessage={handlers.editingMessage} isRecordingAudio={handlers.isRecordingAudio}
           showSlashCommands={dialogs.slashCommands} contactId={conversation.contact.id} contactPhone={conversation.contact.phone}
           contactName={conversation.contact.name} instanceName={instanceName} messages={messages} quickReplies={dbQuickReplies} isSending={handlers.isSending}
+          isWhisper={handlers.isWhisper} onToggleWhisper={() => handlers.setIsWhisper(!handlers.isWhisper)}
           onInputChange={handlers.handleInputChange} onKeyDown={(e) => handlers.handleKeyDown(e, dialogs.slashCommands)} onBlur={handleTypingStop} onSend={handlers.handleSend}
           onCancelReply={() => handlers.setReplyToMessage(null)} onCancelEdit={handlers.handleCancelEdit} onSlashCommand={handlers.handleSlashCommand}
           onCloseSlashCommands={() => closeDialog('slashCommands')} onQuickReply={handleQuickReply}
