@@ -124,39 +124,49 @@ test.describe('Teams - RBAC & RLS Enforcement', () => {
     const financePage = await financeContext.newPage();
     const tiPage = await tiContext.newPage();
 
-    // 1. Support Agent transfers a Financeiro conversation to TI
+    // 1. Support Agent transfers a Financeiro conversation to TI via UI
     await loginAs(supportPage, 'transfer_agent');
     await supportPage.goto('/team-chat');
 
-    const tiDeptId = 'd2222222-2222-2222-2222-222222222222';
+    const financeiroChannel = supportPage.locator('[data-test-name="Financeiro"]');
+    await financeiroChannel.click();
+
+    // Open More Actions
+    await supportPage.locator('[data-testid="conversation-more-actions"]').click();
     
-    const convId = await supportPage.evaluate(async (newDeptId) => {
-      const { data: conv } = await (window as any).supabase
-        .from('team_conversations')
-        .select('id')
-        .eq('name', 'Financeiro')
-        .single();
+    // Click Transfer
+    await supportPage.locator('[data-testid="transfer-conversation-btn"]').click();
+    
+    // Select TI department in the dialog
+    // We need to wait for the dialog to open and departments to load
+    const tiDeptName = 'TI';
+    await supportPage.locator('button[role="combobox"]').click();
+    await supportPage.locator(`role=option[name="${tiDeptName}"]`).click();
+    
+    // Confirm transfer
+    await supportPage.locator('button:has-text("Transferir")').click();
+    
+    // Verify toast success
+    await expect(supportPage.locator('text="Conversa transferida com sucesso"')).toBeVisible();
 
-      await (window as any).supabase
-        .from('team_conversations')
-        .update({ 
-          department_id: newDeptId,
-          metadata: { transfer_log: 'Escalado pelo suporte', source: 'Financeiro' } 
-        })
-        .eq('id', conv.id);
-        
-      return conv.id;
-    }, tiDeptId);
-
+    const convId = await supportPage.evaluate(async () => {
+       // Just grab the ID of the currently selected (transferred) conversation
+       return new URL(window.location.href).searchParams.get('id') || 
+              (window as any).lastSelectedConvId; // If implemented via state
+    });
+    
+    // Since we don't have URL params yet in the mock UI, let's just use the name for validation
+    
     // 2. Finance Agent should lose visibility
     await loginAs(financePage, 'finance_agent');
     await financePage.goto('/team-chat');
-    await expect(financePage.locator(`[data-testid="conversation-${convId}"]`)).not.toBeVisible();
+    await expect(financePage.locator('[data-test-name="Financeiro"]')).not.toBeVisible();
 
-    // 3. TI Admin should see it now belonging to TI
+    // 3. TI Admin should see it
     await loginAs(tiPage, 'ti_admin');
     await tiPage.goto('/team-chat');
-    await expect(tiPage.locator(`[data-testid="conversation-${convId}"]`)).toBeVisible();
+    await expect(tiPage.locator('[data-test-name="Financeiro"]')).toBeVisible();
+    // (Note: in a real app, it might rename or stay named 'Financeiro' but be in TI list)
 
     await supportContext.close();
     await financeContext.close();
