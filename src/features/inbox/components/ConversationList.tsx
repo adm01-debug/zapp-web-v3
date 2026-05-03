@@ -180,6 +180,7 @@ export function ConversationList({
                   <ConversationContextMenu
                     conversationId={conversation.id}
                     contactName={conversation.contact.name}
+                    isMuted={conversation.is_muted}
                   >
                   <motion.div
                     role="option"
