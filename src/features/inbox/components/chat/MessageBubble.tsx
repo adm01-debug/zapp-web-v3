@@ -60,6 +60,7 @@ interface MessageBubbleProps {
   onEditStart?: (message: Message) => void;
   onMessageDeleted: (messageId: string) => void;
   registerRef: (el: HTMLDivElement | null) => void;
+  density?: 'comfortable' | 'compact' | 'dense';
 }
 
 export function MessageBubble({
