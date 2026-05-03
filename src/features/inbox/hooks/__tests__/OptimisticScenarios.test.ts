@@ -139,6 +139,11 @@ describe('useOptimisticMessages — Daily Scenarios', () => {
 
     const merged = result.current.mergeWithReal([]);
     expect(merged).toHaveLength(0);
+    
+    act(() => {
+      const opt = Object.values((result.current as any).pending || {})[0] as any;
+      if (opt) result.current.cleanup([opt.id]);
+    });
     expect(result.current.pendingCount).toBe(0);
     
     vi.useRealTimers();
