@@ -14,7 +14,21 @@ export function useContactsViewState() {
     setFilterDateRange, selectedIds, setSelectedIds, setIsAddDialogOpen,
   } = crud;
 
-  const [viewMode, setViewMode] = useState<ContactViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ContactViewMode>(() => {
+    return (localStorage.getItem('contacts-view-mode') as ContactViewMode) || 'grid';
+  });
+  const [highContrast, setHighContrast] = useState<boolean>(() => {
+    return localStorage.getItem('contacts-high-contrast') === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('contacts-view-mode', viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    localStorage.setItem('contacts-high-contrast', String(highContrast));
+  }, [highContrast]);
+
   const [gridColumns, setGridColumns] = useState(4);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
