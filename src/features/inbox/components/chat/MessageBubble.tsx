@@ -162,6 +162,12 @@ export function MessageBubble({
             {!isSent && isFirstInGroup && (
               <span className="text-[11px] font-semibold text-primary/80 ml-1 block">{senderName}</span>
             )}
+            {message.isWhisper && (
+              <div className="flex items-center gap-1 mb-0.5 ml-1">
+                <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Sussurro Interno</span>
+              </div>
+            )}
 
             {/* Floating emoji reactions on hover — WhatsApp Web style */}
             <AnimatePresence>
