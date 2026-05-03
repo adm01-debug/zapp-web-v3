@@ -114,18 +114,21 @@ export function WhisperMode({ contactId, targetAgentId, className }: WhisperMode
   if (!isSupervisor && whispers.length === 0) return null;
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Whisper toggle button */}
+    <div className={cn("relative flex items-center", className)}>
       <Button
         variant="ghost"
         size="sm"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="relative gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        className={cn(
+          "relative gap-1.5 text-xs transition-all duration-200",
+          isExpanded ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : "text-muted-foreground hover:text-foreground"
+        )}
+        title="Modo Sussurro — Notas internas invisíveis ao cliente"
       >
-        <EyeOff className="w-3.5 h-3.5" />
-        Sussurro
+        <EyeOff className={cn("w-3.5 h-3.5", isExpanded && "animate-pulse")} />
+        <span className="hidden sm:inline">Sussurro</span>
         {unreadCount > 0 && (
-          <Badge variant="destructive" className="h-4 w-4 p-0 text-[10px] flex items-center justify-center">
+          <Badge variant="destructive" className="h-4 min-w-[16px] px-1 text-[9px] flex items-center justify-center animate-bounce">
             {unreadCount}
           </Badge>
         )}
@@ -134,49 +137,76 @@ export function WhisperMode({ contactId, targetAgentId, className }: WhisperMode
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            className="absolute bottom-full left-0 right-0 mb-1 z-50 bg-card border border-dashed border-warning/50 rounded-lg shadow-lg overflow-hidden"
-            style={{ minWidth: 300 }}
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute bottom-full right-0 mb-3 z-[100] bg-card border border-amber-200/50 rounded-xl shadow-2xl overflow-hidden ring-1 ring-black/5"
+            style={{ width: 340 }}
           >
-            <div className="p-2 bg-warning/10 border-b border-warning/20 flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-warning">
-                <EyeOff className="w-3 h-3" />
-                Modo Sussurro — Invisível ao cliente
+            <div className="p-3 bg-amber-50/50 border-b border-amber-100 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                Equipe — Interno
               </div>
-              <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setIsExpanded(false)}>
-                <X className="w-3 h-3" />
+              <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-amber-100 text-amber-600" onClick={() => setIsExpanded(false)}>
+                <X className="w-3.5 h-3.5" />
               </Button>
             </div>
 
-            {/* Messages */}
-            <div className="max-h-40 overflow-auto p-2 space-y-1.5">
+            <div className="max-h-[300px] overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-amber-50/20 to-transparent">
               {whispers.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-2">Nenhum sussurro ainda</p>
+                <div className="flex flex-col items-center justify-center py-8 text-center space-y-2">
+                  <EyeOff className="w-8 h-8 text-amber-200" />
+                  <p className="text-xs text-amber-600/60 font-medium">Nenhum sussurro registrado para esta conversa.</p>
+                </div>
               ) : (
-                whispers.slice().reverse().map(w => (
-                  <div key={w.id} className="text-xs p-1.5 rounded bg-muted/50">
-                    <span className="font-medium text-warning">{w.sender_name}:</span>{' '}
-                    <span className="text-foreground">{w.content}</span>
-                  </div>
+                whispers.slice().reverse().map((w, idx) => (
+                  <motion.div 
+                    key={w.id} 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="flex flex-col gap-1"
+                  >
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-[10px] font-bold text-amber-600/80">{w.sender_name}</span>
+                      <span className="text-[9px] text-muted-foreground/60">{new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div className="text-xs p-2.5 rounded-2xl bg-amber-100/50 border border-amber-200/30 text-amber-900 shadow-sm leading-relaxed">
+                      {w.content}
+                    </div>
+                  </motion.div>
                 ))
               )}
             </div>
 
-            {/* Input (supervisor only) */}
             {isSupervisor && (
-              <div className="p-2 border-t border-border/30 flex gap-1.5">
-                <Input
-                  value={message}
-                  onChange={e => setMessage(e.target.value)}
-                  placeholder="Orientação para o agente..."
-                  className="h-7 text-xs"
-                  onKeyDown={e => e.key === 'Enter' && sendWhisper()}
-                />
-                <Button size="icon" className="h-7 w-7 shrink-0" onClick={sendWhisper} disabled={!message.trim()}>
-                  <Send className="w-3 h-3" />
-                </Button>
+              <div className="p-3 bg-background border-t border-border/40">
+                <div className="relative flex items-end gap-2">
+                  <textarea
+                    value={message}
+                    onChange={e => setMessage(e.target.value)}
+                    placeholder="Escreva uma orientação privada..."
+                    className="flex-1 min-h-[40px] max-h-[120px] bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-amber-400 rounded-xl p-2.5 text-xs resize-none placeholder:text-muted-foreground/50 transition-all"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendWhisper();
+                      }
+                    }}
+                  />
+                  <Button 
+                    size="icon" 
+                    className="h-9 w-9 shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-200" 
+                    onClick={sendWhisper} 
+                    disabled={!message.trim()}
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                <p className="mt-2 text-[9px] text-center text-muted-foreground/60 font-medium italic">
+                  * Apenas agentes e supervisores podem ver estas mensagens.
+                </p>
               </div>
             )}
           </motion.div>
