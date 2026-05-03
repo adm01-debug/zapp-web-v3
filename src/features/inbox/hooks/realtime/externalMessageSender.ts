@@ -149,16 +149,13 @@ export async function sendExternalAudio(
 
   const { error: uploadError } = await supabase.storage
     .from('audio-messages')
-    .upload(fileName, blob, { 
-      contentType: blob.type || 'audio/webm', 
-      upsert: false,
-      onUploadProgress: (progress) => {
-        if (opts.onProgress) {
-          const percent = (progress.loaded / progress.total) * 100;
-          opts.onProgress(percent * 0.9); // Reserve 10% for the API call
-        }
-      }
-    });
+    .upload(fileName, blob, { contentType: blob.type || 'audio/webm', upsert: false });
+  if (uploadError) {
+    log.error('audio upload failed', uploadError);
+    throw new Error(uploadError.message || 'Falha no upload do áudio');
+  }
+
+  if (opts.onProgress) opts.onProgress(50); // Simulation midpoint
   if (uploadError) {
     log.error('audio upload failed', uploadError);
     throw new Error(uploadError.message || 'Falha no upload do áudio');
@@ -222,16 +219,13 @@ export async function sendExternalMedia(
 
   const { error: uploadError } = await supabase.storage
     .from('whatsapp-media')
-    .upload(fileName, file, { 
-      contentType: file.type, 
-      upsert: false,
-      onUploadProgress: (progress) => {
-        if (opts.onProgress) {
-          const percent = (progress.loaded / progress.total) * 100;
-          opts.onProgress(percent * 0.9); // Reserve 10% for the API call
-        }
-      }
-    });
+    .upload(fileName, file, { contentType: file.type, upsert: false });
+  if (uploadError) {
+    log.error('media upload failed', uploadError);
+    throw new Error(uploadError.message || 'Falha no upload do arquivo');
+  }
+
+  if (opts.onProgress) opts.onProgress(50); // Simulation midpoint
   if (uploadError) {
     log.error('media upload failed', uploadError);
     throw new Error(uploadError.message || 'Falha no upload do arquivo');
