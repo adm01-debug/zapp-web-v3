@@ -138,7 +138,7 @@ export default function AdminFailedMessagesPage() {
         <FailedMessagesRootCauseChart
           stats={api.aggregates.byRootCause}
           filter={ui.rootCauseFilter}
-          onFilterChange={ui.setRootCauseFilter}
+          onFilterChange={(v) => ui.setRootCauseFilter(v as any)}
         />
         <FailedMessagesErrorCodeChart
           stats={api.aggregates.byErrorCode}
