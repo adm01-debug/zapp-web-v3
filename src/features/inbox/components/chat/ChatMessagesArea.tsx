@@ -1,4 +1,4 @@
-import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState, useId, CSSProperties } from 'react';
+import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState, useId, CSSProperties, useLayoutEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Ban, RotateCw, Navigation2, AlertCircle, Info, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -114,6 +114,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   const handleMessageDeleted = useCallback(async (messageId: string) => {
     try {
       await dbFrom('messages').update({ is_deleted: true, content: '[Mensagem apagada]' }).eq('id', messageId);
+      log.info(`[Delete] Msg ${messageId.slice(0, 8)} marked as deleted`);
     } catch {
       log.error('Failed to mark message as deleted in DB');
     }
@@ -321,7 +322,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   }, [onLoadOlder, onCancelLoadOlder, hasMoreOlder, loadingOlder, flagCancelled, contactJid]);
 
   // Preserve scroll position after older messages prepend
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
@@ -331,13 +332,11 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
     const wasPrepend = lengthIncreased && firstChanged;
 
     if (wasPrepend && prevScrollHeightRef.current !== null && !cancelledRef.current) {
-      const prev = prevScrollHeightRef.current;
-      requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight - prev;
-        prevScrollHeightRef.current = null;
-      });
+      const prevHeight = prevScrollHeightRef.current;
+      // Use synchronous scroll adjustment to prevent jump
+      container.scrollTop = container.scrollHeight - prevHeight;
+      prevScrollHeightRef.current = null;
     } else if (cancelledRef.current) {
-      // Cancelled mid-flight: respect user's current scroll position, no anchoring.
       prevScrollHeightRef.current = null;
       cancelledRef.current = false;
     }

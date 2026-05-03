@@ -78,7 +78,7 @@ export function ChatSearchFilters({
         return (
           <button key={f.key} role="tab" aria-selected={isActive} tabIndex={0}
             className={cn('inline-flex items-center gap-1.5 whitespace-nowrap text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-150 shrink-0 select-none',
-              isActive ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25' : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground'
+              isActive ? 'bg-[#00a884] text-white shadow-sm' : 'bg-background/80 dark:bg-[#202c33]/80 text-muted-foreground hover:bg-muted hover:text-foreground'
             )}
             onClick={() => setFilter(f.key)}
           >
@@ -96,7 +96,7 @@ export function ChatSearchFilters({
       <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
         <PopoverTrigger asChild>
           <button className={cn('inline-flex items-center gap-1.5 whitespace-nowrap text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-150 shrink-0 select-none',
-            hasDateFilter ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25' : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground'
+            hasDateFilter ? 'bg-[#00a884] text-white shadow-sm' : 'bg-background/80 dark:bg-[#202c33]/80 text-muted-foreground hover:bg-muted hover:text-foreground'
           )}>
             <CalendarDays className="w-3.5 h-3.5" />
             <DatePresetLabel preset={datePreset} from={customDateFrom} to={customDateTo} />
