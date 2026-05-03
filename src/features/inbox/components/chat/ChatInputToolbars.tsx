@@ -201,6 +201,11 @@ export function TertiaryToolsMenu({
 
   return (
     <div className="flex flex-col gap-1">
+      {onOpenTeamFiles && (
+        <Button variant="ghost" size="sm" className="justify-start gap-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50" onClick={onOpenTeamFiles} aria-label="Arquivos da equipe">
+          <Share2 className="w-4 h-4" /> Arquivos da Equipe
+        </Button>
+      )}
       <Button variant="ghost" size="sm" className="justify-start gap-2 text-muted-foreground hover:text-foreground" onClick={onOpenInteractiveBuilder} aria-label="Mensagem interativa">
         <Layers className="w-4 h-4" /> Mensagem Interativa
       </Button>
