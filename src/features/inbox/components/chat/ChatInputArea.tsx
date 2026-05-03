@@ -248,9 +248,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
 
             <AnimatePresence>
               {logic.showMarkdownPreview && logic.hasText && logic.showRichToolbar && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                  className="mb-1 px-3 py-2 border border-border/50 rounded-lg bg-muted/30 text-sm max-h-[100px] overflow-y-auto">
-                  <MarkdownPreview text={inputValue} className="text-foreground leading-relaxed" />
+                <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }}
+                  className="mb-2 px-4 py-3 border border-border/10 rounded-2xl bg-muted/20 backdrop-blur-sm text-[13px] max-h-[120px] overflow-y-auto shadow-sm">
+                  <MarkdownPreview text={inputValue} className="text-foreground/90 leading-snug" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -259,24 +259,24 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               onChange={(e) => { onInputChange(e); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
               onKeyDown={onKeyDown} onBlur={onBlur} onPaste={logic.handlePaste}
               onClick={(e) => { const t = e.target as HTMLTextAreaElement; checkForMention(t.value, t.selectionStart ?? 0); }}
-              placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes verão)..." : "Digite uma mensagem... (/ para comandos, @ para mencionar)"}
+              placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Mensagem... (/ para comandos, @ para mencionar)"}
               rows={1}
               className={cn(
-                "w-full bg-transparent border border-border/50 rounded-xl outline-none text-sm text-foreground",
-                "placeholder:text-muted-foreground resize-none transition-all",
-                "focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
-                logic.isMobile ? "px-3 py-2.5 text-[16px] min-h-[42px] max-h-[200px]" : "px-3 py-2 min-h-[40px] max-h-[200px]",
-                isWhisper && "border-amber-500/50 focus:border-amber-500 focus:ring-amber-500/20 bg-amber-500/5",
-                logic.isOverLimit && "border-destructive/50 focus:border-destructive focus:ring-destructive/20",
-                isSending && "opacity-50 pointer-events-none"
+                "w-full bg-muted/10 border border-border/20 rounded-2xl outline-none text-[13px] font-normal tracking-tight text-foreground",
+                "placeholder:text-muted-foreground/40 placeholder:font-light resize-none transition-all duration-300",
+                "focus:bg-background focus:border-primary/20 focus:ring-4 focus:ring-primary/5 shadow-sm",
+                logic.isMobile ? "px-4 py-3 text-[16px] min-h-[44px] max-h-[220px]" : "px-4 py-2.5 min-h-[42px] max-h-[220px]",
+                isWhisper && "border-amber-500/20 focus:border-amber-500/40 focus:ring-amber-500/5 bg-amber-500/5",
+                logic.isOverLimit && "border-destructive/30 focus:border-destructive/50 focus:ring-destructive/5",
+                isSending && "opacity-40 pointer-events-none grayscale"
               )}
               disabled={isSending}
               aria-label={editingMessage ? "Editar mensagem" : replyToMessage ? "Responder mensagem" : "Digite sua mensagem"}
               aria-describedby={logic.charCount > 0 ? "char-counter" : undefined}
             />
             {logic.charCount > 100 && (
-              <span id="char-counter" className={cn("absolute bottom-1 right-2 text-[10px] select-none pointer-events-none",
-                logic.isOverLimit ? "text-destructive font-medium" : logic.isNearLimit ? "text-warning" : "text-muted-foreground/50")}>
+              <span id="char-counter" className={cn("absolute bottom-2 right-4 text-[9px] font-mono tracking-tighter select-none pointer-events-none transition-colors",
+                logic.isOverLimit ? "text-destructive font-bold" : logic.isNearLimit ? "text-warning" : "text-muted-foreground/30")}>
                 {logic.charCount}/{logic.CHAR_LIMIT}
               </span>
             )}
