@@ -149,8 +149,8 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
           break;
         case 'p':
           e.preventDefault();
-          state.setViewMode('pipeline');
-          toast.info("Visualização: Pipeline", { duration: 1000 });
+          state.setViewMode('kanban');
+          toast.info("Visualização: Pipeline (Kanban)", { duration: 1000 });
           break;
       }
     };
