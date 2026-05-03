@@ -31,7 +31,7 @@ export function useMonitoringActions(fetchData: () => Promise<void>) {
     const testId = `MONITOR_TEST_${Date.now()}`;
     const start = performance.now();
     try {
-      const { error: res1479Err } = await supabase.functions.invoke('evolution-webhook', {
+      const { error: invokeErr } = await supabase.functions.invoke('evolution-webhook', {
         method: 'POST',
         body: {
           event: 'messages.upsert',
@@ -45,7 +45,7 @@ export function useMonitoringActions(fetchData: () => Promise<void>) {
         },
       });
       const latency = Math.round(performance.now() - start);
-      if (error) throw error;
+      if (invokeErr) throw invokeErr;
       await new Promise(r => setTimeout(r, 1000));
       const { data: msg , error: msgErr } = await supabase.from('messages').select('id').eq('external_id', testId).maybeSingle();
       if (msg) await supabase.from('messages').delete().eq('id', msg.id);
@@ -61,7 +61,7 @@ export function useMonitoringActions(fetchData: () => Promise<void>) {
 
   const checkWebhookConfig = useCallback(async (instanceId: string) => {
     try {
-      const { data, error: res2815Err } = await supabase.functions.invoke('evolution-api/get-webhook', {
+      const { data, error } = await supabase.functions.invoke('evolution-api/get-webhook', {
         method: 'POST',
         body: { instanceName: instanceId },
       });
@@ -83,7 +83,7 @@ export function useMonitoringActions(fetchData: () => Promise<void>) {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const webhookUrl = `${supabaseUrl}/functions/v1/evolution-webhook`;
-      const { error: res3618Err } = await supabase.functions.invoke('evolution-api/set-webhook', {
+      const { error } = await supabase.functions.invoke('evolution-api/set-webhook', {
         method: 'POST',
         body: {
           instanceName: instanceId,
@@ -114,7 +114,7 @@ export function useMonitoringActions(fetchData: () => Promise<void>) {
   const runDiagnostic = useCallback(async (autoFix = false) => {
     setDiagnosing(true);
     try {
-      const { data, error: res4830Err } = await supabase.functions.invoke('webhook-diagnostic', {
+      const { data, error } = await supabase.functions.invoke('webhook-diagnostic', {
         method: 'POST',
         body: { action: autoFix ? 'auto-fix' : 'full-diagnostic' },
       });
