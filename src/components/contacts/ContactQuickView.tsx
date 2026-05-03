@@ -115,6 +115,44 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
           </div>
         </div>
 
+        {/* Smart Insights & Actions */}
+        <div className="px-1 mt-4">
+          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-3 relative overflow-hidden group">
+            <div className="absolute -top-2 -right-2 w-16 h-16 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
+            <div className="flex items-center gap-2 text-primary">
+              <Sparkles className="w-4 h-4" />
+              <h4 className="text-xs font-bold uppercase tracking-wider">Hana AI Insights</h4>
+            </div>
+            
+            <div className="space-y-2">
+              {!contact.email && (
+                <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-background/50 p-2 rounded-lg border border-border/30">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1 shrink-0" />
+                  <p>Faltando <strong>E-mail</strong>: Adicione para liberar automações de marketing e envio de propostas.</p>
+                </div>
+              )}
+              {!contact.company && (
+                <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-background/50 p-2 rounded-lg border border-border/30">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 shrink-0" />
+                  <p>Sem <strong>Empresa</strong>: Vincular a uma empresa ajuda a agrupar faturamentos no Analytics.</p>
+                </div>
+              )}
+              {contact.tags?.length === 0 && (
+                <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-background/50 p-2 rounded-lg border border-border/30">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1 shrink-0" />
+                  <p>Sem <strong>Etiquetas</strong>: Use tags para segmentar este contato em campanhas futuras.</p>
+                </div>
+              )}
+              {health >= 90 && (
+                <div className="flex items-start gap-2 text-[11px] text-emerald-600 bg-emerald-500/5 p-2 rounded-lg border border-emerald-500/20">
+                  <TrendingUp className="w-3 h-3 mt-0.5 shrink-0" />
+                  <p><strong>Engajamento:</strong> Este contato possui dados completos. Pronto para campanhas de alta conversão!</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="py-6 space-y-8">
           {/* Informações de Contato */}
           <section className="space-y-4">
