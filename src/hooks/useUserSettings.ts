@@ -82,6 +82,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   tts_voice_id: DEFAULT_TTS_VOICE_ID,
   tts_speed: DEFAULT_TTS_SPEED,
 
+  simulation_mode_enabled: false,
+
   global_sla_warning_minutes: 30,
   global_sla_critical_minutes: 60,
   global_sla_notification_message: 'Alerta SLA: Tempo limite excedido para resposta.',
