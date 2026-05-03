@@ -66,16 +66,12 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
           {fileSize && (<><span>•</span><span>{formatFileSize(fileSize)}</span></>)}
         </div>
       </div>
-      <motion.button
-        whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+      <button
         onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-        className={cn(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors",
-          isSent ? "bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground" : "bg-primary/10 hover:bg-primary/20 text-primary"
-        )}
+        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-[#aebac1] hover:bg-white/10"
       >
         {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-      </motion.button>
+      </button>
     </div>
   );
 }
