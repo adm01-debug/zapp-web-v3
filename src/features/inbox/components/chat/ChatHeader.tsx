@@ -300,6 +300,11 @@ export function ChatHeader({
             <DropdownMenuItem><CheckCircle className="w-4 h-4 mr-2" />Marcar como resolvido</DropdownMenuItem>
             <DropdownMenuItem><Archive className="w-4 h-4 mr-2" />Arquivar</DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onGenerateSummary?.('teamFiles')}>
+              <Share2 className="w-4 h-4 mr-2 text-amber-600" />
+              Arquivos da Equipe
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onCloseConversation} className="text-destructive">
               <XCircle className="w-4 h-4 mr-2" />Encerrar Conversa
             </DropdownMenuItem>
