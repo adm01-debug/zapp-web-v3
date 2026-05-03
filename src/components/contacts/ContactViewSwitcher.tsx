@@ -19,7 +19,6 @@ const VIEW_MODES = [
   { value: 'grid' as const, label: 'Grid', icon: LayoutGrid },
   { value: 'list' as const, label: 'Lista', icon: List },
   { value: 'table' as const, label: 'Tabela', icon: Table2 },
-  { value: 'kanban' as const, label: 'Pipeline', icon: Kanban },
   { value: 'map' as const, label: 'Mapa', icon: MapPin },
   { value: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
 ];
