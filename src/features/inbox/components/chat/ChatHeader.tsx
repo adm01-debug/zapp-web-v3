@@ -188,7 +188,7 @@ export const ChatHeader = memo(function ChatHeader({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <motion.div>
               <Button variant="ghost" size="icon" className={cn("text-muted-foreground hover:text-primary hover:bg-primary/10", showAIAssistant && "text-primary bg-primary/10")} onClick={onToggleAIAssistant} aria-label="Visão">
                 <VisionIcon className="w-4 h-4" />
               </Button>
