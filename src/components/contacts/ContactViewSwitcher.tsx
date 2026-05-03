@@ -1,4 +1,4 @@
-import { LayoutGrid, List, Table2, Settings2, MapPin, Kanban, BarChart3 } from 'lucide-react';
+import { LayoutGrid, List, Table2, Settings2, MapPin, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
