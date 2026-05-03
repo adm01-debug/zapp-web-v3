@@ -36,8 +36,9 @@ describe('useChatSearch Logic', () => {
       result.current.setQuery('Olá');
     });
 
-    // Wait for debounce
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    });
 
     expect(result.current.results).toHaveLength(1);
     expect(result.current.results[0].id).toBe('1');
@@ -83,7 +84,9 @@ describe('useChatSearch Logic', () => {
       result.current.setQuery('e'); // Matches messages 1, 2, 3, 4, 6
     });
 
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    });
 
     expect(result.current.results.length).toBeGreaterThan(1);
     const firstResultId = result.current.results[0].id;
@@ -110,7 +113,9 @@ describe('useChatSearch Logic', () => {
       result.current.setQuery('nonexistent');
     });
 
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    });
 
     expect(result.current.results).toHaveLength(0);
   });
@@ -122,7 +127,9 @@ describe('useChatSearch Logic', () => {
       result.current.setQuery('ola'); // Query without accent
     });
 
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    });
 
     expect(result.current.results).toHaveLength(1);
     expect(result.current.results[0].content).toContain('Olá');
