@@ -60,8 +60,8 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
         {getFileIcon(fileName)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className={cn("text-sm font-medium truncate", isSent ? "text-primary-foreground" : "text-foreground")}>{fileName}</p>
-        <div className={cn("flex items-center gap-2 text-xs", isSent ? "text-primary-foreground/70" : "text-muted-foreground")}>
+        <p className="text-sm font-normal text-[#e9edef] truncate">{fileName}</p>
+        <div className="flex items-center gap-2 text-[12px] text-[#8696a0]">
           <span className="font-medium">{extension}</span>
           {fileSize && (<><span>•</span><span>{formatFileSize(fileSize)}</span></>)}
         </div>
