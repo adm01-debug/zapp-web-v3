@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
 import { WhatsAppConnectionStatus } from '@/features/connections';
 import { useInboxShortcuts } from '../hooks/useInboxShortcuts';
+import { toast } from 'sonner';
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
