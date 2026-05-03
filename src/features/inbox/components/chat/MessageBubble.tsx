@@ -119,12 +119,12 @@ export function MessageBubble({
         data-testid={`message-bubble-${message.id}`}
         data-message-id={message.id}
         className={cn(
-          'flex group gap-2.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+          'flex group gap-2 transition-all duration-300 focus-visible:outline-none',
           isSent ? 'justify-end' : 'justify-start',
-          density === 'comfortable' ? 'mb-4' : density === 'compact' ? 'mb-1.5' : 'mb-0.5',
+          density === 'comfortable' ? 'mb-1.5' : density === 'compact' ? 'mb-1' : 'mb-0.5',
           highlightedMessageIds?.has(message.id) && 'relative',
-          activeHighlightId === message.id && 'ring-2 ring-[hsl(var(--warning))] ring-offset-1 ring-offset-background rounded-2xl animate-[pulse_1.5s_ease-in-out_1]',
-          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-[hsl(var(--warning)/0.08)] rounded-2xl',
+          activeHighlightId === message.id && 'ring-2 ring-[#ffeeb1] ring-offset-0 rounded-lg animate-[pulse_1.5s_ease-in-out_1]',
+          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-[#ffeeb1]/30 rounded-lg',
         )}
       >
         {!isSent && (
@@ -201,10 +201,10 @@ export function MessageBubble({
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={cn(
                 'relative transition-all overflow-hidden',
-                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0' : density === 'comfortable' ? 'px-3 py-2' : density === 'compact' ? 'px-2 py-1.5' : 'px-1.5 py-1',
+                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2 py-1.5' : density === 'compact' ? 'px-1.5 py-1' : 'px-1.5 py-1',
                 isSent
-                  ? cn('bg-primary text-primary-foreground shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg rounded-br-none' : isFirstInGroup ? 'rounded-lg rounded-br-none' : isLastInGroup ? 'rounded-lg rounded-tr-none' : 'rounded-lg rounded-tr-none rounded-br-none')
-                  : cn('bg-card border-none text-foreground shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg rounded-bl-none' : isFirstInGroup ? 'rounded-lg rounded-bl-none' : isLastInGroup ? 'rounded-lg rounded-tl-none' : 'rounded-lg rounded-tl-none rounded-bl-none'),
+                  ? cn('bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg' : isFirstInGroup ? 'rounded-lg rounded-tr-none' : isLastInGroup ? 'rounded-lg rounded-tr-none' : 'rounded-lg rounded-tr-none')
+                  : cn('bg-white dark:bg-[#202c33] border-none text-[#111b21] dark:text-[#e9edef] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg' : isFirstInGroup ? 'rounded-lg rounded-tl-none' : isLastInGroup ? 'rounded-lg rounded-tl-none' : 'rounded-lg rounded-tl-none'),
                 message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 shadow-[inset_0_1px_2px_rgba(251,191,36,0.1)] ring-1 ring-amber-500/30 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border border-destructive/40'
               )}
@@ -221,14 +221,14 @@ export function MessageBubble({
               {message.type === 'sticker' && message.mediaUrl && <div className="mb-1 group/sticker relative"><img src={message.mediaUrl} alt="Sticker" className="max-w-[160px] max-h-[160px] object-contain drop-shadow-lg" loading="lazy" /></div>}
               {!showUnsupportedFallback && message.content && !['audio','location','video','document','sticker'].includes(message.type) && <p className="text-[13.5px] whitespace-pre-wrap leading-[1.45]">{searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}</p>}
               <div className={cn(
-                'flex items-center justify-end gap-1 mt-0.5 -mb-0.5', 
+                'flex items-center justify-end gap-1 mt-1 -mb-0.5', 
                 (message.type === 'image' || message.type === 'video') && !message.content 
-                  ? 'absolute bottom-2 right-3 text-white drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm' 
-                  : isSent ? 'text-[hsl(var(--primary-foreground)/0.7)]' : 'text-muted-foreground/70'
+                  ? 'absolute bottom-2 right-2 text-white drop-shadow-md bg-black/30 px-1.5 py-0.5 rounded-full backdrop-blur-xs' 
+                  : isSent ? 'text-[#667781] dark:text-[#8696a0]' : 'text-[#667781] dark:text-[#8696a0]'
               )}>
                 {message.isEdited && <span className="text-[9px] italic mr-0.5">editada</span>}
-                <span className="text-[10px] font-medium leading-none">{formatMessageTime(message.timestamp)}</span>
-                <div className="flex items-center min-w-[14px]">
+                <span className="text-[11px] font-normal leading-none">{formatMessageTime(message.timestamp)}</span>
+                <div className="flex items-center min-w-[15px]">
                   {isSent ? <MessageStatusInline message={message} /> : <MessageReadStatus message={message} />}
                 </div>
               </div>

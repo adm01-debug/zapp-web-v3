@@ -29,19 +29,19 @@ export function MessageStatusIcon({ status, className }: { status: Message['stat
   switch (status) {
     case 'sent':
       return (
-        <Check className={cn('w-[14px] h-[14px] transition-all duration-300 ease-out', className)} strokeWidth={2.5} />
+        <Check className={cn('w-[15px] h-[15px] transition-all duration-300 ease-out', className)} strokeWidth={1.8} />
       );
     case 'delivered':
       return (
-        <CheckCheck className={cn('w-[14px] h-[14px] transition-all duration-300 ease-out', className)} strokeWidth={2.5} />
+        <CheckCheck className={cn('w-[16px] h-[16px] transition-all duration-300 ease-out', className)} strokeWidth={1.8} />
       );
     case 'read':
       return (
-        <CheckCheck className={cn('w-[14px] h-[14px] text-[#53bdeb] transition-all duration-500 ease-out', className)} strokeWidth={2.5} />
+        <CheckCheck className={cn('w-[16px] h-[16px] text-[#53bdeb] transition-all duration-500 ease-out', className)} strokeWidth={1.8} />
       );
     case 'played':
       return (
-        <Headphones className={cn('w-[14px] h-[14px] text-[#53bdeb] transition-all duration-500 ease-out', className)} strokeWidth={2.5} aria-label="Reproduzido" />
+        <Headphones className={cn('w-[16px] h-[16px] text-[#53bdeb] transition-all duration-500 ease-out', className)} strokeWidth={1.8} aria-label="Reproduzido" />
       );
     case 'retrying':
       return (

@@ -119,8 +119,8 @@ export const MessageStatusInline = memo(function MessageStatusInline({
       <button
         type="button"
         className={cn(
-          'inline-flex items-center gap-0.5 cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/60',
-          'hover:opacity-80 transition-opacity',
+          'inline-flex items-center gap-0.5 cursor-pointer rounded-sm focus-visible:outline-none',
+          'hover:opacity-80 transition-opacity text-[#667781] dark:text-[#8696a0]',
           className,
         )}
         title={tooltip}

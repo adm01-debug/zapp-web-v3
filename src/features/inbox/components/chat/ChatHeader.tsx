@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 import { Conversation, Message } from '@/types/chat';
@@ -58,7 +59,7 @@ interface ChatHeaderProps {
   whisperCount?: number;
 }
 
-export function ChatHeader({
+export const ChatHeader = memo(function ChatHeader({
   conversation, messages, isContactTyping, showAIAssistant, showDetails,
   voiceId, onToggleAIAssistant, onToggleDetails, onStartCall, onOpenSearch,
   onOpenTransfer, onOpenSchedule, onVoiceChange, onBack, onCloseConversation,
@@ -75,9 +76,9 @@ export function ChatHeader({
   const { density, cycleDensity } = useDensity();
 
   return (
-    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className={cn(
-      "flex items-center justify-between px-4 sm:px-6 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-30",
-      density === 'comfortable' ? 'py-3' : 'py-2'
+    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className={cn(
+      "flex items-center justify-between px-4 sm:px-6 border-b border-border/5 bg-[#f0f2f5] dark:bg-[#111b21] sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+      density === 'comfortable' ? 'py-2.5' : 'py-1.5'
     )}>
       <div className="flex items-center gap-3">
         {onBack && (
@@ -86,7 +87,7 @@ export function ChatHeader({
           </Button>
         )}
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Avatar className="w-10 h-10 ring-1 ring-border/10 shadow-sm">
+          <Avatar className="w-10 h-10 ring-0 shadow-none">
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
@@ -114,9 +115,9 @@ export function ChatHeader({
           </div>
           <div className="flex items-center h-4">
             {isContactTyping ? (
-              <span className="text-[11px] text-primary font-medium animate-pulse">digitando...</span>
+              <span className="text-[12px] text-[#00a884] dark:text-[#00a884] font-normal">digitando...</span>
             ) : (
-              <span className="text-[11px] text-muted-foreground/60">{conversation.contact.phone}</span>
+              <span className="text-[12px] text-[#667781] dark:text-[#8696a0] font-normal">{conversation.contact.phone}</span>
             )}
           </div>
         </div>
@@ -176,7 +177,7 @@ export function ChatHeader({
           <Tooltip key={label}>
             <TooltipTrigger asChild>
               <motion.div whileHover={{ scale: 1.1, y: -1 }} whileTap={{ scale: 0.9 }}>
-                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-all" onClick={onClick} aria-label={label}>
+                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-[#667781] dark:text-[#8696a0] hover:bg-transparent transition-all" onClick={onClick} aria-label={label}>
                   <Icon className="w-4 h-4" />
                 </Button>
               </motion.div>
@@ -263,4 +264,4 @@ export function ChatHeader({
       </div>
     </motion.div>
   );
-}
+});
