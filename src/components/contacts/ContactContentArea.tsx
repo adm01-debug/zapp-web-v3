@@ -154,13 +154,32 @@ export function ContactContentArea({
   if (viewMode === 'analytics') return <ContactAnalyticsDashboard contacts={contacts} />;
 
   return (
-    <Card><CardContent className="p-0">
-      <ContactsTable
-        contacts={contacts} selectedIds={selectedIds}
-        onSelectIds={onSelectIds} onOpenChat={onContactClick}
-        onEdit={onEdit} onDelete={onDelete}
-        getCRMData={getCRMData} searchQuery={search}
-      />
-    </CardContent></Card>
+    <Card className="border-border/30 shadow-sm overflow-hidden bg-card">
+      <CardContent className="p-0">
+        {contacts.length > 50 ? (
+          <ContactsTableVirtual
+            contacts={contacts}
+            selectedIds={selectedIds}
+            onSelectIds={onSelectIds}
+            onOpenChat={onContactClick}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            getCRMData={getCRMData}
+            searchQuery={search}
+          />
+        ) : (
+          <ContactsTable
+            contacts={contacts}
+            selectedIds={selectedIds}
+            onSelectIds={onSelectIds}
+            onOpenChat={onContactClick}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            getCRMData={getCRMData}
+            searchQuery={search}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 }
