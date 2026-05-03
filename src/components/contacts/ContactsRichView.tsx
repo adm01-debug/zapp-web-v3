@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Upload } from 'lucide-react';
+import { UserPlus, Upload, Trash2, GitMerge } from 'lucide-react';
 
 import { useContactsViewState } from './useContactsViewState';
 import { ContactStatsCards } from './ContactStatsCards';
@@ -41,6 +41,8 @@ const TAB_ORDER = [
   'sicoob_gifts',
   'transportadora',
   'outros',
+  'duplicates',
+  'trash',
 ] as const;
 
 export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
@@ -156,7 +158,7 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
               </Badge>
             </TabsTrigger>
             {tabs
-              .filter((k) => k !== 'all')
+              .filter((k) => k !== 'all' && k !== 'duplicates' && k !== 'trash')
               .map((key) => {
                 const cfg = CONTACT_TYPE_CONFIG[key];
                 const count = contactCountByType[key] ?? 0;
@@ -167,8 +169,8 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
                     className="gap-2 data-[state=active]:bg-background"
                   >
                     <span className="flex items-center gap-1.5">
-                      {cfg.iconNode}
-                      {cfg.label}
+                      {cfg?.iconNode}
+                      {cfg?.label || key}
                     </span>
                     {count > 0 && (
                       <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
@@ -178,6 +180,15 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
                   </TabsTrigger>
                 );
               })}
+            <div className="w-px h-6 bg-border mx-1 my-auto hidden sm:block" />
+            <TabsTrigger value="duplicates" className="gap-2 data-[state=active]:bg-background text-orange-500">
+              <GitMerge className="w-3.5 h-3.5" />
+              Duplicados
+            </TabsTrigger>
+            <TabsTrigger value="trash" className="gap-2 data-[state=active]:bg-background text-destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Lixeira
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -227,6 +238,7 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
             loading={loading}
             contacts={contactsForContent}
             viewMode={state.viewMode}
+            activeTab={activeTab}
             gridColumns={state.gridColumns}
             groupByCompany={state.groupByCompany}
             selectedIds={selectedIds}
@@ -242,6 +254,8 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
             onClearFilters={clearFilters}
             onImport={() => setIsImportOpen(true)}
             getCRMData={getCRMData}
+            workspaceId={crud.instanceName || 'wpp2'}
+            onRefresh={() => crud.loadContacts()}
           />
         </motion.div>
       </div>
