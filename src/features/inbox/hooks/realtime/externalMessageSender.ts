@@ -194,3 +194,71 @@ export async function sendExternalAudio(
   optimistic.status = 'sent';
   return { optimistic, externalId };
 }
+
+/**
+ * sendExternalMedia — envia imagens, vídeos ou documentos no modo FATOR X.
+ */
+export async function sendExternalMedia(
+  remoteJid: string,
+  file: File,
+  opts: SendExternalOptions & { caption?: string } = {},
+): Promise<SendExternalResult> {
+  const phone = jidToPhone(remoteJid);
+  if (!phone) throw new Error('Contato sem JID válido para envio.');
+  const instance = opts.instanceName || DEFAULT_INSTANCE;
+
+  const safeKey = remoteJid.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const fileName = `${safeKey}/${Date.now()}_${file.name}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('whatsapp-media')
+    .upload(fileName, file, { contentType: file.type, upsert: false });
+  if (uploadError) {
+    log.error('media upload failed', uploadError);
+    throw new Error(uploadError.message || 'Falha no upload do arquivo');
+  }
+
+  const { data: signed, error: signError } = await supabase.storage
+    .from('whatsapp-media')
+    .createSignedUrl(fileName, 3600);
+  if (signError || !signed?.signedUrl) {
+    log.error('media signed url failed', signError);
+    throw new Error(signError?.message || 'Falha ao gerar URL do arquivo');
+  }
+
+  const type = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'document';
+  const optimistic = makeOptimisticBubble(remoteJid, opts.caption || file.name, {
+    messageType: type,
+    mediaUrl: signed.signedUrl,
+    contactAvatar: opts.contactAvatar,
+  });
+
+  const { data, error } = await supabase.functions.invoke('evolution-api', {
+    body: {
+      action: 'send-media',
+      instanceName: instance,
+      number: phone,
+      mediaUrl: signed.signedUrl,
+      mediaType: type,
+      caption: opts.caption,
+      fileName: file.name,
+    },
+  });
+
+  if (error) {
+    log.error('evolution-api send-media failed', error);
+    const info = parseEvolutionError(error);
+    throw new SendError(info.reason, info.detail, info.status);
+  }
+  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
+  if (envelope?.error) {
+    log.error('evolution-api send-media error envelope', envelope);
+    const info = parseEvolutionError(envelope);
+    throw new SendError(info.reason, info.detail, info.status);
+  }
+
+  const externalId = envelope?.key?.id ?? null;
+  optimistic.external_id = externalId;
+  optimistic.status = 'sent';
+  return { optimistic, externalId };
+}
