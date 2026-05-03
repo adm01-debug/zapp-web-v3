@@ -54,7 +54,7 @@ export const AuditLogPanel: React.FC<{ contactId: string; maxEntries?: number }>
     setLoading(true);
     try {
       const { data, error } = await (supabase
-        .from('contact_audit_log') as any)
+        .from('contact_audit_log' as any) as any)
         .select('id,action,field_name,old_value,new_value,changed_by,changed_at,metadata')
         .eq('contact_id', contactId)
         .order('changed_at', { ascending: false })
