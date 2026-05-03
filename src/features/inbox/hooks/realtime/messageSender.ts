@@ -123,7 +123,8 @@ export async function sendMessageToContact(
   content: string,
   messageType = 'text',
   mediaUrl?: string,
-  mediaPayload?: string
+  mediaPayload?: string,
+  opts: { optimisticId?: string } = {}
 ): Promise<SendMessageResult> {
   const { data: profile } = await supabase
     .from('profiles')
@@ -131,6 +132,11 @@ export async function sendMessageToContact(
     .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
     .single();
 
+  // If we already have an optimisticId (local bubble already created), we don't insert yet.
+  // We'll update the record after the API call or use the existing one if we were doing server-side optimistic.
+  // However, the current flow is: DB Insert -> emit 'sending' -> API call -> update DB status.
+  // To reach 10/10 velocity, we should ideally call API FIRST or concurrently, but we need the DB record for the ID.
+  
   const { data, error } = await dbFrom('messages')
     .insert({
       contact_id: contactId,
@@ -150,7 +156,8 @@ export async function sendMessageToContact(
     throw error;
   }
 
-  emitSendStatus(data.id, { status: 'sending' }, { contactId, source: 'messageSender' });
+  const effectiveId = opts.optimisticId || data.id;
+  emitSendStatus(effectiveId, { status: 'sending' }, { contactId, source: 'messageSender' });
 
   try {
     const { data: contact } = await dbFrom('contacts')
