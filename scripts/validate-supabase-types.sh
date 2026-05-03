@@ -7,14 +7,20 @@
 
 set -euo pipefail
 
+# Constantes de versão para determinismo
+SUPABASE_CLI_VERSION="2.9.8"
 TYPES_FILE="src/integrations/supabase/types.ts"
 TYPES_BAK="${TYPES_FILE}.bak"
 CHECK_MODE=false
+SUMMARY_MODE=false
+PR_NUMBER="${GITHUB_PR_NUMBER:-}"
 
 # Simple flag parsing
 for arg in "$@"; do
   if [ "$arg" == "--check" ]; then
     CHECK_MODE=true
+  elif [ "$arg" == "--summary" ]; then
+    SUMMARY_MODE=true
   fi
 done
 
@@ -48,7 +54,8 @@ fi
 # We use npx supabase to lock the version via package manager or direct call
 # The --project-id flag is preferred for remote projects
 if [ -n "${SUPABASE_PROJECT_ID:-}" ] && [ -n "${SUPABASE_ACCESS_TOKEN:-}" ]; then
-  npx supabase gen types typescript --project-id "$SUPABASE_PROJECT_ID" > "$TYPES_FILE.new"
+  # Uso determinístico da versão travada via npx
+  npx "supabase@$SUPABASE_CLI_VERSION" gen types typescript --project-id "$SUPABASE_PROJECT_ID" > "$TYPES_FILE.new"
 elif [ -d "supabase" ] && command -v docker &> /dev/null && docker ps &> /dev/null; then
   # Try local generation if supabase folder exists and docker is running
   npx supabase gen types typescript --local > "$TYPES_FILE.new"
@@ -84,6 +91,16 @@ if [ "$CHECK_MODE" = true ]; then
   NEW_HASH=$(md5sum "$TYPES_FILE.new" | cut -d' ' -f1)
   if [ "$OLD_HASH" != "$NEW_HASH" ]; then
     echo "❌ Error: src/integrations/supabase/types.ts is out of sync with the database schema."
+    
+    if [ "$SUMMARY_MODE" = true ] && [ -n "$PR_NUMBER" ]; then
+      echo "### 🔄 Supabase Types Diff Summary" > types_diff.md
+      echo "O schema do banco de dados mudou. Abaixo estão as alterações detectadas no \`types.ts\`:" >> types_diff.md
+      echo "\`\`\`diff" >> types_diff.md
+      diff -u "$TYPES_FILE" "$TYPES_FILE.new" | head -n 50 >> types_diff.md
+      echo "\`\`\`" >> types_diff.md
+      [ $(diff -u "$TYPES_FILE" "$TYPES_FILE.new" | wc -l) -gt 50 ] && echo "... (truncado)" >> types_diff.md
+    fi
+    
     echo "Run 'npm run types:gen' to update it and commit the changes."
     rm "$TYPES_FILE.new"
     exit 1
@@ -92,6 +109,10 @@ if [ "$CHECK_MODE" = true ]; then
     rm "$TYPES_FILE.new"
   fi
 else
+  # Garantir diff no output durante geração manual/CI push
+  if [ -f "$TYPES_FILE" ]; then
+    diff -u "$TYPES_FILE" "$TYPES_FILE.new" || true
+  fi
   mv "$TYPES_FILE.new" "$TYPES_FILE"
   echo "✅ src/integrations/supabase/types.ts updated successfully."
 fi
