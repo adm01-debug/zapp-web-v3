@@ -16,10 +16,11 @@ interface Props {
   messageId: string;
   reactions: AggregatedReaction[];
   isMine: boolean;
+  isToggling: boolean;
   onToggle: (emoji: string) => void;
 }
 
-export function MessageReactions({ messageId, reactions, isMine, onToggle }: Props) {
+export function MessageReactions({ messageId, reactions, isMine, isToggling, onToggle }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const handlePick = (emoji: string) => {
@@ -32,6 +33,8 @@ export function MessageReactions({ messageId, reactions, isMine, onToggle }: Pro
       className={cn('flex items-center gap-1 flex-wrap mt-1', isMine ? 'justify-end' : 'justify-start')}
       role="group"
       aria-label="Reações da mensagem"
+      data-is-toggling={isToggling}
+      data-testid={`reactions-container-${messageId}`}
     >
       {reactions.map((r) => (
         <button

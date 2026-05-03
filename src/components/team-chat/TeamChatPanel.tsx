@@ -57,7 +57,7 @@ interface Props { conversation: TeamConversation; onBack: () => void; onToggleDe
 export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetails }: Props) {
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
-  const { aggregate, toggle: toggleReaction } = useTeamMessageReactions(conversation.id);
+  const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
 
   
   const isDeptMember = useMemo(() => {
@@ -178,6 +178,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                       messageId={msg.id}
                       reactions={aggregate(msg.id)}
                       isMine={isMine}
+                      isToggling={isToggling}
                       onToggle={(emoji) => toggleReaction({ messageId: msg.id, emoji })}
                     />
                   </div>
