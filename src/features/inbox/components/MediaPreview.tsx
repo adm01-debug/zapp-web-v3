@@ -172,8 +172,8 @@ export function StickerPreview({ url, isSent }: StickerPreviewProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   return (
     <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} className="relative">
-      {!isLoaded && <div className="w-[120px] h-[120px] bg-muted animate-pulse rounded-lg" />}
-      <motion.img src={url} alt="Sticker" onLoad={() => setIsLoaded(true)} whileHover={{ scale: 1.1 }} className={cn("max-w-[120px] max-h-[120px] object-contain", !isLoaded && "hidden")} />
+      {!isLoaded && <div className="w-[120px] h-[120px] bg-[#202c33] animate-pulse rounded-md" />}
+      <motion.img src={url} alt="Sticker" onLoad={() => setIsLoaded(true)} whileHover={{ scale: 1.05 }} className={cn("max-w-[120px] max-h-[120px] object-contain", !isLoaded && "hidden")} />
     </motion.div>
   );
 }
