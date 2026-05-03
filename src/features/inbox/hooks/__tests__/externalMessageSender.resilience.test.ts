@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { supabase } from '@/integrations/supabase/client';
-import { sendExternalText } from '../externalMessageSender';
+import { sendExternalText } from '../realtime/externalMessageSender';
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
