@@ -38,6 +38,7 @@ export function useOptimisticMessages() {
   const createOptimistic = useCallback(
     (params: {
       contactId: string;
+      conversationId: string;
       content: string;
       messageType?: string;
       replyToId?: string | null;
@@ -52,16 +53,18 @@ export function useOptimisticMessages() {
         id: tempId,
         _optimistic: true,
         contact_id: params.contactId,
+        conversationId: params.conversationId,
         content: params.content,
-        message_type: (params.messageType || 'text') as Message['message_type'],
+        message_type: params.messageType || 'text',
+        type: (params.messageType || 'text') as Message['type'],
         sender: 'agent',
         status: 'sending',
         timestamp: now,
         created_at: now.toISOString(),
         updated_at: now.toISOString(),
-        status_updated_at: now.toISOString(),
-        external_id: null,
+        external_id: undefined,
         media_url: params.mediaUrl || null,
+        mediaUrl: params.mediaUrl || undefined,
         quoted_message_id: params.replyToId || null,
         contactAvatar: params.contactAvatar || null,
         is_read: true,
