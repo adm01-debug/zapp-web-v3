@@ -394,20 +394,29 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
       <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden">
         {!hideHeader && (
-          <ChatPanelHeader conversation={conversation} isContactTyping={isContactTyping} showAIAssistant={activeTool === 'aiAssistant'} showDetails={showDetails}
-            showSummaryPanel={activeTool === 'summary'} activeTool={activeTool} onSetActiveTool={handleSetActiveTool}
-            voiceId={voiceId} speed={speed} onToggleAIAssistant={() => handleSetActiveTool('aiAssistant')} onToggleDetails={onToggleDetails}
-            onStartCall={() => { setCallDirection('outbound'); openDialog('callDialog'); }} onOpenSearch={() => handleSetActiveTool('chatSearch')}
-            onOpenTransfer={() => openDialog('transferDialog')} onOpenSchedule={() => openDialog('scheduleDialog')}
-            onVoiceChange={setVoiceId} onSpeedChange={setSpeed} onBack={onBack}
-            onGenerateSummary={() => handleSetActiveTool('summary')} isSummaryLoading={false} canGenerateSummary={canGenerateSummary}
+          <ChatHeader
+            conversation={conversation}
+            messages={messages}
+            isContactTyping={isContactTyping}
+            showAIAssistant={activeTool === 'aiAssistant'}
+            showDetails={showDetails}
+            voiceId={voiceId}
+            speed={speed}
+            onToggleAIAssistant={() => handleSetActiveTool('aiAssistant')}
+            onToggleDetails={onToggleDetails || (() => {})}
+            onStartCall={() => { setCallDirection('outbound'); openDialog('callDialog'); }}
+            onOpenSearch={() => handleSetActiveTool('chatSearch')}
+            onOpenTransfer={() => openDialog('transferDialog')}
+            onOpenSchedule={() => openDialog('scheduleDialog')}
+            onVoiceChange={setVoiceId}
+            onSpeedChange={setSpeed}
+            onBack={onBack}
+            onGenerateSummary={() => handleSetActiveTool('summary')}
             onCloseConversation={() => openDialog('closeDialog')}
-            lastMessages={lastContactMessages}
-            allMessages={allMessagesForHeader}
-            onSelectSuggestion={(text) => handlers.setInputValue(text)}
             failuresOnly={failuresOnly}
             failuresCount={failedMessages.length}
-            onToggleFailuresOnly={() => setFailuresOnly((v) => !v)} />
+            onToggleFailuresOnly={() => setFailuresOnly((v) => !v)}
+          />
         )}
 
         <ChatSearchBar messages={messages} isOpen={activeTool === 'chatSearch'}
