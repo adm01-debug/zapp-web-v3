@@ -87,7 +87,7 @@ export const ChatHeader = memo(function ChatHeader({
           </Button>
         )}
         <motion.div>
-          <Avatar className="w-10 h-10 ring-0 shadow-none">
+          <Avatar className="w-[48px] h-[48px] ring-0 shadow-none">
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
