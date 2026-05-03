@@ -355,6 +355,23 @@ export const RPC = {
     name: 'get_duplicate_report',
     client: 'external',
   }),
+  rpc_log_service_event: def<{
+    p_instance: TEXT;
+    p_event_type: TEXT;
+    p_message: TEXT;
+    p_level?: TEXT;
+    p_remote_jid?: TEXT;
+    p_payload?: JSONB;
+    p_metadata?: JSONB;
+    p_performed_by?: TEXT;
+  }, Record<string, unknown>>({
+    name: 'rpc_log_service_event',
+    client: 'external',
+  }),
 } as const;
+
+type TEXT = string;
+type JSONB = Record<string, unknown> | any[];
+
 
 export type RpcKey = keyof typeof RPC;

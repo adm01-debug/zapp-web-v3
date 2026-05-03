@@ -18,6 +18,8 @@ import { jidToPhone } from '@/adapters/evolutionAdapter';
 import type { RealtimeMessage } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
 import { parseEvolutionError } from '@/features/inbox';
+import { dbInsert } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 const log = getLogger('externalMessageSender');
 const DEFAULT_INSTANCE = 'wpp2';
@@ -91,6 +93,15 @@ export async function sendExternalText(
 
   const optimistic = makeOptimisticBubble(remoteJid, content, { contactAvatar: opts.contactAvatar });
 
+  // Log de auditoria (FATOR X)
+  void dbInsert(RPC.rpc_log_service_event, {
+    p_instance: instance,
+    p_event_type: 'message_send',
+    p_message: `Enviando texto para ${phone}`,
+    p_remote_jid: remoteJid,
+    p_payload: { content }
+  });
+
   const { data, error } = await supabase.functions.invoke('evolution-api', {
     body: {
       action: 'send-text',
@@ -103,6 +114,16 @@ export async function sendExternalText(
   if (error) {
     log.error('evolution-api send-text failed', error);
     const info = parseEvolutionError(error);
+    
+    void dbInsert(RPC.rpc_log_service_event, {
+      p_instance: instance,
+      p_event_type: 'error',
+      p_level: 'error',
+      p_message: `Falha no envio para ${phone}: ${info.reason}`,
+      p_remote_jid: remoteJid,
+      p_payload: { error: info }
+    });
+
     throw new SendError(info.reason, info.detail, info.status);
   }
 
@@ -111,6 +132,16 @@ export async function sendExternalText(
   if (envelope?.error) {
     log.error('evolution-api send-text error envelope', envelope);
     const info = parseEvolutionError(envelope);
+    
+    void dbInsert(RPC.rpc_log_service_event, {
+      p_instance: instance,
+      p_event_type: 'error',
+      p_level: 'error',
+      p_message: `Erro na resposta da API para ${phone}: ${info.reason}`,
+      p_remote_jid: remoteJid,
+      p_payload: { envelope }
+    });
+
     throw new SendError(info.reason, info.detail, info.status);
   }
 

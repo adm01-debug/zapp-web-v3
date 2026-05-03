@@ -5691,6 +5691,63 @@ export type Database = {
         }
         Relationships: []
       }
+      media_upload_queue: {
+        Row: {
+          agent_id: string | null
+          caption: string | null
+          contact_id: string
+          created_at: string | null
+          error_message: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          id: string
+          max_retries: number | null
+          metadata: Json | null
+          progress: number | null
+          retry_count: number | null
+          status: string | null
+          storage_path: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          caption?: string | null
+          contact_id: string
+          created_at?: string | null
+          error_message?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          max_retries?: number | null
+          metadata?: Json | null
+          progress?: number | null
+          retry_count?: number | null
+          status?: string | null
+          storage_path?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          caption?: string | null
+          contact_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          max_retries?: number | null
+          metadata?: Json | null
+          progress?: number | null
+          retry_count?: number | null
+          status?: string | null
+          storage_path?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       message_reactions: {
         Row: {
           contact_id: string | null
@@ -8563,6 +8620,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_logs: {
+        Row: {
+          event_type: string
+          id: string
+          instance_name: string
+          level: string | null
+          message: string | null
+          metadata: Json | null
+          payload: Json | null
+          performed_by: string | null
+          remote_jid: string | null
+          ts: string | null
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          instance_name: string
+          level?: string | null
+          message?: string | null
+          metadata?: Json | null
+          payload?: Json | null
+          performed_by?: string | null
+          remote_jid?: string | null
+          ts?: string | null
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          instance_name?: string
+          level?: string | null
+          message?: string | null
+          metadata?: Json | null
+          payload?: Json | null
+          performed_by?: string | null
+          remote_jid?: string | null
+          ts?: string | null
+        }
+        Relationships: []
       }
       sicoob_contact_mapping: {
         Row: {
@@ -12231,6 +12327,36 @@ export type Database = {
           p_used_vector: boolean
         }
         Returns: string
+      }
+      rpc_log_service_event: {
+        Args: {
+          p_event_type: string
+          p_instance: string
+          p_level?: string
+          p_message: string
+          p_metadata?: Json
+          p_payload?: Json
+          p_performed_by?: string
+          p_remote_jid?: string
+        }
+        Returns: {
+          event_type: string
+          id: string
+          instance_name: string
+          level: string | null
+          message: string | null
+          metadata: Json | null
+          payload: Json | null
+          performed_by: string | null
+          remote_jid: string | null
+          ts: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_logs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       rpc_migrate_whatsapp_integration: { Args: never; Returns: Json }
       rpc_ops_metrics: { Args: { p_window_hours?: number }; Returns: Json }
