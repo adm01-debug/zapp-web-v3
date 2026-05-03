@@ -13,6 +13,7 @@ import { MarkdownPreview } from '@/features/inbox';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AddMembersDialog } from './AddMembersDialog';
 import { TeamChatHeader } from './TeamChatHeader';
+import { ParticipantStatsGraph } from './ParticipantStatsGraph';
 import { TeamChatInputArea } from './TeamChatInputArea';
 import { useTeamChatPanel } from './useTeamChatPanel';
 import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
