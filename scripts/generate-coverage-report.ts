@@ -6,7 +6,7 @@ import { join, extname } from 'path';
  * E2E (Playwright) vs Unitário (Vitest)
  */
 
-const CHAT_DOMAIN_PATH = 'src/features/inbox/components/chat';
+const DOMAIN_PATHS = ['src/features/inbox/components/chat', 'src/features/inbox/components'];
 const E2E_PATH = 'e2e';
 
 function getFiles(dir: string, allFiles: string[] = []) {
@@ -22,7 +22,7 @@ function getFiles(dir: string, allFiles: string[] = []) {
   return allFiles;
 }
 
-const sourceFiles = getFiles(CHAT_DOMAIN_PATH).filter(f => extname(f) === '.tsx' || (extname(f) === '.ts' && !f.includes('.test.')));
+const sourceFiles = DOMAIN_PATHS.flatMap(path => getFiles(path)).filter(f => extname(f) === '.tsx' || (extname(f) === '.ts' && !f.includes('.test.') && !f.includes('.spec.')));
 const e2eFiles = readdirSync(E2E_PATH).filter(f => f.includes('.spec.ts'));
 
 console.log('# Relatório de Cobertura Automático - Módulo Chat');
