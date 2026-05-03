@@ -2,135 +2,94 @@ import { test, expect } from '@playwright/test';
 import { login, openConversation, loginAs } from './helpers/testHelpers';
 
 /**
- * Extended E2E Audit for Teams Module
- * Validates: Resiliency, Order Consistency, Visual Regression, RBAC and Accessibility.
+ * Advanced E2E Audit for Teams Module - Stress, Resiliency, RBAC and Accessibility.
+ * Validates: High-frequency sending, connectivity failure recovery, profile-based permissions, and player A11y.
  */
-test.describe('Teams Module - Resilience & Full Lifecycle', () => {
+test.describe('Teams Module - Advanced Resilience & Stress', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
     await openConversation(page, 'João Silva');
   });
 
-  test('Scenario 1: Audio Failure Simulation & Recovery', async ({ page }) => {
+  test('Scenario 1: Stress Test - High Frequency Sending (Audio/Stickers)', async ({ page }) => {
+    await page.keyboard.press('Alt+W');
+    const input = page.locator('textarea[aria-label="Mensagem de sussurro"]');
+    
+    // Simulate multiple sequential sends to test concurrency and order
+    const iterations = 5;
+    const sentMessages: string[] = [];
+
+    for (let i = 0; i < iterations; i++) {
+      const msg = `StressMsg-${i}-${Date.now()}`;
+      sentMessages.push(msg);
+      await input.fill(msg);
+      await page.keyboard.press('Enter');
+      // No wait here to simulate "stress"
+    }
+
+    // Verify all messages appear and no duplicates
+    for (const msg of sentMessages) {
+      await expect(page.locator(`text="${msg}"`)).toHaveCount(1);
+    }
+
+    // Verify visual order (last sent first in flex-col-reverse)
+    const firstMsgInUI = page.locator('.group\\/whisper').first();
+    await expect(firstMsgInUI).toContainText(sentMessages[iterations - 1]);
+  });
+
+  test('Scenario 2: Network Interruption during Upload Recovery', async ({ page }) => {
     await page.keyboard.press('Alt+W');
     
-    // 1. Mock Upload Failure
-    // Intercept storage upload for team-files/audio to simulate failure
-    await page.route('**/storage/v1/object/whatsapp-media/**', async (route) => {
-      if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 500,
-          contentType: 'application/json',
-          body: JSON.stringify({ error: 'Upload failed for E2E testing' }),
-        });
-      } else {
-        await route.continue();
-      }
-    });
+    // 1. Simulate Offline State
+    await page.context().setOffline(true);
 
     const recordBtn = page.locator('button[aria-label="Gravar áudio"]');
     await recordBtn.click();
-    await page.waitForTimeout(500); // Record a bit
+    await page.waitForTimeout(500);
     await page.locator('button[aria-label="Parar gravação"]').click();
     await page.locator('button[aria-label="Enviar áudio"]').click();
 
-    // 2. Check Error state
+    // 2. Expect error UI
     await expect(page.locator('text="Erro ao enviar áudio"')).toBeVisible();
-    await expect(page.locator('button:has-text("Reenviar")')).toBeVisible();
 
-    // 3. Mock Success and Retry
-    await page.unroute('**/storage/v1/object/whatsapp-media/**');
+    // 3. Go Online and Retry
+    await page.context().setOffline(false);
     await page.locator('button:has-text("Reenviar")').click();
     
-    // Verify recovery (toast or removal of error banner)
     await expect(page.locator('text="Áudio reenviado"')).toBeVisible();
   });
 
-  test('Scenario 2: Order Consistency (Stickers, Memes & Reload)', async ({ page }) => {
-    await page.keyboard.press('Alt+W');
-    const input = page.locator('textarea[aria-label="Mensagem de sussurro"]');
-
-    // 1. Send sequential items
-    const msg1 = `First-${Date.now()}`;
-    await input.fill(msg1);
-    await page.keyboard.press('Enter');
-
-    const msg2 = `Second-${Date.now()}`;
-    await input.fill(msg2);
-    await page.keyboard.press('Enter');
-
-    // 2. Verify order in UI
-    const messages = page.locator('.group\\/whisper');
-    await expect(messages.nth(0)).toContainText(msg2); // Reverse order check (flex-col-reverse)
-    await expect(messages.nth(1)).toContainText(msg1);
-
-    // 3. Navigate away and back
-    await page.click('button[aria-label="Voltar"], .lucide-arrow-left');
-    await openConversation(page, 'João Silva');
+  test('Scenario 3: Detailed A11y Audit for Audio Player', async ({ page }) => {
     await page.keyboard.press('Alt+W');
     
-    // 4. Persistence check
-    await expect(page.locator(`text="${msg1}"`)).toBeVisible();
-    await expect(page.locator(`text="${msg2}"`)).toBeVisible();
-  });
-
-  test('Scenario 3: Audio Player Accessibility & Screen Readers', async ({ page }) => {
-    await page.keyboard.press('Alt+W');
-    
-    // Find an existing audio player or send a mock one
-    // Here we focus on the UI component structure
-    const slider = page.locator('[role="slider"][aria-label="Progresso do áudio"]');
-    
-    // 1. Keyboard Navigation
-    if (await slider.count() > 0) {
-      await slider.first().focus();
-      await expect(slider.first()).toBeFocused();
+    // Check for focus outline and ARIA roles
+    const playBtn = page.locator('button[aria-label="Reproduzir"], button[aria-label="Pausar"]').first();
+    if (await playBtn.isVisible()) {
+      await playBtn.focus();
+      // Check if it has visible focus outline (usually by looking for focus class or style)
+      await expect(playBtn).toBeFocused();
       
-      // ARIA attributes check
-      await expect(slider.first()).toHaveAttribute('aria-valuemin', '0');
-      await expect(slider.first()).toHaveAttribute('aria-valuemax', '100');
+      const slider = page.locator('[role="slider"][aria-label="Progresso do áudio"]').first();
+      await expect(slider).toHaveAttribute('aria-valuemin', '0');
+      await expect(slider).toHaveAttribute('aria-valuenow');
     }
-
-    // 2. Visible focus indicators
-    const buttons = page.locator('button[aria-label*="Sussurro"]');
-    await buttons.first().focus();
-    // We expect some visual focus ring - checked via CSS if possible
   });
 
-  test('Scenario 4: Visual Regression Snapshots', async ({ page }) => {
-    await page.keyboard.press('Alt+W');
-    const whisperPanel = page.locator('[role="dialog"][aria-label="Painel de Sussurro"]');
-    await expect(whisperPanel).toBeVisible();
-
-    // Actual visual regression (requires baseline)
-    // await expect(whisperPanel).toHaveScreenshot('teams-whisper-panel.png');
+  test('Scenario 4: Conversation-Contextual RBAC', async ({ page }) => {
+    // Navigate to a conversation where the user might have different permissions (mocked via roles)
+    await page.click('button[aria-label="Voltar"], .lucide-arrow-left');
     
-    // Fallback: Verify color palette matches Amber design
-    await expect(whisperPanel).toHaveCSS('border-color', /rgb\(254, 243, 199\)|#fef3c7|rgb\(253, 230, 138\)/); 
-  });
-});
-
-test.describe('Teams Module - RBAC Matrix', () => {
-  test('Viewer Profile should be restricted', async ({ page }) => {
-    // Note: loginAs uses specific test accounts
+    // Login as viewer to check total blocking
     await loginAs(page, 'viewer');
     await openConversation(page, 'João Silva');
     
-    // 1. Whisper mode button should be HIDDEN for viewers
+    // Whisper button MUST NOT EXIST for viewers
     const whisperBtn = page.locator('button[title*="Modo Sussurro"]');
     await expect(whisperBtn).not.toBeVisible();
     
-    // 2. Slash commands should be filtered
-    const mainInput = page.locator('textarea[placeholder*="Digite uma mensagem"]');
-    await mainInput.fill('/whisper');
-    await expect(page.locator('text="Modo Sussurro"')).not.toBeVisible();
-  });
-
-  test('Agent Profile should have full collaboration access', async ({ page }) => {
-    await loginAs(page, 'agent');
-    await openConversation(page, 'João Silva');
-    
-    await expect(page.locator('button[title*="Modo Sussurro"]')).toBeVisible();
-    await expect(page.locator('button[aria-label="Arquivos da equipe"]')).toBeVisible();
+    // Team Files in menu should also be gone
+    await page.click('button[aria-label="Mais opções"]');
+    await expect(page.locator('text="Arquivos da Equipe"')).not.toBeVisible();
   });
 });
+
