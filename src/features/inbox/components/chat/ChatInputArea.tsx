@@ -232,16 +232,19 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           <div className="flex items-center">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon"
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
                   className={cn(
-                    "text-[#8696a0] dark:text-[#aebac1] hover:bg-transparent shrink-0 transition-all rounded-full active:scale-95", 
+                    "inline-flex items-center justify-center text-[#8696a0] dark:text-[#aebac1] hover:bg-transparent shrink-0 transition-all rounded-full outline-none", 
                     logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]"
                   )}
-                  aria-label="Mais opções de mensagem">
+                  aria-label="Mais opções de mensagem"
+                >
                   <Plus className="w-6 h-6" />
-                </Button>
+                </motion.button>
               </PopoverTrigger>
-              <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in zoom-in-95 duration-200" align="start" side="top">{tertiaryTools}</PopoverContent>
+              <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-300" align="start" side="top">{tertiaryTools}</PopoverContent>
             </Popover>
 
             {!logic.isMobile && (
@@ -299,30 +302,40 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           <div className="flex items-center gap-1.5 shrink-0 ml-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
+                <motion.button 
                   onClick={(!logic.hasText && logic.attachments.length === 0 && !editingMessage) ? onRecordToggle : logic.handleSendWithAnimation}
                   disabled={logic.isOverLimit || isSending}
-                  size="icon"
-                  variant="ghost"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9, rotate: (logic.hasText || logic.attachments.length > 0) ? 10 : 0 }}
                   className={cn(
-                    "rounded-full shrink-0 touch-manipulation active:scale-95 transition-colors duration-200",
+                    "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
                     isRecordingAudio 
-                      ? "bg-destructive text-white hover:bg-destructive/90 shadow-lg" 
-                      : "text-[#8696a0] dark:text-[#aebac1] hover:bg-transparent",
+                      ? "bg-destructive text-white hover:bg-destructive/90 shadow-lg shadow-destructive/20 scale-110" 
+                      : "text-[#8696a0] dark:text-[#aebac1] hover:text-primary dark:hover:text-primary",
                     logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]",
                     logic.sendAnimation && "motion-safe:animate-bounce"
                   )}
                   aria-label={editingMessage ? "Confirmar edição" : (logic.hasText || logic.attachments.length > 0 ? "Enviar mensagem" : "Gravar áudio")}>
-                  {isSending ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : editingMessage ? (
-                    <Check className="w-5 h-5" />
-                  ) : (logic.hasText || logic.attachments.length > 0) ? (
-                    <Send className="w-6 h-6" />
-                  ) : (
-                    <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
-                  )}
-                </Button>
+                  <AnimatePresence mode="wait">
+                    {isSending ? (
+                      <motion.div key="loading" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      </motion.div>
+                    ) : editingMessage ? (
+                      <motion.div key="edit" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                        <Check className="w-5 h-5" />
+                      </motion.div>
+                    ) : (logic.hasText || logic.attachments.length > 0) ? (
+                      <motion.div key="send" initial={{ opacity: 0, scale: 0.5, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.5, rotate: 20 }}>
+                        <Send className="w-6 h-6" />
+                      </motion.div>
+                    ) : (
+                      <motion.div key="mic" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                        <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px] font-medium">Enviar</TooltipContent>
             </Tooltip>
