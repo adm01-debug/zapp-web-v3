@@ -46,7 +46,7 @@ const ConvItem = memo(({
   isSelected: boolean;
   onSelect:   () => void;
 }) => {
-  const displayName = sanitizeText(conv.contact_name ?? conv.remote_jid ?? 'Desconhecido');
+  const displayName = sanitizeText(conv.contact_name ?? conv.remote_jid?.split('@')[0] ?? 'Desconhecido');
   const initials    = displayName.split(' ').filter(Boolean).slice(0,2).map((n) => n[0].toUpperCase()).join('');
   const phone       = formatPhoneForDisplay(conv.contact_phone ?? conv.remote_jid?.replace(/@.*$/, '') ?? '');
   const lastMsg     = conv.last_message_content ? sanitizeText(conv.last_message_content).slice(0, 60) : null;
@@ -58,41 +58,40 @@ const ConvItem = memo(({
     <button
       type="button"
       onClick={onSelect}
-      className={`w-full flex items-start gap-2.5 px-3 py-3 hover:bg-muted/40 transition-colors text-left border-b ${isSelected ? 'bg-primary/5 border-l-2 border-l-primary' : ''}`}
+      className={`w-full flex items-start gap-3 px-3.5 py-2.5 hover:bg-muted/40 transition-colors text-left border-b ${isSelected ? 'bg-primary/5 border-l-[3px] border-l-primary' : ''}`}
       aria-selected={isSelected}
     >
       <div className="relative shrink-0">
-        <Avatar className="h-9 w-9">
-          {conv.contact_avatar && <img src={conv.contact_avatar} alt="" className="rounded-full" loading="lazy" />}
-          <AvatarFallback className="text-xs font-medium">{initials || '?'}</AvatarFallback>
+        <Avatar className="h-12 w-12 border border-border">
+          {conv.contact_avatar && <img src={conv.contact_avatar} alt="" className="rounded-full h-full w-full object-cover" loading="lazy" />}
+          <AvatarFallback className="text-sm font-medium bg-muted text-muted-foreground">{initials || '?'}</AvatarFallback>
         </Avatar>
         {conv.is_bot_active && (
-          <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-blue-500 border-2 border-background flex items-center justify-center">
-            <Bot className="h-2 w-2 text-white" />
+          <div className="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-blue-500 border-2 border-background flex items-center justify-center shadow-sm">
+            <Bot className="h-2.5 w-2.5 text-white" />
           </div>
         )}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-sm font-medium truncate">{displayName}</span>
-          <span className="text-xs text-muted-foreground shrink-0">{timeStr}</span>
+      <div className="flex-1 min-w-0 py-0.5">
+        <div className="flex items-center justify-between gap-1 mb-0.5">
+          <span className="text-sm font-semibold truncate leading-tight">{displayName}</span>
+          <span className={`text-[11px] shrink-0 ${conv.unread_count > 0 ? 'text-green-600 font-medium' : 'text-muted-foreground'}`}>{timeStr}</span>
         </div>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          {conv.priority !== 'normal' && (
-            <Badge className={`text-xs px-1 py-0 h-4 shrink-0 ${PRIORITY_COLORS[conv.priority] ?? ''}`}>
-              {conv.priority === 'urgent' && <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />}
-              {conv.priority}
-            </Badge>
-          )}
+        <div className="flex items-center gap-1.5 h-5">
+          <p className="text-xs text-muted-foreground truncate flex-1 leading-normal">
+            {lastMsg ?? phone}
+          </p>
           {conv.unread_count > 0 && (
-            <Badge variant="destructive" className="text-xs min-w-[18px] h-4 px-1 shrink-0">
+            <Badge className="text-[10px] min-w-[18px] h-4.5 px-1 bg-green-500 hover:bg-green-600 text-white border-none rounded-full flex items-center justify-center font-bold">
               {conv.unread_count > 99 ? '99+' : conv.unread_count}
             </Badge>
           )}
-          <p className="text-xs text-muted-foreground truncate">
-            {lastMsg ?? phone}
-          </p>
+          {conv.priority !== 'normal' && (
+            <Badge className={`text-[10px] px-1.5 py-0 h-4 shrink-0 rounded-sm border-none uppercase tracking-wider font-bold ${PRIORITY_COLORS[conv.priority] ?? ''}`}>
+              {conv.priority}
+            </Badge>
+          )}
         </div>
       </div>
     </button>
