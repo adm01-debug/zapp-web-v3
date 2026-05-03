@@ -79,14 +79,14 @@ export function ChatHeader({
       "flex items-center justify-between px-6 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-30",
       density === 'comfortable' ? 'py-4' : 'py-2'
     )}>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {onBack && (
-          <Button variant="ghost" size="icon" className="w-9 h-9 lg:hidden rounded-full hover:bg-primary/5 transition-all" onClick={onBack}>
-            <ArrowLeft className="w-5 h-5" />
+          <Button variant="ghost" size="icon" className="w-8 h-8 lg:hidden rounded-full hover:bg-primary/5" onClick={onBack}>
+            <ArrowLeft className="w-4 h-4" />
           </Button>
         )}
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
-          <Avatar className="w-11 h-11 ring-2 ring-border/5 shadow-sm transition-all duration-300">
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Avatar className="w-10 h-10 ring-1 ring-border/10 shadow-sm">
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
@@ -95,71 +95,28 @@ export function ChatHeader({
                 (e.target as HTMLImageElement).removeAttribute('src');
               }}
             />
-            <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold tracking-tighter uppercase">
+            <AvatarFallback className="bg-primary/5 text-primary text-xs font-semibold uppercase">
               {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
             </AvatarFallback>
           </Avatar>
         </motion.div>
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {briefing ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <h3 className="font-display font-bold text-[15px] tracking-tight text-foreground/90 cursor-help border-b border-dashed border-primary/20 flex items-center gap-1.5 transition-colors hover:text-primary">
-                    {conversation.contact.name}
-                    <Brain className="w-3.5 h-3.5 text-primary/40" />
-                  </h3>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" className={cn('max-w-[320px] p-4 bg-popover/95 backdrop-blur-md border-border/20 shadow-2xl rounded-2xl animate-in zoom-in-95 duration-200', briefing.risk_alert && 'border-destructive/30 ring-1 ring-destructive/10')}>
-                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="space-y-3 text-[11px]">
-                    <p className="font-medium text-foreground leading-snug">{briefing.opening_tip}</p>
-                    {briefing.risk_alert && <p className="text-destructive font-bold uppercase tracking-wider text-[9px]">{briefing.risk_alert}</p>}
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-muted-foreground">
-                      <span className="flex items-center justify-between">Score: <strong className="text-foreground ml-1">{briefing.relationship_score ?? '—'}</strong></span>
-                      <span className="flex items-center justify-between">Etapa: <strong className="text-foreground ml-1">{briefing.relationship_stage ?? '—'}</strong></span>
-                      <span className="flex items-center justify-between">Último: <strong className="text-foreground ml-1">{briefing.days_since_last_contact != null ? `${briefing.days_since_last_contact}d` : '—'}</strong></span>
-                      <span className="flex items-center justify-between">Total: <strong className="text-foreground ml-1">{briefing.total_interactions}</strong></span>
-                    </div>
-                  </motion.div>
-                </TooltipContent>
-              </Tooltip>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <h3 className="font-display font-bold text-[14.5px] tracking-tight text-foreground/90 truncate max-w-[200px] sm:max-w-md">
+              {conversation.contact.name}
+            </h3>
+            <SLAIndicatorForContact conversation={conversation} />
+          </div>
+          <div className="flex items-center gap-2">
+            {isContactTyping ? (
+              <span className="text-[11px] text-primary font-medium">digitando...</span>
             ) : (
-              <h3 className="font-display font-bold text-[15px] tracking-tight text-foreground/90">{conversation.contact.name}</h3>
+              <span className="text-[11px] text-muted-foreground/60">{conversation.contact.phone}</span>
             )}
-            <Badge variant="outline" className={cn('text-[10px] capitalize border',
-              briefing?.sentiment === 'positive' && 'border-success/50 text-success bg-success/10',
-              briefing?.sentiment === 'negative' && 'border-destructive/50 text-destructive bg-destructive/10',
-              !briefing?.sentiment && conversation.status === 'open' && 'border-success/50 text-success bg-success/10',
-              !briefing?.sentiment && conversation.status === 'pending' && 'border-warning/50 text-warning bg-warning/10',
-              !briefing?.sentiment && conversation.status === 'resolved' && 'border-muted-foreground/50 text-muted-foreground',
-              !briefing?.sentiment && conversation.status === 'waiting' && 'border-info/50 text-info bg-info/10',
-              briefing?.sentiment === 'neutral' && conversation.status === 'open' && 'border-success/50 text-success bg-success/10',
-              briefing?.sentiment === 'neutral' && conversation.status === 'pending' && 'border-warning/50 text-warning bg-warning/10',
-              briefing?.sentiment === 'neutral' && conversation.status === 'resolved' && 'border-muted-foreground/50 text-muted-foreground',
-              briefing?.sentiment === 'neutral' && conversation.status === 'waiting' && 'border-info/50 text-info bg-info/10',
-            )}>
-              {briefing?.sentiment && briefing.sentiment !== 'neutral' && <span className="mr-0.5">{briefing.sentiment === 'positive' ? '😊' : '😟'}</span>}
+            <Badge variant="outline" className={cn('text-[9px] h-4 px-1 capitalize border border-border/20 bg-muted/20 text-muted-foreground')}>
               {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
             </Badge>
-            {(() => {
-              const ct = conversation.contact.contact_type;
-              const cfg = ct ? contactTypeConfig[ct] : null;
-              if (!cfg) return null;
-              const TypeIcon = cfg.icon;
-              return <Badge variant="outline" className={cn('text-[10px] border font-medium', cfg.color)}><TypeIcon className="w-3 h-3 mr-0.5" />{cfg.label}</Badge>;
-            })()}
-            <SLAIndicatorForContact conversation={conversation} />
-            <CrmBadges crmCompany={crmCompany} crmCustomer={crmCustomer} crmRfm={crmRfm} />
-            <BusinessHoursBadge connectionId={conversation.contact.whatsapp_connection_id} />
-            <AnalysisBadges contactId={conversation.contact.id} compact />
           </div>
-          <p className="text-[11px] font-light tracking-tight text-muted-foreground/60 flex items-center gap-1.5">
-            {isContactTyping ? <TypingIndicatorCompact isVisible={true} className="text-primary" /> : <span>{conversation.contact.phone}</span>}
-          </p>
-          <QueuePositionNotifier contactId={conversation.contact.id} className="mt-0.5" />
-        </div>
-        <div className="hidden lg:block border-l border-border/20 pl-4 ml-1">
-          <ConversationHealth conversation={conversation} messages={messages} />
         </div>
       </div>
 
