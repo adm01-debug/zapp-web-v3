@@ -233,15 +233,15 @@ export function ChatMessageBubble({
         </div>
 
         <motion.div
-          whileHover={{ scale: 1.01 }}
+          whileHover={{ scale: 1.005 }}
           className={cn(
-            'relative rounded-2xl shadow-sm transition-all overflow-hidden',
+            'relative rounded-2xl shadow-sm transition-all overflow-hidden border border-transparent',
             (message.type === 'image' || message.type === 'video') && !message.content
               ? 'p-0'
-              : 'px-4 py-2.5',
+              : density === 'comfortable' ? 'px-4 py-2.5' : density === 'compact' ? 'px-3 py-1.5' : 'px-2 py-1',
             isSent 
               ? 'rounded-br-md bg-chat-sent text-chat-sent-foreground' 
-              : 'rounded-bl-md bg-chat-received border border-border/30 text-chat-received-foreground'
+              : 'rounded-bl-md bg-chat-received border-border/30 text-chat-received-foreground'
           )}
         >
 
