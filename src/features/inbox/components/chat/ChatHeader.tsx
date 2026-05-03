@@ -212,7 +212,7 @@ export const ChatHeader = memo(function ChatHeader({
         <VoiceSelector selectedVoiceId={voiceId} onVoiceChange={onVoiceChange} />
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <motion.div>
               <Button 
                 variant="ghost" 
                 size="icon" 
