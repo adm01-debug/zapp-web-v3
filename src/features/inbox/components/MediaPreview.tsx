@@ -141,7 +141,7 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
             )}
             <video
               key={effectiveUrl}
-              src={effectiveUrl} className="w-full max-h-[200px] object-cover rounded-lg" muted={isMuted} loop playsInline
+              src={effectiveUrl} className="w-full max-h-[400px] object-cover rounded-md" muted={isMuted} loop playsInline
               onLoadedData={() => setIsLoaded(true)}
               onError={refresh.onError}
               onMouseEnter={(e) => { e.currentTarget.play(); setIsPlaying(true); }}
