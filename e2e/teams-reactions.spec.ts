@@ -24,7 +24,7 @@ test.describe('Teams - Message Reactions @teams @reactions', () => {
     const message = page.getByText(uniqueText);
     await expect(message).toBeVisible();
 
-    const messageContainer = page.locator(`[data-testid^="message-"]`).filter({ hasText: uniqueText });
+    const messageContainer = page.locator(`[data-testid^="message-container-"]`).filter({ hasText: uniqueText });
     const reactionTrigger = messageContainer.locator('[data-testid^="reaction-trigger-"]');
     
     await messageContainer.hover();
@@ -51,7 +51,7 @@ test.describe('Teams - Message Reactions @teams @reactions', () => {
     await page.getByPlaceholder(/escreva uma mensagem/i).fill(uniqueText);
     await page.getByPlaceholder(/escreva uma mensagem/i).press('Enter');
 
-    const messageContainer = page.locator(`[data-testid^="message-"]`).filter({ hasText: uniqueText });
+    const messageContainer = page.locator(`[data-testid^="message-container-"]`).filter({ hasText: uniqueText });
     await messageContainer.hover();
     
     const errors = [401, 500];
@@ -99,7 +99,7 @@ test.describe('Teams - Message Reactions @teams @reactions', () => {
     await input.fill(uniqueText);
     await input.press('Enter');
 
-    const messageContainer = page.locator(`[data-testid^="message-"]`).filter({ hasText: uniqueText });
+    const messageContainer = page.locator(`[data-testid^="message-container-"]`).filter({ hasText: uniqueText });
     
     // Scroll to the message if it's not visible
     await messageContainer.scrollIntoViewIfNeeded();
@@ -146,8 +146,8 @@ test.describe('Teams - Message Reactions @teams @reactions', () => {
     await p1.getByPlaceholder(/escreva uma mensagem/i).fill(uniqueText);
     await p1.getByPlaceholder(/escreva uma mensagem/i).press('Enter');
 
-    const m1 = p1.locator(`[data-testid^="message-"]`).filter({ hasText: uniqueText });
-    const m2 = p2.locator(`[data-testid^="message-"]`).filter({ hasText: uniqueText });
+    const m1 = p1.locator(`[data-testid^="message-container-"]`).filter({ hasText: uniqueText });
+    const m2 = p2.locator(`[data-testid^="message-container-"]`).filter({ hasText: uniqueText });
     
     // Step 1: P1 adds ❤️ (count 1)
     await m1.hover();
@@ -170,7 +170,7 @@ test.describe('Teams - Message Reactions @teams @reactions', () => {
     
     // Validate order on both pages
     for (const page of [p1, p2]) {
-      const container = page.locator(`[data-testid^="message-"]`).filter({ hasText: uniqueText });
+      const container = page.locator(`[data-testid^="message-container-"]`).filter({ hasText: uniqueText });
       const firstBadge = container.locator('button[aria-pressed]').first();
       await expect(firstBadge).toContainText('🔥');
       await expect(firstBadge).toContainText('2');
@@ -205,8 +205,8 @@ test.describe('Teams - Message Reactions @teams @reactions', () => {
     await p1.getByPlaceholder(/escreva uma mensagem/i).fill(uniqueText);
     await p1.getByPlaceholder(/escreva uma mensagem/i).press('Enter');
 
-    const m1 = p1.locator(`[data-testid^="message-"]`).filter({ hasText: uniqueText });
-    const m2 = p2.locator(`[data-testid^="message-"]`).filter({ hasText: uniqueText });
+    const m1 = p1.locator(`[data-testid^="message-container-"]`).filter({ hasText: uniqueText });
+    const m2 = p2.locator(`[data-testid^="message-container-"]`).filter({ hasText: uniqueText });
     
     // Ensure message is visible for both
     await expect(m2).toBeVisible();
