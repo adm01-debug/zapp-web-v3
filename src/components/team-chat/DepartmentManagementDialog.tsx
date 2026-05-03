@@ -45,7 +45,7 @@ export function DepartmentManagementDialog({ department, open, onOpenChange }: P
   const { profile: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [view, setView] = useState<'members' | 'audit'>('members');
+  const [view, setView] = useState<'members' | 'audit' | 'invites'>('members');
 
   const { data: allProfiles = [], isLoading: loadingProfiles } = useQuery({
     queryKey: ['profiles-for-dept-mgmt'],
