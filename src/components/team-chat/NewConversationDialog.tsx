@@ -6,12 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, User, Users, Loader2 } from 'lucide-react';
+import { Search, User, Users, Loader2, Building2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/features/auth';
 import { useCreateTeamConversation } from '@/hooks/useTeamChat';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('NewConversationDialog');
@@ -24,13 +25,16 @@ interface Props {
 
 export function NewConversationDialog({ open, onOpenChange, onCreated }: Props) {
   const { profile } = useAuth();
-  const [tab, setTab] = useState<'direct' | 'group'>('direct');
+  const [tab, setTab] = useState<'direct' | 'group' | 'department'>('direct');
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedDeptId, setSelectedDeptId] = useState<string | null>(null);
   const [groupName, setGroupName] = useState('');
   const createMutation = useCreateTeamConversation();
 
-  const { data: teammates = [], isLoading } = useQuery({
+  const isAdmin = profile?.role === 'admin';
+
+  const { data: teammates = [], isLoading: loadingTeammates } = useQuery({
     queryKey: ['team-profiles-for-chat'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -42,16 +46,38 @@ export function NewConversationDialog({ open, onOpenChange, onCreated }: Props) 
       if (error) throw error;
       return data || [];
     },
-    enabled: open && !!profile,
+    enabled: open && !!profile && tab !== 'department',
   });
 
-  const filtered = useMemo(() => {
+  const { data: departments = [], isLoading: loadingDepts } = useQuery({
+    queryKey: ['departments-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: open && !!profile && tab === 'department',
+  });
+
+  const filteredTeammates = useMemo(() => {
     if (!search.trim()) return teammates;
     const q = search.toLowerCase();
     return teammates.filter(t =>
       t.name?.toLowerCase().includes(q) || t.email?.toLowerCase().includes(q)
     );
   }, [teammates, search]);
+
+  const filteredDepts = useMemo(() => {
+    if (!search.trim()) return departments;
+    const q = search.toLowerCase();
+    return departments.filter(d =>
+      d.name?.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q)
+    );
+  }, [departments, search]);
 
   const toggleMember = (id: string) => {
     if (tab === 'direct') {
@@ -64,21 +90,33 @@ export function NewConversationDialog({ open, onOpenChange, onCreated }: Props) 
   };
 
   const handleCreate = async () => {
-    if (selectedIds.length === 0) return;
+    if (tab === 'department' && !selectedDeptId) return;
+    if (tab !== 'department' && selectedIds.length === 0) return;
     if (tab === 'group' && selectedIds.length < 2) {
       return; // Groups need at least 2 other members
     }
+
     try {
-      const result = await createMutation.mutateAsync({
-        type: tab,
-        name: tab === 'group' ? groupName.trim() || undefined : undefined,
-        memberIds: selectedIds,
-      });
+      let payload: any = { type: tab };
+      
+      if (tab === 'department') {
+        const dept = departments.find(d => d.id === selectedDeptId);
+        payload.departmentId = selectedDeptId;
+        payload.name = dept?.name;
+      } else {
+        payload.name = tab === 'group' ? groupName.trim() || undefined : undefined;
+        payload.memberIds = selectedIds;
+      }
+
+      const result = await createMutation.mutateAsync(payload);
       setSelectedIds([]);
+      setSelectedDeptId(null);
       setGroupName('');
       setSearch('');
       onCreated(result.id);
-    } catch (err) { log.error('Unexpected error in NewConversationDialog:', err); }
+    } catch (err) { 
+      log.error('Unexpected error in NewConversationDialog:', err); 
+    }
   };
 
   return (
@@ -88,13 +126,16 @@ export function NewConversationDialog({ open, onOpenChange, onCreated }: Props) 
           <DialogTitle>Nova Conversa</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={tab} onValueChange={v => { setTab(v as 'direct' | 'group'); setSelectedIds([]); }}>
+        <Tabs value={tab} onValueChange={v => { setTab(v as any); setSelectedIds([]); setSelectedDeptId(null); }}>
           <TabsList className="w-full">
             <TabsTrigger value="direct" className="flex-1 gap-1.5">
               <User className="w-3.5 h-3.5" /> Direto
             </TabsTrigger>
             <TabsTrigger value="group" className="flex-1 gap-1.5">
               <Users className="w-3.5 h-3.5" /> Grupo
+            </TabsTrigger>
+            <TabsTrigger value="department" className="flex-1 gap-1.5">
+              <Building2 className="w-3.5 h-3.5" /> Depto
             </TabsTrigger>
           </TabsList>
 
@@ -113,51 +154,85 @@ export function NewConversationDialog({ open, onOpenChange, onCreated }: Props) 
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar colegas..."
+                placeholder={tab === 'department' ? "Buscar departamentos..." : "Buscar colegas..."}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pl-8"
-                aria-label="Buscar colegas"
               />
             </div>
 
-            <div className="max-h-60 overflow-auto space-y-0.5 border rounded-lg p-1" role="listbox" aria-label="Lista de colegas">
-              {isLoading ? (
-                <div className="text-center py-4 text-muted-foreground text-sm">Carregando...</div>
-              ) : filtered.length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground text-sm">Nenhum colega encontrado</div>
-              ) : (
-                filtered.map(t => {
-                  const isSelected = selectedIds.includes(t.id);
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => toggleMember(t.id)}
-                      className={cn(
-                        "w-full flex items-center gap-3 p-2.5 rounded-md transition-colors",
-                        "hover:bg-accent/50",
-                        isSelected && "bg-primary/10"
-                      )}
-                    >
-                      <Avatar className="w-8 h-8 shrink-0">
-                        <AvatarImage src={t.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs bg-muted">{t.name?.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 text-left min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{t.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{t.email}</p>
-                      </div>
-                      {tab === 'group' ? (
-                        <Checkbox checked={isSelected} className="shrink-0" />
-                      ) : (
+            <div className="max-h-60 overflow-auto space-y-0.5 border rounded-lg p-1">
+              {tab === 'department' ? (
+                loadingDepts ? (
+                  <div className="text-center py-4 text-muted-foreground text-sm">Carregando departamentos...</div>
+                ) : filteredDepts.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground text-sm">Nenhum departamento encontrado</div>
+                ) : (
+                  filteredDepts.map(d => {
+                    const isSelected = selectedDeptId === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        onClick={() => setSelectedDeptId(d.id)}
+                        className={cn(
+                          "w-full flex items-center gap-3 p-2.5 rounded-md transition-colors",
+                          "hover:bg-accent/50",
+                          isSelected && "bg-primary/10"
+                        )}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Building2 className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{d.name}</p>
+                          {d.description && <p className="text-xs text-muted-foreground truncate">{d.description}</p>}
+                        </div>
                         <div className={cn(
                           "w-4 h-4 rounded-full border-2 shrink-0",
                           isSelected ? "bg-primary border-primary" : "border-muted-foreground/30"
                         )} />
-                      )}
-                    </button>
-                  );
-                })
+                      </button>
+                    );
+                  })
+                )
+              ) : (
+                loadingTeammates ? (
+                  <div className="text-center py-4 text-muted-foreground text-sm">Carregando...</div>
+                ) : filteredTeammates.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground text-sm">Nenhum colega encontrado</div>
+                ) : (
+                  filteredTeammates.map(t => {
+                    const isSelected = selectedIds.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => toggleMember(t.id)}
+                        className={cn(
+                          "w-full flex items-center gap-3 p-2.5 rounded-md transition-colors",
+                          "hover:bg-accent/50",
+                          isSelected && "bg-primary/10"
+                        )}
+                      >
+                        <Avatar className="w-8 h-8 shrink-0">
+                          <AvatarImage src={t.avatar_url || undefined} />
+                          <AvatarFallback className="text-xs bg-muted">{t.name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{t.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{t.email}</p>
+                        </div>
+                        {tab === 'group' ? (
+                          <Checkbox checked={isSelected} className="shrink-0" />
+                        ) : (
+                          <div className={cn(
+                            "w-4 h-4 rounded-full border-2 shrink-0",
+                            isSelected ? "bg-primary border-primary" : "border-muted-foreground/30"
+                          )} />
+                        )}
+                      </button>
+                    );
+                  })
+                )
               )}
             </div>
           </div>
@@ -165,13 +240,12 @@ export function NewConversationDialog({ open, onOpenChange, onCreated }: Props) 
 
         <Button
           onClick={handleCreate}
-          disabled={selectedIds.length === 0 || createMutation.isPending || (tab === 'group' && selectedIds.length < 2)}
+          disabled={createMutation.isPending || (tab === 'department' ? !selectedDeptId : selectedIds.length === 0 || (tab === 'group' && selectedIds.length < 2))}
           className="w-full mt-2 rounded-xl"
         >
-          {createMutation.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          ) : null}
-          {tab === 'direct' ? 'Iniciar Conversa' : `Criar Grupo (${selectedIds.length} membro${selectedIds.length !== 1 ? 's' : ''})`}
+          {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+          {tab === 'department' ? 'Criar Grupo do Departamento' : 
+           tab === 'direct' ? 'Iniciar Conversa' : `Criar Grupo (${selectedIds.length} membros)`}
         </Button>
         {tab === 'group' && selectedIds.length > 0 && selectedIds.length < 2 && (
           <p className="text-xs text-muted-foreground text-center mt-1">Selecione pelo menos 2 membros para criar um grupo</p>
