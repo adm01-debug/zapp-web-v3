@@ -45,6 +45,9 @@ export interface UserSettings {
   tts_voice_id: string;
   tts_speed: number;
 
+  // Simulation
+  simulation_mode_enabled: boolean;
+
   // SLA
   global_sla_warning_minutes: number;
   global_sla_critical_minutes: number;
