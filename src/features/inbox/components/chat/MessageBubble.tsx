@@ -200,13 +200,13 @@ export function MessageBubble({
               whileHover={{ scale: 1.002 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={cn(
-                'relative transition-all overflow-hidden',
-                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2 py-1.5' : density === 'compact' ? 'px-1.5 py-1' : 'px-1.5 py-1',
+                'relative transition-all overflow-hidden border border-transparent shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]',
+                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2 py-1.5' : 'px-1.5 py-1',
                 isSent
-                  ? cn('bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg' : isFirstInGroup ? 'rounded-lg rounded-tr-none' : isLastInGroup ? 'rounded-lg rounded-tr-none' : 'rounded-lg rounded-tr-none')
-                  : cn('bg-white dark:bg-[#202c33] border-none text-[#111b21] dark:text-[#e9edef] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]', isFirstInGroup && isLastInGroup ? 'rounded-lg' : isFirstInGroup ? 'rounded-lg rounded-tl-none' : isLastInGroup ? 'rounded-lg rounded-tl-none' : 'rounded-lg rounded-tl-none'),
-                message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 shadow-[inset_0_1px_2px_rgba(251,191,36,0.1)] ring-1 ring-amber-500/30 border-dashed',
-                isFailedTerminal && 'ring-1 ring-destructive/50 border border-destructive/40'
+                  ? cn('bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef]', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
+                  : cn('bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef]', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
+                message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 ring-1 ring-amber-500/30 border-dashed',
+                isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
             >
               {message.replyTo && <QuotedMessage replyTo={message.replyTo} isSent={isSent} onClick={() => onScrollToMessage(message.replyTo!.messageId)} />}
@@ -219,7 +219,7 @@ export function MessageBubble({
               {message.type === 'document' && message.mediaUrl && <div className="mb-1.5"><DocumentPreview url={message.mediaUrl} fileName={message.content || 'documento'} isSent={isSent} /></div>}
               {message.type === 'location' && message.location && <LocationMessageDisplay location={message.location} isSent={isSent} />}
               {message.type === 'sticker' && message.mediaUrl && <div className="mb-1 group/sticker relative"><img src={message.mediaUrl} alt="Sticker" className="max-w-[160px] max-h-[160px] object-contain drop-shadow-lg" loading="lazy" /></div>}
-              {!showUnsupportedFallback && message.content && !['audio','location','video','document','sticker'].includes(message.type) && <p className="text-[14.2px] whitespace-pre-wrap leading-[1.45] tracking-tight">{searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}</p>}
+              {!showUnsupportedFallback && message.content && !['audio','location','video','document','sticker'].includes(message.type) && <p className="text-[13.5px] whitespace-pre-wrap leading-[1.4] tracking-tight">{searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}</p>}
               <div className={cn(
                 'flex items-center justify-end gap-1 mt-1 -mb-0.5', 
                 (message.type === 'image' || message.type === 'video') && !message.content 
