@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { undoToast } from '@/lib/undoToast';
+import { useAuth } from '@/features/auth';
 import { Message, InteractiveMessage, InteractiveButton, LocationMessage } from '@/types/chat';
 import { SlashCommand } from '@/features/inbox/components/SlashCommands';
 import { ExternalProduct } from '@/hooks/useExternalCatalog';
@@ -29,8 +30,9 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     editMessageApi, applySignature, handleTypingStart, handleTypingStop,
     openDialog, closeDialog, handleSetActiveTool,
   } = opts;
-
+  const { profile } = useAuth();
   const [inputValue, setInputValue] = useState('');
+  const [isWhisper, setIsWhisper] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [lastSendError, setLastSendError] = useState<string | null>(null);
@@ -61,6 +63,9 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
 
   const replyToMessageRef = useRef(replyToMessage);
   replyToMessageRef.current = replyToMessage;
+
+  const isWhisperRef = useRef(isWhisper);
+  isWhisperRef.current = isWhisper;
 
   const EDIT_WINDOW_MINUTES = 15;
 
@@ -108,7 +113,20 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     if (wasReply) log.debug('Sending reply to:', wasReply.id);
 
     try {
-      await Promise.resolve(onSendMessage(messageContent));
+      if (isWhisperRef.current) {
+        if (!profile?.id) throw new Error('Usuário não autenticado');
+        const { error } = await supabase.from('whisper_messages').insert({
+          contact_id: opts.contactId,
+          sender_id: profile.id,
+          content: messageContent,
+          target_agent_id: profile.id, // Envia para si mesmo por padrão se não houver alvo
+        });
+        if (error) throw error;
+        toast({ title: '🤫 Sussurro enviado', description: 'Nota interna registrada com sucesso.' });
+        setIsWhisper(false); // Reset whisper mode after sending
+      } else {
+        await Promise.resolve(onSendMessage(messageContent));
+      }
       lastFailedPayloadRef.current = null;
       undoToast({
         message: 'Mensagem enviada', icon: '📨', delay: 3000,
@@ -294,5 +312,6 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     handleSendProduct, handleSendInteractiveMessage, handleInteractiveButtonClick,
     handleSendLocation, handleAudioSend,
     lastSendError, lastSendErrorDetail, retryLastSend, dismissSendError,
+    isWhisper, setIsWhisper,
   };
 }

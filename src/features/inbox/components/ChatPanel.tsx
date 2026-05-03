@@ -16,7 +16,7 @@ import { CRMAutoSync } from './CRMAutoSync';
 import { useAmbientColor } from '@/hooks/useAmbientColor';
 import { ChatToolPanels } from './chat/ChatToolPanels';
 import { ChatDialogs } from './chat/ChatDialogs';
-import { ChatPanelHeader } from './chat/ChatPanelHeader';
+import { ChatHeader } from './chat/ChatHeader';
 import { ChatAssignedBar } from './chat/ChatAssignedBar';
 import { TicketActionsBar } from './chat/TicketActionsBar';
 import { TicketHistorySheet } from './TicketHistorySheet';
@@ -394,20 +394,29 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
       <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden">
         {!hideHeader && (
-          <ChatPanelHeader conversation={conversation} isContactTyping={isContactTyping} showAIAssistant={activeTool === 'aiAssistant'} showDetails={showDetails}
-            showSummaryPanel={activeTool === 'summary'} activeTool={activeTool} onSetActiveTool={handleSetActiveTool}
-            voiceId={voiceId} speed={speed} onToggleAIAssistant={() => handleSetActiveTool('aiAssistant')} onToggleDetails={onToggleDetails}
-            onStartCall={() => { setCallDirection('outbound'); openDialog('callDialog'); }} onOpenSearch={() => handleSetActiveTool('chatSearch')}
-            onOpenTransfer={() => openDialog('transferDialog')} onOpenSchedule={() => openDialog('scheduleDialog')}
-            onVoiceChange={setVoiceId} onSpeedChange={setSpeed} onBack={onBack}
-            onGenerateSummary={() => handleSetActiveTool('summary')} isSummaryLoading={false} canGenerateSummary={canGenerateSummary}
+          <ChatHeader
+            conversation={conversation}
+            messages={messages}
+            isContactTyping={isContactTyping}
+            showAIAssistant={activeTool === 'aiAssistant'}
+            showDetails={showDetails}
+            voiceId={voiceId}
+            speed={speed}
+            onToggleAIAssistant={() => handleSetActiveTool('aiAssistant')}
+            onToggleDetails={onToggleDetails || (() => {})}
+            onStartCall={() => { setCallDirection('outbound'); openDialog('callDialog'); }}
+            onOpenSearch={() => handleSetActiveTool('chatSearch')}
+            onOpenTransfer={() => openDialog('transferDialog')}
+            onOpenSchedule={() => openDialog('scheduleDialog')}
+            onVoiceChange={setVoiceId}
+            onSpeedChange={setSpeed}
+            onBack={onBack}
+            onGenerateSummary={() => handleSetActiveTool('summary')}
             onCloseConversation={() => openDialog('closeDialog')}
-            lastMessages={lastContactMessages}
-            allMessages={allMessagesForHeader}
-            onSelectSuggestion={(text) => handlers.setInputValue(text)}
             failuresOnly={failuresOnly}
             failuresCount={failedMessages.length}
-            onToggleFailuresOnly={() => setFailuresOnly((v) => !v)} />
+            onToggleFailuresOnly={() => setFailuresOnly((v) => !v)}
+          />
         )}
 
         <ChatSearchBar messages={messages} isOpen={activeTool === 'chatSearch'}
@@ -510,6 +519,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
         <ChatInputArea inputValue={handlers.inputValue} replyToMessage={handlers.replyToMessage} editingMessage={handlers.editingMessage} isRecordingAudio={handlers.isRecordingAudio}
           showSlashCommands={dialogs.slashCommands} contactId={conversation.contact.id} contactPhone={conversation.contact.phone}
           contactName={conversation.contact.name} instanceName={instanceName} messages={messages} quickReplies={dbQuickReplies} isSending={handlers.isSending}
+          isWhisper={handlers.isWhisper} onToggleWhisper={() => handlers.setIsWhisper(!handlers.isWhisper)}
           onInputChange={handlers.handleInputChange} onKeyDown={(e) => handlers.handleKeyDown(e, dialogs.slashCommands)} onBlur={handleTypingStop} onSend={handlers.handleSend}
           onCancelReply={() => handlers.setReplyToMessage(null)} onCancelEdit={handlers.handleCancelEdit} onSlashCommand={handlers.handleSlashCommand}
           onCloseSlashCommands={() => closeDialog('slashCommands')} onQuickReply={handleQuickReply}

@@ -18,7 +18,7 @@ import { AdvancedMessageMenu } from '@/features/inbox/components/AdvancedMessage
 import { ExternalProductCatalog } from '@/components/catalog/ExternalProductCatalog';
 import { ExternalProduct } from '@/hooks/useExternalCatalog';
 import { Message } from '@/types/chat';
-import { Package, Layers, MapPin, Clock, Zap, PenTool, Check } from 'lucide-react';
+import { Package, Layers, MapPin, Clock, Zap, PenTool, Check, Lock, Unlock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
@@ -41,12 +41,15 @@ interface SecondaryToolbarProps {
   contactId: string;
   contactName?: string;
   onVoiceDictation: (text: string) => void;
+  isWhisper?: boolean;
+  onToggleWhisper?: () => void;
 }
 
 export function SecondaryToolbar({
   inputRef, inputValue, showRichToolbar, onToggleRichToolbar, isRecordingAudio,
   onSendSticker, onSendAudioMeme, onSendCustomEmoji, onOpenCatalog, onAudioSend,
   fileUploaderRef, instanceName, contactPhone, contactId, contactName, onVoiceDictation,
+  isWhisper, onToggleWhisper,
 }: SecondaryToolbarProps) {
   const handleRewrite = (newText: string) => {
     const el = inputRef.current;
@@ -60,6 +63,29 @@ export function SecondaryToolbar({
 
   return (
     <div className="flex items-center gap-0.5 shrink-0">
+      {onToggleWhisper && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "w-8 h-8 transition-all duration-200",
+                isWhisper 
+                  ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 shadow-inner" 
+                  : "text-muted-foreground hover:text-primary"
+              )}
+              onClick={onToggleWhisper}
+              aria-label={isWhisper ? "Desativar modo sussurro" : "Ativar modo sussurro (nota interna)"}
+            >
+              {isWhisper ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {isWhisper ? "Modo Sussurro Ativo (Nota Interna)" : "Ativar Modo Sussurro"}
+          </TooltipContent>
+        </Tooltip>
+      )}
       <AIRewriteButton inputValue={inputValue} onRewrite={handleRewrite} contactName={contactName} />
       <StickerPicker onSendSticker={onSendSticker} />
       <AudioMemePicker onSendAudio={onSendAudioMeme} />
