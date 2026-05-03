@@ -127,7 +127,7 @@ export function TeamMemberDetails({ conversation, onClose }: TeamMemberDetailsPr
           </Collapsible>
         )}
 
-        {conversation.type === 'group' && groupMembers.length > 0 && (
+        {(conversation.type === 'group' || conversation.type === 'department') && groupMembers.length > 0 && (
           <Collapsible open={sections.activity} onOpenChange={(o) => setSections(s => ({ ...s, activity: o }))}>
             <SectionHeader icon={Cake} label="Próximos Aniversários" open={sections.activity} onToggle={() => setSections(s => ({ ...s, activity: !s.activity }))} />
             <CollapsibleContent>
