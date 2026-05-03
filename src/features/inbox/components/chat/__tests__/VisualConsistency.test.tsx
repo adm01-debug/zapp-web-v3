@@ -12,6 +12,19 @@ vi.mock('@/features/inbox', () => ({
   useContactAvatar: () => ({ avatarUrl: null }),
   SLAIndicatorForContact: () => <div data-testid="sla-indicator">SLA</div>
 }));
+vi.mock('@/features/auth', () => ({ useAuth: () => ({ profile: { name: 'Agent' } }) }));
+vi.mock('@/hooks/useDensity', () => ({ useDensity: () => ({ density: 'comfortable', cycleDensity: vi.fn() }) }));
+vi.mock('../ConversationHealth', () => ({ ConversationHealth: () => null }));
+vi.mock('../RealtimeCollaboration', () => ({ RealtimeCollaboration: () => null }));
+vi.mock('../ai-tools/VisionIcon', () => ({ VisionIcon: () => null }));
+vi.mock('../QueuePositionNotifier', () => ({ QueuePositionNotifier: () => null }));
+vi.mock('../VoiceSelector', () => ({ VoiceSelector: () => null }));
+vi.mock('../KeyboardShortcutsHelp', () => ({ KeyboardShortcutsHelp: () => null }));
+vi.mock('../collaboration/ViewersIndicator', () => ({ ViewersIndicator: () => null }));
+vi.mock('../collaboration/InternalNotesPanel', () => ({ InternalNotesPanel: () => null }));
+vi.mock('../CrmBadges', () => ({ CrmBadges: () => null }));
+vi.mock('../BusinessHoursBadge', () => ({ BusinessHoursBadge: () => null }));
+vi.mock('../AnalysisBadges', () => ({ AnalysisBadges: () => null }));
 
 describe('Visual Consistency — ChatHeader', () => {
   const queryClient = new QueryClient();
