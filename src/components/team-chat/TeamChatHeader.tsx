@@ -45,6 +45,8 @@ interface TeamChatHeaderProps {
   onVoiceChange: (voiceId: string) => void;
   onSpeedChange: (speed: number) => void;
   onToggleMute?: () => void;
+  onToggleStats?: () => void;
+  showStats?: boolean;
 }
 
 export function TeamChatHeader({
