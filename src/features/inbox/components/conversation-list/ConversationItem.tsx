@@ -131,24 +131,37 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
 
   return (
     <QuickPeek preview={quickPeekPreview} enabled={!isSelected} delay={500}>
-      <motion.div ref={rootRef} onClick={() => onSelect(conversation)} whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.15 }}
-        className={cn('relative p-[var(--density-padding-x)] rounded-xl cursor-pointer transition-all duration-200 group h-full mx-2', isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent')}>
-        {isSelected && <motion.div layoutId="conversationActive" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-primary" />}
-        <div className="flex items-start gap-3 relative z-10">
+      <motion.div ref={rootRef} onClick={() => onSelect(conversation)} whileHover={{ x: 3 }} whileTap={{ scale: 0.99 }} transition={{ duration: 0.2, ease: "easeOut" }}
+        className={cn(
+          'relative p-4 rounded-2xl cursor-pointer transition-all duration-300 group h-full mx-2 my-0.5', 
+          isSelected 
+            ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary/10' 
+            : 'hover:bg-background/60 hover:shadow-sm border border-transparent hover:border-border/5'
+        )}>
+        {isSelected && <motion.div layoutId="conversationActive" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--primary),0.4)]" />}
+        <div className="flex items-start gap-3.5 relative z-10">
           <div className="relative flex-shrink-0">
             <ChannelBadge type={conversation.contact.contact_type} />
-            <Avatar className={cn("w-11 h-11 ring-2 transition-all", isSelected ? "ring-primary/40" : "ring-border/30")}>
-              <AvatarImage src={conversation.contact.avatar} />
-              <AvatarFallback className="bg-primary/10 text-primary font-medium">{conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}</AvatarFallback>
+            <Avatar className={cn(
+              "w-12 h-12 ring-2 transition-all duration-500", 
+              isSelected ? "ring-primary/20 scale-105" : "ring-border/10 group-hover:ring-primary/10"
+            )}>
+              <AvatarImage src={conversation.contact.avatar} className="object-cover" />
+              <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold tracking-tighter">
+                {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             {conversation.assignedTo ? (
-              <Avatar className="absolute -bottom-1 -right-1 w-5 h-5 ring-2 ring-sidebar">
+              <Avatar className="absolute -bottom-1 -right-1 w-5 h-5 ring-2 ring-background shadow-sm">
                 <AvatarImage src={conversation.assignedTo.avatar} />
                 <AvatarFallback className="bg-secondary text-secondary-foreground text-[8px] font-bold">{conversation.assignedTo.name[0]}</AvatarFallback>
               </Avatar>
             ) : (
-              <span className={cn('absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-sidebar', statusColors[conversation.status])}>
-                <StatusIcon className="w-2.5 h-2.5 text-primary-foreground" />
+              <span className={cn(
+                'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background shadow-sm', 
+                statusColors[conversation.status]
+              )}>
+                <StatusIcon className="w-2 h-2 text-white" />
               </span>
             )}
           </div>
