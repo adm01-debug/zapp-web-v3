@@ -79,6 +79,7 @@ interface ChatInputAreaProps {
   onToggleWhisper?: () => void;
   fileUploaderRef: React.RefObject<FileUploaderRef | null>;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  onOpenTeamFiles?: () => void;
 }
 
 export function ChatInputArea(props: ChatInputAreaProps) {
