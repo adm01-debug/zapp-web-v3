@@ -501,11 +501,11 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const ambient = useAmbientColor(conversation.sentiment);
 
   return (
-    <div className={`flex h-full min-h-0 min-w-0 overflow-hidden relative ${ambient.className}`} style={{ backgroundColor: ambient.bgTint }} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}>
+    <div className={`flex h-full min-h-0 min-w-0 overflow-hidden relative bg-[#0b141a] dark:bg-[#0b141a]`} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}>
       <ChatDragOverlay isDraggingOver={isDraggingOver} />
       <CRMAutoSync conversation={conversation} messageCount={messages.length} messages={messages} />
 
-      <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden bg-[#0b141a] dark:bg-[#0b141a]">
         {!hideHeader && (
           <ChatHeader
             conversation={conversation}
