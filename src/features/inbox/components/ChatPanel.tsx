@@ -412,7 +412,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onVoiceChange={setVoiceId}
             onSpeedChange={setSpeed}
             onBack={onBack}
-            onGenerateSummary={() => handleSetActiveTool('summary')}
+            onGenerateSummary={(tool) => handleSetActiveTool(tool === 'teamFiles' ? 'teamFiles' : 'summary')}
             onCloseConversation={() => openDialog('closeDialog')}
             failuresOnly={failuresOnly}
             failuresCount={failedMessages.length}
