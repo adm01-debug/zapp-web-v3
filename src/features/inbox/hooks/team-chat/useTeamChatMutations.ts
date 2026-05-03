@@ -3,6 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/features/auth';
 import { toast } from '@/hooks/use-toast';
 
+export function useUpdateTeamMessageStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ messageId, status, conversationId }: { messageId: string; status: 'delivered' | 'read'; conversationId: string }) => {
+      const { error } = await supabase.from('team_messages').update({ status }).eq('id', messageId);
+      if (error) throw error;
+      return { conversationId };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['team-messages', data.conversationId] });
+    },
+  });
+}
+
 export function useSendTeamMessage() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();

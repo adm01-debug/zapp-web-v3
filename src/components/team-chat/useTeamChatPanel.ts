@@ -3,7 +3,7 @@ import { getLogger } from '@/lib/logger';
 import { useAuth } from '@/features/auth';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import { useTeamMessages, useSendTeamMessage, useDeleteTeamMessage, useEditTeamMessage, useToggleMuteConversation, TeamMessage, TeamConversation } from '@/hooks/useTeamChat';
+import { useTeamMessages, useSendTeamMessage, useDeleteTeamMessage, useEditTeamMessage, useToggleMuteConversation, useUpdateTeamMessageStatus, TeamMessage, TeamConversation } from '@/hooks/useTeamChat';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -16,6 +16,7 @@ export function useTeamChatPanel(conversation: TeamConversation) {
   const deleteMutation = useDeleteTeamMessage();
   const editMutation = useEditTeamMessage();
   const muteMutation = useToggleMuteConversation();
+  const updateStatusMutation = useUpdateTeamMessageStatus();
 
   const currentMember = conversation.members?.find(m => m.profile_id === profile?.id);
   const isMuted = currentMember?.is_muted ?? false;
