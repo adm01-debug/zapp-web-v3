@@ -85,7 +85,7 @@ export function useTeamConversations() {
 
         return {
           ...conv,
-          type: conv.type as 'direct' | 'group',
+          type: conv.type as 'direct' | 'group' | 'department',
           name: displayName,
           avatar_url: conv.type === 'direct' && !conv.avatar_url
             ? members.find(m => m.profile_id !== profile.id)?.profile?.avatar_url
