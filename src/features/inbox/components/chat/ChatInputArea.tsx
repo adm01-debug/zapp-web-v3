@@ -294,7 +294,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     "rounded-full shrink-0 touch-manipulation active:scale-90 transition-all duration-200",
                     isRecordingAudio 
                       ? "bg-destructive text-white hover:bg-destructive/90 shadow-lg" 
-                      : "text-muted-foreground/70 hover:text-muted-foreground",
+                      : "text-[#8696a0] dark:text-[#8696a0] hover:text-muted-foreground",
                     logic.isMobile ? "w-10 h-10" : "w-10 h-10",
                     logic.sendAnimation && "motion-safe:animate-bounce"
                   )}
