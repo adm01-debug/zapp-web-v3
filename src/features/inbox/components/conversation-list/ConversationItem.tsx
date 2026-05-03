@@ -190,18 +190,49 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               {isTyping ? (
                 <TypingIndicatorCompact isVisible={true} />
               ) : (
-                <p className="text-[12px] font-light tracking-tight text-muted-foreground/75 truncate pr-2">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
+                <p className={cn(
+                  "text-[12px] font-light tracking-tight truncate pr-4 transition-colors duration-300",
+                  conversation.unreadCount > 0 ? "text-foreground font-normal" : "text-muted-foreground/60"
+                )}>
+                  {conversation.lastMessage?.content || 'Sem mensagens'}
+                </p>
               )}
-              {conversation.unreadCount > 0 && <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-primary-foreground">{conversation.unreadCount}</span>}
+              {conversation.unreadCount > 0 && (
+                <motion.span 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="flex-shrink-0 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(var(--primary),0.3)]"
+                >
+                  {conversation.unreadCount}
+                </motion.span>
+              )}
             </div>
-            <div className="flex items-center gap-0.5 mt-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
-              <TooltipProvider delayDuration={200}>
-                <Tooltip><TooltipTrigger asChild><button onClick={(e) => e.stopPropagation()} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-emerald-500 hover:bg-emerald-500/10 active:scale-90 transition-all duration-150"><CheckCircle2 className="w-3.5 h-3.5" /></button></TooltipTrigger><TooltipContent side="bottom" className="text-xs font-medium">Resolver</TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><button onClick={(e) => e.stopPropagation()} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-primary hover:bg-primary/10 active:scale-90 transition-all duration-150"><UserCheck className="w-3.5 h-3.5" /></button></TooltipTrigger><TooltipContent side="bottom" className="text-xs font-medium">Transferir</TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><button onClick={(e) => e.stopPropagation()} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-amber-500 hover:bg-amber-500/10 active:scale-90 transition-all duration-150"><Pin className="w-3.5 h-3.5" /></button></TooltipTrigger><TooltipContent side="bottom" className="text-xs font-medium">Fixar</TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><button onClick={(e) => e.stopPropagation()} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-amber-400 hover:bg-amber-400/10 active:scale-90 transition-all duration-150"><Star className="w-3.5 h-3.5" /></button></TooltipTrigger><TooltipContent side="bottom" className="text-xs font-medium">Favoritar</TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><button onClick={(e) => e.stopPropagation()} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-sky-500 hover:bg-sky-500/10 active:scale-90 transition-all duration-150"><AlarmClock className="w-3.5 h-3.5" /></button></TooltipTrigger><TooltipContent side="bottom" className="text-xs font-medium">Adiar</TooltipContent></Tooltip>
-                <Tooltip><TooltipTrigger asChild><button onClick={(e) => e.stopPropagation()} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 active:scale-90 transition-all duration-150"><Archive className="w-3.5 h-3.5" /></button></TooltipTrigger><TooltipContent side="bottom" className="text-xs font-medium">Arquivar</TooltipContent></Tooltip>
+            
+            <div className="flex items-center gap-1 mt-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+              <TooltipProvider delayDuration={400}>
+                {[
+                  { icon: CheckCircle2, label: 'Resolver', color: 'hover:text-emerald-500 hover:bg-emerald-500/10' },
+                  { icon: UserCheck, label: 'Transferir', color: 'hover:text-primary hover:bg-primary/10' },
+                  { icon: Pin, label: 'Fixar', color: 'hover:text-amber-500 hover:bg-amber-500/10' },
+                  { icon: Star, label: 'Favoritar', color: 'hover:text-amber-400 hover:bg-amber-400/10' },
+                  { icon: AlarmClock, label: 'Adiar', color: 'hover:text-sky-500 hover:bg-sky-500/10' },
+                  { icon: Archive, label: 'Arquivar', color: 'hover:text-destructive hover:bg-destructive/10' }
+                ].map((action, idx) => (
+                  <Tooltip key={idx}>
+                    <TooltipTrigger asChild>
+                      <button 
+                        onClick={(e) => e.stopPropagation()} 
+                        className={cn(
+                          "w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/40 transition-all duration-200 active:scale-90",
+                          action.color
+                        )}
+                      >
+                        <action.icon className="w-3.5 h-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-[10px] font-medium px-2 py-1">{action.label}</TooltipContent>
+                  </Tooltip>
+                ))}
               </TooltipProvider>
             </div>
             <div className="mt-1">
