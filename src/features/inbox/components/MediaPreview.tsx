@@ -49,11 +49,10 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
   };
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
+    <div
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg min-w-[240px] max-w-[300px] cursor-pointer transition-all",
-        isSent ? "bg-primary-foreground/10 hover:bg-primary-foreground/15" : "bg-muted/50 hover:bg-muted/70 border border-border/30"
+        "flex items-center gap-3 p-2.5 rounded-md min-w-[240px] max-w-[320px] cursor-pointer transition-colors",
+        isSent ? "bg-[#005c4b]" : "bg-[#202c33] border border-[#222d34]"
       )}
       onClick={handleOpen}
     >
