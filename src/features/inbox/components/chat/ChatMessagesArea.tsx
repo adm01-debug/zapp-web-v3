@@ -410,49 +410,66 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
            ha carregamento adicional. Este marcador e puramente visual:
            sem listeners, sem efeitos, sem custo de runtime alem do render.
       */}
-      {onLoadOlder ? (
-        <div className="flex justify-center py-2" aria-live="polite">
-          {loadingOlder && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/30">
-              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-              <span>Carregando mensagens anteriores…</span>
-            </div>
-          )}
-          {!loadingOlder && loadCancelled && (
-            <LoadCancelledBadge
-              reason={cancelReason}
-              scrollContainerRef={scrollContainerRef}
-              onRetry={() => {
-                setLoadCancelled(false);
-                if (cancelBadgeTimerRef.current) {
-                  clearTimeout(cancelBadgeTimerRef.current);
-                  cancelBadgeTimerRef.current = null;
-                }
-                cancelledRef.current = false;
-                void onLoadOlder?.();
-              }}
-            />
-          )}
-          {!loadingOlder && !loadCancelled && !hasMoreOlder && messages.length > 0 && (
-            <span className="text-[11px] text-muted-foreground/60 italic">Início da conversa</span>
-          )}
-        </div>
-      ) : (
-        messages.length > 0 && (
-          <div
-            className="flex justify-center py-2"
-            data-testid="chat-local-mode-top"
-            data-mode="local"
-          >
-            <span
-              className="text-[11px] text-muted-foreground/60 italic"
-              title="Modo local: voce esta vendo todas as mensagens disponiveis. Nao ha carregamento de mensagens anteriores."
-            >
-              Início da conversa
-            </span>
+      <div className="flex flex-col items-center gap-4 mb-8 pt-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-card/50 backdrop-blur-sm border border-border/30 rounded-2xl p-6 max-w-sm text-center shadow-sm"
+        >
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Lock className="w-6 h-6 text-primary" />
           </div>
-        )
-      )}
+          <h3 className="text-sm font-semibold mb-1">Criptografia de Ponta a Ponta</h3>
+          <p className="text-[12px] text-muted-foreground leading-relaxed">
+            As mensagens e chamadas são protegidas com criptografia. Ninguém fora desta conversa pode lê-las.
+          </p>
+        </motion.div>
+
+        {onLoadOlder ? (
+          <div className="flex justify-center" aria-live="polite">
+            {loadingOlder && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/30">
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                <span>Carregando mensagens anteriores…</span>
+              </div>
+            )}
+            {!loadingOlder && loadCancelled && (
+              <LoadCancelledBadge
+                reason={cancelReason}
+                scrollContainerRef={scrollContainerRef}
+                onRetry={() => {
+                  setLoadCancelled(false);
+                  if (cancelBadgeTimerRef.current) {
+                    clearTimeout(cancelBadgeTimerRef.current);
+                    cancelBadgeTimerRef.current = null;
+                  }
+                  cancelledRef.current = false;
+                  void onLoadOlder?.();
+                }}
+              />
+            )}
+            {!loadingOlder && !loadCancelled && !hasMoreOlder && messages.length > 0 && (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 bg-muted/30 px-3 py-1 rounded-full">
+                <Info className="w-3 h-3" />
+                <span>Início da conversa</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          messages.length > 0 && (
+            <div
+              className="flex justify-center"
+              data-testid="chat-local-mode-top"
+              data-mode="local"
+            >
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 bg-muted/30 px-3 py-1 rounded-full">
+                <Info className="w-3 h-3" />
+                <span>Início da conversa</span>
+              </div>
+            </div>
+          )
+        )}
+      </div>
 
 
       {Object.entries(groupedMessages).map(([dateKey, dayMessages]) => (
