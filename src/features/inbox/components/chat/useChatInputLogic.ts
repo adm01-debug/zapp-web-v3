@@ -127,7 +127,13 @@ export function useChatInputLogic({
 
   // Send with animation
   const handleSendWithAnimation = useCallback(() => {
-    if ((!hasText && attachments.length === 0 && !editingMessage) || isOverLimit) return;
+    // If no text/attachments and not editing, we handle mic record toggle
+    if (!hasText && attachments.length === 0 && !editingMessage) {
+      return; // Prop handles the actual call to onRecordToggle
+    }
+
+    if (isOverLimit) return;
+    
     setSendAnimation(true);
     try { localStorage.removeItem(`${DRAFT_KEY_PREFIX}${contactId}`); } catch { /* storage unavailable */ }
     if (isMobile && navigator.vibrate) navigator.vibrate(50);
