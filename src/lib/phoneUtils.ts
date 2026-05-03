@@ -92,10 +92,13 @@ export function validatePhone(phone: unknown): PhoneValidationDetailed {
   if (raw === '') return { valid: false, error: 'Telefone vazio.' };
 
   const digitsOnly = raw.replace(/\D/g, '');
-  if (digitsOnly.length > 11 && !/^55/.test(digitsOnly)) {
+  const startsWithPlus = raw.startsWith('+');
+  const isInternational = startsWithPlus ? !raw.startsWith('+55') : (digitsOnly.length > 11 && !digitsOnly.startsWith('55'));
+
+  if (isInternational) {
     return {
       valid: true,
-      normalized: digitsOnly,
+      normalized: startsWithPlus ? raw.replace(/[^\d+]/g, '') : digitsOnly,
       formatted: raw,
       type: 'international',
     };
