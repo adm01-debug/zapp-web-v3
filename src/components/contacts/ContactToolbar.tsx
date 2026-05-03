@@ -69,7 +69,7 @@ export function ContactToolbar({
 }: ContactToolbarProps) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap bg-muted/30 p-2 rounded-xl border border-border/50 backdrop-blur-sm">
         <ContactSearchWithSuggestions
           value={searchInput}
           onChange={onSearchChange}
@@ -79,8 +79,8 @@ export function ContactToolbar({
         />
 
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-[180px]">
-            <SortAsc className="w-4 h-4 mr-2" />
+          <SelectTrigger className="w-[180px] bg-background/50 border-none shadow-sm hover:bg-background transition-colors">
+            <SortAsc className="w-4 h-4 mr-2 text-primary/70" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -93,14 +93,17 @@ export function ContactToolbar({
         <Button
           variant={showFilters ? "default" : "outline"}
           onClick={() => setShowFilters(!showFilters)}
-          className={cn(showFilters && "bg-primary hover:bg-primary/90")}
+          className={cn(
+            "bg-background/50 border-none shadow-sm hover:bg-background transition-colors",
+            showFilters && "bg-primary text-primary-foreground hover:bg-primary/90"
+          )}
           aria-expanded={showFilters}
           aria-controls="contact-filters-panel"
         >
-          <Filter className="w-4 h-4 mr-2" />
+          <Filter className={cn("w-4 h-4 mr-2", !showFilters && "text-primary/70")} />
           Filtros
           {activeFiltersCount > 0 && (
-            <Badge variant="secondary" className="ml-2 bg-background/20 text-xs">{activeFiltersCount}</Badge>
+            <Badge variant="secondary" className="ml-2 bg-primary-foreground/20 text-xs text-inherit">{activeFiltersCount}</Badge>
           )}
         </Button>
 
