@@ -77,6 +77,33 @@ export function SLASettings({ settings, updateSettings }: SLASettingsProps) {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="border-amber-200 bg-amber-50/30">
+        <CardHeader>
+          <div className="flex items-center gap-2 text-amber-600">
+            <FlaskConical className="w-5 h-5" />
+            <CardTitle>Modo de Simulação</CardTitle>
+          </div>
+          <CardDescription>
+            Ative para testar gráficos e alertas com dados fictícios sem afetar conversas reais.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-amber-200">
+            <div className="space-y-0.5">
+              <Label htmlFor="simulation-mode">Habilitar Dados Mock</Label>
+              <p className="text-xs text-muted-foreground">
+                Substitui métricas reais por dados gerados para demonstração.
+              </p>
+            </div>
+            <Switch
+              id="simulation-mode"
+              checked={settings.simulation_mode_enabled}
+              onCheckedChange={(checked) => updateSettings({ simulation_mode_enabled: checked })}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
