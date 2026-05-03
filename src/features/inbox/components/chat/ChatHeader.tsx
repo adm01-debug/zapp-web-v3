@@ -199,7 +199,7 @@ export const ChatHeader = memo(function ChatHeader({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <motion.div>
               <Button variant="ghost" size="icon" className={cn("text-muted-foreground hover:text-primary hover:bg-primary/10 relative", showDetails && "text-primary bg-primary/10")} onClick={onToggleDetails} aria-label="Detalhes do contato">
                 <Info className="w-4 h-4" />
                 {!showDetails && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary animate-pulse" />}
