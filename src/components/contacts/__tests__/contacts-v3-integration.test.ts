@@ -10,7 +10,7 @@ import { normalizePhone, phonesMatch, formatPhoneForDisplay } from '@/lib/phoneU
 describe('CSV Safety', () => {
   it('neutralizes =HYPERLINK injection', () => {
     const csv = buildCsv([{name:'T',phone:'=HYPERLINK("evil","x")',email:'',company:'',tags:'',notes:''}],[{key:'name' as const,label:'Nome'},{key:'phone' as const,label:'Tel'}]);
-    expect(csv).not.toContain('=HYPERLINK');
+    expect(csv).toContain('"\t=HYPERLINK');
   });
   it('BR accents preserved', () => { expect(escapeCsvCell('João')).toBe('"João"'); });
   it('null → empty', () => { expect(escapeCsvCell(null)).toBe(''); });

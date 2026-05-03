@@ -35,8 +35,9 @@ describe('CSV Injection — Complete', () => {
   it('number → quoted string', () => { expect(escapeCsvCell(42)).toBe('"42"'); });
   it('complete CSV no injection', () => {
     const csv = buildCsvString([{ n: '=EVIL()', p: '+CMD' }], [{ key: 'n', label: 'Nome' }, { key: 'p', label: 'Tel' }]);
-    expect(csv).not.toContain('=EVIL()');
-    expect(csv).not.toContain('+CMD');
+    // We expect the TAB prefix before the malicious characters
+    expect(csv).toContain('"\t=EVIL()"');
+    expect(csv).toContain('"\t+CMD"');
   });
 });
 

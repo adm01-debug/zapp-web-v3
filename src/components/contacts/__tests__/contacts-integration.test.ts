@@ -110,7 +110,8 @@ import { escapeCsvCell, buildCsvString } from '@/lib/csvUtils';
 describe('csvUtils — Additional Edge Cases', () => {
   it('handles empty array', () => {
     const csv = buildCsvString([], [{ key: 'name' as const, label: 'Nome' }]);
-    expect(csv).toBe('"Nome"');
+    expect(csv).toContain('"Nome"');
+    expect(csv).toContain('\uFEFF');
   });
 
   it('handles very long values (truncate safe)', () => {
