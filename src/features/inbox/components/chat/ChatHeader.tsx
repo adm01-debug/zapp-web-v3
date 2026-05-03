@@ -20,7 +20,7 @@ import { CrmBadges } from './CrmBadges';
 import { BusinessHoursBadge } from '@/features/inbox/components/BusinessHoursBadge';
 import { AnalysisBadges } from '@/features/inbox/components/AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2 } from 'lucide-react';
+import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2, ArrowLeft, XCircle } from 'lucide-react';
 import { useContactAvatar } from '@/features/inbox';
 import { useDensity } from '@/hooks/useDensity';
 
@@ -48,12 +48,19 @@ interface ChatHeaderProps {
   onOpenSchedule: () => void;
   onVoiceChange: (voiceId: string) => void;
   onSpeedChange: (speed: number) => void;
+  onBack?: () => void;
+  onCloseConversation?: () => void;
+  onGenerateSummary?: () => void;
+  failuresOnly?: boolean;
+  onToggleFailuresOnly?: () => void;
+  failuresCount?: number;
 }
 
 export function ChatHeader({
   conversation, messages, isContactTyping, showAIAssistant, showDetails,
   voiceId, onToggleAIAssistant, onToggleDetails, onStartCall, onOpenSearch,
-  onOpenTransfer, onOpenSchedule, onVoiceChange,
+  onOpenTransfer, onOpenSchedule, onVoiceChange, onBack, onCloseConversation,
+  onGenerateSummary, failuresOnly, onToggleFailuresOnly, failuresCount,
 }: ChatHeaderProps) {
   const { data: crmData } = useExternalContact360(isExternalConfigured ? conversation.contact.phone : undefined);
   const crmCompany = crmData?.found ? crmData.company : null;
@@ -71,6 +78,11 @@ export function ChatHeader({
       density === 'comfortable' ? 'py-3' : 'py-1.5'
     )}>
       <div className="flex items-center gap-3">
+        {onBack && (
+          <Button variant="ghost" size="icon" className="w-8 h-8 lg:hidden" onClick={onBack}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+        )}
         <motion.div whileHover={{ scale: 1.05 }}>
           <Avatar className="w-10 h-10 ring-2 ring-border/30">
             <AvatarImage 
@@ -233,8 +245,18 @@ export function ChatHeader({
             <DropdownMenuItem onClick={onOpenTransfer}><ArrowRight className="w-4 h-4 mr-2" />Transferir</DropdownMenuItem>
             <DropdownMenuItem onClick={onOpenSchedule}><Clock className="w-4 h-4 mr-2" />Agendar mensagem</DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onGenerateSummary}><Brain className="w-4 h-4 mr-2" />Gerar Resumo</DropdownMenuItem>
+            <DropdownMenuItem onClick={onToggleFailuresOnly} className={cn(failuresOnly && "text-destructive font-medium")}>
+              <XCircle className="w-4 h-4 mr-2" />
+              {failuresOnly ? 'Ocultar Falhas' : `Ver Falhas (${failuresCount || 0})`}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem><CheckCircle className="w-4 h-4 mr-2" />Marcar como resolvido</DropdownMenuItem>
             <DropdownMenuItem><Archive className="w-4 h-4 mr-2" />Arquivar</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onCloseConversation} className="text-destructive">
+              <XCircle className="w-4 h-4 mr-2" />Encerrar Conversa
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
