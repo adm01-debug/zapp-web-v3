@@ -75,7 +75,42 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
     const weekAgo = subDays(new Date(), 7);
     const newThisWeek = contacts.filter(c => new Date(c.created_at) >= weekAgo).length;
 
-    return { typeDistribution, topCompanies, topTags, dailyGrowth, newThisWeek };
+    // Actionable Insights Logic
+    const insights = [];
+    
+    if (newThisWeek > contacts.length * 0.05) {
+      insights.push({
+        title: 'Crescimento Acelerado',
+        description: `Aumento de ${Math.round((newThisWeek / contacts.length) * 100)}% na base esta semana.`,
+        icon: ArrowUpRight,
+        color: 'text-green-500',
+        bg: 'bg-green-500/10'
+      });
+    }
+
+    const leadsCount = contacts.filter(c => c.contact_type === 'lead').length;
+    if (leadsCount > contacts.length * 0.3) {
+      insights.push({
+        title: 'Foco em Conversão',
+        description: 'Leads representam mais de 30% da base. Priorize ações de vendas.',
+        icon: Zap,
+        color: 'text-amber-500',
+        bg: 'bg-amber-500/10'
+      });
+    }
+
+    const missingCompany = contacts.filter(c => !c.company).length;
+    if (missingCompany > contacts.length * 0.2) {
+      insights.push({
+        title: 'Dados Incompletos',
+        description: `${missingCompany} contatos sem empresa. Enriqueça para melhor segmentação.`,
+        icon: AlertCircle,
+        color: 'text-orange-500',
+        bg: 'bg-orange-500/10'
+      });
+    }
+
+    return { typeDistribution, topCompanies, topTags, dailyGrowth, newThisWeek, insights };
   }, [contacts]);
 
   const maxDaily = Math.max(...analytics.dailyGrowth.map(d => d.count), 1);
