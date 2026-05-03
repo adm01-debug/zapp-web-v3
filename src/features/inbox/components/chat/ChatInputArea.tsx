@@ -85,7 +85,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
   const {
     inputValue, replyToMessage, editingMessage, isRecordingAudio, showSlashCommands,
     contactId, contactPhone, contactName, instanceName, onPollSent, onContactSent,
-    messages, quickReplies, isSending = false,
+    messages, quickReplies, isSending = false, sendProgress = 0,
     onInputChange, onKeyDown, onBlur, onSend, onCancelReply, onCancelEdit,
     onSlashCommand, onCloseSlashCommands, onQuickReply, onRecordToggle,
     onAudioSend, onAudioCancel, onOpenInteractiveBuilder, onOpenSchedule,
