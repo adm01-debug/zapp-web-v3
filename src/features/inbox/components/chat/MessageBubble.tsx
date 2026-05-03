@@ -128,22 +128,22 @@ export function MessageBubble({
         )}
       >
         {!isSent && (
-          <div className=\"w-9 shrink-0\">
+          <div className="w-9 shrink-0">
             {isLastInGroup && (
-              <Avatar className=\"w-9 h-9 ring-2 ring-background shadow-sm\">
-                <AvatarImage src={avatarUrl || undefined} referrerPolicy=\"no-referrer\" onError={(e) => (e.target as HTMLImageElement).removeAttribute('src')} />
-                <AvatarFallback className=\"bg-gradient-to-br from-accent to-accent/60 text-accent-foreground text-[10px] font-bold\">{senderName.slice(0, 2).toUpperCase()}</AvatarFallback>
+              <Avatar className="w-9 h-9 ring-2 ring-background shadow-sm">
+                <AvatarImage src={avatarUrl || undefined} referrerPolicy="no-referrer" onError={(e) => (e.target as HTMLImageElement).removeAttribute('src')} />
+                <AvatarFallback className="bg-gradient-to-br from-accent to-accent/60 text-accent-foreground text-[10px] font-bold">{senderName.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
             )}
           </div>
         )}
 
         <div className={cn('max-w-[85%] sm:max-w-[70%] space-y-0.5 relative', isSent && 'items-end')}>
-          {!isSent && isFirstInGroup && <span className=\"text-[11px] font-semibold text-primary/80 ml-1 block\">{senderName}</span>}
+          {!isSent && isFirstInGroup && <span className="text-[11px] font-semibold text-primary/80 ml-1 block">{senderName}</span>}
           {message.isWhisper && (
-            <div className=\"flex items-center gap-1.5 mb-1 ml-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-full w-fit border border-amber-500/20\">
-              <ShieldAlert className=\"w-3 h-3 text-amber-600 dark:text-amber-400 animate-pulse\" />
-              <span className=\"text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest\">Equipe — Sussurro Interno</span>
+            <div className="flex items-center gap-1.5 mb-1 ml-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-full w-fit border border-amber-500/20">
+              <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400 animate-pulse" />
+              <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Equipe — Sussurro Interno</span>
             </div>
           )}
 
@@ -162,7 +162,7 @@ export function MessageBubble({
           </AnimatePresence>
 
           {!message.is_deleted && (
-            <div className=\"mt-1\">
+            <div className="mt-1">
               <MessageReactions
                 messageId={message.id}
                 isSent={isSent}
@@ -213,22 +213,22 @@ export function MessageBubble({
               {message.buttonResponse && <ButtonResponseBadge buttonTitle={message.buttonResponse.buttonTitle} isSent={isSent} />}
               {message.type === 'interactive' && message.interactive && <InteractiveMessageDisplay interactive={message.interactive} isSent={isSent} onButtonClick={onInteractiveButtonClick} />}
               {showUnsupportedFallback && <MessageBubbleUnsupported extracted={extracted} rawContent={message.content} isSent={isSent} />}
-              {message.type === 'image' && message.mediaUrl && <div className={cn(\"overflow-hidden\", message.content ? \"mb-1.5 -mx-1 -mt-0.5 rounded-xl\" : \"w-full\")}><MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} /></div>}
-              {message.type === 'video' && message.mediaUrl && <div className=\"mb-1.5\"><VideoPreview url={message.mediaUrl} caption={message.content} isSent={isSent} refreshKey={mediaRefreshKey} /></div>}
-              {message.type === 'audio' && message.mediaUrl && <div className=\"mb-1\"><AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} refreshKey={mediaRefreshKey} /></div>}
-              {message.type === 'document' && message.mediaUrl && <div className=\"mb-1.5\"><DocumentPreview url={message.mediaUrl} fileName={message.content || 'documento'} isSent={isSent} /></div>}
+              {message.type === 'image' && message.mediaUrl && <div className={cn("overflow-hidden", message.content ? "mb-1.5 -mx-1 -mt-0.5 rounded-xl" : "w-full")}><MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} /></div>}
+              {message.type === 'video' && message.mediaUrl && <div className="mb-1.5"><VideoPreview url={message.mediaUrl} caption={message.content} isSent={isSent} refreshKey={mediaRefreshKey} /></div>}
+              {message.type === 'audio' && message.mediaUrl && <div className="mb-1"><AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} refreshKey={mediaRefreshKey} /></div>}
+              {message.type === 'document' && message.mediaUrl && <div className="mb-1.5"><DocumentPreview url={message.mediaUrl} fileName={message.content || 'documento'} isSent={isSent} /></div>}
               {message.type === 'location' && message.location && <LocationMessageDisplay location={message.location} isSent={isSent} />}
-              {message.type === 'sticker' && message.mediaUrl && <div className=\"mb-1 group/sticker relative\"><img src={message.mediaUrl} alt=\"Sticker\" className=\"max-w-[160px] max-h-[160px] object-contain drop-shadow-lg\" loading=\"lazy\" /></div>}
-              {!showUnsupportedFallback && message.content && !['audio','location','video','document','sticker'].includes(message.type) && <p className=\"text-[13.5px] whitespace-pre-wrap leading-[1.4] tracking-tight\">{searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}</p>}
+              {message.type === 'sticker' && message.mediaUrl && <div className="mb-1 group/sticker relative"><img src={message.mediaUrl} alt="Sticker" className="max-w-[160px] max-h-[160px] object-contain drop-shadow-lg" loading="lazy" /></div>}
+              {!showUnsupportedFallback && message.content && !['audio','location','video','document','sticker'].includes(message.type) && <p className="text-[13.5px] whitespace-pre-wrap leading-[1.4] tracking-tight">{searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}</p>}
               <div className={cn(
                 'flex items-center justify-end gap-1 mt-1 -mb-0.5', 
                 (message.type === 'image' || message.type === 'video') && !message.content 
                   ? 'absolute bottom-2 right-2 text-white drop-shadow-md bg-black/30 px-1.5 py-0.5 rounded-full backdrop-blur-xs' 
                   : isSent ? 'text-[#667781] dark:text-[#8696a0]' : 'text-[#667781] dark:text-[#8696a0]'
               )}>
-                {message.isEdited && <span className=\"text-[9px] italic mr-0.5\">editada</span>}
-                <span className=\"text-[11px] font-normal leading-none\">{formatMessageTime(message.timestamp)}</span>
-                <div className=\"flex items-center min-w-[15px]\">
+                {message.isEdited && <span className="text-[9px] italic mr-0.5">editada</span>}
+                <span className="text-[11px] font-normal leading-none">{formatMessageTime(message.timestamp)}</span>
+                <div className="flex items-center min-w-[15px]">
                   {isSent ? <MessageStatusInline message={message} /> : <MessageReadStatus message={message} />}
                 </div>
               </div>
@@ -243,9 +243,9 @@ export function MessageBubble({
     <ContextMenu>
       <ContextMenuTrigger asChild>{bubbleContent}</ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={() => onReply(message)} className=\"gap-2\"><Reply className=\"w-3.5 h-3.5\" /> Responder</ContextMenuItem>
-        <ContextMenuItem onClick={() => onForward(message)} className=\"gap-2\"><Forward className=\"w-3.5 h-3.5\" /> Encaminhar</ContextMenuItem>
-        <ContextMenuItem onClick={() => onCopy(message.content || '')} className=\"gap-2\"><Copy className=\"w-3.5 h-3.5\" /> Copiar</ContextMenuItem>
+        <ContextMenuItem onClick={() => onReply(message)} className="gap-2"><Reply className="w-3.5 h-3.5" /> Responder</ContextMenuItem>
+        <ContextMenuItem onClick={() => onForward(message)} className="gap-2"><Forward className="w-3.5 h-3.5" /> Encaminhar</ContextMenuItem>
+        <ContextMenuItem onClick={() => onCopy(message.content || '')} className="gap-2"><Copy className="w-3.5 h-3.5" /> Copiar</ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );
