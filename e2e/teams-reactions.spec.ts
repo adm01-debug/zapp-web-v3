@@ -41,7 +41,7 @@ test.describe('Teams - Message Reactions @teams @reactions', () => {
     await heartEmoji.click();
 
     // Validate reaction appeared in UI immediately (optimistic) and persists
-    const reactionBadge = messageContainer.locator('[data-testid^="reaction-"][data-testid$="❤️"]');
+    const reactionBadge = messageContainer.locator('button').filter({ hasText: '❤️' });
     await expect(reactionBadge).toBeVisible();
     await expect(reactionBadge).toContainText('1');
     
@@ -87,7 +87,7 @@ test.describe('Teams - Message Reactions @teams @reactions', () => {
 
     // Verify Agent sees it in real-time
     const agentMsgContainer = agentPage.locator(`[data-testid^="message-"]`).filter({ hasText: uniqueText });
-    const agentReactionBadge = agentMsgContainer.locator('[data-testid^="reaction-"][data-testid$="🔥"]');
+    const agentReactionBadge = agentMsgContainer.locator('button').filter({ hasText: '🔥' });
     await expect(agentReactionBadge).toBeVisible({ timeout: 10000 });
     await expect(agentReactionBadge).toContainText('1');
 
@@ -96,7 +96,7 @@ test.describe('Teams - Message Reactions @teams @reactions', () => {
     await expect(agentReactionBadge).toContainText('2');
     
     // Verify Admin sees the count update to 2
-    const adminReactionBadge = adminMsgContainer.locator('[data-testid^="reaction-"][data-testid$="🔥"]');
+    const adminReactionBadge = adminMsgContainer.locator('button').filter({ hasText: '🔥' });
     await expect(adminReactionBadge).toContainText('2', { timeout: 10000 });
 
     await adminContext.close();
