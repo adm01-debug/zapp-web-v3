@@ -4,12 +4,12 @@ import { useChatSearch, SearchFilter } from '../useChatSearch';
 import { Message } from '@/types/chat';
 
 const mockMessages: Message[] = [
-  { id: '1', content: 'Olá, como vai?', type: 'text', timestamp: new Date('2024-01-01T10:00:00Z'), status: 'delivered', sender: 'contact' },
-  { id: '2', content: 'Tudo bem, e você?', type: 'text', timestamp: new Date('2024-01-01T10:01:00Z'), status: 'delivered', sender: 'agent' },
-  { id: '3', content: 'Olha essa imagem', type: 'image', mediaUrl: 'http://example.com/img.jpg', timestamp: new Date('2024-01-01T10:02:00Z'), status: 'delivered', sender: 'contact' },
-  { id: '4', content: 'E esse áudio', type: 'audio', mediaUrl: 'http://example.com/audio.mp3', timestamp: new Date('2024-01-01T10:03:00Z'), status: 'delivered', sender: 'agent' },
-  { id: '5', content: 'Link importante: https://google.com', type: 'text', timestamp: new Date('2024-01-01T10:04:00Z'), status: 'delivered', sender: 'contact' },
-  { id: '6', content: 'Figurinha legal', type: 'sticker' as any, mediaUrl: 'http://example.com/sticker.webp', timestamp: new Date('2024-01-01T10:05:00Z'), status: 'delivered', sender: 'agent' },
+  { id: '1', conversationId: 'conv1', content: 'Olá, como vai?', type: 'text', timestamp: new Date('2024-01-01T10:00:00Z'), status: 'delivered', sender: 'contact' },
+  { id: '2', conversationId: 'conv1', content: 'Tudo bem, e você?', type: 'text', timestamp: new Date('2024-01-01T10:01:00Z'), status: 'delivered', sender: 'agent' },
+  { id: '3', conversationId: 'conv1', content: 'Olha essa imagem', type: 'image', mediaUrl: 'http://example.com/img.jpg', timestamp: new Date('2024-01-01T10:02:00Z'), status: 'delivered', sender: 'contact' },
+  { id: '4', conversationId: 'conv1', content: 'E esse áudio', type: 'audio', mediaUrl: 'http://example.com/audio.mp3', timestamp: new Date('2024-01-01T10:03:00Z'), status: 'delivered', sender: 'agent' },
+  { id: '5', conversationId: 'conv1', content: 'Link importante: https://google.com', type: 'text', timestamp: new Date('2024-01-01T10:04:00Z'), status: 'delivered', sender: 'contact' },
+  { id: '6', conversationId: 'conv1', content: 'Figurinha legal', type: 'sticker', mediaUrl: 'http://example.com/sticker.webp', timestamp: new Date('2024-01-01T10:05:00Z'), status: 'delivered', sender: 'agent' },
 ];
 
 describe('useChatSearch Logic', () => {
