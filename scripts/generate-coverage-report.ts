@@ -6,7 +6,7 @@ import { join, extname } from 'path';
  * E2E (Playwright) vs Unitário (Vitest)
  */
 
-const CHAT_DOMAIN_PATH = 'src/features/inbox/components/chat';
+const DOMAIN_PATHS = ['src/features/inbox/components/chat', 'src/features/inbox/components'];
 const E2E_PATH = 'e2e';
 
 function getFiles(dir: string, allFiles: string[] = []) {
