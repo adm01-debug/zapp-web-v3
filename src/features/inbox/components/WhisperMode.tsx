@@ -134,7 +134,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
   if (!isSupervisor && whispers.length === 0) return null;
 
   return (
-    <div className={cn("relative flex items-center", className)}>
+    <div className={cn("relative flex items-center", className)} role="region" aria-label="Modo Sussurro">
       <Button
         variant="ghost"
         size="sm"
@@ -143,12 +143,18 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
           "relative gap-1.5 text-xs transition-all duration-200",
           isExpanded ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : "text-muted-foreground hover:text-foreground"
         )}
-        title="Modo Sussurro — Notas internas invisíveis ao cliente"
+        title="Modo Sussurro — Notas internas invisíveis ao cliente (Alt+W)"
+        aria-expanded={isExpanded}
+        aria-haspopup="dialog"
       >
         <EyeOff className={cn("w-3.5 h-3.5", isExpanded && "animate-pulse")} />
         <span className="hidden sm:inline">Sussurro</span>
         {unreadCount > 0 && (
-          <Badge variant="destructive" className="h-4 min-w-[16px] px-1 text-[9px] flex items-center justify-center animate-bounce">
+          <Badge 
+            variant="destructive" 
+            className="h-4 min-w-[16px] px-1 text-[9px] flex items-center justify-center animate-bounce"
+            aria-label={`${unreadCount} novas mensagens de sussurro`}
+          >
             {unreadCount}
           </Badge>
         )}
@@ -162,18 +168,31 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             className="absolute bottom-full right-0 mb-3 z-[100] bg-card border border-amber-200/50 rounded-xl shadow-2xl overflow-hidden ring-1 ring-black/5"
             style={{ width: 340 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Painel de Sussurro"
           >
             <div className="p-3 bg-amber-50/50 border-b border-amber-100 flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
                 <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                 Equipe — Interno
               </div>
-              <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-amber-100 text-amber-600" onClick={() => setIsExpanded(false)}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 hover:bg-amber-100 text-amber-600" 
+                onClick={() => setIsExpanded(false)}
+                aria-label="Fechar sussurro"
+              >
                 <X className="w-3.5 h-3.5" />
               </Button>
             </div>
 
-            <div className="max-h-[300px] overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-amber-50/20 to-transparent flex flex-col-reverse">
+            <div 
+              className="max-h-[300px] overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-amber-50/20 to-transparent flex flex-col-reverse"
+              role="log"
+              aria-live="polite"
+            >
               {whispers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center space-y-2">
                   <EyeOff className="w-8 h-8 text-amber-200" />
@@ -204,14 +223,19 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
               <div className="p-3 bg-background border-t border-border/40">
                 <div className="relative flex items-end gap-2">
                   <textarea
+                    ref={inputRef}
                     value={message}
                     onChange={e => setMessage(e.target.value)}
                     placeholder="Escreva uma orientação privada..."
+                    aria-label="Mensagem de sussurro"
                     className="flex-1 min-h-[40px] max-h-[120px] bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-amber-400 rounded-xl p-2.5 text-xs resize-none placeholder:text-muted-foreground/50 transition-all"
                     onKeyDown={e => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         sendWhisper();
+                      }
+                      if (e.key === 'Escape') {
+                        setIsExpanded(false);
                       }
                     }}
                   />
@@ -220,6 +244,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                     className="h-9 w-9 shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-200" 
                     onClick={sendWhisper} 
                     disabled={!message.trim()}
+                    aria-label="Enviar sussurro"
                   >
                     <Send className="w-3.5 h-3.5" />
                   </Button>
