@@ -50,7 +50,7 @@ export function useGmailOAuthFlow(): UseGmailOAuthFlowReturn {
   const loadAccounts = useCallback(async () => {
     const { data, error } = await (supabase as any)
       .from('gmail_accounts')
-      .select('id, email_address, display_name, picture_url, token_expires_at, is_active, last_sync_at')
+      .select('id, user_id, email:email_address, display_name, picture_url, token_expiry:token_expires_at, is_active, created_at')
       .eq('is_active', true)
       .order('created_at');
 
