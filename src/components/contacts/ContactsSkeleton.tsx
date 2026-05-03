@@ -105,18 +105,36 @@ export function ContactsSkeleton({ viewMode, gridColumns }: ContactsSkeletonProp
 
   // Table skeleton
   return (
-    <Card><CardContent className="p-4 space-y-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}
-          className="flex items-center gap-4 p-3">
-          <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 w-32 rounded bg-muted animate-pulse" />
-            <div className="h-3 w-24 rounded bg-muted/60 animate-pulse" />
-          </div>
-          <div className="h-5 w-16 rounded-full bg-muted/40 animate-pulse" />
-        </motion.div>
-      ))}
-    </CardContent></Card>
+    <Card className="overflow-hidden border-border/30 shadow-none">
+      <div className="bg-muted/20 h-10 border-b border-border/20 px-4 flex items-center gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className={cn("h-3 rounded bg-muted/60 animate-pulse", i === 0 ? "w-10" : "flex-1")} />
+        ))}
+      </div>
+      <CardContent className="p-0">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <motion.div 
+            key={i} 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ delay: i * 0.05 }}
+            className="flex items-center gap-4 p-4 border-b border-border/10 last:border-0"
+          >
+            <div className="w-5 h-5 rounded bg-muted animate-pulse shrink-0" />
+            <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+              <div className="w-9 h-9 rounded-full bg-muted animate-pulse shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-32 rounded bg-muted animate-pulse" />
+                <div className="h-3 w-20 rounded bg-muted/60 animate-pulse" />
+              </div>
+            </div>
+            <div className="h-4 w-24 rounded bg-muted/40 animate-pulse flex-1 hidden md:block" />
+            <div className="h-4 w-32 rounded bg-muted/40 animate-pulse flex-1 hidden lg:block" />
+            <div className="h-4 w-28 rounded bg-muted/40 animate-pulse flex-1 hidden xl:block" />
+            <div className="w-10 h-8 rounded bg-muted/30 animate-pulse shrink-0" />
+          </motion.div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
