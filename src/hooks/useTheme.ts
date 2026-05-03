@@ -160,16 +160,10 @@ export function useTheme(): UseThemeReturn {
   }, []);
 
   const setTheme = useCallback((nextTheme: Theme) => {
-    // Check if the browser supports the View Transition API
-    if (!document.startViewTransition) {
-      updateThemeState(nextTheme);
-      return;
-    }
-
-    // Smooth transition using View Transition API
-    document.startViewTransition(() => {
-      updateThemeState(nextTheme);
-    });
+    // Add transition class for smooth theme switching
+    document.documentElement.classList.add('theme-transitioning');
+    updateThemeState(nextTheme);
+    setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 350);
   }, []);
 
   const toggleTheme = useCallback(() => {

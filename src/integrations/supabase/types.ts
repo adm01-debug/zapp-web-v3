@@ -6648,7 +6648,6 @@ export type Database = {
           role: string | null
           session_invalidated_at: string | null
           signature: string | null
-          theme_config: Json | null
           updated_at: string
           user_id: string
         }
@@ -6672,7 +6671,6 @@ export type Database = {
           role?: string | null
           session_invalidated_at?: string | null
           signature?: string | null
-          theme_config?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -6696,7 +6694,6 @@ export type Database = {
           role?: string | null
           session_invalidated_at?: string | null
           signature?: string | null
-          theme_config?: Json | null
           updated_at?: string
           user_id?: string
         }

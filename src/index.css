@@ -1,20 +1,117 @@
-/* 
-  View Transition API Animations 
-  Creates a smooth cross-fade effect when changing themes
-*/
+/* ===== MODULAR DESIGN SYSTEM ===== */
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/utilities.css';
+@import './styles/components.css';
+@import './styles/animations.css';
+@import './styles/sidebar.css';
+@import './styles/accessibility.css';
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== FONT VARIABLES ===== */
+:root {
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-sans: 'Outfit', system-ui, sans-serif;
+}
+
+/* ===== VIEWPORT LOCK — Must be outside @layer to win specificity ===== */
+html, body, #root {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+}
+
+/* ===== VIEW TRANSITIONS API ===== */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.4s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-duration: 200ms;
+  animation-timing-function: ease-in-out;
+}
+::view-transition-old(root) { animation-name: vt-fade-out; }
+::view-transition-new(root) { animation-name: vt-fade-in; }
+@keyframes vt-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes vt-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation-duration: 0.01ms !important; }
 }
 
-.theme-transitioning ::view-transition-old(root) {
-  animation: none;
-  mix-blend-mode: normal;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== ACCESSIBILITY ===== */
+/* Global focus-visible ring for all interactive elements - High Contrast & Premium */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px hsla(var(--primary), 0.15);
+  transition: outline-offset 0.2s, box-shadow 0.2s;
 }
 
-.theme-transitioning ::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
+:focus:not(:focus-visible) {
+  outline: none;
 }
+
+.safe-area-top { padding-top: env(safe-area-inset-top, 0); }
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+.touch-manipulation { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+/* Mobile-specific optimizations */
+@media (max-width: 767px) {
+  input, textarea, select { font-size: 16px !important; }
+  * { -webkit-overflow-scrolling: touch; }
+  body { overscroll-behavior-y: contain; }
+  button, a, [role="button"] { min-height: 44px; min-width: 44px; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+  .overscroll-contain { overscroll-behavior: contain; }
+  .will-change-transform { will-change: transform; }
+}
+
+/* ===== HIGH CONTRAST MODE (WCAG AAA Goal) ===== */
+.high-contrast-mode {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 0%;
+  --primary: 221 83% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 90%;
+  --secondary-foreground: 0 0% 0%;
+  --muted: 0 0% 90%;
+  --muted-foreground: 0 0% 10%;
+  --accent: 0 0% 90%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 0 84% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 0%;
+  --input: 0 0% 0%;
+  --ring: 0 0% 0%;
+}
+
+.high-contrast-mode * {
+  border-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+.high-contrast-mode .badge,
+.high-contrast-mode [role="badge"] {
+  border-width: 2px !important;
+  color: #000 !important;
+  background-color: #fff !important;
+  border-color: #000 !important;
+}
+
+.high-contrast-mode button:not(.primary) {
+  border: 2px solid #000 !important;
+}
+
+/* Modular design system imports already loaded at the top of this file. */

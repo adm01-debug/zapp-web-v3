@@ -50,11 +50,11 @@ export function InteractiveMessageDisplay({
   const getButtonIcon = (button: InteractiveButton) => {
     switch (button.type) {
       case 'url':
-        return <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />;
+        return <ExternalLink className="w-3.5 h-3.5" />;
       case 'phone':
-        return <Phone className="w-3.5 h-3.5" aria-hidden="true" />;
+        return <Phone className="w-3.5 h-3.5" />;
       case 'reply':
-        return <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />;
+        return <MessageSquare className="w-3.5 h-3.5" />;
       default:
         return null;
     }
@@ -125,7 +125,7 @@ export function InteractiveMessageDisplay({
               >
                 {getButtonIcon(button)}
                 <span>{button.title}</span>
-                {button.type === 'url' && <ChevronRight className="w-3 h-3 ml-auto" aria-hidden="true" />}
+                {button.type === 'url' && <ChevronRight className="w-3 h-3 ml-auto" />}
               </motion.button>
             ))}
           </div>
@@ -148,7 +148,7 @@ export function InteractiveMessageDisplay({
               disabled && "opacity-50 cursor-not-allowed"
             )}
           >
-            <List className="w-4 h-4" aria-hidden="true" />
+            <List className="w-4 h-4" />
             {interactive.listButtonText}
           </motion.button>
         )}
