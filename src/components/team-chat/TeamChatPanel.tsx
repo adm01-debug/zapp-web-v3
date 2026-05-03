@@ -168,12 +168,12 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             return (
               <ContextMenu key={msg.id}>
                 <ContextMenuTrigger asChild>
-                  <div data-testid={`message-container-${msg.id}`} className="group/msg relative">
+                  <div data-testid={`message-container-${msg.id}`} className="group/msg relative mb-3">
                     {showDate && <div className="flex justify-center py-2"><span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border border-border/20">{formatDateSep(msg.created_at)}</span></div>}
                     <div 
                       key={msg.id}
                       data-testid={`message-${msg.id}`}
-                      className={cn("flex gap-2 py-0.5", isMine ? "justify-end" : "justify-start")}
+                      className={cn("flex gap-2 py-0.5 relative", isMine ? "justify-end" : "justify-start")}
                     >
                       {!isMine && <Avatar className="w-7 h-7 mt-1 shrink-0"><AvatarImage src={msg.sender?.avatar_url || undefined} /><AvatarFallback className="text-[10px] bg-muted">{msg.sender?.name?.charAt(0) || '?'}</AvatarFallback></Avatar>}
                       
