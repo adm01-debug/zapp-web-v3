@@ -67,7 +67,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
             </g>
 
             {/* Dot ring */}
-            <g opacity="0.015" fill="currentColor" className="text-muted-foreground">
+            <g opacity="0.04" fill="currentColor" className="text-foreground">
               <circle cx="50" cy="170" r="1.5" />
               <circle cx="56" cy="165" r="1.5" />
               <circle cx="62" cy="163" r="1.5" />
