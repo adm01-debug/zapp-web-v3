@@ -279,7 +279,7 @@ export function useEmailTracking() {
 
   // ── Buscar links rastreados de um email ────────────────────────────────
   const getTrackedLinks = useCallback(async (trackingId: string): Promise<TrackedLink[]> => {
-    const { data, error: res9627Err } = await supabase
+    const { data, error } = await supabase
       .from('email_tracked_links')
       .select('*')
       .eq('tracking_id', trackingId)

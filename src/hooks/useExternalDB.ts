@@ -106,7 +106,7 @@ export function useExternalRPC<T = unknown>(options: UseExternalRPCOptions) {
     queryFn: async () => {
       validateRpcAccess(options.rpc, 'external');
       const start = performance.now();
-      const { data, error: res3374Err } = await getExternalSupabase().rpc(options.rpc, options.params || {});
+      const { data, error } = await getExternalSupabase().rpc(options.rpc, options.params || {});
       const duration = Math.round(performance.now() - start);
       if (error) throw new Error(error.message);
       return {
@@ -199,7 +199,7 @@ export function useExternalMutation() {
     }) => {
       validateEntityAccess(params.table, 'external');
       if (params.action === 'insert') {
-        const { data, error: res6313Err } = await getExternalSupabase().from(params.table).insert(params.data as any).select();
+        const { data, error } = await getExternalSupabase().from(params.table).insert(params.data as any).select();
         if (error) throw new Error(error.message);
         return data;
       }
@@ -208,7 +208,7 @@ export function useExternalMutation() {
         if (params.match) {
           for (const [k, v] of Object.entries(params.match)) q = q.eq(k, v as string);
         }
-        const { data, error: res6759Err } = await q.select();
+        const { data, error } = await q.select();
         if (error) throw new Error(error.message);
         return data;
       }
@@ -217,7 +217,7 @@ export function useExternalMutation() {
         if (params.match) {
           for (const [k, v] of Object.entries(params.match)) q = q.eq(k, v as string);
         }
-        const { data, error: res7121Err } = await q.select();
+        const { data, error } = await q.select();
         if (error) throw new Error(error.message);
         return data;
       }

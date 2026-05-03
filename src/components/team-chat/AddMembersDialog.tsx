@@ -53,7 +53,7 @@ export function AddMembersDialog({ open, onOpenChange, conversation }: Props) {
 
   const addMutation = useMutation({
     mutationFn: async (memberIds: string[]) => {
-      const { error: res2068Err } = await supabase
+      const { error } = await supabase
         .from('team_conversation_members')
         .insert(memberIds.map(pid => ({
           conversation_id: conversation.id,

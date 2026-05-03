@@ -220,7 +220,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
   const retryNow = useMutation({
     mutationFn: async (id: string) => {
       if (!isDev) throw new Error(ADMIN_ONLY_MSG);
-      const { data, error: res6905Err } = await supabase.rpc('rpc_dlq_retry_now', { p_id: id });
+      const { data, error } = await supabase.rpc('rpc_dlq_retry_now', { p_id: id });
       if (error) throw error;
       if (data === true) await logItemAction('retry', [id]);
       return data as boolean;
@@ -240,7 +240,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       if (!isDev) throw new Error(ADMIN_ONLY_MSG);
       const id = typeof input === 'string' ? input : input.id;
       const reason = typeof input === 'string' ? '' : (input.reason ?? '');
-      const { data, error: res7787Err } = await supabase.rpc('rpc_dlq_abandon', { p_id: id, p_reason: reason });
+      const { data, error } = await supabase.rpc('rpc_dlq_abandon', { p_id: id, p_reason: reason });
       if (error) throw error;
       if (data === true) await logItemAction('abandon', [id], reason);
       return data as boolean;
@@ -265,7 +265,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       let n = 0;
       const succeededIds: string[] = [];
       for (const id of ids) {
-        const { data, error: res8858Err } = await supabase.rpc('rpc_dlq_retry_now', { p_id: id });
+        const { data, error } = await supabase.rpc('rpc_dlq_retry_now', { p_id: id });
         if (error) throw error;
         if (data === true) {
           n += 1;
@@ -290,7 +290,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       const ids = Array.isArray(input) ? input : input.ids;
       const reason = Array.isArray(input) ? '' : (input.reason ?? '');
       if (ids.length === 0) return 0;
-      const { data, error: res9833Err } = await supabase.rpc('rpc_dlq_bulk_abandon', { p_ids: ids, p_reason: reason });
+      const { data, error } = await supabase.rpc('rpc_dlq_bulk_abandon', { p_ids: ids, p_reason: reason });
       if (error) throw error;
       const affected = (data as number) ?? 0;
       if (affected > 0) await logItemAction('bulk_abandon', ids, reason);
@@ -314,7 +314,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       } catch (logErr) {
         console.warn('[dlq] failed to log reprocess trigger', logErr);
       }
-      const { data, error: res10809Err } = await supabase.functions.invoke('reprocess-failed-messages', { method: 'POST' });
+      const { data, error } = await supabase.functions.invoke('reprocess-failed-messages', { method: 'POST' });
       if (error) throw error;
       return data as { processed?: number; succeeded?: number; failed?: number; abandoned?: number; message?: string };
     },
@@ -375,7 +375,7 @@ export function useFailedMessagesStats() {
   return useQuery<DlqStats>({
     queryKey: ['failed-messages-stats'],
     queryFn: async () => {
-      const { data, error: res12871Err } = await supabase.rpc('rpc_dlq_stats');
+      const { data, error } = await supabase.rpc('rpc_dlq_stats');
       if (error) throw error;
       return (data ?? {
         total: 0, total_24h: 0, oldest_pending_at: null, by_status: {}, by_instance: [],

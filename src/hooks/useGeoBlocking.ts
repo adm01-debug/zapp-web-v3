@@ -52,7 +52,7 @@ export function useGeoBlocking() {
     if (!settings) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { error: res2083Err } = await supabase.from('geo_blocking_settings').update({ mode, updated_by: user?.id, updated_at: new Date().toISOString() }).eq('id', settings.id);
+      const { error } = await supabase.from('geo_blocking_settings').update({ mode, updated_by: user?.id, updated_at: new Date().toISOString() }).eq('id', settings.id);
       if (error) throw error;
       setSettings({ ...settings, mode });
       const modeLabels = { disabled: 'Desativado', whitelist: 'Whitelist (apenas permitidos)', blacklist: 'Blacklist (bloqueados)' };
@@ -87,7 +87,7 @@ export function useGeoBlocking() {
     if (!countryToRemove) return;
     try {
       const table = activeTab === 'whitelist' ? 'allowed_countries' : 'blocked_countries';
-      const { error: res3759Err } = await supabase.from(table).delete().eq('id', countryToRemove.id);
+      const { error } = await supabase.from(table).delete().eq('id', countryToRemove.id);
       if (error) throw error;
       toast.success(`${countryToRemove.country_name} removido`);
       setCountryToRemove(null);

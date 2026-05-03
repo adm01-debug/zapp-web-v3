@@ -127,7 +127,7 @@ export function useTeamChatNotifications(activeConversationId: string | null) {
           // Fetch sender name
           let senderName = 'Colega';
           try {
-            const { data, error: res4460Err } = await supabase
+            const { data, error } = await supabase
               .from('profiles')
               .select('name')
               .eq('id', msg.sender_id)

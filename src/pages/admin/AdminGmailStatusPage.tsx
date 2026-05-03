@@ -10,7 +10,8 @@ import {
   Filter, History as HistoryIcon
 } from 'lucide-react';
 import { useGmail } from '@/hooks/useGmail';
-import { gmailHealthService, GmailHealthInfo, GmailFailure } from '@/services/gmailHealthService';
+import { gmailHealthService } from '@/services/gmail/gmailHealthService';
+import type { GmailHealthInfo, GmailFailure } from '@/services/gmail/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 

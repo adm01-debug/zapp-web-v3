@@ -35,7 +35,7 @@ export async function checkAccountLock(email: string): Promise<LockStatus> {
 }
 
 export async function recordFailedLogin(email: string): Promise<LockStatus> {
-  const { data, error: res1085Err } = await supabase.rpc('record_failed_login', {
+  const { data, error } = await supabase.rpc('record_failed_login', {
     p_email: email,
     p_ip_address: null,
     p_user_agent: navigator.userAgent
@@ -63,7 +63,7 @@ export async function recordFailedLogin(email: string): Promise<LockStatus> {
 }
 
 export async function clearLoginAttempts(email: string): Promise<void> {
-  const { error: res1918Err } = await supabase.rpc('clear_login_attempts', {
+  const { error } = await supabase.rpc('clear_login_attempts', {
     p_email: email
   });
 

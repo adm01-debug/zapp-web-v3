@@ -90,7 +90,7 @@ export function useNotifications() {
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      const { error: res2842Err } = await supabase
+      const { error } = await supabase
         .from('notifications')
         .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('id', notificationId);
@@ -110,7 +110,7 @@ export function useNotifications() {
     if (!user) return;
     
     try {
-      const { error: res3451Err } = await supabase
+      const { error } = await supabase
         .from('notifications')
         .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('user_id', user.id)
@@ -131,7 +131,7 @@ export function useNotifications() {
     try {
       const notification = notifications.find(n => n.id === notificationId);
       
-      const { error: res4110Err } = await supabase
+      const { error } = await supabase
         .from('notifications')
         .delete()
         .eq('id', notificationId);
@@ -151,7 +151,7 @@ export function useNotifications() {
     if (!user) return;
     
     try {
-      const { error: res4651Err } = await supabase
+      const { error } = await supabase
         .from('notifications')
         .delete()
         .eq('user_id', user.id);
@@ -174,7 +174,7 @@ export function useNotifications() {
     if (!user) return;
     
     try {
-      const { error: res5164Err } = await supabase
+      const { error } = await supabase
         .from('notifications')
         .insert([{
           user_id: user.id,

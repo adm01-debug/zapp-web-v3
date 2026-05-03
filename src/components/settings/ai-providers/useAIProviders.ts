@@ -43,10 +43,10 @@ export function useAIProviders() {
       };
 
       if (editingId) {
-        const { error: res1774Err } = await supabase.from('ai_providers').update(record).eq('id', editingId);
+        const { error } = await supabase.from('ai_providers').update(record).eq('id', editingId);
         if (error) throw error;
       } else {
-        const { error: res1919Err } = await supabase.from('ai_providers').insert(record as never);
+        const { error } = await supabase.from('ai_providers').insert(record as never);
         if (error) throw error;
       }
     },
@@ -60,7 +60,7 @@ export function useAIProviders() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res2439Err } = await supabase.from('ai_providers').delete().eq('id', id);
+      const { error } = await supabase.from('ai_providers').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -73,7 +73,7 @@ export function useAIProviders() {
   const handleTest = async (provider: AIProvider) => {
     setTesting(provider.id);
     try {
-      const { data, error: res2906Err } = await supabase.functions.invoke('ai-proxy', {
+      const { data, error } = await supabase.functions.invoke('ai-proxy', {
         body: {
           messages: [
             { role: 'system', content: 'Responda apenas: TESTE OK' },

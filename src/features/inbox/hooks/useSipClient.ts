@@ -53,7 +53,7 @@ export function useSipClient() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
-      const { data, error: res2580Err } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle();
+      const { data, error } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle();
       if (data?.id) profileIdRef.current = data.id;
       return data?.id || null;
     } catch { return null; }

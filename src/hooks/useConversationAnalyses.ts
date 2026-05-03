@@ -67,7 +67,7 @@ export function useConversationAnalyses(contactId: string | null) {
         profileId = profile?.id || null;
       }
 
-      const { data, error: res69Err } = await supabase
+      const { data, error } = await supabase
         .from('conversation_analyses')
         .insert({
           ...analysis,

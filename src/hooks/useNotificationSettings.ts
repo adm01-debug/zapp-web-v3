@@ -134,7 +134,7 @@ export const useNotificationSettings = () => {
       if ('transcriptionSoundType' in updates) dbUpdates.transcription_sound_type = updates.transcriptionSoundType;
 
       if (Object.keys(dbUpdates).length > 0) {
-        const { error: res6595Err } = await supabase
+        const { error } = await supabase
           .from('user_settings')
           .upsert({
             user_id: user.id,

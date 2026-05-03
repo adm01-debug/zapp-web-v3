@@ -132,7 +132,7 @@ export function useContactsSearch() {
   const { data: typeCounts } = useQuery({
     queryKey: ['contacts-type-counts'],
     queryFn: async () => {
-      const { data, error: res4867Err } = await supabase.rpc('contacts_count_by_type');
+      const { data, error } = await supabase.rpc('contacts_count_by_type');
       if (error) throw error;
       return (data as { contact_type: string; count: number }[]) ?? [];
     },

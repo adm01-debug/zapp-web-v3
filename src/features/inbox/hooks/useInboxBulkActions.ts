@@ -79,7 +79,7 @@ export function useInboxBulkActions({ refetch, filteredConversations }: UseInbox
       } else {
         updateData.queue_id = targetId;
       }
-      const { error: res2815Err } = await dbFrom('contacts')
+      const { error } = await dbFrom('contacts')
         .update(updateData)
         .in('id', contactIds);
       if (error) throw error;
@@ -108,7 +108,7 @@ export function useInboxBulkActions({ refetch, filteredConversations }: UseInbox
         successMessage: `${contactIds.length} contato(s) arquivado(s)`,
         undoMessage: 'Arquivamento desfeito',
         action: async () => {
-          const { error: res3731Err } = await dbFrom('contacts')
+          const { error } = await dbFrom('contacts')
             .update({ assigned_to: null })
             .in('id', contactIds);
           if (error) throw error;

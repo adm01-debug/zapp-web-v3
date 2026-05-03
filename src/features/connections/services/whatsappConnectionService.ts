@@ -62,7 +62,7 @@ export const whatsappConnectionService = {
     
     try {
       log.info(`Requesting QR code for instance ${instanceId}`);
-      const { data, error: res2268Err } = await whatsappConnectionRepository.callEvolutionApi({
+      const { data, error } = await whatsappConnectionRepository.callEvolutionApi({
         action: 'connect',
         instanceName: instanceId
       });

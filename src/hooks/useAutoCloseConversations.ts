@@ -34,7 +34,7 @@ export function useAutoCloseConversations() {
       const config = configQuery.data;
       if (!config) throw new Error('Config not found');
 
-      const { error: res1056Err } = await supabase
+      const { error } = await supabase
         .from('auto_close_config')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', config.id);

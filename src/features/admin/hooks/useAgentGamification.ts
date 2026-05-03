@@ -33,7 +33,7 @@ export const useAgentGamification = () => {
     queryKey: ['agent-stats', profileId],
     queryFn: async () => {
       if (!profileId) return null;
-      const { data, error: res1201Err } = await supabase
+      const { data, error } = await supabase
         .from('agent_stats')
         .select('*')
         .eq('profile_id', profileId)
@@ -49,7 +49,7 @@ export const useAgentGamification = () => {
     queryKey: ['agent-achievements', profileId],
     queryFn: async () => {
       if (!profileId) return [];
-      const { data, error: res1643Err } = await supabase
+      const { data, error } = await supabase
         .from('agent_achievements')
         .select('*')
         .eq('profile_id', profileId)

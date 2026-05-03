@@ -146,7 +146,7 @@ export function useAuthForm() {
     }
 
     setLoading(true);
-    const { error: res5241Err } = await signUp(formData.email, formData.password, formData.name);
+    const { error } = await signUp(formData.email, formData.password, formData.name);
     setLoading(false);
 
     if (error) {
@@ -161,7 +161,7 @@ export function useAuthForm() {
   const handlePasskeyLogin = async () => {
     const result = await authenticateWithPasskey(formData.email || undefined);
     if (result.success && result.userEmail) {
-      const { error: res5888Err } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithOtp({
         email: result.userEmail,
         options: { shouldCreateUser: false },
       });
@@ -175,7 +175,7 @@ export function useAuthForm() {
   const handleGoogleLogin = async () => {
     try {
       const { lovable } = await import('@/integrations/lovable/index');
-      const { error: res6309Err } = await lovable.auth.signInWithOAuth('google', {
+      const { error } = await lovable.auth.signInWithOAuth('google', {
         redirect_uri: window.location.origin,
       });
       if (error) {

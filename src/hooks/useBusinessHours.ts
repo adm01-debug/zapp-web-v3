@@ -64,7 +64,7 @@ export function useBusinessHours(connectionId: string) {
   const { data: awayMessage, isLoading: loadingAway, refetch: refetchAway } = useQuery({
     queryKey: ['away-message', connectionId],
     queryFn: async () => {
-      const { data, error: res2322Err } = await supabase
+      const { data, error } = await supabase
         .from('away_messages')
         .select('*')
         .eq('whatsapp_connection_id', connectionId)
@@ -86,7 +86,7 @@ export function useBusinessHours(connectionId: string) {
     mutationFn: async ({ hours, away }: { hours: BusinessHour[]; away: AwayMessage }) => {
       // Upsert business hours
       for (const hour of hours) {
-        const { error: res2928Err } = await supabase
+        const { error } = await supabase
           .from('business_hours')
           .upsert({
             whatsapp_connection_id: connectionId,

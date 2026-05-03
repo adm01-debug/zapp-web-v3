@@ -131,7 +131,7 @@ export async function sendMessageToContact(
     .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
     .single();
 
-  const { data, error: res4656Err } = await dbFrom('messages')
+  const { data, error } = await dbFrom('messages')
     .insert({
       contact_id: contactId,
       agent_id: profile?.id,

@@ -74,7 +74,7 @@ export function AuthEventTrendChart() {
   const summaryQuery = useQuery({
     queryKey: ['auth-event-summary', hours, filterTrim],
     queryFn: async () => {
-      const { data, error: res2383Err } = await supabase.rpc('rpc_instance_auth_event_summary', {
+      const { data, error } = await supabase.rpc('rpc_instance_auth_event_summary', {
         p_hours: hours,
         p_instance: filterTrim,
       });

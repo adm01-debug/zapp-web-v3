@@ -38,7 +38,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     action: 'Conectar WhatsApp',
     actionRoute: 'connections',
     checkCondition: async () => {
-      const { data, error: res1223Err } = await supabase
+      const { data, error } = await supabase
         .from('whatsapp_connections')
         .select('id')
         .eq('status', 'connected')
@@ -56,7 +56,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     checkCondition: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data, error: res1777Err } = await supabase
+      const { data, error } = await supabase
         .from('user_settings')
         .select('business_hours_enabled')
         .eq('user_id', user.id)
@@ -74,7 +74,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     checkCondition: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data, error: res2353Err } = await supabase
+      const { data, error } = await supabase
         .from('message_templates')
         .select('id')
         .eq('user_id', user.id)
@@ -92,7 +92,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     checkCondition: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data, error: res2903Err } = await supabase
+      const { data, error } = await supabase
         .from('user_settings')
         .select('browser_notifications_enabled, sound_enabled')
         .eq('user_id', user.id)
@@ -110,7 +110,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     checkCondition: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data, error: res3517Err } = await supabase
+      const { data, error } = await supabase
         .from('user_settings')
         .select('theme')
         .eq('user_id', user.id)

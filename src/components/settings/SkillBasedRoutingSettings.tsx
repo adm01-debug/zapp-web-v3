@@ -33,7 +33,7 @@ export function SkillBasedRoutingSettings() {
   const { data: queues = [] } = useQuery({
     queryKey: ['queues-for-skills'],
     queryFn: async () => {
-      const { data, error: res1545Err } = await supabase.from('queues').select('id, name, color').eq('is_active', true);
+      const { data, error } = await supabase.from('queues').select('id, name, color').eq('is_active', true);
       return data || [];
     },
   });
@@ -42,7 +42,7 @@ export function SkillBasedRoutingSettings() {
     queryKey: ['agent-skills', selectedProfile],
     queryFn: async () => {
       if (!selectedProfile) return [];
-      const { data, error: res1856Err } = await supabase
+      const { data, error } = await supabase
         .from('agent_skills')
         .select('*')
         .eq('profile_id', selectedProfile);
@@ -55,7 +55,7 @@ export function SkillBasedRoutingSettings() {
     queryKey: ['queue-skills', selectedQueue],
     queryFn: async () => {
       if (!selectedQueue) return [];
-      const { data, error: res2226Err } = await supabase
+      const { data, error } = await supabase
         .from('queue_skill_requirements')
         .select('*')
         .eq('queue_id', selectedQueue);
@@ -66,7 +66,7 @@ export function SkillBasedRoutingSettings() {
 
   const addSkill = useMutation({
     mutationFn: async ({ profileId, skillName, level }: { profileId: string; skillName: string; level: number }) => {
-      const { error: res2594Err } = await supabase.from('agent_skills').insert({
+      const { error } = await supabase.from('agent_skills').insert({
         profile_id: profileId,
         skill_name: skillName,
         skill_level: level,
@@ -82,7 +82,7 @@ export function SkillBasedRoutingSettings() {
 
   const removeSkill = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res3062Err } = await supabase.from('agent_skills').delete().eq('id', id);
+      const { error } = await supabase.from('agent_skills').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['agent-skills'] }),
@@ -90,7 +90,7 @@ export function SkillBasedRoutingSettings() {
 
   const addQueueRequirement = useMutation({
     mutationFn: async ({ queueId, skillName, minLevel }: { queueId: string; skillName: string; minLevel: number }) => {
-      const { error: res3437Err } = await supabase.from('queue_skill_requirements').insert({
+      const { error } = await supabase.from('queue_skill_requirements').insert({
         queue_id: queueId,
         skill_name: skillName,
         min_level: minLevel,
@@ -106,7 +106,7 @@ export function SkillBasedRoutingSettings() {
 
   const removeQueueRequirement = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res3931Err } = await supabase.from('queue_skill_requirements').delete().eq('id', id);
+      const { error } = await supabase.from('queue_skill_requirements').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['queue-skills'] }),

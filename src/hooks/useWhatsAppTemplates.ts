@@ -103,11 +103,11 @@ export function useWhatsAppTemplates() {
         created_by: user?.id || null,
       };
       if (editingTemplate.id) {
-        const { error: res4419Err } = await supabase.from('whatsapp_templates').update(templateData).eq('id', editingTemplate.id);
+        const { error } = await supabase.from('whatsapp_templates').update(templateData).eq('id', editingTemplate.id);
         if (error) throw error;
         toast.success('Template atualizado!');
       } else {
-        const { error: res4632Err } = await supabase.from('whatsapp_templates').insert(templateData);
+        const { error } = await supabase.from('whatsapp_templates').insert(templateData);
         if (error) throw error;
         toast.success('Template criado!');
       }
@@ -121,7 +121,7 @@ export function useWhatsAppTemplates() {
 
   const handleDelete = useCallback(async (id: string) => {
     try {
-      const { error: res5162Err } = await supabase.from('whatsapp_templates').delete().eq('id', id);
+      const { error } = await supabase.from('whatsapp_templates').delete().eq('id', id);
       if (error) throw error;
       toast.success('Template removido!'); fetchTemplates();
     } catch (err) { log.error('Error deleting:', err); toast.error('Erro ao remover template'); }

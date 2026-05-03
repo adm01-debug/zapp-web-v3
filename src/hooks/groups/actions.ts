@@ -66,7 +66,7 @@ export function useGroupActions({ connections, groups, selectedGroups, setGroups
     let success = false;
     await feedback.withFeedback(
       async () => {
-        const { error: res3045Err } = await supabase.from('whatsapp_groups').insert({
+        const { error } = await supabase.from('whatsapp_groups').insert({
           name: newGroup.name, group_id: newGroup.group_id, description: newGroup.description || null,
           whatsapp_connection_id: newGroup.whatsapp_connection_id || null, category: newGroup.category || null,
         });
@@ -80,7 +80,7 @@ export function useGroupActions({ connections, groups, selectedGroups, setGroups
 
   const handleDeleteGroup = useCallback(async (id: string) => {
     await feedback.withFeedback(
-      async () => { const { error: res3743Err } = await supabase.from('whatsapp_groups').delete().eq('id', id); if (error) throw error; },
+      async () => { const { error } = await supabase.from('whatsapp_groups').delete().eq('id', id); if (error) throw error; },
       { loadingMessage: 'Excluindo...', successMessage: 'Grupo excluído!', errorMessage: 'Erro ao excluir', onSuccess: () => fetchGroups() }
     );
   }, [feedback, fetchGroups]);
@@ -95,7 +95,7 @@ export function useGroupActions({ connections, groups, selectedGroups, setGroups
       const conn = connections.find(c => c.id === group.whatsapp_connection_id);
       if (!conn?.instance_id) { failed++; continue; }
       try {
-        const { error: res4578Err } = await supabase.functions.invoke('evolution-api', {
+        const { error } = await supabase.functions.invoke('evolution-api', {
           body: { action: 'send-text', instanceName: conn.instance_id, number: group.group_id, text: broadcastMessage },
         });
         if (error) failed++; else sent++;
@@ -108,7 +108,7 @@ export function useGroupActions({ connections, groups, selectedGroups, setGroups
   }, [connections, groups, selectedGroups, setSelectedGroups]);
 
   const handleCategoryChange = useCallback(async (groupId: string, category: string | null) => {
-    const { error: res5323Err } = await supabase.from('whatsapp_groups').update({ category }).eq('id', groupId);
+    const { error } = await supabase.from('whatsapp_groups').update({ category }).eq('id', groupId);
     if (error) { toast.error('Erro ao atualizar categoria'); return; }
     toast.success('Categoria atualizada');
     const group = groups.find(g => g.id === groupId);

@@ -82,7 +82,7 @@ export function useContactEnrichedData(contactId: string) {
   const { data: enrichedData } = useQuery({
     queryKey: ['contact-enriched', localId],
     queryFn: async () => {
-      const { data, error: res2915Err } = await dbFrom('contacts')
+      const { data, error } = await dbFrom('contacts')
         .select('company, job_title, nickname, surname, contact_type, ai_sentiment, ai_priority, channel_type')
         .eq('id', localId!)
         .single();
@@ -100,7 +100,7 @@ export function useContactEnrichedData(contactId: string) {
   const { data: aiTags = [] } = useQuery({
     queryKey: ['contact-ai-tags', localId],
     queryFn: async () => {
-      const { data, error: res3471Err } = await supabase
+      const { data, error } = await supabase
         .from('ai_conversation_tags')
         .select('id, tag_name, confidence, source')
         .eq('contact_id', localId!)
@@ -119,7 +119,7 @@ export function useContactEnrichedData(contactId: string) {
   const { data: slaInfo } = useQuery({
     queryKey: ['contact-sla', localId],
     queryFn: async () => {
-      const { data, error: res4000Err } = await supabase
+      const { data, error } = await supabase
         .from('conversation_sla')
         .select('first_response_breached, resolution_breached, first_response_at, resolved_at')
         .eq('contact_id', localId!)

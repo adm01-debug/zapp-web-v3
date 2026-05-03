@@ -23,7 +23,7 @@ export function IntegrationMigrationMount() {
         const { data: session , error } = await supabase.auth.getSession();
         if (!session?.session) return; // só roda se usuário autenticado
         // deno-lint-ignore no-explicit-any
-        const { data, error: res25Err } = await supabase.rpc("rpc_migrate_whatsapp_integration" as any);
+        const { data, error } = await supabase.rpc("rpc_migrate_whatsapp_integration" as any);
         if (error) {
           console.warn("[integration-migration] failed:", error.message);
           return;

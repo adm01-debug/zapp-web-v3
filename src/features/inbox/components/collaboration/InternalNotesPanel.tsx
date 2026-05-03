@@ -39,7 +39,7 @@ export function InternalNotesPanel({ contactId }: { contactId: string }) {
       const { data: profile , error: profileErr } = await supabase
         .from('profiles').select('id').eq('user_id', user?.id).single();
       if (!profile) throw new Error('Profile not found');
-      const { error: res41Err } = await supabase.from('contact_notes').insert({
+      const { error } = await supabase.from('contact_notes').insert({
         contact_id: contactId, content, author_id: profile.id,
       });
       if (error) throw error;

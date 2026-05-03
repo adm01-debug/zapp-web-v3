@@ -143,7 +143,7 @@ export default function HmacSelfTestPage() {
     setResult(null);
     const t0 = performance.now();
     try {
-      const { data, error: res5347Err } = await supabase.functions.invoke('webhook-hmac-selftest', {
+      const { data, error } = await supabase.functions.invoke('webhook-hmac-selftest', {
         body: { instance, include_negative: includeNegative },
       });
       if (error) throw error;

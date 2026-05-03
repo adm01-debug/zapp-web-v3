@@ -66,7 +66,7 @@ export function TrainingMode() {
 
   const loadSessions = async () => {
     if (!profileId) return;
-    const { data, error: res2753Err } = await supabase
+    const { data, error } = await supabase
       .from('training_sessions')
       .select('*')
       .eq('profile_id', profileId)
@@ -85,7 +85,7 @@ export function TrainingMode() {
     setMessages([firstMsg]);
     setCustomerStep(1);
 
-    const { data, error: res3301Err } = await supabase.from('training_sessions').insert({
+    const { data, error } = await supabase.from('training_sessions').insert({
       profile_id: profileId,
       scenario_name: s.name,
       scenario_type: s.type,

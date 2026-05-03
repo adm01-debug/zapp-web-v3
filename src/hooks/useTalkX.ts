@@ -71,7 +71,7 @@ export function useTalkX() {
     queryKey: ['talkx-recipients', selectedCampaignId],
     queryFn: async () => {
       if (!selectedCampaignId) return [];
-      const { data, error: res2112Err } = await supabase
+      const { data, error } = await supabase
         .from('talkx_recipients')
         .select('*, contacts:contact_id(name, nickname, phone, company, avatar_url)')
         .eq('campaign_id', selectedCampaignId)
@@ -89,7 +89,7 @@ export function useTalkX() {
         .select('id')
         .single();
 
-      const { data, error: res91Err } = await fromTable('talkx_campaigns')
+      const { data, error } = await fromTable('talkx_campaigns')
         .insert({ ...campaign, created_by: profile?.id })
         .select()
         .single();
@@ -105,7 +105,7 @@ export function useTalkX() {
 
   const updateCampaign = useMutation({
     mutationFn: async ({ id, ...updates }: CampaignPayload & { id: string }) => {
-      const { data, error: res3302Err } = await fromTable('talkx_campaigns')
+      const { data, error } = await fromTable('talkx_campaigns')
         .update(updates)
         .eq('id', id)
         .select()
@@ -120,7 +120,7 @@ export function useTalkX() {
 
   const deleteCampaign = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res3723Err } = await supabase.from('talkx_campaigns').delete().eq('id', id);
+      const { error } = await supabase.from('talkx_campaigns').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -141,7 +141,7 @@ export function useTalkX() {
         campaign_id: campaignId,
         contact_id,
       }));
-      const { error: res4288Err } = await fromTable('talkx_recipients')
+      const { error } = await fromTable('talkx_recipients')
         .insert(rows);
       if (error) throw error;
 
@@ -159,7 +159,7 @@ export function useTalkX() {
   const startCampaign = useCallback(async (campaignId: string) => {
     const trace = newRequestId('talkx-start');
     try {
-      const { data, error: res4891Err } = await supabase.functions.invoke('talkx-send', {
+      const { data, error } = await supabase.functions.invoke('talkx-send', {
         body: { campaignId, action: 'start' },
         headers: trace.headers,
       });
@@ -216,7 +216,7 @@ export function useTalkX() {
     const unique = Array.from(new Set(phones.map((p) => p.replace(/\D/g, '')).filter(Boolean)));
     if (unique.length === 0) return { valid: [], invalid: [] };
     try {
-      const { data, error: res7153Err } = await supabase.functions.invoke('evolution-api/check-numbers', {
+      const { data, error } = await supabase.functions.invoke('evolution-api/check-numbers', {
         body: { instanceName, numbers: unique },
       });
       if (error) throw error;

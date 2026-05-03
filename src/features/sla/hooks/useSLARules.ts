@@ -82,7 +82,7 @@ export function useSLARules(scope?: SLARuleScope) {
       const payload = form.metadata
         ? { ...base, metadata: form.metadata as unknown as Json }
         : base;
-      const { error: res3045Err } = await supabase.from('sla_rules').insert(payload);
+      const { error } = await supabase.from('sla_rules').insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -110,7 +110,7 @@ export function useSLARules(scope?: SLARuleScope) {
       const payload = form.metadata
         ? { ...base, metadata: form.metadata as unknown as Json }
         : base;
-      const { error: res4123Err } = await supabase.from('sla_rules').update(payload).eq('id', id);
+      const { error } = await supabase.from('sla_rules').update(payload).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -123,7 +123,7 @@ export function useSLARules(scope?: SLARuleScope) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error: res4605Err } = await supabase.from('sla_rules').delete().eq('id', id);
+      const { error } = await supabase.from('sla_rules').delete().eq('id', id);
       if (error) throw error;
     },
     onMutate: async (id: string) => {
@@ -145,7 +145,7 @@ export function useSLARules(scope?: SLARuleScope) {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error: res5526Err } = await supabase.from('sla_rules').update({ is_active }).eq('id', id);
+      const { error } = await supabase.from('sla_rules').update({ is_active }).eq('id', id);
       if (error) throw error;
     },
     onMutate: async ({ id, is_active }) => {

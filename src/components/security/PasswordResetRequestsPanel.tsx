@@ -50,7 +50,7 @@ export function PasswordResetRequestsPanel() {
   const handleApprove = async (request: ResetRequest) => {
     setProcessing(true);
     try {
-      const { error: res2515Err } = await supabase.functions.invoke('approve-password-reset', { body: { requestId: request.id, action: 'approve' } });
+      const { error } = await supabase.functions.invoke('approve-password-reset', { body: { requestId: request.id, action: 'approve' } });
       if (error) throw error;
       toast.success('Solicitação aprovada! Email de reset enviado.');
       fetchRequests();
@@ -62,7 +62,7 @@ export function PasswordResetRequestsPanel() {
     if (!selectedRequest) return;
     setProcessing(true);
     try {
-      const { error: res3102Err } = await supabase.functions.invoke('approve-password-reset', { body: { requestId: selectedRequest.id, action: 'reject', rejectionReason: reason } });
+      const { error } = await supabase.functions.invoke('approve-password-reset', { body: { requestId: selectedRequest.id, action: 'reject', rejectionReason: reason } });
       if (error) throw error;
       toast.success('Solicitação rejeitada');
       setRejectDialogOpen(false); setSelectedRequest(null); fetchRequests();

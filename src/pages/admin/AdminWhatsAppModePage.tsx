@@ -104,7 +104,7 @@ export default function AdminWhatsAppModePage() {
   const runVerify = useCallback(async () => {
     setVerifyLoading(true);
     try {
-      const { data, error: res4019Err } = await supabase.functions.invoke("whatsapp-cloud-webhook-verify");
+      const { data, error } = await supabase.functions.invoke("whatsapp-cloud-webhook-verify");
       if (error) throw error;
       setVerify(data as VerifyResult);
     } catch (e) {
@@ -129,7 +129,7 @@ export default function AdminWhatsAppModePage() {
     setSaving(true);
     try {
       // deno-lint-ignore no-explicit-any
-      const { error: res4780Err } = await supabase.rpc("rpc_set_whatsapp_mode" as any, { p_mode: next });
+      const { error } = await supabase.rpc("rpc_set_whatsapp_mode" as any, { p_mode: next });
       if (error) throw error;
       invalidateWhatsAppModeCache();
       setMode(next);

@@ -203,7 +203,7 @@ function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; on
       queryClient.prefetchQuery({
         queryKey: ['media-gallery-preview', contactId, PAGE_SIZE],
         queryFn: async () => {
-          const { data, error: res9891Err } = await dbFrom('messages')
+          const { data, error } = await dbFrom('messages')
             .select('id, media_url, message_type, content, created_at')
             .eq('contact_id', contactId)
             .not('media_url', 'is', null)
