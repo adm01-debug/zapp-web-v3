@@ -31,7 +31,7 @@ export function ConnectionAlertPreferences() {
 
   useEffect(() => {
     (async () => {
-      const { data: auth , error } = await supabase.auth.getUser();
+      const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) return setLoading(false);
       const { data, error } = await supabase
         .from('connection_alert_preferences')
