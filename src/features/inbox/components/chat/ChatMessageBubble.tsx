@@ -20,6 +20,7 @@ import {
   Reply,
   Forward,
   Copy,
+  Lock,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { MessageStatusIcon } from './messageUtils';
