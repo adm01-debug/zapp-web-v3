@@ -14,7 +14,7 @@ async function run() {
   console.log('Tentando criar usuário...');
   const { data, error } = await supabase.auth.signUp({
     email: 't02.promobrindes@gmail.com',
-    password: 'TemporaryPassword123!',
+    password: 'Zapp#Complex#2026!#',
     options: {
       data: { name: 'Usuário T02' }
     }
