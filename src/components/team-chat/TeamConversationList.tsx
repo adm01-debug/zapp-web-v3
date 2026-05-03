@@ -79,9 +79,10 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
           </div>
         ) : (
           <div className="space-y-0.5 p-1">
-            {filtered.map(conv => (
               <button
                 key={conv.id}
+                data-testid={`conversation-${conv.id}`}
+                data-test-name={conv.name}
                 onClick={() => onSelect(conv.id)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(conv.id); } }}
                 role="option"
