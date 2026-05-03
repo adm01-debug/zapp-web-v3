@@ -143,8 +143,8 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           <div className="relative flex-shrink-0">
             <ChannelBadge type={conversation.contact.contact_type} />
             <Avatar className={cn(
-              "w-12 h-12 ring-2 transition-all duration-500", 
-              isSelected ? "ring-primary/20 scale-105" : "ring-border/10 group-hover:ring-primary/10"
+              "w-[50px] h-[50px] ring-0 transition-all duration-500", 
+              isSelected ? "scale-100" : "group-hover:scale-100"
             )}>
               <AvatarImage src={conversation.contact.avatar} className="object-cover" />
               <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold tracking-tighter">
