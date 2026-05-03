@@ -46,7 +46,7 @@ export function EmailChatThread({
     .filter(m => !m.is_sent)
     .map(m => m.from_email ?? '')
     .filter(Boolean);
-  const replyTo = externalEmails.length > 0 ? [externalEmails[0]] : thread.participant_emails ?? [];
+  const replyTo = externalEmails.length > 0 ? [externalEmails[0]] : (thread as any).participant_emails ?? [];
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
@@ -67,11 +67,11 @@ export function EmailChatThread({
               <span className="text-xs text-muted-foreground">
                 {thread.message_count} {thread.message_count === 1 ? 'mensagem' : 'mensagens'}
               </span>
-              {thread.participant_emails?.length > 0 && (
+              {(thread as any).participant_emails?.length > 0 && (
                 <>
                   <span className="text-muted-foreground/50">·</span>
                   <span className="text-xs text-muted-foreground truncate max-w-48">
-                    {thread.participant_emails.join(', ')}
+                    {(thread as any).participant_emails.join(', ')}
                   </span>
                 </>
               )}

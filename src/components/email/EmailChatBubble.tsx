@@ -96,8 +96,8 @@ export function EmailChatBubble({
         messageId: message.message_id,
         addLabels: wasStarred ? [] : ['STARRED'],
         removeLabels: wasStarred ? ['STARRED'] : [],
-      });
-    } catch {
+      } as any);
+    } catch (err) {
       setIsStarred(wasStarred);
     }
   };
@@ -106,17 +106,17 @@ export function EmailChatBubble({
     const wasRead = isRead;
     setIsRead(!wasRead);
     try {
-      await gmailMarkRead({ accountId, messageIds: [message.message_id], read: !wasRead });
-    } catch {
+      await gmailMarkRead({ accountId, messageIds: [message.message_id], read: !wasRead } as any);
+    } catch (err) {
       setIsRead(wasRead);
     }
   };
 
   const handleTrash = async () => {
     try {
-      await gmailTrashMessage({ accountId, messageId: message.message_id });
+      await gmailTrashMessage({ accountId, messageId: message.message_id } as any);
       toast.success('Mensagem movida para lixeira');
-    } catch {
+    } catch (err) {
       toast.error('Erro ao mover para lixeira');
     }
   };

@@ -71,7 +71,7 @@ export function PublicApiDashboard() {
       const { error } = await supabase
         .from('global_settings')
         .upsert({ key: 'api_token', value: newToken, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-      if (error) throw error;
+      if (upsertError) throw upsertError;
       setApiToken(newToken);
       setNewToken('');
       toast.success('Token de API salvo com sucesso');
