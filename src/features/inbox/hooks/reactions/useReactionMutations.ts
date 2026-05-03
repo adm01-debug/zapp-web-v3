@@ -100,8 +100,8 @@ export function useReactionMutations(
       if (context?.previous) {
         queryClient.setQueryData(['message-reactions', messageId], context.previous);
       }
-      log.error('Failed to add reaction', error);
-      
+      mutationLog.error('Failed to add reaction', error);
+
       const status = error?.status || error?.code;
       const message = status === 401 ? 'Não autorizado' : 'Erro interno no servidor (500)';
       
