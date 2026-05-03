@@ -5,6 +5,7 @@ import { ContactCard } from './ContactCard';
 import { ContactListItem } from './ContactListItem';
 import { ContactGroupedList } from './ContactGroupedList';
 import { ContactsTable } from './ContactsTable';
+import { ContactsTableVirtual } from './ContactsTableVirtual';
 import { ContactKanbanView } from './ContactKanbanView';
 import { ContactMapView } from './ContactMapView';
 import { ContactAnalyticsDashboard } from './ContactAnalyticsDashboard';
