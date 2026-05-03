@@ -70,7 +70,7 @@ export function useScheduledMessages(contactId?: string) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (msgErr) throw msgErr;
       return msg;
     },
     onSuccess: () => {

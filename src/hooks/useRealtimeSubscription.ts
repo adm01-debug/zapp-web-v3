@@ -33,14 +33,14 @@ export function useRealtimeSubscription(config: SubscriptionConfig) {
     const channel = supabase
       .channel(config.channelName)
       .on(
-        'postgres_changes',
+        'postgres_changes' as any,
         {
           event: config.event || '*',
           schema: config.schema || 'public',
           table: config.table,
           filter: config.filter,
-        },
-        config.onPayload
+        } as any,
+        config.onPayload as any
       )
       .subscribe((status) => {
         if (status === 'CHANNEL_ERROR') {

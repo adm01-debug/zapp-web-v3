@@ -138,7 +138,7 @@ export default function ChatPopup() {
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData , error: urlDataErr } = await supabase.storage
+        const { data: urlData } = supabase.storage
           .from('whatsapp-media')
           .getPublicUrl(fileName);
 
