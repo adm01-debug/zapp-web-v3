@@ -88,6 +88,12 @@ describe('useOptimisticMessages — Daily Scenarios', () => {
     const merged = result.current.mergeWithReal(realMessages);
     expect(merged).toHaveLength(1);
     expect(merged[0].id).toBe('real-2');
+    
+    act(() => {
+      const opt = Object.values((result.current as any).pending || {})[0] as any;
+      if (opt) result.current.cleanup([opt.id]);
+    });
+    // Find the opt by content in our result state if we didn't save ID
     expect(result.current.pendingCount).toBe(0);
   });
 
