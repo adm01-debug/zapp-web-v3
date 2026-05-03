@@ -212,20 +212,17 @@ export function QuickReactionBar({
     setShowPicker(false);
   };
 
-  // Mobile support: Detect long press or single tap based on environment if needed, 
-  // but standard hover + popover already provides a baseline. 
-  // For mobile "tap to open", the Popover trigger handles it.
-
+  return (
     <div 
       className={cn(
         'absolute -top-9 flex items-center transition-all duration-200 z-20',
         'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100', // Keyboard/Hover
         'md:opacity-0', // Default hidden on desktop unless hover
-        'max-md:opacity-100 max-md:pointer-events-auto', // Always reachable on mobile? Maybe too noisy.
+        'max-md:opacity-100 max-md:pointer-events-auto', // Always reachable on mobile
         showPicker && 'opacity-100',
         isSent ? 'right-0' : 'left-0'
       )}
-      onClick={(e) => e.stopPropagation()} // Prevent bubble click
+      onClick={(e) => e.stopPropagation()}
     >
       <motion.div
         initial={{ opacity: 0, y: 4, scale: 0.95 }}
