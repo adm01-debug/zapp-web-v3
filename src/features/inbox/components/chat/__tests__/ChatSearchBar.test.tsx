@@ -47,13 +47,15 @@ describe('ChatSearchBar', () => {
 
   const renderBar = (isOpen = true, msgs = MESSAGES) =>
     render(
-      <ChatSearchBar
-        messages={msgs}
-        isOpen={isOpen}
-        onClose={onClose}
-        onNavigateToMessage={onNavigateToMessage}
-        onHighlightChange={onHighlightChange}
-      />
+      <TooltipProvider>
+        <ChatSearchBar
+          messages={msgs}
+          isOpen={isOpen}
+          onClose={onClose}
+          onNavigateToMessage={onNavigateToMessage}
+          onHighlightChange={onHighlightChange}
+        />
+      </TooltipProvider>
     );
 
   // ── Rendering ──
