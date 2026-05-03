@@ -72,7 +72,7 @@ export function TeamMemberDetails({ conversation, onClose }: TeamMemberDetailsPr
   return (
     <div className="w-[300px] border-l border-border flex flex-col bg-card h-full" role="complementary" aria-label="Detalhes da conversa">
       <div className="flex items-center justify-between p-3 border-b border-border">
-        <h3 className="text-sm font-semibold flex items-center gap-1.5"><span className="w-1 h-4 bg-primary rounded-full" />{conversation.type === 'direct' ? 'Detalhes do Colaborador' : 'Detalhes do Grupo'}</h3>
+        <h3 className="text-sm font-semibold flex items-center gap-1.5"><span className="w-1 h-4 bg-primary rounded-full" />{conversation.type === 'direct' ? 'Detalhes do Colaborador' : conversation.type === 'department' ? 'Detalhes do Departamento' : 'Detalhes do Grupo'}</h3>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleAll} title="Recolher/Expandir"><ChevronsDownUp className="w-3.5 h-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Fechar"><X className="w-3.5 h-3.5" /></Button>
