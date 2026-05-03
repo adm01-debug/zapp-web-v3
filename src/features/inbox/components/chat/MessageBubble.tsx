@@ -179,7 +179,7 @@ export function MessageBubble({
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 className={cn(
                   'relative transition-all overflow-hidden',
-                  (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0' : 'px-3.5 py-2',
+                  (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0' : density === 'comfortable' ? 'px-3.5 py-2' : density === 'compact' ? 'px-2.5 py-1.5' : 'px-2 py-1',
                   isSent
                     ? cn('bg-primary text-primary-foreground shadow-sm',
                         isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-br-md',
