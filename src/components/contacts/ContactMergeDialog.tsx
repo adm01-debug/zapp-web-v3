@@ -251,22 +251,47 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
           <ContactCard contact={secondaryContact} label="Secundário" badge="Será excluído" />
         </div>
 
+        {/* Confidence Score Panel */}
+        <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-bold tracking-tight">Score de Confiança</span>
+            </div>
+            <Badge variant={confidenceScore > 60 ? "default" : "secondary"} className="font-mono">
+              {confidenceScore}%
+            </Badge>
+          </div>
+          <Progress value={confidenceScore} className="h-2" />
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+            <ShieldCheck className="h-3 w-3 text-primary" />
+            Sugestão baseada na similaridade de dados e completude de campos.
+          </p>
+        </div>
+
         {conflictCount > 0 && (
           <>
             <Separator />
-            <div className="space-y-1">
-              <p className="text-sm font-semibold">Resolver conflitos de campos</p>
-              {fields.map(([field, label, k]) => (
-                <FieldSelector
-                  key={field}
-                  fieldKey={field}
-                  label={label}
-                  primaryValue={sanitizeText(primaryContact[k] as string ?? '')}
-                  secondaryValue={sanitizeText(secondaryContact[k] as string ?? '')}
-                  value={resolution[field]}
-                  onChange={(v) => setResolution((r) => ({ ...r, [field]: v }))}
-                />
-              ))}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold">Resolver conflitos de campos</p>
+                <Badge variant="outline" className="text-[9px] uppercase border-primary/20 text-primary bg-primary/5">
+                  Sugestões Inteligentes Aplicadas
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 gap-1">
+                {fields.map(([field, label, k]) => (
+                  <FieldSelector
+                    key={field}
+                    fieldKey={field}
+                    label={label}
+                    primaryValue={sanitizeText(primaryContact[k] as string ?? '')}
+                    secondaryValue={sanitizeText(secondaryContact[k] as string ?? '')}
+                    value={resolution[field]}
+                    onChange={(v) => setResolution((r) => ({ ...r, [field]: v }))}
+                  />
+                ))}
+              </div>
             </div>
           </>
         )}
