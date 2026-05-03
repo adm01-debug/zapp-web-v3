@@ -79,7 +79,7 @@ export function useContactDuplicateDetector({
       try {
         // Check by normalized phone
         if (normalizedPhone && normalizedPhone.length >= 8) {
-          const { data: phoneMatches , error } = await supabase
+          const { data: phoneMatches , error } = await (supabase as any)
             .from('contacts')
             .select('id, name, phone, email, avatar_url')
             .eq('workspace_id', workspaceId)
