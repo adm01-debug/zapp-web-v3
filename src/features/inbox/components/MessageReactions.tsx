@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -51,30 +51,36 @@ export function MessageReactions({
 
   const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
 
-  const groupedReactions = reactions.reduce((acc, reaction) => {
-    if (!acc[reaction.emoji]) {
-      acc[reaction.emoji] = {
-        emoji: reaction.emoji,
-        count: 0,
-        users: [],
-        hasCurrentUser: false,
-      };
-    }
+  const groupedReactions = useMemo(() => {
+    return reactions.reduce((acc, reaction) => {
+      if (!acc[reaction.emoji]) {
+        acc[reaction.emoji] = {
+          emoji: reaction.emoji,
+          count: 0,
+          users: [],
+          hasCurrentUser: false,
+        };
+      }
 
-    acc[reaction.emoji].count++;
-    acc[reaction.emoji].users.push(reaction.user_name || 'Usuário');
+      acc[reaction.emoji].count++;
+      acc[reaction.emoji].users.push(reaction.user_name || 'Usuário');
 
-    if (reaction.user_id === currentProfileId) {
-      acc[reaction.emoji].hasCurrentUser = true;
-    }
+      if (reaction.user_id === currentProfileId) {
+        acc[reaction.emoji].hasCurrentUser = true;
+      }
 
-    return acc;
-  }, {} as Record<string, { emoji: string; count: number; users: string[]; hasCurrentUser: boolean }>);
+      return acc;
+    }, {} as Record<string, { emoji: string; count: number; users: string[]; hasCurrentUser: boolean }>);
+  }, [reactions, currentProfileId]);
 
-  const reactionsList = Object.values(groupedReactions).sort((a, b) => b.count - a.count);
+  const reactionsList = useMemo(() => 
+    Object.values(groupedReactions).sort((a, b) => b.count - a.count),
+    [groupedReactions]
+  );
+  
   const availableReactions = showExtended ? EXTENDED_REACTIONS : WHATSAPP_REACTIONS;
 
-  const handleReact = async (emoji: string) => {
+  const handleReact = useCallback(async (emoji: string) => {
     const existingReaction = groupedReactions[emoji];
 
     if (existingReaction?.hasCurrentUser) {
@@ -83,7 +89,7 @@ export function MessageReactions({
       await addReaction(emoji);
     }
     setIsOpen(false);
-  };
+  }, [groupedReactions, addReaction, removeReaction]);
 
   return (
     <div className={cn('flex items-center gap-1 flex-wrap mt-1', isSent ? 'justify-end' : 'justify-start')}>
@@ -104,9 +110,14 @@ export function MessageReactions({
                 data-testid={`reaction-${messageId}-${reaction.emoji}`}
               >
                 <span className="text-sm">{reaction.emoji}</span>
-                <span className="text-[10px] font-semibold tabular-nums">
+                <motion.span 
+                  key={reaction.count}
+                  initial={{ scale: 1.2, opacity: 0.8 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="text-[10px] font-semibold tabular-nums"
+                >
                   {reaction.count}
-                </span>
+                </motion.span>
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs">
@@ -148,7 +159,28 @@ export function MessageReactions({
           role="dialog"
           aria-label="Escolher um emoji"
         >
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-1" role="grid">
+          <div 
+            className="grid grid-cols-4 sm:grid-cols-6 gap-1 outline-none" 
+            role="grid"
+            onKeyDown={(e) => {
+              const buttons = Array.from(e.currentTarget.querySelectorAll('button'));
+              const activeIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+              if (activeIndex === -1) return;
+
+              let nextIndex = -1;
+              const cols = window.innerWidth < 640 ? 4 : 6;
+
+              if (e.key === 'ArrowRight') nextIndex = (activeIndex + 1) % buttons.length;
+              if (e.key === 'ArrowLeft') nextIndex = (activeIndex - 1 + buttons.length) % buttons.length;
+              if (e.key === 'ArrowDown') nextIndex = (activeIndex + cols) % buttons.length;
+              if (e.key === 'ArrowUp') nextIndex = (activeIndex - cols + buttons.length) % buttons.length;
+
+              if (nextIndex !== -1) {
+                e.preventDefault();
+                buttons[nextIndex]?.focus();
+              }
+            }}
+          >
             {availableReactions.map((emoji) => {
               const userHasReacted = hasReacted(emoji);
 
@@ -206,14 +238,14 @@ export function QuickReactionBar({
   
   const { trackReactionEvent } = useReactionMutations(messageId, currentProfileId);
 
-  const handleReact = async (emoji: string) => {
+  const handleReact = useCallback(async (emoji: string) => {
     if (hasReacted(emoji)) {
       await removeReaction(emoji);
     } else {
       await addReaction(emoji);
     }
     setShowPicker(false);
-  };
+  }, [hasReacted, addReaction, removeReaction]);
 
   return (
     <div 
@@ -268,7 +300,26 @@ export function QuickReactionBar({
             role="dialog"
             aria-label="Escolher reações estendidas"
           >
-            <div className="grid grid-cols-4 gap-1" role="grid">
+            <div 
+              className="grid grid-cols-4 gap-1 outline-none" 
+              role="grid"
+              onKeyDown={(e) => {
+                const buttons = Array.from(e.currentTarget.querySelectorAll('button'));
+                const activeIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+                if (activeIndex === -1) return;
+
+                let nextIndex = -1;
+                if (e.key === 'ArrowRight') nextIndex = (activeIndex + 1) % buttons.length;
+                if (e.key === 'ArrowLeft') nextIndex = (activeIndex - 1 + buttons.length) % buttons.length;
+                if (e.key === 'ArrowDown') nextIndex = (activeIndex + 4) % buttons.length;
+                if (e.key === 'ArrowUp') nextIndex = (activeIndex - 4 + buttons.length) % buttons.length;
+
+                if (nextIndex !== -1) {
+                  e.preventDefault();
+                  buttons[nextIndex]?.focus();
+                }
+              }}
+            >
               {EXTENDED_REACTIONS.map((emoji) => (
                 <button
                   key={emoji}
