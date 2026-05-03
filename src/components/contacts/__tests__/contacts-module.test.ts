@@ -102,8 +102,8 @@ describe('Security: CSV Injection Prevention', () => {
       { key: 'email' as const, label: 'E-mail' },
     ];
     const csv = buildCsvString(rows, cols);
-    expect(csv).not.toContain('=HYPERLINK');
-    expect(csv).toContain('\t=HYPERLINK');
+    // The utility adds a TAB (\t) before formula characters
+    expect(csv).toContain('"\t=HYPERLINK');
   });
 
   it('detects Windows-1252 encoding issues', () => {
@@ -330,7 +330,7 @@ describe('LGPD Consent Logic', () => {
 
 describe('PII Masking', () => {
   const maskPhone = (phone: string) => {
-    if (!phone || phone.length < 4) return phone;
+    if (!phone || phone.length < 8) return phone;
     return phone.slice(0, 2) + '*'.repeat(Math.max(0, phone.length - 6)) + phone.slice(-4);
   };
 

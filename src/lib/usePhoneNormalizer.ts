@@ -53,7 +53,9 @@ export function normalizePhone(raw: string): NormalizedPhone {
   }
 
   // Add 9th digit if mobile number is 8 digits (pre-2012 format)
-  if (number.length === 8 && /^[2-9]/.test(number)) {
+  // Brazilian mobile numbers after 2012 always have 9 digits starting with '9'
+  // Area codes (DDD) like 11, 21, etc. all have this now.
+  if (ddd && number.length === 8 && /^[6-9]/.test(number)) {
     number = '9' + number;
   }
 
