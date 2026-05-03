@@ -1,6 +1,7 @@
 import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState, useId } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, Ban, RotateCw, Navigation2 } from 'lucide-react';
+import { Loader2, Ban, RotateCw, Navigation2, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('ChatMessagesArea');
@@ -365,17 +366,32 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
       )}
 
       {messages.length > 0 && displayedMessages.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">
-            Nenhuma mensagem corresponde ao filtro
-          </span>
-          <button
-            type="button"
+        <div className="flex flex-col items-center justify-center py-20 text-center gap-4 animate-in fade-in zoom-in duration-300">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            {statusFilter.has('failed' as any) ? (
+              <Ban className="w-8 h-8 text-destructive opacity-50" />
+            ) : (
+              <Navigation2 className="w-8 h-8 text-muted-foreground opacity-50" />
+            )}
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-base font-semibold text-foreground">
+              {statusFilter.has('failed' as any) ? 'Nenhuma falha encontrada' : 'Sem resultados'}
+            </h4>
+            <p className="text-sm text-muted-foreground max-w-[240px]">
+              {statusFilter.has('failed' as any) 
+                ? 'Todas as mensagens deste contato foram entregues com sucesso.' 
+                : 'Ajuste os filtros ou a busca para encontrar o que procura.'}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setStatusFilter(new Set())}
-            className="text-xs text-primary hover:underline"
+            className="mt-2"
           >
-            Limpar filtros
-          </button>
+            Limpar todos os filtros
+          </Button>
         </div>
       )}
 

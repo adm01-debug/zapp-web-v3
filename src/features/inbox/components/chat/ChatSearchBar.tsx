@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Message } from '@/types/chat';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChatSearch } from '@/features/inbox';
@@ -60,9 +61,23 @@ export function ChatSearchBar({ messages, isOpen, onClose, onNavigateToMessage, 
                 )}
               </div>
               <div className="flex items-center shrink-0 bg-muted rounded-xl border border-border">
-                <Button variant="ghost" size="icon" className="w-8 h-10 rounded-l-xl rounded-r-none hover:bg-accent" onClick={navigateUp} disabled={results.length === 0}><ChevronUp className="w-4 h-4" /></Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="w-8 h-10 rounded-l-xl rounded-r-none hover:bg-accent" onClick={navigateUp} disabled={results.length === 0} aria-label="Resultado anterior">
+                      <ChevronUp className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Anterior (Shift+Enter)</TooltipContent>
+                </Tooltip>
                 <div className="w-px h-5 bg-border" />
-                <Button variant="ghost" size="icon" className="w-8 h-10 rounded-r-xl rounded-l-none hover:bg-accent" onClick={navigateDown} disabled={results.length === 0}><ChevronDown className="w-4 h-4" /></Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="w-8 h-10 rounded-r-xl rounded-l-none hover:bg-accent" onClick={navigateDown} disabled={results.length === 0} aria-label="Próximo resultado">
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Próximo (Enter)</TooltipContent>
+                </Tooltip>
               </div>
               <Button variant="ghost" size="icon" className="w-8 h-10 rounded-xl shrink-0 hover:bg-destructive/10 hover:text-destructive" onClick={onClose}><X className="w-4 h-4" /></Button>
             </div>

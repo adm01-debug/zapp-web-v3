@@ -113,7 +113,9 @@ export function MessageBubble({
         break;
       case 'c':
         e.preventDefault();
-        onCopy(message.content || '');
+        if (message.content) {
+          onCopy(message.content);
+        }
         break;
     }
   };
@@ -159,6 +161,12 @@ export function MessageBubble({
           <div className={cn('max-w-[68%] space-y-0.5 relative', isSent && 'items-end')}>
             {!isSent && isFirstInGroup && (
               <span className="text-[11px] font-semibold text-primary/80 ml-1 block">{senderName}</span>
+            )}
+            {message.isWhisper && (
+              <div className="flex items-center gap-1 mb-0.5 ml-1">
+                <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Sussurro Interno</span>
+              </div>
             )}
 
             {/* Floating emoji reactions on hover — WhatsApp Web style */}
@@ -214,6 +222,7 @@ export function MessageBubble({
                         isFirstInGroup && !isLastInGroup && 'rounded-2xl rounded-bl-sm',
                         !isFirstInGroup && isLastInGroup && 'rounded-2xl rounded-tl-sm rounded-bl-md',
                         !isFirstInGroup && !isLastInGroup && 'rounded-xl rounded-tl-sm rounded-bl-sm'),
+                  message.isWhisper && 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-100 shadow-inner ring-1 ring-amber-500/20',
                   isFailedTerminal && 'ring-1 ring-destructive/50 border border-destructive/40'
                 )}
               >

@@ -20,7 +20,7 @@ import { CrmBadges } from './CrmBadges';
 import { BusinessHoursBadge } from '@/features/inbox/components/BusinessHoursBadge';
 import { AnalysisBadges } from '@/features/inbox/components/AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2, ArrowLeft, XCircle } from 'lucide-react';
+import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2, ArrowLeft, XCircle, AlertCircle } from 'lucide-react';
 import { useContactAvatar } from '@/features/inbox';
 import { useDensity } from '@/hooks/useDensity';
 
@@ -171,6 +171,26 @@ export function ChatHeader({
       </div>
 
       <div className="flex items-center gap-1">
+        {failuresCount != null && failuresCount > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant={failuresOnly ? "destructive" : "ghost"} 
+                size="sm" 
+                className={cn(
+                  "h-8 gap-1.5 px-2 animate-in fade-in slide-in-from-right-2",
+                  !failuresOnly && "text-destructive hover:text-destructive hover:bg-destructive/10"
+                )}
+                onClick={onToggleFailuresOnly}
+              >
+                <AlertCircle className={cn("w-4 h-4", !failuresOnly && "animate-pulse")} />
+                <span className="text-[11px] font-bold uppercase tracking-tight">{failuresCount} Falhas</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{failuresOnly ? 'Mostrar todas as mensagens' : 'Filtrar mensagens com erro'}</TooltipContent>
+          </Tooltip>
+        )}
+
         <RealtimeCollaboration contactId={conversation.contact.id} className="mr-1" />
         {[
           { icon: Search, label: 'Buscar (Ctrl+K)', onClick: onOpenSearch },
