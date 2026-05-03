@@ -143,7 +143,7 @@ export default function AdminFailedMessagesPage() {
         <FailedMessagesErrorCodeChart
           stats={api.aggregates.byErrorCode}
           filter={ui.errorCodeFilter}
-          onFilterChange={ui.setErrorCodeFilter}
+          onFilterChange={(v) => ui.setErrorCodeFilter(v)}
         />
       </div>
 
