@@ -293,33 +293,22 @@ export function buildMimeMessage(params: {
 
 const _NOT_IMPLEMENTED = { code: 501, message: 'Function not implemented', status: 'NOT_IMPLEMENTED' as const };
 
-export async function gmailMarkRead(_accountId: string, _messageId: string): Promise<GmailApiResponse<void>> {
+export async function gmailMarkRead(..._args: unknown[]): Promise<GmailApiResponse<void>> {
   console.warn('[gmailApi] gmailMarkRead is not implemented yet');
   return { data: null, error: _NOT_IMPLEMENTED };
 }
 
-export async function gmailModifyLabels(
-  _accountId: string,
-  _messageId: string,
-  _addLabelIds: string[],
-  _removeLabelIds: string[]
-): Promise<GmailApiResponse<void>> {
+export async function gmailModifyLabels(..._args: unknown[]): Promise<GmailApiResponse<void>> {
   console.warn('[gmailApi] gmailModifyLabels is not implemented yet');
   return { data: null, error: _NOT_IMPLEMENTED };
 }
 
-export async function gmailSendMessage(
-  _accountId: string,
-  _params: { to: string[]; subject: string; html: string; cc?: string[]; bcc?: string[] }
-): Promise<GmailApiResponse<{ id: string; threadId: string }>> {
+export async function gmailSendMessage(..._args: unknown[]): Promise<GmailApiResponse<{ id: string; threadId: string }>> {
   console.warn('[gmailApi] gmailSendMessage is not implemented yet');
   return { data: null, error: _NOT_IMPLEMENTED };
 }
 
-export async function gmailTrashMessage(
-  _accountId: string,
-  _messageId: string
-): Promise<GmailApiResponse<void>> {
+export async function gmailTrashMessage(..._args: unknown[]): Promise<GmailApiResponse<void>> {
   console.warn('[gmailApi] gmailTrashMessage is not implemented yet');
   return { data: null, error: _NOT_IMPLEMENTED };
 }
