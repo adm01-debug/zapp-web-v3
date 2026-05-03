@@ -79,19 +79,20 @@ export function useContactDuplicateDetector({
       try {
         // Check by normalized phone
         if (normalizedPhone && normalizedPhone.length >= 8) {
-          const workspace_id = workspaceId; // local const to avoid deep capture
-          const { data: phoneMatches } = await (supabase as any)
+          const workspace_id = workspaceId; 
+          const query = (supabase as any)
             .from('contacts')
             .select('id, name, phone, email, avatar_url')
             .eq('workspace_id', workspace_id)
             .is('deleted_at', null)
-            .or(
-              `phone.eq.${normalizedPhone}` +
-              `,phone.eq.+55${normalizedPhone}` +
-              `,phone.eq.55${normalizedPhone}`
-            )
             .neq('id', excludeId ?? '00000000-0000-0000-0000-000000000000')
             .limit(5);
+
+          const { data: phoneMatches } = await query.or(
+            `phone.eq.${normalizedPhone}` +
+            `,phone.eq.+55${normalizedPhone}` +
+            `,phone.eq.55${normalizedPhone}`
+          );
 
           if (phoneMatches) {
             for (const c of phoneMatches) {

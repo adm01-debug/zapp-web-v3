@@ -123,19 +123,19 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
       await withRetry(async () => {
         if (force) {
           // Force update ignoring version (admin override)
-          const { error } = await dbFrom('contacts')
+          const { error: updateError } = await dbFrom('contacts')
             .update({ ...data, updated_at: new Date().toISOString() })
             .eq('id', contact.id);
-          if (error) throw error;
+          if (updateError) throw updateError;
         } else {
           // Use versioned update to detect concurrent edits
-          const { data: result, error } = await (supabase as any).rpc('update_contact_versioned', {
+          const { data: result, error: rpcError } = await (supabase as any).rpc('update_contact_versioned', {
             p_contact_id:       contact.id,
             p_expected_version: contact.version,
             p_updates:          data,
           });
 
-          if (error) throw error;
+          if (rpcError) throw rpcError;
 
           const r = result as any;
           if (r?.error === 'CONFLICT') {

@@ -48,7 +48,7 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
         // Auto-marcar como lido
         const unreadIds = (data as GmailMessage[]).filter((m) => !m.is_read).map((m) => m.message_id);
         if (unreadIds.length > 0) {
-          gmailMarkRead({ accountId, messageIds: unreadIds, read: true }).catch(() => {});
+          gmailMarkRead({ accountId, messageIds: unreadIds, read: true } as any).catch(() => {});
           (supabase as any).from('gmail_messages').update({ is_read: true }).in('message_id', unreadIds).then(() => {});
           (supabase as any).from('gmail_threads').update({ unread_count: 0 }).eq('id', thread.id).then(() => {});
         }
