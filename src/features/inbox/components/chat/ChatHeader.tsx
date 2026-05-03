@@ -87,7 +87,7 @@ export const ChatHeader = memo(function ChatHeader({
           </Button>
         )}
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Avatar className="w-10 h-10 ring-1 ring-border/10 shadow-sm">
+          <Avatar className="w-10 h-10 ring-0 shadow-none">
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
