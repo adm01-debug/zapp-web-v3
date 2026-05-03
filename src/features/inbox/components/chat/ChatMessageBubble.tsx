@@ -51,57 +51,30 @@ interface ChatMessageBubbleProps {
 
 // Message status icon — wrapped in tooltip for failure states so the user
 // gets actionable guidance (re-authenticate / retry).
-function MessageStatusIcon({ status }: { status: Message['status'] }) {
-  let icon: JSX.Element;
-  let tooltip: string = '';
+function MessageStatusIconWithTooltip({ status }: { status: Message['status'] }) {
+  const tooltip = status === 'failed_auth' 
+    ? 'Falha de autenticação na conexão do WhatsApp. Reconecte a instância em Canais para reenviar.'
+    : status === 'failed_retries'
+    ? 'A mensagem falhou após várias tentativas automáticas. Toque para tentar reenviar manualmente.'
+    : status === 'failed'
+    ? 'Falha ao enviar a mensagem. Verifique a conexão e tente novamente.'
+    : null;
 
-  switch (status) {
-    case 'sent':
-      icon = <Check className="w-3 h-3" />;
-      tooltip = 'Enviado';
-      break;
-    case 'delivered':
-      icon = <CheckCheck className="w-3 h-3" />;
-      tooltip = 'Entregue';
-      break;
-    case 'read':
-    case 'played':
-      icon = <CheckCheck className="w-3 h-3 text-info" />;
-      tooltip = status === 'played' ? 'Reproduzido' : 'Lido';
-      break;
-    case 'failed_auth':
-      icon = <ShieldAlert className="w-3 h-3 text-destructive" />;
-      tooltip = 'Falha de autenticação na conexão do WhatsApp. Reconecte a instância em Canais para reenviar.';
-      break;
-    case 'failed_retries':
-      icon = <RefreshCw className="w-3 h-3 text-destructive" />;
-      tooltip = 'A mensagem falhou após várias tentativas automáticas. Toque para tentar reenviar manualmente.';
-      break;
-    case 'failed':
-      icon = <X className="w-3 h-3 text-destructive" />;
-      tooltip = 'Falha ao enviar a mensagem. Verifique a conexão e tente novamente.';
-      break;
-    default:
-      icon = <Clock className="w-3 h-3 animate-pulse" />;
-      tooltip = 'Enviando...';
-  }
+  if (!tooltip) return <MessageStatusIcon status={status} />;
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span
-          role="status"
+          role="button"
           tabIndex={0}
-          aria-label={`Status: ${tooltip}`}
-          className={cn(
-            "inline-flex",
-            status?.startsWith('failed') ? "cursor-help" : "cursor-default"
-          )}
+          aria-label={tooltip}
+          className="inline-flex cursor-help"
         >
-          {icon}
+          <MessageStatusIcon status={status} />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="text-[10px] px-2 py-1">
+      <TooltipContent side="top" className="max-w-xs text-xs">
         {tooltip}
       </TooltipContent>
     </Tooltip>
