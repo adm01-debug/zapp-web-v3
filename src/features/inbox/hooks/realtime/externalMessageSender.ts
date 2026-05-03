@@ -41,6 +41,7 @@ export class SendError extends Error {
 export interface SendExternalOptions {
   instanceName?: string;
   contactAvatar?: string | null;
+  onProgress?: (progress: number) => void;
 }
 
 export interface SendExternalResult {
@@ -148,7 +149,16 @@ export async function sendExternalAudio(
 
   const { error: uploadError } = await supabase.storage
     .from('audio-messages')
-    .upload(fileName, blob, { contentType: blob.type || 'audio/webm', upsert: false });
+    .upload(fileName, blob, { 
+      contentType: blob.type || 'audio/webm', 
+      upsert: false,
+      onUploadProgress: (progress) => {
+        if (opts.onProgress) {
+          const percent = (progress.loaded / progress.total) * 100;
+          opts.onProgress(percent * 0.9); // Reserve 10% for the API call
+        }
+      }
+    });
   if (uploadError) {
     log.error('audio upload failed', uploadError);
     throw new Error(uploadError.message || 'Falha no upload do áudio');
@@ -212,7 +222,16 @@ export async function sendExternalMedia(
 
   const { error: uploadError } = await supabase.storage
     .from('whatsapp-media')
-    .upload(fileName, file, { contentType: file.type, upsert: false });
+    .upload(fileName, file, { 
+      contentType: file.type, 
+      upsert: false,
+      onUploadProgress: (progress) => {
+        if (opts.onProgress) {
+          const percent = (progress.loaded / progress.total) * 100;
+          opts.onProgress(percent * 0.9); // Reserve 10% for the API call
+        }
+      }
+    });
   if (uploadError) {
     log.error('media upload failed', uploadError);
     throw new Error(uploadError.message || 'Falha no upload do arquivo');
