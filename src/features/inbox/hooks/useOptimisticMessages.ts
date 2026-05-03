@@ -107,17 +107,10 @@ export function useOptimisticMessages() {
         }
       }
 
-      if (toRemove.length > 0) {
-        // Scheduled update to keep pure
-        setTimeout(() => {
-          setPending(prev => {
-            const next = { ...prev };
-            toRemove.forEach(id => delete next[id]);
-            return next;
-          });
-        }, 0);
-      }
-
+      // Instead of scheduling, we just return the filtered list.
+      // The actual removal from state should be triggered by the caller when they detect
+      // that mergeWithReal removed something, or we can use a cleanup effect.
+      
       if (stillPending.length === 0) return realMessages;
 
       return [...realMessages, ...stillPending].sort(
@@ -127,11 +120,22 @@ export function useOptimisticMessages() {
     [pending],
   );
 
+  // Manual cleanup for confirmed/stale items to avoid infinite loops during render
+  const cleanup = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setPending(prev => {
+      const next = { ...prev };
+      ids.forEach(id => delete next[id]);
+      return next;
+    });
+  }, []);
+
   return {
     createOptimistic,
     confirmSent,
     failOptimistic,
     mergeWithReal,
+    cleanup,
     pendingCount: Object.keys(pending).length,
   };
 }
