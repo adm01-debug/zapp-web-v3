@@ -19,7 +19,10 @@ vi.mock('@/features/inbox', () => ({
   clearSendStatus: vi.fn(),
   SLAIndicatorForContact: () => <div data-testid="sla-indicator">SLA</div>
 }));
-vi.mock('@/lib/logger', () => ({ getLogger: () => ({ info: vi.fn(), error: vi.fn(), warn: vi.fn() }) }));
+vi.mock('@/lib/logger', () => ({ 
+  getLogger: () => ({ info: vi.fn(), error: vi.fn(), warn: vi.fn() }),
+  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
+}));
 vi.mock('@/integrations/supabase/client', () => ({ 
   supabase: { 
     channel: () => ({ on: () => ({ subscribe: () => ({}) }) }),
