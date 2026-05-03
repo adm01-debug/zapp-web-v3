@@ -204,33 +204,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               )}
             </div>
             
-            <div className="flex items-center gap-1 mt-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-              <TooltipProvider delayDuration={400}>
-                {[
-                  { icon: CheckCircle2, label: 'Resolver', color: 'hover:text-emerald-500 hover:bg-emerald-500/10' },
-                  { icon: UserCheck, label: 'Transferir', color: 'hover:text-primary hover:bg-primary/10' },
-                  { icon: Pin, label: 'Fixar', color: 'hover:text-amber-500 hover:bg-amber-500/10' },
-                  { icon: Star, label: 'Favoritar', color: 'hover:text-amber-400 hover:bg-amber-400/10' },
-                  { icon: AlarmClock, label: 'Adiar', color: 'hover:text-sky-500 hover:bg-sky-500/10' },
-                  { icon: Archive, label: 'Arquivar', color: 'hover:text-destructive hover:bg-destructive/10' }
-                ].map((action, idx) => (
-                  <Tooltip key={idx}>
-                    <TooltipTrigger asChild>
-                      <button 
-                        onClick={(e) => e.stopPropagation()} 
-                        className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/40 transition-all duration-200 active:scale-90",
-                          action.color
-                        )}
-                      >
-                        <action.icon className="w-3.5 h-3.5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-[10px] font-medium px-2 py-1">{action.label}</TooltipContent>
-                  </Tooltip>
-                ))}
-              </TooltipProvider>
-            </div>
+            {/* Actions hidden to match WhatsApp Web list simplicity */}
             <div className="mt-1">
               <SLAIndicatorForContact conversation={conversation} compact />
             </div>
