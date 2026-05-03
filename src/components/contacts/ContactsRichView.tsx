@@ -254,8 +254,8 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
             onClearFilters={clearFilters}
             onImport={() => setIsImportOpen(true)}
             getCRMData={getCRMData}
-            workspaceId={crud.instanceName || 'wpp2'}
-            onRefresh={() => crud.loadContacts()}
+            workspaceId="wpp2"
+            onRefresh={() => crud.refetch()}
           />
         </motion.div>
       </div>

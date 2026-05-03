@@ -10,6 +10,8 @@ import { ContactMapView } from './ContactMapView';
 import { ContactAnalyticsDashboard } from './ContactAnalyticsDashboard';
 import { ContactsSkeleton } from './ContactsSkeleton';
 import type { ContactViewMode } from './ContactViewSwitcher';
+import DuplicateContactsPanel from './DuplicateContactsPanel';
+import ContactRecycleBin from './ContactRecycleBin';
 
 const GRID_COLUMNS_CLASS: Record<number, string> = {
   3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
@@ -25,6 +27,7 @@ interface ContactContentAreaProps {
   loading: boolean;
   contacts: Contact[];
   viewMode: ContactViewMode;
+  activeTab?: string;
   gridColumns: number;
   groupByCompany: boolean;
   selectedIds: string[];
@@ -40,14 +43,43 @@ interface ContactContentAreaProps {
   onClearFilters?: () => void;
   onImport: () => void;
   getCRMData: (phone: string) => CRMBatchResult | null;
+  workspaceId?: string;
+  onRefresh?: () => void;
 }
 
 export function ContactContentArea({
-  loading, contacts, viewMode, gridColumns, groupByCompany,
+  loading, contacts, viewMode, activeTab, gridColumns, groupByCompany,
   selectedIds, search, activeFiltersCount,
   onToggleSelect, onContactClick, onEdit, onDelete, onSelectIds,
   onAddContact, onClearSearch, onClearFilters, onImport, getCRMData,
+  workspaceId, onRefresh,
 }: ContactContentAreaProps) {
+  if (activeTab === 'duplicates') {
+    return (
+      <Card className="border-orange-500/20">
+        <CardContent className="p-6">
+          <DuplicateContactsPanel 
+            workspaceId={workspaceId || 'wpp2'} 
+            onMergeComplete={onRefresh} 
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (activeTab === 'trash') {
+    return (
+      <Card className="border-destructive/20">
+        <CardContent className="p-6">
+          <ContactRecycleBin 
+            workspaceId={workspaceId || 'wpp2'} 
+            onRestored={onRefresh} 
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (loading) {
     return <ContactsSkeleton viewMode={viewMode} gridColumns={gridColumns} />;
   }
