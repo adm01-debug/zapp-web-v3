@@ -6,6 +6,8 @@ export * from './AdminCRMDashboard';
 export * from './AdminUsersTable';
 export * from './AdminView';
 export * from './BulkReprocessGuidedDialog';
+export * from './FailedMessageKpiCard';
+export * from './FailedMessageStatusBadge';
 export * from './CrisisRoom';
 export * from './EvolutionFallbackStatusCard';
 export * from './ForceLogoutButton';
