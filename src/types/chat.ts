@@ -140,6 +140,7 @@ export interface Conversation {
   sla_critical_threshold_minutes?: number;
   sla_notification_message?: string;
   sla_enabled?: boolean;
+  is_muted?: boolean;
 }
 
 export interface Agent {
