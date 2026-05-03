@@ -14,6 +14,7 @@ vi.mock('@/features/inbox', () => ({
   sendMessageToContact: vi.fn(),
   useMediaRefresh: () => ({ url: null, failed: false }),
   useInboxStatusPref: () => ({ showStatus: true }),
+  useMessageSendStatus: () => ({ isSending: false, progress: 0 }),
   SLAIndicatorForContact: () => <div data-testid="sla-indicator">SLA</div>
 }));
 vi.mock('@/lib/logger', () => ({ getLogger: () => ({ info: vi.fn(), error: vi.fn(), warn: vi.fn() }) }));
