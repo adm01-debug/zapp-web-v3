@@ -1,5 +1,5 @@
-import { Suspense, useCallback, forwardRef, lazy, useState } from 'react';
-import { Target, Mic, Maximize2, Minimize2 } from 'lucide-react';
+import { Suspense, useCallback, forwardRef, lazy, useState, useMemo } from 'react';
+import { Target, Mic, Maximize2, Minimize2, Info } from 'lucide-react';
 import { useViewTransition } from '@/hooks/useViewTransition';
 import { cn } from '@/lib/utils';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -78,7 +78,11 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
     threshold: 60,
   });
 
-
+  const appVersion = useMemo(() => {
+    // build time versioning based on today's date + minor increment
+    const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
+    return `v2.0.${today}.10-10`;
+  }, []);
   return (
     <div className="flex h-screen max-h-screen min-h-screen bg-background overflow-hidden relative">
       <RouteLoadingBar isLoading={loading} />
