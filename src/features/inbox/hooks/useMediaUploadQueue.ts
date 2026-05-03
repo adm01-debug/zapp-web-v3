@@ -65,18 +65,12 @@ export function useMediaUploadQueue(contactId: string) {
 
       const { error: uploadError } = await supabase.storage
         .from('whatsapp-media')
-        .upload(storagePath, file, {
-          onUploadProgress: (progress) => {
-            const percent = Math.round((progress.loaded / progress.total) * 100);
-            setQueue(prev => prev.map(item => 
-              item.id === newItem.id ? { ...item, progress: percent } : item
-            ));
-            // Sincroniza com DB para outros viewers
-            void supabase.from('media_upload_queue').update({ progress: percent }).eq('id', newItem.id);
-          }
-        });
+        .upload(storagePath, file);
 
       if (uploadError) throw uploadError;
+
+      // Sincroniza progresso 100%
+      void supabase.from('media_upload_queue').update({ progress: 100 }).eq('id', newItem.id);
 
       // 3. Atualiza status para 'uploaded'
       await supabase.from('media_upload_queue').update({ 
