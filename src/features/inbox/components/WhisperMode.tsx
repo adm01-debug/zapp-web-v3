@@ -34,6 +34,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const isSupervisor = profile?.role === 'admin' || profile?.role === 'supervisor';
