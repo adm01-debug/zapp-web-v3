@@ -92,13 +92,13 @@ export function ContactHeaderSection({ contact, enrichedData, conversation, onQu
         {/* Avatar with engagement ring */}
         <div className="relative mb-3">
           <div className="relative inline-block">
-            <svg className="absolute -inset-1.5 w-[calc(100%+12px)] h-[calc(100%+12px)] -rotate-90" viewBox="0 0 108 108">
-              <circle cx="54" cy="54" r="50" fill="none" stroke="hsl(var(--muted))" strokeWidth="2.5" opacity="0.3" />
-              <motion.circle cx="54" cy="54" r="50" fill="none" stroke={getScoreColor(engagementScore)} strokeWidth="2.5" strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 50} initial={{ strokeDashoffset: 2 * Math.PI * 50 }}
-                animate={{ strokeDashoffset: ((100 - engagementScore) / 100) * 2 * Math.PI * 50 }} transition={{ duration: 1, ease: 'easeOut' }} />
+            <svg className="absolute -inset-1.5 w-[calc(100%+12px)] h-[calc(100%+12px)] -rotate-90" viewBox="0 0 132 132">
+              <circle cx="66" cy="66" r="62" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" opacity="0.3" />
+              <motion.circle cx="66" cy="66" r="62" fill="none" stroke={getScoreColor(engagementScore)} strokeWidth="3" strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 62} initial={{ strokeDashoffset: 2 * Math.PI * 62 }}
+                animate={{ strokeDashoffset: ((100 - engagementScore) / 100) * 2 * Math.PI * 62 }} transition={{ duration: 1, ease: 'easeOut' }} />
             </svg>
-            <Avatar className="w-24 h-24 ring-2 ring-background cursor-pointer hover:ring-primary/50 transition-all"
+            <Avatar className="w-[120px] h-[120px] ring-2 ring-background cursor-pointer hover:ring-primary/50 transition-all shadow-md"
               onClick={() => contact.avatar && setShowAvatarPreview(true)}>
               <AvatarImage 
                 src={contact.avatar} 
@@ -107,7 +107,7 @@ export function ContactHeaderSection({ contact, enrichedData, conversation, onQu
                   (e.target as HTMLImageElement).removeAttribute('src');
                 }}
               />
-              <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+              <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
                 {contact.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
             </Avatar>
