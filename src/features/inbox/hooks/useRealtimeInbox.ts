@@ -38,6 +38,7 @@ export function useRealtimeInbox() {
   const { sendMessage, markAsRead } = localRealtime;
   const { newMessageNotification, dismissNotification, setSelectedContact, setSoundEnabled } = localRealtime;
 
+  const [deliveryAlert, setDeliveryAlert] = useState<{ status: 'warning' | 'breached', delay: number } | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [selectedContactFallback, setSelectedContactFallback] = useState<ConversationContact | null>(null);
   const [showDetails, setShowDetails] = useState(true);
@@ -162,8 +163,20 @@ export function useRealtimeInbox() {
       }
     };
     window.addEventListener('open-contact-chat', handler);
-    return () => window.removeEventListener('open-contact-chat', handler);
-  }, []);
+
+    const deliveryHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { contactId: string; status: 'warning' | 'breached'; delay: number };
+      if (detail.contactId === selectedContactId) {
+        setDeliveryAlert({ status: detail.status, delay: detail.delay });
+      }
+    };
+    window.addEventListener('sla-delivery-alert', deliveryHandler);
+
+    return () => {
+      window.removeEventListener('open-contact-chat', handler);
+      window.removeEventListener('sla-delivery-alert', deliveryHandler);
+    };
+  }, [selectedContactId]);
 
   // Load fallback contact
   const selectedConversation = useMemo(
@@ -211,6 +224,7 @@ export function useRealtimeInbox() {
     log.info('Selecting conversation', { contactId });
     setSelectedContactId(contactId);
     setSelectedContact(contactId);
+    setDeliveryAlert(null); // Reset alert when changing conversation
     // No modo externo, ids são remote_jid (string) — markAsRead local
     // espera UUID e dispararia erro 22P02. Pulamos.
     if (!USE_EXTERNAL_DB) markAsRead(contactId);
@@ -433,5 +447,6 @@ export function useRealtimeInbox() {
     whisperCount,
     // Realtime batching diagnostics (only meaningful in local mode)
     batcherStatus: USE_EXTERNAL_DB ? null : localRealtime.batcherStatus,
+    deliveryAlert,
   };
 }

@@ -209,6 +209,42 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     instanceName,
     assignedTo: conversation.assignedTo?.id ?? null,
   });
+
+  // Monitora atraso na entrega (SLA Delivery)
+  useEffect(() => {
+    if (!conversation.contact.id || !messages.length) return;
+    
+    // Thresholds fixos conforme pedido: 30/60 min
+    const WARNING_THRESHOLD = 30 * 60 * 1000;
+    const BREACH_THRESHOLD = 60 * 60 * 1000;
+    
+    const checkDeliveryDelay = () => {
+      // Pega a última mensagem outbound que está entregue mas não lida
+      const lastOutbound = [...messages].reverse().find(m => 
+        m.sender === 'agent' && 
+        m.status === 'delivered'
+      );
+      
+      if (!lastOutbound) return;
+      
+      const deliveredAt = new Date(lastOutbound.updated_at).getTime();
+      const delay = Date.now() - deliveredAt;
+      
+      if (delay >= BREACH_THRESHOLD) {
+        window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
+          detail: { contactId: conversation.contact.id, status: 'breached', delay } 
+        }));
+      } else if (delay >= WARNING_THRESHOLD) {
+        window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
+          detail: { contactId: conversation.contact.id, status: 'warning', delay } 
+        }));
+      }
+    };
+    
+    const interval = setInterval(checkDeliveryDelay, 60000); // Check every minute
+    checkDeliveryDelay();
+    return () => clearInterval(interval);
+  }, [conversation.contact.id, messages]);
   const lastMsgIdRef = useRef<string | null>(null);
   useEffect(() => {
     const lastId = messages[messages.length - 1]?.id ?? null;

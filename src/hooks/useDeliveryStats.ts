@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
+import { startOfHour, format, parseISO } from 'date-fns';
 
 export interface ParticipantStats {
   participantJid: string;
@@ -11,6 +12,13 @@ export interface ParticipantStats {
   lastSentAt: string | null;
   lastDeliveredAt: string | null;
   lastReadAt: string | null;
+}
+
+export interface DeliveryTimelinePoint {
+  time: string;
+  sent: number;
+  delivered: number;
+  read: number;
 }
 
 export interface DeliveryStatsResult {
@@ -24,6 +32,7 @@ export interface DeliveryStatsResult {
     lastReadAt: string | null;
   };
   participants: ParticipantStats[];
+  timeline: DeliveryTimelinePoint[];
   totalMessages: number;
 }
 
@@ -85,7 +94,13 @@ export function useDeliveryStats(remoteJid: string | undefined, instance = 'wpp2
       // Fallback para quando o retorno do Supabase vier em formato inesperado
       if (error) {
         console.error('[useDeliveryStats] Erro na query:', error);
-        return { isGroup: isGroupJid(remoteJid!), totals: { sent: 0, delivered: 0, read: 0, lastSentAt: null, lastDeliveredAt: null, lastReadAt: null }, participants: [], totalMessages: 0 };
+        return { 
+          isGroup: isGroupJid(remoteJid!), 
+          totals: { sent: 0, delivered: 0, read: 0, lastSentAt: null, lastDeliveredAt: null, lastReadAt: null }, 
+          participants: [], 
+          timeline: [],
+          totalMessages: 0 
+        };
       }
 
       const messages = (data && Array.isArray(data) ? data : []) as unknown as Record<string, unknown>[];
@@ -94,11 +109,26 @@ export function useDeliveryStats(remoteJid: string | undefined, instance = 'wpp2
       const totals = { sent: 0, delivered: 0, read: 0, lastSentAt: null as string | null, lastDeliveredAt: null as string | null, lastReadAt: null as string | null };
       const byParticipant = new Map<string, ParticipantStats>();
 
+      const timelineMap = new Map<string, DeliveryTimelinePoint>();
+
       for (const msg of messages) {
         const status = String(msg.status ?? 'pending').toLowerCase();
         const rank = STATUS_RANK[status] ?? 0;
-        const ts = (msg.status_at as string | null) ?? (msg.created_at as string | null) ?? null;
+        const tsString = (msg.status_at as string | null) ?? (msg.created_at as string | null) ?? null;
         const { jid, name } = extractParticipant(msg);
+
+        // Timeline aggregation (by hour)
+        if (tsString) {
+          const date = parseISO(tsString);
+          const hourKey = format(startOfHour(date), 'yyyy-MM-dd HH:00');
+          if (!timelineMap.has(hourKey)) {
+            timelineMap.set(hourKey, { time: hourKey, sent: 0, delivered: 0, read: 0 });
+          }
+          const point = timelineMap.get(hourKey)!;
+          if (rank >= 1) point.sent++;
+          if (rank >= 2) point.delivered++;
+          if (rank >= 3) point.read++;
+        }
 
         if (!byParticipant.has(jid)) {
           byParticipant.set(jid, {
@@ -111,14 +141,15 @@ export function useDeliveryStats(remoteJid: string | undefined, instance = 'wpp2
         const p = byParticipant.get(jid)!;
         if (name && name.length > p.displayName.length) p.displayName = name;
 
-        if (rank >= 1) { p.sent++; totals.sent++; p.lastSentAt = maxDate(p.lastSentAt, ts); totals.lastSentAt = maxDate(totals.lastSentAt, ts); }
-        if (rank >= 2) { p.delivered++; totals.delivered++; p.lastDeliveredAt = maxDate(p.lastDeliveredAt, ts); totals.lastDeliveredAt = maxDate(totals.lastDeliveredAt, ts); }
-        if (rank >= 3) { p.read++; totals.read++; p.lastReadAt = maxDate(p.lastReadAt, ts); totals.lastReadAt = maxDate(totals.lastReadAt, ts); }
+        if (rank >= 1) { p.sent++; totals.sent++; p.lastSentAt = maxDate(p.lastSentAt, tsString); totals.lastSentAt = maxDate(totals.lastSentAt, tsString); }
+        if (rank >= 2) { p.delivered++; totals.delivered++; p.lastDeliveredAt = maxDate(p.lastDeliveredAt, tsString); totals.lastDeliveredAt = maxDate(totals.lastDeliveredAt, tsString); }
+        if (rank >= 3) { p.read++; totals.read++; p.lastReadAt = maxDate(p.lastReadAt, tsString); totals.lastReadAt = maxDate(totals.lastReadAt, tsString); }
       }
 
       const participants = Array.from(byParticipant.values()).sort((a, b) => b.sent - a.sent);
+      const timeline = Array.from(timelineMap.values()).sort((a, b) => a.time.localeCompare(b.time));
 
-      return { isGroup, totals, participants, totalMessages: messages.length };
+      return { isGroup, totals, participants, timeline, totalMessages: messages.length };
     },
   });
 }

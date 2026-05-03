@@ -14,6 +14,7 @@ import { useInboxFilters } from '@/features/inbox';
 import { useRealtimeInbox } from '@/features/inbox';
 import { useRealtimeContacts } from '@/features/inbox';
 import { useRealtimeFallbackRefetch } from '@/features/inbox';
+import { useSLAAlerts } from '@/features/sla/hooks/useSLAAlerts';
 import { WifiOff, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -47,6 +48,21 @@ interface SearchResult {
 export function RealtimeInboxView() {
   const isMobile = useIsMobile();
   const inbox = useRealtimeInbox();
+  
+  // Conecta alertas de delivery ao useSLAAlerts
+  useSLAAlerts({
+    contactId: inbox.selectedContactId,
+    contactName: inbox.legacyConversation?.contact.name || 'Contato',
+    scope: 'current',
+    firstResponseStatus: 'na',
+    resolutionStatus: 'na',
+    ruleName: 'Atraso na Entrega',
+    awaitingMs: null,
+    resolutionDurationMs: null,
+    // @ts-ignore - Propriedades estendidas
+    deliveryDelayStatus: inbox.deliveryAlert?.status,
+    deliveryDelayMs: inbox.deliveryAlert?.delay,
+  });
   // Realtime sync of evolution_contacts (FATOR X) → React Query caches
   useRealtimeContacts({ instance: 'wpp2' });
   // Safety net: periodic + on-reconnect refetch in case the realtime
