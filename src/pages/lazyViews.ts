@@ -7,7 +7,10 @@ export const DashboardView = lazyWithRetry(() => import('@/components/dashboard/
 export const SentimentAlertsDashboard = lazyWithRetry(() => import('@/components/dashboard/SentimentAlertsDashboard').then(m => ({ default: m.SentimentAlertsDashboard })));
 export const AgentsView = lazyWithRetry(() => import('@/components/agents/AgentsView').then(m => ({ default: m.AgentsView })));
 export const QueuesView = lazyWithRetry(() => import('@/components/queues/QueuesView').then(m => ({ default: m.QueuesView })));
-export const ContactsView = lazyWithRetry(() => import('@/components/contacts/ContactsView').then(m => ({ default: m.ContactsView })));
+// ContactsView agora aponta para o layout rico (KPIs + Aniversários + Abas por tipo
+// + Grid/Lista/Tabela/Pipeline/Mapa/Analytics). O ContactsView legacy
+// (Todos/Duplicados/Lixeira) foi mantido no repositório como fallback.
+export const ContactsView = lazyWithRetry(() => import('@/components/contacts/ContactsRichView').then(m => ({ default: m.ContactsRichView })));
 export const ConnectionsView = lazyWithRetry(() => import('@/components/connections/ConnectionsView').then(m => ({ default: m.ConnectionsView })));
 export const TagsView = lazyWithRetry(() => import('@/components/tags/TagsView').then(m => ({ default: m.TagsView })));
 export const SettingsView = lazyWithRetry(() => import('@/components/settings/SettingsView').then(m => ({ default: m.SettingsView })));
