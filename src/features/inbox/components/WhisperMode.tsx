@@ -219,7 +219,12 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                     </div>
                     <div className="relative text-xs p-2.5 rounded-2xl bg-amber-100/50 border border-amber-200/30 text-amber-900 shadow-sm leading-relaxed group-hover/whisper:bg-amber-100 transition-colors">
                       {w.content}
-                      {/* Placeholder para futuras reações e threads internas */}
+                      {/* Futuro suporte a reações rápidas e threads */}
+                      <div className="absolute -bottom-1.5 -right-1 opacity-0 group-hover/whisper:opacity-100 transition-opacity flex items-center gap-0.5 bg-background border border-amber-100 rounded-full px-1 shadow-sm">
+                        <button onClick={() => toast({ title: '👍 Confirmado' })} className="hover:scale-120 transition-transform">👍</button>
+                        <button onClick={() => toast({ title: '👀 Ciente' })} className="hover:scale-120 transition-transform">👀</button>
+                        <button onClick={() => toast({ title: '✅ Resolvido' })} className="hover:scale-120 transition-transform">✅</button>
+                      </div>
                     </div>
                   </motion.div>
                 ))
