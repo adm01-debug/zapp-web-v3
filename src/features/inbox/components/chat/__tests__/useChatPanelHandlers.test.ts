@@ -25,6 +25,13 @@ vi.mock('@/hooks/use-toast', () => ({
   toast: vi.fn(),
 }));
 
+vi.mock('@/features/auth', () => ({
+  useAuth: () => ({
+    profile: { id: 'agent-123', name: 'Test Agent', role: 'admin' },
+    user: { id: 'user-123' },
+  }),
+}));
+
 vi.mock('@/lib/undoToast', () => ({
   undoToast: vi.fn(),
 }));
