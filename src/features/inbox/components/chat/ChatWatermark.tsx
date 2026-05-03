@@ -25,7 +25,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
             patternUnits="userSpaceOnUse"
           >
             {/* Speech bubble 1 */}
-            <g opacity="0.025" fill="none" stroke="currentColor" strokeWidth="1" className="text-primary">
+            <g opacity="0.06" fill="none" stroke="currentColor" strokeWidth="1" className="text-foreground">
               <path d="M30 25 Q30 15 40 15 H60 Q70 15 70 25 V40 Q70 50 60 50 H45 L38 57 L40 50 H40 Q30 50 30 40 Z" />
             </g>
 
