@@ -14,6 +14,7 @@ import { MessageImage } from '@/features/inbox/components/ImagePreview';
 import { DocumentPreview, VideoPreview } from '@/features/inbox/components/MediaPreview';
 import { AudioMessagePlayer } from '@/features/inbox/components/AudioMessagePlayer';
 import { InteractiveMessageDisplay, ButtonResponseBadge } from '@/features/inbox/components/InteractiveMessage';
+import { TextWithLinks } from '@/features/inbox/components/LinkPreview';
 import { QuotedMessage } from '@/features/inbox/components/ReplyQuote';
 import { LocationMessageDisplay } from '@/features/inbox/components/LocationMessage';
 import { TextToSpeechButton } from '@/features/inbox/components/TextToSpeechButton';
