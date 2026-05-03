@@ -8,6 +8,7 @@ export * from './useFailureReason';
 export * from './useInboxBulkActions';
 export * from './useInboxFilters';
 export * from './useInboxStatusPref';
+export * from './useInboxShortcuts';
 export * from './useIncomingCallBroadcast';
 export * from './useMediaRefresh';
 export * from './useMediaUrl';
