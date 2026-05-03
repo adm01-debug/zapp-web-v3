@@ -75,26 +75,27 @@ export function ChatHeader({
   const { density, cycleDensity } = useDensity();
 
   return (
-    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className={cn(
-      "flex items-center justify-between px-4 border-b border-border/20 bg-card/80 backdrop-blur-md sticky top-0 z-30",
-      density === 'comfortable' ? 'py-3' : 'py-1.5'
+    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className={cn(
+      "flex items-center justify-between px-6 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-30",
+      density === 'comfortable' ? 'py-4' : 'py-2'
     )}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {onBack && (
-          <Button variant="ghost" size="icon" className="w-8 h-8 lg:hidden" onClick={onBack}>
+          <Button variant="ghost" size="icon" className="w-9 h-9 lg:hidden rounded-full hover:bg-primary/5 transition-all" onClick={onBack}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
         )}
-        <motion.div whileHover={{ scale: 1.05 }}>
-          <Avatar className="w-10 h-10 ring-2 ring-border/30">
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
+          <Avatar className="w-11 h-11 ring-2 ring-border/5 shadow-sm transition-all duration-300">
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
+              className="object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).removeAttribute('src');
               }}
             />
-            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+            <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold tracking-tighter uppercase">
               {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
             </AvatarFallback>
           </Avatar>
