@@ -264,4 +264,4 @@ export const ChatHeader = memo(function ChatHeader({
       </div>
     </motion.div>
   );
-}
+});
