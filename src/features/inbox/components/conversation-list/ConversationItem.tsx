@@ -177,7 +177,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               {isTyping ? (
                 <TypingIndicatorCompact isVisible={true} />
               ) : (
-                <p className="text-sm text-muted-foreground truncate pr-2">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
+                <p className="text-[12px] font-light tracking-tight text-muted-foreground/75 truncate pr-2">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
               )}
               {conversation.unreadCount > 0 && <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-primary-foreground">{conversation.unreadCount}</span>}
             </div>
