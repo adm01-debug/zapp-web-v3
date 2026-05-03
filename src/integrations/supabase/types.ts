@@ -3937,6 +3937,64 @@ export type Database = {
           },
         ]
       }
+      department_invitations: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string
+          department_id: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          uses: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by: string
+          department_id: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          uses?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string
+          department_id?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          uses?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_invitations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_invitations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_invitations_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string
@@ -11386,6 +11444,10 @@ export type Database = {
         Args: { connection_id: string }
         Returns: boolean
       }
+      join_department_via_code: {
+        Args: { _code: string; _user_id: string }
+        Returns: undefined
+      }
       log_audit_event: {
         Args: {
           p_action: string
@@ -12266,6 +12328,16 @@ export type Database = {
           p_signature?: string
         }
         Returns: boolean
+      }
+      upsert_department: {
+        Args: {
+          _admin_user_id: string
+          _description: string
+          _id: string
+          _is_active?: boolean
+          _name: string
+        }
+        Returns: string
       }
       user_has_permission: {
         Args: { _permission_name: string; _user_id: string }
