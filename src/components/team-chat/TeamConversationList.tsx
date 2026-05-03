@@ -21,7 +21,11 @@ interface Props {
 }
 
 export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function TeamConversationList({ conversations, isLoading, selectedId, onSelect, onNewConversation }, _ref) {
+  const { profile } = useAuth();
   const [search, setSearch] = useState('');
+  const [mgmtDept, setMgmtDept] = useState<{ id: string, name: string } | null>(null);
+
+  const isAdmin = profile?.role === 'admin';
 
   const filtered = useMemo(() => {
     if (!search.trim()) return conversations;
