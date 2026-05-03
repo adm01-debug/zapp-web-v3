@@ -300,7 +300,7 @@ export function ChatHeader({
             <DropdownMenuItem><CheckCircle className="w-4 h-4 mr-2" />Marcar como resolvido</DropdownMenuItem>
             <DropdownMenuItem><Archive className="w-4 h-4 mr-2" />Arquivar</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onGenerateSummary?.('teamFiles')}>
+            <DropdownMenuItem onClick={() => onGenerateSummary?.()}>
               <Share2 className="w-4 h-4 mr-2 text-amber-600" />
               Arquivos da Equipe
             </DropdownMenuItem>
