@@ -10,6 +10,7 @@ let optimisticCounter = 0;
 export interface OptimisticMessage extends Message {
   _optimistic: true;
   contact_id: string;
+  isConfirmed?: boolean;
 }
 
 export function useOptimisticMessages() {
