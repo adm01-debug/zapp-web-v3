@@ -56,7 +56,6 @@ export function useOptimisticMessages() {
         mediaUrl: params.mediaUrl || undefined,
         replyTo: params.replyToId ? { messageId: params.replyToId, content: '', sender: 'contact' } : undefined,
         contactAvatar: params.contactAvatar || null,
-        is_read: true,
         is_deleted: false,
       };
 
