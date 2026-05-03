@@ -233,29 +233,50 @@ export function useRealtimeInbox() {
     await Promise.all([refetch(), refetchSelectedMessages()]);
   }, [refetch, refetchSelectedMessages]);
 
-  const handleSendMessage = useCallback(async (content: string) => {
+  const handleSendMessage = useCallback(async (content: string, attachments?: File[]) => {
     if (!selectedContactId) return;
     if (USE_EXTERNAL_DB) {
       // External path: envio via evolution-api + bolha otimista no cursor.
-      // Erros são propagados (sem swallow) para o SendErrorBanner.
-      const { sendExternalText } = await import('..');
+      const { sendExternalText, sendExternalMedia } = await import('..');
       const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
-      const { optimistic } = await sendExternalText(selectedContactId, content, { contactAvatar: currentAvatar });
-      try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+      
+      try {
+        if (attachments && attachments.length > 0) {
+          for (const file of attachments) {
+            const { optimistic } = await sendExternalMedia(selectedContactId, file, { 
+              contactAvatar: currentAvatar,
+              caption: file === attachments[0] ? content : undefined // Use text as caption for the first file
+            });
+            try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+          }
+        } else {
+          const { optimistic } = await sendExternalText(selectedContactId, content, { contactAvatar: currentAvatar });
+          try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+        }
+      } catch (err) {
+        log.error('Failed to send external message/media:', err);
+        throw err;
+      }
+      
       // Pequeno delay para o webhook materializar — depois refetch.
       setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
       return;
     }
     try {
-      await sendMessage(selectedContactId, content);
+      if (attachments && attachments.length > 0) {
+        // Fallback para envio legado de múltiplos arquivos se necessário
+        for (const file of attachments) {
+          await sendMessage(selectedContactId, content, 'document', URL.createObjectURL(file));
+        }
+      } else {
+        await sendMessage(selectedContactId, content);
+      }
     } catch (err) {
-      // Propagar para o ChatPanel exibir o SendErrorBanner em vez de
-      // apenas mostrar um toast genérico que se confundia com o sucesso.
       throw err;
     } finally {
       await refreshActiveConversation();
     }
-  }, [selectedContactId, sendMessage, refreshActiveConversation, externalMsgs, externalData]);
+  }, [selectedContactId, sendMessage, refreshActiveConversation, externalMsgs, externalData, resolvedSelectedConversation]);
 
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
