@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Sheet, SheetContent, SheetHeader, SheetTitle, 
   SheetDescription, SheetFooter, SheetClose 
@@ -8,11 +9,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
   Phone, Mail, Building, Briefcase, Calendar, 
-  Tag, MessageSquare, Edit3, Trash2, Globe, MapPin
+  Tag, MessageSquare, Edit3, Trash2, Globe, MapPin,
+  Activity, Sparkles, TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
+import { calculateContactHealth, getHealthColor } from '@/lib/contact-health';
 import type { Contact } from './types';
 
 interface ContactQuickViewProps {
@@ -31,18 +35,24 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
 
   const typeCfg = contact.contact_type ? CONTACT_TYPE_CONFIG[contact.contact_type] : null;
   const initials = contact.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const health = useMemo(() => contact ? calculateContactHealth(contact) : 0, [contact]);
+  const healthColor = getHealthColor(health);
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-md border-l border-border/50 shadow-2xl overflow-y-auto">
+      <SheetContent className="sm:max-w-md border-l border-border/50 shadow-2xl overflow-y-auto bg-background/95 backdrop-blur-xl">
+        <motion.div layoutId={`contact-${contact.id}`} className="absolute inset-0 z-[-1] bg-card opacity-50" />
+        
         <SheetHeader className="space-y-4 pb-6 border-b border-border/30">
           <div className="flex items-start justify-between">
-            <Avatar className="w-20 h-20 border-4 border-background shadow-xl">
-              <AvatarImage src={contact.avatar_url || ''} />
-              <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <motion.div layoutId={`avatar-${contact.id}`}>
+              <Avatar className="w-20 h-20 border-4 border-background shadow-xl">
+                <AvatarImage src={contact.avatar_url || ''} />
+                <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </motion.div>
             <div className="flex gap-2">
               <Button size="icon" variant="outline" className="rounded-full" onClick={() => onEdit(contact)}>
                 <Edit3 className="w-4 h-4" />
@@ -72,6 +82,76 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
             </div>
           </div>
         </SheetHeader>
+
+        {/* Health Score Overview */}
+        <div className="px-1 mt-6">
+          <div className={cn("p-4 rounded-2xl border border-border/50 shadow-sm space-y-3", healthColor.split(' ')[1])}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={cn("p-2 rounded-lg", healthColor)}>
+                  <Activity className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Saúde do Cadastro</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-semibold">Integridade de Dados</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className={cn("text-2xl font-black", healthColor.split(' ')[0])}>{health}%</span>
+              </div>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${health}%` }}
+                className={cn("h-full", health >= 70 ? "bg-emerald-500" : health >= 40 ? "bg-orange-500" : "bg-destructive")}
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-tight">
+              {health >= 90 ? "Perfil excelente! Todos os dados essenciais estão presentes." :
+               health >= 70 ? "Perfil muito bom. Adicione algumas tags ou cargo para chegar a 100%." :
+               "Este perfil precisa de mais informações para ser útil nas automações."}
+            </p>
+          </div>
+        </div>
+
+        {/* Smart Insights & Actions */}
+        <div className="px-1 mt-4">
+          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-3 relative overflow-hidden group">
+            <div className="absolute -top-2 -right-2 w-16 h-16 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
+            <div className="flex items-center gap-2 text-primary">
+              <Sparkles className="w-4 h-4" />
+              <h4 className="text-xs font-bold uppercase tracking-wider">Hana AI Insights</h4>
+            </div>
+            
+            <div className="space-y-2">
+              {!contact.email && (
+                <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-background/50 p-2 rounded-lg border border-border/30">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1 shrink-0" />
+                  <p>Faltando <strong>E-mail</strong>: Adicione para liberar automações de marketing e envio de propostas.</p>
+                </div>
+              )}
+              {!contact.company && (
+                <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-background/50 p-2 rounded-lg border border-border/30">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 shrink-0" />
+                  <p>Sem <strong>Empresa</strong>: Vincular a uma empresa ajuda a agrupar faturamentos no Analytics.</p>
+                </div>
+              )}
+              {contact.tags?.length === 0 && (
+                <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-background/50 p-2 rounded-lg border border-border/30">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1 shrink-0" />
+                  <p>Sem <strong>Etiquetas</strong>: Use tags para segmentar este contato em campanhas futuras.</p>
+                </div>
+              )}
+              {health >= 90 && (
+                <div className="flex items-start gap-2 text-[11px] text-emerald-600 bg-emerald-500/5 p-2 rounded-lg border border-emerald-500/20">
+                  <TrendingUp className="w-3 h-3 mt-0.5 shrink-0" />
+                  <p><strong>Engajamento:</strong> Este contato possui dados completos. Pronto para campanhas de alta conversão!</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="py-6 space-y-8">
           {/* Informações de Contato */}

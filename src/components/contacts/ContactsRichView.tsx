@@ -9,14 +9,15 @@
  * usando exclusivamente componentes que já existem no projeto.
  */
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   UserPlus, Upload, Trash2, GitMerge, Keyboard, 
-  Search, Grid, List, Table, Map, BarChart3, Info, X, Zap, Users
+  Search, Grid, List, Table, Map, BarChart3, Info, X, Zap, Users,
+  CheckCircle2, Tag as TagIcon, Download, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -360,35 +361,117 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
         />
 
         {/* ── Conteúdo (Grid / Lista / Tabela / Pipeline / Mapa / Analytics) ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ContactContentArea
-            loading={loading}
-            contacts={contactsForContent}
-            viewMode={state.viewMode}
-            activeTab={activeTab}
-            gridColumns={state.gridColumns}
-            groupByCompany={state.groupByCompany}
-            selectedIds={selectedIds}
-            search={searchInput}
-            activeFiltersCount={activeFiltersCount}
-            onToggleSelect={state.handleToggleSelect}
-            onContactClick={handleContactClick}
-            onEdit={(c) => openEditDialog(c as never)}
-            onDelete={(c) => setDeleteTarget(c as never)}
-            onSelectIds={crud.setSelectedIds}
-            onAddContact={() => setIsAddDialogOpen(true)}
-            onClearSearch={clearSearch}
-            onClearFilters={clearFilters}
-            onImport={() => setIsImportOpen(true)}
-            getCRMData={getCRMData}
-            workspaceId="wpp2"
-            onRefresh={() => crud.refetch()}
-          />
-        </motion.div>
+        <LayoutGroup>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="relative"
+          >
+            <ContactContentArea
+              loading={loading}
+              contacts={contactsForContent}
+              viewMode={state.viewMode}
+              activeTab={activeTab}
+              gridColumns={state.gridColumns}
+              groupByCompany={state.groupByCompany}
+              selectedIds={selectedIds}
+              search={searchInput}
+              activeFiltersCount={activeFiltersCount}
+              onToggleSelect={state.handleToggleSelect}
+              onContactClick={handleContactClick}
+              onEdit={(c) => openEditDialog(c as never)}
+              onDelete={(c) => setDeleteTarget(c as never)}
+              onSelectIds={crud.setSelectedIds}
+              onAddContact={() => setIsAddDialogOpen(true)}
+              onClearSearch={clearSearch}
+              onClearFilters={clearFilters}
+              onImport={() => setIsImportOpen(true)}
+              getCRMData={getCRMData}
+              workspaceId="wpp2"
+              onRefresh={() => crud.refetch()}
+            />
+
+            {/* ── Floating Batch Action Bar ──────────────────────────── */}
+            <AnimatePresence>
+              {selectedIds.length > 0 && (
+                <motion.div
+                  initial={{ y: 100, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 100, opacity: 0 }}
+                  className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-4 border border-background/10 backdrop-blur-xl"
+                >
+                  <div className="flex items-center gap-2 border-r border-background/20 pr-4">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                      {selectedIds.length}
+                    </div>
+                    <span className="text-sm font-semibold whitespace-nowrap">Selecionados</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-background hover:bg-background/10 h-9 px-3 gap-2"
+                      onClick={() => state.setIsBulkTagOpen(true)}
+                    >
+                      <TagIcon className="w-4 h-4" />
+                      <span className="hidden sm:inline">Etiquetar</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-background hover:bg-background/10 h-9 px-3 gap-2"
+                      onClick={() => state.setIsMergeOpen(true)}
+                    >
+                      <GitMerge className="w-4 h-4" />
+                      <span className="hidden sm:inline">Mesclar</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-background hover:bg-background/10 h-9 px-3 gap-2"
+                      onClick={() => state.handleExportCSV()}
+                    >
+                      <Download className="w-4 h-4" />
+                      <span className="hidden sm:inline">Exportar</span>
+                    </Button>
+                    <div className="w-px h-6 bg-background/20 mx-1" />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive-foreground hover:bg-destructive/20 h-9 px-3 gap-2"
+                      onClick={() => {
+                        const count = selectedIds.length;
+                        toast.error(`Excluir ${count} contatos?`, {
+                          action: {
+                            label: "Confirmar",
+                            onClick: () => {
+                              selectedIds.forEach(id => handleDeleteContact(id));
+                              crud.setSelectedIds([]);
+                            }
+                          }
+                        });
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="hidden sm:inline">Excluir</span>
+                    </Button>
+                  </div>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-background hover:bg-background/10 rounded-full"
+                    onClick={() => crud.setSelectedIds([])}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </LayoutGroup>
       </div>
 
       {/* ── Quick View lateral ─────────────────────────────────────── */}

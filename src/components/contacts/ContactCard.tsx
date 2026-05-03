@@ -10,7 +10,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   MessageSquare, Edit, Trash2, MoreVertical, Phone, Mail,
-  Briefcase,
+  Briefcase, Activity
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -19,6 +19,7 @@ import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
 import { CompanyLogo } from './CompanyLogo';
 import { HighlightText } from './HighlightText';
+import { calculateContactHealth, getHealthColor } from '@/lib/contact-health';
 import type { ContactItemProps } from './types';
 
 export function ContactCard({
@@ -29,13 +30,15 @@ export function ContactCard({
 
   return (
     <motion.div
+      layoutId={`contact-${contact.id}`}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, scale: 1.02 }}
       transition={{ delay: index * 0.03, duration: 0.3 }}
       className={cn(
         "group relative rounded-2xl border border-border/40 bg-card hover:bg-muted/30",
         "transition-all duration-200 cursor-pointer overflow-hidden",
-        "hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20",
+        "hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30",
         isSelected && "ring-2 ring-primary/50 border-primary/30 bg-primary/5"
       )}
       onClick={() => onOpenChat(contact.id)}
@@ -88,12 +91,14 @@ export function ContactCard({
         {/* Avatar + Name */}
         <div className="flex items-start gap-3.5">
           <div className="relative">
-            <Avatar className="w-12 h-12 ring-2 ring-background shadow-md">
-              <AvatarImage src={contact.avatar_url || undefined} />
-              <AvatarFallback className={cn('font-bold text-sm', avatarColors.bg, avatarColors.text)}>
-                {getInitials(contact.name)}
-              </AvatarFallback>
-            </Avatar>
+            <motion.div layoutId={`avatar-${contact.id}`}>
+              <Avatar className="w-12 h-12 ring-2 ring-background shadow-md">
+                <AvatarImage src={contact.avatar_url || undefined} />
+                <AvatarFallback className={cn('font-bold text-sm', avatarColors.bg, avatarColors.text)}>
+                  {getInitials(contact.name)}
+                </AvatarFallback>
+              </Avatar>
+            </motion.div>
             {/* Type indicator dot */}
             <div className={cn(
               "absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-background flex items-center justify-center",
@@ -116,11 +121,21 @@ export function ContactCard({
           </div>
 
           <div className="min-w-0 flex-1">
-            <HighlightText
-              text={`${contact.name} ${contact.surname || ''}`.trim()}
-              highlight={searchQuery}
-              className="font-semibold text-sm text-foreground truncate leading-tight block"
-            />
+            <div className="flex items-center justify-between">
+              <HighlightText
+                text={`${contact.name} ${contact.surname || ''}`.trim()}
+                highlight={searchQuery}
+                className="font-semibold text-sm text-foreground truncate leading-tight block"
+              />
+              {/* Health Score Indicator */}
+              <div className={cn(
+                "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-tight",
+                getHealthColor(calculateContactHealth(contact))
+              )} title="Saúde do Perfil">
+                <Activity className="w-2.5 h-2.5" />
+                {calculateContactHealth(contact)}%
+              </div>
+            </div>
             {contact.nickname && (
               <p className="text-xs text-muted-foreground truncate">({contact.nickname})</p>
             )}
