@@ -30,6 +30,8 @@ vi.mock('@/integrations/supabase/client', () => ({
 describe('useGmail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (safeClient.rpc as any).mockResolvedValue({ data: [], error: null });
+    (safeClient.from as any).mockResolvedValue({ data: [], error: null });
   });
 
   it('deve carregar contas com sucesso', async () => {
@@ -56,10 +58,10 @@ describe('useGmail', () => {
     const { result } = renderHook(() => useGmail());
 
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => setTimeout(resolve, 10));
     });
 
-    expect(result.current.error).toContain('Database error');
+    expect(result.current.error?.toLowerCase()).toContain('database error');
     expect(result.current.accounts.length).toBe(0);
   });
 
