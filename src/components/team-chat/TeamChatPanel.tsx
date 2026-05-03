@@ -96,7 +96,17 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
       </AnimatePresence>
 
       <div ref={s.scrollRef} className="flex-1 overflow-auto p-4 space-y-1 bg-muted/5" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
-        {s.isLoading ? (
+        {!isDeptMember ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-bold mb-2">Conteúdo Protegido</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              As mensagens deste departamento são privadas. Entre em contato com um administrador se você precisar de acesso.
+            </p>
+          </div>
+        ) : s.isLoading ? (
           <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}><Skeleton className="h-10 rounded-2xl" style={{ width: 120 + (i % 3) * 60 }} /></div>)}</div>
         ) : s.filteredMessages.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-12">{s.searchQuery ? 'Nenhuma mensagem encontrada' : 'Envie a primeira mensagem!'}</div>
