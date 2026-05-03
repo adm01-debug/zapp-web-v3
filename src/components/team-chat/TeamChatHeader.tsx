@@ -74,7 +74,9 @@ export function TeamChatHeader({
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-[15px] text-foreground truncate">{conversation.name}</h3>
           <p className="text-xs text-muted-foreground">
-            {conversation.type === 'group'
+            {conversation.type === 'department'
+              ? 'Grupo de Departamento'
+              : conversation.type === 'group'
               ? `${conversation.members?.length || 0} membros`
               : 'Chat direto'}
           </p>
