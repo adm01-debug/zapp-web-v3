@@ -6,7 +6,7 @@ import { toast } from '@/hooks/use-toast';
 const DRAFT_KEY_PREFIX = 'chat_draft_';
 const CHAR_LIMIT = 4096;
 
-export interface QueuedFile {
+export interface ChatInputAttachment {
   id: string;
   file: File;
   preview?: string;
@@ -29,7 +29,7 @@ export function useChatInputLogic({
   const [showRichToolbar, setShowRichToolbar] = useState(false);
   const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
   const [sendAnimation, setSendAnimation] = useState(false);
-  const [attachments, setAttachments] = useState<QueuedFile[]>([]);
+  const [attachments, setAttachments] = useState<ChatInputAttachment[]>([]);
   const isMobile = useIsMobile();
 
   const hasText = inputValue.trim().length > 0;
