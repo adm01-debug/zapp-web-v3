@@ -160,18 +160,25 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
 
       {/* Column 3: CRM Sidebar */}
       {showContact && selectedConv && (
-        <div className="w-72 shrink-0 border-l flex flex-col h-full overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 border-b shrink-0">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">CRM 360°</span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowContact(false)} aria-label="Fechar CRM">
-              <X className="h-4 w-4" />
+        <div className="w-80 shrink-0 border-l flex flex-col h-full overflow-hidden bg-background">
+          <div className="flex items-center gap-3 px-4 py-3 border-b shrink-0 h-[61px]">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setShowContact(false)} aria-label="Fechar CRM">
+              <X className="h-4.5 w-4.5" />
             </Button>
+            <span className="text-sm font-semibold">Dados do contato</span>
           </div>
-          <div className="flex-1 overflow-hidden">
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
-              <Users className="h-10 w-10 mb-2 opacity-20" />
-              <p className="text-xs text-center">Dados do contato carregam ao selecionar conversa com contact_id</p>
-            </div>
+          <div className="flex-1 overflow-y-auto">
+            {selectedConv.contact_id ? (
+              <ContactSidebarPanel 
+                contact={{ id: selectedConv.contact_id, remote_jid: selectedConv.remote_jid, full_name: selectedConv.contact_name, phone_number: selectedConv.contact_phone, profile_picture_url: selectedConv.contact_avatar } as any} 
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground p-6 text-center">
+                <Users className="h-12 w-12 mb-3 opacity-20" />
+                <p className="text-sm font-medium">Sem perfil vinculado</p>
+                <p className="text-xs mt-1">Este contato ainda não possui dados detalhados no CRM.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
