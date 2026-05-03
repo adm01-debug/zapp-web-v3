@@ -78,7 +78,8 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
-  const [highContrast, setHighContrast] = useState(false);
+  // const [highContrast, setHighContrast] = useState(false); // Removed, now in useContactsViewState
+  const { highContrast, setHighContrast } = state;
   const [quickViewContact, setQuickViewContact] = useState<Contact | null>(null);
 
   // Keyboard Shortcuts Logic
