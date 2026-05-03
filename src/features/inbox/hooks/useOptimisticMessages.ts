@@ -14,6 +14,13 @@ export interface OptimisticMessage extends Message {
 
 export function useOptimisticMessages() {
   const [pending, setPending] = useState<Record<string, OptimisticMessage>>({});
+  
+  // Use a ref to store the latest pending state for non-reactive logic if needed,
+  // but we prefer state for UI reactivity.
+  const pendingRef = useRef<Record<string, OptimisticMessage>>({});
+  useEffect(() => {
+    pendingRef.current = pending;
+  }, [pending]);
 
   const createOptimistic = useCallback(
     (params: {
@@ -107,9 +114,7 @@ export function useOptimisticMessages() {
         }
       }
 
-      // Instead of scheduling, we just return the filtered list.
-      // The actual removal from state should be triggered by the caller when they detect
-      // that mergeWithReal removed something, or we can use a cleanup effect.
+      // NO SETTIMEOUT HERE - IT BREAKS TESTS
       
       if (stillPending.length === 0) return realMessages;
 
@@ -120,13 +125,18 @@ export function useOptimisticMessages() {
     [pending],
   );
 
-  // Manual cleanup for confirmed/stale items to avoid infinite loops during render
   const cleanup = useCallback((ids: string[]) => {
     if (ids.length === 0) return;
     setPending(prev => {
       const next = { ...prev };
-      ids.forEach(id => delete next[id]);
-      return next;
+      let changed = false;
+      ids.forEach(id => {
+        if (next[id]) {
+          delete next[id];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
     });
   }, []);
 
@@ -137,5 +147,6 @@ export function useOptimisticMessages() {
     mergeWithReal,
     cleanup,
     pendingCount: Object.keys(pending).length,
+    pending, // exposed for testing
   };
 }
