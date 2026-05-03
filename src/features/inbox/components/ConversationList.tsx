@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -68,6 +69,7 @@ export function ConversationList({
   const [filter, setFilter] = useState('all');
   const [slaSettingsThreadId, setSlaSettingsThreadId] = useState<string | null>(null);
   const [isSlaDialogOpen, setIsSlaDialogOpen] = useState(false);
+  const parentRef = useRef<HTMLDivElement>(null);
 
   // Batch CRM lookup: collect all phones, make 1 single RPC call
   const allPhones = useMemo(
@@ -97,6 +99,13 @@ export function ConversationList({
     }
     return c;
   }, [conversations]);
+
+  const virtualizer = useVirtualizer({
+    count: filteredConversations.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 73, // 72px item + 1px border
+    overscan: 10,
+  });
 
   return (
     <div className="flex flex-col h-full bg-[#111b21] border-r border-[#222d34]">
@@ -147,7 +156,7 @@ export function ConversationList({
 
 
       {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto scrollbar-none" role="listbox" aria-label="Lista de conversas">
+      <div ref={parentRef} className="flex-1 overflow-y-auto scrollbar-none" role="listbox" aria-label="Lista de conversas">
         {filteredConversations.length === 0 ? (
           <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
@@ -161,12 +170,30 @@ export function ConversationList({
             </div>
           </div>
         ) : (
-          <div className="p-0 space-y-0">
-            {filteredConversations.map((conversation) => {
+          <div 
+            style={{ 
+              height: `${virtualizer.getTotalSize()}px`, 
+              width: '100%', 
+              position: 'relative' 
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualRow) => {
+              const conversation = filteredConversations[virtualRow.index];
               const isSelected = selectedId === conversation.id;
 
               return (
-                <div key={conversation.id} className="p-0">
+                <div 
+                  key={virtualRow.key} 
+                  className="p-0"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
                   <ConversationContextMenu
                     conversationId={conversation.id}
                     contactName={conversation.contact.name}
@@ -179,13 +206,12 @@ export function ConversationList({
                     onClick={() => onSelect(conversation)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(conversation); } }}
                     className={cn(
-                      'relative p-0 cursor-pointer transition-colors duration-200 outline-none',
+                      'relative p-0 cursor-pointer transition-colors duration-200 outline-none h-full',
                       isSelected ? 'bg-[#2a3942]' : 'hover:bg-[#202c33] bg-[#111b21]'
                     )}
                   >
-                    <div className="px-3">
-                      <div className="flex items-center gap-3 py-3 border-b border-[#222d34]">
-
+                    <div className="px-3 h-full">
+                      <div className="flex items-center gap-3 py-3 border-b border-[#222d34] h-full">
                         <div className="relative flex-shrink-0">
                           <Avatar className="w-[49px] h-[49px] ring-0">
                             <AvatarImage 
@@ -198,7 +224,6 @@ export function ConversationList({
                             </AvatarFallback>
                           </Avatar>
                         </div>
-
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
