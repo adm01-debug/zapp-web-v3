@@ -64,9 +64,9 @@ describe('GmailHealthService', () => {
 
   describe('getFailures with filtering and pagination', () => {
     const mockFailures: GmailFailure[] = [
-      { requestId: 'req-1', operation: 'LIST', resource: 'threads', timestamp: new Date(), message: 'Error 1' },
-      { requestId: 'req-2', operation: 'GET', resource: 'messages', timestamp: new Date(), message: 'Error 2' },
-      { requestId: 'test-req', operation: 'SEND', resource: 'gmail', timestamp: new Date(), message: 'Error 3' },
+      { requestId: 'req-1', operation: 'LIST', resource: 'threads', timestamp: new Date().toISOString(), message: 'Error 1' },
+      { requestId: 'req-2', operation: 'GET', resource: 'messages', timestamp: new Date().toISOString(), message: 'Error 2' },
+      { requestId: 'test-req', operation: 'SEND', resource: 'gmail', timestamp: new Date().toISOString(), message: 'Error 3' },
     ];
 
     beforeEach(() => {

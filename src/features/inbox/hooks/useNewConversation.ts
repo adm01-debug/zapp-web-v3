@@ -75,9 +75,9 @@ export function useNewConversation(
           name: newName.trim() || cleanedNewPhone, phone: cleanedNewPhone,
           whatsapp_connection_id: selectedConnection || null,
         }).select('id').single();
-        if (error) {
-          if (error.code === '23505') { toast.error('Já existe um contato com este número de telefone.'); setIsSending(false); return; }
-          throw error;
+        if (newContactErr) {
+          if ((newContactErr as any).code === '23505') { toast.error('Já existe um contato com este número de telefone.'); setIsSending(false); return; }
+          throw newContactErr;
         }
         contactId = newContact.id;
         await supabase.functions.invoke('batch-fetch-avatars');

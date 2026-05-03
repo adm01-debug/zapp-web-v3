@@ -99,7 +99,7 @@ export function useContactSearch(options: ContactSearchOptions = {}) {
 
         if (error) {
           // Fallback: direct ilike search
-          const { data: fallback , error: fallbackErr } = await supabase
+          const { data: fallback , error: fallbackErr } = await (supabase as any)
             .from('evolution_contacts')
             .select('id,remote_jid,phone_number,full_name,push_name,email,company,lead_status,lead_score,tags')
             .is('deleted_at', null)

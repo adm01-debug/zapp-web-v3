@@ -80,7 +80,7 @@ export function useCreateTeamConversation() {
       }
 
       const { data: conv, error: convErr } = await supabase.from('team_conversations').insert({ type, name: name || null, created_by: profile.id }).select().single();
-      if (error) throw error;
+      if (convErr) throw convErr;
       const allMembers = [profile.id, ...memberIds.filter(id => id !== profile.id)];
       const { error: memError } = await supabase.from('team_conversation_members').insert(allMembers.map(pid => ({ conversation_id: conv.id, profile_id: pid })));
       if (memError) throw memError;

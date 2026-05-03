@@ -85,7 +85,7 @@ export function useWarRoomData() {
         .from('queues')
         .select('id, name, color, is_active')
         .eq('is_active', true);
-      if (error) throw error;
+      if (dbQueuesErr) throw dbQueuesErr;
 
       const { data: contacts } = await dbFrom('contacts')
         .select('queue_id, assigned_to');
