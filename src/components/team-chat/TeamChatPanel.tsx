@@ -178,6 +178,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                       messageId={msg.id}
                       reactions={aggregate(msg.id)}
                       isMine={isMine}
+                      isToggling={isToggling}
                       onToggle={(emoji) => toggleReaction({ messageId: msg.id, emoji })}
                     />
                   </div>
