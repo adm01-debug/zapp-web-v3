@@ -11,7 +11,7 @@ import { AudioRecorder } from '@/features/inbox/components/AudioRecorder';
 import { FileUploader, FileUploaderRef } from '@/features/inbox/components/FileUploader';
 import { ExternalProduct } from '@/hooks/useExternalCatalog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Send, Smile, Plus } from 'lucide-react';
+import { Send, Smile, Plus, Loader2 } from 'lucide-react';
 import { AIEnhanceButton } from './AIEnhanceButton';
 import { InputExtraTools } from './InputExtraTools';
 import { toast } from '@/hooks/use-toast';
@@ -51,6 +51,8 @@ interface ChatMessageInputProps {
   onTypingStart: () => void;
   onTypingStop: () => void;
   onExternalFiles?: (files: File[]) => void;
+  isSending?: boolean;
+  sendProgress?: number;
 }
 
 export interface ChatMessageInputRef {
@@ -65,6 +67,7 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
   onQuickReply, onRecordToggle, onAudioSend, onAudioCancel,
   onOpenInteractiveBuilder, onOpenSchedule, onOpenLocationPicker,
   onSendProduct, onTypingStart, onTypingStop,
+  isSending = false, sendProgress = 0,
 }, ref) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileUploaderRef = useRef<FileUploaderRef>(null);
@@ -116,6 +119,30 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
         {replyToMessage && <ReplyPreview message={replyToMessage} onCancel={onCancelReply} />}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {isSending && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-1.5 bg-primary/5 border-t border-primary/10"
+          >
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <span className="text-[10px] font-medium text-primary uppercase tracking-wider">Enviando...</span>
+              <span className="text-[10px] font-bold text-primary">{Math.round(sendProgress)}%</span>
+            </div>
+            <div className="h-1 w-full bg-primary/10 rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-primary"
+                initial={{ width: 0 }}
+                animate={{ width: `${sendProgress}%` }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("glass-strong border-t border-border/50", isMobile ? "p-2 safe-area-bottom" : "p-4")}>
         <div className="flex items-end gap-1">
           <FileUploader ref={fileUploaderRef} instanceName={contactId} recipientNumber={contactPhone} contactId={contactId} connectionId={undefined}
@@ -142,8 +169,9 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
             <SlashCommands inputValue={inputValue} onSelectCommand={onSlashCommand} onClose={onCloseSlashCommands} isOpen={showSlashCommands} />
             <Textarea ref={textareaRef} value={inputValue} onChange={handleInputChange} onKeyDown={handleKeyDown} onBlur={onTypingStop}
               placeholder={replyToMessage ? "Digite sua resposta..." : isMobile ? "Mensagem..." : "Digite / para comandos... (Shift+Enter para nova linha)"}
-              className={cn("min-h-[40px] max-h-[120px] resize-none pr-10 glass border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all", isMobile ? "py-2.5 text-[16px] rounded-2xl leading-snug" : "py-2.5")}
+              className={cn("min-h-[40px] max-h-[120px] resize-none pr-10 glass border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all", isMobile ? "py-2.5 text-[16px] rounded-2xl leading-snug" : "py-2.5", isSending && "opacity-50 pointer-events-none")}
               rows={1}
+              disabled={isSending}
             />
             <div className="absolute right-1 top-1.5 flex items-center gap-0.5">
               <AIEnhanceButton inputValue={inputValue} onInputChange={onInputChange} contactName={contactName} />
@@ -158,10 +186,10 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
           </div>
 
           <div className="flex-shrink-0">
-            <Button onClick={onSend} disabled={!inputValue.trim()} size="icon"
+            <Button onClick={onSend} disabled={!inputValue.trim() || isSending} size="icon"
               className={cn("text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all disabled:opacity-50 touch-manipulation active:scale-95", isMobile ? "w-10 h-10 rounded-full" : "w-9 h-9")}
               style={{ background: 'var(--gradient-primary)' }} aria-label="Enviar mensagem">
-              <Send className="w-4 h-4" />
+              {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </div>
         </div>
