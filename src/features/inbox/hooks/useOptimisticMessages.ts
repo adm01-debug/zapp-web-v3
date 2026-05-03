@@ -123,9 +123,15 @@ export function useOptimisticMessages() {
           return false;
         }
 
-        // Remove very old optimistic messages (>30s) — they're stale
+        // Also check if an external_id match already exists in realMessages
+        if (opt.external_id && realMessages.some(rm => rm.external_id === opt.external_id)) {
+          pendingRef.current.delete(opt.id);
+          return false;
+        }
+
+        // Remove very old optimistic messages (>60s) — they're stale
         const age = Date.now() - opt.timestamp.getTime();
-        if (age > 30000) {
+        if (age > 60000) {
           pendingRef.current.delete(opt.id);
           return false;
         }
