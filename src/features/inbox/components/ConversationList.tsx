@@ -213,7 +213,7 @@ export function ConversationList({
                     <div className="px-3 h-full">
                       <div className="flex items-center gap-3 py-3 border-b border-[#222d34] h-full">
                         <div className="relative flex-shrink-0">
-                          <Avatar className="w-[59px] h-[59px] ring-0">
+                          <Avatar className="w-[49px] h-[49px] ring-0">
                             <AvatarImage 
                               src={conversation.contact.avatar} 
                               referrerPolicy="no-referrer" 
