@@ -220,10 +220,10 @@ export default function AdminFailedMessagesPage() {
         open={ui.guidedReprocessOpen}
         onOpenChange={ui.setGuidedReprocessOpen}
         selectedRows={sortedRows.filter(r => ui.selectedIds.has(r.id))}
-        onConfirm={async (ids) => {
-          api.bulkRetry.mutate(ids);
-          return 0; // matching expected type if needed, or simply mutate and return
+        onConfirm={async (ids, reason) => {
+          return api.bulkRetry.mutateAsync({ ids, reason });
         }}
+        isPending={api.bulkRetry.isPending}
       />
       <FailedMessageDetailsSheet
         selected={ui.selected}
