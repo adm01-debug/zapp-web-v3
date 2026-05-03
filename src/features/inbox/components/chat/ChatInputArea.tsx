@@ -300,22 +300,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px] font-medium">Enviar</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon"
-                  className={cn(
-                    "shrink-0 touch-manipulation active:scale-90 rounded-full transition-all duration-300 shadow-md hover:shadow-lg",
-                    logic.isMobile ? "w-11 h-11" : "w-10 h-10",
-                    isRecordingAudio 
-                      ? "bg-destructive text-destructive-foreground shadow-destructive/20 hover:bg-destructive/90" 
-                      : "bg-muted text-muted-foreground hover:text-primary hover:bg-primary/5 shadow-none border border-border/20"
-                  )}
-                  onClick={onRecordToggle} aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}>
-                  <Mic className={cn("w-4.5 h-4.5", isRecordingAudio && "animate-pulse")} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] font-medium">Áudio</TooltipContent>
-            </Tooltip>
+            {/* Mic button handled by send button logic to mimic WhatsApp toggle */}
           </div>
 
           {!logic.isMobile && (
