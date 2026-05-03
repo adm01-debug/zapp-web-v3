@@ -5,7 +5,8 @@
  *
  * Renderiza um par ✓ (recebida) ou ✓✓ azul (lida pelo agente).
  */
-import { memo } from 'react';
+import { memo, useEffect, useRef } from 'react';
+import { log } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import { MessageStatusIcon } from './messageUtils';
 import { MessageStatusPanel } from './MessageStatusPanel';
@@ -33,6 +34,14 @@ export const MessageReadStatus = memo(function MessageReadStatus({
   const { showLabel } = useInboxStatusPref();
   const showTextLabel = forceLabel || showLabel;
   const reachedRead = !!message.contact_read_at;
+  const wasReadRef = useRef(reachedRead);
+
+  useEffect(() => {
+    if (reachedRead && !wasReadRef.current) {
+      log.info(`[Read Status] Inbound msg ${message.id.slice(0, 8)} marked as READ by agent`);
+      wasReadRef.current = true;
+    }
+  }, [message.id, reachedRead]);
 
   return (
     <MessageStatusPanel message={message}>

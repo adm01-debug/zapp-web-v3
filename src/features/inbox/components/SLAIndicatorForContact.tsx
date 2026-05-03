@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { log } from '@/lib/logger';
 import { SLAIndicator } from './SLAIndicator';
 import { useApplicableSLA, ApplicableSLA, SLAMatchedLevel } from '@/features/sla';
 import { Conversation } from '@/types/chat';
@@ -101,6 +103,14 @@ export function SLAIndicatorForContact({ conversation, compact, className }: SLA
     queueId: conversation.queue?.id ?? null,
     agentId: conversation.assignedTo?.id ?? null,
   });
+
+  const lastSlaRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (applicable?.ruleName && applicable.ruleName !== lastSlaRef.current) {
+      log.info(`[SLA Match] Conv ${conversation.id.slice(0, 8)} matched rule: ${applicable.ruleName} (${applicable.matchedLevel})`);
+      lastSlaRef.current = applicable.ruleName;
+    }
+  }, [conversation.id, applicable?.ruleName, applicable?.matchedLevel]);
 
   const fallbackFr = conversation.priority === 'high' ? 2 : 5;
   const fallbackRes = conversation.priority === 'high' ? 30 : 60;
