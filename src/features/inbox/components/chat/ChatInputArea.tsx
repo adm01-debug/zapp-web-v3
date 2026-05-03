@@ -233,7 +233,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon"
                 className={cn(
-                  "text-muted-foreground/70 hover:text-muted-foreground shrink-0 transition-all rounded-full active:scale-90", 
+                  "text-[#8696a0] dark:text-[#8696a0] hover:text-muted-foreground shrink-0 transition-all rounded-full active:scale-90", 
                   logic.isMobile ? "w-10 h-10" : "w-10 h-10"
                 )}
                 aria-label="Mais opções de mensagem">
