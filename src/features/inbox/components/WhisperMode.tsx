@@ -25,6 +25,8 @@ interface WhisperMessage {
   sender_name?: string;
   is_read: boolean;
   created_at: string;
+  whisper_thread_id?: string;
+  reply_count?: number;
 }
 
 export function WhisperMode({ contactId, targetAgentId, className, defaultExpanded = false }: WhisperModeProps) {
