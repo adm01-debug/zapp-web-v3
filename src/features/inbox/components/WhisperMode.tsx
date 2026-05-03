@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/features/auth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 interface WhisperModeProps {
   contactId: string;
   targetAgentId?: string;
   className?: string;
+  defaultExpanded?: boolean;
 }
 
 interface WhisperMessage {
@@ -24,11 +26,12 @@ interface WhisperMessage {
   created_at: string;
 }
 
-export function WhisperMode({ contactId, targetAgentId, className }: WhisperModeProps) {
+export function WhisperMode({ contactId, targetAgentId, className, defaultExpanded = false }: WhisperModeProps) {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const isSupervisor = profile?.role === 'admin' || profile?.role === 'supervisor';
 
@@ -45,9 +48,8 @@ export function WhisperMode({ contactId, targetAgentId, className }: WhisperMode
       
       if (!data) return [];
 
-      // Get sender names
       const senderIds = [...new Set(data.map(w => w.sender_id))];
-      const { data: profiles , error: profilesErr } = await supabase
+      const { data: profiles } = await supabase
         .from('profiles')
         .select('id, name')
         .in('id', senderIds);
@@ -61,6 +63,13 @@ export function WhisperMode({ contactId, targetAgentId, className }: WhisperMode
     },
     refetchInterval: 10000,
   });
+
+  // Focus input when expanded
+  useEffect(() => {
+    if (isExpanded) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isExpanded]);
 
   // Realtime subscription
   useEffect(() => {
@@ -83,32 +92,43 @@ export function WhisperMode({ contactId, targetAgentId, className }: WhisperMode
   // Mark as read when viewing
   useEffect(() => {
     if (isExpanded && whispers.some(w => !w.is_read)) {
-      supabase
-        .from('whisper_messages')
-        .update({ is_read: true })
-        .eq('contact_id', contactId)
-        .eq('is_read', false)
-        .then();
+      const markAsRead = async () => {
+        const { error } = await supabase
+          .from('whisper_messages')
+          .update({ is_read: true })
+          .eq('contact_id', contactId)
+          .eq('is_read', false);
+        
+        if (!error) {
+          queryClient.setQueryData(['whispers', contactId], (old: WhisperMessage[] | undefined) => 
+            old?.map(w => ({ ...w, is_read: true }))
+          );
+        }
+      };
+      markAsRead();
     }
-  }, [isExpanded, whispers, contactId]);
+  }, [isExpanded, whispers, contactId, queryClient]);
 
   const unreadCount = whispers.filter(w => !w.is_read).length;
 
   const sendWhisper = async () => {
     if (!message.trim() || !profile?.id) return;
 
-    const agentId = targetAgentId || '';
-    if (!agentId) return;
+    const agentId = targetAgentId || profile.id;
 
-    await supabase.from('whisper_messages').insert({
+    const { error } = await supabase.from('whisper_messages').insert({
       contact_id: contactId,
       sender_id: profile.id,
       target_agent_id: agentId,
       content: message.trim(),
     });
 
-    setMessage('');
-    queryClient.invalidateQueries({ queryKey: ['whispers', contactId] });
+    if (error) {
+      toast({ title: 'Erro ao enviar sussurro', description: error.message, variant: 'destructive' });
+    } else {
+      setMessage('');
+      queryClient.invalidateQueries({ queryKey: ['whispers', contactId] });
+    }
   };
 
   if (!isSupervisor && whispers.length === 0) return null;
