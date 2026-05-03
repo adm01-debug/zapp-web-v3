@@ -164,6 +164,13 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
   // Stub de CRM batch
   const getCRMData = (_phone: string) => null;
 
+  const handleContactClick = useCallback((contactId: string) => {
+    const contact = contactsForContent.find(c => c.id === contactId);
+    if (contact) {
+      setQuickViewContact(contact);
+    }
+  }, [contactsForContent]);
+
   const contactsForContent: Contact[] = useMemo(
     () => (contacts as Contact[]) ?? [],
     [contacts],
