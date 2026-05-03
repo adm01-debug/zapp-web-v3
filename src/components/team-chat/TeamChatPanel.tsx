@@ -53,11 +53,13 @@ interface Props { conversation: TeamConversation; onBack: () => void; onToggleDe
 
 export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetails }: Props) {
   const s = useTeamChatPanel(conversation);
+  const { profile: liveProfile } = useAuth(); // Use useAuth for real-time profile updates
+  
   const isDeptMember = useMemo(() => {
     if (conversation.type !== 'department') return true;
-    if (s.profile?.role === 'admin') return true;
-    return s.profile?.department_id === conversation.department_id;
-  }, [conversation, s.profile]);
+    if (liveProfile?.role === 'admin') return true;
+    return liveProfile?.department_id === conversation.department_id;
+  }, [conversation, liveProfile]);
 
   useEffect(() => {
     if (s.isNearBottomRef.current && s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight;
