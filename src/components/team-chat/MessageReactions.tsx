@@ -33,6 +33,8 @@ export function MessageReactions({ messageId, reactions, isMine, isToggling, onT
       className={cn('flex items-center gap-1 flex-wrap mt-1', isMine ? 'justify-end' : 'justify-start')}
       role="group"
       aria-label="Reações da mensagem"
+      data-is-toggling={isToggling}
+      data-testid={`reactions-container-${messageId}`}
     >
       {reactions.map((r) => (
         <button
