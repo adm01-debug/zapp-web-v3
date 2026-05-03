@@ -105,6 +105,7 @@ export function useReactionMutations(
       
       toast.error(`Erro ao adicionar reação: ${message}`, {
         id: `reaction-error-${messageId}`,
+        className: "bg-destructive text-destructive-foreground",
       });
     },
   });
@@ -158,6 +159,7 @@ export function useReactionMutations(
       }
       toast.error('Erro ao remover reação', {
         id: `reaction-remove-error-${messageId}`,
+        className: "bg-destructive text-destructive-foreground",
       });
     }
   });
