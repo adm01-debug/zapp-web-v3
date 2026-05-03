@@ -153,8 +153,8 @@ export function ChatHeader({
             <BusinessHoursBadge connectionId={conversation.contact.whatsapp_connection_id} />
             <AnalysisBadges contactId={conversation.contact.id} compact />
           </div>
-          <p className="text-xs text-muted-foreground">
-            {isContactTyping ? <TypingIndicatorCompact isVisible={true} /> : conversation.contact.phone}
+          <p className="text-[11px] font-light tracking-tight text-muted-foreground/60 flex items-center gap-1.5">
+            {isContactTyping ? <TypingIndicatorCompact isVisible={true} className="text-primary" /> : <span>{conversation.contact.phone}</span>}
           </p>
           <QueuePositionNotifier contactId={conversation.contact.id} className="mt-0.5" />
         </div>
