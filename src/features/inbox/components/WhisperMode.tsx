@@ -150,6 +150,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
       sender_id: profile.id,
       target_agent_id: agentId,
       content: message.trim(),
+      whisper_thread_id: activeThreadId,
     });
 
     if (error) {
