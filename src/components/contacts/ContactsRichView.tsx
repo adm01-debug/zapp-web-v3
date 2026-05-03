@@ -354,7 +354,7 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
             search={searchInput}
             activeFiltersCount={activeFiltersCount}
             onToggleSelect={state.handleToggleSelect}
-            onContactClick={openContactChat}
+            onContactClick={handleContactClick}
             onEdit={(c) => openEditDialog(c as never)}
             onDelete={(c) => setDeleteTarget(c as never)}
             onSelectIds={crud.setSelectedIds}
