@@ -147,6 +147,7 @@ export function RealtimeInboxView() {
                       onCancelLoadOlder={inbox.cancelLoadOlderMessages}
                       loadingOlder={inbox.loadingOlderMessages}
                       hasMoreOlder={inbox.hasMoreMessages}
+                      whisperCount={inbox.whisperCount}
                       showDetails={isMobile ? false : inbox.showDetails}
                       onToggleDetails={() => inbox.setShowDetails(!inbox.showDetails)}
                       initialHighlightMessageId={inbox.pendingMessageId}
