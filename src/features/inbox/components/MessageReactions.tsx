@@ -216,13 +216,17 @@ export function QuickReactionBar({
   // but standard hover + popover already provides a baseline. 
   // For mobile "tap to open", the Popover trigger handles it.
 
-  return (
-    <div className={cn(
-      'absolute -top-9 flex items-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-20',
-      'group-focus-within:opacity-100', // Keyboard accessibility
-      showPicker && 'opacity-100',
-      isSent ? 'right-0' : 'left-0'
-    )}>
+    <div 
+      className={cn(
+        'absolute -top-9 flex items-center transition-all duration-200 z-20',
+        'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100', // Keyboard/Hover
+        'md:opacity-0', // Default hidden on desktop unless hover
+        'max-md:opacity-100 max-md:pointer-events-auto', // Always reachable on mobile? Maybe too noisy.
+        showPicker && 'opacity-100',
+        isSent ? 'right-0' : 'left-0'
+      )}
+      onClick={(e) => e.stopPropagation()} // Prevent bubble click
+    >
       <motion.div
         initial={{ opacity: 0, y: 4, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
