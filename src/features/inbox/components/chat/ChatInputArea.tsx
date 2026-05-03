@@ -203,9 +203,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-4 py-1.5 bg-[#f0f2f5] dark:bg-[#111b21] relative transition-all duration-500", 
+        "px-4 py-2 bg-[#f0f2f5] dark:bg-[#202c33] relative transition-all duration-500", 
         isWhisper && "bg-amber-50/40 dark:bg-amber-950/10 border-t border-amber-200/30",
-        logic.isMobile && "px-2 py-1.5 safe-area-bottom"
+        logic.isMobile && "px-2 py-2 safe-area-bottom"
       )}>
         <AnimatePresence>
           {isRecordingAudio && (
@@ -233,7 +233,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon"
                 className={cn(
-                  "text-muted-foreground/70 hover:text-muted-foreground shrink-0 transition-all rounded-full active:scale-90", 
+                  "text-[#8696a0] dark:text-[#8696a0] hover:text-muted-foreground shrink-0 transition-all rounded-full active:scale-90", 
                   logic.isMobile ? "w-10 h-10" : "w-10 h-10"
                 )}
                 aria-label="Mais opções de mensagem">
@@ -262,10 +262,10 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Mensagem... (/ para comandos, @ para mencionar)"}
               rows={1}
               className={cn(
-                "w-full bg-background dark:bg-[#2a3933]/10 border-none rounded-lg outline-none text-[15px] font-normal tracking-tight text-foreground shadow-none",
-                "placeholder:text-muted-foreground/60 placeholder:font-normal resize-none transition-all duration-200",
-                "focus:bg-background focus:ring-0",
-                logic.isMobile ? "px-3 py-2.5 text-[16px] min-h-[40px] max-h-[200px]" : "px-3 py-2 min-h-[40px] max-h-[200px]",
+                "w-full bg-white dark:bg-[#2a3942] border-none rounded-lg outline-none text-[15px] font-normal tracking-tight text-foreground shadow-none",
+                "placeholder:text-[#8696a0] dark:placeholder:text-[#8696a0] placeholder:font-normal resize-none transition-all duration-200",
+                "focus:bg-white dark:focus:bg-[#2a3942] focus:ring-0",
+                logic.isMobile ? "px-3 py-2.5 text-[16px] min-h-[42px] max-h-[200px]" : "px-3 py-2.5 min-h-[42px] max-h-[200px]",
                 isWhisper && "bg-amber-500/10",
                 logic.isOverLimit && "text-destructive",
                 isSending && "opacity-60 pointer-events-none"
@@ -294,7 +294,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     "rounded-full shrink-0 touch-manipulation active:scale-90 transition-all duration-200",
                     isRecordingAudio 
                       ? "bg-destructive text-white hover:bg-destructive/90 shadow-lg" 
-                      : "text-muted-foreground/70 hover:text-muted-foreground",
+                      : "text-[#8696a0] dark:text-[#8696a0] hover:text-muted-foreground",
                     logic.isMobile ? "w-10 h-10" : "w-10 h-10",
                     logic.sendAnimation && "motion-safe:animate-bounce"
                   )}

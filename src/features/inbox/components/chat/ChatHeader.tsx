@@ -77,7 +77,7 @@ export const ChatHeader = memo(function ChatHeader({
 
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className={cn(
-      "flex items-center justify-between px-4 sm:px-6 border-b border-border/5 bg-[#f0f2f5] dark:bg-[#111b21] sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+      "flex items-center justify-between px-4 sm:px-4 border-b border-border/5 bg-[#f0f2f5] dark:bg-[#202c33] sticky top-0 z-30 shadow-none h-[60px]",
       density === 'comfortable' ? 'py-1.5' : 'py-1'
     )}>
       <div className="flex items-center gap-3">
@@ -86,7 +86,7 @@ export const ChatHeader = memo(function ChatHeader({
             <ArrowLeft className="w-4 h-4" />
           </Button>
         )}
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <motion.div>
           <Avatar className="w-10 h-10 ring-0 shadow-none">
             <AvatarImage 
               src={avatarUrl || undefined} 
@@ -103,12 +103,12 @@ export const ChatHeader = memo(function ChatHeader({
         </motion.div>
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
-            <h3 className="font-display font-bold text-[15px] tracking-tight text-foreground/90 truncate max-w-[180px] sm:max-w-md">
+            <h3 className="font-sans font-normal text-[16px] text-[#e9edef] truncate max-w-[180px] sm:max-w-md">
               {conversation.contact.name}
             </h3>
             <div className="flex-shrink-0 flex items-center gap-1">
               <SLAIndicatorForContact conversation={conversation} />
-              <Badge variant="outline" className="text-[9px] h-4 px-1 capitalize border border-border/20 bg-muted/20 text-muted-foreground whitespace-nowrap">
+              <Badge variant="outline" className="text-[10px] h-4 px-1.5 capitalize border-none bg-[#202c33] text-[#8696a0] whitespace-nowrap rounded-sm">
                 {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
               </Badge>
             </div>
@@ -117,7 +117,7 @@ export const ChatHeader = memo(function ChatHeader({
             {isContactTyping ? (
               <span className="text-[12px] text-[#00a884] dark:text-[#00a884] font-normal">digitando...</span>
             ) : (
-              <span className="text-[12px] text-[#667781] dark:text-[#8696a0] font-normal">{conversation.contact.phone}</span>
+              <span className="text-[12px] text-[#667781] dark:text-[#8696a0] font-normal truncate max-w-[200px]">clique aqui para dados do contato</span>
             )}
           </div>
         </div>
@@ -176,7 +176,7 @@ export const ChatHeader = memo(function ChatHeader({
         ].map(({ icon: Icon, label, onClick }) => (
           <Tooltip key={label}>
             <TooltipTrigger asChild>
-              <motion.div whileHover={{ scale: 1.1, y: -1 }} whileTap={{ scale: 0.9 }}>
+              <motion.div>
                 <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full text-[#667781] dark:text-[#8696a0] hover:bg-transparent transition-all" onClick={onClick} aria-label={label}>
                   <Icon className="w-4 h-4" />
                 </Button>
@@ -188,7 +188,7 @@ export const ChatHeader = memo(function ChatHeader({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <motion.div>
               <Button variant="ghost" size="icon" className={cn("text-muted-foreground hover:text-primary hover:bg-primary/10", showAIAssistant && "text-primary bg-primary/10")} onClick={onToggleAIAssistant} aria-label="Visão">
                 <VisionIcon className="w-4 h-4" />
               </Button>
@@ -199,7 +199,7 @@ export const ChatHeader = memo(function ChatHeader({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <motion.div>
               <Button variant="ghost" size="icon" className={cn("text-muted-foreground hover:text-primary hover:bg-primary/10 relative", showDetails && "text-primary bg-primary/10")} onClick={onToggleDetails} aria-label="Detalhes do contato">
                 <Info className="w-4 h-4" />
                 {!showDetails && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary animate-pulse" />}
@@ -212,7 +212,7 @@ export const ChatHeader = memo(function ChatHeader({
         <VoiceSelector selectedVoiceId={voiceId} onVoiceChange={onVoiceChange} />
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <motion.div>
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -231,7 +231,7 @@ export const ChatHeader = memo(function ChatHeader({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <motion.div>
               <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/10" aria-label="Mais opções">
                 <MoreVertical className="w-4 h-4" />
               </Button>
