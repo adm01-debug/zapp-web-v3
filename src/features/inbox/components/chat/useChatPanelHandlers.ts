@@ -115,14 +115,9 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
 
     try {
       // DEBUG: Simulação de latência e falha
-      const simulateLatency = typeof localStorage !== 'undefined' && localStorage.getItem('ZAPP_CHAT_SIMULATE_LATENCY') === 'true';
-      const simulateFailure = typeof localStorage !== 'undefined' && localStorage.getItem('ZAPP_CHAT_SIMULATE_FAILURE') === 'true';
-      
-      if (simulateLatency) {
-        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
-      }
-      
-      if (simulateFailure && Math.random() > 0.5) {
+      const { simulateLatency, shouldSimulateFailure } = await import('@/features/inbox/utils/simulateChatLatency');
+      await simulateLatency();
+      if (shouldSimulateFailure()) {
         throw new Error('Falha simulada no envio via WhatsApp API (Debug Mode)');
       }
 
