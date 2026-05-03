@@ -219,7 +219,7 @@ export function MessageBubble({
               {message.type === 'document' && message.mediaUrl && <div className="mb-1.5"><DocumentPreview url={message.mediaUrl} fileName={message.content || 'documento'} isSent={isSent} /></div>}
               {message.type === 'location' && message.location && <LocationMessageDisplay location={message.location} isSent={isSent} />}
               {message.type === 'sticker' && message.mediaUrl && <div className="mb-1 group/sticker relative"><img src={message.mediaUrl} alt="Sticker" className="max-w-[160px] max-h-[160px] object-contain drop-shadow-lg" loading="lazy" /></div>}
-              {!showUnsupportedFallback && message.content && !['audio','location','video','document','sticker'].includes(message.type) && <p className="text-[13.5px] whitespace-pre-wrap leading-[1.45]">{searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}</p>}
+              {!showUnsupportedFallback && message.content && !['audio','location','video','document','sticker'].includes(message.type) && <p className="text-[14.2px] whitespace-pre-wrap leading-[1.45] tracking-tight">{searchQuery && highlightedMessageIds?.has(message.id) ? <HighlightedText text={message.content} query={searchQuery} /> : message.content}</p>}
               <div className={cn(
                 'flex items-center justify-end gap-1 mt-1 -mb-0.5', 
                 (message.type === 'image' || message.type === 'video') && !message.content 
