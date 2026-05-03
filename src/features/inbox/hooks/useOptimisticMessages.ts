@@ -41,11 +41,14 @@ export function useOptimisticMessages() {
       content: string;
       messageType?: string;
       replyToId?: string | null;
+      mediaUrl?: string | null;
+      contactAvatar?: string | null;
     }): OptimisticMessage => {
       optimisticCounter++;
-      const tempId = `_optimistic_${Date.now()}_${optimisticCounter}`;
+      const now = new Date();
+      const tempId = `optimistic:${now.getTime()}:${optimisticCounter}`;
 
-      const optimistic = {
+      const optimistic: OptimisticMessage = {
         id: tempId,
         _optimistic: true,
         contact_id: params.contactId,
@@ -53,14 +56,20 @@ export function useOptimisticMessages() {
         message_type: (params.messageType || 'text') as Message['message_type'],
         sender: 'agent',
         status: 'sending',
-        timestamp: new Date(),
+        timestamp: now,
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+        status_updated_at: now.toISOString(),
         external_id: null,
-        media_url: null,
+        media_url: params.mediaUrl || null,
         quoted_message_id: params.replyToId || null,
+        contactAvatar: params.contactAvatar || null,
+        is_read: true,
+        is_deleted: false,
       };
 
-      pendingRef.current.set(tempId, optimistic as unknown as OptimisticMessage);
-      return optimistic as unknown as OptimisticMessage;
+      pendingRef.current.set(tempId, optimistic);
+      return optimistic;
     },
     [],
   );
