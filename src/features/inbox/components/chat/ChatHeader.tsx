@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
-import { Conversation } from '@/types/chat';
+import { Conversation, Message } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
