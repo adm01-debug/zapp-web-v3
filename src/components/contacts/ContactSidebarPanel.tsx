@@ -36,6 +36,18 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
   const initials = displayName.split(' ').filter(Boolean).slice(0, 2).map((n) => n[0].toUpperCase()).join('');
   const hasConsent = !!contact.lgpd_consent_at && !contact.lgpd_opt_out_at;
 
+  // Provide defaults for potentially missing fields to avoid crashes when passed partial data
+  const safeContact = {
+    tags: [],
+    lead_status: 'novo',
+    lead_score: 0,
+    version: 1,
+    created_at: new Date().toISOString(),
+    instance_name: 'default',
+    remote_jid: '',
+    ...contact
+  };
+
   return (
     <div className="h-full flex flex-col overflow-hidden" role="complementary" aria-label={`Detalhes: ${displayName}`}>
       {/* ── Contact Header ── */}
@@ -49,11 +61,11 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
             <h2 className="font-semibold text-base truncate">{displayName}</h2>
             {contact.company && <p className="text-sm text-muted-foreground truncate">{sanitizeText(contact.company)}</p>}
             <div className="flex flex-wrap gap-1 mt-1">
-              <Badge className={`text-xs ${LEAD_COLORS[contact.lead_status] ?? 'bg-gray-100 text-gray-700'}`}>
-                {LEAD_LABELS[contact.lead_status] ?? contact.lead_status}
+              <Badge className={`text-xs ${LEAD_COLORS[safeContact.lead_status] ?? 'bg-gray-100 text-gray-700'}`}>
+                {LEAD_LABELS[safeContact.lead_status] ?? safeContact.lead_status}
               </Badge>
-              {contact.lead_score > 0 && (
-                <Badge variant="outline" className="text-xs gap-0.5"><Star className="h-2.5 w-2.5" />{contact.lead_score}</Badge>
+              {safeContact.lead_score > 0 && (
+                <Badge variant="outline" className="text-xs gap-0.5"><Star className="h-2.5 w-2.5" />{safeContact.lead_score}</Badge>
               )}
               <Badge className={`text-xs ${hasConsent ? 'bg-green-100 text-green-800 border-green-300' : 'bg-amber-50 text-amber-700 border-amber-400'}`}>
                 <Shield className="h-2.5 w-2.5 mr-0.5" />{hasConsent ? 'LGPD ✓' : 'Sem consent.'}
@@ -68,16 +80,16 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
 
         {/* Contact info */}
         <div className="space-y-1.5 text-sm">
-          {contact.phone_number && <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-3.5 w-3.5 shrink-0" /><a href={`tel:${contact.phone_number}`} className="hover:text-foreground">{formatPhoneForDisplay(contact.phone_number)}</a></div>}
-          {contact.email && <div className="flex items-center gap-2 text-muted-foreground"><Mail className="h-3.5 w-3.5 shrink-0" /><a href={`mailto:${sanitizeText(contact.email)}`} className="hover:text-foreground truncate text-sm">{sanitizeText(contact.email)}</a></div>}
-          {contact.last_message_at && <div className="flex items-center gap-2 text-muted-foreground"><Clock className="h-3.5 w-3.5 shrink-0" /><span className="text-xs">Último msg: {new Date(contact.last_message_at).toLocaleDateString('pt-BR')}</span></div>}
-          {contact.total_messages > 0 && <p className="text-xs text-muted-foreground pl-6">{contact.total_messages.toLocaleString('pt-BR')} mensagens</p>}
+          {safeContact.phone_number && <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-3.5 w-3.5 shrink-0" /><a href={`tel:${safeContact.phone_number}`} className="hover:text-foreground">{formatPhoneForDisplay(safeContact.phone_number)}</a></div>}
+          {safeContact.email && <div className="flex items-center gap-2 text-muted-foreground"><Mail className="h-3.5 w-3.5 shrink-0" /><a href={`mailto:${sanitizeText(safeContact.email)}`} className="hover:text-foreground truncate text-sm">{sanitizeText(safeContact.email)}</a></div>}
+          {safeContact.last_message_at && <div className="flex items-center gap-2 text-muted-foreground"><Clock className="h-3.5 w-3.5 shrink-0" /><span className="text-xs">Último msg: {new Date(safeContact.last_message_at).toLocaleDateString('pt-BR')}</span></div>}
+          {safeContact.total_messages && safeContact.total_messages > 0 && <p className="text-xs text-muted-foreground pl-6">{safeContact.total_messages.toLocaleString('pt-BR')} mensagens</p>}
         </div>
 
         {/* Tags */}
-        {contact.tags.length > 0 && (
+        {safeContact.tags && safeContact.tags.length > 0 && (
           <div className="flex flex-wrap gap-1" role="list" aria-label="Tags">
-            {contact.tags.map((t) => <Badge key={t} variant="secondary" className="text-xs" role="listitem">{sanitizeText(t)}</Badge>)}
+            {safeContact.tags.map((t) => <Badge key={t} variant="secondary" className="text-xs" role="listitem">{sanitizeText(t)}</Badge>)}
           </div>
         )}
       </div>
@@ -95,27 +107,27 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
 
         <div className="flex-1 overflow-y-auto">
           <TabsContent value="notes" className="p-3 mt-0">
-            <ContactNotesPanel contactId={contact.id} />
+            <ContactNotesPanel contactId={safeContact.id} />
           </TabsContent>
 
           <TabsContent value="lgpd" className="p-3 mt-0">
-            <LGPDConsentManager contact={contact} onUpdated={onUpdated} readonly={readonly} />
+            <LGPDConsentManager contact={safeContact as any} onUpdated={onUpdated} readonly={readonly} />
           </TabsContent>
 
           <TabsContent value="history" className="p-3 mt-0">
-            <AuditLogPanel contactId={contact.id} maxEntries={20} />
+            <AuditLogPanel contactId={safeContact.id} maxEntries={20} />
           </TabsContent>
 
           <TabsContent value="info" className="p-3 mt-0 space-y-2 text-xs text-muted-foreground">
             <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
-              <span className="font-medium">ID:</span><span className="font-mono truncate">{contact.id.slice(0, 8)}...</span>
-              <span className="font-medium">Instância:</span><span>{sanitizeText(contact.instance_name)}</span>
-              <span className="font-medium">JID:</span><span className="font-mono truncate">{sanitizeText(contact.remote_jid)}</span>
-              <span className="font-medium">Versão:</span><span>{contact.version}</span>
-              <span className="font-medium">Criado:</span><span>{new Date(contact.created_at).toLocaleDateString('pt-BR')}</span>
-              <span className="font-medium">1º contato:</span><span>{contact.first_contact_at ? new Date(contact.first_contact_at).toLocaleDateString('pt-BR') : '—'}</span>
-              {contact.assigned_to && <><span className="font-medium">Responsável:</span><span className="truncate">{sanitizeText(contact.assigned_to)}</span></>}
-              {contact.merge_source_id && <><span className="font-medium">Origem:</span><span className="font-mono truncate text-amber-600">Mesclado</span></>}
+              <span className="font-medium">ID:</span><span className="font-mono truncate">{safeContact.id.slice(0, 8)}...</span>
+              <span className="font-medium">Instância:</span><span>{sanitizeText(safeContact.instance_name)}</span>
+              <span className="font-medium">JID:</span><span className="font-mono truncate">{sanitizeText(safeContact.remote_jid)}</span>
+              <span className="font-medium">Versão:</span><span>{safeContact.version}</span>
+              <span className="font-medium">Criado:</span><span>{new Date(safeContact.created_at).toLocaleDateString('pt-BR')}</span>
+              <span className="font-medium">1º contato:</span><span>{safeContact.first_contact_at ? new Date(safeContact.first_contact_at).toLocaleDateString('pt-BR') : '—'}</span>
+              {safeContact.assigned_to && <><span className="font-medium">Responsável:</span><span className="truncate">{sanitizeText(safeContact.assigned_to)}</span></>}
+              {safeContact.merge_source_id && <><span className="font-medium">Origem:</span><span className="font-mono truncate text-amber-600">Mesclado</span></>}
             </div>
             {/* Inline notes backup */}
             {contact.notes && (

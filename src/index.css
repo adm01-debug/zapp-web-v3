@@ -11,11 +11,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== WHATSAPP WEB TYPOGRAPHY STANDARDIZATION ===== */
-:root {
-  --font-display: 'Segoe UI', 'Helvetica Neue', Helvetica, Lucida Grande, Arial, Ubuntu, Cantarell, 'Fira Sans', sans-serif;
-  --font-sans: 'Segoe UI', 'Helvetica Neue', Helvetica, Lucida Grande, Arial, Ubuntu, Cantarell, 'Fira Sans', sans-serif;
-}
+/* Typography already handled by design tokens in styles/tokens.css */
 
 /* ===== VIEWPORT LOCK — Must be outside @layer to win specificity ===== */
 html, body, #root {

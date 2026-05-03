@@ -5,6 +5,7 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MessageCircle, Users, BarChart2, X, CheckCircle2, RotateCcw, UserCheck, MoreHorizontal } from 'lucide-react';
 import { ConversationList } from '@/components/conversations/ConversationList';
@@ -69,55 +70,83 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
         {selectedConv ? (
           <>
-            <div className="flex items-center justify-between px-4 py-3 border-b gap-2 shrink-0">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-sm truncate">
-                    {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid?.replace(/@.*$/, '') ?? 'Conversa')}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b gap-2 shrink-0 bg-background/95 backdrop-blur-sm z-10">
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar className="h-10 w-10 border border-border shrink-0">
+                  {selectedConv.contact_avatar && <AvatarImage src={selectedConv.contact_avatar} alt="" className="object-cover" />}
+                  <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
+                    {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid ?? '?').split(' ').filter(Boolean).slice(0,2).map(n => n[0].toUpperCase()).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-sm truncate leading-tight">
+                      {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid?.split('@')[0] ?? 'Conversa')}
+                    </p>
+                    {selectedConv.is_bot_active && (
+                      <Badge className="text-[10px] bg-blue-100 text-blue-700 h-4 px-1.5 border-none font-bold uppercase tracking-wider">Bot</Badge>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-tight">
+                    {formatPhoneForDisplay(selectedConv.contact_phone ?? selectedConv.remote_jid?.split('@')[0] ?? '')}
                   </p>
-                  <Badge className={`text-xs px-1.5 py-0 h-4 border ${PRIORITY_COLORS[selectedConv.priority] ?? ''}`}>
-                    {selectedConv.priority}
-                  </Badge>
-                  {selectedConv.is_bot_active && <Badge className="text-xs bg-blue-100 text-blue-700 h-4 px-1.5">Bot</Badge>}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {formatPhoneForDisplay(selectedConv.contact_phone ?? selectedConv.remote_jid?.replace(/@.*$/, '') ?? '')}
-                </p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button variant={showContact ? 'default' : 'ghost'} size="icon" className="h-8 w-8"
+                <Button variant={showContact ? 'default' : 'ghost'} size="icon" className="h-9 w-9 rounded-full"
                   onClick={() => setShowContact((v) => !v)} aria-pressed={showContact} title="CRM 360°">
-                  <Users className="h-4 w-4" />
+                  <Users className="h-4.5 w-4.5" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full"><MoreHorizontal className="h-4.5 w-4.5" /></Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="w-48">
                     {selectedConv.status === 'open' && (
-                      <DropdownMenuItem onClick={handleClose} disabled={closing} className="gap-2">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />{closing ? 'Encerrando...' : 'Encerrar'}
+                      <DropdownMenuItem onClick={handleClose} disabled={closing} className="gap-2 py-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span className="font-medium text-sm">{closing ? 'Encerrando...' : 'Encerrar conversa'}</span>
                       </DropdownMenuItem>
                     )}
                     {selectedConv.status === 'closed' && (
-                      <DropdownMenuItem className="gap-2"><RotateCcw className="h-3.5 w-3.5" />Reabrir</DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 py-2">
+                        <RotateCcw className="h-4 w-4" />
+                        <span className="font-medium text-sm">Reabrir conversa</span>
+                      </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="gap-2"><UserCheck className="h-3.5 w-3.5" />Atribuir agente</DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 py-2">
+                      <UserCheck className="h-4 w-4" />
+                      <span className="font-medium text-sm">Atribuir a um agente</span>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-end">
-              <div className="text-center text-muted-foreground py-8">
-                <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Mensagens de {sanitizeText(selectedConv.remote_jid)}</p>
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col bg-[#efeae2] dark:bg-background/95 relative">
+              <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.02] pointer-events-none" 
+                style={{ backgroundImage: 'url("https://wweb.static.whatsapp.net/7/7b/7b2e3e9d8e7e1c1f1f1f1f1f1f1f1f1f.png")' }} />
+              
+              <div className="flex-1 flex flex-col justify-end gap-3 z-10">
+                <div className="text-center text-muted-foreground py-8">
+                  <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm font-medium">Início da conversa com {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid?.split('@')[0] ?? 'este contato')}</p>
+                  <p className="text-xs opacity-60">As mensagens são protegidas com criptografia de ponta a ponta.</p>
+                </div>
               </div>
             </div>
-            <div className="border-t px-4 py-3 shrink-0">
-              <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-                <span className="text-sm text-muted-foreground flex-1">Responder...</span>
-                <Button size="sm" className="h-7 gap-1"><MessageCircle className="h-3.5 w-3.5" />Enviar</Button>
+            <div className="bg-[#f0f2f5] dark:bg-muted/30 px-4 py-2.5 shrink-0 z-10">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-2 rounded-lg bg-background px-4 py-2 shadow-sm border border-transparent focus-within:border-primary/20 transition-all">
+                  <input 
+                    type="text" 
+                    placeholder="Digite uma mensagem..." 
+                    className="bg-transparent border-none outline-none text-sm w-full placeholder:text-muted-foreground/60"
+                  />
+                </div>
+                <Button size="icon" className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 shadow-sm shrink-0">
+                  <MessageCircle className="h-5 w-5" />
+                </Button>
               </div>
             </div>
           </>
@@ -131,18 +160,25 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
 
       {/* Column 3: CRM Sidebar */}
       {showContact && selectedConv && (
-        <div className="w-72 shrink-0 border-l flex flex-col h-full overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 border-b shrink-0">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">CRM 360°</span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowContact(false)} aria-label="Fechar CRM">
-              <X className="h-4 w-4" />
+        <div className="w-80 shrink-0 border-l flex flex-col h-full overflow-hidden bg-background">
+          <div className="flex items-center gap-3 px-4 py-3 border-b shrink-0 h-[61px]">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setShowContact(false)} aria-label="Fechar CRM">
+              <X className="h-4.5 w-4.5" />
             </Button>
+            <span className="text-sm font-semibold">Dados do contato</span>
           </div>
-          <div className="flex-1 overflow-hidden">
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
-              <Users className="h-10 w-10 mb-2 opacity-20" />
-              <p className="text-xs text-center">Dados do contato carregam ao selecionar conversa com contact_id</p>
-            </div>
+          <div className="flex-1 overflow-y-auto">
+            {selectedConv.contact_id ? (
+              <ContactSidebarPanel 
+                contact={{ id: selectedConv.contact_id, remote_jid: selectedConv.remote_jid, full_name: selectedConv.contact_name, phone_number: selectedConv.contact_phone, profile_picture_url: selectedConv.contact_avatar } as any} 
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground p-6 text-center">
+                <Users className="h-12 w-12 mb-3 opacity-20" />
+                <p className="text-sm font-medium">Sem perfil vinculado</p>
+                <p className="text-xs mt-1">Este contato ainda não possui dados detalhados no CRM.</p>
+              </div>
+            )}
           </div>
         </div>
       )}

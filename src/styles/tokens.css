@@ -3,8 +3,8 @@
 
   :root {
     /* ===== FONTS ===== */
-    --font-sans: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    --font-display: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-sans: 'Segoe UI', 'Helvetica Neue', Helvetica, 'Lucida Grande', Arial, Ubuntu, Cantarell, 'Fira Sans', sans-serif;
+    --font-display: 'Segoe UI', 'Helvetica Neue', Helvetica, 'Lucida Grande', Arial, Ubuntu, Cantarell, 'Fira Sans', sans-serif;
 
     /* ===== TYPOGRAPHY SCALE (fluid clamp) ===== */
     --text-xs: 11px;
