@@ -24,7 +24,7 @@ interface AutomationCardProps {
 export function AutomationCard({ automation, onToggle, onEdit, onDelete, onDuplicate }: AutomationCardProps) {
   const triggerInfo = TRIGGER_TYPES.find(t => t.type === automation.trigger_type);
   const TriggerIcon = triggerInfo?.icon || Zap;
-  const actions = Array.isArray(automation.actions) ? automation.actions : [];
+  const actions = (Array.isArray(automation.actions) ? automation.actions : []) as unknown as AutomationAction[];
 
   return (
     <motion.div
