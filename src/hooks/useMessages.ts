@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { eventBus } from '@/lib/eventBus';
+import { deduplicateMessages } from '@/lib/inbox/chatOptimizations';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -114,7 +115,10 @@ export function useMessages(remoteJid: string | null) {
       const newItems = ((data ?? []) as any[]).map(mapRow);
       // Prepended because they are older (reversed for UI)
       const reversed = [...newItems].reverse();
-      setMessages((prev) => [...reversed, ...prev]);
+      setMessages((prev) => {
+        const uniqueNew = deduplicateMessages(prev, reversed);
+        return [...uniqueNew, ...prev];
+      });
       setHasMore(newItems.length === PAGE_SIZE);
       offsetRef.current += newItems.length;
     } finally { setLoadingMore(false); }
@@ -133,7 +137,12 @@ export function useMessages(remoteJid: string | null) {
         filter: `remote_jid=eq.${remoteJid}`,
       }, (payload) => {
         const newMsg = mapRow(payload.new as Record<string, unknown>);
-        setMessages((prev) => [...prev, newMsg]);
+        setMessages((prev) => {
+          if (prev.some(m => m.id === newMsg.id || (newMsg.message_id && m.message_id === newMsg.message_id))) {
+            return prev;
+          }
+          return [...prev, newMsg];
+        });
       })
       .on('postgres_changes', {
         event:  'UPDATE',
