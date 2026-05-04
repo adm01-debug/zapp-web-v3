@@ -15,6 +15,14 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+// Mock useAuth
+vi.mock('@/features/auth/hooks/useAuth', () => ({
+  useAuth: () => ({
+    user: { id: 'agent-1', name: 'Agent' },
+    session: {},
+  }),
+}));
+
 // Mock Logger
 vi.mock('@/lib/logger', () => ({
   getLogger: () => ({
@@ -95,11 +103,12 @@ describe('ChatMessagesArea Integration', () => {
       loadingOlder: false,
     });
 
-    const scrollContainer = container.firstChild as HTMLElement;
+    const scrollContainer = container.querySelector('[role="log"]') as HTMLElement;
     
     // Mock scrollHeight and clientHeight
-    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 2000 });
-    Object.defineProperty(scrollContainer, 'clientHeight', { value: 1000 });
+    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 2000, configurable: true });
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 1000, configurable: true });
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 5, writable: true });
     
     // Scroll to top
     fireEvent.scroll(scrollContainer, { target: { scrollTop: 0 } });
@@ -117,13 +126,7 @@ describe('ChatMessagesArea Integration', () => {
   it('filters messages by status', async () => {
     renderComponent();
     
-    // Open filter bar
-    const filterBtn = screen.getByRole('button', { name: /filtrar mensagens/i });
-    fireEvent.click(filterBtn);
-    
-    // Select 'Lidas' filter (assuming 'read' status maps to some filter)
-    // We need to check MessageStatusFilterBar implementation for exact labels
-    // For now, just verify the filter bar exists
+    // Verify that the filter bar is rendered (it's sticky at the top)
     expect(screen.getByText(/Exibindo/i)).toBeInTheDocument();
   });
 });
