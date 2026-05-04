@@ -203,8 +203,8 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-4 py-[9px] bg-[#f0f2f5] dark:bg-[#202c33] relative flex flex-col gap-2 shrink-0", 
-        isWhisper && "bg-amber-50/40 dark:bg-amber-950/10 border-t border-amber-200/30",
+        "px-4 py-[9px] bg-[#0b141a] border-t border-white/10 relative flex flex-col gap-2 shrink-0", 
+        isWhisper && "bg-amber-950/10 border-t border-amber-200/30",
         logic.isMobile && "px-2 py-2 safe-area-bottom"
       )}>
         <AnimatePresence>
@@ -279,7 +279,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Mensagem... (/ para comandos, @ para mencionar)"}
               rows={1}
               className={cn(
-                "w-full bg-white dark:bg-[#2a3942] border-none rounded-lg outline-none text-[15px] font-normal tracking-tight text-foreground shadow-none",
+                "w-full bg-[#2a3942] border-none rounded-lg outline-none text-[15px] font-normal tracking-tight text-[#e9edef] shadow-none",
                 "placeholder:text-[#8696a0] dark:placeholder:text-[#8696a0] placeholder:font-normal resize-none transition-none",
                 "focus:bg-white dark:focus:bg-[#2a3942] focus:ring-0",
                 logic.isMobile ? "px-3 py-2 text-[16px] min-h-[40px] max-h-[160px]" : "px-3 py-[11px] min-h-[42px] max-h-[200px]",

@@ -35,7 +35,7 @@ export const ChatWatermark = memo(function ChatWatermark() {
               strokeWidth="1.1"
               strokeLinecap="round"
               strokeLinejoin="round"
-              opacity="0.07"
+              opacity="0.04"
             >
               {/* Rocket */}
               <g transform="translate(30, 30)">

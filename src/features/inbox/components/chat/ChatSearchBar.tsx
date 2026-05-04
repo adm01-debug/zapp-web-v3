@@ -46,21 +46,21 @@ export function ChatSearchBar({ messages, isOpen, onClose, onNavigateToMessage, 
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden border-b border-[#222d34] bg-[#202c33] shrink-0">
+        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden border-b border-white/10 bg-[#111b21] shrink-0">
           <div className="px-3 md:px-4 py-3 space-y-2.5" role="search">
             <div className="flex items-center gap-1.5">
-              <div className="relative flex-1 min-w-0 flex items-center gap-2.5 bg-[#2a3942] rounded-lg px-3.5 h-10 border-none focus-within:ring-0 transition-all duration-200">
+              <div className="relative flex-1 min-w-0 flex items-center gap-2.5 bg-[#202c33] rounded-lg px-3.5 h-10 border-none focus-within:ring-0 transition-all duration-200">
                 <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                 <Input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={handleKeyDown} placeholder="Buscar na conversa..."
-                  className="h-full text-sm border-none bg-transparent shadow-none focus-visible:ring-0 px-0 min-w-0" />
-                {query && <button onClick={() => setQuery('')} className="p-1 rounded-full hover:bg-background shrink-0"><X className="w-3.5 h-3.5 text-muted-foreground" /></button>}
+                  className="h-full text-sm border-none bg-transparent shadow-none focus-visible:ring-0 px-0 min-w-0 text-[#e9edef] placeholder:text-[#8696a0]" />
+                {query && <button onClick={() => setQuery('')} className="p-1 rounded-full hover:bg-[#2a3942] shrink-0"><X className="w-3.5 h-3.5 text-[#8696a0]" /></button>}
                 {(debouncedQuery.trim() || filter !== 'all' || hasDateFilter) && (
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0 tabular-nums font-medium" aria-live="polite">
                     {results.length > 0 ? `${activeIndex + 1}/${results.length}` : '0'}
                   </span>
                 )}
               </div>
-              <div className="flex items-center shrink-0 bg-[#2a3942] rounded-lg">
+              <div className="flex items-center shrink-0 bg-[#202c33] rounded-lg">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="w-8 h-10 rounded-l-xl rounded-r-none hover:bg-accent" onClick={navigateUp} disabled={results.length === 0} aria-label="Resultado anterior">
@@ -79,7 +79,7 @@ export function ChatSearchBar({ messages, isOpen, onClose, onNavigateToMessage, 
                   <TooltipContent>Próximo (Enter)</TooltipContent>
                 </Tooltip>
               </div>
-              <Button variant="ghost" size="icon" className="w-8 h-10 rounded-xl shrink-0 hover:bg-destructive/10 hover:text-destructive" onClick={onClose}><X className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" className="w-8 h-10 rounded-xl shrink-0 hover:bg-[#2a3942] text-[#8696a0] hover:text-[#e9edef]" onClick={onClose}><X className="w-4 h-4" /></Button>
             </div>
 
             <ChatSearchFilters filter={filter} setFilter={setFilter} filterCounts={filterCounts} debouncedQuery={debouncedQuery} hasDateFilter={hasDateFilter}
