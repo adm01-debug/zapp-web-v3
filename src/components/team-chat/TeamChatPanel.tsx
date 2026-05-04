@@ -116,26 +116,33 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
+    // If we are at the bottom, stay at the bottom
     if (s.isNearBottomRef.current && s.listRef.current) {
       s.listRef.current.scrollToItem(s.filteredMessages.length - 1, 'end');
     }
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
-    // If we are loading previous messages (infinite scroll up), 
-    // we need to maintain the scroll position relative to the content.
-    if (s.isFetchingNextPage && s.scrollRef.current) {
+    // If we are loading previous messages (infinite scroll up) OR receiving live messages while scrolled up,
+    // we capture the distance from the bottom to use as an anchor.
+    if (s.scrollRef.current && !s.isNearBottomRef.current) {
       s.scrollOffsetRef.current = s.scrollRef.current.scrollHeight - s.scrollRef.current.scrollTop;
     }
-  }, [s.isFetchingNextPage]);
+  }, [s.isFetchingNextPage, s.filteredMessages.length]);
 
   useEffect(() => {
-    if (!s.isFetchingNextPage && s.scrollOffsetRef.current > 0 && s.scrollRef.current) {
+    // Apply the scroll anchor position after messages update
+    if (s.scrollOffsetRef.current > 0 && s.scrollRef.current) {
       const newScrollTop = s.scrollRef.current.scrollHeight - s.scrollOffsetRef.current;
-      s.scrollRef.current.scrollTop = newScrollTop;
-      s.scrollOffsetRef.current = 0;
+      // We don't want to adjust if the shift is negligible and not fetching next page
+      if (s.isFetchingNextPage || Math.abs(newScrollTop - s.scrollRef.current.scrollTop) > 5) {
+        s.scrollRef.current.scrollTop = newScrollTop;
+      }
+      // Reset anchor if we are not fetching (it was a live message)
+      if (!s.isFetchingNextPage) s.scrollOffsetRef.current = 0;
     }
   }, [s.filteredMessages.length]);
+
 
   useEffect(() => { if (s.showSearch) s.searchInputRef.current?.focus(); }, [s.showSearch]);
 
