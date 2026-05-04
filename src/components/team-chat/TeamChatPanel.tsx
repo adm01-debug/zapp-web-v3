@@ -232,11 +232,11 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
           <div className="h-full w-full flex flex-col relative">
             {s.isFetchingNextPage && <div className="p-2 text-center text-xs text-muted-foreground animate-pulse">Carregando mensagens anteriores...</div>}
             <div className="flex-1 relative">
-              <List
+              <List<{}>
                 listRef={s.listRef}
                 rowCount={s.filteredMessages.length}
                 rowHeight={100}
-                rowProps={{}}
+                rowProps={{} as any}
                 className="scrollbar-none absolute inset-0"
                 overscanCount={10}
                 rowComponent={({ index, style }: { index: number, style: React.CSSProperties }) => {
