@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ChatWatermark } from './ChatWatermark';
 import { cn } from '@/lib/utils';
 import { Message, InteractiveButton } from '@/types/chat';
-import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
+import { motion, AnimatePresence, StaggeredList, StaggeredItem } from 'framer-motion';
 import { TypingIndicator } from '@/features/inbox/components/TypingIndicator';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
