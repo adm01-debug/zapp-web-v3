@@ -33,7 +33,7 @@ This report provides a high-level overview of the system's compliance, security,
 | ID | Gap Description | Evidence | Severity | File Path |
 | :--- | :--- | :--- | :--- | :--- |
 | GAP-01 | Edge Function Coverage < 60% | CI Coverage Report | P1 | [`supabase/functions/`](supabase/functions/) |
-| GAP-02 | Missing Rate Limiting on Public API | Security Scan | P2 | [`supabase/functions/public-api/`](supabase/functions/public-api/) |
+| GAP-02 | Missing Rate Limiting on Public API | Security Scan | P2 | [`supabase/functions/`](supabase/functions/) |
 
 ---
 
