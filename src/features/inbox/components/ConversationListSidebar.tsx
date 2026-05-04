@@ -161,7 +161,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               onChange={(e) => handleContactSearch(e.target.value)}
               className={cn(
                 "pl-8 pr-7 bg-muted/40 border-0 rounded-lg text-xs placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30",
-                isMobile ? "h-8" : "h-7 text-[11px]"
+                isMobile ? "h-[40px] text-[16px]" : "h-7 text-[11px]"
               )}
               aria-label="Buscar conversa"
             />
