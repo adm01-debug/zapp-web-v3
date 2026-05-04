@@ -75,19 +75,27 @@ export function useMessageQueue(instanceName: string = 'wpp2') {
       } catch (err) {
         log.error(`[MessageQueue] Failed to send ${msg.id}:`, err);
         
-        setPendingMessages(prev => 
-          prev.map(p => p.id === msg.id ? { ...p, status: 'failed' } : p)
-        );
+        msg.retries += 1;
         
-        toast({
-          title: 'Erro ao enviar mensagem',
-          description: 'A mensagem será tentada novamente em breve.',
-          variant: 'destructive'
-        });
-        
-        // Move to end of queue or wait? 
-        // For now, let's stop and wait for a manual retry or backoff
-        break;
+        if (msg.retries >= 3) {
+          setPendingMessages(prev => 
+            prev.map(p => p.id === msg.id ? { ...p, status: 'failed' } : p)
+          );
+          queueRef.current.shift(); // Remove after max retries
+          
+          toast({
+            title: 'Erro ao enviar mensagem',
+            description: 'A mensagem não pôde ser enviada após várias tentativas.',
+            variant: 'destructive'
+          });
+        } else {
+          // Exponential backoff wait
+          const waitTime = Math.pow(2, msg.retries) * 1000;
+          log.info(`[MessageQueue] Retrying ${msg.id} in ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          // Keep in queue for next iteration
+        }
+        break; 
       }
     }
     
