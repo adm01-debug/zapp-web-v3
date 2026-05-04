@@ -63,7 +63,7 @@ export function AssignmentSection({ conversation }: AssignmentSectionProps) {
             <SelectTrigger className="w-full border-border/30 hover:border-primary/30 transition-colors bg-background/40 h-9">
               <SelectValue placeholder="Selecionar atendente" />
             </SelectTrigger>
-            <SelectContent className="bg-[#000000] border-border/30">
+            <SelectContent className="bg-background border-border/30">
               {agents.filter(a => a.is_active).map((agent) => (
                 <SelectItem key={agent.id} value={agent.id} className="hover:bg-primary/10">
                   <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export function AssignmentSection({ conversation }: AssignmentSectionProps) {
             <SelectTrigger className="w-full border-border/30 hover:border-primary/30 transition-colors bg-background/40 h-9">
               <SelectValue placeholder="Selecionar fila" />
             </SelectTrigger>
-            <SelectContent className="bg-[#000000] border-border/30">
+            <SelectContent className="bg-background border-border/30">
               {queues.map((queue) => (
                 <SelectItem key={queue.id} value={queue.id} className="hover:bg-primary/10">
                   <div className="flex items-center gap-2">

@@ -129,13 +129,13 @@ export function ConversationList({
             placeholder="Buscar conversas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 h-[40px] md:h-[35px] bg-[#202c33] border-none rounded-lg text-[16px] md:text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+            className="pl-10 pr-4 h-[40px] md:h-[35px] bg-card border-none rounded-lg text-[16px] md:text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           />
         </div>
 
         {/* Tabs */}
         <Tabs value={filter} onValueChange={setFilter} className="w-full">
-          <TabsList className="w-full h-8 p-1 bg-[#202c33] border-none rounded-lg">
+          <TabsList className="w-full h-8 p-1 bg-card border-none rounded-lg">
             {[
               { id: 'all', label: 'Todas', count: counts.all },
               { id: 'open', label: 'Abertas', count: counts.open },
@@ -160,7 +160,7 @@ export function ConversationList({
         {filteredConversations.length === 0 ? (
           <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-[#202c33]">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-card">
                 <Search className="w-7 h-7 text-muted-foreground" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">Nenhuma conversa</h3>
@@ -207,7 +207,7 @@ export function ConversationList({
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(conversation); } }}
                     className={cn(
                       'relative p-0 cursor-pointer transition-colors duration-200 outline-none h-full',
-                      isSelected ? 'bg-accent' : 'hover:bg-[#202c33] bg-background'
+                      isSelected ? 'bg-accent' : 'hover:bg-card bg-background'
                     )}
                   >
                     <div className="px-3 h-full">
