@@ -10,6 +10,10 @@ vi.mock('../useTeamChatPanel', () => ({
   useTeamChatPanel: vi.fn()
 }));
 
+vi.mock('@/features/auth', () => ({
+  useAuth: vi.fn(() => ({ profile: { id: 'user-1', name: 'Me' } }))
+}));
+
 const mockConversation = {
   id: 'conv-1',
   name: 'Test Team',
