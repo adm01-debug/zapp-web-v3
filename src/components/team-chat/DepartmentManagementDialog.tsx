@@ -130,7 +130,18 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
     }
   });
 
-  const updateWhatsappMutation = useMutation({
+  const deleteInviteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('department_invitations').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dept-invitations', department.id] });
+      toast({ title: 'Convite revogado' });
+    }
+  });
+
+
     mutationFn: async () => {
       const { error } = await supabase
         .from('departments')
