@@ -111,6 +111,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         s.updateStatusMutation.mutate({ messageId: id, status: 'read', conversationId: conversation.id });
       });
     }
+    itemHeights.current = {};
+    s.listRef.current?.resetAfterIndex(0);
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
