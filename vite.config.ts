@@ -108,7 +108,10 @@ export default defineConfig(({ mode }) => ({
     force: true,
   },
   esbuild: {
-    drop: mode === 'production' ? ['console', 'debugger'] : [],
+    drop: mode === 'production' ? ['debugger'] : [],
+    // Drop apenas console.log/debug em prod — preserva console.info/warn/error
+    // (necessário pro Sentry SDK funcionar e para diagnóstico de erros em runtime)
+    pure: mode === 'production' ? ['console.log', 'console.debug'] : [],
   },
   build: {
     target: "esnext",

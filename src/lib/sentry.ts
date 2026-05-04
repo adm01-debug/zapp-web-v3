@@ -11,6 +11,7 @@
  * - environment: prod (mode=production) | dev (mode=development) | preview
  * - release: VITE_APP_VERSION ou commit hash via VITE_GIT_SHA (se disponível)
  */
+import { init as sentryInit, browserTracingIntegration, replayIntegration, ErrorBoundary } from "@sentry/react";
 import * as Sentry from "@sentry/react";
 
 const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
@@ -30,7 +31,9 @@ export function initSentry(): boolean {
   }
 
   try {
-    Sentry.init({
+    // eslint-disable-next-line no-console
+    console.info(`[sentry] initializing — env=${ENV} release=${RELEASE} dsn_host=${DSN.split('@')[1]?.split('/')[0]}`);
+    sentryInit({
       dsn: DSN,
       environment: ENV,
       release: RELEASE,
@@ -40,8 +43,8 @@ export function initSentry(): boolean {
       replaysSessionSampleRate: 0.01,
       replaysOnErrorSampleRate: 1.0,
       integrations: [
-        Sentry.browserTracingIntegration(),
-        Sentry.replayIntegration({ maskAllText: false, blockAllMedia: false }),
+        browserTracingIntegration(),
+        replayIntegration({ maskAllText: false, blockAllMedia: false }),
       ],
       // Don't send if user opted out (LGPD friendly)
       beforeSend(event) {
@@ -67,13 +70,15 @@ export function initSentry(): boolean {
     });
 
     initialized = true;
+    // eslint-disable-next-line no-console
+    console.info("[sentry] ✅ initialized successfully");
     return true;
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.warn("[sentry] init failed:", err);
+    console.error("[sentry] init failed:", err);
     return false;
   }
 }
 
-export const SentryErrorBoundary = Sentry.ErrorBoundary;
+export const SentryErrorBoundary = ErrorBoundary;
 export { Sentry };
