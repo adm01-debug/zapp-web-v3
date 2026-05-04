@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
 // @ts-ignore
-import { FixedSizeList as List } from 'react-window';
+import { VariableSizeList as List } from 'react-window';
 // @ts-ignore
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { useAuth } from '@/features/auth';
@@ -64,6 +64,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
   const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
+  const itemHeights = useRef<Record<number, number>>({});
+
 
   // Keyboard shortcuts for chat
   useEffect(() => {
@@ -109,6 +111,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         s.updateStatusMutation.mutate({ messageId: id, status: 'read', conversationId: conversation.id });
       });
     }
+    itemHeights.current = {};
+    s.listRef.current?.resetAfterIndex(0);
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
@@ -227,7 +231,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                   ref={s.listRef}
                   height={height}
                   itemCount={s.filteredMessages.length}
-                  itemSize={90} 
+                  itemSize={(index: number) => itemHeights.current[index] || 100} 
                   width={width}
                   className="scrollbar-none"
                   overscanCount={10}
@@ -244,7 +248,15 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                 const cleanText = msg.content?.replace(/\[.*?\]/g, '').replace(/https?:\/\/\S+/g, '').trim();
 
                 return (
-                  <div style={style}>
+                  <div style={style} ref={(el) => {
+                    if (el && !itemHeights.current[index]) {
+                      const h = el.getBoundingClientRect().height;
+                      if (h > 0) {
+                        itemHeights.current[index] = h;
+                        s.listRef.current?.resetAfterIndex(index);
+                      }
+                    }
+                  }}>
                     <ContextMenu key={msg.id}>
                       <ContextMenuTrigger asChild>
                         <div data-testid={`message-container-${msg.id}`} className="group/msg relative px-4">
