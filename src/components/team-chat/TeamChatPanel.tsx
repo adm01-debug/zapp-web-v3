@@ -195,10 +195,11 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         ) : (s.isLoading && !s.filteredMessages.length) ? (
           <div className="p-4 space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}><Skeleton className="h-10 rounded-2xl" style={{ width: 120 + (i % 3) * 60 }} /></div>)}</div>
 
+
         ) : s.filteredMessages.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-12">{s.searchQuery ? 'Nenhuma mensagem encontrada' : 'Envie a primeira mensagem!'}</div>
         ) : (
-          <div className="h-full w-full flex flex-col">
+          <div className="h-full w-full flex flex-col relative">
             {s.isFetchingNextPage && <div className="p-2 text-center text-xs text-muted-foreground animate-pulse">Carregando mensagens anteriores...</div>}
             <div className="flex-1 relative">
             <AutoSizer>
@@ -311,6 +312,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             </div>
           </div>
         )}
+
       </div>
 
 
