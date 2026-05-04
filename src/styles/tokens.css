@@ -89,11 +89,11 @@
     --radius: 0.625rem;
 
     /* ===== ESTADOS ===== */
-    --success: 160 70% 42%;
+    --success: 142 76% 45%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 38 100% 50%;
     --warning-foreground: 0 0% 100%;
-    --info: 210 80% 55%;
+    --info: 214 100% 50%;
     --info-foreground: 0 0% 100%;
 
     /* ===== GAMIFICAÇÃO ===== */
