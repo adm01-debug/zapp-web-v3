@@ -21,7 +21,7 @@ const CHANNEL_STYLES: Record<string, string> = {
   whatsapp:'bg-primary text-primary-foreground',
   instagram:'bg-pink-100 text-pink-800',
   telegram:'bg-blue-100 text-blue-800',
-  email:'bg-gray-100 text-gray-700',
+  email:'bg-muted text-gray-700',
 };
 
 function reltime(ts: string): string {

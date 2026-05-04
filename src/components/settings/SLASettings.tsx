@@ -89,7 +89,7 @@ export function SLASettings({ settings, updateSettings }: SLASettingsProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-amber-200">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-background border border-amber-200">
             <div className="space-y-0.5">
               <Label htmlFor="simulation-mode">Habilitar Dados Mock</Label>
               <p className="text-xs text-muted-foreground">

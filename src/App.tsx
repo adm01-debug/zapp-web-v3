@@ -9,6 +9,7 @@ import { LiveRegion } from "@/components/ui/visually-hidden";
 import { ThemeInitializer } from "@/components/ThemeInitializer";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { AppRoutes } from "@/components/routing/AppRoutes";
+import { useThemeAudit } from "@/hooks/useThemeAudit";
 
 const log = getLogger('App');
 
@@ -44,6 +45,7 @@ const DeferredHooks = lazy(() =>
 );
 
 function AppContent() {
+  useThemeAudit();
   const [deferredReady, setDeferredReady] = useState(false);
 
   // Defer non-critical features to after first paint

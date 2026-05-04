@@ -49,7 +49,7 @@ export const AGENT_STATUS_LABELS: Record<string, string> = {
 };
 
 export const AGENT_STATUS_COLORS: Record<string, string> = {
-  draft:        'bg-gray-100 text-gray-700',
+  draft:        'bg-muted text-gray-700',
   configured:   'bg-blue-100 text-blue-700',
   testing:      'bg-yellow-100 text-yellow-700',
   staging:      'bg-orange-100 text-orange-700',
@@ -57,7 +57,7 @@ export const AGENT_STATUS_COLORS: Record<string, string> = {
   production:   'bg-primary text-primary',
   monitoring:   'bg-teal-100 text-teal-700',
   deprecated:   'bg-amber-100 text-amber-700',
-  archived:     'bg-gray-100 text-gray-500',
+  archived:     'bg-muted text-gray-500',
 };
 
 // ── Hook ───────────────────────────────────────────────────────────────────

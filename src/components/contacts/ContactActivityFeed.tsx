@@ -24,7 +24,7 @@ const ICONS: Record<string, React.FC<{ className?: string }>> = {
 };
 
 const COLORS: Record<string, string> = {
-  conversation_open: 'bg-blue-100 text-blue-600', conversation_closed: 'bg-gray-100 text-gray-600',
+  conversation_open: 'bg-blue-100 text-blue-600', conversation_closed: 'bg-muted text-gray-600',
   edit: 'bg-blue-100 text-blue-600', lgpd: 'bg-primary text-primary',
   merge: 'bg-purple-100 text-purple-600', delete: 'bg-red-100 text-red-600',
   restore: 'bg-amber-100 text-amber-600', note: 'bg-yellow-100 text-yellow-600',

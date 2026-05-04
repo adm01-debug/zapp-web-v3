@@ -163,7 +163,7 @@ export function MonitoringConnectionsList({ connections, webhookTest, onCheckWeb
                     animate={{ height: 'auto', opacity: 1 }}
                     className="mt-4 flex justify-center"
                   >
-                    <div className="p-4 bg-white rounded-xl border shadow-sm">
+                    <div className="p-4 bg-background rounded-xl border shadow-sm">
                       <img
                         src={qrCodes[conn.instance_id]}
                         alt={`QR Code ${conn.instance_id}`}

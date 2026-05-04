@@ -78,7 +78,7 @@ export function ContactDuplicateIndicator({
       {isExpanded && (
         <div className="mt-2 space-y-2">
           {duplicates.map((dup) => (
-            <div key={dup.id} className="flex items-center justify-between gap-2 p-2 bg-white dark:bg-gray-900 rounded border">
+            <div key={dup.id} className="flex items-center justify-between gap-2 p-2 bg-background dark:bg-background rounded border">
               <div className="min-w-0">
                 <p className="font-medium text-xs truncate">
                   {dup.full_name || dup.first_name || 'Sem nome'}
