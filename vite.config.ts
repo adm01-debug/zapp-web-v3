@@ -51,29 +51,11 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    // VitePWA disabled temporarily to debug 412 error
-    // VitePWA({
-    //   ...
-    // }),
-    compression({ algorithm: "gzip", exclude: [/\.(br|gz)$/], threshold: 1024 }),
-    compression({ algorithm: "brotliCompress", exclude: [/\.(br|gz)$/], threshold: 1024 }),
-    stripLazyModulepreloadsPlugin,
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "framer-motion"],
-  },
-  optimizeDeps: {
-    include: ["react", "react-dom", "framer-motion", "lucide-react"],
-    force: true,
-  },
-  esbuild: {
-    drop: mode === 'production' ? ['debugger'] : [],
-    // Drop apenas console.log/debug em prod — preserva console.info/warn/error
-    // (necessário pro Sentry SDK funcionar e para diagnóstico de erros em runtime)
-    pure: mode === 'production' ? ['console.log', 'console.debug'] : [],
   },
   build: {
     target: "esnext",
