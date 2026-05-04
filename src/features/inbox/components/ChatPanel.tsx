@@ -31,6 +31,7 @@ import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import { useChatPanelHandlers } from './chat/useChatPanelHandlers';
 import { ActiveTool } from './chat/ChatHeaderToolbar';
+import { FailureFilterBar } from './chat/FailureFilterBar';
 import { useChatFilters } from './chat/hooks/useChatFilters';
 import { useSLADelivery } from './chat/hooks/useSLADelivery';
 import { useChatSearchState } from './chat/hooks/useChatSearchState';
