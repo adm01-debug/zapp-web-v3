@@ -18,6 +18,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AddMembersDialog } from './AddMembersDialog';
 import { TeamChatHeader } from './TeamChatHeader';
 import { ParticipantStatsGraph } from './ParticipantStatsGraph';
+import { TeamPerformancePanel } from './TeamPerformancePanel';
 import { TeamChatInputArea } from './TeamChatInputArea';
 import { useTeamChatPanel } from './useTeamChatPanel';
 import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
@@ -73,7 +74,7 @@ export function TeamChatPanel(props: Props) {
 }
 
 function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetails }: Props) {
-  const [showStats, setShowStats] = useState(false);
+  const [showStats, setShowStats] = useState<'participants' | 'performance' | null>(null);
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
   const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
@@ -172,7 +173,9 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
         onToggleSearch={() => { s.setShowSearch(!s.showSearch); if (s.showSearch) s.setSearchQuery(''); }}
         onAddMembers={() => s.setShowAddMembers(true)} onVoiceChange={s.tts.setVoiceId} onSpeedChange={s.tts.setSpeed}
         onToggleMute={() => s.muteMutation.mutate({ conversationId: conversation.id, muted: !s.isMuted })}
-        onToggleStats={() => setShowStats(!showStats)} showStats={showStats} />
+        onToggleStats={() => setShowStats(showStats === 'participants' ? null : 'participants')} 
+        onTogglePerformance={() => setShowStats(showStats === 'performance' ? null : 'performance')}
+        showStats={!!showStats} />
 
       <AnimatePresence>
         {s.showSearch && (
@@ -192,8 +195,14 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
 
       <AnimatePresence>
         {showStats && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="p-4 bg-muted/30 border-b border-border">
-            <ParticipantStatsGraph conversationId={conversation.id} />
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="bg-muted/30 border-b border-border overflow-hidden">
+            <div className="p-4">
+              {showStats === 'participants' ? (
+                <ParticipantStatsGraph conversationId={conversation.id} />
+              ) : (
+                <TeamPerformancePanel conversationId={conversation.id} />
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
