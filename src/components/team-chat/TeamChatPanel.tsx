@@ -64,6 +64,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
   const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
+  const itemHeights = useRef<Record<number, number>>({});
+
 
   // Keyboard shortcuts for chat
   useEffect(() => {
