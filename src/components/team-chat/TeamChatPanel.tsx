@@ -303,6 +303,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
           </div>
         )}
       </div>
+
     </div>
 
       {s.showScrollDown && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10"><Button size="icon" variant="secondary" className="rounded-full shadow-lg h-8 w-8" onClick={s.scrollToBottom}><ArrowDown className="w-4 h-4" /></Button></div>}
