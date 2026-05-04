@@ -2,11 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { log } from '@/lib/logger';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { messageService } from '@/features/inbox/services/messageService';
-import { messageRepository, Message } from '@/features/inbox/data-access/messageRepository';
+import { messageRepository } from '@/features/inbox/data-access/messageRepository';
+import type { Message } from '@/types/chat';
 
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-
-export type { Message };
 
 interface UseMessagesOptions {
   contactId: string | null;
@@ -40,7 +39,7 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
 
       const mappedMessages = await messageService.getAllMessagesForContact(contactId);
       
-      if (mountedRef.current) setMessages(mappedMessages);
+      if (mountedRef.current) setMessages(mappedMessages as Message[]);
     } catch (err) {
       log.error('Error fetching messages:', err);
       if (mountedRef.current) setError(err instanceof Error ? err.message : 'Failed to fetch messages');
@@ -51,13 +50,11 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
 
   // Handle new message from realtime
   const handleNewMessage = useCallback(
-    (payload: RealtimePostgresChangesPayload<Message>) => {
-      const newMessage = payload.new as Message;
+    (payload: RealtimePostgresChangesPayload<any>) => {
+      const newMessage = messageService.mapMessage(payload.new);
       
-      // Only add if it's for the current contact
-      if (newMessage.contact_id === contactId) {
+      if (newMessage.conversationId === contactId) {
         setMessages((prev) => {
-          // Check if message already exists
           if (prev.some((m) => m.id === newMessage.id)) {
             return prev;
           }
@@ -68,12 +65,11 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
     [contactId]
   );
 
-  // Handle message update from realtime
   const handleMessageUpdate = useCallback(
-    (payload: RealtimePostgresChangesPayload<Message>) => {
-      const updatedMessage = payload.new as Message;
+    (payload: RealtimePostgresChangesPayload<any>) => {
+      const updatedMessage = messageService.mapMessage(payload.new);
 
-      if (updatedMessage.contact_id === contactId) {
+      if (updatedMessage.conversationId === contactId) {
         setMessages((prev) =>
           prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
         );
@@ -82,12 +78,11 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
     [contactId]
   );
 
-  // Handle message delete from realtime
   const handleMessageDelete = useCallback(
-    (payload: RealtimePostgresChangesPayload<Message>) => {
-      const deletedMessage = payload.old as Message;
+    (payload: RealtimePostgresChangesPayload<any>) => {
+      const deletedMessage = payload.old as any;
 
-      if (deletedMessage.contact_id === contactId) {
+      if (deletedMessage && (deletedMessage.contact_id === contactId || deletedMessage.id)) {
         setMessages((prev) => prev.filter((m) => m.id !== deletedMessage.id));
       }
     },

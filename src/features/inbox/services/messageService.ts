@@ -1,10 +1,24 @@
-import { messageRepository, Message } from '@/features/inbox/data-access/messageRepository';
+import { messageRepository } from '@/features/inbox/data-access/messageRepository';
+import type { Message } from '@/types/chat';
 
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('messageService');
 
 export const messageService = {
+  mapMessage(m: any): Message {
+    return {
+      ...m,
+      id: m.id,
+      conversationId: m.conversationId || m.contact_id,
+      timestamp: new Date(m.created_at || m.timestamp),
+      isEdited: !!m.is_edited,
+      type: m.message_type || m.type || 'text',
+      mediaUrl: m.media_url || m.mediaUrl,
+      sender: m.sender || (m.sender_id ? 'agent' : 'contact'),
+    } as Message;
+  },
+
   async getAllMessagesForContact(contactId: string): Promise<Message[]> {
     if (!contactId) return [];
 
@@ -36,16 +50,10 @@ export const messageService = {
       if (whisperErr) {
         log.error('Error fetching whispers:', whisperErr);
       } else if (whispers) {
-        const mappedWhispers = whispers.map((w: any) => ({
-          id: w.id,
-          conversationId: contactId, // Using contactId as fallback if needed
-          content: w.content,
-          sender: 'agent' as const,
-          type: 'text' as const,
-          timestamp: new Date(w.created_at),
-          status: 'sent' as const,
+        const mappedWhispers = whispers.map((w: any) => this.mapMessage({
+          ...w,
+          sender_id: w.sender_id,
           isWhisper: true,
-          agentId: w.sender_id,
         }));
         allData = allData.concat(mappedWhispers);
       }
@@ -57,16 +65,7 @@ export const messageService = {
         return timeA - timeB;
       });
 
-      return allData.map((m) => ({
-        ...m,
-        id: m.id,
-        conversationId: m.conversationId || m.contact_id,
-        timestamp: new Date(m.created_at || m.timestamp),
-        isEdited: !!m.is_edited,
-        type: m.message_type || m.type || 'text',
-        mediaUrl: m.media_url || m.mediaUrl,
-        sender: m.sender || (m.sender_id ? 'agent' : 'contact'),
-      })) as Message[];
+      return allData.map((m) => this.mapMessage(m));
     } catch (err) {
       log.error(`Critical error in getAllMessagesForContact for ${contactId}:`, err);
       throw err;
