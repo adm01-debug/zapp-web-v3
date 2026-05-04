@@ -156,16 +156,16 @@
     --gradient-xp: linear-gradient(90deg, hsl(221 100% 55%), hsl(230 100% 65%));
     --gradient-gold: linear-gradient(135deg, hsl(45 100% 50%), hsl(38 100% 55%));
     --gradient-surface: linear-gradient(180deg, hsl(221 20% 97%), hsl(221 15% 95%));
-    --gradient-divider: linear-gradient(90deg, transparent, hsl(221 15% 88%), transparent);
+    --gradient-divider: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
     --gradient-vibrant: linear-gradient(135deg, hsl(221 83% 53%), hsl(210 80% 55%), hsl(230 78% 59%));
     --gradient-purple-green: linear-gradient(135deg, hsl(221 83% 53%), hsl(160 70% 42%));
 
     /* ===== SHADOWS ===== */
-    --shadow-xs: 0 1px 1px hsl(221 20% 12% / 0.12);
-    --shadow-sm: 0 2px 4px hsl(221 20% 12% / 0.15), 0 1px 2px hsl(221 20% 12% / 0.1);
-    --shadow-md: 0 4px 8px -2px hsl(221 20% 12% / 0.2), 0 2px 4px -2px hsl(221 20% 12% / 0.15);
-    --shadow-lg: 0 12px 20px -5px hsl(221 20% 12% / 0.25), 0 8px 10px -6px hsl(221 20% 12% / 0.18);
-    --shadow-xl: 0 25px 35px -8px hsl(221 20% 12% / 0.3), 0 12px 15px -10px hsl(221 20% 12% / 0.2);
+    --shadow-xs: 0 1px 2px hsl(var(--foreground) / 0.05);
+    --shadow-sm: 0 1px 3px hsl(var(--foreground) / 0.1);
+    --shadow-md: 0 4px 6px -1px hsl(var(--foreground) / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(var(--foreground) / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(var(--foreground) / 0.1);
     --shadow-glow-primary: 0 4px 14px hsl(221 83% 53%);
     --shadow-glow-secondary: 0 4px 14px hsl(215 70% 55%);
     --shadow-glow-success: 0 4px 14px hsl(160 70% 42%);
@@ -212,10 +212,10 @@
   .dark {
     --background: 0 0% 0%; /* PRETO VIVO (OLED Black) */
     --foreground: 210 20% 98%;
-    --card: 0 0% 4%; /* Sutil distinção para profundidade */
+    --card: 0 0% 0%; /* Preto OLED puro */
     --card-foreground: 210 20% 98%;
-    --card-elevated: 0 0% 7%;
-    --popover: 0 0% 3%;
+    --card-elevated: 0 0% 3%;
+    --popover: 0 0% 0%; /* Preto OLED puro */
     --popover-foreground: 210 20% 98%;
     --primary: 221 95% 60%;
     --primary-foreground: 0 0% 100%;
@@ -228,8 +228,8 @@
     --accent-foreground: 221 100% 88%;
     --destructive: 0 95% 62%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 25% 22%;
-    --input: 222 22% 16%;
+    --border: 0 0% 12%; /* Borda sutil para OLED */
+    --input: 0 0% 10%;
     --ring: 221 95% 60%;
     --success: 142 90% 50%;
     --success-foreground: 0 0% 100%;
@@ -265,10 +265,10 @@
     --sidebar-ring: 221 95% 60%;
     --chat-bubble-sent: 221 95% 55%;
     --chat-bubble-sent-foreground: 0 0% 100%;
-    --chat-bubble-received: 0 0% 7%; /* Ligeiramente mais claro que o fundo OLED */
+    --chat-bubble-received: 0 0% 10%; /* Ligeiramente mais claro para leitura em OLED */
     --chat-bubble-received-foreground: 0 0% 98%;
-    --chat-header: 0 0% 3%;
-    --chat-input-bg: 0 0% 2%;
+    --chat-header: 0 0% 0%;
+    --chat-input-bg: 0 0% 0%;
     --status-open: 221 95% 60%;
     --status-pending: 42 100% 60%;
     --status-resolved: 152 85% 50%;
@@ -285,11 +285,11 @@
     --gradient-divider: linear-gradient(90deg, transparent, hsl(221 80% 45%), transparent);
     --gradient-vibrant: linear-gradient(135deg, hsl(221 95% 58%), hsl(205 100% 62%), hsl(230 95% 62%));
     --gradient-purple-green: linear-gradient(135deg, hsl(221 95% 58%), hsl(152 85% 50%));
-    --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.7);
-    --shadow-sm: 0 2px 4px hsl(0 0% 0% / 0.8), 0 1px 2px hsl(0 0% 0% / 0.6);
-    --shadow-md: 0 6px 10px -2px hsl(0 0% 0% / 0.85), 0 3px 5px -2px hsl(0 0% 0% / 0.75);
-    --shadow-lg: 0 15px 25px -5px hsl(0 0% 0% / 0.9), 0 8px 12px -5px hsl(0 0% 0% / 0.8);
-    --shadow-xl: 0 30px 45px -10px hsl(0 0% 0% / 0.95), 0 15px 20px -8px hsl(0 0% 0% / 0.9);
+    --shadow-xs: none;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-xl: none;
     --shadow-glow-primary: 0 4px 28px hsl(221 95% 60%);
     --shadow-glow-secondary: 0 4px 28px hsl(215 90% 60%);
     --shadow-glow-success: 0 4px 24px hsl(152 85% 50%);
