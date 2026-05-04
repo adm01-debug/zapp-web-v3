@@ -16,13 +16,13 @@ Mapeamento detalhado de funcionalidades para arquivos e caminhos de implementaç
 | Módulo | Funcionalidade | Path no Repositório | Dependências Principais | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | 2026-05-04 22:31:06 | Auditoria Inicial | gpt-engineer-app[bot] | `ddf47fc3` | Sucesso |
-| **Inbox** | Virtualização de Chat | [[[`src/components/team-chat/TeamChatPanel.tsx`](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx) | react-window, useTeamChat | ✅ Implementado |
-| **Inbox** | Filtro & Busca | [[[`src/hooks/useTeamChat.ts`](src/hooks/useTeamChat.ts)](src/hooks/useTeamChat.ts)](src/hooks/useTeamChat.ts) | Supabase JS | ✅ Implementado |
-| **CRM** | Gestão de Contatos | [[[`src/components/contacts/ContactForm.tsx`](src/components/contacts/ContactForm.tsx)](src/components/contacts/ContactForm.tsx)](src/components/contacts/ContactForm.tsx) | react-hook-form, zod | ✅ Implementado |
-| **Segurança** | MFA / Auth | [[[`src/hooks/useMFA.ts`](src/hooks/useMFA.ts)](src/hooks/useMFA.ts)](src/hooks/useMFA.ts) | Supabase Auth | ✅ Implementado |
-| **Segurança** | RLS & Policies | [[[`supabase/migrations/`](supabase/migrations/)](supabase/migrations/)](supabase/migrations/) | PostgreSQL | ✅ Implementado |
-| **IA** | Proxy de IA / Fallback | [[[`supabase/functions/evolution-api/`](supabase/functions/evolution-api/)](supabase/functions/evolution-api/)](supabase/functions/evolution-api/) | Deno, OpenAI/Evolution | ✅ Implementado |
-| **Infra** | CI/CD Audit | [[[`.github/workflows/ci.yml`](.github/workflows/ci.yml)](.github/workflows/ci.yml)](.github/workflows/ci.yml) | GitHub Actions, Scripts JS | ✅ Implementado |
+| **Inbox** | Virtualização de Chat | [[[[`src/components/team-chat/TeamChatPanel.tsx`](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx) | react-window, useTeamChat | ✅ Implementado |
+| **Inbox** | Filtro & Busca | [[[[`src/hooks/useTeamChat.ts`](src/hooks/useTeamChat.ts)](src/hooks/useTeamChat.ts)](src/hooks/useTeamChat.ts)](src/hooks/useTeamChat.ts) | Supabase JS | ✅ Implementado |
+| **CRM** | Gestão de Contatos | [[[[`src/components/contacts/ContactForm.tsx`](src/components/contacts/ContactForm.tsx)](src/components/contacts/ContactForm.tsx)](src/components/contacts/ContactForm.tsx)](src/components/contacts/ContactForm.tsx) | react-hook-form, zod | ✅ Implementado |
+| **Segurança** | MFA / Auth | [[[[`src/hooks/useMFA.ts`](src/hooks/useMFA.ts)](src/hooks/useMFA.ts)](src/hooks/useMFA.ts)](src/hooks/useMFA.ts) | Supabase Auth | ✅ Implementado |
+| **Segurança** | RLS & Policies | [[[[`supabase/migrations/`](supabase/migrations/)](supabase/migrations/)](supabase/migrations/)](supabase/migrations/) | PostgreSQL | ✅ Implementado |
+| **IA** | Proxy de IA / Fallback | [[[[`supabase/functions/evolution-api/`](supabase/functions/evolution-api/)](supabase/functions/evolution-api/)](supabase/functions/evolution-api/)](supabase/functions/evolution-api/) | Deno, OpenAI/Evolution | ✅ Implementado |
+| **Infra** | CI/CD Audit | [[[[`.github/workflows/ci.yml`](.github/workflows/ci.yml)](.github/workflows/ci.yml)](.github/workflows/ci.yml)](.github/workflows/ci.yml) | GitHub Actions, Scripts JS | ✅ Implementado |
 
 ---
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -49,14 +49,14 @@ Status atual do backlog técnico priorizado.
 Evidências rastreáveis para auditoria técnica.
 
 ### 5.1 Inbox & Performance
-- **Código**: [[[`src/components/team-chat/TeamChatPanel.tsx`](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx)
+- **Código**: [[[[`src/components/team-chat/TeamChatPanel.tsx`](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx)](src/components/team-chat/TeamChatPanel.tsx)
 - **Métrica**: Tempo de renderização inicial < 150ms para 5.000 mensagens.
 - **Teste**: `TeamChatPanel.test.tsx` (ID: TEST-IBX-01)
 - **Evidência**: `import { FixedSizeList as List } from 'react-window'` garante virtualização.
 
 ### 5.2 Segurança & RLS
 - **Query de Validação**: `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND rowsecurity = false;`
-- **Contrato Edge Function**: [[[`supabase/functions/auth-email-hook/index.ts`](supabase/functions/auth-email-hook/index.ts)](supabase/functions/auth-email-hook/index.ts)](supabase/functions/auth-email-hook/index.ts)
+- **Contrato Edge Function**: [[[[`supabase/functions/auth-email-hook/index.ts`](supabase/functions/auth-email-hook/index.ts)](supabase/functions/auth-email-hook/index.ts)](supabase/functions/auth-email-hook/index.ts)](supabase/functions/auth-email-hook/index.ts)
 - **Rota**: `/auth/v1/sso/saml/metadata`
 
 ---
@@ -66,6 +66,7 @@ Evidências rastreáveis para auditoria técnica.
 
 | Data/Hora (UTC) | Ação | Responsável | Commit Ref | Status |
 | :--- | :--- | :--- | :--- | :--- |
+| 2026-05-04 22:33:13 | CI Audit (dev) | gpt-engineer-app[bot] | [`53b2fe84`](https://github.com/user/repo/commit/53b2fe84380c0b7cc643dd4e300e5239c2ed1fa5) | Sucesso |
 | 2026-05-04 22:32:53 | CI Audit (dev) | gpt-engineer-app[bot] | [`903d7f0e`](https://github.com/user/repo/commit/903d7f0e0772c6329516e52385b4885174b40a27) | Sucesso |
 | 2026-05-04 22:32:41 | CI Audit (dev) | gpt-engineer-app[bot] | [`5949e68c`](https://github.com/user/repo/commit/5949e68c4b9d33fafc03ab90d1048087a3c01256) | Sucesso |
 | 2026-05-04 22:32:27 | CI Audit (dev) | gpt-engineer-app[bot] | [`5cc372aa`](https://github.com/user/repo/commit/5cc372aa4a5a51682608d271bfadd613537debc6) | Sucesso |
