@@ -36,7 +36,7 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     status: string,
     externalId?: string | null
   ) => {
-    const payload: Record<string, unknown> = { status };
+    const payload: any = { status };
     if (externalId) payload.external_id = externalId;
 
     try {

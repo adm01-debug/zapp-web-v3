@@ -41,7 +41,7 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
 
       const mappedMessages = await messageService.getAllMessagesForContact(contactId);
       
-      if (mountedRef.current) setMessages(mappedMessages);
+      if (mountedRef.current) setMessages(mappedMessages as Message[]);
     } catch (err) {
       log.error('Error fetching messages:', err);
       if (mountedRef.current) setError(err instanceof Error ? err.message : 'Failed to fetch messages');
@@ -52,13 +52,11 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
 
   // Handle new message from realtime
   const handleNewMessage = useCallback(
-    (payload: RealtimePostgresChangesPayload<Message>) => {
+    (payload: RealtimePostgresChangesPayload<any>) => {
       const newMessage = messageService.mapMessage(payload.new);
       
-      // Only add if it's for the current contact
       if (newMessage.conversationId === contactId) {
         setMessages((prev) => {
-          // Check if message already exists
           if (prev.some((m) => m.id === newMessage.id)) {
             return prev;
           }
@@ -69,9 +67,8 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
     [contactId]
   );
 
-  // Handle message update from realtime
   const handleMessageUpdate = useCallback(
-    (payload: RealtimePostgresChangesPayload<Message>) => {
+    (payload: RealtimePostgresChangesPayload<any>) => {
       const updatedMessage = messageService.mapMessage(payload.new);
 
       if (updatedMessage.conversationId === contactId) {
@@ -83,12 +80,11 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
     [contactId]
   );
 
-  // Handle message delete from realtime
   const handleMessageDelete = useCallback(
-    (payload: RealtimePostgresChangesPayload<Message>) => {
-      const deletedMessage = payload.old as Message;
+    (payload: RealtimePostgresChangesPayload<any>) => {
+      const deletedMessage = payload.old;
 
-      if (deletedMessage.contact_id === contactId) {
+      if (deletedMessage && (deletedMessage.contact_id === contactId || deletedMessage.id)) {
         setMessages((prev) => prev.filter((m) => m.id !== deletedMessage.id));
       }
     },

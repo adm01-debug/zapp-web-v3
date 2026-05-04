@@ -61,9 +61,9 @@ export function useMediaUploadQueue(contactId: string) {
     setQueue((prev) => prev.map((it) => (it.id === id ? { ...it, ...partial } : it)));
   }, []);
 
-  const persist = useCallback(async (id: string, partial: Record<string, unknown>) => {
+  const persist = useCallback(async (id: string, partial: Record<string, any>) => {
     try {
-      await supabase.from('media_upload_queue').update(partial).eq('id', id);
+      await supabase.from('media_upload_queue').update(partial as any).eq('id', id);
     } catch (err) {
       log.error('[MediaQueue] persist failed', err);
     }
