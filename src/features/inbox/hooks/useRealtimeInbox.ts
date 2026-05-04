@@ -366,12 +366,8 @@ export function useRealtimeInbox() {
   const messageSource = selectedContactId ? selectedMessages : resolvedSelectedConversation?.messages || [];
   
   const legacyMessages = useMemo(
-    () => mapToLegacyMessages(
-      messageSource, 
-      resolvedSelectedConversation?.contact.id || selectedContactId || '',
-      resolvedSelectedConversation?.contact.avatar_url
-    ),
-    [messageSource, resolvedSelectedConversation, selectedContactId]
+    () => messageSource as Message[],
+    [messageSource]
   );
 
   const [whisperCount, setWhisperCount] = useState(0);

@@ -42,23 +42,9 @@ interface RawMessage {
   transcription_status?: string;
 }
 
-function mapToLegacyMessages(msgs: RawMessage[], contactId: string): Message[] {
-  return msgs.map((m) => ({
-    id: m.id,
-    conversationId: contactId,
-    content: m.content,
-    type: (m.message_type || 'text') as Message['type'],
-    sender: m.sender as Message['sender'],
-    agentId: m.agent_id || undefined,
-    timestamp: new Date(m.created_at),
-    status:
-      (m.status as Message['status'] | null) ||
-      (m.is_read ? 'read' : 'delivered'),
-    mediaUrl: m.media_url || undefined,
-    transcription: m.transcription || null,
-    transcriptionStatus:
-      (m.transcription_status as Message['transcriptionStatus']) || null,
-  }));
+// This mapper is now mostly redundant as useMessages already maps to UI Message type.
+function mapToLegacyMessages(msgs: Message[]): Message[] {
+  return msgs;
 }
 
 export default function ChatPopup() {
@@ -110,9 +96,7 @@ export default function ChatPopup() {
       }
     : null;
 
-  const legacyMessages = contactId
-    ? mapToLegacyMessages(messages, contactId)
-    : [];
+  const legacyMessages = messages;
 
   const handleSendMessage = useCallback(
     async (content: string) => {
