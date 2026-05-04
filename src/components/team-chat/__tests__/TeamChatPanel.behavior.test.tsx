@@ -50,6 +50,8 @@ describe('TeamChatPanel Behavior', () => {
       tts: { isPlaying: false, isLoading: false },
       checkNearBottom: vi.fn(),
       scrollToBottom: vi.fn(),
+      sendMutation: { isPending: false },
+      updateStatusMutation: { mutate: vi.fn() },
     });
 
     render(
@@ -82,6 +84,8 @@ describe('TeamChatPanel Behavior', () => {
       lastScrollTopRef: { current: 0 },
       tts: { isPlaying: false, isLoading: false },
       checkNearBottom: vi.fn(),
+      sendMutation: { isPending: false },
+      updateStatusMutation: { mutate: vi.fn() },
     });
 
     render(
@@ -117,6 +121,8 @@ describe('TeamChatPanel Behavior', () => {
       lastScrollTopRef: { current: 0 },
       tts: { isPlaying: false, isLoading: false },
       checkNearBottom: vi.fn(),
+      sendMutation: { isPending: false },
+      updateStatusMutation: { mutate: vi.fn() },
     });
 
     // If we were using the real hook, we'd check if scrollOffsetRef.current became 800.
