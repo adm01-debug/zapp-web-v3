@@ -180,7 +180,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="px-3 py-2 border-b border-border bg-card">
             <div className="flex items-center gap-2">
               <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-              <Input ref={s.searchInputRef} value={s.searchQuery} onChange={e => s.setSearchQuery(e.target.value)}
+              <Input ref={s.searchInputRef} value={s.searchQuery} onChange={e => (s as any).syncSearchWithCache(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Escape') { s.setShowSearch(false); s.setSearchQuery(''); } }}
                 placeholder="Buscar nas mensagens..." className="h-8 text-sm" />
               {s.searchQuery && <span className="text-xs text-muted-foreground whitespace-nowrap">{s.filteredMessages.length} resultado{s.filteredMessages.length !== 1 ? 's' : ''}</span>}
@@ -189,6 +189,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
           </motion.div>
         )}
       </AnimatePresence>
+
 
       <AnimatePresence>
         {showStats && (
