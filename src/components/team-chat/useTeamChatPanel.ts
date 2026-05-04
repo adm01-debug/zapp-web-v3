@@ -43,8 +43,12 @@ export function useTeamChatPanel(conversation: TeamConversation) {
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [showAddMembers, setShowAddMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<any>(null); // Reference to react-window List
   const isNearBottomRef = useRef(true);
+  const lastScrollTopRef = useRef(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const scrollOffsetRef = useRef<number>(0);
+
   
   // Performance metrics
   usePerformanceMetrics('TeamChatPanel');
