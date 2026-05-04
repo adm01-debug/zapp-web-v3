@@ -50,6 +50,9 @@ export function RealtimeInboxView() {
   const isMobile = useIsMobile();
   const inbox = useRealtimeInbox();
   
+  // Monitora a conexão com o provedor e reconecta automaticamente se necessário
+  useEvolutionAutoReconnection('wpp2');
+
   // Conecta alertas de delivery ao useSLAAlerts
   useSLAAlerts({
     contactId: inbox.selectedContactId,
