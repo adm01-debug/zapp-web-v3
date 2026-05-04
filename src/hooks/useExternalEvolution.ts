@@ -42,7 +42,7 @@ async function fetchMessagesByJid(remoteJid: string, limit = 1000): Promise<Evol
 }
 
 // ─── Hook: External Conversations (list for sidebar) ──────────
-export function useExternalConversations() {
+export function useExternalConversations(enabled = true) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -51,7 +51,8 @@ export function useExternalConversations() {
       const messages = await fetchExternalMessages(500);
       return buildExternalConversations(messages);
     },
-    refetchInterval: POLL_INTERVAL,
+    enabled,
+    refetchInterval: enabled ? POLL_INTERVAL : false,
     staleTime: POLL_INTERVAL - 1000,
   });
 
