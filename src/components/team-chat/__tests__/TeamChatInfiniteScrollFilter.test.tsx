@@ -1,9 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { TeamChatPanel } from '../TeamChatPanel';
-import { useAuth } from '@/features/auth';
-import { useTeamChatPanel } from '../useTeamChatPanel';
-import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
 
 // Mock dependencies
 vi.mock('@/features/auth', () => ({
@@ -42,9 +39,15 @@ vi.mock('@/features/inbox/hooks/team-chat/useTeamMessageReactions', () => ({
   }))
 }));
 
-// Mock react-window
+// Mock react-window with all used exports
 vi.mock('react-window', () => ({
-  List: ({ rowCount }: any) => <div data-testid="virtual-list" data-itemcount={rowCount} />
+  List: ({ rowCount }: any) => <div data-testid="virtual-list" data-itemcount={rowCount} />,
+  useDynamicRowHeight: vi.fn(() => ({ setRowHeight: vi.fn() }))
+}));
+
+// Mock react-virtualized-auto-sizer
+vi.mock('react-virtualized-auto-sizer', () => ({
+  default: ({ children }: any) => children({ width: 1000, height: 1000 })
 }));
 
 describe('TeamChatPanel Infinite Scroll & Filter Integration', () => {
