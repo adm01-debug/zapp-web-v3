@@ -41,6 +41,7 @@ export function useTeamChatPanel(conversation: TeamConversation) {
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [replyTo, setReplyTo] = useState<TeamMessage | null>(null);
   const [showScrollDown, setShowScrollDown] = useState(false);
+  const [hasNewMessagesUnseen, setHasNewMessagesUnseen] = useState(false);
   const [showAddMembers, setShowAddMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<any>(null); // Reference to react-window List
