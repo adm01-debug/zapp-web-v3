@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+const TEMPLATE_PATH = 'scripts/templates/audit_template.md';
 const DOSSIER_PATH = 'docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.md';
 
 function getGitInfo() {
@@ -15,29 +16,27 @@ function getGitInfo() {
   }
 }
 
-function updateEvidenceGenesis() {
-  if (!fs.existsSync(DOSSIER_PATH)) return;
+function generateDossier() {
+  if (!fs.existsSync(TEMPLATE_PATH)) {
+    console.error('Template not found');
+    process.exit(1);
+  }
 
   const { commitHash, date, author } = getGitInfo();
-  let content = fs.readFileSync(DOSSIER_PATH, 'utf8');
+  let content = fs.readFileSync(TEMPLATE_PATH, 'utf8');
 
-  // Replace Evidence Genesis section or specific markers
+  // Fill in the Evidence Genesis
   const genesisEntry = `| ${date} | CI Audit Generation | ${author} | \`${commitHash}\` | Sucesso |`;
-  
-  // Update the operational trail table
-  const tableHeader = '| Data/Hora (UTC) | Ação | Responsável | Evidência (Commit/ID) | Status |';
-  const tableSeparator = '| :--- | :--- | :--- | :--- | :--- |';
-  
-  const searchPattern = `${tableHeader}\n${tableSeparator}`;
-  if (content.includes(searchPattern)) {
-    // Insert after separator if not already there for this commit
-    if (!content.includes(commitHash)) {
-      content = content.replace(searchPattern, `${searchPattern}\n${genesisEntry}`);
-    }
+  content = content.replace('GENESIS_ENTRY_PLACEHOLDER', genesisEntry);
+
+  // Ensure target directory exists
+  const dir = path.dirname(DOSSIER_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
 
   fs.writeFileSync(DOSSIER_PATH, content);
-  console.log(`Updated Evidence Genesis with commit ${commitHash}`);
+  console.log(`Dossier generated at ${DOSSIER_PATH} (Commit: ${commitHash})`);
 }
 
-updateEvidenceGenesis();
+generateDossier();
