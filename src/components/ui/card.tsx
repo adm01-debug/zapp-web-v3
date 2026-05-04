@@ -8,13 +8,13 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-white/10 bg-black",
-        elevated: "border-white/10 bg-black shadow-none",
-        interactive: "border-white/10 bg-black hover:border-primary/50 cursor-pointer shadow-none",
-        selected: "border-primary bg-primary/5 ring-1 ring-primary/20",
+        default: "border-white/10 bg-black shadow-none",
+        elevated: "border-white/10 bg-black shadow-none hover:shadow-[0_0_25px_rgba(255,255,255,0.02)]",
+        interactive: "border-white/10 bg-black hover:border-primary/50 cursor-pointer shadow-none hover:shadow-[0_0_30px_rgba(var(--primary),0.05)]",
+        selected: "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.1)]",
         ghost: "border-transparent bg-transparent",
-        glass: "border-white/10 bg-black", /* Pure black for OLED */
-        neon: "border-secondary/50 bg-black shadow-none",
+        glass: "border-white/15 bg-black/40 backdrop-blur-md", /* OLED Glass effect */
+        neon: "border-secondary/40 bg-black shadow-[0_0_15px_rgba(var(--secondary),0.05)]",
         gradient: "border-white/10 bg-black",
       },
       padding: {
