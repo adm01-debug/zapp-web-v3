@@ -329,7 +329,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     whatsappConnectionId,
   });
 
-  const handleScheduleMessage = async (message: string, scheduledAt: Date, attachment?: File) => {
+  const handleScheduleMessage = async (content: string, scheduledAt: Date, attachment?: File) => {
     try {
       let mediaUrl: string | undefined;
       let messageType = 'text';
@@ -338,14 +338,13 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
         const { error: uploadError } = await supabase.storage.from('whatsapp-media').upload(fileName, attachment);
         if (uploadError) {
           toast({ title: 'Erro no upload', description: `Falha ao anexar: ${uploadError.message}`, variant: 'destructive' });
-        }
-        if (!uploadError) {
-          const { data: signedData } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 604800); // 7 days for scheduled messages
+        } else {
+          const { data: signedData } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 604800);
           mediaUrl = signedData?.signedUrl;
           messageType = attachment.type.startsWith('audio') ? 'audio' : attachment.type.startsWith('image') ? 'image' : attachment.type.startsWith('video') ? 'video' : 'document';
         }
       }
-      await scheduleMessage({ contactId: conversation.contact.id, content: message, scheduledAt, messageType, mediaUrl });
+      await scheduleMessage({ contactId: conversation.contact.id, content, scheduledAt, messageType, mediaUrl });
       closeDialog('scheduleDialog');
     } catch (err) { log.error('Failed to schedule message:', err); }
   };
