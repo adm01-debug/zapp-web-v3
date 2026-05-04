@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, UserPlus, UserMinus, Shield, Loader2, History, Link2, Copy, Trash2, Download, FileSpreadsheet, MessageSquare, Settings2, Globe, Lock } from 'lucide-react';
+import { Search, UserPlus, UserMinus, Shield, Loader2, History, Link2, Copy, Trash2, Download, MessageSquare, Settings2, Globe, Lock, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -183,7 +183,7 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
     mutationFn: async ({ profileId, action }: { profileId: string, action: 'add' | 'remove' }) => {
       if (!currentUser) throw new Error('Not authenticated');
       const { error } = await supabase.rpc('manage_department_member', {
-        _admin_user_id: currentUser.user_id,
+        _admin_user_id: currentUser.id,
         _target_profile_id: profileId,
         _department_id: department.id,
         _action: action
@@ -193,7 +193,6 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['profiles-for-dept-mgmt'] });
       queryClient.invalidateQueries({ queryKey: ['dept-audit-logs', department.id] });
-      queryClient.invalidateQueries({ queryKey: ['team-profiles-for-chat'] });
       toast({
         title: vars.action === 'add' ? 'Membro adicionado' : 'Membro removido',
         description: `O colaborador foi ${vars.action === 'add' ? 'incluído no' : 'removido do'} departamento ${department.name}.`,
@@ -423,46 +422,6 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
                     Recomendamos iniciar com o modo Não-Oficial para testes.
                   </p>
                 </div>
-              </div>
-            </div>
-          )}
-
-              {whatsappMode !== 'none' && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">ID da Instância / Phone Number ID</label>
-                    <div className="relative">
-                      <Settings2 className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        placeholder="Ex: 1234567890" 
-                        value={whatsappInstanceId} 
-                        onChange={e => setWhatsappInstanceId(e.target.value)}
-                        className="pl-9 h-10 text-sm bg-background"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Chave da API / Token de Acesso</label>
-                    <Input 
-                      type="password"
-                      placeholder="••••••••••••••••" 
-                      value={whatsappApiKey} 
-                      onChange={e => setWhatsappApiKey(e.target.value)}
-                      className="h-10 text-sm bg-background"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="pt-4 mt-auto">
-                <Button 
-                  className="w-full h-10 font-bold tracking-tight bg-primary hover:bg-primary/90 shadow-md" 
-                  onClick={() => updateWhatsappMutation.mutate()}
-                  disabled={updateWhatsappMutation.isPending}
-                >
-                  {updateWhatsappMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : 'Salvar Configurações'}
-                </Button>
               </div>
             </div>
           )}
