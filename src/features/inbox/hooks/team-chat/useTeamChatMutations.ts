@@ -95,7 +95,18 @@ export function useEditTeamMessage() {
       if (error) throw error;
       return { conversationId };
     },
-    onSuccess: (data) => { queryClient.invalidateQueries({ queryKey: ['team-messages', data.conversationId] }); },
+    onSuccess: (data, vars) => {
+      queryClient.setQueriesData({ queryKey: ['team-messages', vars.conversationId] }, (oldData: any) => {
+        if (!oldData || !oldData.pages) return oldData;
+        const newPages = oldData.pages.map((page: any) => ({
+          ...page,
+          messages: page.messages.map((m: any) => 
+            m.id === vars.messageId ? { ...m, content: vars.content, is_edited: true } : m
+          )
+        }));
+        return { ...oldData, pages: newPages };
+      });
+    },
     onError: () => { toast({ title: 'Erro ao editar mensagem', variant: 'destructive' }); },
   });
 }
