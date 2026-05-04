@@ -33,6 +33,11 @@ vi.mock('@/hooks/messaging/useMessageQueue', () => ({
   useMessageQueue: () => mockUseMessageQueue(),
 }));
 
+const mockUseContactTyping = vi.fn(() => false);
+vi.mock('@/hooks/useContactTyping', () => ({
+  useContactTyping: () => mockUseContactTyping(),
+}));
+
 describe('Chat Integration - Flow Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -112,6 +117,13 @@ describe('Chat Integration - Flow Tests', () => {
     expect(screen.getByText('Enviando agora')).toBeInTheDocument();
     expect(screen.getAllByText(/Enviando.../i)[0]).toBeInTheDocument();
   });
+
+  it('exibe o indicador de "Digitando..." quando o contato está ativo', () => {
+    mockUseContactTyping.mockReturnValue(true);
+    render(<MessageList remoteJid="test@jid" />);
+    expect(screen.getByText(/Digitando.../i)).toBeInTheDocument();
+  });
+
 
   it('deve disparar loadMore quando o topo da lista se torna visível (carregamento incremental)', async () => {
     const loadMoreMock = vi.fn().mockResolvedValue(undefined);
