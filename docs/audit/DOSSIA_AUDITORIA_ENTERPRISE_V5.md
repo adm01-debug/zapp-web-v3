@@ -67,7 +67,7 @@ Evidências rastreáveis para auditoria técnica.
 | Data/Hora (UTC) | Ação | Responsável | Commit Ref | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | 2026-05-04 22:31:26 | CI Audit (dev) | gpt-engineer-app[bot] | `aae7212c` | Sucesso |
-| | 2026-05-04 22:29:36 | CI Audit Generation | gpt-engineer-app[bot] | `5a0a2d2f` | Sucesso | |
+| 2026-05-04 22:29:36 | CI Audit Generation | gpt-engineer-app[bot] | `5a0a2d2f` | Sucesso |
 
 ---
 
