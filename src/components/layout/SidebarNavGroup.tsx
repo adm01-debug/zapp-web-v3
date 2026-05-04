@@ -87,8 +87,8 @@ export function SidebarNavGroup({ label, icon: GroupIcon, items, currentView, on
           >
             <ul role="list" className={cn(
               'flex flex-col gap-0.5 w-full list-none p-0 m-0 pt-0.5',
-              collapsed && 'items-center',
-              !collapsed && 'pl-1'
+                collapsed && 'items-center px-[11px]',
+                !collapsed && 'px-2'
             )}>
               {items.map((item) => {
                 const b = badgeMap?.[item.id];
