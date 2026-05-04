@@ -111,6 +111,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
     }
   }, [s.filteredMessages.length, conversation.id]);
 
+  useEffect(() => {
+    // Restore scroll position logic would go here, 
+    // for now we ensure it stays at bottom when new messages arrive.
+    if (s.isNearBottomRef.current && s.scrollRef.current) {
+        s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight;
+    }
+  }, [s.filteredMessages]);
+
   useEffect(() => { if (s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight; }, [conversation.id]);
   useEffect(() => { if (s.showSearch) s.searchInputRef.current?.focus(); }, [s.showSearch]);
 
@@ -153,7 +161,13 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
       </AnimatePresence>
 
       <div className="flex-1 relative bg-background min-h-0">
-        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
+        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto" onScroll={(e) => {
+          s.checkNearBottom();
+          const el = e.target as HTMLDivElement;
+          if (el.scrollTop === 0 && s.hasNextPage && !s.isFetchingNextPage) {
+            s.fetchNextPage();
+          }
+        }} role="log" aria-label="Mensagens da conversa" aria-live="polite">
         {!isDeptMember ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
