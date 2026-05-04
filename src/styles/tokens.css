@@ -223,14 +223,14 @@
     --primary-glow: 225 100% 65%;
     --secondary: 215 90% 60%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 215 25% 75%;
-    --accent: 221 80% 20%;
+    --muted: 0 0% 8%; /* Ajustado para OLED */
+    --muted-foreground: 215 20% 70%;
+    --accent: 221 80% 15%; /* Mais profundo */
     --accent-foreground: 221 100% 95%;
     --destructive: 0 95% 62%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 14%; /* Contraste ideal para OLED */
-    --input: 0 0% 8%;
+    --border: 0 0% 10%; /* Borda sutil no OLED */
+    --input: 0 0% 6%;
     --ring: 221 95% 60%;
     --success: 142 90% 50%;
     --success-foreground: 0 0% 100%;
@@ -260,13 +260,13 @@
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 221 95% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 221 75% 15%;
+    --sidebar-accent: 221 75% 12%;
     --sidebar-accent-foreground: 221 100% 95%;
-    --sidebar-border: 0 0% 10%;
+    --sidebar-border: 0 0% 8%; /* Borda sidebar sutil */
     --sidebar-ring: 221 95% 60%;
     --chat-bubble-sent: 221 95% 55%;
     --chat-bubble-sent-foreground: 0 0% 100%;
-    --chat-bubble-received: 0 0% 10%; /* Ligeiramente mais claro para leitura em OLED */
+    --chat-bubble-received: 0 0% 8%; /* Levemente mais escuro para OLED */
     --chat-bubble-received-foreground: 0 0% 98%;
     --chat-header: 0 0% 0%;
     --chat-input-bg: 0 0% 0%;
