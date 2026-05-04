@@ -71,8 +71,8 @@
     --secondary-foreground: 0 0% 100%;
 
     /* ===== MUTED ===== */
-    --muted: 221 15% 92%;
-    --muted-foreground: 221 10% 45%;
+    --muted: 221 15% 90%;
+    --muted-foreground: 221 12% 40%;
 
     /* ===== ACCENT ===== */
     --accent: 221 55% 95%;
