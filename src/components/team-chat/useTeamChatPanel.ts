@@ -69,9 +69,22 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
     isNearBottomRef.current = nearBottom;
     setShowScrollDown(!nearBottom);
+    if (nearBottom) setHasNewMessagesUnseen(false);
   }, []);
 
-  const scrollToBottom = useCallback(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), []);
+  const scrollToBottom = useCallback(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    setHasNewMessagesUnseen(false);
+  }, []);
+
+  // Monitor new messages from others to show indicator
+  useEffect(() => {
+    if (!messages.length || isNearBottomRef.current) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.sender_id !== profile?.id) {
+      setHasNewMessagesUnseen(true);
+    }
+  }, [messages.length, profile?.id]);
 
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
