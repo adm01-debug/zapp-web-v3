@@ -243,7 +243,7 @@ export function ConversationList({
                               {conversation.lastMessage?.content || 'Sem mensagens'}
                             </p>
                             {conversation.unreadCount > 0 && (
-                              <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-[#111b21]">
+                              <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-background">
                                 {conversation.unreadCount}
                               </span>
                             )}
