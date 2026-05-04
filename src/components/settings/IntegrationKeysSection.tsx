@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGlobalSettings } from '@/hooks/useGlobalSettings';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Plug, Eye, EyeOff, Save, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plug, Eye, EyeOff, Save, CheckCircle2, AlertCircle, RefreshCw, Activity } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import { cn } from '@/lib/utils';
 
 interface KeyField {
   key: string;
@@ -18,6 +20,18 @@ interface KeyField {
 
 const INTEGRATION_KEYS: KeyField[] = [
   {
+    key: 'evolution_api_url',
+    label: 'Evolution API URL',
+    description: 'URL base da sua instância Evolution API (ex: https://api.evolution.com)',
+    placeholder: 'https://...',
+  },
+  {
+    key: 'evolution_api_token',
+    label: 'Evolution Global Apikey',
+    description: 'Token global de autenticação (Global Apikey) do seu servidor Evolution',
+    placeholder: '...',
+  },
+  {
     key: 'elevenlabs_api_key',
     label: 'ElevenLabs API Key',
     description: 'Chave para geração de voz (TTS), efeitos sonoros e conversão de voz',
@@ -26,10 +40,25 @@ const INTEGRATION_KEYS: KeyField[] = [
 ];
 
 export function IntegrationKeysSection() {
-  const { isLoading, getSetting, addSetting } = useGlobalSettings();
+  const { isLoading, getSetting, addSetting, refetch } = useGlobalSettings();
+  const { listInstances, isLoading: evolutionLoading } = useEvolutionApi();
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Sync with localStorage for direct mode
+  useEffect(() => {
+    const url = getSetting('evolution_api_url');
+    const token = getSetting('evolution_api_token');
+    if (url && token) {
+      localStorage.setItem('zapp_evolution_config', JSON.stringify({
+        evolution_api_url: url,
+        evolution_api_key: token
+      }));
+    }
+  }, [getSetting]);
 
   const toggleVisibility = (key: string) => {
     setVisibleKeys(prev => ({ ...prev, [key]: !prev[key] }));
@@ -37,6 +66,31 @@ export function IntegrationKeysSection() {
 
   const handleChange = (key: string, value: string) => {
     setEditValues(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    setTestResult(null);
+    try {
+      // Test by listing instances - simple GET call that requires authentication
+      const result = await listInstances();
+      if (Array.isArray(result) || (result && typeof result === 'object')) {
+        const count = Array.isArray(result) ? result.length : 0;
+        setTestResult({ 
+          success: true, 
+          message: `Conexão estabelecida com sucesso! ${count} instâncias encontradas.` 
+        });
+        toast.success('Teste de conexão bem sucedido!');
+      } else {
+        throw new Error('Resposta inválida da API');
+      }
+    } catch (error: any) {
+      const msg = error.message || 'Falha na conexão';
+      setTestResult({ success: false, message: msg });
+      toast.error(`Falha no teste: ${msg}`);
+    } finally {
+      setTestingConnection(false);
+    }
   };
 
   const handleSave = async (key: string) => {
@@ -150,6 +204,41 @@ export function IntegrationKeysSection() {
             </div>
           );
         })}
+        <div className="pt-4 border-t border-border/30">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium">Diagnóstico de Conexão</h4>
+                <p className="text-xs text-muted-foreground">Valide se a plataforma consegue se comunicar com o servidor Evolution</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={handleTestConnection}
+                disabled={testingConnection || !getSetting('evolution_api_url') || !getSetting('evolution_api_token')}
+              >
+                {testingConnection ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+                Testar Evolution
+              </Button>
+            </div>
+            
+            {testResult && (
+              <div className={cn(
+                "p-3 rounded-lg border text-xs flex items-start gap-2 animate-in fade-in slide-in-from-top-1",
+                testResult.success 
+                  ? "bg-success/10 border-success/30 text-success" 
+                  : "bg-destructive/10 border-destructive/30 text-destructive"
+              )}>
+                {testResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
+                <div>
+                  <p className="font-semibold">{testResult.success ? 'Sucesso' : 'Erro na Conexão'}</p>
+                  <p className="opacity-90">{testResult.message}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
