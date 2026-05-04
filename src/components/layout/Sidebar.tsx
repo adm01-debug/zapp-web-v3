@@ -62,20 +62,20 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
         {!collapsed && <span className="text-sm font-bold text-foreground tracking-tight ml-2 mr-auto">ZAPP</span>}
         {!collapsed && (
           <Tooltip delayDuration={200}><TooltipTrigger asChild>
-            <button onClick={toggle} className="w-[28px] h-[28px] rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" aria-label="Recolher menu">
+            <button onClick={toggle} className="w-[28px] h-[28px] rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" aria-label="Recolher menu">
               <PanelLeftClose className="w-[15px] h-[15px]" />
             </button>
-          </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">Recolher <kbd className="ml-1 px-1 py-0.5 rounded bg-muted text-[10px] font-mono">⌘B</kbd></TooltipContent></Tooltip>
+          </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">Recolher <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] font-mono">⌘B</kbd></TooltipContent></Tooltip>
         )}
       </div>
 
       {collapsed && (
         <div className="flex justify-center my-1">
           <Tooltip delayDuration={200}><TooltipTrigger asChild>
-            <button onClick={toggle} className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border border-border/40 hover:border-border focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" aria-label="Expandir menu">
+            <button onClick={toggle} className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-all border border-border/40 hover:border-border focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" aria-label="Expandir menu">
               <PanelLeftOpen className="w-[16px] h-[16px]" />
             </button>
-          </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">Expandir <kbd className="ml-1 px-1 py-0.5 rounded bg-muted text-[10px] font-mono">⌘B</kbd></TooltipContent></Tooltip>
+          </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">Expandir <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] font-mono">⌘B</kbd></TooltipContent></Tooltip>
         </div>
       )}
 
@@ -95,12 +95,12 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
       <div className={cn('flex my-1.5', collapsed ? 'justify-center px-[11px]' : 'px-2')}>
         <Tooltip delayDuration={200}><TooltipTrigger asChild>
           <button onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
-            className={cn('rounded-lg flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all border border-dashed border-border/60 hover:border-border', collapsed ? 'w-[40px] h-[30px] justify-center' : 'w-full h-[32px] px-3')} aria-label="Buscar módulo (Ctrl+K)">
+            className={cn('rounded-lg flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-all border border-dashed border-border/60 hover:border-border', collapsed ? 'w-[40px] h-[30px] justify-center' : 'w-full h-[32px] px-3')} aria-label="Buscar módulo (Ctrl+K)">
             <Search className="w-[14px] h-[14px] shrink-0" />
             {!collapsed && <span className="text-xs text-muted-foreground">Buscar...</span>}
-            {!collapsed && <kbd className="ml-auto px-1 py-0.5 rounded bg-muted text-[9px] font-mono text-muted-foreground">⌘K</kbd>}
+            {!collapsed && <kbd className="ml-auto px-1 py-0.5 rounded bg-muted/20 text-[9px] font-mono text-muted-foreground">⌘K</kbd>}
           </button>
-        </TooltipTrigger>{collapsed && <TooltipContent side="right" sideOffset={8} className="text-xs">Buscar <kbd className="ml-1 px-1 py-0.5 rounded bg-muted text-[10px] font-mono">⌘K</kbd></TooltipContent>}</Tooltip>
+        </TooltipTrigger>{collapsed && <TooltipContent side="right" sideOffset={8} className="text-xs">Buscar <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] font-mono">⌘K</kbd></TooltipContent>}</Tooltip>
       </div>
 
       {/* Favorites */}
@@ -119,8 +119,8 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
       <div className={cn('mx-3 h-px bg-border', collapsed ? 'my-1' : 'my-1.5')} />
 
       {/* Groups */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-thin [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-primary/50">
-        <div className={cn('flex flex-col gap-1.5 py-1', collapsed ? 'items-center px-[11px]' : 'px-2')}>
+      <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-none">
+        <div className={cn('flex flex-col gap-1.5 py-1', collapsed ? 'items-center' : 'px-2')}>
           {sidebarGroups.map((group) => <SidebarNavGroup key={group.label} label={group.label} icon={group.icon} items={group.items} currentView={currentView} onViewChange={onViewChange} collapsed={collapsed} onToggleFavorite={toggleFavorite} isFavorite={isFavorite} badgeMap={groupBadges[group.label]} />)}
         </div>
       </div>
@@ -135,7 +135,7 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
           <SoundMuteToggle className="w-[36px] h-[36px]" />
           <StatusLabelToggle className="w-[36px] h-[36px]" />
           <Tooltip delayDuration={200}><TooltipTrigger asChild>
-            <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={cn("w-[36px] h-[36px] rounded-lg flex items-center justify-center transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none", isDark && "text-primary")} aria-label={isDark ? 'Modo claro' : 'Modo escuro'}>
+            <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={cn("w-[36px] h-[36px] rounded-lg flex items-center justify-center transition-all duration-200 text-muted-foreground hover:bg-muted/10 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none", isDark && "text-primary")} aria-label={isDark ? 'Modo claro' : 'Modo escuro'}>
               {isDark ? <Sun className="w-[16px] h-[16px]" /> : <Moon className="w-[16px] h-[16px]" />}
             </button>
           </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">{isDark ? 'Modo claro' : 'Modo escuro'}</TooltipContent></Tooltip>

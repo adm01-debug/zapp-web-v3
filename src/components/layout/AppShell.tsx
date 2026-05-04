@@ -126,7 +126,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
       )}
 
       {!isMobile && (
-        <div className="fixed bottom-2 left-2 z-[60] flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/40 backdrop-blur-xs border border-border/10 text-[9px] font-mono text-muted-foreground/60 select-none pointer-events-none group hover:opacity-100 transition-opacity">
+        <div className="fixed bottom-2 left-2 z-[60] flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/10 border border-border/10 text-[9px] font-mono text-muted-foreground/60 select-none pointer-events-none group hover:opacity-100 transition-opacity">
           <Info className="w-2.5 h-2.5 opacity-40" />
           <span>{appVersion}</span>
           <span className="w-1 h-1 rounded-full bg-success/40" />
@@ -155,7 +155,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
                   'border border-border/40 shadow-none',
                   isZen
                     ? 'px-3 bg-primary/15 border-primary/30 text-primary hover:bg-primary/25 hover:border-primary/50 shadow-primary/10'
-                    : 'px-2.5 bg-card/80 border-border/40 text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 hover:border-border/70'
+                    : 'px-2.5 bg-black border-border/40 text-muted-foreground/60 hover:text-foreground hover:bg-muted/10 hover:border-border/70'
                 )}
                 aria-label={isZen ? 'Sair do modo zen' : 'Modo zen'}
               >
@@ -196,7 +196,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
           <TooltipTrigger asChild>
             <button
               onClick={() => setVoiceOpen(true)}
-              className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+              className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-none hover:scale-105 transition-all flex items-center justify-center border border-primary/20"
               aria-label="Assistente de voz"
             >
               <Mic className="w-6 h-6" />
