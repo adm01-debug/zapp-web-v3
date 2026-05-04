@@ -57,9 +57,11 @@ const AdminWhatsAppModePage = lazyWithRetry(() => import("@/pages/admin/AdminWha
 const AdminWhatsAppLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppLogsPage"));
 const AdminGmailStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailStatusPage"));
 const AdminGmailAuditPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailAuditPage"));
+const AuditEvidenceDashboard = lazyWithRetry(() => import("@/pages/admin/AuditEvidenceDashboard"));
 const Install = lazyWithRetry(() => import("@/pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("@/pages/ChatPopup"));
 const InboxPage = lazyWithRetry(() => import("@/pages/inbox/InboxPage"));
+
 
 
 // Route loading fallback component
@@ -125,7 +127,9 @@ export function AppRoutes() {
         <Route path="/admin/whatsapp-logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppLogsPage /></ProtectedRoute>} />
         <Route path="/admin/gmail-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailStatusPage /></ProtectedRoute>} />
         <Route path="/admin/gmail-audit" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailAuditPage /></ProtectedRoute>} />
+        <Route path="/admin/audit-evidence" element={<ProtectedRoute requiredRoles={['admin']}><AuditEvidenceDashboard /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
+
       </Routes>
     </Suspense>
   );
