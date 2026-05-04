@@ -222,14 +222,14 @@
     --primary-glow: 225 100% 65%;
     --secondary: 215 90% 60%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 222 25% 12%;
-    --muted-foreground: 215 25% 85%;
-    --accent: 221 80% 28%;
-    --accent-foreground: 221 100% 88%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 215 25% 75%;
+    --accent: 221 80% 20%;
+    --accent-foreground: 221 100% 95%;
     --destructive: 0 95% 62%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 12%; /* Borda sutil para OLED */
-    --input: 0 0% 10%;
+    --border: 0 0% 14%; /* Contraste ideal para OLED */
+    --input: 0 0% 8%;
     --ring: 221 95% 60%;
     --success: 142 90% 50%;
     --success-foreground: 0 0% 100%;

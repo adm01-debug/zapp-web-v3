@@ -42,13 +42,38 @@ html, body, #root {
 @tailwind components;
 @tailwind utilities;
 
-/* ===== ACCESSIBILITY ===== */
-/* Global focus-visible ring for all interactive elements - High Contrast & Premium */
+/* ===== ACCESSIBILITY & SCROLLBAR ===== */
+/* Global focus-visible ring for all interactive elements - High Contrast OLED Premium */
 :focus-visible {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 3px;
-  box-shadow: 0 0 0 4px hsla(var(--primary), 0.15);
+  box-shadow: 0 0 0 4px hsla(var(--primary), 0.25);
   transition: outline-offset 0.2s, box-shadow 0.2s;
+}
+
+/* OLED Scrollbar */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 10px;
+    border: 2px solid hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+/* Selection Contrast */
+::selection {
+  background-color: hsla(var(--primary), 0.3);
+  color: hsl(var(--foreground));
 }
 
 :focus:not(:focus-visible) {
