@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ChatMessagesArea } from '../ChatMessagesArea';
 import { Message } from '@/types/chat';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock Supabase
@@ -69,22 +70,24 @@ describe('ChatMessagesArea Integration', () => {
   const renderComponent = (props = {}) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <ChatMessagesArea
-          messages={mockMessages}
-          isContactTyping={false}
-          typingUserName=""
-          ttsLoading={false}
-          ttsPlaying={false}
-          ttsMessageId={null}
-          onSpeak={vi.fn()}
-          onStop={vi.fn()}
-          onReply={vi.fn()}
-          onForward={vi.fn()}
-          onCopy={vi.fn()}
-          onScrollToMessage={vi.fn()}
-          onInteractiveButtonClick={vi.fn()}
-          {...props}
-        />
+        <TooltipProvider>
+          <ChatMessagesArea
+            messages={mockMessages}
+            isContactTyping={false}
+            typingUserName=""
+            ttsLoading={false}
+            ttsPlaying={false}
+            ttsMessageId={null}
+            onSpeak={vi.fn()}
+            onStop={vi.fn()}
+            onReply={vi.fn()}
+            onForward={vi.fn()}
+            onCopy={vi.fn()}
+            onScrollToMessage={vi.fn()}
+            onInteractiveButtonClick={vi.fn()}
+            {...props}
+          />
+        </TooltipProvider>
       </QueryClientProvider>
     );
   };
