@@ -52,6 +52,7 @@ export function IntegrationKeysSection() {
     message: string; 
     details?: { instances: number; status: string; version?: string } 
   } | null>(null);
+  const [detectedInstances, setDetectedInstances] = useState<any[]>([]);
 
   const { syncAll } = useEvolutionAutoSync();
 
