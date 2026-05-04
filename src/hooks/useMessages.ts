@@ -32,6 +32,7 @@ export interface Message {
   notes:            string | null;
   follow_up_at:     string | null;
   follow_up_done:   boolean;
+  status:           number;
   contact_id:       string | null;
   created_at:       string;
 }
