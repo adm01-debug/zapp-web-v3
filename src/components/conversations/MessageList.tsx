@@ -29,6 +29,7 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
     toggleStar, toggleImportant 
   } = useMessages(remoteJid);
   const { pendingMessages } = useMessageQueue();
+  const isTyping = useContactTyping(remoteJid);
   
   const currentPending = pendingMessages.filter(p => p.remote_jid === remoteJid);
   
