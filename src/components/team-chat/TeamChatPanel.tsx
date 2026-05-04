@@ -198,9 +198,11 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         ) : s.filteredMessages.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-12">{s.searchQuery ? 'Nenhuma mensagem encontrada' : 'Envie a primeira mensagem!'}</div>
         ) : (
-          <div className="h-full w-full">
+          <div className="h-full w-full flex flex-col">
+            {s.isFetchingNextPage && <div className="p-2 text-center text-xs text-muted-foreground animate-pulse">Carregando mensagens anteriores...</div>}
+            <div className="flex-1 relative">
             <AutoSizer>
-              {({ height, width }) => (
+              {({ height, width }: { height: number, width: number }) => (
                 <List
                   height={height}
                   itemCount={s.filteredMessages.length}
@@ -209,7 +211,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                   className="scrollbar-none"
                   overscanCount={5}
                 >
-              {({ index, style }) => {
+              {({ index, style }: { index: number, style: React.CSSProperties }) => {
                 const msg = s.filteredMessages[index];
                 const showDate = dateFirstIndexes.has(index);
                 const isMine = msg.sender_id === s.profile?.id;
@@ -290,9 +292,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                           </ContextMenuSubContent>
                         </ContextMenuSub>
                         <ContextMenuItem onClick={() => s.setReplyTo(msg)} className="gap-2"><Reply className="w-3.5 h-3.5" /> Responder</ContextMenuItem>
-                        {msg.content && <ContextMenuItem onClick={() => s.handleCopyMessage(msg.content)} className="gap-2"><Copy className="w-3.5 h-3.5" /> Copiar</ContextMenuItem>}
-                        {cleanText && <ContextMenuItem onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className="gap-2"><Volume2 className="w-3.5 h-3.5" /> {isThisTtsPlaying ? 'Parar' : 'Ouvir'}</ContextMenuItem>}
-                        {isMine && !isEditing && (<><ContextMenuSeparator />{!hasMedia && <ContextMenuItem onClick={() => s.handleStartEdit(msg)} className="gap-2"><Pencil className="w-3.5 h-3.5" /> Editar</ContextMenuItem>}<ContextMenuItem onClick={() => s.handleDelete(msg.id)} className="gap-2 text-destructive focus:text-destructive"><Trash2 className="w-3.5 h-3.5" /> Excluir</ContextMenuItem></>)}
+                        <ContextMenuItem onClick={() => s.handleCopyMessage(msg.content || '')} className="gap-2"><Copy className="w-3.5 h-3.5" /> Copiar Texto</ContextMenuItem>
+                        {isMine && (
+                          <>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem onClick={() => s.handleStartEdit(msg)} className="gap-2"><Pencil className="w-3.5 h-3.5" /> Editar</ContextMenuItem>
+                            <ContextMenuItem onClick={() => s.handleDelete(msg.id)} className="gap-2 text-destructive"><Trash2 className="w-3.5 h-3.5" /> Excluir</ContextMenuItem>
+                          </>
+                        )}
                       </ContextMenuContent>
                     </ContextMenu>
                   </div>
@@ -307,7 +314,6 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
       </div>
 
       {s.showScrollDown && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10"><Button size="icon" variant="secondary" className="rounded-full shadow-lg h-8 w-8" onClick={s.scrollToBottom}><ArrowDown className="w-4 h-4" /></Button></div>}
-
 
       {isDeptMember ? (
         <TeamChatInputArea conversationId={conversation.id} text={s.text} setText={s.setText} replyTo={s.replyTo}
