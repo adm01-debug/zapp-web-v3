@@ -66,7 +66,7 @@ import type { NavItemConfig } from './SidebarNavItem';
 export const primaryNav: readonly NavItemConfig[] = [
   { id: 'inbox', icon: MessageSquare, label: 'Chat' },
   { id: 'contacts', icon: User, label: 'Contatos' },
-  { id: 'agents', icon: UsersRound, label: 'TEAMS' },
+  { id: 'team-chat', icon: UsersRound, label: 'Teams' },
   { id: 'dashboard', icon: BarChart3, label: 'Painel' },
   { id: 'automations', icon: RefreshCw, label: 'Robôs' },
   { id: 'settings', icon: Settings, label: 'Ajustes' },
