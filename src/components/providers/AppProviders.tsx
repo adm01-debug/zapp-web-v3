@@ -55,7 +55,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
           <ThemeSync />
           <HighContrastProvider>
             <AccessibleToastProvider>
-              <TooltipProvider delayDuration={300}>
+              <TooltipProvider delayDuration={150}>
                 {children}
               </TooltipProvider>
             </AccessibleToastProvider>
