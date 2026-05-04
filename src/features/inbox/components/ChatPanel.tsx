@@ -393,10 +393,10 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           />
         )}
 
-        <ChatSearchBar messages={messages} isOpen={activeTool === 'chatSearch'}
+        <ChatSearchBar messages={messages} isOpen={(activeTool as string) === 'chatSearch'}
           onClose={() => { handleSetActiveTool('chatSearch'); setTimeout(() => handlers.inputRef.current?.focus(), 150); }}
           onNavigateToMessage={(id) => messagesAreaRef.current?.scrollToMessage(id)}
-          onHighlightChange={(ids, activeId) => { setHighlightedMessageIds(ids); setActiveHighlightId(activeId); }}
+          onHighlightChange={handleHighlightChange}
           onSearchQueryChange={setSearchQuery} />
 
         <TicketActionsBar contactId={conversation.contact.id} onOpenHistory={() => setHistoryOpen(true)} />
