@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, lazy, Suspense, useReducer, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense, useCallback, useMemo } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { Conversation, Message } from '@/types/chat';
@@ -31,15 +31,12 @@ import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import { useChatPanelHandlers } from './chat/useChatPanelHandlers';
 import { ActiveTool } from './chat/ChatHeaderToolbar';
-import { useChatFilters, FailureCategory } from './chat/hooks/useChatFilters';
+import { useChatFilters } from './chat/hooks/useChatFilters';
 import { useSLADelivery } from './chat/hooks/useSLADelivery';
 import { useChatSearchState } from './chat/hooks/useChatSearchState';
 import { useChatDialogs } from './chat/hooks/useChatDialogs';
-import { useSearchParams } from 'react-router-dom';
 import { useTransferConversation } from '@/features/inbox/hooks/useTransferConversation';
 import { useInboxShortcuts } from '@/features/inbox/hooks/useInboxShortcuts';
-import { useScheduledMediaUpload } from '@/features/inbox/hooks/useScheduledMediaUpload';
-import { useSafeInteractiveMessage } from '@/features/inbox/hooks/useSafeInteractiveMessage';
 import { dbFrom } from '@/integrations/datasource/db';
 
 const WhisperMode = lazy(() => import('./WhisperMode').then(m => ({ default: m.WhisperMode })));
@@ -79,30 +76,23 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   }, []);
 
   useEffect(() => {
-    if ((activeTool as string) === 'chatSearch') openDialog('chatSearch');
-    else if ((activeTool as string) === 'aiAssistant') openDialog('aiAssistant');
-    else {
-      if ((activeTool as string) !== 'chatSearch') closeDialog('chatSearch');
-      if ((activeTool as string) !== 'aiAssistant') closeDialog('aiAssistant');
-    }
+    const isSearch = (activeTool as string) === 'chatSearch';
+    const isAssistant = (activeTool as string) === 'aiAssistant';
+    
+    if (isSearch) openDialog('chatSearch');
+    else closeDialog('chatSearch');
+
+    if (isAssistant) openDialog('aiAssistant');
+    else closeDialog('aiAssistant');
   }, [activeTool, openDialog, closeDialog]);
 
   const [callDirection, setCallDirection] = useState<'inbound' | 'outbound'>('outbound');
-  const {
-    highlightedMessageIds,
-    activeHighlightId,
-    searchQuery,
-    setSearchQuery,
-    resetSearch,
-    handleHighlightChange,
-    setHighlightedMessageIds,
-    setActiveHighlightId
-  } = useChatSearchState();
+  
+  const chatSearch = useChatSearchState();
+  const { highlightedMessageIds, activeHighlightId, searchQuery, setSearchQuery, resetSearch, handleHighlightChange, setHighlightedMessageIds, setActiveHighlightId } = chatSearch;
 
-  const {
-    failuresOnly, failureCategory, setFailuresOnly, setFailureCategory,
-    failedMessages, categoryCounts, categoryFilteredMessages, visibleMessages
-  } = useChatFilters(messages);
+  const filters = useChatFilters(messages);
+  const { failuresOnly, failureCategory, setFailuresOnly, setFailureCategory, failedMessages, categoryCounts, categoryFilteredMessages, visibleMessages } = filters;
 
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
