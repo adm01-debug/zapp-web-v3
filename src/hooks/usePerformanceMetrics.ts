@@ -38,7 +38,7 @@ export function usePerformanceMetrics(componentName: string) {
         }
       });
     });
-    inpObserver.observe({ type: 'event-timing', buffered: true, durationThreshold: 40 });
+    inpObserver.observe({ type: 'event-timing', buffered: true, durationThreshold: 40 } as any);
 
     // Layout Shifts (CLS)
     const clsObserver = new PerformanceObserver((list) => {
