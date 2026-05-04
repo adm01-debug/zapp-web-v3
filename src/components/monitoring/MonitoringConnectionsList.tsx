@@ -20,7 +20,7 @@ interface Props {
 
 const statusIcon = (status: string | null) => {
   switch (status) {
-    case 'connected': case 'healthy': return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />;
+    case 'connected': case 'healthy': return <CheckCircle2 className="w-3.5 h-3.5 text-primary" />;
     case 'disconnected': case 'error': return <XCircle className="w-3.5 h-3.5 text-destructive" />;
     case 'degraded': return <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />;
     default: return <Clock className="w-3.5 h-3.5 text-muted-foreground" />;
@@ -95,10 +95,10 @@ export function MonitoringConnectionsList({ connections, webhookTest, onCheckWeb
                   <div className="flex items-center gap-4 min-w-0">
                     <div className={cn(
                       'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
-                      conn.status === 'connected' ? 'bg-emerald-500/10' : 'bg-destructive/10'
+                      conn.status === 'connected' ? 'bg-primary/10' : 'bg-destructive/10'
                     )}>
                       {conn.status === 'connected'
-                        ? <Wifi className="w-5 h-5 text-emerald-500" />
+                        ? <Wifi className="w-5 h-5 text-primary" />
                         : <WifiOff className="w-5 h-5 text-destructive" />
                       }
                     </div>
@@ -119,7 +119,7 @@ export function MonitoringConnectionsList({ connections, webhookTest, onCheckWeb
                         {conn.phone_number && <span>📱 {conn.phone_number}</span>}
                         {conn.health_response_ms != null && (
                           <span className={cn('font-medium',
-                            conn.health_response_ms < 300 ? 'text-emerald-500' :
+                            conn.health_response_ms < 300 ? 'text-primary' :
                             conn.health_response_ms < 800 ? 'text-amber-500' : 'text-destructive'
                           )}>
                             ⚡ {conn.health_response_ms}ms

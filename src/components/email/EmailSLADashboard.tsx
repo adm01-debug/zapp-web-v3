@@ -157,7 +157,7 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
           title="No prazo"
           value={totals.ok}
           icon={CheckCircle}
-          color="text-green-500"
+          color="text-primary"
           tooltip="Threads respondidas dentro do SLA"
         />
         <StatCard
@@ -216,7 +216,7 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
                       </Badge>
                     )}
                     <span className={cn('text-xs font-semibold tabular-nums',
-                      okPct >= 95 ? 'text-green-500' :
+                      okPct >= 95 ? 'text-primary' :
                       okPct >= 80 ? 'text-amber-500' : 'text-destructive'
                     )}>
                       {okPct}% ok

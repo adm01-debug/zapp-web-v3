@@ -92,7 +92,7 @@ describe('OmnichannelInbox', () => {
   // ===== CHANNEL CONFIG =====
   describe('Channel configuration', () => {
     const CHANNEL_CONFIG = {
-      whatsapp: { label: 'WhatsApp', color: 'text-green-500' },
+      whatsapp: { label: 'WhatsApp', color: 'text-primary' },
       instagram: { label: 'Instagram', color: 'text-pink-500' },
       telegram: { label: 'Telegram', color: 'text-blue-400' },
       messenger: { label: 'Messenger', color: 'text-blue-600' },

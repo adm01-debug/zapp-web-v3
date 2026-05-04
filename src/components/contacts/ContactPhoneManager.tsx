@@ -158,7 +158,7 @@ export const ContactPhoneManager: React.FC<ContactPhoneManagerProps> = ({
 
             {/* WhatsApp badge */}
             {phone.is_whatsapp && (
-              <span title="WhatsApp" className="inline-flex"><MessageCircle className="h-3.5 w-3.5 text-green-500 shrink-0" /></span>
+              <span title="WhatsApp" className="inline-flex"><MessageCircle className="h-3.5 w-3.5 text-primary shrink-0" /></span>
             )}
 
             {/* Remove */}
@@ -220,7 +220,7 @@ export const ContactPhoneManager: React.FC<ContactPhoneManagerProps> = ({
                 onCheckedChange={(v) => setNewPhone((p) => ({ ...p, is_whatsapp: v }))}
               />
               <Label htmlFor="is_whatsapp" className="text-xs cursor-pointer">
-                <MessageCircle className="h-3 w-3 inline text-green-500 mr-1" />
+                <MessageCircle className="h-3 w-3 inline text-primary mr-1" />
                 WhatsApp
               </Label>
             </div>

@@ -124,8 +124,8 @@ export default function WhatsAppProviderConfig() {
           </CardHeader>
           <CardContent>
             <ul className="text-sm space-y-2 text-muted-foreground">
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Sem custos de setup</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Ativação instantânea</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> Sem custos de setup</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> Ativação instantânea</li>
               <li className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-yellow-500" /> Maior risco de banimento</li>
             </ul>
           </CardContent>
@@ -148,8 +148,8 @@ export default function WhatsAppProviderConfig() {
           </CardHeader>
           <CardContent>
             <ul className="text-sm space-y-2 text-muted-foreground">
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Alta performance</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> API REST robusta</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> Alta performance</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> API REST robusta</li>
               <li className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-blue-500" /> Requer servidor próprio</li>
             </ul>
           </CardContent>
@@ -184,7 +184,7 @@ export default function WhatsAppProviderConfig() {
             </div>
 
             {status && (
-              <Alert variant={status.ok ? 'default' : 'destructive'} className={status.ok ? 'bg-green-50 border-green-200 text-green-800' : ''}>
+              <Alert variant={status.ok ? 'default' : 'destructive'} className={status.ok ? 'bg-primary/10 border-primary/20 text-primary-foreground' : ''}>
                 {status.ok ? <ShieldCheck className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                 <AlertTitle>{status.ok ? 'Sucesso' : 'Falha'}</AlertTitle>
                 <AlertDescription>{status.message}</AlertDescription>

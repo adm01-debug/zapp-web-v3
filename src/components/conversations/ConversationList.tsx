@@ -98,7 +98,7 @@ const ConvItem = memo(({
             </p>
           )}
           {conv.unread_count > 0 && (
-            <Badge className="text-[10px] min-w-[18px] h-4.5 px-1 bg-green-500 hover:bg-green-600 text-white border-none rounded-full flex items-center justify-center font-bold">
+            <Badge className="text-[10px] min-w-[18px] h-4.5 px-1 bg-primary hover:bg-green-600 text-white border-none rounded-full flex items-center justify-center font-bold">
               {conv.unread_count > 99 ? '99+' : conv.unread_count}
             </Badge>
           )}

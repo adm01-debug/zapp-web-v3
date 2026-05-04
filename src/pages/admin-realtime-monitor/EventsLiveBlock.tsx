@@ -128,7 +128,7 @@ export function EventsLiveBlock({ windowHours, autoRefresh, onNavigateTo }: Prop
                         {r.error_message ? (
                           <Badge variant="destructive" className="text-[10px]">erro</Badge>
                         ) : r.processed ? (
-                          <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-500/40">ok</Badge>
+                          <Badge variant="outline" className="text-[10px] text-emerald-600 border-primary/40">ok</Badge>
                         ) : (
                           <Badge variant="secondary" className="text-[10px]">pendente</Badge>
                         )}

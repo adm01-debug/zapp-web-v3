@@ -17,8 +17,8 @@ interface Props {
 }
 
 const statusConfig: Record<string, { icon: typeof CheckCircle2; color: string; bg: string }> = {
-  connected: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/5' },
-  healthy: { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/5' },
+  connected: { icon: CheckCircle2, color: 'text-primary', bg: 'bg-primary/5' },
+  healthy: { icon: CheckCircle2, color: 'text-primary', bg: 'bg-primary/5' },
   disconnected: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/5' },
   error: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/5' },
   degraded: { icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-500/5' },
@@ -58,7 +58,7 @@ export function MonitoringHealthLogs({ healthLogs }: Props) {
             <CardDescription>{filtered.length} de {healthLogs.length} registros</CardDescription>
           </div>
           <div className="flex gap-2">
-            <Badge variant="outline" className="text-[10px] text-emerald-500">✓ {okCount}</Badge>
+            <Badge variant="outline" className="text-[10px] text-primary">✓ {okCount}</Badge>
             <Badge variant="outline" className="text-[10px] text-destructive">✗ {errCount}</Badge>
           </div>
         </div>
@@ -138,7 +138,7 @@ export function MonitoringHealthLogs({ healthLogs }: Props) {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0">
                     {log.response_time_ms != null && (
                       <span className={cn('font-medium',
-                        log.response_time_ms < 300 ? 'text-emerald-500' :
+                        log.response_time_ms < 300 ? 'text-primary' :
                         log.response_time_ms < 800 ? 'text-amber-500' : 'text-destructive'
                       )}>
                         {log.response_time_ms}ms

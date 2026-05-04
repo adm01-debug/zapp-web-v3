@@ -54,7 +54,7 @@ export default function AdminGmailAuditPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed': return <Badge variant="default" className="bg-green-500">Concluído</Badge>;
+      case 'completed': return <Badge variant="default" className="bg-primary">Concluído</Badge>;
       case 'pending': return <Badge variant="secondary">Pendente</Badge>;
       case 'processing': return <Badge variant="secondary" className="bg-blue-500">Processando</Badge>;
       case 'failed': return <Badge variant="destructive">Falhou</Badge>;

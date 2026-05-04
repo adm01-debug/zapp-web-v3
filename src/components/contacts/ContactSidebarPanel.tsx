@@ -67,7 +67,7 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
               {safeContact.lead_score > 0 && (
                 <Badge variant="outline" className="text-xs gap-0.5"><Star className="h-2.5 w-2.5" />{safeContact.lead_score}</Badge>
               )}
-              <Badge className={`text-xs ${hasConsent ? 'bg-green-100 text-green-800 border-green-300' : 'bg-amber-50 text-amber-700 border-amber-400'}`}>
+              <Badge className={`text-xs ${hasConsent ? 'bg-green-100 text-primary-foreground border-green-300' : 'bg-amber-50 text-amber-700 border-amber-400'}`}>
                 <Shield className="h-2.5 w-2.5 mr-0.5" />{hasConsent ? 'LGPD ✓' : 'Sem consent.'}
               </Badge>
             </div>

@@ -33,7 +33,7 @@ function getComplianceColor(rate: number): string {
 }
 
 function getProgressColor(rate: number): string {
-  if (rate >= 95) return 'bg-green-500';
+  if (rate >= 95) return 'bg-primary';
   if (rate >= 80) return 'bg-amber-500';
   return 'bg-red-500';
 }
@@ -173,7 +173,7 @@ export const SLADashboard: React.FC<Props> = ({
       </div>
 
       {stats.compliance_rate_pct >= 95 && !hasViolations && (
-        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg p-2.5">
+        <div className="flex items-center gap-2 text-sm text-green-700 bg-primary/10 rounded-lg p-2.5">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>Todos os SLAs cumpridos no período! 🎉</span>
         </div>

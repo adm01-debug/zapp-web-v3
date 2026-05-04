@@ -18,7 +18,7 @@ const HEALTHY = ['connected', 'healthy'];
 
 function getCellColor(ratio: number, total: number): string {
   if (total === 0) return 'bg-muted/30';
-  if (ratio >= 0.95) return 'bg-emerald-500';
+  if (ratio >= 0.95) return 'bg-primary';
   if (ratio >= 0.8) return 'bg-emerald-400';
   if (ratio >= 0.5) return 'bg-amber-400';
   if (ratio >= 0.2) return 'bg-orange-500';
@@ -77,7 +77,7 @@ export function MonitoringAvailabilityHeatmap({ healthLogs }: Props) {
             variant="outline"
             className={cn(
               'text-sm font-bold',
-              overallUptime >= 99 ? 'text-emerald-500 border-emerald-500/30' :
+              overallUptime >= 99 ? 'text-primary border-primary/30' :
               overallUptime >= 95 ? 'text-amber-500 border-amber-500/30' : 'text-destructive border-destructive/30'
             )}
           >
@@ -133,7 +133,7 @@ export function MonitoringAvailabilityHeatmap({ healthLogs }: Props) {
             {/* Legend */}
             <div className="flex items-center gap-2 mt-3 ml-[100px]">
               <span className="text-[10px] text-muted-foreground">Menos</span>
-              {['bg-muted/20', 'bg-destructive', 'bg-orange-500', 'bg-amber-400', 'bg-emerald-400', 'bg-emerald-500'].map((c, i) => (
+              {['bg-muted/20', 'bg-destructive', 'bg-orange-500', 'bg-amber-400', 'bg-emerald-400', 'bg-primary'].map((c, i) => (
                 <div key={i} className={cn('w-3 h-3 rounded-sm', c)} />
               ))}
               <span className="text-[10px] text-muted-foreground">Mais</span>

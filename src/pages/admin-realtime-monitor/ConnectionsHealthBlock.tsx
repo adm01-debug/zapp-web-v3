@@ -32,7 +32,7 @@ const STATUS_META: Record<string, { label: string; tone: 'success' | 'destructiv
 
 function toneClasses(tone: 'success' | 'destructive' | 'warning' | 'info'): string {
   switch (tone) {
-    case 'success': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30';
+    case 'success': return 'bg-primary/10 text-emerald-600 border-primary/30';
     case 'destructive': return 'bg-destructive/10 text-destructive border-destructive/30';
     case 'warning': return 'bg-amber-500/10 text-amber-600 border-amber-500/30';
     default: return 'bg-muted text-muted-foreground border-border';

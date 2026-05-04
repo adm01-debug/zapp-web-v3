@@ -25,7 +25,7 @@ interface GmailAccountSelectorProps {
 
 const TOKEN_STATUS_CONFIG: Record<TokenStatus, { icon: typeof Wifi; color: string; label: string }> = {
   loading:      { icon: RefreshCw, color: 'text-muted-foreground', label: 'Verificando...' },
-  valid:        { icon: Wifi, color: 'text-green-500', label: 'Conectado' },
+  valid:        { icon: Wifi, color: 'text-primary', label: 'Conectado' },
   expiring:     { icon: AlertTriangle, color: 'text-amber-500', label: 'Token expirando' },
   expired:      { icon: WifiOff, color: 'text-destructive', label: 'Sessão expirada — reconecte' },
   disconnected: { icon: WifiOff, color: 'text-muted-foreground', label: 'Desconectado' },
@@ -77,7 +77,7 @@ export function GmailAccountSelector({
               </Avatar>
               {/* Status dot */}
               <span className={cn('absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background',
-                activeStatus === 'valid' && 'bg-green-500',
+                activeStatus === 'valid' && 'bg-primary',
                 activeStatus === 'expiring' && 'bg-amber-500',
                 activeStatus === 'expired' && 'bg-destructive',
                 (activeStatus === 'loading' || activeStatus === 'disconnected') && 'bg-muted-foreground',

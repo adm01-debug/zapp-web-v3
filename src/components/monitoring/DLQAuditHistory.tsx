@@ -29,7 +29,7 @@ function actionBadge(action: string) {
   const Icon = meta.icon;
   const cls = {
     default:     'border-border text-foreground/80 bg-muted/40',
-    success:     'border-emerald-500/40 text-emerald-600 bg-emerald-500/10',
+    success:     'border-primary/40 text-emerald-600 bg-primary/10',
     warning:     'border-amber-500/40 text-amber-600 bg-amber-500/10',
     destructive: 'border-destructive/40 text-destructive bg-destructive/10',
   }[meta.tone];

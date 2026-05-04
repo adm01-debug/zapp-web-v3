@@ -115,8 +115,8 @@ export const ContactImportDialogV2: React.FC<Props> = ({ open, onOpenChange, ins
           {err && <Alert variant="destructive"><XCircle className="h-4 w-4" /><AlertDescription>{err}</AlertDescription></Alert>}
           {importing && <div className="space-y-2"><Progress value={progress} /><p className="text-xs text-center text-muted-foreground">Importando {rows.length.toLocaleString('pt-BR')} contatos...</p></div>}
           {result && (
-            <Alert className="border-green-200 bg-green-50"><CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-sm text-green-800 space-y-2">
+            <Alert className="border-primary/20 bg-primary/10"><CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-sm text-primary-foreground space-y-2">
                 <p className="font-medium">Importação concluída!</p>
                 <div className="grid grid-cols-3 gap-2 text-xs text-center">
                   <div><p className="text-xl font-bold text-green-700">{result.inserted}</p><p>Criados</p></div>

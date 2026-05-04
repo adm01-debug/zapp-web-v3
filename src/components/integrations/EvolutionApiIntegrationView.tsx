@@ -235,12 +235,12 @@ export function EvolutionApiIntegrationView() {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex items-start gap-2 p-3 rounded-lg border ${
                   testResult === 'success'
-                    ? 'bg-emerald-500/5 border-emerald-500/20'
+                    ? 'bg-primary/5 border-primary/20'
                     : 'bg-red-500/5 border-red-500/20'
                 }`}
               >
                 {testResult === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 ) : (
                   <XCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
                 )}

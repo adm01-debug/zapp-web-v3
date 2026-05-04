@@ -143,7 +143,7 @@ export const ContactStatsDashboard: React.FC<Props> = ({
           <CardContent className="p-3 text-center">
             <p className={`text-2xl font-bold ${dupes > 0 ? 'text-amber-600' : 'text-green-600'}`}>{dupes}</p>
             <p className="text-xs text-muted-foreground">Duplicatas</p>
-            {dupes === 0 && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mx-auto mt-0.5" />}
+            {dupes === 0 && <CheckCircle2 className="h-3.5 w-3.5 text-primary mx-auto mt-0.5" />}
           </CardContent>
         </Card>
       </div>

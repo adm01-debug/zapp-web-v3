@@ -52,7 +52,7 @@ function getInitials(name: string | null, email: string | null): string {
 }
 
 function getAvatarColor(email: string | null): string {
-  const colors = ['bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500'];
+  const colors = ['bg-blue-500', 'bg-primary', 'bg-violet-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500'];
   const code = (email ?? '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   return colors[code % colors.length];
 }

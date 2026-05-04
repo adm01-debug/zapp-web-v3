@@ -129,7 +129,7 @@ export function SLAProgressBar({ receivedAt, thresholdMinutes, repliedAt, classN
   const color =
     pct >= 100 ? 'bg-destructive' :
     pct >= 80  ? 'bg-amber-500' :
-    'bg-green-500';
+    'bg-primary';
 
   return (
     <div className={cn('flex items-center gap-2', className)}>

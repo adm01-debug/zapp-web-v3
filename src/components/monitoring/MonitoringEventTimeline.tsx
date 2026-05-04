@@ -26,8 +26,8 @@ const iconMap = {
 
 const colorMap = {
   message_in: 'text-primary',
-  message_out: 'text-emerald-500',
-  health_ok: 'text-emerald-500',
+  message_out: 'text-primary',
+  health_ok: 'text-primary',
   health_fail: 'text-destructive',
 };
 

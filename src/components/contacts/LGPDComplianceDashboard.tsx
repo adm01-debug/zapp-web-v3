@@ -156,9 +156,9 @@ export const LGPDComplianceDashboard: React.FC<LGPDComplianceDashboardProps> = (
           )}
 
           {stats.without_consent === 0 && stats.opted_out === 0 && (
-            <Alert className="border-green-200 bg-green-50">
+            <Alert className="border-primary/20 bg-primary/10">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-sm text-green-800">100% em conformidade!</AlertTitle>
+              <AlertTitle className="text-sm text-primary-foreground">100% em conformidade!</AlertTitle>
               <AlertDescription className="text-xs text-green-700">
                 Todos os contatos ativos têm consentimento LGPD registrado.
               </AlertDescription>

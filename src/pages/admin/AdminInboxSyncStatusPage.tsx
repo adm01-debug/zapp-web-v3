@@ -440,7 +440,7 @@ export default function AdminInboxSyncStatusPage() {
         <CardContent className="grid sm:grid-cols-2 gap-4">
           <div className="rounded-md border p-3">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <ArrowDownLeft className="h-4 w-4 text-emerald-500" />
+              <ArrowDownLeft className="h-4 w-4 text-primary" />
               Inbound (recebida)
             </div>
             <p className="text-2xl font-semibold mt-1 tabular-nums">{timeAgo(lastEvents.inboundAt)}</p>

@@ -104,7 +104,7 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${health}%` }}
-                className={cn("h-full", health >= 70 ? "bg-emerald-500" : health >= 40 ? "bg-orange-500" : "bg-destructive")}
+                className={cn("h-full", health >= 70 ? "bg-primary" : health >= 40 ? "bg-orange-500" : "bg-destructive")}
               />
             </div>
             <p className="text-[11px] text-muted-foreground leading-tight">
@@ -144,7 +144,7 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
                 </div>
               )}
               {health >= 90 && (
-                <div className="flex items-start gap-2 text-[11px] text-emerald-600 bg-emerald-500/5 p-2 rounded-lg border border-emerald-500/20">
+                <div className="flex items-start gap-2 text-[11px] text-emerald-600 bg-primary/5 p-2 rounded-lg border border-primary/20">
                   <TrendingUp className="w-3 h-3 mt-0.5 shrink-0" />
                   <p><strong>Engajamento:</strong> Este contato possui dados completos. Pronto para campanhas de alta conversão!</p>
                 </div>

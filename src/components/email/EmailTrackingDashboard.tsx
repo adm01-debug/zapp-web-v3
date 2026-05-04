@@ -47,7 +47,7 @@ function OpenIndicator({ count, firstAt }: { count: number; firstAt: string | nu
   if (count === 0) return <span className="text-xs text-muted-foreground">Não aberto</span>;
   return (
     <div className="flex items-center gap-1.5">
-      <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+      <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
       <span className="text-xs font-medium text-green-700 dark:text-green-400">
         {count}x aberto
       </span>
@@ -108,7 +108,7 @@ function EmailTrackingDetail({
           <p className="text-xs text-muted-foreground">Aberturas</p>
         </div>
         <div className="text-center p-2 bg-muted/30 rounded-lg">
-          <MousePointerClick className="h-4 w-4 mx-auto text-green-500 mb-1" />
+          <MousePointerClick className="h-4 w-4 mx-auto text-primary mb-1" />
           <p className="text-lg font-bold">{email.click_count}</p>
           <p className="text-xs text-muted-foreground">Cliques</p>
         </div>
@@ -250,7 +250,7 @@ export function EmailTrackingDashboard() {
                     </p>
                     <p className="text-xs text-muted-foreground">{stats.unique_opens} únicos</p>
                   </div>
-                  <Eye className="h-8 w-8 text-green-500 opacity-20" />
+                  <Eye className="h-8 w-8 text-primary opacity-20" />
                 </div>
               </CardContent>
             </Card>

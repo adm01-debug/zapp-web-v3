@@ -141,7 +141,7 @@ export const CSATWidget: React.FC<Props> = ({
             </div>
             <div className="flex gap-0.5 h-3 rounded overflow-hidden">
               {stats.nps_promoters > 0 && (
-                <div className="bg-green-500" style={{ flex: stats.nps_promoters }} />
+                <div className="bg-primary" style={{ flex: stats.nps_promoters }} />
               )}
               {stats.nps_passives > 0 && (
                 <div className="bg-amber-400" style={{ flex: stats.nps_passives }} />
@@ -163,7 +163,7 @@ export const CSATWidget: React.FC<Props> = ({
             {[10,9,8,7,6,5,4,3,2,1,0].map((score) => {
               const count = stats.score_distribution[score.toString()] ?? 0;
               const pct   = maxDist > 0 ? Math.round((count / maxDist) * 100) : 0;
-              const color = score >= 9 ? 'bg-green-500' : score >= 7 ? 'bg-amber-400' : 'bg-red-400';
+              const color = score >= 9 ? 'bg-primary' : score >= 7 ? 'bg-amber-400' : 'bg-red-400';
               return count > 0 ? (
                 <div key={score} className="flex items-center gap-2 text-xs">
                   <span className="w-4 text-right text-muted-foreground">{score}</span>

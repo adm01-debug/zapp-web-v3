@@ -167,7 +167,7 @@ export const ContactDuplicatesPanel: React.FC<ContactDuplicatesPanelProps> = ({ 
       {/* Clean */}
       {scanned && !scanning && groups.length === 0 && (
         <div className="flex flex-col items-center gap-2 py-8">
-          <CheckCircle2 className="h-10 w-10 text-green-500" />
+          <CheckCircle2 className="h-10 w-10 text-primary" />
           <p className="font-medium text-green-700 dark:text-green-400">Base de contatos limpa!</p>
           <p className="text-xs text-muted-foreground">Nenhuma duplicata por número de telefone foi encontrada.</p>
         </div>

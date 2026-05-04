@@ -84,7 +84,7 @@ export function GmailOAuthCallback() {
         {/* Ícone */}
         <div className="flex justify-center">
           {status === 'loading' && <Loader2 className="h-16 w-16 text-primary animate-spin" />}
-          {status === 'success' && <CheckCircle className="h-16 w-16 text-green-500" />}
+          {status === 'success' && <CheckCircle className="h-16 w-16 text-primary" />}
           {status === 'error'   && <XCircle className="h-16 w-16 text-destructive" />}
         </div>
 
@@ -99,7 +99,7 @@ export function GmailOAuthCallback() {
 
         {/* Email conectado */}
         {email && status === 'success' && (
-          <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3 text-sm text-green-700 dark:text-green-400">
+          <div className="bg-primary/10 dark:bg-green-950/20 rounded-lg p-3 text-sm text-green-700 dark:text-green-400">
             <strong>{email}</strong> conectado ao ZAPP WEB
           </div>
         )}
