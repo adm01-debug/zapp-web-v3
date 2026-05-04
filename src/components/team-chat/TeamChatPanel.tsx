@@ -111,6 +111,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
     }
   }, [s.filteredMessages.length, conversation.id]);
 
+  useEffect(() => {
+    // Restore scroll position logic would go here, 
+    // for now we ensure it stays at bottom when new messages arrive.
+    if (s.isNearBottomRef.current && s.scrollRef.current) {
+        s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight;
+    }
+  }, [s.filteredMessages]);
+
   useEffect(() => { if (s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight; }, [conversation.id]);
   useEffect(() => { if (s.showSearch) s.searchInputRef.current?.focus(); }, [s.showSearch]);
 
@@ -153,7 +161,13 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
       </AnimatePresence>
 
       <div className="flex-1 relative bg-background min-h-0">
-        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
+        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto" onScroll={(e) => {
+          s.checkNearBottom();
+          const el = e.target as HTMLDivElement;
+          if (el.scrollTop === 0 && s.hasNextPage && !s.isFetchingNextPage) {
+            s.fetchNextPage();
+          }
+        }} role="log" aria-label="Mensagens da conversa" aria-live="polite">
         {!isDeptMember ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -178,14 +192,18 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
               </div>
             </div>
           </div>
-        ) : s.isLoading ? (
+        ) : (s.isLoading && !s.filteredMessages.length) ? (
           <div className="p-4 space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}><Skeleton className="h-10 rounded-2xl" style={{ width: 120 + (i % 3) * 60 }} /></div>)}</div>
+
+
         ) : s.filteredMessages.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-12">{s.searchQuery ? 'Nenhuma mensagem encontrada' : 'Envie a primeira mensagem!'}</div>
         ) : (
-          <div className="h-full w-full">
+          <div className="h-full w-full flex flex-col relative">
+            {s.isFetchingNextPage && <div className="p-2 text-center text-xs text-muted-foreground animate-pulse">Carregando mensagens anteriores...</div>}
+            <div className="flex-1 relative">
             <AutoSizer>
-              {({ height, width }) => (
+              {({ height, width }: { height: number, width: number }) => (
                 <List
                   height={height}
                   itemCount={s.filteredMessages.length}
@@ -194,7 +212,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                   className="scrollbar-none"
                   overscanCount={5}
                 >
-              {({ index, style }) => {
+              {({ index, style }: { index: number, style: React.CSSProperties }) => {
                 const msg = s.filteredMessages[index];
                 const showDate = dateFirstIndexes.has(index);
                 const isMine = msg.sender_id === s.profile?.id;
@@ -275,9 +293,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                           </ContextMenuSubContent>
                         </ContextMenuSub>
                         <ContextMenuItem onClick={() => s.setReplyTo(msg)} className="gap-2"><Reply className="w-3.5 h-3.5" /> Responder</ContextMenuItem>
-                        {msg.content && <ContextMenuItem onClick={() => s.handleCopyMessage(msg.content)} className="gap-2"><Copy className="w-3.5 h-3.5" /> Copiar</ContextMenuItem>}
-                        {cleanText && <ContextMenuItem onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className="gap-2"><Volume2 className="w-3.5 h-3.5" /> {isThisTtsPlaying ? 'Parar' : 'Ouvir'}</ContextMenuItem>}
-                        {isMine && !isEditing && (<><ContextMenuSeparator />{!hasMedia && <ContextMenuItem onClick={() => s.handleStartEdit(msg)} className="gap-2"><Pencil className="w-3.5 h-3.5" /> Editar</ContextMenuItem>}<ContextMenuItem onClick={() => s.handleDelete(msg.id)} className="gap-2 text-destructive focus:text-destructive"><Trash2 className="w-3.5 h-3.5" /> Excluir</ContextMenuItem></>)}
+                        <ContextMenuItem onClick={() => s.handleCopyMessage(msg.content || '')} className="gap-2"><Copy className="w-3.5 h-3.5" /> Copiar Texto</ContextMenuItem>
+                        {isMine && (
+                          <>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem onClick={() => s.handleStartEdit(msg)} className="gap-2"><Pencil className="w-3.5 h-3.5" /> Editar</ContextMenuItem>
+                            <ContextMenuItem onClick={() => s.handleDelete(msg.id)} className="gap-2 text-destructive"><Trash2 className="w-3.5 h-3.5" /> Excluir</ContextMenuItem>
+                          </>
+                        )}
                       </ContextMenuContent>
                     </ContextMenu>
                   </div>
@@ -286,10 +309,11 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             </List>
               )}
             </AutoSizer>
+            </div>
           </div>
         )}
       </div>
-    </div>
+
 
       {s.showScrollDown && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10"><Button size="icon" variant="secondary" className="rounded-full shadow-lg h-8 w-8" onClick={s.scrollToBottom}><ArrowDown className="w-4 h-4" /></Button></div>}
 
