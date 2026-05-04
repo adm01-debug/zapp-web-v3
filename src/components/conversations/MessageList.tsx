@@ -22,9 +22,10 @@ import {
 interface MessageListProps {
   remoteJid: string;
   searchTerm?: string;
+  onReply?: (msg: Message) => void;
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ remoteJid, searchTerm = '' }) => {
+export const MessageList: React.FC<MessageListProps> = ({ remoteJid, searchTerm = '', onReply }) => {
   const { 
     messages, loading, loadingMore, hasMore, loadMore, 
     toggleStar, toggleImportant 
@@ -228,7 +229,7 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid, searchTerm 
                         <AlertCircle className={cn("h-4 w-4", msg.is_important && "text-orange-400")} />
                         {msg.is_important ? 'Remover importante' : 'Marcar importante'}
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="gap-2">
+                      <DropdownMenuItem onClick={() => onReply?.(msg)} className="gap-2">
                         <Reply className="h-4 w-4" /> Responder
                       </DropdownMenuItem>
                       <DropdownMenuItem className="gap-2 text-destructive">
