@@ -202,7 +202,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
 
   const groupedMessages = useMemo(() => {
     return displayedMessages.reduce((groups, message) => {
-      const dateKey = format(message.timestamp, 'yyyy-MM-dd');
+      const dateKey = format(message.timestamp, 'yyyy-MM-dd', { locale: ptBR });
       if (!groups[dateKey]) groups[dateKey] = [];
       groups[dateKey].push(message);
       return groups;

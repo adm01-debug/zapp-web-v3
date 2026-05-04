@@ -260,7 +260,7 @@ export function MessageBubble({
                 {message.isEdited && <span className="text-[9px] italic mr-0.5">editada</span>}
                 <span className="text-[11px] font-normal leading-none">{formatMessageTime(message.timestamp)}</span>
                 <div className="flex items-center min-w-[15px]">
-                  {isSent ? <MessageStatusInline message={message} /> : <MessageReadStatus message={message} />}
+                  {isSent ? <MessageStatusInline message={message} className="scale-90 origin-right" /> : <MessageReadStatus message={message} />}
                 </div>
               </div>
             </motion.div>
