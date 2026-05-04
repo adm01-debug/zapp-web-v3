@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { log } from '@/lib/logger';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { messageService } from '@/features/inbox/services/messageService';
-import { messageRepository, Message } from '@/features/inbox/data-access/messageRepository';
+import { messageRepository } from '@/features/inbox/data-access/messageRepository';
+import type { Message } from '@/types/chat';
 
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
