@@ -208,10 +208,30 @@ serve(async (req) => {
 
     if (action === 'status') {
       const response = await fetch(`${evolutionApiUrl}/instance/connectionState/${instance}`, { method: 'GET', headers: { 'apikey': evolutionApiKey } });
-      const data = await response.json();
-      const status = data.state === 'open' ? 'connected' : 'disconnected';
+      const data = await response.json().catch(() => ({}));
+
+      // Upstream auth failure (401/403): record + return graceful envelope so the
+      // frontend can render a "disconnected" state instead of crashing on a 400.
+      if (response.status === 401 || response.status === 403) {
+        recordAuthFailureAndMaybePause(supabase, String(instance), response.status === 401 ? 'auth_401' : 'auth_403', 'evolution-api', { http_status: response.status, message: 'status' });
+        await supabase.from('whatsapp_connections').update({ status: 'disconnected', qr_code: null }).eq('instance_id', instance);
+        return new Response(JSON.stringify({
+          version: EVOLUTION_ENVELOPE_VERSION,
+          status: 'disconnected',
+          state: 'close',
+          error: true,
+          upstream_status: response.status,
+          message: 'Evolution API rejeitou a requisição (Unauthorized). Verifique a API key ou recrie a instância.',
+          details: data,
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const status = data?.state === 'open' ? 'connected' : 'disconnected';
       await supabase.from('whatsapp_connections').update({ status, qr_code: null }).eq('instance_id', instance);
-      return new Response(JSON.stringify({ ...data, status }), { status: response.ok ? 200 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ ...data, status }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     if (action === 'instance-info') return await proxy(`/instance/info/${instance}`, 'GET');
