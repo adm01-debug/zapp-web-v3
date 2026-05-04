@@ -141,17 +141,18 @@ export function useMediaUploadQueue(contactId: string) {
           await new Promise((r) => setTimeout(r, delay));
         }
         const result = await performUpload(item);
-        if (result.ok) {
+        if (result.ok === true) {
           patch(item.id, { status: 'uploaded', progress: 100, storagePath: result.storagePath, errorMessage: undefined });
           await persist(item.id, { status: 'uploaded', progress: 100, storage_path: result.storagePath });
           return;
         }
-        if (result.error === 'canceled') {
+        const errMsg = result.error;
+        if (errMsg === 'canceled') {
           patch(item.id, { status: 'canceled' });
           await persist(item.id, { status: 'canceled' });
           return;
         }
-        lastError = result.error;
+        lastError = errMsg;
         attempt += 1;
       }
       patch(item.id, { status: 'failed', errorMessage: lastError, retryCount: attempt - 1 });
