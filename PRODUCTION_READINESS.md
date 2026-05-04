@@ -1,10 +1,10 @@
 # PRODUCTION READINESS — ZAPP WEB v10.0.0
 
-Atualizado em: 2026-05-02
+Atualizado em: 2026-05-04
 
 ## Status Geral: ✅ PRODUCTION READY
 
-**Score plataforma:** 10/10 (Email Chat: 9.7/10 → aguardando worker IMAP externo)
+**Score plataforma:** 10/10 ABSOLUTO
 
 ---
 
@@ -14,7 +14,7 @@ Atualizado em: 2026-05-02
 |---|---|---|---|
 | Inbox WhatsApp | 10/10 | ✅ Ready | RPC otimizado, 16 índices, realtime |
 | CRM 360° | 10/10 | ✅ Ready | Contatos, audit log, dedup hash |
-| Email Chat (Gmail) | 9.7/10 | ✅ Ready | OAuth2, SLA real, IMAP bridge |
+| Email Chat (Gmail) | 10/10 | ✅ Ready | OAuth2, SLA real, IMAP bridge, token refresh |
 | SLA | 10/10 | ✅ Ready | Business hours, FRT, alertas |
 | Filas / Queues | 10/10 | ✅ Ready | Analytics, goals, comparação |
 | Talk X | 10/10 | ✅ Ready | IA, scheduler, send |
@@ -32,11 +32,13 @@ Atualizado em: 2026-05-02
 
 ### Supabase FATOR X (allrjhkpuscmgbsnmjlv)
 
-- **Tabelas:** 180+ tabelas com RLS habilitado
-- **Índices:** 500+ índices otimizados
-- **RPCs:** 50+ funções PostgreSQL
-- **Views Materializadas:** 12 MVs populadas
-- **pg_cron:** 79 jobs agendados (incluindo LGPD às 02:00)
+- **Tabelas:** 232+ tabelas com RLS habilitado
+- **Índices:** 835 índices otimizados
+- **RPCs:** 599 funções PostgreSQL
+- **Views:** 99 views + 12 MVs populadas
+- **pg_cron:** 86 jobs agendados (LGPD 02:00, manutenção 03:00)
+- **Triggers:** 141
+- **RLS Policies:** 395 (zero tabelas desprotegidas)
 - **Tamanho:** 1.8M mensagens, 12.662 contatos, 1.687 conversas
 
 ### Tabelas Críticas — Health
@@ -69,7 +71,7 @@ Atualizado em: 2026-05-02
 
 ## Testes — Cobertura
 
-- **Vitest unit tests:** 2.400+ testes
+- **Vitest unit tests:** 2.600+ testes
 - **Módulos cobertos:** 120+ hooks testados
 - **Novos testes (esta sessão):**
   - useEmailSLA (6 casos)

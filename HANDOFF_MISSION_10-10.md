@@ -1,6 +1,6 @@
 # 🎯 HANDOFF: ZAPP-WEB — Missão Rumo ao 10/10
 
-> **Última atualização:** 2026-05-03 21:50:07 UTC
+> **Última atualização:** 2026-05-04 19:58:00 UTC
 > **Score atual:** 10/10 🏆
 > **Próximo objetivo:** Manutenção Evolutiva
 
@@ -12,7 +12,7 @@
 - **Repositório:** `github.com/adm01-debug/zapp-web` (privado)
 - **Branch principal:** `main`
 - **Stack:** React 18.3.1 + Vite 5 + TypeScript + Supabase + shadcn/ui + Tailwind
-- **Deploy:** Lovable (`https://pronto-talk-suite.lovable.app`)
+- **Deploy:** VPS self-hosted (`https://zapp.atomicabr.com.br`)
 - **Tipo:** CRM WhatsApp multi-atendimento empresarial
 
 ### Supabase Projects (IMPORTANTE: são 2!)
@@ -79,15 +79,18 @@
 
 | Métrica | Valor |
 |---------|-------|
-| Arquivos de código | 608 |
+| Arquivos de código | 608+ |
 | Componentes React | 297 em 35 pastas |
 | Custom hooks | 80 (+72 testes) |
-| Edge Functions | 20 (4.598 linhas) |
-| Migrations SQL | **55** (inclui nova RLS fix) |
-| Tabelas PostgreSQL | 56 |
-| RLS Policies | 181 (10+ corrigidas) |
+| Edge Functions | **101** |
+| Migrations SQL | **372** |
+| Tabelas PostgreSQL | **232+** |
+| RLS Policies | **395** |
 | Tabelas com Realtime | 16 |
 | Roles RBAC | 3 (admin, supervisor, agent) |
+| pg_cron jobs | **86** |
+| RPCs PostgreSQL | **599** |
+| Índices | **835** |
 
 ---
 
@@ -102,6 +105,7 @@
 | 2026-04-12 | **9.8/10** | Docs completas + DEPLOYMENT + TROUBLESHOOTING |
 | 2026-05-03 | **9.9/10** | Migration RLS aplicada (v3) |
 | 2026-05-03 | **10/10** | Migration RLS + Schema Alignment + 10/10 Reached |
+| 2026-05-04 | **10/10** | Sync deploy: nginx v5, service.json, docs, CI smoke-prod |
 
 ---
 

@@ -427,6 +427,53 @@ jobs:
           path: chat-coverage-report.md
 
   # ===========================================
+  # JOB 5.8: Smoke Production (post-push gate)
+  # Roda apenas em push no main — valida que o
+  # site está respondendo antes de fechar o CI.
+  # ===========================================
+  smoke-prod:
+    name: 💨 Smoke Production
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: 🌐 Smoke Test Production — HTTP + healthz
+        run: |
+          set -euo pipefail
+          DOMAIN=zapp.atomicabr.com.br
+
+          check() {
+            local code
+            code=$(curl -s --connect-timeout 10 --max-time 15 --retry 2 -o /dev/null -w "%{http_code}" "https://$DOMAIN$1")
+            if [ "$code" = "$2" ]; then
+              echo "  ✅ $code  https://$DOMAIN$1"
+            else
+              echo "  ❌ $code (expected $2)  https://$DOMAIN$1"
+              exit 1
+            fi
+          }
+
+          echo "🌐 Smoke Production: https://$DOMAIN"
+          check "/"              "200"
+          check "/healthz"       "200"
+          check "/favicon.ico"   "200"
+          check "/robots.txt"    "200"
+          check "/manifest.json" "200"
+          check "/sw.js"         "200"
+
+          echo ""
+          echo "🔬 Validando healthz/detailed ..."
+          STATUS=$(curl -s --connect-timeout 10 --max-time 15 "https://$DOMAIN/healthz/detailed" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          assert d.get('status')=='healthy', f'status={d.get(\"status\")}'
+          failed=[k for k,v in d.get('checks',{}).items() if not v.get('ok')]
+          assert not failed, f'Checks falhando: {failed}'
+          print('✅ Todos os checks OK:', list(d.get('checks', {}).keys()))
+          ")
+          echo "$STATUS"
+
+  # ===========================================
   # JOB 6: Security Audit
   # ===========================================
   security:

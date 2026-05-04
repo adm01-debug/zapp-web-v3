@@ -9,7 +9,7 @@
 
 > Plataforma omnichannel de atendimento ao cliente com WhatsApp, IA integrada, CRM e automações.
 
-**Deploy**: [pronto-talk-suite.lovable.app](https://pronto-talk-suite.lovable.app)
+**Deploy**: [zapp.atomicabr.com.br](https://zapp.atomicabr.com.br)
 
 ---
 

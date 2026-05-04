@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { Send, Paperclip, ChevronDown, ChevronUp, Signature, X, Loader2, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -198,7 +199,7 @@ export function EmailChatReplyBar({
             <p className="text-[10px] text-muted-foreground mb-1">— Assinatura: {selectedSignature.name}</p>
             <div
               className="text-xs text-muted-foreground opacity-70 max-h-16 overflow-hidden"
-              dangerouslySetInnerHTML={{ __html: selectedSignature.html_content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedSignature.html_content) }}
             />
           </div>
         )}

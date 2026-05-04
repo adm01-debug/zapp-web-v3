@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { Star, Archive, UserPlus, RefreshCw, Reply, ReplyAll, Forward, ChevronDown, ChevronUp, Paperclip, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -96,7 +97,7 @@ function MessageBubble({
           {msg.body_html ? (
             <div
               className="prose prose-sm max-w-none dark:prose-invert text-sm overflow-auto"
-              dangerouslySetInnerHTML={{ __html: msg.body_html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.body_html) }}
             />
           ) : (
             <p className="text-sm whitespace-pre-wrap text-foreground">{msg.body_text ?? msg.snippet}</p>

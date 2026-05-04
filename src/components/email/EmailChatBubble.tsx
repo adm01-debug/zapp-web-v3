@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { ChevronDown, ChevronUp, MoreHorizontal, Reply, Forward, Trash2, Star, StarOff, Mail, MailOpen } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -25,24 +26,25 @@ interface EmailChatBubbleProps {
   className?: string;
 }
 
-// Sanitiza HTML de email (remoção de scripts)
 function sanitizeHtml(html: string): string {
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  // Remove scripts e iframes
-  div.querySelectorAll('script, iframe, object, embed, form').forEach(el => el.remove());
-  // Remove event handlers
-  div.querySelectorAll('*').forEach(el => {
-    Array.from(el.attributes).forEach(attr => {
-      if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
-    });
-    // Restringe hrefs externos
-    if (el.tagName === 'A') {
-      (el as HTMLAnchorElement).target = '_blank';
-      (el as HTMLAnchorElement).rel = 'noopener noreferrer nofollow';
+  // Força target="_blank" + rel="noopener noreferrer nofollow" em todos os <a>
+  // (clientes de email enviam links sem esses attrs; sem isso o link navega in-tab e
+  // pode permitir window.opener leak via tabnabbing).
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    if (node.tagName === 'A') {
+      node.setAttribute('target', '_blank');
+      node.setAttribute('rel', 'noopener noreferrer nofollow');
     }
   });
-  return div.innerHTML;
+  try {
+    return DOMPurify.sanitize(html, {
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form'],
+      ADD_ATTR: ['target', 'rel'],
+      FORCE_BODY: true,
+    });
+  } finally {
+    DOMPurify.removeHook('afterSanitizeAttributes');
+  }
 }
 
 function getInitials(name: string | null, email: string | null): string {

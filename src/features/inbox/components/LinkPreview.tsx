@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Play, Globe, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import DOMPurify from 'dompurify';
 import {
   isImageUrl, isVideoUrl, isYouTubeUrl, getYouTubeThumbnail,
   getDomain, getFavicon, extractLinks, escapeHtml,
@@ -113,7 +114,7 @@ export function TextWithLinks({ text, className, showPreviews = true, maxPreview
   const formattedText = useMemo(() => {
     let result = escapeHtml(text);
     links.forEach(link => { const escaped = escapeHtml(link); result = result.replace(escaped, `<a href="${encodeURI(link)}" target="_blank" rel="noopener noreferrer" class="text-primary underline underline-offset-2 hover:text-primary/80">${escaped}</a>`); });
-    return result;
+    return DOMPurify.sanitize(result, { ALLOWED_TAGS: ['a'], ALLOWED_ATTR: ['href', 'target', 'rel', 'class'] });
   }, [text, links]);
 
   return (

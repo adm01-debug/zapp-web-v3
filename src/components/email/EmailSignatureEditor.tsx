@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { Bold, Italic, Underline, AlignLeft, AlignCenter, Link2, Image, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,7 +90,7 @@ export function EmailSignatureEditor({ accountId }: EmailSignatureEditorProps) {
             {/* Preview */}
             <div
               className="text-xs text-muted-foreground border-t pt-2 max-h-16 overflow-hidden"
-              dangerouslySetInnerHTML={{ __html: sig.html_content || '<em>Sem conteúdo</em>' }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(sig.html_content || '<em>Sem conteúdo</em>') }}
             />
           </div>
         ))}
@@ -172,7 +173,7 @@ export function EmailSignatureEditor({ accountId }: EmailSignatureEditorProps) {
               contentEditable
               suppressContentEditableWarning
               className="min-h-32 max-h-64 overflow-auto border border-t-0 rounded-b-md p-3 text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              dangerouslySetInnerHTML={{ __html: editing?.html_content ?? '' }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(editing?.html_content ?? '') }}
             />
           </div>
 

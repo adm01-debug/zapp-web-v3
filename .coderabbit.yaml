@@ -4,17 +4,7 @@
 
 language: "pt-BR"
 
-tone_instructions: |
-  Seja direto e prático. Use português brasileiro claro.
-  Foque em bugs reais, problemas de segurança, performance e regressões.
-  Evite nitpicks de estilo (formatação, espaçamento, etc).
-  Sinalize com prioridade alta:
-  - Credenciais, tokens ou secrets hardcoded
-  - Queries SQL com risco de injection
-  - Promises sem await ou catch
-  - Tipos any/unknown sem tratamento
-  - URLs de API hardcoded em vez de variáveis de ambiente
-  - Operações destrutivas em SQL (DROP/TRUNCATE) sem backup
+tone_instructions: "Seja direto em português BR. Foque em bugs reais, segurança e performance. Ignore nitpicks de estilo. Sinalizar como crítico: secrets hardcoded, SQL injection, promises sem await/catch, any sem tratamento, operações destrutivas sem backup."
 
 early_access: false
 

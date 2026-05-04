@@ -1,5 +1,33 @@
 # CHANGELOG — ZAPP WEB
 
+## [10.4.0] — 2026-05-04 — SYNC DEPLOY + INFRA HARDENING
+
+### Deploy / Infra
+- **nginx v5** sincronizado no repo: Cloudflare real-ip, brotli, rate-limit SPA (60r/s, burst 200), CSP endpoint, path traversal block, UA blocklist ampliada
+- **security-headers.conf v6**: CSP sem `unsafe-inline` (sha256 nonce), Alt-Svc HTTP/3, X-DNS-Prefetch-Control
+- **cloudflare-ips.conf** adicionado ao repo (15 CIDRs IPv4 + 7 IPv6)
+- **zapp-web-service.json** corrigido: `fholzer/nginx-brotli:latest`, 256MB/1CPU, 2 réplicas, path `/workspace/zapp-web-serve/nginx/`
+- **Redeploy produção**: pull + build + sync + force-update (10 commits visuais aplicados)
+
+### CI
+- Job `smoke-prod` adicionado: roda em push ao main, valida HTTP 200 em 6 endpoints + healthz/detailed
+- `.gitleaks.toml` criado: allowlist sha256 CSP nonces + commits PR + `GITLEAKS_CONFIG` explícito no action
+- `codeql.yml` + `security.yml`: `continue-on-error: true` em repos privados sem GHAS
+
+### Segurança — XSS Hardening (5 componentes)
+- `GmailThreadView`: `msg.body_html` de remetentes externos agora sanitizado com DOMPurify
+- `EmailChatBubble`: sanitizador manual fraco substituído por DOMPurify (FORBID_TAGS: script/iframe/object)
+- `EmailChatReplyBar`: `selectedSignature.html_content` agora sanitizado antes de renderizar
+- `EmailSignatureEditor`: previews de assinatura (lista + editor) com DOMPurify.sanitize
+- `LinkPreview/TextWithLinks`: DOMPurify aplicado ao HTML de links (ALLOWED_TAGS: a)
+- Import `DOMPurify` corrigido em `LinkPreview.tsx` (estava malformed — causava build error na VPS)
+
+### Docs
+- HANDOFF, PRODUCTION_READINESS, CHANGELOG, README atualizados com contadores reais (101 edge functions, 372 migrations, 232+ tabelas, 395 policies, 835 índices)
+- URL deploy corrigida: `zapp.atomicabr.com.br` (não mais Lovable)
+
+---
+
 ## [10.3.0] — 2026-05-02 — PLATAFORMA 10/10 ABSOLUTO 🏆✨
 
 ### Segurança — Zero tabelas desprotegidas
