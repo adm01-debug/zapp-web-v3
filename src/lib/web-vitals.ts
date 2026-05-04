@@ -130,7 +130,7 @@ export function initWebVitals() {
         id: `ttfb-${Date.now()}`,
       });
     }
-  } catch (e) { console.debug('[web-vitals] Navigation Timing API not supported:', e); }
+  } catch (e) { log.debug('[web-vitals] Navigation Timing API not supported'); }
 }
 
 export function getWebVitalsReport(): WebVitalMetric[] {

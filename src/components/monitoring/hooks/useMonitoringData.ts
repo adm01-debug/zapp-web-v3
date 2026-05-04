@@ -1,7 +1,10 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getLogger } from '@/lib/logger';
 import type { ConnectionInfo, HealthLog, MessageStats, UptimeInfo, SparklineData, InstanceUptime, TimePeriod } from './types';
 import { periodMs, periodBuckets, HEALTHY_STATUSES } from './types';
+
+const log = getLogger('MonitoringData');
 
 function computeUptime(logs: HealthLog[], now: Date): UptimeInfo {
   const dayAgo = new Date(now.getTime() - 86400000);
@@ -102,7 +105,7 @@ export function useMonitoringData(onConnectionsUpdate?: (c: ConnectionInfo[]) =>
       }
       if (logsRes.data && msgRes.data) setSparklines(computeSparklines(logsRes.data, msgRes.data, now, period));
     } catch (err) {
-      console.error('Monitoring fetch error:', err);
+      log.error('Monitoring fetch error:', err);
     } finally {
       setLoading(false);
     }
