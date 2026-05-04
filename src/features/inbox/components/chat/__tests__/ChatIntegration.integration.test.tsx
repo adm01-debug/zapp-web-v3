@@ -136,9 +136,7 @@ describe('ChatMessagesArea Integration', () => {
   it('displays message status filter bar', async () => {
     renderComponent();
     
-    // Verify that the filter bar is rendered
-    // MessageStatusFilterBar uses some labels like "Exibindo" or icons
-    // Let's search for the filter button if it exists or just check for message count text
-    expect(screen.getByText(/2 mensagens/i)).toBeInTheDocument();
+    // Use a more robust matcher for the message count
+    expect(screen.getByText((content) => content.includes('2 mensagens'))).toBeInTheDocument();
   });
 });
