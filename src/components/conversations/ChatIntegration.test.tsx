@@ -128,14 +128,13 @@ describe('Chat Integration - Flow Tests', () => {
     });
 
     let observerCallback: (entries: any[]) => void = () => {};
-    window.IntersectionObserver = vi.fn((cb) => {
+    const mockObserver = vi.fn(function(this: any, cb: (entries: any[]) => void) {
       observerCallback = cb;
-      return {
-        observe: vi.fn(),
-        disconnect: vi.fn(),
-        unobserve: vi.fn(),
-      };
-    }) as any;
+      this.observe = vi.fn();
+      this.disconnect = vi.fn();
+      this.unobserve = vi.fn();
+    });
+    window.IntersectionObserver = mockObserver as any;
 
     render(<MessageList remoteJid="test@jid" />);
     
