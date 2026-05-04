@@ -159,11 +159,12 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         ) : (
           <div className="h-full w-full">
             <List
-              height={500} // This would ideally be dynamic but FixedSizeList needs a number. For a 10/10 solution we'd use auto-sizer or variable size list.
+              height={700}
               itemCount={s.filteredMessages.length}
-              itemSize={100} 
+              itemSize={90} 
               width="100%"
               className="scrollbar-none"
+              overscanCount={5}
             >
               {({ index, style }) => {
                 const msg = s.filteredMessages[index];
