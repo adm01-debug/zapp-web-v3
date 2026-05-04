@@ -134,7 +134,7 @@ export function MessageBubble({
               <span>{formatMessageTime(message.timestamp)}</span>
               {isSent && <MessageStatusInline message={message} />}
             </div>
-          </div>
+          </motion.div>
         )}
 
         <MessageReactions messageId={message.id} isSent={isSent} />
