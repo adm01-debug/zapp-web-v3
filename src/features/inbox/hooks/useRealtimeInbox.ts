@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useOfflineCache } from '@/hooks/useOfflineCache';
 import { useMessages } from '@/features/inbox';
-import { useRealtimeMessages, ConversationWithMessages, ConversationContact } from '@/features/inbox';
+import { useRealtimeMessages, type ConversationWithMessages, type ConversationContact, type RealtimeMessage } from '@/features/inbox';
 import { useExternalConversations, useExternalMessages } from '@/hooks/useExternalEvolution';
 import { useAuth } from '@/features/auth';
 import { supabase } from '@/integrations/supabase/client';
