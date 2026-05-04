@@ -64,7 +64,19 @@ export function MessageBubble({
   }, [isSent, avatarUrl, contactAvatar, message]);
 
   return (
-    <div className={cn('flex group px-4 py-1 gap-2', isSent ? 'justify-end' : 'justify-start')}>
+    <motion.div 
+      layout
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+      transition={{ 
+        type: 'spring',
+        stiffness: 400,
+        damping: 30,
+        mass: 0.8
+      }}
+      className={cn('flex group px-4 py-1 gap-2', isSent ? 'justify-end' : 'justify-start')}
+    >
       {!isSent && (
         <Avatar className="w-8 h-8 shrink-0 self-end mb-1 ring-1 ring-border/30">
           <AvatarImage 
