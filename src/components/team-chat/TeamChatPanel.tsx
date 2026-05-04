@@ -125,21 +125,6 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
     }
   }, [s.filteredMessages.length, conversation.id]);
 
-  useEffect(() => {
-    // Scroll anchor for infinite scroll UP
-    if (s.scrollRef.current && s.isFetchingNextPage) {
-      s.scrollOffsetRef.current = s.scrollRef.current.scrollHeight - s.scrollRef.current.scrollTop;
-    }
-  }, [s.isFetchingNextPage]);
-
-  useEffect(() => {
-    // Apply scroll anchor after new messages are loaded from infinite scroll
-    if (s.scrollOffsetRef.current > 0 && s.scrollRef.current && !s.isFetchingNextPage) {
-      const newScrollTop = s.scrollRef.current.scrollHeight - s.scrollOffsetRef.current;
-      s.scrollRef.current.scrollTop = newScrollTop;
-      s.scrollOffsetRef.current = 0;
-    }
-  }, [s.filteredMessages.length, s.isFetchingNextPage]);
 
   // Handle incoming messages while reading old ones
   useEffect(() => {
