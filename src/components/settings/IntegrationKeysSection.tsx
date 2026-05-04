@@ -18,6 +18,18 @@ interface KeyField {
 
 const INTEGRATION_KEYS: KeyField[] = [
   {
+    key: 'evolution_api_url',
+    label: 'Evolution API URL',
+    description: 'URL base da sua instância Evolution API (ex: https://api.evolution.com)',
+    placeholder: 'https://...',
+  },
+  {
+    key: 'evolution_api_token',
+    label: 'Evolution Global Apikey',
+    description: 'Token global de autenticação (Global Apikey) do seu servidor Evolution',
+    placeholder: '...',
+  },
+  {
     key: 'elevenlabs_api_key',
     label: 'ElevenLabs API Key',
     description: 'Chave para geração de voz (TTS), efeitos sonoros e conversão de voz',
