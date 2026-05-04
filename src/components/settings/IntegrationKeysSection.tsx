@@ -10,7 +10,6 @@ import { Plug, Eye, EyeOff, Save, CheckCircle2, AlertCircle, RefreshCw, Activity
 import { toast } from 'sonner';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { useEvolutionAutoSync } from '@/hooks/useEvolutionAutoSync';
-import { useEvolutionAutoSync } from '@/hooks/useEvolutionAutoSync';
 import { cn } from '@/lib/utils';
 
 interface KeyField {
