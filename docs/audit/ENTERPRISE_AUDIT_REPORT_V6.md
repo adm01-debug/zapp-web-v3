@@ -23,6 +23,7 @@ This report provides a high-level overview of the system's compliance, security,
 ## 3. Risk Matrix & LGPD Controls
 | ID | Risk | Impact | Control | Priority |
 | :--- | :--- | :--- | :--- | :--- |
+| 2026-05-04 22:31:06 | CI Audit (dev) | gpt-engineer-app[bot] | `ddf47fc3` | Sucesso |
 | R-01 | Data Leak | Critical | RLS Enforcement | P0 |
 | R-02 | API Downtime | High | Fallback Mechanism | P1 |
 
