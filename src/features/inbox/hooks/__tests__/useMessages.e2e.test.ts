@@ -7,6 +7,11 @@ import { messageRepository } from '../../data-access/messageRepository';
 vi.mock('../../services/messageService', () => ({
   messageService: {
     getAllMessagesForContact: vi.fn(),
+    mapMessage: vi.fn((m) => ({
+      ...m,
+      conversationId: m.conversationId || m.contact_id,
+      timestamp: new Date(m.created_at || m.timestamp),
+    })),
   },
 }));
 

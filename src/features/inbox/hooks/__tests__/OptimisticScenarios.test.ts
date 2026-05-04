@@ -132,9 +132,9 @@ describe('useOptimisticMessages — Daily Scenarios', () => {
 
     expect(result.current.pendingCount).toBe(1);
 
-    // Fast forward 61 seconds
+    // Fast forward 121 seconds (timeout is 120s)
     act(() => {
-      vi.advanceTimersByTime(61000);
+      vi.advanceTimersByTime(121000);
     });
 
     const merged = result.current.mergeWithReal([]);
