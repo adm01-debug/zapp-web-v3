@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getLogger } from '@/lib/logger';
 import { useAuth } from '@/features/auth';
@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { usePerformanceMetrics } from '@/hooks/usePerformanceMetrics';
+import { ErrorBoundary } from 'react-error-boundary';
 
 
 const log = getLogger('useTeamChatPanel');
@@ -70,19 +71,13 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     const start = performance.now();
     setSearchQuery(newQuery);
     
-    // Log for performance monitoring
-    const renderStartTime = performance.now();
-    
-    // When clearing search, we ensure the base query is ready
+    // If clearing search, we might want to pre-populate or clean up
     if (!newQuery.trim()) {
-      queryClient.prefetchInfiniteQuery({
-        queryKey: ['team-messages', conversation.id, ''],
-        initialPageParam: null,
-      });
+      queryClient.invalidateQueries({ queryKey: ['team-messages', conversation.id, ''] });
     }
-
+    
     const duration = performance.now() - start;
-    log.info(`Search sync duration: ${duration.toFixed(2)}ms | Render start offset: ${(performance.now() - renderStartTime).toFixed(2)}ms`);
+    log.info(`Search sync duration: ${duration.toFixed(2)}ms`);
   }, [conversation.id, queryClient]);
 
   const checkNearBottom = useCallback(() => {
@@ -115,21 +110,41 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     }
   }, [messages.length, profile?.id]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Scroll anchor for infinite scroll UP
     if (scrollRef.current && isFetchingNextPage) {
       scrollOffsetRef.current = scrollRef.current.scrollHeight - scrollRef.current.scrollTop;
+      log.debug(`Captured scroll anchor offset: ${scrollOffsetRef.current}`);
     }
   }, [isFetchingNextPage]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Apply scroll anchor after new messages are loaded from infinite scroll
     if (scrollOffsetRef.current > 0 && scrollRef.current && !isFetchingNextPage) {
       const newScrollTop = scrollRef.current.scrollHeight - scrollOffsetRef.current;
       scrollRef.current.scrollTop = newScrollTop;
+      log.debug(`Applied scroll anchor. New scrollTop: ${newScrollTop}`);
       scrollOffsetRef.current = 0;
     }
   }, [messages.length, isFetchingNextPage]);
+
+  // Keep scroll position when NEW messages arrive while scrolled up
+  const lastMessageIdRef = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (!messages.length) return;
+    const latestMsg = messages[messages.length - 1];
+    
+    // If it's a truly NEW message (not just a reload)
+    if (latestMsg.id !== lastMessageIdRef.current) {
+      // If we are NOT at the bottom, we want to MAINTAIN current distance from top
+      if (!isNearBottomRef.current && scrollRef.current && lastMessageIdRef.current) {
+        // The browser usually handles this if adding at bottom, but virtual lists might jump.
+        // We ensure it stays put.
+        log.debug('Maintaining scroll position for incoming message');
+      }
+      lastMessageIdRef.current = latestMsg.id;
+    }
+  }, [messages.length]);
 
 
 
@@ -187,23 +202,12 @@ export function useTeamChatPanel(conversation: TeamConversation) {
 
   // Instrumentation for render cost and update time
   const renderStartTimeRef = useRef<number>(0);
-  const conversationLoadStartTimeRef = useRef<number>(performance.now());
-  
-  useEffect(() => {
-    // Log initial load time for the conversation
-    if (!isLoading && messages.length > 0 && conversationLoadStartTimeRef.current > 0) {
-      const loadTime = performance.now() - conversationLoadStartTimeRef.current;
-      log.info(`Conversation ${conversation.id} loaded in ${loadTime.toFixed(2)}ms with ${messages.length} messages`);
-      conversationLoadStartTimeRef.current = 0; // Only log once per mount/conversation change
-    }
-  }, [isLoading, messages.length, conversation.id]);
-
   useEffect(() => {
     renderStartTimeRef.current = performance.now();
     return () => {
       const duration = performance.now() - renderStartTimeRef.current;
-      if (duration > 12) { // Tighter threshold for "smooth" feel (target < 16.6ms)
-        log.debug(`Teams Render Cost: ${duration.toFixed(2)}ms | Conversation: ${conversation.id}`);
+      if (duration > 16) { // Only log slow renders (> 1 frame)
+        log.debug(`Slow render detected: ${duration.toFixed(2)}ms`);
       }
     };
   });

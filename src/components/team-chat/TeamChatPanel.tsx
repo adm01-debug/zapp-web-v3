@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { getLogger } from '@/lib/logger';
 // @ts-ignore
 import { List } from 'react-window';
 // @ts-ignore
@@ -59,7 +61,20 @@ const MediaTypeIcon = memo(function MediaTypeIcon({ type }: { type: string | nul
 
 interface Props { conversation: TeamConversation; onBack: () => void; onToggleDetails?: () => void; showDetails?: boolean; }
 
-export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetails }: Props) {
+const log = getLogger('TeamChatPanel');
+
+export function TeamChatPanel(props: Props) {
+  return (
+    <ErrorBoundary 
+      fallback={<div className="p-4 text-center text-destructive">Erro ao carregar o chat. Por favor, tente recarregar.</div>}
+      onError={(error) => log.error('TeamChatPanel error:', error)}
+    >
+      <TeamChatPanelContent {...props} />
+    </ErrorBoundary>
+  );
+}
+
+function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetails }: Props) {
   const [showStats, setShowStats] = useState(false);
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
@@ -231,36 +246,6 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
           <div className="h-full w-full flex flex-col relative">
             {s.isFetchingNextPage && <div className="p-2 text-center text-xs text-muted-foreground animate-pulse">Carregando mensagens anteriores...</div>}
             <div className="flex-1 relative">
-              <AnimatePresence>
-                {s.showScrollDown && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
-                  >
-                    <Button 
-                      size="sm" 
-                      onClick={s.scrollToBottom}
-                      className={cn(
-                        "rounded-full shadow-lg border border-primary/20 gap-2 h-9 px-4",
-                        s.hasNewMessagesUnseen ? "bg-primary hover:bg-primary/90 text-primary-foreground animate-bounce" : "bg-background/80 backdrop-blur-sm text-foreground hover:bg-background"
-                      )}
-                    >
-                      {s.hasNewMessagesUnseen ? (
-                        <>
-                          <div className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
-                          <span>Novas mensagens</span>
-                          <ArrowDown className="w-4 h-4" />
-                        </>
-                      ) : (
-                        <ArrowDown className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
               <List<{}>
                 listRef={s.listRef}
                 rowCount={s.filteredMessages.length}

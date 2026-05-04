@@ -29,7 +29,7 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
         .select('*, sender:profiles!team_messages_sender_id_fkey(id, name, avatar_url)')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: false })
-        .order('id', { ascending: false }) // Deterministic order for same timestamp
+        .order('id', { ascending: false })
         .limit(MESSAGES_PER_PAGE);
 
       if (pageParam) {
