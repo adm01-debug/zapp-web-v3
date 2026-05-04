@@ -98,9 +98,9 @@
   /* ===== UNREAD BADGE ===== */
   .unread-badge { @apply min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-bold bg-destructive text-destructive-foreground; }
 
-  /* ===== GLASS MORPHISM ===== */
-  .glass { @apply border transition-all duration-200; background: hsl(var(--glass-bg)); border-color: hsl(var(--glass-border)); }
-  .glass-strong { @apply border transition-all duration-200; background: hsl(var(--glass-bg)); border-color: hsl(var(--glass-border)); }
+  /* ===== GLASS MORPHISM — Substituído por cores sólidas vívidas ===== */
+  .glass { @apply border transition-all duration-200; background: hsl(var(--card)); border-color: hsl(var(--border)); }
+  .glass-strong { @apply border transition-all duration-200; background: hsl(var(--card-elevated)); border-color: hsl(var(--border)); }
 
   /* ===== GAMIFICATION ANIMATIONS ===== */
   .animate-xp-shimmer {
