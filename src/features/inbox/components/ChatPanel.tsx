@@ -34,7 +34,7 @@ import { ActiveTool } from './chat/ChatHeaderToolbar';
 import { useChatFilters, FailureCategory } from './chat/hooks/useChatFilters';
 import { useSLADelivery } from './chat/hooks/useSLADelivery';
 import { useChatSearchState } from './chat/hooks/useChatSearchState';
-import { useChatDialogs, DialogKey } from './chat/hooks/useChatDialogs';
+import { useChatDialogs } from './chat/hooks/useChatDialogs';
 import { useSearchParams } from 'react-router-dom';
 import { useTransferConversation } from '@/features/inbox/hooks/useTransferConversation';
 import { useInboxShortcuts } from '@/features/inbox/hooks/useInboxShortcuts';
@@ -82,17 +82,25 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     if (activeTool === 'chatSearch') openDialog('chatSearch');
     else if (activeTool === 'aiAssistant') openDialog('aiAssistant');
     else {
-      closeDialog('chatSearch');
-      closeDialog('aiAssistant');
+      // Don't close everything, just the ones managed by activeTool
+      // Actually ChatPanel originally had:
+      // useEffect(() => {
+      //   dispatch({ type: activeTool === 'chatSearch' ? 'OPEN' : 'CLOSE', key: 'chatSearch' });
+      //   dispatch({ type: activeTool === 'aiAssistant' ? 'OPEN' : 'CLOSE', key: 'aiAssistant' });
+      // }, [activeTool]);
+      if (activeTool !== 'chatSearch') closeDialog('chatSearch');
+      if (activeTool !== 'aiAssistant') closeDialog('aiAssistant');
     }
   }, [activeTool, openDialog, closeDialog]);
 
   const [callDirection, setCallDirection] = useState<'inbound' | 'outbound'>('outbound');
   const {
-    highlightedMessageIds, setHighlightedMessageIds,
-    activeHighlightId, setActiveHighlightId,
-    searchQuery, setSearchQuery,
-    resetSearch, handleHighlightChange
+    highlightedMessageIds,
+    activeHighlightId,
+    searchQuery,
+    setSearchQuery,
+    resetSearch,
+    handleHighlightChange
   } = useChatSearchState();
 
   const {
