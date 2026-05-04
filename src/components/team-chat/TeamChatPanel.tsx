@@ -229,7 +229,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                   ref={s.listRef}
                   height={height}
                   itemCount={s.filteredMessages.length}
-                  itemSize={90} 
+                  itemSize={(index: number) => itemHeights.current[index] || 100} 
                   width={width}
                   className="scrollbar-none"
                   overscanCount={10}
