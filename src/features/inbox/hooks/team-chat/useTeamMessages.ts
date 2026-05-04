@@ -80,23 +80,33 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
         const newMessage = payload.new as TeamMessage;
         
         // Optimistic update of the infinite query cache
-        queryClient.setQueryData(['team-messages', conversationId, searchQuery], (oldData: any) => {
-          if (!oldData || !oldData.pages) return oldData;
-          
-          // Add the new message to the first page (which holds the newest messages)
-          const newPages = [...oldData.pages];
-          if (newPages.length > 0) {
-            newPages[0] = {
-              ...newPages[0],
-              messages: [newMessage, ...newPages[0].messages].slice(0, MESSAGES_PER_PAGE + 1)
+        // Note: we ONLY update if searchQuery is empty to avoid showing results that don't match the filter
+        if (!searchQuery.trim()) {
+          queryClient.setQueryData(['team-messages', conversationId, ''], (oldData: any) => {
+            if (!oldData || !oldData.pages) return oldData;
+            
+            // For a new message (INSERT), we add it to the newest page (pages[0])
+            // Since our pages are stored oldest-to-newest internally (sortedMessages in queryFn),
+            // and useTeamMessages reverses the pages order to combine them,
+            // we must be careful. 
+            // queryFn returns newest 50 reversed -> oldest of those 50 first.
+            // pages[0] has the 50 MOST RECENT messages, in ascending order.
+            
+            const newPages = [...oldData.pages];
+            if (newPages.length > 0) {
+              // Append to the end of the first page (most recent messages)
+              newPages[0] = {
+                ...newPages[0],
+                messages: [...newPages[0].messages, newMessage]
+              };
+            }
+            
+            return {
+              ...oldData,
+              pages: newPages
             };
-          }
-          
-          return {
-            ...oldData,
-            pages: newPages
-          };
-        });
+          });
+        }
 
         // Also invalidate conversation list to update snippets
         queryClient.invalidateQueries({ queryKey: ['team-conversations'] });
