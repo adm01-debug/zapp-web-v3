@@ -103,7 +103,7 @@ export function ConversationList({
   const virtualizer = useVirtualizer({
     count: filteredConversations.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 73, // 72px item + 1px border
+    estimateSize: () => 65, // 64px item + 1px border
     overscan: 10,
   });
 
@@ -112,7 +112,7 @@ export function ConversationList({
       {/* Header */}
       <div className="p-3 border-b border-border bg-background space-y-3 shrink-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground select-none">Conversas</h2>
+          <h2 className="text-lg font-bold text-foreground select-none">Conversas</h2>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className="w-8 h-8 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
               <Filter className="w-4 h-4" />
@@ -129,7 +129,7 @@ export function ConversationList({
             placeholder="Buscar conversas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 h-[40px] md:h-[35px] bg-card border-none rounded-lg text-[16px] md:text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+            className="pl-10 pr-4 h-[32px] bg-card border-none rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           />
         </div>
 
@@ -213,7 +213,7 @@ export function ConversationList({
                     <div className="px-3 h-full">
                       <div className="flex items-center gap-3 py-3 border-b border-border h-full">
                         <div className="relative flex-shrink-0">
-                          <Avatar className="w-[49px] h-[49px] ring-0">
+                          <Avatar className="w-[42px] h-[42px] ring-0">
                             <AvatarImage 
                               src={conversation.contact.avatar} 
                               referrerPolicy="no-referrer" 
@@ -227,7 +227,7 @@ export function ConversationList({
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-[14px] leading-tight text-foreground truncate">
+                            <span className="font-medium text-[13px] leading-tight text-foreground truncate">
                               {conversation.contact.name}
                             </span>
                             <span className="text-[11px] leading-tight text-muted-foreground tabular-nums flex-shrink-0 ml-2">
@@ -237,7 +237,7 @@ export function ConversationList({
 
                           <div className="flex items-center justify-between">
                             <p className={cn(
-                              "text-[13px] leading-tight truncate pr-2",
+                              "text-[12px] leading-tight truncate pr-2",
                               conversation.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground font-normal"
                             )}>
                               {conversation.lastMessage?.content || 'Sem mensagens'}
