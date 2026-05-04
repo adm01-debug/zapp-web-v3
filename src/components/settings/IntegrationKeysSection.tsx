@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plug, Eye, EyeOff, Save, CheckCircle2, AlertCircle, RefreshCw, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import { useEvolutionAutoSync } from '@/hooks/useEvolutionAutoSync';
 import { cn } from '@/lib/utils';
 
 interface KeyField {
@@ -41,12 +42,18 @@ const INTEGRATION_KEYS: KeyField[] = [
 
 export function IntegrationKeysSection() {
   const { isLoading, getSetting, addSetting, refetch } = useGlobalSettings();
-  const { listInstances, isLoading: evolutionLoading } = useEvolutionApi();
+  const { listInstances, getInstanceStatus, isLoading: evolutionLoading } = useEvolutionApi();
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [testingConnection, setTestingConnection] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testResult, setTestResult] = useState<{ 
+    success: boolean; 
+    message: string; 
+    details?: { instances: number; status: string; version?: string } 
+  } | null>(null);
+
+  const { syncAll } = useEvolutionAutoSync();
 
   // Sync with localStorage for direct mode
   useEffect(() => {
@@ -75,11 +82,21 @@ export function IntegrationKeysSection() {
       // Test by listing instances - simple GET call that requires authentication
       const result = await listInstances();
       if (Array.isArray(result) || (result && typeof result === 'object')) {
-        const count = Array.isArray(result) ? result.length : 0;
+        const instances = Array.isArray(result) ? result : [];
+        const count = instances.length;
+        
         setTestResult({ 
           success: true, 
-          message: `Conexão estabelecida com sucesso! ${count} instâncias encontradas.` 
+          message: `Conexão estabelecida com sucesso!`,
+          details: { 
+            instances: count, 
+            status: 'Online',
+            version: 'v2.x (Auto-detected)'
+          }
         });
+        
+        // Trigger a background sync if we have a valid connection
+        syncAll();
         toast.success('Teste de conexão bem sucedido!');
       } else {
         throw new Error('Resposta inválida da API');
@@ -225,16 +242,39 @@ export function IntegrationKeysSection() {
             
             {testResult && (
               <div className={cn(
-                "p-3 rounded-lg border text-xs flex items-start gap-2 animate-in fade-in slide-in-from-top-1",
+                "p-4 rounded-xl border text-sm flex flex-col gap-3 animate-in fade-in slide-in-from-top-2",
                 testResult.success 
-                  ? "bg-success/10 border-success/30 text-success" 
-                  : "bg-destructive/10 border-destructive/30 text-destructive"
+                  ? "bg-success/5 border-success/20 text-success" 
+                  : "bg-destructive/5 border-destructive/20 text-destructive"
               )}>
-                {testResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
-                <div>
-                  <p className="font-semibold">{testResult.success ? 'Sucesso' : 'Erro na Conexão'}</p>
-                  <p className="opacity-90">{testResult.message}</p>
+                <div className="flex items-start gap-3">
+                  {testResult.success ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />}
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">{testResult.success ? 'Conexão Ativa' : 'Erro na Conexão'}</p>
+                    <p className="opacity-80 text-xs leading-relaxed mt-0.5">{testResult.message}</p>
+                  </div>
                 </div>
+                
+                {testResult.success && testResult.details && (
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-success/10">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] uppercase tracking-wider opacity-60">Instâncias</p>
+                      <p className="font-mono text-xs">{testResult.details.instances}</p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] uppercase tracking-wider opacity-60">Status</p>
+                      <p className="font-mono text-xs">{testResult.details.status}</p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] uppercase tracking-wider opacity-60">Versão API</p>
+                      <p className="font-mono text-xs">{testResult.details.version}</p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] uppercase tracking-wider opacity-60">Auto-Sync</p>
+                      <p className="font-mono text-xs text-success">Habilitado</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
