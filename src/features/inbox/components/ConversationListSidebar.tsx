@@ -167,8 +167,8 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             />
             {contactSearch && (
               <Button variant="ghost" size="icon" onClick={clearContactSearch}
-                className="absolute right-0.5 top-1/2 -translate-y-1/2 w-6 h-6 hover:bg-transparent" aria-label="Limpar busca">
-                <X className="w-3 h-3 text-muted-foreground" />
+                className="absolute right-0.5 top-1/2 -translate-y-1/2 w-8 h-8 md:w-6 md:h-6 hover:bg-transparent" aria-label="Limpar busca">
+                <X className="w-4 h-4 md:w-3 md:h-3 text-muted-foreground" />
               </Button>
             )}
             <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:block pointer-events-none">
