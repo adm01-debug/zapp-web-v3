@@ -119,11 +119,11 @@ export function MessagePreview({ content, className }: MessagePreviewProps) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -5 }}
         className={cn(
-          "text-sm text-muted-foreground p-2 rounded-lg bg-muted/50 border border-border/50",
+          "text-[13px] text-muted-foreground p-2 rounded-lg bg-muted/50 border border-border/50",
           className
         )}
       >
-        <span className="text-xs text-muted-foreground/70 block mb-1">Preview:</span>
+        <span className="text-[11px] text-muted-foreground/70 block mb-1">Preview:</span>
         <span className="break-words">
           {parts.map((part, index) => {
             switch (part.type) {
@@ -133,7 +133,7 @@ export function MessagePreview({ content, className }: MessagePreviewProps) {
                 return <em key={index} className="italic">{part.content}</em>;
               case 'code':
                 return (
-                  <code key={index} className="px-1 py-0.5 bg-primary/10 text-primary rounded text-xs font-mono">
+                  <code key={index} className="px-1 py-0.5 bg-primary/10 text-primary rounded text-[11px] font-mono">
                     {part.content}
                   </code>
                 );

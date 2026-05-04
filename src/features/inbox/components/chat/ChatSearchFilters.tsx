@@ -60,9 +60,9 @@ export function ChatSearchFilters({
     day_selected: 'bg-primary text-primary-foreground hover:bg-primary',
     day_today: 'bg-accent text-accent-foreground font-bold',
     head_cell: 'text-[10px] font-semibold text-muted-foreground w-9',
-    cell: 'h-9 w-9 text-center text-sm p-0',
-    day: 'h-9 w-9 p-0 text-sm font-normal',
-    caption_label: 'text-sm font-bold',
+    cell: 'h-9 w-9 text-center text-[13px] p-0',
+    day: 'h-9 w-9 p-0 text-[13px] font-normal',
+    caption_label: 'text-[13px] font-bold',
     nav_button: 'h-7 w-7 bg-transparent opacity-60 hover:opacity-100',
     table: 'w-full border-collapse',
     head_row: 'flex',
@@ -77,7 +77,7 @@ export function ChatSearchFilters({
         const showCount = (debouncedQuery.trim() || f.key !== 'all' || hasDateFilter) && count > 0;
         return (
           <button key={f.key} role="tab" aria-selected={isActive} tabIndex={0}
-            className={cn('inline-flex items-center gap-1.5 whitespace-nowrap text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-150 shrink-0 select-none',
+            className={cn('inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] px-3 py-1.5 rounded-lg font-medium transition-all duration-150 shrink-0 select-none',
               isActive ? 'bg-primary text-white shadow-sm' : 'bg-background/80 dark:bg-card/80 text-muted-foreground hover:bg-muted hover:text-foreground'
             )}
             onClick={() => setFilter(f.key)}

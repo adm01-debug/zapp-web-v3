@@ -8,7 +8,8 @@
 
     /* ===== TYPOGRAPHY SCALE (fluid clamp) ===== */
     --text-xs: 12px;
-    --text-sm: 14px;
+    --text-sm: 13.5px;
+    --chat-font-size: 13.5px;
     --text-base: 16px;
     --text-lg: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
     --text-xl: clamp(1.0625rem, 1rem + 0.3vw, 1.125rem);

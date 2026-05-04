@@ -52,7 +52,7 @@ export function ChatSearchBar({ messages, isOpen, onClose, onNavigateToMessage, 
               <div className="relative flex-1 min-w-0 flex items-center gap-2.5 bg-card rounded-lg px-3.5 h-10 border-none focus-within:ring-0 transition-all duration-200">
                 <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                 <Input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={handleKeyDown} placeholder="Buscar na conversa..."
-                  className="h-full text-sm border-none bg-transparent shadow-none focus-visible:ring-0 px-0 min-w-0 text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]" />
+                  className="h-full text-[13px] border-none bg-transparent shadow-none focus-visible:ring-0 px-0 min-w-0 text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]" />
                 {query && <button onClick={() => setQuery('')} className="p-1 rounded-full hover:bg-accent shrink-0"><X className="w-3.5 h-3.5 text-[hsl(var(--muted-foreground))]" /></button>}
                 {(debouncedQuery.trim() || filter !== 'all' || hasDateFilter) && (
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0 tabular-nums font-medium" aria-live="polite">
@@ -88,7 +88,7 @@ export function ChatSearchBar({ messages, isOpen, onClose, onNavigateToMessage, 
             {(debouncedQuery.trim() || filter !== 'all' || hasDateFilter) && results.length === 0 && (
               <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2.5 px-3 py-2 text-muted-foreground bg-muted/50 rounded-lg">
                 <Search className="w-4 h-4 opacity-40" />
-                <span className="text-xs">{debouncedQuery.trim() ? `Nenhum resultado para "${debouncedQuery.trim().slice(0, 30)}"` : 'Nenhuma mensagem encontrada'}</span>
+                <span className="text-[11px]">{debouncedQuery.trim() ? `Nenhum resultado para "${debouncedQuery.trim().slice(0, 30)}"` : 'Nenhuma mensagem encontrada'}</span>
               </motion.div>
             )}
 
