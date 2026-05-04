@@ -234,11 +234,11 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             <div className="flex-1 relative">
             <AutoSizer>
               {({ height, width }: { height: number, width: number }) => (
-                <VariableSizeList
+                <List
                   ref={s.listRef}
                   height={height}
                   itemCount={s.filteredMessages.length}
-                  itemSize={(index: number) => itemHeights.current[index] || 100} 
+                  itemSize={100} 
                   width={width}
                   className="scrollbar-none"
                   overscanCount={10}
