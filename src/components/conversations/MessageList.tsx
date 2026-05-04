@@ -5,7 +5,8 @@
  */
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useMessages, type Message } from '@/hooks/useMessages';
-import { MessageCircle, CheckCircle2, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply } from 'lucide-react';
+import { useMessageQueue, type PendingMessage } from '@/hooks/messaging/useMessageQueue';
+import { MessageCircle, CheckCircle2, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,9 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
     messages, loading, loadingMore, hasMore, loadMore, 
     toggleStar, toggleImportant 
   } = useMessages(remoteJid);
+  const { pendingMessages } = useMessageQueue();
+  
+  const currentPending = pendingMessages.filter(p => p.remote_jid === remoteJid);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -192,6 +196,26 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
           </React.Fragment>
         );
       })}
+      
+      {currentPending.map((p) => (
+        <div key={p.id} className="flex group max-w-[85%] sm:max-w-[75%] lg:max-w-[65%] self-end flex-row-reverse opacity-70">
+          <div className="relative px-3 py-1.5 rounded-lg shadow-sm border bg-primary/80 text-primary-foreground rounded-tr-none border-primary/10">
+            <div className="text-sm break-words whitespace-pre-wrap leading-relaxed italic">
+              {p.content}
+            </div>
+            <div className="flex items-center justify-end gap-1.5 mt-1 select-none text-primary-foreground/50">
+              <span className="text-[10px] font-medium uppercase">Enviando...</span>
+              {p.status === 'sending' ? (
+                <RefreshCw className="h-3 w-3 animate-spin" />
+              ) : p.status === 'failed' ? (
+                <AlertCircle className="h-3 w-3 text-red-300" />
+              ) : (
+                <Clock className="h-3 w-3" />
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
       
       <div ref={bottomRef} className="h-1 shrink-0" />
     </div>
