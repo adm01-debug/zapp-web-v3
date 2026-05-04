@@ -47,74 +47,82 @@ export function initWebVitals() {
 
   // LCP - Largest Contentful Paint
   try {
-    const lcpObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      const lastEntry = entries[entries.length - 1] as PerformanceEntry;
-      if (lastEntry) {
-        onMetric({
-          name: 'LCP',
-          value: lastEntry.startTime,
-          rating: getRating('LCP', lastEntry.startTime),
-          delta: lastEntry.startTime,
-          id: `lcp-${Date.now()}`,
-        });
-      }
-    });
-    lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+    if (PerformanceObserver.supportedEntryTypes.includes('largest-contentful-paint')) {
+      const lcpObserver = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        const lastEntry = entries[entries.length - 1] as PerformanceEntry;
+        if (lastEntry) {
+          onMetric({
+            name: 'LCP',
+            value: lastEntry.startTime,
+            rating: getRating('LCP', lastEntry.startTime),
+            delta: lastEntry.startTime,
+            id: `lcp-${Date.now()}`,
+          });
+        }
+      });
+      lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+    }
   } catch (e) { /* not supported */ }
 
   // FID - First Input Delay
   try {
-    const fidObserver = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
-        onMetric({
-          name: 'FID',
-          value: fid,
-          rating: getRating('FID', fid),
-          delta: fid,
-          id: `fid-${Date.now()}`,
-        });
-      }
-    });
-    fidObserver.observe({ type: 'first-input', buffered: true });
+    if (PerformanceObserver.supportedEntryTypes.includes('first-input')) {
+      const fidObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
+          onMetric({
+            name: 'FID',
+            value: fid,
+            rating: getRating('FID', fid),
+            delta: fid,
+            id: `fid-${Date.now()}`,
+          });
+        }
+      });
+      fidObserver.observe({ type: 'first-input', buffered: true });
+    }
   } catch (e) { /* not supported */ }
 
   // CLS - Cumulative Layout Shift
   try {
-    let clsValue = 0;
-    const clsObserver = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (!(entry as PerformanceEntry & { hadRecentInput?: boolean }).hadRecentInput) {
-          clsValue += (entry as PerformanceEntry & { value: number }).value;
+    if (PerformanceObserver.supportedEntryTypes.includes('layout-shift')) {
+      let clsValue = 0;
+      const clsObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (!(entry as PerformanceEntry & { hadRecentInput?: boolean }).hadRecentInput) {
+            clsValue += (entry as PerformanceEntry & { value: number }).value;
+          }
         }
-      }
-      onMetric({
-        name: 'CLS',
-        value: clsValue,
-        rating: getRating('CLS', clsValue),
-        delta: clsValue,
-        id: `cls-${Date.now()}`,
+        onMetric({
+          name: 'CLS',
+          value: clsValue,
+          rating: getRating('CLS', clsValue),
+          delta: clsValue,
+          id: `cls-${Date.now()}`,
+        });
       });
-    });
-    clsObserver.observe({ type: 'layout-shift', buffered: true });
+      clsObserver.observe({ type: 'layout-shift', buffered: true });
+    }
   } catch (e) { /* not supported */ }
 
   // INP - Interaction to Next Paint
   try {
-    const inpObserver = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        const duration = entry.duration;
-        onMetric({
-          name: 'INP',
-          value: duration,
-          rating: getRating('INP', duration),
-          delta: duration,
-          id: `inp-${Date.now()}`,
-        });
-      }
-    });
-    inpObserver.observe({ type: 'event', buffered: true, durationThreshold: 40 } as PerformanceObserverInit);
+    if (PerformanceObserver.supportedEntryTypes.includes('event')) {
+      const inpObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const duration = entry.duration;
+          onMetric({
+            name: 'INP',
+            value: duration,
+            rating: getRating('INP', duration),
+            delta: duration,
+            id: `inp-${Date.now()}`,
+          });
+        }
+      });
+      inpObserver.observe({ type: 'event', buffered: true, durationThreshold: 40 } as PerformanceObserverInit);
+    }
   } catch (e) { /* not supported */ }
 
   // TTFB - Time to First Byte

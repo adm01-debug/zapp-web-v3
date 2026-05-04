@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, forwardRef } from 'react';
+import { useState, useEffect, useCallback, useRef, forwardRef, memo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 import { useNavigate } from 'react-router-dom';
@@ -261,28 +261,28 @@ function LoadingSplash() {
   );
 }
 
-const Index = forwardRef<HTMLDivElement>(function Index(_props, _ref) {
+const Index = memo(forwardRef<HTMLDivElement>(function Index(_props, _ref) {
   const { user, loading } = useAuth();
   const { completeOnboarding } = useOnboarding();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <div className="text-center animate-fade-in">
-          <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-8 h-8 text-primary animate-pulse" />
-          </div>
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSplash />;
   }
+
+  if (!user) return null;
 
   return (
     <TourProvider onComplete={completeOnboarding}>
       <IndexContent />
     </TourProvider>
   );
-});
+}));
 
 export default Index;
