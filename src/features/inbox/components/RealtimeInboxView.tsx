@@ -15,6 +15,7 @@ import { useRealtimeInbox } from '@/features/inbox';
 import { useRealtimeContacts } from '@/features/inbox';
 import { useRealtimeFallbackRefetch } from '@/features/inbox';
 import { useSLAAlerts } from '@/features/sla/hooks/useSLAAlerts';
+import { useEvolutionAutoReconnection } from '@/hooks/useEvolutionAutoReconnection';
 import { WifiOff, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -49,6 +50,9 @@ export function RealtimeInboxView() {
   const isMobile = useIsMobile();
   const inbox = useRealtimeInbox();
   
+  // Monitora a conexão com o provedor e reconecta automaticamente se necessário
+  useEvolutionAutoReconnection('wpp2');
+
   // Conecta alertas de delivery ao useSLAAlerts
   useSLAAlerts({
     contactId: inbox.selectedContactId,
