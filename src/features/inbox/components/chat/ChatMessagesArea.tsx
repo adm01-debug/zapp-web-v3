@@ -392,10 +392,10 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
             )}
           </div>
           <div className="space-y-1">
-            <h4 className="text-base font-semibold text-foreground">
+            <h4 className="text-[14px] font-semibold text-foreground">
               {statusFilter.has('failed' as any) ? 'Nenhuma falha encontrada' : 'Sem resultados'}
             </h4>
-            <p className="text-sm text-muted-foreground max-w-[240px]">
+            <p className="text-[13px] text-muted-foreground max-w-[240px]">
               {statusFilter.has('failed' as any) 
                 ? 'Todas as mensagens deste contato foram entregues com sucesso.' 
                 : 'Ajuste os filtros ou a busca para encontrar o que procura.'}
@@ -461,7 +461,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Lock className="w-6 h-6 text-primary" />
           </div>
-          <h3 className="text-sm font-semibold mb-1">Criptografia de Ponta a Ponta</h3>
+          <h3 className="text-[13px] font-semibold mb-1">Criptografia de Ponta a Ponta</h3>
           <p className="text-[12px] text-muted-foreground leading-relaxed">
             As mensagens e chamadas são protegidas com criptografia. Ninguém fora desta conversa pode lê-las.
           </p>
@@ -470,7 +470,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
         {onLoadOlder ? (
           <div className="flex justify-center" aria-live="polite">
             {loadingOlder && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/30">
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground bg-muted/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/30">
                 <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
                 <span>Carregando mensagens anteriores…</span>
               </div>
@@ -609,7 +609,7 @@ function LoadCancelledBadge({
       aria-atomic="true"
       data-testid="load-older-cancelled"
       data-cancel-reason={reason}
-      className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 backdrop-blur-sm pl-3 pr-1 py-1 rounded-full border border-border/30"
+      className="flex items-center gap-2 text-[11px] text-muted-foreground bg-muted/40 backdrop-blur-sm pl-3 pr-1 py-1 rounded-full border border-border/30"
     >
       <Icon className="h-3 w-3" aria-hidden="true" />
       <span id={labelId}>{text}</span>
