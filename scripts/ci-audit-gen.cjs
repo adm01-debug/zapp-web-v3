@@ -80,19 +80,18 @@ async function updateAuditFiles() {
     let content = fs.readFileSync(filePath, 'utf8');
     
     // Update Evidence Genesis
-    // We match the table header and separator to inject the row
-    const separator = '| :--- | :--- | :--- | :--- | :--- |';
     const genesisLine = `| ${date} | CI Audit (${version}) | ${author} | \`${commitHash}\` | Sucesso |`;
     
-    if (content.includes(separator)) {
-      const parts = content.split(separator);
-      // We limit to last 5 entries to keep it readable
-      let tableBody = parts[1].trim().split('\n');
-      tableBody.unshift(genesisLine);
-      if (tableBody.length > 10) tableBody = tableBody.slice(0, 10);
-      
-      parts[1] = '\n' + tableBody.join('\n') + '\n';
-      content = parts.join(separator);
+    // Improved pattern to find and update the table
+    const tableRegex = /(\| Data\/Hora \(UTC\) \|.*?\n\| :--- \| :--- \| :--- \| :--- \| :--- \|\n)([\s\S]*?)(\n\n---|\n\n##|$)/;
+    
+    if (tableRegex.test(content)) {
+      content = content.replace(tableRegex, (match, header, body, footer) => {
+        let rows = body.trim().split('\n').filter(r => r.trim() !== '');
+        rows.unshift(genesisLine);
+        if (rows.length > 10) rows = rows.slice(0, 10); // Keep last 10
+        return `${header}${rows.join('\n')}${footer}`;
+      });
     }
 
     fs.writeFileSync(filePath, content);
