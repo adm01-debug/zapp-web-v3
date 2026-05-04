@@ -15,7 +15,7 @@ Mapeamento detalhado de funcionalidades para arquivos e caminhos de implementaç
 
 | Módulo | Funcionalidade | Path no Repositório | Dependências Principais | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| 2026-05-04 22:31:06 | CI Audit (dev) | gpt-engineer-app[bot] | `ddf47fc3` | Sucesso |
+| 2026-05-04 22:31:06 | Auditoria Inicial | gpt-engineer-app[bot] | `ddf47fc3` | Sucesso |
 | **Inbox** | Virtualização de Chat | [`src/components/team-chat/TeamChatPanel.tsx`](src/components/team-chat/TeamChatPanel.tsx) | react-window, useTeamChat | ✅ Implementado |
 | **Inbox** | Filtro & Busca | [`src/hooks/useTeamChat.ts`](src/hooks/useTeamChat.ts) | Supabase JS | ✅ Implementado |
 | **CRM** | Gestão de Contatos | [`src/components/contacts/ContactForm.tsx`](src/components/contacts/ContactForm.tsx) | react-hook-form, zod | ✅ Implementado |
