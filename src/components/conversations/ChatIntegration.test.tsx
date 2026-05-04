@@ -112,4 +112,37 @@ describe('Chat Integration - Flow Tests', () => {
     expect(screen.getByText('Enviando agora')).toBeInTheDocument();
     expect(screen.getAllByText(/Enviando.../i)[0]).toBeInTheDocument();
   });
+
+  it('deve disparar loadMore quando o topo da lista se torna visível (carregamento incremental)', async () => {
+    const loadMoreMock = vi.fn().mockResolvedValue(undefined);
+    mockUseMessages.mockReturnValue({
+      messages: Array.from({ length: 10 }).map((_, i) => ({
+        id: `${i}`, content: `Mensagem ${i}`, created_at: new Date().toISOString(), from_me: false, message_id: `m${i}`
+      })),
+      loading: false,
+      loadingMore: false,
+      hasMore: true,
+      loadMore: loadMoreMock,
+      toggleStar: vi.fn(),
+      toggleImportant: vi.fn(),
+    });
+
+    let observerCallback: (entries: any[]) => void = () => {};
+    window.IntersectionObserver = vi.fn((cb) => {
+      observerCallback = cb;
+      return {
+        observe: vi.fn(),
+        disconnect: vi.fn(),
+        unobserve: vi.fn(),
+      };
+    }) as any;
+
+    render(<MessageList remoteJid="test@jid" />);
+    
+    // Simula a interseção do elemento do topo
+    observerCallback([{ isIntersecting: true }]);
+    
+    expect(loadMoreMock).toHaveBeenCalled();
+  });
 });
+
