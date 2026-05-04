@@ -63,7 +63,7 @@ export function SecondaryToolbar({
   };
 
   return (
-    <div className="flex items-center gap-0.5 shrink-0 bg-[#202c33] p-1 rounded-full border border-white/5 ml-1">
+    <div className="flex items-center gap-0.5 shrink-0 bg-card p-1 rounded-full border border-white/5 ml-1">
       {onToggleWhisper && (
         <Tooltip>
           <TooltipTrigger asChild>

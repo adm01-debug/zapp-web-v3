@@ -27,7 +27,7 @@ export function AutomationSuggestionsBar({
         <Card
           key={s.id}
           className={cn(
-            "p-3 border-white/10 bg-[#111b21] flex items-start gap-3",
+            "p-3 border-white/10 bg-background flex items-start gap-3",
           )}
         >
           <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
