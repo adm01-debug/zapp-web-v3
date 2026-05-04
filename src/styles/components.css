@@ -160,24 +160,24 @@
   .bg-background\/95,
   .bg-background\/60,
   .bg-background\/50,
-  .bg-background\/70 { background-color: black !important; opacity: 1 !important; }
+  .bg-background\/70 { background-color: #000000 !important; opacity: 1 !important; }
 
   .bg-card\/80,
   .bg-card\/90,
   .bg-card\/95,
   .bg-card\/60,
   .bg-card\/50,
-  .bg-card\/70 { background-color: hsl(var(--card)) !important; opacity: 1 !important; }
+  .bg-card\/70 { background-color: #000000 !important; opacity: 1 !important; }
 
   .bg-popover\/80,
   .bg-popover\/90,
-  .bg-popover\/95 { background-color: hsl(var(--popover)) !important; opacity: 1 !important; }
+  .bg-popover\/95 { background-color: #000000 !important; opacity: 1 !important; }
 
   .bg-muted\/30,
   .bg-muted\/40,
   .bg-muted\/50,
   .bg-muted\/60,
-  .bg-muted\/70 { background-color: hsl(var(--muted)) !important; opacity: 1 !important; }
+  .bg-muted\/70 { background-color: #080808 !important; opacity: 1 !important; }
 
   /* Neutraliza opacidade em bordas e anéis */
   .border-primary\/10, .border-primary\/20, .border-primary\/30, .border-primary\/40, .border-primary\/50,
