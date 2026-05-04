@@ -133,7 +133,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
     <QuickPeek preview={quickPeekPreview} enabled={!isSelected} delay={500}>
       <div ref={rootRef} onClick={() => onSelect(conversation)} 
         className={cn(
-          'relative p-3 cursor-pointer transition-colors duration-200 h-[72px] mx-0 border-b border-[#222d34]', 
+          'relative p-3 cursor-pointer transition-colors duration-200 h-[72px] mx-0 border-b border-[hsl(var(--border))]', 
           isSelected 
             ? 'bg-accent' 
             : 'hover:bg-card bg-background'
@@ -164,11 +164,11 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className={cn("font-normal text-[16px] md:text-[17px] truncate", isSelected ? "text-[#e9edef]" : "text-[#e9edef]")}>{conversation.contact.name}</span>
+                <span className={cn("font-normal text-[16px] md:text-[17px] truncate", isSelected ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--foreground))]")}>{conversation.contact.name}</span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <span className="text-[12px] text-[#8696a0] tabular-nums">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
+                <span className="text-[12px] text-[hsl(var(--muted-foreground))] tabular-nums">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -188,7 +188,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
               ) : (
                 <p className={cn(
                   "text-[13px] md:text-[14px] truncate pr-4 transition-colors duration-300",
-                  conversation.unreadCount > 0 ? "text-[#e9edef]" : "text-[#8696a0]"
+                  conversation.unreadCount > 0 ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--muted-foreground))]"
                 )}>
                   {conversation.lastMessage?.content || 'Sem mensagens'}
                 </p>

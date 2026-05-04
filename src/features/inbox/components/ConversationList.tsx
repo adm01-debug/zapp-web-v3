@@ -123,7 +123,7 @@ export function ConversationList({
         {/* Search */}
         <div className="relative group">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none z-10">
-            <Search className="w-4 h-4 text-muted-foreground group-focus-within:text-[#3b82f6] transition-colors" />
+            <Search className="w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           </div>
           <Input
             placeholder="Buscar conversas..."
@@ -145,7 +145,7 @@ export function ConversationList({
               <TabsTrigger 
                 key={t.id}
                 value={t.id} 
-                className="flex-1 text-[11px] h-6 rounded-md data-[state=active]:bg-accent data-[state=active]:text-[#3b82f6] text-muted-foreground hover:text-foreground transition-all"
+                className="flex-1 text-[11px] h-6 rounded-md data-[state=active]:bg-accent data-[state=active]:text-primary text-muted-foreground hover:text-foreground transition-all"
               >
                 {t.label}
               </TabsTrigger>
@@ -243,7 +243,7 @@ export function ConversationList({
                               {conversation.lastMessage?.content || 'Sem mensagens'}
                             </p>
                             {conversation.unreadCount > 0 && (
-                              <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-[#3b82f6] text-[#111b21]">
+                              <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-[#111b21]">
                                 {conversation.unreadCount}
                               </span>
                             )}

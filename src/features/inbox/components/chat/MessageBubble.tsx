@@ -204,8 +204,8 @@ export function MessageBubble({
                 'relative transition-all overflow-visible border border-transparent shadow-[0_1.5px_2px_rgba(0,0,0,0.15)]',
                 (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2.5 py-2' : 'px-2 py-1.5',
                 isSent
-                  ? cn('bg-[#1e3a5f] text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
-                  : cn('bg-card text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
+                  ? cn('bg-[#1e3a5f] text-[hsl(var(--foreground))] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
+                  : cn('bg-card text-[hsl(var(--foreground))] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
                 message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 ring-1 ring-amber-500/30 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
@@ -255,7 +255,7 @@ export function MessageBubble({
                 'flex items-center justify-end gap-1 mt-1 -mb-0.5', 
                 (message.type === 'image' || message.type === 'video') && !message.content 
                   ? 'absolute bottom-2 right-2 text-white drop-shadow-md bg-black/30 px-1.5 py-0.5 rounded-full backdrop-blur-xs' 
-                  : 'text-[#8696a0]'
+                  : 'text-[hsl(var(--muted-foreground))]'
               )}>
                 {message.isEdited && <span className="text-[9px] italic mr-0.5">editada</span>}
                 <span className="text-[11px] font-normal leading-none">{formatMessageTime(message.timestamp)}</span>

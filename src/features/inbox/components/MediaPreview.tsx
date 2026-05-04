@@ -18,8 +18,8 @@ function getFileIcon(fileName: string, mimeType?: string) {
   if (['xls', 'xlsx'].includes(extension)) return <FileSpreadsheet className="w-8 h-8 text-[#1d6f42]" />;
   if (['ppt', 'pptx'].includes(extension)) return <FileText className="w-8 h-8 text-[#d24726]" />;
   if (['zip', 'rar', '7z'].includes(extension)) return <FileArchive className="w-8 h-8 text-[#f8bc34]" />;
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return <FileImage className="w-8 h-8 text-[#aebac1]" />;
-  return <File className="w-8 h-8 text-[#aebac1]" />;
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return <FileImage className="w-8 h-8 text-[hsl(var(--muted-foreground))]" />;
+  return <File className="w-8 h-8 text-[hsl(var(--muted-foreground))]" />;
 }
 
 // Document Preview Component
@@ -52,7 +52,7 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
     <div
       className={cn(
         "flex items-center gap-3 p-2.5 rounded-md min-w-[240px] max-w-[320px] cursor-pointer transition-colors",
-        isSent ? "bg-[#1e3a5f]" : "bg-card border border-[#222d34]"
+        isSent ? "bg-[#1e3a5f]" : "bg-card border border-[hsl(var(--border))]"
       )}
       onClick={handleOpen}
     >
@@ -60,15 +60,15 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
         {getFileIcon(fileName)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-normal text-[#e9edef] truncate">{fileName}</p>
-        <div className="flex items-center gap-2 text-[12px] text-[#8696a0]">
+        <p className="text-sm font-normal text-[hsl(var(--foreground))] truncate">{fileName}</p>
+        <div className="flex items-center gap-2 text-[12px] text-[hsl(var(--muted-foreground))]">
           <span className="font-medium">{extension}</span>
           {fileSize && (<><span>•</span><span>{formatFileSize(fileSize)}</span></>)}
         </div>
       </div>
       <button
         onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-[#aebac1] hover:bg-white/10"
+        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-[hsl(var(--muted-foreground))] hover:bg-white/10"
       >
         {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
       </button>

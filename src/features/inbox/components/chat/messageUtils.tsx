@@ -43,7 +43,7 @@ export function MessageStatusIcon({ status, className }: { status: Message['stat
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 500, damping: 15 }}
         >
-          <CheckCheck className={cn('w-[16px] h-[16px] text-[#53bdeb] transition-all duration-500 ease-out', className)} strokeWidth={1.8} />
+          <CheckCheck className={cn('w-[16px] h-[16px] text-info transition-all duration-500 ease-out', className)} strokeWidth={1.8} />
         </motion.div>
       );
     case 'played':
@@ -53,7 +53,7 @@ export function MessageStatusIcon({ status, className }: { status: Message['stat
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 500, damping: 15 }}
         >
-          <Headphones className={cn('w-[16px] h-[16px] text-[#53bdeb] transition-all duration-500 ease-out', className)} strokeWidth={1.8} aria-label="Reproduzido" />
+          <Headphones className={cn('w-[16px] h-[16px] text-info transition-all duration-500 ease-out', className)} strokeWidth={1.8} aria-label="Reproduzido" />
         </motion.div>
       );
     case 'retrying':

@@ -37,7 +37,7 @@ export function AssignmentSection({ conversation }: AssignmentSectionProps) {
               </AvatarFallback>
             </Avatar>
             <div className={cn(
-              'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-[#000000]',
+              'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-background',
               currentAgent.is_active ? 'bg-success' : 'bg-muted-foreground/40'
             )} />
           </div>
@@ -75,7 +75,7 @@ export function AssignmentSection({ conversation }: AssignmentSectionProps) {
                         </AvatarFallback>
                       </Avatar>
                       <div className={cn(
-                        'absolute -bottom-px -right-px w-2 h-2 rounded-full ring-1 ring-[#000000]',
+                        'absolute -bottom-px -right-px w-2 h-2 rounded-full ring-1 ring-background',
                         agent.is_active ? 'bg-success' : 'bg-muted-foreground/30'
                       )} />
                     </div>

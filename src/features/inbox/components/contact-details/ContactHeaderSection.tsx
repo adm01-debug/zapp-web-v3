@@ -122,10 +122,10 @@ export function ContactHeaderSection({ contact, enrichedData, conversation, onQu
                 <TooltipContent>Engajamento: {engagementScore >= 80 ? 'Alto' : engagementScore >= 50 ? 'Médio' : 'Baixo'} ({engagementScore}/100)</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            {channelEmoji && <span className="absolute -bottom-1 -right-1 text-lg bg-background rounded-full p-0.5 ring-2 ring-[#000000]">{channelEmoji}</span>}
+            {channelEmoji && <span className="absolute -bottom-1 -right-1 text-lg bg-background rounded-full p-0.5 ring-2 ring-background">{channelEmoji}</span>}
             {crmCompany?.logo_url && (
               <img src={crmCompany.logo_url} alt={crmCompany.nome_fantasia || ''}
-                className="absolute -top-1 -left-1 w-8 h-8 rounded-md object-contain bg-background border border-white/10 ring-2 ring-[#000000]" />
+                className="absolute -top-1 -left-1 w-8 h-8 rounded-md object-contain bg-background border border-white/10 ring-2 ring-background" />
             )}
           </div>
         </div>
