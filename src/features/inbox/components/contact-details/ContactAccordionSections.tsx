@@ -151,7 +151,7 @@ export function ContactAccordionSections({ contact, conversation, enrichedData, 
       </Section>
 
       <motion.div custom={8} initial="hidden" animate="visible" variants={sectionVariants}>
-        <AccordionItem value="stats" className="border-border/30">
+        <AccordionItem value="stats" className="border-border/50">
           <AccordionTrigger className="px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider hover:no-underline hover:bg-muted/10 bg-[#0b141a] dark:bg-[#0b141a]">
             <div className="flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5 text-primary" />Estatísticas</div>
           </AccordionTrigger>
@@ -236,7 +236,7 @@ function SharedMediaAccordionItem({ contactId, onOpen }: { contactId: string; on
       : `${count} ${count === 1 ? 'arquivo' : 'arquivos'}`;
 
   return (
-    <AccordionItem ref={itemRef} value="media" className="border-border/30">
+    <AccordionItem ref={itemRef} value="media" className="border-border/50">
       <AccordionTrigger className="px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider hover:no-underline hover:bg-muted/10 bg-[#0b141a] dark:bg-[#0b141a]">
         <div className="flex items-center justify-between gap-2 w-full pr-2">
           <div className="flex items-center gap-2"><Image className="w-3.5 h-3.5" />Mídia Compartilhada</div>
@@ -271,7 +271,7 @@ function Section({ index, value, icon, label, badge, children }: {
 }) {
   return (
     <motion.div custom={index} initial="hidden" animate="visible" variants={sectionVariants}>
-      <AccordionItem value={value} className="border-border/30">
+      <AccordionItem value={value} className="border-border/50">
         <AccordionTrigger className="px-4 py-2.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider hover:no-underline hover:bg-muted/10 bg-[#0b141a] dark:bg-[#0b141a]">
           <div className="flex items-center gap-2">
             {icon}

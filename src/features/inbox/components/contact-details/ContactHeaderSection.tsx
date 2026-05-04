@@ -88,7 +88,7 @@ export function ContactHeaderSection({ contact, enrichedData, conversation, onQu
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="p-4 flex flex-col items-center text-center border-b border-border bg-[#0b141a] dark:bg-[#0b141a]">
+        className="p-4 flex flex-col items-center text-center border-b border-border/50 bg-[#0b141a] dark:bg-[#0b141a]">
         {/* Avatar with engagement ring */}
         <div className="relative mb-3">
           <div className="relative inline-block">
