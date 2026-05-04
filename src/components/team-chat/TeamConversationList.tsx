@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Plus, Search, Users, User, Building2, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useMemo, forwardRef, useEffect, useRef, useCallback } from 'react';
-import { useDebounce } from '@/hooks/use-debounce';
+import { useDebounce } from '@/hooks/useDebounce';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
