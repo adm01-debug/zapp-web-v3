@@ -125,7 +125,7 @@ export function MessageBubble({
           density === 'comfortable' ? 'mb-1.5' : density === 'compact' ? 'mb-1' : 'mb-0.5',
           highlightedMessageIds?.has(message.id) && 'relative',
           activeHighlightId === message.id && 'ring-2 ring-primary ring-offset-0 rounded-lg animate-[pulse_1.5s_ease-in-out_1]',
-          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-primary/20 rounded-lg',
+          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-primary/10 rounded-lg',
         )}
       >
         {!isSent && (
