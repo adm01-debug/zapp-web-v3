@@ -72,7 +72,7 @@ export function ThreadSLASettingsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-black border-border shadow-none">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-primary" />

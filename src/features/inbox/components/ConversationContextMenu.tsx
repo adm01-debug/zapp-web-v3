@@ -90,7 +90,7 @@ export function ConversationContextMenu({
       <ContextMenuTrigger asChild>
         {children}
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-56 bg-card border-border/50 shadow-xl">
+      <ContextMenuContent className="w-56 bg-black border-border shadow-none">
         {/* Header */}
         <div className="px-2 py-1.5 border-b border-border/50">
           <p className="text-sm font-medium text-foreground truncate">{contactName}</p>
@@ -180,7 +180,7 @@ export function ConversationContextMenu({
             <AlertTriangle className="w-4 h-4" />
             Definir prioridade
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-40 bg-card border-border/50">
+          <ContextMenuSubContent className="w-40 bg-black border-border shadow-none">
             <ContextMenuItem
               onClick={() => onSetPriority?.(conversationId, 'high')}
               className="gap-2 cursor-pointer"
@@ -211,7 +211,7 @@ export function ConversationContextMenu({
             <Clock className="w-4 h-4" />
             Adiar
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-48 bg-card border-border/50">
+          <ContextMenuSubContent className="w-48 bg-black border-border shadow-none">
             <ContextMenuItem
               onClick={() => onSnooze?.(conversationId, '1h')}
               className="gap-2 cursor-pointer"

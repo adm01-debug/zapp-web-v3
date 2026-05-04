@@ -67,8 +67,7 @@ export const primaryNav: readonly NavItemConfig[] = [
   { id: 'inbox', icon: MessageSquare, label: 'Chat' },
   { id: 'contacts', icon: User, label: 'Contatos' },
   { id: 'dashboard', icon: BarChart3, label: 'Painel' },
-  { id: 'pipeline', icon: Kanban, label: 'Pipeline' },
-  { id: 'talkx', icon: Sparkles, label: 'TalkX' },
+  { id: 'automations', icon: RefreshCw, label: 'Robôs' },
   { id: 'settings', icon: Settings, label: 'Ajustes' },
 ] as const;
 
@@ -164,8 +163,8 @@ export const communicationNav = automationNav;
 // ── Group definitions for collapsible sidebar (≤5 groups) ──
 export const sidebarGroups = [
   { label: 'Vendas & CRM', icon: Kanban, items: salesNav },
-  { label: 'Automação & IA', icon: Bot, items: automationNav },
-  { label: 'Analytics', icon: BarChart3, items: analyticsNav },
-  { label: 'Conexões', icon: Plug, items: connectionsNav },
+  { label: 'Robôs & IA', icon: Bot, items: automationNav },
+  { label: 'Análise', icon: BarChart3, items: analyticsNav },
+  { label: 'Canais', icon: Plug, items: connectionsNav },
   { label: 'Sistema', icon: Lock, items: systemNav },
 ] as const;

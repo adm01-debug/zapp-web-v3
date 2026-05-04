@@ -58,7 +58,7 @@ export const MotionCard = forwardRef<HTMLDivElement, MotionCardProps>(
     <motion.div ref={ref}
       whileHover={hover ? { y: -4, transition: { duration: 0.2 } } : undefined}
       whileTap={tap ? { scale: 0.98 } : undefined}
-      className={cn('rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-glow-primary', className)}
+      className={cn('rounded-xl border border-border bg-card text-card-foreground shadow-none transition-shadow', className)}
       {...props}>{children}</motion.div>
   )
 );
