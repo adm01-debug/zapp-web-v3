@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
 // @ts-ignore
-import { FixedSizeList as List } from 'react-window';
+import { VariableSizeList as List } from 'react-window';
 // @ts-ignore
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { useAuth } from '@/features/auth';
