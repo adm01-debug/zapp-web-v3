@@ -90,6 +90,10 @@ export function AppearanceSettings({ settings, updateSettings, onResetOnboarding
           </div>
 
           <div className="pt-4 border-t border-border">
+            <ChatThemeSettings />
+          </div>
+
+          <div className="pt-4 border-t border-border">
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-base flex items-center gap-2">
