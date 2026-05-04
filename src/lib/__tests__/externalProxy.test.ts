@@ -76,6 +76,8 @@ describe('externalProxy', () => {
 
     await expect(queryExternalProxy({ table: 'test', signal: controller.signal }))
       .rejects.toThrow(); // Just check that it throws when aborted
+  });
+
   it('should trip circuit breaker after multiple failures', async () => {
     const ghostPostError = {
       name: 'FunctionsFetchError',
