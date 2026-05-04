@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Users, User, Building2, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useMemo, forwardRef } from 'react';
+import { useState, useMemo, forwardRef, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +25,8 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'direct' | 'group' | 'department'>('all');
   const [mgmtDept, setMgmtDept] = useState<{ id: string, name: string } | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = profile?.role === 'admin';
 
@@ -44,6 +46,32 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
     );
   }, [conversations, search, filterType]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // CMD/CTRL + F to search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f' && !e.shiftKey) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      
+      // Arrow navigation if something is selected or focus is on list
+      if (selectedId && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '')) {
+        const currentIndex = filtered.findIndex(c => c.id === selectedId);
+        if (e.key === 'ArrowDown' && currentIndex < filtered.length - 1) {
+          e.preventDefault();
+          onSelect(filtered[currentIndex + 1].id);
+        } else if (e.key === 'ArrowUp' && currentIndex > 0) {
+          e.preventDefault();
+          onSelect(filtered[currentIndex - 1].id);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filtered, selectedId, onSelect]);
+
   return (
     <>
       <div className="p-3 border-b border-border space-y-2">
@@ -56,10 +84,11 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar conversas..."
+            ref={searchInputRef}
+            placeholder="Buscar conversas... (⌘F)"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-8 h-9"
+            className="pl-8 h-9 bg-background border-border/40 focus:ring-primary/20"
           />
         </div>
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none pb-1">
