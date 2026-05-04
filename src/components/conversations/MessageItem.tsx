@@ -45,6 +45,7 @@ const MessageItem = memo(({
     } catch {
       return '--:--';
     }
+  };
   const getStatusText = (status: any) => {
     if (isPending) {
       if (status === 'sending') return 'Enviando...';
