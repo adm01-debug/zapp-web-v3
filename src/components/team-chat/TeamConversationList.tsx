@@ -31,7 +31,7 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
 
   const isAdmin = profile?.role === 'admin';
 
-  const debouncedSearch = useDebounce(search, 300);
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const filtered = useMemo(() => {
     let filteredList = conversations;
