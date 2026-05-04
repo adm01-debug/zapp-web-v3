@@ -108,13 +108,13 @@ export function ConversationList({
   });
 
   return (
-    <div className="flex flex-col h-full bg-background border-r border-[#222d34] overflow-hidden">
+    <div className="flex flex-col h-full bg-background border-r border-border overflow-hidden">
       {/* Header */}
-      <div className="p-3 border-b border-[#222d34] bg-background space-y-3 shrink-0">
+      <div className="p-3 border-b border-border bg-background space-y-3 shrink-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[#e9edef] select-none">Conversas</h2>
+          <h2 className="text-xl font-bold text-foreground select-none">Conversas</h2>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className="w-8 h-8 rounded-full text-[#8696a0] hover:bg-[#2a3942] hover:text-[#e9edef]">
+            <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className="w-8 h-8 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
               <Filter className="w-4 h-4" />
             </Button>
           </div>
@@ -123,13 +123,13 @@ export function ConversationList({
         {/* Search */}
         <div className="relative group">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none z-10">
-            <Search className="w-4 h-4 text-[#8696a0] group-focus-within:text-[#3b82f6] transition-colors" />
+            <Search className="w-4 h-4 text-muted-foreground group-focus-within:text-[#3b82f6] transition-colors" />
           </div>
           <Input
             placeholder="Buscar conversas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 h-[40px] md:h-[35px] bg-[#202c33] border-none rounded-lg text-[16px] md:text-sm text-[#e9edef] placeholder:text-[#8696a0] focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+            className="pl-10 pr-4 h-[40px] md:h-[35px] bg-[#202c33] border-none rounded-lg text-[16px] md:text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           />
         </div>
 
@@ -145,7 +145,7 @@ export function ConversationList({
               <TabsTrigger 
                 key={t.id}
                 value={t.id} 
-                className="flex-1 text-[11px] h-6 rounded-md data-[state=active]:bg-[#2a3942] data-[state=active]:text-[#3b82f6] text-[#8696a0] hover:text-[#e9edef] transition-all"
+                className="flex-1 text-[11px] h-6 rounded-md data-[state=active]:bg-accent data-[state=active]:text-[#3b82f6] text-muted-foreground hover:text-foreground transition-all"
               >
                 {t.label}
               </TabsTrigger>
@@ -161,10 +161,10 @@ export function ConversationList({
           <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
               <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-[#202c33]">
-                <Search className="w-7 h-7 text-[#8696a0]" />
+                <Search className="w-7 h-7 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-[#e9edef] mb-1">Nenhuma conversa</h3>
-              <p className="text-sm text-[#8696a0] max-w-[200px]">
+              <h3 className="font-semibold text-foreground mb-1">Nenhuma conversa</h3>
+              <p className="text-sm text-muted-foreground max-w-[200px]">
                 {search ? 'Nenhum resultado para sua busca' : 'Suas conversas aparecerão aqui'}
               </p>
             </div>
@@ -207,11 +207,11 @@ export function ConversationList({
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(conversation); } }}
                     className={cn(
                       'relative p-0 cursor-pointer transition-colors duration-200 outline-none h-full',
-                      isSelected ? 'bg-[#2a3942]' : 'hover:bg-[#202c33] bg-background'
+                      isSelected ? 'bg-accent' : 'hover:bg-[#202c33] bg-background'
                     )}
                   >
                     <div className="px-3 h-full">
-                      <div className="flex items-center gap-3 py-3 border-b border-[#222d34] h-full">
+                      <div className="flex items-center gap-3 py-3 border-b border-border h-full">
                         <div className="relative flex-shrink-0">
                           <Avatar className="w-[49px] h-[49px] ring-0">
                             <AvatarImage 
@@ -227,10 +227,10 @@ export function ConversationList({
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-normal text-[17px] text-[#e9edef] truncate">
+                            <span className="font-normal text-[17px] text-foreground truncate">
                               {conversation.contact.name}
                             </span>
-                            <span className="text-[12px] text-[#8696a0] tabular-nums">
+                            <span className="text-[12px] text-muted-foreground tabular-nums">
                               {formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}
                             </span>
                           </div>
@@ -238,7 +238,7 @@ export function ConversationList({
                           <div className="flex items-center justify-between">
                             <p className={cn(
                               "text-[14px] truncate pr-2",
-                              conversation.unreadCount > 0 ? "text-[#e9edef]" : "text-[#8696a0]"
+                              conversation.unreadCount > 0 ? "text-foreground" : "text-muted-foreground"
                             )}>
                               {conversation.lastMessage?.content || 'Sem mensagens'}
                             </p>
