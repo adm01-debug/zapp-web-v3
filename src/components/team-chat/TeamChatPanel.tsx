@@ -343,9 +343,9 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                       </ContextMenuContent>
                     </ContextMenu>
                   </div>
-                );
-              }}
-            </List>
+                    );
+                  }}
+                />
               )}
             </AutoSizer>
             </div>
