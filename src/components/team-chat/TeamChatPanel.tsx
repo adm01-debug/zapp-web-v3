@@ -112,15 +112,29 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
-    // Restore scroll position logic would go here, 
-    // for now we ensure it stays at bottom when new messages arrive.
-    if (s.isNearBottomRef.current && s.scrollRef.current) {
-        s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight;
+    if (s.isNearBottomRef.current && s.listRef.current) {
+      s.listRef.current.scrollToItem(s.filteredMessages.length - 1, 'end');
     }
-  }, [s.filteredMessages]);
+  }, [s.filteredMessages.length, conversation.id]);
 
-  useEffect(() => { if (s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight; }, [conversation.id]);
+  useEffect(() => {
+    // If we are loading previous messages (infinite scroll up), 
+    // we need to maintain the scroll position relative to the content.
+    if (s.isFetchingNextPage && s.scrollRef.current) {
+      s.scrollOffsetRef.current = s.scrollRef.current.scrollHeight - s.scrollRef.current.scrollTop;
+    }
+  }, [s.isFetchingNextPage]);
+
+  useEffect(() => {
+    if (!s.isFetchingNextPage && s.scrollOffsetRef.current > 0 && s.scrollRef.current) {
+      const newScrollTop = s.scrollRef.current.scrollHeight - s.scrollOffsetRef.current;
+      s.scrollRef.current.scrollTop = newScrollTop;
+      s.scrollOffsetRef.current = 0;
+    }
+  }, [s.filteredMessages.length]);
+
   useEffect(() => { if (s.showSearch) s.searchInputRef.current?.focus(); }, [s.showSearch]);
+
 
   const dateFirstIndexes = useMemo(() => {
     const seen = new Set<string>(); const result = new Set<number>();
