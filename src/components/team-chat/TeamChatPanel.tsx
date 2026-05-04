@@ -125,7 +125,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         )}
       </AnimatePresence>
 
-      <div ref={s.scrollRef} className="flex-1 overflow-auto p-4 space-y-1 bg-muted/5" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
+      <div ref={s.scrollRef} className="flex-1 overflow-auto p-4 space-y-1 bg-background" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
         {!isDeptMember ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -169,7 +169,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
               <ContextMenu key={msg.id}>
                 <ContextMenuTrigger asChild>
                   <div data-testid={`message-container-${msg.id}`} className="group/msg relative mb-3">
-                    {showDate && <div className="flex justify-center py-2"><span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border border-border/20">{formatDateSep(msg.created_at)}</span></div>}
+                    {showDate && <div className="flex justify-center py-2"><span className="text-[11px] font-medium text-muted-foreground bg-muted/20 px-3 py-1 rounded-full border border-border/10">{formatDateSep(msg.created_at)}</span></div>}
                     <div 
                       key={msg.id}
                       data-testid={`message-${msg.id}`}
@@ -186,8 +186,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                           reactions={aggregate(msg.id)}
                         />
 
-                        <div className={cn("rounded-2xl px-3.5 py-2 shadow-sm relative", isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card border border-border/30 text-foreground rounded-bl-md")}>
-                          {!isMine && conversation.type === 'group' && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.sender?.name}</p>}
+                        <div className={cn("rounded-2xl px-3.5 py-2 shadow-none relative", isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted/30 border border-border/20 text-foreground rounded-bl-md")}>
+                          {!isMine && conversation.type === 'group' && <p className="text-[11px] font-bold mb-1 opacity-90 text-primary">{msg.sender?.name}</p>}
                           {repliedMsg && <div className={cn("text-[10px] mb-1.5 px-2 py-1 rounded border-l-2", isMine ? "bg-primary-foreground/10 border-primary-foreground/30" : "bg-muted/50 border-muted-foreground/30")}><span className="font-medium">{repliedMsg.sender?.name}</span><p className="truncate opacity-80 flex items-center gap-1">{repliedMsg.media_type && <MediaTypeIcon type={repliedMsg.media_type} />}{repliedMsg.content || 'Mídia'}</p></div>}
                           {isEditing ? (
                             <div className="space-y-1.5">
