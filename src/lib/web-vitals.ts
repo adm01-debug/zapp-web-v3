@@ -67,19 +67,21 @@ export function initWebVitals() {
 
   // FID - First Input Delay
   try {
-    const fidObserver = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
-        onMetric({
-          name: 'FID',
-          value: fid,
-          rating: getRating('FID', fid),
-          delta: fid,
-          id: `fid-${Date.now()}`,
-        });
-      }
-    });
-    fidObserver.observe({ type: 'first-input', buffered: true });
+    if (PerformanceObserver.supportedEntryTypes.includes('first-input')) {
+      const fidObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
+          onMetric({
+            name: 'FID',
+            value: fid,
+            rating: getRating('FID', fid),
+            delta: fid,
+            id: `fid-${Date.now()}`,
+          });
+        }
+      });
+      fidObserver.observe({ type: 'first-input', buffered: true });
+    }
   } catch (e) { /* not supported */ }
 
   // CLS - Cumulative Layout Shift
