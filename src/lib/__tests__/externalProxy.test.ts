@@ -76,5 +76,22 @@ describe('externalProxy', () => {
 
     await expect(queryExternalProxy({ table: 'test', signal: controller.signal }))
       .rejects.toThrow(); // Just check that it throws when aborted
+  it('should trip circuit breaker after multiple failures', async () => {
+    const ghostPostError = {
+      name: 'FunctionsFetchError',
+      message: 'Failed to send a request',
+      status: undefined,
+    };
+    
+    // Mock 4 failures
+    (global.fetch as any).mockImplementation(() => Promise.reject(ghostPostError));
+
+    for (let i = 0; i < 4; i++) {
+      try { await queryExternalProxy({ table: 'breaker_test' }); } catch { /* ignore */ }
+    }
+
+    // 5th call should fail fast with circuit breaker error
+    await expect(queryExternalProxy({ table: 'breaker_test' }))
+      .rejects.toThrow(/Proxy circuit open/);
   });
 });
