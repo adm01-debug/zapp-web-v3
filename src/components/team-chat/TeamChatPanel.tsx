@@ -245,14 +245,14 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
           <div className="h-full w-full flex flex-col relative">
             {s.isFetchingNextPage && <div className="p-2 text-center text-xs text-muted-foreground animate-pulse">Carregando mensagens anteriores...</div>}
             <div className="flex-1 relative">
-              <List<{}>
+              <List
                 listRef={s.listRef}
                 rowCount={s.filteredMessages.length}
-                rowHeight={100}
-                rowProps={{} as any}
+                rowHeight={dynamicRowHeight}
+                rowProps={{}}
                 className="scrollbar-none absolute inset-0"
                 overscanCount={10}
-                rowComponent={({ index, style }: { index: number, style: React.CSSProperties }) => {
+                rowComponent={({ index, style, ariaAttributes }) => {
                 const msg = s.filteredMessages[index];
                 const showDate = dateFirstIndexes.has(index);
                 const isMine = msg.sender_id === s.profile?.id;
@@ -264,12 +264,12 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
                 const cleanText = msg.content?.replace(/\[.*?\]/g, '').replace(/https?:\/\/\S+/g, '').trim();
 
                 return (
-                  <div style={style} ref={(el) => {
+                  <div style={style} {...ariaAttributes} ref={(el) => {
                     if (el && !itemHeights.current[index]) {
                       const h = el.getBoundingClientRect().height;
                       if (h > 0) {
                         itemHeights.current[index] = h;
-                        s.listRef.current?.resetAfterIndex(index);
+                        dynamicRowHeight.setRowHeight(index, h);
                       }
                     }
                   }}>
