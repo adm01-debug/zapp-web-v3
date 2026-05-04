@@ -1,8 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { MessageList } from '../MessageList';
 
@@ -16,9 +13,6 @@ vi.mock('@/integrations/supabase/client', () => ({
     removeChannel: vi.fn(),
   },
 }));
-
-// Mock scrollIntoView
-window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 // Create a mock for useMessages
 const mockUseMessages = vi.fn();
@@ -39,6 +33,8 @@ vi.mock('@/hooks/messaging/useMessageQueue', () => ({
 describe('Chat Integration - Flow Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Default mock behavior
     mockUseMessages.mockReturnValue({
       messages: [],
       loading: false,
@@ -48,6 +44,11 @@ describe('Chat Integration - Flow Tests', () => {
       toggleStar: vi.fn(),
       toggleImportant: vi.fn(),
     });
+
+    // Mock scrollIntoView on prototype
+    if (typeof window !== 'undefined') {
+       window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    }
   });
 
   it('exibe estado vazio quando não há mensagens', () => {
