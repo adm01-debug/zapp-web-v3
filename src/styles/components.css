@@ -77,10 +77,10 @@
   .conversation-item {
     @apply flex items-center gap-3 p-3 rounded-xl cursor-pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    @apply hover:bg-accent/60;
+    @apply hover:bg-accent;
   }
   .conversation-item.active {
-    @apply bg-primary/10 border-l-[3px] border-primary;
+    @apply bg-primary/20 border-l-[3px] border-primary;
     box-shadow: inset 4px 0 8px -4px hsl(var(--primary) / 0.15);
   }
 
