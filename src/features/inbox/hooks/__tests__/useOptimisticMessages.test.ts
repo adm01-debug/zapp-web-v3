@@ -93,7 +93,7 @@ describe('useOptimisticMessages', () => {
     expect(merged.length).toBe(2);
     expect(merged.some(m => m.content === 'Unique Message')).toBe(true);
     // The merged list should contain the real message for the duplicate content
-    expect(merged.find(m => m.content === 'Duplicate Message')._optimistic).toBeUndefined();
+    expect((merged.find(m => m.content === 'Duplicate Message') as any)?._optimistic).toBeUndefined();
   });
 
   it('should cleanup specific messages', () => {
