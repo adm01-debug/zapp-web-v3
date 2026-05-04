@@ -113,7 +113,9 @@ serve(async (req) => {
       const connectUrl = `${evolutionApiUrl}/instance/connect/${instance}`;
       const doConnect = async () => {
         const response = await fetch(connectUrl, { method: 'GET', headers: { 'apikey': evolutionApiKey } });
-        const data = await response.json();
+        const text = await response.text();
+        let data: any = {};
+        try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
         return { response, data };
       };
 
