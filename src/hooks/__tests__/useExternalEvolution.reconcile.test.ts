@@ -8,13 +8,16 @@ describe('useExternalEvolution: reconcileOptimistic', () => {
   const createMsg = (id: string, overrides: Partial<RealtimeMessage> = {}): RealtimeMessage => ({
     id,
     contact_id: 'contact1',
+    agent_id: null,
     content: 'hello',
     sender: 'agent',
     message_type: 'text',
+    media_url: null,
+    is_read: false,
+    status: 'sent',
+    status_updated_at: null,
     created_at: now,
     updated_at: now,
-    status: 'sent',
-    is_read: false,
     external_id: null,
     whatsapp_connection_id: null,
     transcription: null,
@@ -22,7 +25,7 @@ describe('useExternalEvolution: reconcileOptimistic', () => {
     is_deleted: false,
     contactAvatar: null,
     ...overrides
-  });
+  } as RealtimeMessage);
 
   it('should reconcile by external_id', () => {
     const optimistic = createMsg('optimistic:1', { external_id: 'ext123', status: 'sending' });
