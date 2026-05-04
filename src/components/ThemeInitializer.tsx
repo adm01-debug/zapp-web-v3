@@ -28,7 +28,7 @@ type StoredThemeConfig = {
  * flash-prevention script in index.html.
  */
 export function ThemeInitializer() {
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme, theme } = useTheme();
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -72,7 +72,7 @@ export function ThemeInitializer() {
     }
 
     document.documentElement.style.setProperty('--radius', `${radius / 16}rem`);
-  }, [resolvedTheme]);
+  }, [resolvedTheme, theme]);
 
   return null;
 }
