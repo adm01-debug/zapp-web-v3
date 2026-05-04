@@ -122,7 +122,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const handlers = useChatPanelHandlers({
     conversationId: conversation.id, contactId: conversation.contact.id, contactPhone: conversation.contact.phone,
     instanceName, onSendMessage, editMessageApi: editMessage, applySignature,
-    handleTypingStart, handleTypingStop, openDialog: openDialog as (key: string) => void, closeDialog: closeDialog as (key: string) => void, handleSetActiveTool,
+    handleTypingStart, handleTypingStop, openDialog: openDialog as any, closeDialog: closeDialog as any, handleSetActiveTool,
   });
 
   useEffect(() => { initResolve(); }, [conversation.contact.id]);
