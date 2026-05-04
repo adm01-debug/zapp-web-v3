@@ -7,8 +7,6 @@ import type { Message } from '@/types/chat';
 
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
-export type { Message };
-
 interface UseMessagesOptions {
   contactId: string | null;
   enabled?: boolean;
@@ -82,7 +80,7 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
 
   const handleMessageDelete = useCallback(
     (payload: RealtimePostgresChangesPayload<any>) => {
-      const deletedMessage = payload.old;
+      const deletedMessage = payload.old as any;
 
       if (deletedMessage && (deletedMessage.contact_id === contactId || deletedMessage.id)) {
         setMessages((prev) => prev.filter((m) => m.id !== deletedMessage.id));
