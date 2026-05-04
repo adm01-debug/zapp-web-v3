@@ -199,6 +199,19 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
         );
       })}
       
+      {isTyping && (
+        <div className="flex self-start max-w-[80%] mb-2">
+          <div className="bg-background border px-3 py-2 rounded-lg rounded-tl-none shadow-sm flex items-center gap-1">
+            <div className="flex gap-1">
+              <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+              <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce"></span>
+            </div>
+            <span className="text-[11px] text-muted-foreground ml-1 font-medium">Digitando...</span>
+          </div>
+        </div>
+      )}
+
       {currentPending.map((p) => (
         <div key={p.id} className="flex group max-w-[85%] sm:max-w-[75%] lg:max-w-[65%] self-end flex-row-reverse opacity-70">
           <div className="relative px-3 py-1.5 rounded-lg shadow-sm border bg-primary/80 text-primary-foreground rounded-tr-none border-primary/10">
