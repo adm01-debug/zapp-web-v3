@@ -130,13 +130,13 @@ export function ContactHeaderSection({ contact, enrichedData, conversation, onQu
           </div>
         </div>
 
-        <h4 className="font-semibold text-lg text-foreground leading-tight">{firstName}</h4>
-        {companyName && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><Building className="w-3 h-3" />{companyName}</p>}
+        <h4 className="font-semibold text-[16px] text-foreground leading-tight">{firstName}</h4>
+        {companyName && <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5"><Building className="w-3 h-3" />{companyName}</p>}
         {nomeTratamento && <p className="text-[10px] text-primary/70 italic mt-0.5">"{nomeTratamento}"</p>}
-        {enrichedData?.job_title && <p className={`text-${companyName ? '[10px]' : 'xs'} text-muted-foreground ${!companyName ? 'flex items-center gap-1' : ''} mt-0.5`}>
+        {enrichedData?.job_title && <p className={`text-${companyName ? '[10px]' : '[11px]'} text-muted-foreground ${!companyName ? 'flex items-center gap-1' : ''} mt-0.5`}>
           {!companyName && <Briefcase className="w-3 h-3" />}{enrichedData.job_title}
         </p>}
-        <p className="text-xs text-muted-foreground mt-0.5 font-mono tracking-tight">{contact.phone}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5 font-mono tracking-tight">{contact.phone}</p>
 
         {/* Badges */}
         <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2.5">

@@ -111,7 +111,7 @@ export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-background dark:bg-background shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 rounded-full bg-primary" />
-          <h3 className="font-semibold text-foreground text-sm">Detalhes do Contato</h3>
+          <h3 className="font-semibold text-foreground text-[13px]">Detalhes do Contato</h3>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar painel de detalhes" className="w-7 h-7 hover:bg-destructive/10 hover:text-destructive transition-colors">
           <X className="w-3.5 h-3.5" />
