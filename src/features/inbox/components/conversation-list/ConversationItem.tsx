@@ -133,7 +133,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
     <QuickPeek preview={quickPeekPreview} enabled={!isSelected} delay={500}>
       <div ref={rootRef} onClick={() => onSelect(conversation)} 
         className={cn(
-          'relative p-3 cursor-pointer transition-colors duration-200 h-[72px] mx-0 border-b border-[hsl(var(--border))]', 
+          'relative p-3 cursor-pointer transition-colors duration-200 min-h-[78px] mx-0 border-b border-[hsl(var(--border))]', 
           isSelected 
             ? 'bg-accent' 
             : 'hover:bg-card bg-background'
