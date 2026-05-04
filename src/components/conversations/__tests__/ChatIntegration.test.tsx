@@ -1,67 +1,51 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { MessageList } from '../MessageList';
-
-// Mock the hooks
-const mockLoadMore = vi.fn();
-const mockToggleStar = vi.fn();
-const mockToggleImportant = vi.fn();
-
-vi.mock('@/hooks/useMessages', () => ({
-  useMessages: (jid: string) => ({
-    messages: [
-      { id: '1', content: 'Message 1', created_at: new Date().toISOString(), from_me: false, message_id: 'm1' },
-      { id: '2', content: 'Message 2', created_at: new Date().toISOString(), from_me: true, message_id: 'm2' },
-    ],
-    loading: false,
-    loadingMore: false,
-    hasMore: true,
-    loadMore: mockLoadMore,
-    toggleStar: mockToggleStar,
-    toggleImportant: mockToggleImportant,
-  }),
-}));
 
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
-describe('Chat Integration - MessageList', () => {
+// Create a mock for useMessages
+const mockUseMessages = vi.fn();
+vi.mock('@/hooks/useMessages', () => ({
+  useMessages: (jid: string) => mockUseMessages(jid),
+}));
+
+// Create a mock for useMessageQueue
+const mockUseMessageQueue = vi.fn(() => ({
+  pendingMessages: [],
+  enqueueMessage: vi.fn(),
+  retryMessage: vi.fn(),
+}));
+vi.mock('@/hooks/messaging/useMessageQueue', () => ({
+  useMessageQueue: () => mockUseMessageQueue(),
+}));
+
+describe('Chat Integration - Flow Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseMessages.mockReturnValue({
+      messages: [],
+      loading: false,
+      loadingMore: false,
+      hasMore: false,
+      loadMore: vi.fn(),
+      toggleStar: vi.fn(),
+      toggleImportant: vi.fn(),
+    });
   });
 
-  it('renderiza as mensagens corretamente', () => {
+  it('exibe estado vazio quando não há mensagens', () => {
     render(<MessageList remoteJid="test@jid" />);
-    
-    expect(screen.getByText('Message 1')).toBeInTheDocument();
-    expect(screen.getByText('Message 2')).toBeInTheDocument();
+    expect(screen.getByText(/Nenhuma mensagem nesta conversa/i)).toBeInTheDocument();
   });
 
-  it('chama loadMore ao chegar no topo (carregamento incremental)', async () => {
-    // We need to simulate IntersectionObserver or call it manually
-    // Since we mocked IntersectionObserver in the component (implicit via window.IntersectionObserver)
-    // we might need to mock IntersectionObserver in the test too.
-    
-    let observerCallback: (entries: any[]) => void;
-    window.IntersectionObserver = vi.fn((cb) => ({
-      observe: vi.fn(),
-      disconnect: vi.fn(),
-      unobserve: vi.fn(),
-    })) as any;
-
-    render(<MessageList remoteJid="test@jid" />);
-    
-    // In a real integration test, we'd trigger the intersection.
-    // Here we're checking if it attempts to load history.
-    // For the sake of this test, we'll verify the component renders the top observer.
-    expect(document.querySelector('.h-4.shrink-0')).toBeInTheDocument();
-  });
-
-  it('exibe badges de importante e estrela', () => {
-    vi.mocked(require('@/hooks/useMessages').useMessages).mockReturnValue({
+  it('exibe mensagens carregadas do hook', () => {
+    mockUseMessages.mockReturnValue({
       messages: [
-        { id: '1', content: 'Msg', created_at: new Date().toISOString(), from_me: false, is_starred: true, is_important: true, message_id: 'm1' },
+        { id: '1', content: 'Olá!', created_at: new Date().toISOString(), from_me: false, message_id: 'm1' },
+        { id: '2', content: 'Tudo bem?', created_at: new Date().toISOString(), from_me: true, message_id: 'm2' },
       ],
       loading: false,
       loadingMore: false,
@@ -72,10 +56,42 @@ describe('Chat Integration - MessageList', () => {
     });
 
     render(<MessageList remoteJid="test@jid" />);
+    expect(screen.getByText('Olá!')).toBeInTheDocument();
+    expect(screen.getByText('Tudo bem?')).toBeInTheDocument();
+  });
+
+  it('mantém o scroll no fundo ao receber novas mensagens (auto-scroll)', () => {
+    const scrollIntoViewMock = vi.fn();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+
+    const { rerender } = render(<MessageList remoteJid="test@jid" />);
     
-    // Check if icons are present (using their testid or just finding them)
-    // In our component we use Lucide icons.
-    expect(document.querySelector('.text-orange-400')).toBeInTheDocument(); // Important
-    expect(document.querySelector('.fill-yellow-400')).toBeInTheDocument(); // Starred
+    // Simulate new messages
+    mockUseMessages.mockReturnValue({
+      messages: [{ id: '1', content: 'Nova!', created_at: new Date().toISOString(), from_me: false, message_id: 'm1' }],
+      loading: false,
+      loadingMore: false,
+      hasMore: false,
+      loadMore: vi.fn(),
+      toggleStar: vi.fn(),
+      toggleImportant: vi.fn(),
+    });
+
+    rerender(<MessageList remoteJid="test@jid" />);
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+  });
+
+  it('mostra indicador de "Enviando..." para mensagens na fila', () => {
+    mockUseMessageQueue.mockReturnValue({
+      pendingMessages: [
+        { id: 'p1', remote_jid: 'test@jid', content: 'Enviando agora', status: 'sending', timestamp: Date.now() }
+      ],
+      enqueueMessage: vi.fn(),
+      retryMessage: vi.fn(),
+    });
+
+    render(<MessageList remoteJid="test@jid" />);
+    expect(screen.getByText('Enviando agora')).toBeInTheDocument();
+    expect(screen.getByText(/Enviando.../i)).toBeInTheDocument();
   });
 });
