@@ -124,8 +124,8 @@ export function MessageBubble({
           isSent ? 'justify-end' : 'justify-start',
           density === 'comfortable' ? 'mb-1.5' : density === 'compact' ? 'mb-1' : 'mb-0.5',
           highlightedMessageIds?.has(message.id) && 'relative',
-          activeHighlightId === message.id && 'ring-2 ring-[#ffeeb1] ring-offset-0 rounded-lg animate-[pulse_1.5s_ease-in-out_1]',
-          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-[#ffeeb1]/30 rounded-lg',
+          activeHighlightId === message.id && 'ring-2 ring-primary ring-offset-0 rounded-lg animate-[pulse_1.5s_ease-in-out_1]',
+          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-primary/20 rounded-lg',
         )}
       >
         {!isSent && (
@@ -204,8 +204,8 @@ export function MessageBubble({
                 'relative transition-all overflow-visible border border-transparent shadow-[0_1.5px_2px_rgba(0,0,0,0.15)]',
                 (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2.5 py-2' : 'px-2 py-1.5',
                 isSent
-                  ? cn('bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
-                  : cn('bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
+                  ? cn('bg-[#005c4b] text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
+                  : cn('bg-[#202c33] text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
                 message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 ring-1 ring-amber-500/30 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
@@ -223,8 +223,8 @@ export function MessageBubble({
                     className={cn(
                       "w-3 h-3 rotate-45 transform origin-top",
                       isSent 
-                        ? "bg-[#d9fdd3] dark:bg-[#005c4b] -translate-x-1.5" 
-                        : "bg-white dark:bg-[#202c33] translate-x-1.5"
+                        ? "bg-[#005c4b] -translate-x-1.5" 
+                        : "bg-[#202c33] translate-x-1.5"
                     )} 
                   />
                 </div>
@@ -255,7 +255,7 @@ export function MessageBubble({
                 'flex items-center justify-end gap-1 mt-1 -mb-0.5', 
                 (message.type === 'image' || message.type === 'video') && !message.content 
                   ? 'absolute bottom-2 right-2 text-white drop-shadow-md bg-black/30 px-1.5 py-0.5 rounded-full backdrop-blur-xs' 
-                  : isSent ? 'text-[#667781] dark:text-[#8696a0]' : 'text-[#667781] dark:text-[#8696a0]'
+                  : 'text-[#8696a0]'
               )}>
                 {message.isEdited && <span className="text-[9px] italic mr-0.5">editada</span>}
                 <span className="text-[11px] font-normal leading-none">{formatMessageTime(message.timestamp)}</span>
