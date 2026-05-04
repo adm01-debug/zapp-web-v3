@@ -66,6 +66,7 @@ export function useMessages(remoteJid: string | null) {
     notes:             row.notes ? sanitizeText(row.notes as string) : null,
     follow_up_at:      row.follow_up_at as string | null,
     follow_up_done:    Boolean(row.follow_up_done ?? false),
+    status:            Number(row.status ?? 1), // Default to sent
     contact_id:        row.contact_id as string | null,
     created_at:        String(row.created_at ?? ''),
   });
