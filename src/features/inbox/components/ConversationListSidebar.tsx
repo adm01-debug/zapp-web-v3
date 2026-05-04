@@ -95,7 +95,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
 
   return (
     <div className={cn(
-      'h-full min-h-0 flex-shrink-0 relative z-10 border-r border-border bg-background flex flex-col overflow-hidden',
+      'h-full min-h-0 flex-shrink-0 relative z-10 border-r border-white/10 bg-[#0b141a] dark:bg-[#0b141a] flex flex-col overflow-hidden',
       isMobile ? (inbox.selectedContactId ? 'hidden' : 'w-full') : 'w-[320px] min-w-[320px] max-w-[320px]'
     )}>
       <BulkActionsToolbar
@@ -107,7 +107,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
         isLoading={bulkActions.bulkLoading}
       />
 
-      <div className={cn("px-3 border-b border-border space-y-1.5 shrink-0", isMobile ? "pt-1.5 pb-1.5" : "pt-2.5 pb-1.5")}>
+      <div className={cn("px-3 border-b border-white/10 space-y-1.5 shrink-0", isMobile ? "pt-1.5 pb-1.5" : "pt-2.5 pb-1.5")}>
         {!isMobile && (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -160,7 +160,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               value={contactSearch}
               onChange={(e) => handleContactSearch(e.target.value)}
               className={cn(
-                "pl-8 pr-7 bg-muted/40 border-0 rounded-lg text-xs placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30",
+                "pl-8 pr-7 bg-white/5 border-0 rounded-lg text-xs placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30",
                 isMobile ? "h-[40px] text-[16px]" : "h-7 text-[11px]"
               )}
               aria-label="Buscar conversa"
@@ -172,7 +172,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               </Button>
             )}
             <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:block pointer-events-none">
-              <kbd className="h-4 px-1 rounded bg-muted/80 text-[8px] font-mono flex items-center border border-border/50 text-muted-foreground/50">K</kbd>
+              <kbd className="h-4 px-1 rounded bg-white/5 text-[8px] font-mono flex items-center border border-white/10 text-muted-foreground/50">K</kbd>
             </div>
           </div>
 
