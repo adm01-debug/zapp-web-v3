@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
 // @ts-ignore
 import { FixedSizeList as List } from 'react-window';
-import { AutoSizer } from 'react-virtualized-auto-sizer';
+// @ts-ignore
+import AutoSizer from 'react-virtualized-auto-sizer';
 import { useAuth } from '@/features/auth';
 import { TeamConversation } from '@/hooks/useTeamChat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
