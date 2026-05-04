@@ -122,14 +122,14 @@ export function ConversationList({
 
         {/* Search */}
         <div className="relative group">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none z-10">
             <Search className="w-4 h-4 text-[#8696a0] group-focus-within:text-[#00a884] transition-colors" />
           </div>
           <Input
             placeholder="Buscar conversas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 h-[35px] bg-[#202c33] border-none rounded-lg text-sm text-[#e9edef] placeholder:text-[#8696a0] focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+            className="pl-10 pr-4 h-[40px] md:h-[35px] bg-[#202c33] border-none rounded-lg text-[16px] md:text-sm text-[#e9edef] placeholder:text-[#8696a0] focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           />
         </div>
 
