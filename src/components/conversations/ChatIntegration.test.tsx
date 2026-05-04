@@ -100,9 +100,6 @@ describe('Chat Integration - Flow Tests', () => {
   });
 
   it('mantém o scroll no fundo ao receber novas mensagens (auto-scroll)', () => {
-    const scrollIntoViewMock = vi.fn();
-    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
-
     const { rerender } = render(<MessageList remoteJid="test@jid" />);
     
     // Simulate new messages
@@ -117,7 +114,7 @@ describe('Chat Integration - Flow Tests', () => {
     });
 
     rerender(<MessageList remoteJid="test@jid" />);
-    expect(scrollIntoViewMock).toHaveBeenCalled();
+    expect(mockScrollToIndex).toHaveBeenCalled();
   });
 
   it('mostra indicador de "Enviando..." para mensagens na fila', () => {
