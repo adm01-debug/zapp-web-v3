@@ -196,7 +196,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
           <TooltipTrigger asChild>
             <button
               onClick={() => setVoiceOpen(true)}
-              className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+              className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-none hover:scale-105 transition-all flex items-center justify-center border border-primary/20"
               aria-label="Assistente de voz"
             >
               <Mic className="w-6 h-6" />
