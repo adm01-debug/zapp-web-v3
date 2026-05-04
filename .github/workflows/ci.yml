@@ -427,6 +427,35 @@ jobs:
           path: chat-coverage-report.md
 
   # ===========================================
+  # JOB 5.9: Enterprise Audit Report
+  # ===========================================
+  enterprise-audit:
+    name: 📜 Enterprise Audit Report
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 📚 Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: 📜 Generate Enterprise Audit MD
+        run: |
+          # Script simples para atualizar a trilha de auditoria com o commit atual
+          sed -i "s/COMMITS_PLACEHOLDER/$(git rev-parse --short HEAD)/g" docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.md
+          cp docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.md enterprise-audit-report.md
+      - name: 📄 Convert MD to PDF (Optional/Mock)
+        run: echo "PDF Generation would happen here using a tool like md-to-pdf"
+      - name: 📊 Upload Audit Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: enterprise-audit-report
+          path: enterprise-audit-report.md
+
+  # ===========================================
   # JOB 5.8: Smoke Production (post-push gate)
   # Roda apenas em push no main — valida que o
   # site está respondendo antes de fechar o CI.
