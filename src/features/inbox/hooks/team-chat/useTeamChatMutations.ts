@@ -79,8 +79,15 @@ export function useDeleteTeamMessage() {
       if (error) throw error;
       return { conversationId };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['team-messages', data.conversationId] });
+    onSuccess: (data, vars) => {
+      queryClient.setQueriesData({ queryKey: ['team-messages', data.conversationId] }, (oldData: any) => {
+        if (!oldData || !oldData.pages) return oldData;
+        const newPages = oldData.pages.map((page: any) => ({
+          ...page,
+          messages: page.messages.filter((m: any) => m.id !== vars.messageId)
+        }));
+        return { ...oldData, pages: newPages };
+      });
       queryClient.invalidateQueries({ queryKey: ['team-conversations'] });
     },
     onError: () => { toast({ title: 'Erro ao excluir mensagem', variant: 'destructive' }); },
