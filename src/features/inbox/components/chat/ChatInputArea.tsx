@@ -236,7 +236,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   className={cn(
-                    "inline-flex items-center justify-center text-[#8696a0] dark:text-[#aebac1] hover:bg-transparent shrink-0 transition-all rounded-full outline-none", 
+                    "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] hover:bg-transparent shrink-0 transition-all rounded-full outline-none", 
                     logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]"
                   )}
                   aria-label="Mais opções de mensagem"
@@ -279,9 +279,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Mensagem... (/ para comandos, @ para mencionar)"}
               rows={1}
               className={cn(
-                "w-full bg-[#2a3942] border-none rounded-lg outline-none text-[15px] font-normal tracking-tight text-[#e9edef] shadow-none",
-                "placeholder:text-[#8696a0] dark:placeholder:text-[#8696a0] placeholder:font-normal resize-none transition-none",
-                "focus:bg-white dark:focus:bg-[#2a3942] focus:ring-0",
+                "w-full bg-accent border-none rounded-lg outline-none text-[15px] font-normal tracking-tight text-[hsl(var(--foreground))] shadow-none",
+                "placeholder:text-[hsl(var(--muted-foreground))] dark:placeholder:text-[hsl(var(--muted-foreground))] placeholder:font-normal resize-none transition-none",
+                "focus:bg-white dark:focus:bg-accent focus:ring-0",
                 logic.isMobile ? "px-3 py-2 text-[16px] min-h-[40px] max-h-[160px]" : "px-3 py-[11px] min-h-[42px] max-h-[200px]",
                 isWhisper && "bg-amber-500/10",
                 logic.isOverLimit && "text-destructive",
@@ -311,7 +311,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
                     isRecordingAudio 
                       ? "bg-destructive text-white hover:bg-destructive/90 shadow-lg shadow-destructive/20 scale-110" 
-                      : "text-[#8696a0] dark:text-[#aebac1] hover:text-primary dark:hover:text-primary",
+                      : "text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] hover:text-primary dark:hover:text-primary",
                     logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]",
                     logic.sendAnimation && "motion-safe:animate-bounce"
                   )}

@@ -123,19 +123,19 @@ export function ConversationList({
         {/* Search */}
         <div className="relative group">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none z-10">
-            <Search className="w-4 h-4 text-muted-foreground group-focus-within:text-[#3b82f6] transition-colors" />
+            <Search className="w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           </div>
           <Input
             placeholder="Buscar conversas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 h-[40px] md:h-[35px] bg-[#202c33] border-none rounded-lg text-[16px] md:text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+            className="pl-10 pr-4 h-[40px] md:h-[35px] bg-card border-none rounded-lg text-[16px] md:text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           />
         </div>
 
         {/* Tabs */}
         <Tabs value={filter} onValueChange={setFilter} className="w-full">
-          <TabsList className="w-full h-8 p-1 bg-[#202c33] border-none rounded-lg">
+          <TabsList className="w-full h-8 p-1 bg-card border-none rounded-lg">
             {[
               { id: 'all', label: 'Todas', count: counts.all },
               { id: 'open', label: 'Abertas', count: counts.open },
@@ -145,7 +145,7 @@ export function ConversationList({
               <TabsTrigger 
                 key={t.id}
                 value={t.id} 
-                className="flex-1 text-[11px] h-6 rounded-md data-[state=active]:bg-accent data-[state=active]:text-[#3b82f6] text-muted-foreground hover:text-foreground transition-all"
+                className="flex-1 text-[11px] h-6 rounded-md data-[state=active]:bg-accent data-[state=active]:text-primary text-muted-foreground hover:text-foreground transition-all"
               >
                 {t.label}
               </TabsTrigger>
@@ -160,7 +160,7 @@ export function ConversationList({
         {filteredConversations.length === 0 ? (
           <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-[#202c33]">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-card">
                 <Search className="w-7 h-7 text-muted-foreground" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">Nenhuma conversa</h3>
@@ -207,7 +207,7 @@ export function ConversationList({
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(conversation); } }}
                     className={cn(
                       'relative p-0 cursor-pointer transition-colors duration-200 outline-none h-full',
-                      isSelected ? 'bg-accent' : 'hover:bg-[#202c33] bg-background'
+                      isSelected ? 'bg-accent' : 'hover:bg-card bg-background'
                     )}
                   >
                     <div className="px-3 h-full">
@@ -243,7 +243,7 @@ export function ConversationList({
                               {conversation.lastMessage?.content || 'Sem mensagens'}
                             </p>
                             {conversation.unreadCount > 0 && (
-                              <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-[#3b82f6] text-[#111b21]">
+                              <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-background">
                                 {conversation.unreadCount}
                               </span>
                             )}

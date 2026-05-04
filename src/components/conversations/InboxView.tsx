@@ -179,7 +179,7 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
                 </Button>
               </div>
             )}
-            <div className="bg-[#f0f2f5] dark:bg-muted/30 px-4 py-2.5 shrink-0 z-10">
+            <div className="bg-background dark:bg-muted/30 px-4 py-2.5 shrink-0 z-10 border-t">
               <div className="flex items-center gap-2">
                 <div className="flex-1 flex items-center gap-2 rounded-lg bg-background px-4 py-2 shadow-sm border border-transparent focus-within:border-primary/20 transition-all">
                   <input 

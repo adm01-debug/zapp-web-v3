@@ -103,21 +103,21 @@ export const ChatHeader = memo(function ChatHeader({
         </motion.div>
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
-            <h3 className="font-sans font-normal text-[16px] text-[#e9edef] truncate max-w-[240px] sm:max-w-md">
+            <h3 className="font-sans font-normal text-[16px] text-[hsl(var(--foreground))] truncate max-w-[240px] sm:max-w-md">
               {conversation.contact.name}
             </h3>
             <div className="flex-shrink-0 flex items-center gap-1">
               <SLAIndicatorForContact conversation={conversation} />
-              <Badge variant="outline" className="text-[10px] h-4 px-1.5 capitalize border-none bg-card text-[#8696a0] whitespace-nowrap rounded-sm">
+              <Badge variant="outline" className="text-[10px] h-4 px-1.5 capitalize border-none bg-card text-[hsl(var(--muted-foreground))] whitespace-nowrap rounded-sm">
                 {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
               </Badge>
             </div>
           </div>
           <div className="flex items-center h-4">
             {isContactTyping ? (
-              <span className="text-[12px] text-[#3b82f6] dark:text-[#3b82f6] font-normal">digitando...</span>
+              <span className="text-[12px] text-primary dark:text-primary font-normal">digitando...</span>
             ) : (
-              <span className="text-[12px] text-[#667781] dark:text-[#8696a0] font-normal truncate max-w-[200px]">clique aqui para dados do contato</span>
+              <span className="text-[12px] text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] font-normal truncate max-w-[200px]">clique aqui para dados do contato</span>
             )}
           </div>
         </div>
@@ -177,7 +177,7 @@ export const ChatHeader = memo(function ChatHeader({
           <Tooltip key={label}>
             <TooltipTrigger asChild>
               <motion.div>
-                <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-[#aebac1] hover:bg-transparent active:scale-95 transition-all" onClick={onClick} aria-label={label}>
+                <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-[hsl(var(--muted-foreground))] hover:bg-transparent active:scale-95 transition-all" onClick={onClick} aria-label={label}>
                   <Icon className="w-4 h-4" />
                 </Button>
               </motion.div>
