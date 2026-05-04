@@ -34,6 +34,7 @@ vi.mock('@/hooks/messaging/useMessageQueue', () => ({
 }));
 
 // Mock react-virtual
+const mockScrollToIndex = vi.fn();
 vi.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: vi.fn(({ count }) => ({
     getVirtualItems: () => Array.from({ length: count }).map((_, index) => ({
@@ -43,7 +44,7 @@ vi.mock('@tanstack/react-virtual', () => ({
       size: 100,
     })),
     getTotalSize: () => count * 100,
-    scrollToIndex: vi.fn(),
+    scrollToIndex: mockScrollToIndex,
     measureElement: vi.fn(),
   })),
 }));
