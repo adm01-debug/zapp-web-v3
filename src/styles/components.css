@@ -161,23 +161,9 @@
   }
 
   /* Garante que superfícies translúcidas tradicionais virem opacas e vívidas */
-  .bg-background\/80,
-  .bg-background\/90,
-  .bg-background\/95,
-  .bg-background\/60,
-  .bg-background\/50,
-  .bg-background\/70 { background-color: #000000 !important; opacity: 1 !important; }
-
-  .bg-card\/80,
-  .bg-card\/90,
-  .bg-card\/95,
-  .bg-card\/60,
-  .bg-card\/50,
-  .bg-card\/70 { background-color: #000000 !important; opacity: 1 !important; }
-
-  .bg-popover\/80,
-  .bg-popover\/90,
-  .bg-popover\/95 { background-color: #000000 !important; opacity: 1 !important; }
+  .bg-background\/80, .bg-background\/90, .bg-background\/95, .bg-background\/60, .bg-background\/50, .bg-background\/70,
+  .bg-card\/80, .bg-card\/90, .bg-card\/95, .bg-card\/60, .bg-card\/50, .bg-card\/70,
+  .bg-popover\/80, .bg-popover\/90, .bg-popover\/95 { background-color: #000000 !important; opacity: 1 !important; }
 
   .bg-muted\/30,
   .bg-muted\/40,
