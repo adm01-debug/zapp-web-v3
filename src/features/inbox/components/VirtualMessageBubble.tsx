@@ -129,13 +129,13 @@ export function MessageBubble({
             <div className={cn('flex items-center gap-1 mt-1 text-[10px]', isSent ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
               <span>{formatMessageTime(message.timestamp)}</span>
               {isSent && <MessageStatusInline message={message} />}
-    </motion.div>
+            </div>
           </div>
         )}
 
         <MessageReactions messageId={message.id} isSent={isSent} />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
