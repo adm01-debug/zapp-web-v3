@@ -36,7 +36,7 @@ export function DegradedConnectionsBanner({ onNavigate, recentWindowMs = 10 * 60
       .select('id, name, instance_id, instance_name, health_status, health_response_ms, last_health_check, degraded_at')
       .eq('health_status', 'degraded')
       .gte('last_health_check', since);
-    setDegraded((data as DegradedInstance[]) ?? []);
+    setDegraded(((data as unknown) as DegradedInstance[]) ?? []);
   }, [recentWindowMs]);
 
   useEffect(() => {
