@@ -107,7 +107,7 @@ export function useOptimisticMessages() {
         if (opt.external_id && realExternalIds.has(opt.external_id)) confirmed = true;
         else if (realContentSet.has(opt.content)) confirmed = true;
         
-        const age = Date.now() - opt.timestamp.getTime();
+        const age = Date.now() - new Date(opt.timestamp).getTime();
         // Remove if confirmed or timed out (2 minutes)
         if (confirmed || age > 120000) {
           toRemove.push(opt.id);
@@ -121,7 +121,7 @@ export function useOptimisticMessages() {
       if (stillPending.length === 0) return realMessages;
 
       return [...realMessages, ...stillPending].sort(
-        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
     },
     [pending],

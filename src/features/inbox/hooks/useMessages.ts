@@ -52,10 +52,10 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   // Handle new message from realtime
   const handleNewMessage = useCallback(
     (payload: RealtimePostgresChangesPayload<Message>) => {
-      const newMessage = payload.new as Message;
+      const newMessage = messageService.mapMessage(payload.new);
       
       // Only add if it's for the current contact
-      if (newMessage.contact_id === contactId) {
+      if (newMessage.conversationId === contactId) {
         setMessages((prev) => {
           // Check if message already exists
           if (prev.some((m) => m.id === newMessage.id)) {
@@ -71,9 +71,9 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   // Handle message update from realtime
   const handleMessageUpdate = useCallback(
     (payload: RealtimePostgresChangesPayload<Message>) => {
-      const updatedMessage = payload.new as Message;
+      const updatedMessage = messageService.mapMessage(payload.new);
 
-      if (updatedMessage.contact_id === contactId) {
+      if (updatedMessage.conversationId === contactId) {
         setMessages((prev) =>
           prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
         );

@@ -52,6 +52,9 @@ export function useTransferConversation({ contactId, whatsappConnectionId }: Use
             ? '🔄 Chat transferido para outro atendente.'
             : '🔄 Chat transferido para outra fila.';
 
+        const { data: userData } = await supabase.auth.getUser();
+        const agentId = userData.user?.id;
+
         await dbFrom('messages').insert({
           contact_id: contactId,
           whatsapp_connection_id: whatsappConnectionId ?? null,
@@ -59,6 +62,7 @@ export function useTransferConversation({ contactId, whatsappConnectionId }: Use
           message_type: 'text',
           sender: 'agent',
           status: 'sent',
+          agent_id: agentId,
         });
 
         toast({
