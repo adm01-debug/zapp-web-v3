@@ -39,7 +39,9 @@ export function useTransferConversation({ contactId, whatsappConnectionId }: Use
 
         const { error } = await dbFrom('contacts')
           .update(updateData)
-          .eq('id', contactId);
+          .eq('id', contactId)
+          .select()
+          .single();
 
         if (error) throw error;
 
