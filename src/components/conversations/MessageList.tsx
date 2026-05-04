@@ -8,6 +8,7 @@ import { useMessages, type Message } from '@/hooks/useMessages';
 import { useMessageQueue, type PendingMessage } from '@/hooks/messaging/useMessageQueue';
 import { useContactTyping } from '@/hooks/useContactTyping';
 import { MessageCircle, Check, CheckCheck, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw, ChevronDown } from 'lucide-react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
