@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { TypingIndicatorCompact } from '@/features/inbox/components/TypingIndicator';
+import { TypingIndicatorCompact, TypingIndicatorInline } from '@/features/inbox/components/TypingIndicator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SLAIndicatorForContact } from '@/features/inbox/components/SLAIndicatorForContact';
 import { ChatHeaderToolbar } from './ChatHeaderToolbar';
@@ -59,7 +59,7 @@ export function ChatPanelHeader({
   const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
 
   return (
-    <div className="flex items-center justify-between px-3 md:px-5 h-[56px] md:h-[65px] border-b border-border bg-card shrink-0">
+    <div className="flex items-center justify-between px-3 md:px-5 h-[64px] md:h-[72px] border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-30 shrink-0 transition-all duration-300">
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
         {isMobile && onBack && (
           <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl shrink-0 touch-manipulation" onClick={onBack} aria-label="Voltar">
@@ -97,11 +97,19 @@ export function ChatPanelHeader({
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            {isContactTyping ? <TypingIndicatorCompact isVisible={true} /> : (
-              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--online))]" />Online</span>
+          <div className="h-4 flex items-center">
+            {isContactTyping ? (
+              <TypingIndicatorCompact isVisible={true} className="text-success" />
+            ) : (
+              <div className="flex items-center gap-1.5 group cursor-default">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                </span>
+                <span className="text-[11px] font-medium text-muted-foreground/80 group-hover:text-foreground transition-colors">Online</span>
+              </div>
             )}
-          </p>
+          </div>
         </div>
       </div>
 

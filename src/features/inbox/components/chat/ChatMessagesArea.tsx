@@ -1,6 +1,6 @@
 import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState, useId, CSSProperties, useLayoutEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, Ban, RotateCw, Navigation2, AlertCircle, Info, Lock } from 'lucide-react';
+import { Loader2, Ban, RotateCw, Navigation2, AlertCircle, Info, Lock, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getLogger } from '@/lib/logger';
 
@@ -9,9 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { ChatWatermark } from './ChatWatermark';
 import { cn } from '@/lib/utils';
 import { Message, InteractiveButton } from '@/types/chat';
-import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
+import { motion, AnimatePresence, StaggeredList, StaggeredItem } from '@/components/ui/motion';
 import { TypingIndicator } from '@/features/inbox/components/TypingIndicator';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { formatDateSeparator } from './messageUtils';
 import { MessageBubble } from './MessageBubble';
 import { ConversationDeliverySummary } from './ConversationDeliverySummary';
@@ -91,6 +92,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   const cancelBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevContactJidRef = useRef<string | undefined>(contactJid);
   const { density } = useDensity();
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
 
   const flagCancelled = useCallback((reason: LoadOlderCancelReason = 'reverse-scroll') => {
     setCancelReason(reason);
@@ -202,7 +204,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
 
   const groupedMessages = useMemo(() => {
     return displayedMessages.reduce((groups, message) => {
-      const dateKey = format(message.timestamp, 'yyyy-MM-dd');
+      const dateKey = format(message.timestamp, 'yyyy-MM-dd', { locale: ptBR });
       if (!groups[dateKey]) groups[dateKey] = [];
       groups[dateKey].push(message);
       return groups;
@@ -279,6 +281,12 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
 
     const handleScroll = () => {
       const top = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      
+      // Mostrar botão se estiver a mais de 400px do fundo
+      setShowScrollBottom(scrollHeight - top - clientHeight > 400);
+
       maybeCancel(top);
       if (top < PRELOAD_PX) triggerLoad();
       lastScrollTopRef.current = top;
@@ -356,7 +364,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   }, [messages]);
 
   return (
-    <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-4 md:px-24 space-y-0.5 scrollbar-none bg-[#0b141a] dark:bg-[#0b141a] relative">
+    <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-4 md:px-24 space-y-0.5 scrollbar-none bg-[#efeae2] dark:bg-[#0b141a] relative transition-colors duration-500">
       <ChatWatermark />
       {messages.length > 0 && (
         <div className="sticky top-0 z-20 flex flex-col items-center gap-1.5 pointer-events-none -mt-2 mb-2">
@@ -403,6 +411,31 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
           </Button>
         </div>
       )}
+
+      <AnimatePresence>
+        {showScrollBottom && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            className="fixed bottom-24 right-8 md:right-32 z-40"
+          >
+            <Button
+              variant="secondary"
+              size="icon"
+              className="rounded-full shadow-lg border border-border/50 bg-background/80 backdrop-blur-sm hover:bg-background transition-all duration-300 w-10 h-10"
+              onClick={() => {
+                const container = scrollContainerRef.current;
+                if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+              }}
+              aria-label="Rolar para o fim"
+            >
+              <ChevronDown className="w-5 h-5 text-primary" />
+              {/* Badge opcional para mensagens não lidas no chat ativo poderia ir aqui */}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/*
         Topo da lista — duas modalidades mutuamente exclusivas:
