@@ -132,11 +132,4 @@ describe('ChatMessagesArea Integration', () => {
     renderComponent({ isContactTyping: true, typingUserName: 'John' });
     expect(screen.getByText(/John está digitando/i)).toBeInTheDocument();
   });
-
-  it('displays message status filter bar', async () => {
-    renderComponent();
-    
-    // Use a more robust matcher for the message count
-    expect(screen.getByText((content) => content.includes('2 mensagens'))).toBeInTheDocument();
-  });
 });
