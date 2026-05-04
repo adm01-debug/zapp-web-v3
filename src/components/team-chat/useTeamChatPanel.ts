@@ -142,7 +142,7 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     profile, messages, isLoading, isMuted, filteredMessages: messages,
     text, setText, editingId, editText, setEditText,
     isRecordingAudio, setIsRecordingAudio, replyTo, setReplyTo,
-    showScrollDown, showAddMembers, setShowAddMembers,
+    showScrollDown, hasNewMessagesUnseen, showAddMembers, setShowAddMembers,
     showSearch, setShowSearch, searchQuery, setSearchQuery,
     scrollRef, listRef, isNearBottomRef, searchInputRef, lastScrollTopRef, scrollOffsetRef,
     tts, muteMutation, sendMutation, updateStatusMutation,
