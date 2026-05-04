@@ -130,16 +130,28 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
     }
   });
 
-  const deleteInviteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('department_invitations').delete().eq('id', id);
+  const updateWhatsappMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('departments')
+        .update({
+          whatsapp_mode: whatsappMode,
+          whatsapp_api_key: whatsappApiKey,
+          whatsapp_instance_id: whatsappInstanceId,
+        })
+        .eq('id', department.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dept-invitations', department.id] });
-      toast({ title: 'Convite revogado' });
+      queryClient.invalidateQueries({ queryKey: ['department-details', department.id] });
+      toast({ title: 'Configurações de WhatsApp atualizadas' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Erro ao atualizar WhatsApp', description: err.message, variant: 'destructive' });
     }
   });
+
+
 
   const exportAuditCsv = () => {
     if (auditLogs.length === 0) return;
