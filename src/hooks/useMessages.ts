@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { eventBus } from '@/lib/eventBus';
-import { deduplicateMessages } from '@/lib/inbox/chatOptimizations';
+import { deduplicateMessages, setLastReceived } from '@/lib/inbox/chatOptimizations';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -143,6 +143,16 @@ export function useMessages(remoteJid: string | null) {
           if (prev.some(m => m.id === newMsg.id || (newMsg.message_id && m.message_id === newMsg.message_id))) {
             return prev;
           }
+          
+          // Track last received message if from contact
+          if (!newMsg.from_me) {
+            setLastReceived(newMsg.remote_jid, {
+              message_id: newMsg.message_id,
+              timestamp: newMsg.created_at,
+              content: newMsg.content || ''
+            });
+          }
+          
           return [...prev, newMsg];
         });
       })
