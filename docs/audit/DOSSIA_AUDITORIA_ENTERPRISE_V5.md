@@ -20,7 +20,9 @@ Este dossiê consolida as evidências técnicas e de conformidade do Sistema de 
 | **Segurança** | Sanitização de PII em Logs | `src/lib/logger.ts` | `maskPII(data)` | ✅ OK |
 | **Segurança** | MFA (Multi-Factor Auth) | `src/hooks/useMFA.ts` | `supabase.auth.mfa.challenge()` | ✅ OK |
 | **Infra** | Edge Functions (Proxy) | `supabase/functions/evolution-api/index.ts` | [Evolution API Contract](supabase/functions/evolution-api/index.ts) | ✅ OK |
-| **Admin** | AdminVerbas Accessibility | `src/pages/AdminVerbasPage.tsx` | `aria-label`, `role="region"` | ✅ OK |
+| **Admin** | Catálogo de Produtos | `src/components/catalog/ProductManagement.tsx` | [ProductManagement Component](src/components/catalog/ProductManagement.tsx) | ✅ OK |
+| **Admin** | Compliance LGPD Dashboard | `src/components/contacts/LGPDComplianceDashboard.tsx` | [LGPD Dashboard](src/components/contacts/LGPDComplianceDashboard.tsx) | ✅ OK |
+| **Compliance** | Audit Trail Privacy | `src/components/compliance/PrivacyAuditTrail.tsx` | [Privacy Trail](src/components/compliance/PrivacyAuditTrail.tsx) | ✅ OK |
 
 ---
 
