@@ -70,13 +70,19 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     const start = performance.now();
     setSearchQuery(newQuery);
     
-    // If clearing search, we might want to pre-populate or clean up
-    if (!newQuery.trim()) {
-      queryClient.invalidateQueries({ queryKey: ['team-messages', conversation.id, ''] });
-    }
+    // Log for performance monitoring
+    const renderStartTime = performance.now();
     
+    // When clearing search, we ensure the base query is ready
+    if (!newQuery.trim()) {
+      queryClient.prefetchInfiniteQuery({
+        queryKey: ['team-messages', conversation.id, ''],
+        initialPageParam: null,
+      });
+    }
+
     const duration = performance.now() - start;
-    log.info(`Search sync duration: ${duration.toFixed(2)}ms`);
+    log.info(`Search sync duration: ${duration.toFixed(2)}ms | Render start offset: ${(performance.now() - renderStartTime).toFixed(2)}ms`);
   }, [conversation.id, queryClient]);
 
   const checkNearBottom = useCallback(() => {
