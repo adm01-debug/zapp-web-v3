@@ -22,6 +22,7 @@ import { EvolutionDisconnectBanner } from '@/components/alerts/EvolutionDisconne
 import { toast } from 'sonner';
 
 const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _ref) {
+  console.log("[IndexPageContent] Rendering Index content...");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, profile, loading, signOut } = useAuth();
@@ -262,6 +263,7 @@ function LoadingSplash() {
 }
 
 const Index = memo(forwardRef<HTMLDivElement>(function Index(_props, _ref) {
+  console.log("[IndexPage] Rendering Index page wrapper...");
   const { user, loading } = useAuth();
   const { completeOnboarding } = useOnboarding();
   const navigate = useNavigate();

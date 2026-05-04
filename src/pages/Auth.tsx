@@ -15,6 +15,7 @@ import { useAuthForm } from '@/hooks/useAuthForm';
 import { Link } from 'react-router-dom';
 
 export default function Auth() {
+  console.log("[AuthPage] Rendering Auth page...");
   const {
     loading, activeTab, setActiveTab, passkeyAvailable, passkeyLoading,
     lockStatus, formData, setFormData, errors,
