@@ -7,6 +7,7 @@ import { useTeamMessages, useSendTeamMessage, useDeleteTeamMessage, useEditTeamM
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useDebouncedValue } from '@/hooks/useDebounce';
+import { usePerformanceMetrics } from '@/hooks/usePerformanceMetrics';
 
 const log = getLogger('useTeamChatPanel');
 
@@ -42,19 +43,16 @@ export function useTeamChatPanel(conversation: TeamConversation) {
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [showAddMembers, setShowAddMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<any>(null); // Reference to react-window List
   const isNearBottomRef = useRef(true);
+  const lastScrollTopRef = useRef(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const scrollOffsetRef = useRef<number>(0);
+
   
   // Performance metrics
-  const lastMetricsRef = useRef({ lastRender: Date.now() });
-  useEffect(() => {
-    const now = Date.now();
-    const duration = now - lastMetricsRef.current.lastRender;
-    if (duration > 50) {
-      log.warn(`Long render detected: ${duration}ms`);
-    }
-    lastMetricsRef.current.lastRender = now;
-  });
+  usePerformanceMetrics('TeamChatPanel');
+
 
   const { settings, updateSettings, saveSettings } = useUserSettings();
   const handleVoiceChange = (v: string) => { updateSettings({ tts_voice_id: v }); setTimeout(() => saveSettings(), 100); };
@@ -132,7 +130,7 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     isRecordingAudio, setIsRecordingAudio, replyTo, setReplyTo,
     showScrollDown, showAddMembers, setShowAddMembers,
     showSearch, setShowSearch, searchQuery, setSearchQuery,
-    scrollRef, isNearBottomRef, searchInputRef,
+    scrollRef, listRef, isNearBottomRef, searchInputRef, lastScrollTopRef, scrollOffsetRef,
     tts, muteMutation, sendMutation, updateStatusMutation,
     checkNearBottom, scrollToBottom, handleSend, handleSendSticker, handleSendAudioMeme,
     handleSendCustomEmoji, handleFileSent, handleAudioSend,

@@ -112,15 +112,29 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
-    // Restore scroll position logic would go here, 
-    // for now we ensure it stays at bottom when new messages arrive.
-    if (s.isNearBottomRef.current && s.scrollRef.current) {
-        s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight;
+    if (s.isNearBottomRef.current && s.listRef.current) {
+      s.listRef.current.scrollToItem(s.filteredMessages.length - 1, 'end');
     }
-  }, [s.filteredMessages]);
+  }, [s.filteredMessages.length, conversation.id]);
 
-  useEffect(() => { if (s.scrollRef.current) s.scrollRef.current.scrollTop = s.scrollRef.current.scrollHeight; }, [conversation.id]);
+  useEffect(() => {
+    // If we are loading previous messages (infinite scroll up), 
+    // we need to maintain the scroll position relative to the content.
+    if (s.isFetchingNextPage && s.scrollRef.current) {
+      s.scrollOffsetRef.current = s.scrollRef.current.scrollHeight - s.scrollRef.current.scrollTop;
+    }
+  }, [s.isFetchingNextPage]);
+
+  useEffect(() => {
+    if (!s.isFetchingNextPage && s.scrollOffsetRef.current > 0 && s.scrollRef.current) {
+      const newScrollTop = s.scrollRef.current.scrollHeight - s.scrollOffsetRef.current;
+      s.scrollRef.current.scrollTop = newScrollTop;
+      s.scrollOffsetRef.current = 0;
+    }
+  }, [s.filteredMessages.length]);
+
   useEffect(() => { if (s.showSearch) s.searchInputRef.current?.focus(); }, [s.showSearch]);
+
 
   const dateFirstIndexes = useMemo(() => {
     const seen = new Set<string>(); const result = new Set<number>();
@@ -161,13 +175,18 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
       </AnimatePresence>
 
       <div className="flex-1 relative bg-background min-h-0">
-        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto" onScroll={(e) => {
+        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-thumb-primary/20 hover:scrollbar-thumb-primary/40" onScroll={(e) => {
           s.checkNearBottom();
           const el = e.target as HTMLDivElement;
-          if (el.scrollTop === 0 && s.hasNextPage && !s.isFetchingNextPage) {
+          
+          // Infinite scroll UP
+          if (el.scrollTop < 100 && s.hasNextPage && !s.isFetchingNextPage) {
             s.fetchNextPage();
           }
+          
+          s.lastScrollTopRef.current = el.scrollTop;
         }} role="log" aria-label="Mensagens da conversa" aria-live="polite">
+
         {!isDeptMember ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -205,12 +224,13 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             <AutoSizer>
               {({ height, width }: { height: number, width: number }) => (
                 <List
+                  ref={s.listRef}
                   height={height}
                   itemCount={s.filteredMessages.length}
                   itemSize={90} 
                   width={width}
                   className="scrollbar-none"
-                  overscanCount={5}
+                  overscanCount={10}
                 >
               {({ index, style }: { index: number, style: React.CSSProperties }) => {
                 const msg = s.filteredMessages[index];
