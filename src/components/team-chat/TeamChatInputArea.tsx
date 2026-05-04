@@ -140,6 +140,7 @@ export function TeamChatInputArea({
               tabIndex={0}
               onChange={(e) => { setText(e.target.value); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
               onKeyDown={handleKeyDown} onPaste={draft.handlePaste}
+              autoFocus
               onClick={(e) => { const t = e.target as HTMLTextAreaElement; checkForMention(t.value, t.selectionStart ?? 0); }}
               placeholder="Digite uma mensagem... (/ para comandos, @ para mencionar)" rows={1}
               className={cn("w-full bg-transparent border border-border/50 rounded-xl outline-none text-sm text-foreground placeholder:text-muted-foreground resize-none transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
