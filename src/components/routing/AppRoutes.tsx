@@ -127,7 +127,9 @@ export function AppRoutes() {
         <Route path="/admin/whatsapp-logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppLogsPage /></ProtectedRoute>} />
         <Route path="/admin/gmail-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailStatusPage /></ProtectedRoute>} />
         <Route path="/admin/gmail-audit" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailAuditPage /></ProtectedRoute>} />
+        <Route path="/admin/audit-evidence" element={<ProtectedRoute requiredRoles={['admin']}><AuditEvidenceDashboard /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
+
       </Routes>
     </Suspense>
   );
