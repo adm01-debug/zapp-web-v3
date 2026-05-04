@@ -33,6 +33,21 @@ vi.mock('@/hooks/messaging/useMessageQueue', () => ({
   useMessageQueue: () => mockUseMessageQueue(),
 }));
 
+// Mock react-virtual
+vi.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: vi.fn(({ count }) => ({
+    getVirtualItems: () => Array.from({ length: count }).map((_, index) => ({
+      index,
+      key: index,
+      start: index * 100,
+      size: 100,
+    })),
+    getTotalSize: () => count * 100,
+    scrollToIndex: vi.fn(),
+    measureElement: vi.fn(),
+  })),
+}));
+
 const mockUseContactTyping = vi.fn(() => false);
 vi.mock('@/hooks/useContactTyping', () => ({
   useContactTyping: () => mockUseContactTyping(),
