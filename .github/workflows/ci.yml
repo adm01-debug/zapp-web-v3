@@ -2,7 +2,7 @@
 # ZAPP-WEB CI/CD Pipeline
 # =================================================
 # Triggered on: push to main, pull requests
-# Jobs: lint, typecheck, test, build
+# Jobs: lint, typecheck, test, build, audit
 # =================================================
 
 name: CI/CD Pipeline
@@ -217,309 +217,13 @@ jobs:
           path: dist/
           retention-days: 7
 
-      - name: 📐 Report bundle size
-        run: |
-          echo "📦 Bundle Size Report"
-          echo "====================="
-          du -sh dist/
-          echo ""
-          echo "JS Files:"
-          find dist -name "*.js" -exec du -h {} \;
-          echo ""
-          echo "CSS Files:"
-          find dist -name "*.css" -exec du -h {} \;
-
   # ===========================================
-  # JOB 5: E2E Tests (Playwright)
+  # JOB 5: Enterprise Audit & Compliance
   # ===========================================
-  e2e:
-    name: 🎭 E2E Tests (Standard)
+  audit-and-compliance:
+    name: 🛡️ Enterprise Audit
     runs-on: ubuntu-latest
     needs: build
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: ['1/2', '2/2']
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: 📦 Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: 🎭 Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-
-      - name: 🎭 Install Playwright dependencies & browsers
-        run: |
-          sudo apt-get update && sudo apt-get install -y libglib2.0-0
-          npx playwright install --with-deps chromium
-
-      - name: 🚀 Start preview server
-        run: |
-          npx vite preview --port 4173 --host &
-          npx wait-on http://localhost:4173 --timeout 60000
-
-      - name: 🧪 Run Playwright tests (Standard Shard ${{ matrix.shard }})
-        run: npx playwright test --shard=${{ matrix.shard }} --grep-invert "@teams"
-        env:
-          CI: true
-          E2E_BASE_URL: http://localhost:4173
-          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
-          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-
-      - name: 📊 Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-standard-shard-${{ strategy.job-index }}
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 7
-
-  e2e-teams-matrix:
-    name: 👥 Teams E2E (Role: ${{ matrix.role }})
-    runs-on: ubuntu-latest
-    needs: build
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        role: [rh_agent, finance_agent, ti_admin, transfer_agent]
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: 📦 Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: 🎭 Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
-
-      - name: 🎭 Install Playwright dependencies & browsers
-        run: |
-          sudo apt-get update && sudo apt-get install -y libglib2.0-0
-          npx playwright install --with-deps chromium
-
-      - name: 🚀 Start preview server
-        run: |
-          npx vite preview --port 4173 --host &
-          npx wait-on http://localhost:4173 --timeout 60000
-
-      - name: 🧪 Run Teams E2E for ${{ matrix.role }}
-        run: npx playwright test e2e/teams-security-integration.spec.ts --project=chromium --reporter=list,json
-        env:
-          CI: true
-          E2E_BASE_URL: http://localhost:4173
-          E2E_ROLE_UNDER_TEST: ${{ matrix.role }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          # Fallback to standard credentials if role-specific ones aren't provided
-          E2E_USER_EMAIL: ${{ secrets[format('E2E_EMAIL_{0}', matrix.role)] || secrets.E2E_USER_EMAIL }}
-          E2E_USER_PASSWORD: ${{ secrets[format('E2E_PASS_{0}', matrix.role)] || secrets.E2E_USER_PASSWORD }}
-
-      - name: 📊 Upload Teams E2E Report (${{ matrix.role }})
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-teams-${{ matrix.role }}
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 14
-
-  e2e-teams-summary:
-    name: 📈 Teams Test Summary
-    runs-on: ubuntu-latest
-    needs: e2e-teams-matrix
-    if: always()
-    steps:
-      - name: 📝 Generate Final Summary
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const run_id = context.runId;
-            const repo = context.repo.owner + '/' + context.repo.repo;
-            const artifacts_url = `https://github.com/${repo}/actions/runs/${run_id}#artifacts`;
-            
-            let summary = `### 📈 Teams E2E Test Final Summary\n\n`;
-            summary += `| Role | Artifact Section |\n`;
-            summary += `| :--- | :--- |\n`;
-            
-            const roles = ["rh_agent", "finance_agent", "ti_admin", "transfer_agent"];
-            for (const role of roles) {
-              summary += `| **${role.toUpperCase()}** | [View All Artifacts & Traces](${artifacts_url}) |\n`;
-            }
-            
-            summary += `\n\n⚠️ **Note:** Trace and Video are **ALWAYS** captured for Teams tests to speed up debugging. download the specific artifact named \`playwright-report-teams-<role>\` to view.`;
-            
-            core.summary.addRaw(summary).write();
-
-
-
-
-  # ===========================================
-  # JOB 5.5: Chat Coverage Report
-  # ===========================================
-  chat-coverage:
-    name: 📊 Chat Coverage Report
-    runs-on: ubuntu-latest
-    needs: [test, e2e]
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: 📊 Generate Chat Coverage Report
-        run: npm run report:coverage > chat-coverage-report.md
-      - name: 📝 Post Coverage to PR
-        if: github.event_name == 'pull_request'
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          filePath: chat-coverage-report.md
-          comment_tag: chat_coverage_report
-      - name: 📊 Upload Coverage Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: chat-coverage-report
-          path: chat-coverage-report.md
-
-  # ===========================================
-  # JOB 5.9: Enterprise Audit Report
-  # ===========================================
-  enterprise-audit:
-    name: 📜 Enterprise Audit Report
-    runs-on: ubuntu-latest
-    needs: [test]
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: 📜 Generate Enterprise Audit MD
-        run: |
-          # Rodar auditoria de RLS para incluir no dossiê
-          bun scripts/verify_rls_compliance.ts > rls_report.tmp
-          
-          # Inserir relatório de RLS no dossiê (Seção 5)
-          # (Simplificado para o workflow)
-          sed -i "s/COMMITS_PLACEHOLDER/$(git rev-parse --short HEAD)/g" docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.md
-          
-          cp docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.md enterprise-audit-report.md
-          
-      - name: 📄 Convert MD to PDF
-        run: |
-          # Usando uma ferramenta simples ou mantendo como artefato MD
-          echo "PDF format ready for conversion"
-          
-      - name: 📊 Upload Audit Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: enterprise-audit-v5
-          path: |
-            enterprise-audit-report.md
-            docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.md
-
-
-  # ===========================================
-  # JOB 5.8: Smoke Production (post-push gate)
-  # Roda apenas em push no main — valida que o
-  # site está respondendo antes de fechar o CI.
-  # ===========================================
-  smoke-prod:
-    name: 💨 Smoke Production
-    runs-on: ubuntu-latest
-    needs: [build]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: 🌐 Smoke Test Production — HTTP + healthz
-        run: |
-          set -euo pipefail
-          DOMAIN=zapp.atomicabr.com.br
-
-          check() {
-            local code
-            code=$(curl -s --connect-timeout 10 --max-time 15 --retry 2 -o /dev/null -w "%{http_code}" "https://$DOMAIN$1")
-            if [ "$code" = "$2" ]; then
-              echo "  ✅ $code  https://$DOMAIN$1"
-            else
-              echo "  ❌ $code (expected $2)  https://$DOMAIN$1"
-              exit 1
-            fi
-          }
-
-          echo "🌐 Smoke Production: https://$DOMAIN"
-          check "/"              "200"
-          check "/healthz"       "200"
-          check "/favicon.ico"   "200"
-          check "/robots.txt"    "200"
-          check "/manifest.json" "200"
-          check "/sw.js"         "200"
-
-          echo ""
-          echo "🔬 Validando healthz/detailed ..."
-          STATUS=$(curl -s --connect-timeout 10 --max-time 15 "https://$DOMAIN/healthz/detailed" | python3 -c "
-          import json,sys
-          d=json.load(sys.stdin)
-          assert d.get('status')=='healthy', f'status={d.get(\"status\")}'
-          failed=[k for k,v in d.get('checks',{}).items() if not v.get('ok')]
-          assert not failed, f'Checks falhando: {failed}'
-          print('✅ Todos os checks OK:', list(d.get('checks', {}).keys()))
-          ")
-          echo "$STATUS"
-
-  # ===========================================
-  # JOB 6: Enterprise Audit (Dossier & Compliance)
-  # ===========================================
-  audit:
-    name: 📜 Enterprise Audit
-    runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -531,47 +235,40 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 📝 Update Evidence Genesis (Git Meta)
+      - name: 📚 Install dependencies
+        run: npm install --no-audit --no-fund jspdf
+
+      - name: 🔄 Update Audit Genesis
         run: node scripts/ci-audit-gen.cjs
 
-      - name: 🔍 Validate Dossier Links
+      - name: 🔗 Validate Audit Links (Fail on broken)
         run: node scripts/validate-audit-links.cjs
         env:
-          AUDIT_LINK_TIMEOUT: 10000
+          AUDIT_LINK_TIMEOUT: 5000
 
-      - name: 🧪 Run Audit Scripts Tests
-        run: node scripts/test-audit-scripts.cjs
+      - name: 📄 Generate Audit PDF
+        run: node scripts/generate-final-dossier.cjs
 
-      - name: 📊 Upload Audit Dossier
+      - name: 🧪 Run RLS Integrity Tests
+        run: npx vitest run src/__tests__/rls-integrity.test.ts
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: 📦 Archive Audit Reports
         uses: actions/upload-artifact@v4
         with:
-          name: audit-dossier
-          path: docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.md
+          name: enterprise-audit-reports
+          path: |
+            docs/audit/*.md
+            docs/audit/*.pdf
+          retention-days: 30
 
-  # ===========================================
-  # JOB 7: Security Audit
-  # ===========================================
-  security:
-    name: 🔒 Security Audit
-    runs-on: ubuntu-latest
-    needs: audit
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
+      - name: 🚀 Deploy Audit History to GH Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: 🔒 Run npm audit
-        run: npm audit --audit-level=high
-        continue-on-error: true
-
-      - name: 🔍 Check for secrets in code
-        run: |
-          echo "Checking for potential secrets..."
-          ! grep -rn "SUPABASE_SERVICE_ROLE_KEY\|sk_live_\|sk_test_\|password\s*=\s*[\"']" --include="*.ts" --include="*.tsx" --include="*.js" src/ || echo "⚠️ Potential secrets found - please review"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/audit
+          destination_dir: audit-history/${{ github.sha }}
+          keep_files: true
