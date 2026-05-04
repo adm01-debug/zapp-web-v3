@@ -53,7 +53,7 @@
     --z-max: 9999;
 
     /* ===== BASE (Light Mode - Corporate Blue) ===== */
-    --background: 221 20% 97%;
+    --background: 221 25% 98%;
     --foreground: 221 20% 12%;
     --card: 0 0% 100%;
     --card-foreground: 221 20% 12%;
@@ -71,12 +71,12 @@
     --secondary-foreground: 0 0% 100%;
 
     /* ===== MUTED ===== */
-    --muted: 221 15% 90%;
-    --muted-foreground: 221 12% 40%;
+    --muted: 221 20% 92%;
+    --muted-foreground: 221 15% 30%;
 
     /* ===== ACCENT ===== */
-    --accent: 221 55% 95%;
-    --accent-foreground: 221 83% 45%;
+    --accent: 221 80% 94%;
+    --accent-foreground: 221 90% 40%;
 
     /* ===== DESTRUCTIVE ===== */
     --destructive: 0 84% 60%;
@@ -210,7 +210,7 @@
 
   /* ===== DARK MODE - Vivid Corporate Blue (sem neblina) ===== */
   .dark {
-    --background: 222 30% 6%;
+    --background: 222 35% 4%;
     --foreground: 0 0% 98%;
     --card: 222 28% 10%;
     --card-foreground: 0 0% 98%;
@@ -222,8 +222,8 @@
     --primary-glow: 225 100% 65%;
     --secondary: 215 90% 60%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 222 22% 14%;
-    --muted-foreground: 220 15% 85%;
+    --muted: 222 25% 12%;
+    --muted-foreground: 220 20% 95%;
     --accent: 221 80% 28%;
     --accent-foreground: 221 100% 88%;
     --destructive: 0 95% 62%;
