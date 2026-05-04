@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEvolutionApi } from './useEvolutionApi';
 import { getLogger } from '@/lib/logger';
 import { useQueryClient } from '@tanstack/react-query';
+import { eventBus } from '@/lib/eventBus';
 
 const log = getLogger('useEvolutionAutoReconnection');
 
@@ -39,6 +40,7 @@ export function useEvolutionAutoReconnection(instanceName: string = 'wpp2') {
           // Recovery of conversation state: force refetch of conversations and messages
           log.info('Recovering conversation state after reconnection...');
           queryClient.invalidateQueries({ queryKey: ['external-evolution'] });
+          eventBus.emit('connection:recovered', { instanceName });
         } else {
           scheduleNextAttempt();
         }
