@@ -140,9 +140,9 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
       toast({ title: 'Convite revogado' });
     }
   });
-
-
+  const updateWhatsappMutation = useMutation({
     mutationFn: async () => {
+
       const { error } = await supabase
         .from('departments')
         .update({
