@@ -62,7 +62,7 @@ export function AIRewriteButton({ inputValue, onRewrite, contactName }: AIRewrit
     }
   };
 
-  const hasText = inputValue.trim().length > 0;
+  const hasText = (inputValue || '').trim().length > 0;
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
