@@ -78,13 +78,13 @@ const ChatPopup = lazyWithRetry(() => import("./pages/ChatPopup"));
 function RouteLoadingFallback() {
   return (
     <div className="flex items-center justify-center h-screen bg-background" role="status" aria-busy="true" aria-label="Carregando página">
-      <div className="text-center space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto animate-pulse">
-          <Sparkles className="w-8 h-8 text-primary" aria-hidden="true" />
+      <div className="text-center space-y-6 max-w-xs w-full px-4">
+        <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto animate-pulse-soft border border-primary/20 shadow-glow-primary/20">
+          <Sparkles className="w-10 h-10 text-primary" aria-hidden="true" />
         </div>
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-32 mx-auto" />
-          <Skeleton className="h-3 w-24 mx-auto" />
+        <div className="space-y-3">
+          <div className="h-5 w-40 bg-muted rounded-full mx-auto animate-pulse-soft" />
+          <div className="h-3 w-28 bg-muted/60 rounded-full mx-auto animate-pulse-soft" />
         </div>
         <span className="sr-only">Carregando página...</span>
       </div>
