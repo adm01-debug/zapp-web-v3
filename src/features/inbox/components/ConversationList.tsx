@@ -108,9 +108,9 @@ export function ConversationList({
   });
 
   return (
-    <div className="flex flex-col h-full bg-background border-r border-border overflow-hidden">
+    <div className="flex flex-col h-full bg-black border-r border-border overflow-hidden">
       {/* Header */}
-      <div className="p-3 border-b border-border bg-background space-y-3 shrink-0">
+      <div className="p-3 border-b border-border bg-black space-y-3 shrink-0">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground select-none">Conversas</h2>
           <div className="flex items-center gap-1">
@@ -207,7 +207,7 @@ export function ConversationList({
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(conversation); } }}
                     className={cn(
                       'relative p-0 cursor-pointer transition-colors duration-200 outline-none h-full',
-                      isSelected ? 'bg-accent' : 'hover:bg-card bg-background'
+                      isSelected ? 'bg-primary/10' : 'hover:bg-muted/10 bg-black'
                     )}
                   >
                     <div className="px-3 h-full">
