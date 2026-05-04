@@ -364,7 +364,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   }, [messages]);
 
   return (
-    <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-4 md:px-24 space-y-0.5 scrollbar-none bg-[#efeae2] dark:bg-[#0b141a] relative transition-colors duration-500">
+    <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-4 md:px-24 space-y-0.5 scrollbar-none bg-[#0b141a] relative transition-colors duration-500">
       <ChatWatermark />
       {messages.length > 0 && (
         <div className="sticky top-0 z-20 flex flex-col items-center gap-1.5 pointer-events-none -mt-2 mb-2">
