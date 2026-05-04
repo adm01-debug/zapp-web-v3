@@ -369,6 +369,65 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
               </div>
 
               {whatsappMode !== 'none' && (
+                <div className="space-y-4 bg-muted/20 p-4 rounded-xl border animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      Configurações da Instância
+                    </h4>
+                    <Badge variant={whatsappInstanceId ? "success" : "secondary"} className="text-[10px] h-4">
+                      {whatsappInstanceId ? "Conectado" : "Aguardando Configuração"}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase">ID da Instância / Phone ID</label>
+                      <Input 
+                        value={whatsappInstanceId} 
+                        onChange={e => setWhatsappInstanceId(e.target.value)}
+                        placeholder={whatsappMode === 'evolution' ? "Ex: MinhaEmpresa" : "Ex: 1029384756"}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase">Token de Acesso / API Key</label>
+                      <Input 
+                        type="password"
+                        value={whatsappApiKey} 
+                        onChange={e => setWhatsappApiKey(e.target.value)}
+                        placeholder="••••••••••••••••"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 pt-2">
+                    <Button 
+                      className="w-full h-9 gap-2" 
+                      onClick={() => updateWhatsappMutation.mutate()}
+                      disabled={updateWhatsappMutation.isPending || !whatsappInstanceId || !whatsappApiKey}
+                    >
+                      {updateWhatsappMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Settings2 className="w-4 h-4" />}
+                      Salvar e Validar Conexão
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-3 flex gap-3">
+                <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-yellow-700">Atenção sobre API Oficial</p>
+                  <p className="text-[10px] text-yellow-600 leading-relaxed">
+                    A API Oficial requer aprovação do Facebook Business Manager. O uso indevido pode resultar no banimento do número. 
+                    Recomendamos iniciar com o modo Não-Oficial para testes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+              {whatsappMode !== 'none' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">ID da Instância / Phone Number ID</label>
