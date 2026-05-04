@@ -85,9 +85,13 @@
   }
 
   /* ===== MESSAGE BUBBLES ===== */
-  .message-bubble { @apply max-w-[70%] px-4 py-2 rounded-2xl; }
-  .message-bubble.sent { @apply bg-[hsl(var(--chat-bubble-sent))] text-[hsl(var(--chat-bubble-sent-foreground))] rounded-br-md; }
-  .message-bubble.received { @apply bg-[hsl(var(--chat-bubble-received))] text-[hsl(var(--chat-bubble-received-foreground))] rounded-bl-md; }
+  .message-bubble { 
+    @apply max-w-[70%] px-4 py-2; 
+    border-radius: var(--chat-bubble-radius, 20px);
+    font-size: var(--chat-font-size, 14px);
+  }
+  .message-bubble.sent { @apply bg-[hsl(var(--chat-bubble-sent))] text-[hsl(var(--chat-bubble-sent-foreground))]; }
+  .message-bubble.received { @apply bg-[hsl(var(--chat-bubble-received))] text-[hsl(var(--chat-bubble-received-foreground))]; }
 
   /* ===== STATUS DOT ===== */
   .status-dot { @apply w-2.5 h-2.5 rounded-full; }
