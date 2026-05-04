@@ -72,7 +72,7 @@ export function useLGPDWebhookSync({
           entity_id: event.contact_id,
           action: 'lgpd_deletion_request',
           details: { channel: event.channel, remote_jid: event.remote_jid },
-        });
+        } as any);
         toast.warning('Solicitação de exclusão de dados recebida (LGPD)');
         onDeletionRequest?.(event.contact_id);
         break;
