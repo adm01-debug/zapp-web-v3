@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getLogger } from '@/lib/logger';
 import { useAuth } from '@/features/auth';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
@@ -8,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { usePerformanceMetrics } from '@/hooks/usePerformanceMetrics';
+
 
 const log = getLogger('useTeamChatPanel');
 
