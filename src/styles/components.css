@@ -115,7 +115,7 @@
 
   /* New Vibrant Interactions */
   .vibrant-hover { @apply transition-all duration-300; }
-  .vibrant-hover:hover { @apply brightness-110 saturate-110; filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.3)); }
+  .vibrant-hover:hover { @apply brightness-110; filter: saturate(1.15) drop-shadow(0 0 8px hsl(var(--primary) / 0.3)); }
   .vibrant-active:active { transform: scale(0.96); filter: brightness(0.9); }
   
   .vibrant-border-reveal {
