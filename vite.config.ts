@@ -13,39 +13,40 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    // Temporarily disabled PWA for debugging preview 412 error
-    // VitePWA({
-    //   registerType: "autoUpdate",
-    //   includeAssets: ["favicon.ico", "apple-touch-icon.png"],
-    //   workbox: {
-    //     globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-    //     navigateFallbackDenylist: [/^\/~oauth/],
-    //     skipWaiting: true,
-    //     clientsClaim: true,
-    //     cleanupOutdatedCaches: true,
-    //     runtimeCaching: [
-    //       {
-    //         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-    //         handler: "StaleWhileRevalidate",
-    //         options: {
-    //           cacheName: "google-fonts-cache",
-    //           expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-    //           cacheableResponse: { statuses: [0, 200] },
-    //         },
-    //       },
-    //       {
-    //         urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-    //         handler: "CacheFirst",
-    //         options: {
-    //           cacheName: "gstatic-fonts-cache",
-    //           expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-    //           cacheableResponse: { statuses: [0, 200] },
-    //         },
-    //       },
-    //     ],
-    //   },
-    //   manifest: false,
-    // }),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.ico", "apple-touch-icon.png"],
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        navigateFallbackDenylist: [/^\/~oauth/],
+        // Force new SW to take over immediately
+        skipWaiting: true,
+        clientsClaim: true,
+        // Clean old caches on update
+        cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "google-fonts-cache",
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "gstatic-fonts-cache",
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
+      manifest: false, // Use existing public/manifest.json
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
