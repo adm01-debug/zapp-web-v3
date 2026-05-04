@@ -35,7 +35,7 @@ export function ContactActionButtons({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="min-w-[160px]">
             <DropdownMenuItem onClick={() => onStartCall('whatsapp')} className="gap-2 text-xs">
-              <PhoneCall className="w-3.5 h-3.5 text-success" />Ligar via WhatsApp
+              <PhoneCall className="w-3.5 h-3.5 text-primary" />Ligar via WhatsApp
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => {
               onStartCall('voip');

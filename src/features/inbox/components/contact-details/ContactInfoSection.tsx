@@ -61,7 +61,7 @@ function EditableField({ value, icon, onSave, placeholder, label }: EditableFiel
           disabled={saving}
           placeholder={placeholder}
         />
-        <Button variant="ghost" size="icon" className="w-6 h-6 text-success hover:bg-success/10" onClick={handleSave} disabled={saving}>
+        <Button variant="ghost" size="icon" className="w-6 h-6 text-primary hover:bg-primary/10" onClick={handleSave} disabled={saving}>
           <Check className="w-3 h-3" />
         </Button>
         <Button variant="ghost" size="icon" className="w-6 h-6 text-destructive hover:bg-destructive/10" onClick={() => { setDraft(value); setEditing(false); }}>
