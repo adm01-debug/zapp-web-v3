@@ -250,8 +250,16 @@ export function useRealtimeInbox() {
 
   const handleSendMessage = useCallback(async (content: string, attachments?: File[], onProgress?: (p: number) => void) => {
     if (!selectedContactId) return;
+    
+    // Adiciona à fila para garantir ordem e evitar duplicidades
+    messageQueue.addToQueue(selectedContactId, content, attachments, onProgress);
+  }, [selectedContactId, messageQueue]);
+
+  // Função interna que processa cada item da fila
+  const processQueuedMessage = useCallback(async (item: any) => {
+    const { contactId, content, attachments, onProgress } = item;
+    
     if (USE_EXTERNAL_DB) {
-      // External path: envio via evolution-api + bolha otimista no cursor.
       const { sendExternalText, sendExternalMedia } = await import('..');
       const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
       
@@ -259,12 +267,11 @@ export function useRealtimeInbox() {
         if (attachments && attachments.length > 0) {
           for (let i = 0; i < attachments.length; i++) {
             const file = attachments[i];
-            const { optimistic } = await sendExternalMedia(selectedContactId, file, { 
+            const { optimistic } = await sendExternalMedia(contactId, file, { 
               contactAvatar: currentAvatar,
               caption: file === attachments[0] ? content : undefined,
               onProgress: (p) => {
                 if (onProgress) {
-                  // Total progress across all files
                   const total = ((i / attachments.length) * 100) + (p / attachments.length);
                   onProgress(total);
                 }
@@ -273,7 +280,7 @@ export function useRealtimeInbox() {
             try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
           }
         } else {
-          const { optimistic } = await sendExternalText(selectedContactId, content, { 
+          const { optimistic } = await sendExternalText(contactId, content, { 
             contactAvatar: currentAvatar,
             onProgress: (p) => { if (onProgress) onProgress(p); }
           });
@@ -284,25 +291,27 @@ export function useRealtimeInbox() {
         throw err;
       }
       
-      // Pequeno delay para o webhook materializar — depois refetch.
       setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
       return;
     }
+    
+    // Modo legado (local)
     try {
       if (attachments && attachments.length > 0) {
-        // Fallback para envio legado de múltiplos arquivos se necessário
         for (const file of attachments) {
-          await sendMessage(selectedContactId, content, 'document', URL.createObjectURL(file));
+          await sendMessage(contactId, content, 'document', URL.createObjectURL(file));
         }
       } else {
-        await sendMessage(selectedContactId, content);
+        await sendMessage(contactId, content);
       }
     } catch (err) {
       throw err;
     } finally {
       await refreshActiveConversation();
     }
-  }, [selectedContactId, sendMessage, refreshActiveConversation, externalMsgs, externalData, resolvedSelectedConversation]);
+  }, [sendMessage, refreshActiveConversation, externalMsgs, externalData, resolvedSelectedConversation]);
+
+  const messageQueue = useMessageQueue(processQueuedMessage);
 
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
