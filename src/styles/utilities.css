@@ -104,7 +104,7 @@
   .glow-purple-pulse-slow { box-shadow: var(--shadow-glow-purple); }
   .glow-purple-pulse-fast { box-shadow: var(--shadow-glow-purple); }
   .glow-gradient-pulse { box-shadow: var(--shadow-glow-primary); }
-  .border-glow-purple { border-color: hsl(var(--primary) / 0.3); }
+  .border-glow-purple { border-color: hsl(var(--primary)); }
 
   /* Scroll fade indicators — apply to scrollable containers */
   .scroll-fade-y {
