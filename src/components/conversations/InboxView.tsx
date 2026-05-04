@@ -12,6 +12,7 @@ import { ConversationList } from '@/components/conversations/ConversationList';
 import { MessageList } from '@/components/conversations/MessageList';
 import { ConversationsDashboard } from '@/components/conversations/ConversationsDashboard';
 import { ContactSidebarPanel } from '@/components/contacts/ContactSidebarPanel';
+import { useMessageQueue } from '@/hooks/messaging/useMessageQueue';
 import { useConversations, type Conversation } from '@/hooks/useConversations';
 import { type Contact } from '@/hooks/useContacts';
 import { sanitizeText } from '@/lib/sanitize';
@@ -26,10 +27,18 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 'wpp2' }) => {
   const { closeConversation, markAsRead } = useConversations();
+  const { enqueueMessage, pendingMessages } = useMessageQueue(instanceName);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [showStats,    setShowStats]    = useState(false);
   const [showContact,  setShowContact]  = useState(true);
   const [closing,      setClosing]      = useState(false);
+  const [message,      setMessage]      = useState('');
+
+  const handleSend = () => {
+    if (!selectedConv || !message.trim()) return;
+    enqueueMessage(selectedConv.remote_jid, message.trim());
+    setMessage('');
+  };
 
   const handleSelectConv = useCallback(async (conv: Conversation) => {
     setSelectedConv(conv);
@@ -133,10 +142,18 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
                   <input 
                     type="text" 
                     placeholder="Digite uma mensagem..." 
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     className="bg-transparent border-none outline-none text-sm w-full placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <Button size="icon" className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 shadow-sm shrink-0">
+                <Button 
+                  size="icon" 
+                  onClick={handleSend}
+                  disabled={!message.trim()}
+                  className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 shadow-sm shrink-0"
+                >
                   <MessageCircle className="h-5 w-5" />
                 </Button>
               </div>
