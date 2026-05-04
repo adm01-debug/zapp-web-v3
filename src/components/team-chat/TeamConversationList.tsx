@@ -31,6 +31,8 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
 
   const isAdmin = profile?.role === 'admin';
 
+  const debouncedSearch = useDebounce(search, 300);
+
   const filtered = useMemo(() => {
     let filteredList = conversations;
     
@@ -38,14 +40,14 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
       filteredList = filteredList.filter(c => c.type === filterType);
     }
     
-    if (!search.trim()) return filteredList;
+    if (!debouncedSearch.trim()) return filteredList;
     
-    const q = search.toLowerCase();
+    const q = debouncedSearch.toLowerCase();
     return filteredList.filter(c =>
       c.name?.toLowerCase().includes(q) ||
       c.last_message?.content.toLowerCase().includes(q)
     );
-  }, [conversations, search, filterType]);
+  }, [conversations, debouncedSearch, filterType]);
 
   // Keyboard shortcuts
   useEffect(() => {
