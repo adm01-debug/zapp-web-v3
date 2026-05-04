@@ -85,6 +85,7 @@ export function IntegrationKeysSection() {
       if (Array.isArray(result) || (result && typeof result === 'object')) {
         const instances = Array.isArray(result) ? result : [];
         const count = instances.length;
+        setDetectedInstances(instances);
         
         setTestResult({ 
           success: true, 
