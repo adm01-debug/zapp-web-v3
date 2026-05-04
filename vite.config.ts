@@ -36,10 +36,6 @@ const stripLazyModulepreloadsPlugin: Plugin = {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-  },
   define: {
     ...(process.env.VITE_SUPABASE_URL ? {} : {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(SUPABASE_FALLBACK_URL),
