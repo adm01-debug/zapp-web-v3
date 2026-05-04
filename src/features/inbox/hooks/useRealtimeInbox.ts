@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useOfflineCache } from '@/hooks/useOfflineCache';
 import { useMessages } from '@/features/inbox';
-import { useRealtimeMessages, ConversationWithMessages, ConversationContact } from '@/features/inbox';
+import { useRealtimeMessages, type ConversationWithMessages, type ConversationContact, type RealtimeMessage } from '@/features/inbox';
 import { useExternalConversations, useExternalMessages } from '@/hooks/useExternalEvolution';
 import { useAuth } from '@/features/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -366,8 +366,12 @@ export function useRealtimeInbox() {
   const messageSource = selectedContactId ? selectedMessages : resolvedSelectedConversation?.messages || [];
   
   const legacyMessages = useMemo(
-    () => messageSource as Message[],
-    [messageSource]
+    () => mapToLegacyMessages(
+      messageSource as RealtimeMessage[], 
+      resolvedSelectedConversation?.contact.id || selectedContactId || '',
+      resolvedSelectedConversation?.contact.avatar_url
+    ),
+    [messageSource, resolvedSelectedConversation, selectedContactId]
   );
 
   const [whisperCount, setWhisperCount] = useState(0);
