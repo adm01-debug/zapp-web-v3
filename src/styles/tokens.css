@@ -208,24 +208,24 @@
     --chart-sentiment-negative: 0 84% 60%;
   }
 
-  /* ===== DARK MODE - Corporate Blue ===== */
+  /* ===== DARK MODE - Vivid Corporate Blue (sem neblina) ===== */
   .dark {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 97%;
-    --card: 240 7% 11%;
-    --card-foreground: 0 0% 97%;
-    --card-elevated: 240 7% 16%;
-    --popover: 240 7% 13%;
-    --popover-foreground: 0 0% 97%;
-    --primary: 221 83% 53%;
+    --background: 222 30% 6%;
+    --foreground: 0 0% 98%;
+    --card: 222 28% 10%;
+    --card-foreground: 0 0% 98%;
+    --card-elevated: 222 28% 14%;
+    --popover: 222 30% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 221 95% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 230 86% 59%;
-    --secondary: 215 70% 55%;
+    --primary-glow: 225 100% 65%;
+    --secondary: 215 90% 60%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 240 8% 16%;
-    --muted-foreground: 220 20% 72%;
-    --accent: 221 60% 22%;
-    --accent-foreground: 221 83% 80%;
+    --muted: 222 22% 16%;
+    --muted-foreground: 220 18% 78%;
+    --accent: 221 80% 28%;
+    --accent-foreground: 221 100% 88%;
     --destructive: 0 90% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 240 8% 20%;
