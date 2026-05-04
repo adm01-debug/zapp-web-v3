@@ -108,7 +108,7 @@ export function TeamChatHeader({
               <Search className="w-[18px] h-[18px]" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Buscar mensagens</TooltipContent>
+          <TooltipContent side="bottom">Buscar mensagens (⌘K)</TooltipContent>
         </Tooltip>
 
         {conversation.type === 'group' && (

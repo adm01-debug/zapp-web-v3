@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, memo } from 'react';
+import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
 // @ts-ignore
 import { FixedSizeList as List } from 'react-window';
 import { useAuth } from '@/features/auth';
@@ -63,6 +63,30 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   const { profile: liveProfile } = useAuth();
   const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
 
+  // Keyboard shortcuts for chat
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // CMD/CTRL + K to focus search inside chat
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        s.setShowSearch(prev => !prev);
+      }
+      
+      // ESC to close search or go back
+      if (e.key === 'Escape') {
+        if (s.showSearch) {
+          s.setShowSearch(false);
+          s.setSearchQuery('');
+        } else if (onBack) {
+          onBack();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [s.showSearch, onBack, s.setShowSearch, s.setSearchQuery]);
+
   
   const isDeptMember = useMemo(() => {
     if (conversation.type !== 'department') return true;
@@ -126,7 +150,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         )}
       </AnimatePresence>
 
-      <div ref={s.scrollRef} className="flex-1 bg-background" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
+      <div className="flex-1 relative bg-background min-h-0">
+        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
         {!isDeptMember ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -158,11 +183,12 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         ) : (
           <div className="h-full w-full">
             <List
-              height={500} // This would ideally be dynamic but FixedSizeList needs a number. For a 10/10 solution we'd use auto-sizer or variable size list.
+              height={700}
               itemCount={s.filteredMessages.length}
-              itemSize={100} 
+              itemSize={90} 
               width="100%"
               className="scrollbar-none"
+              overscanCount={5}
             >
               {({ index, style }) => {
                 const msg = s.filteredMessages[index];
@@ -257,6 +283,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
           </div>
         )}
       </div>
+    </div>
 
       {s.showScrollDown && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10"><Button size="icon" variant="secondary" className="rounded-full shadow-lg h-8 w-8" onClick={s.scrollToBottom}><ArrowDown className="w-4 h-4" /></Button></div>}
 
