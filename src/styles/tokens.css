@@ -265,9 +265,9 @@
     --sidebar-ring: 221 95% 60%;
     --chat-bubble-sent: 221 95% 55%;
     --chat-bubble-sent-foreground: 0 0% 100%;
-    --chat-bubble-received: 222 22% 18%;
+    --chat-bubble-received: 0 0% 7%; /* Ligeiramente mais claro que o fundo OLED */
     --chat-bubble-received-foreground: 0 0% 98%;
-    --chat-header: 0 0% 5%;
+    --chat-header: 0 0% 3%;
     --chat-input-bg: 0 0% 2%;
     --status-open: 221 95% 60%;
     --status-pending: 42 100% 60%;

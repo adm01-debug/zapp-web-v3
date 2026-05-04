@@ -46,10 +46,10 @@ const MessageItem = memo(({
       isMe ? "ml-auto items-end" : "mr-auto items-start"
     )}>
       <div className={cn(
-        "relative px-3 py-1.5 rounded-lg shadow-sm border transition-all",
+        "relative px-4 py-2 rounded-2xl shadow-md border transition-all duration-200",
         isMe 
-          ? "bg-primary text-primary-foreground rounded-tr-none border-primary/20" 
-          : "bg-background text-foreground rounded-tl-none border-border",
+          ? "bg-[hsl(var(--chat-bubble-sent))] text-[hsl(var(--chat-bubble-sent-foreground))] rounded-tr-none border-primary/20 shadow-primary/10" 
+          : "bg-[hsl(var(--chat-bubble-received))] text-[hsl(var(--chat-bubble-received-foreground))] rounded-tl-none border-white/5 shadow-black/20",
         isPending && "opacity-70 italic bg-primary/80",
         searchTerm && msg.content?.toLowerCase().includes(searchTerm.toLowerCase()) && "ring-2 ring-primary/30"
       )}>
@@ -92,7 +92,7 @@ const MessageItem = memo(({
                 <div className="flex items-center">
                   {msg.status === 1 && <Check className="h-3 w-3 text-primary-foreground/40" />}
                   {msg.status === 2 && <CheckCheck className="h-3 w-3 text-primary-foreground/40" />}
-                  {msg.status >= 3 && <CheckCheck className="h-3 w-3 text-blue-300" />}
+                  {msg.status >= 3 && <CheckCheck className="h-3 w-3 text-cyan-400" />}
                   {msg.status === 0 && <AlertCircle className="h-3 w-3 text-red-300" />}
                 </div>
               )}
