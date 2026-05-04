@@ -1,41 +1,25 @@
-name: Security Scan
-
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-  schedule:
-    # Toda segunda-feira às 06:30 (UTC) — 03:30 BRT
-    - cron: '30 6 * * 1'
-
-permissions:
-  contents: read
-  pull-requests: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  gitleaks:
-    name: Gitleaks — Secret Scan
-    runs-on: ubuntu-latest
-    # continue-on-error: PERMANENTE — gitleaks scan roda e confirma 0 leaks,
-    # mas o job falha por limitação de infra CI (sem GHAS / sem acesso a releases CDN).
-    # Confirmado localmente: 0 leaks em 10.085 commits (git mode + detect mode).
-    # Para re-habilitar como bloqueante: resolver acesso externo ao runner ou habilitar GHAS.
-    continue-on-error: true
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+name: Security & Compliance
+...
           GITLEAKS_ENABLE_SUMMARY: "false"
+
+  rls-audit:
+    name: 🛡️ RLS & Compliance Weekly Report
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 📚 Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: 🛡️ Generate RLS Report
+        run: bun scripts/verify_rls_compliance.ts > rls-compliance-report.md
+      - name: 📜 Publish Weekly Compliance
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-security-compliance-report
+          path: rls-compliance-report.md
+
