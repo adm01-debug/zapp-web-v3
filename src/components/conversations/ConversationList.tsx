@@ -14,11 +14,14 @@ import {
 } from '@/components/ui/select';
 import {
   Search, X, RefreshCw, MessageCircle, Bot,
-  AlertTriangle, Clock, CheckCircle2,
+  AlertTriangle, Clock, CheckCircle2, Check, CheckCheck
 } from 'lucide-react';
 import { useConversations, type Conversation, type ConversationFilters } from '@/hooks/useConversations';
+import { useContactTyping } from '@/hooks/useContactTyping';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatPhoneForDisplay } from '@/lib/phoneUtils';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
