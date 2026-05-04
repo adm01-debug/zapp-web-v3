@@ -187,12 +187,23 @@ export function useTeamChatPanel(conversation: TeamConversation) {
 
   // Instrumentation for render cost and update time
   const renderStartTimeRef = useRef<number>(0);
+  const conversationLoadStartTimeRef = useRef<number>(performance.now());
+  
+  useEffect(() => {
+    // Log initial load time for the conversation
+    if (!isLoading && messages.length > 0 && conversationLoadStartTimeRef.current > 0) {
+      const loadTime = performance.now() - conversationLoadStartTimeRef.current;
+      log.info(`Conversation ${conversation.id} loaded in ${loadTime.toFixed(2)}ms with ${messages.length} messages`);
+      conversationLoadStartTimeRef.current = 0; // Only log once per mount/conversation change
+    }
+  }, [isLoading, messages.length, conversation.id]);
+
   useEffect(() => {
     renderStartTimeRef.current = performance.now();
     return () => {
       const duration = performance.now() - renderStartTimeRef.current;
-      if (duration > 16) { // Only log slow renders (> 1 frame)
-        log.debug(`Slow render detected: ${duration.toFixed(2)}ms`);
+      if (duration > 12) { // Tighter threshold for "smooth" feel (target < 16.6ms)
+        log.debug(`Teams Render Cost: ${duration.toFixed(2)}ms | Conversation: ${conversation.id}`);
       }
     };
   });
