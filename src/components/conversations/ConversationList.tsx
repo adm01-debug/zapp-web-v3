@@ -14,11 +14,14 @@ import {
 } from '@/components/ui/select';
 import {
   Search, X, RefreshCw, MessageCircle, Bot,
-  AlertTriangle, Clock, CheckCircle2,
+  AlertTriangle, Clock, CheckCircle2, Check, CheckCheck
 } from 'lucide-react';
 import { useConversations, type Conversation, type ConversationFilters } from '@/hooks/useConversations';
+import { useContactTyping } from '@/hooks/useContactTyping';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatPhoneForDisplay } from '@/lib/phoneUtils';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -46,12 +49,13 @@ const ConvItem = memo(({
   isSelected: boolean;
   onSelect:   () => void;
 }) => {
+  const isTyping    = useContactTyping(conv.remote_jid);
   const displayName = sanitizeText(conv.contact_name ?? conv.remote_jid?.split('@')[0] ?? 'Desconhecido');
   const initials    = displayName.split(' ').filter(Boolean).slice(0,2).map((n) => n[0].toUpperCase()).join('');
   const phone       = formatPhoneForDisplay(conv.contact_phone ?? conv.remote_jid?.replace(/@.*$/, '') ?? '');
   const lastMsg     = conv.last_message_content ? sanitizeText(conv.last_message_content).slice(0, 60) : null;
   const timeStr     = conv.last_message_at
-    ? new Date(conv.last_message_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true, locale: ptBR })
     : '';
 
   return (
@@ -79,9 +83,20 @@ const ConvItem = memo(({
           <span className={`text-[11px] shrink-0 ${conv.unread_count > 0 ? 'text-green-600 font-medium' : 'text-muted-foreground'}`}>{timeStr}</span>
         </div>
         <div className="flex items-center gap-1.5 h-5">
-          <p className="text-xs text-muted-foreground truncate flex-1 leading-normal">
-            {lastMsg ?? phone}
-          </p>
+          {isTyping ? (
+            <p className="text-xs text-green-600 font-medium animate-pulse flex items-center gap-1">
+              <span className="flex gap-0.5">
+                <span className="w-1 h-1 bg-green-600 rounded-full animate-bounce"></span>
+                <span className="w-1 h-1 bg-green-600 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                <span className="w-1 h-1 bg-green-600 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+              </span>
+              Digitando...
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground truncate flex-1 leading-normal">
+              {lastMsg ?? phone}
+            </p>
+          )}
           {conv.unread_count > 0 && (
             <Badge className="text-[10px] min-w-[18px] h-4.5 px-1 bg-green-500 hover:bg-green-600 text-white border-none rounded-full flex items-center justify-center font-bold">
               {conv.unread_count > 99 ? '99+' : conv.unread_count}
