@@ -3,12 +3,19 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { MessageCircle, Check, CheckCheck, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { type Message } from '@/hooks/useMessages';
 
 interface MessageItemProps {
@@ -39,12 +46,33 @@ const MessageItem = memo(({
       return '--:--';
     }
   };
+  const getStatusText = (status: any) => {
+    if (isPending) {
+      if (status === 'sending') return 'Enviando...';
+      if (status === 'failed') return 'Falha ao enviar';
+      return 'Aguardando envio';
+    }
+    if (status === 0) return 'Falhou';
+    if (status === 1) return 'Enviada';
+    if (status === 2) return 'Entregue';
+    if (status >= 3) return 'Lida';
+    return 'Status desconhecido';
+  };
 
   return (
-    <div className={cn(
-      "flex flex-col group max-w-[85%] sm:max-w-[75%] lg:max-w-[65%]",
-      isMe ? "ml-auto items-end" : "mr-auto items-start"
-    )}>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 30,
+        opacity: { duration: 0.2 }
+      }}
+      className={cn(
+        "flex flex-col group max-w-[92%] sm:max-w-[80%] lg:max-w-[70%]",
+        isMe ? "ml-auto items-end" : "mr-auto items-start"
+      )}>
       <div className={cn(
         "relative px-4 py-2 rounded-2xl shadow-md border transition-all duration-200",
         isMe 
@@ -61,7 +89,7 @@ const MessageItem = memo(({
         )}
 
         {/* Message Content */}
-        <div className="text-sm break-words whitespace-pre-wrap leading-relaxed">
+        <div className="text-[15px] sm:text-sm break-words whitespace-pre-wrap leading-relaxed">
           {msg.content}
         </div>
 
@@ -89,12 +117,39 @@ const MessageItem = memo(({
               {msg.is_starred && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
               <span className="text-[10px] font-medium uppercase">{formatTime(msg.created_at)}</span>
               {isMe && (
-                <div className="flex items-center">
-                  {msg.status === 1 && <Check className="h-3 w-3 text-primary-foreground/40" />}
-                  {msg.status === 2 && <CheckCheck className="h-3 w-3 text-primary-foreground/40" />}
-                  {msg.status >= 3 && <CheckCheck className="h-3 w-3 text-cyan-400" />}
-                  {msg.status === 0 && <AlertCircle className="h-3 w-3 text-red-300" />}
-                </div>
+                <TooltipProvider>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center cursor-help">
+                        <AnimatePresence mode="wait">
+                          {msg.status === 1 && (
+                            <motion.div key="check1" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                              <Check className="h-3 w-3 text-primary-foreground/40" />
+                            </motion.div>
+                          )}
+                          {msg.status === 2 && (
+                            <motion.div key="check2" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                              <CheckCheck className="h-3 w-3 text-primary-foreground/40" />
+                            </motion.div>
+                          )}
+                          {msg.status >= 3 && (
+                            <motion.div key="check3" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0 }}>
+                              <CheckCheck className="h-3 w-3 text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]" />
+                            </motion.div>
+                          )}
+                          {msg.status === 0 && (
+                            <motion.div key="fail" initial={{ rotate: 90 }} animate={{ rotate: 0 }}>
+                              <AlertCircle className="h-3 w-3 text-red-300" />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent variant="neon" size="sm">
+                      <p>{getStatusText(msg.status)}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </>
           )}
@@ -132,7 +187,7 @@ const MessageItem = memo(({
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 });
 
