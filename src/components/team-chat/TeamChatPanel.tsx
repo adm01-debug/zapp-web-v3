@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { getLogger } from '@/lib/logger';
-// @ts-ignore
-import { List } from 'react-window';
-// @ts-ignore
+import { List, useDynamicRowHeight } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { useAuth } from '@/features/auth';
 import { TeamConversation } from '@/hooks/useTeamChat';
@@ -79,6 +77,7 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
   const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
+  const dynamicRowHeight = useDynamicRowHeight({ defaultRowHeight: 100, key: conversation.id });
   const itemHeights = useRef<Record<number, number>>({});
 
 
@@ -126,8 +125,8 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
         s.updateStatusMutation.mutate({ messageId: id, status: 'read', conversationId: conversation.id });
       });
     }
+    // reset cache if needed (handled by dynamicRowHeight key mostly)
     itemHeights.current = {};
-    s.listRef.current?.resetAfterIndex(0);
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
@@ -135,7 +134,7 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
     if (s.isNearBottomRef.current && s.listRef.current) {
       const lastIndex = s.filteredMessages.length - 1;
       if (lastIndex >= 0) {
-        s.listRef.current.scrollToItem(lastIndex, 'end');
+        s.listRef.current.scrollToRow({ index: lastIndex, align: 'end' });
       }
     }
   }, [s.filteredMessages.length, conversation.id]);
@@ -180,7 +179,7 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="px-3 py-2 border-b border-border bg-card">
             <div className="flex items-center gap-2">
               <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-              <Input ref={s.searchInputRef} value={s.searchQuery} onChange={e => (s as any).syncSearchWithCache(e.target.value)}
+              <Input ref={s.searchInputRef} value={s.searchQuery} onChange={e => s.syncSearchWithCache(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Escape') { s.setShowSearch(false); s.setSearchQuery(''); } }}
                 placeholder="Buscar nas mensagens..." className="h-8 text-sm" />
               {s.searchQuery && <span className="text-xs text-muted-foreground whitespace-nowrap">{s.filteredMessages.length} resultado{s.filteredMessages.length !== 1 ? 's' : ''}</span>}
@@ -246,14 +245,14 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
           <div className="h-full w-full flex flex-col relative">
             {s.isFetchingNextPage && <div className="p-2 text-center text-xs text-muted-foreground animate-pulse">Carregando mensagens anteriores...</div>}
             <div className="flex-1 relative">
-              <List<{}>
+              <List
                 listRef={s.listRef}
                 rowCount={s.filteredMessages.length}
-                rowHeight={100}
-                rowProps={{} as any}
+                rowHeight={dynamicRowHeight}
+                rowProps={{}}
                 className="scrollbar-none absolute inset-0"
                 overscanCount={10}
-                rowComponent={({ index, style }: { index: number, style: React.CSSProperties }) => {
+                rowComponent={({ index, style, ariaAttributes }) => {
                 const msg = s.filteredMessages[index];
                 const showDate = dateFirstIndexes.has(index);
                 const isMine = msg.sender_id === s.profile?.id;
@@ -265,12 +264,12 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
                 const cleanText = msg.content?.replace(/\[.*?\]/g, '').replace(/https?:\/\/\S+/g, '').trim();
 
                 return (
-                  <div style={style} ref={(el) => {
+                  <div style={style} {...ariaAttributes} ref={(el) => {
                     if (el && !itemHeights.current[index]) {
                       const h = el.getBoundingClientRect().height;
                       if (h > 0) {
                         itemHeights.current[index] = h;
-                        s.listRef.current?.resetAfterIndex(index);
+                        dynamicRowHeight.setRowHeight(index, h);
                       }
                     }
                   }}>
