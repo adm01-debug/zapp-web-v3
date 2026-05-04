@@ -35,11 +35,15 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
   const [message,      setMessage]      = useState('');
   const [showSearch,   setShowSearch]   = useState(false);
   const [searchTerm,   setSearchTerm]   = useState('');
+  const [replyTo,      setReplyTo]      = useState<any | null>(null);
 
   const handleSend = () => {
     if (!selectedConv || !message.trim()) return;
+    
+    // In a real app, we'd pass the quoted message ID to the queue
     enqueueMessage(selectedConv.remote_jid, message.trim());
     setMessage('');
+    setReplyTo(null);
   };
 
   const handleSelectConv = useCallback(async (conv: Conversation) => {
@@ -158,8 +162,23 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
               </div>
             )}
             <div className="flex-1 overflow-hidden relative flex flex-col">
-              <MessageList remoteJid={selectedConv.remote_jid} searchTerm={searchTerm} />
+              <MessageList 
+                remoteJid={selectedConv.remote_jid} 
+                searchTerm={searchTerm} 
+                onReply={(msg) => setReplyTo(msg)}
+              />
             </div>
+            {replyTo && (
+              <div className="px-4 py-2 border-l-4 border-l-primary bg-muted/30 flex items-center justify-between animate-in slide-in-from-bottom-2 duration-200">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-primary uppercase">Respondendo a {replyTo.from_me ? 'Você' : 'Contato'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{replyTo.content}</p>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setReplyTo(null)}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
             <div className="bg-[#f0f2f5] dark:bg-muted/30 px-4 py-2.5 shrink-0 z-10">
               <div className="flex items-center gap-2">
                 <div className="flex-1 flex items-center gap-2 rounded-lg bg-background px-4 py-2 shadow-sm border border-transparent focus-within:border-primary/20 transition-all">
