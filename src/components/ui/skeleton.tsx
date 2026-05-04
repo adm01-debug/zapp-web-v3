@@ -67,10 +67,10 @@ function SkeletonCard({
   className?: string;
 }) {
   return (
-    <div className={cn("relative overflow-hidden rounded-xl bg-card border border-border", className)}>
+    <div className={cn("relative overflow-hidden rounded-xl bg-black border border-white/10", className)}>
       {children}
       <div 
-        className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-background/40 to-transparent pointer-events-none [animation-duration:2.5s]" 
+        className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none [animation-duration:2.5s]" 
         aria-hidden="true"
       />
     </div>
