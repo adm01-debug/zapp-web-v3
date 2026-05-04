@@ -185,7 +185,7 @@
   
   /* Remove transparência de sombras de brilho */
   [class*="shadow-glow"] {
-    --tw-shadow-color: hsl(var(--primary)) !important;
+    --tw-shadow-color: hsl(var(--primary) / var(--neon-glow-intensity, 1)) !important;
     box-shadow: 0 4px 14px var(--tw-shadow-color) !important;
   }
 
