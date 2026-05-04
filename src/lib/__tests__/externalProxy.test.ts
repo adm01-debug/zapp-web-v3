@@ -57,7 +57,7 @@ describe('externalProxy', () => {
       .mockResolvedValueOnce(errorResponse)
       .mockResolvedValueOnce(successResponse);
 
-    const result = await queryExternalProxy({ table: 'test_table', action: 'select' });
+    const result = await queryExternalProxy({ table: 'test_table' });
 
     expect(result.data).toEqual([{ id: 1 }]);
     expect(global.fetch).toHaveBeenCalledTimes(2);
