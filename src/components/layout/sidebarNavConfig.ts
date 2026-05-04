@@ -67,8 +67,7 @@ export const primaryNav: readonly NavItemConfig[] = [
   { id: 'inbox', icon: MessageSquare, label: 'Chat' },
   { id: 'contacts', icon: User, label: 'Contatos' },
   { id: 'dashboard', icon: BarChart3, label: 'Painel' },
-  { id: 'pipeline', icon: Kanban, label: 'Pipeline' },
-  { id: 'talkx', icon: Sparkles, label: 'TalkX' },
+  { id: 'automations', icon: RefreshCw, label: 'Robôs' },
   { id: 'settings', icon: Settings, label: 'Ajustes' },
 ] as const;
 
