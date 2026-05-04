@@ -238,15 +238,15 @@ jobs:
       - name: 📚 Install dependencies
         run: npm install --no-audit --no-fund jspdf
 
-      - name: 🔄 Update Audit Genesis
-        run: node scripts/ci-audit-gen.cjs
+      - name: 🧪 Test Audit Scripts
+        run: node scripts/test-audit-pipeline.cjs
 
-      - name: 🔗 Validate Audit Links (Fail on broken)
-        run: node scripts/validate-audit-links.cjs
+      - name: 🔄 Update & Validate Audit Dossier (Fail on broken links)
+        run: node scripts/ci-audit-gen.cjs
         env:
           AUDIT_LINK_TIMEOUT: 5000
 
-      - name: 📄 Generate Audit PDF
+      - name: 📄 Generate Final Audit PDF
         run: node scripts/generate-final-dossier.cjs
 
       - name: 🧪 Run RLS Integrity Tests
