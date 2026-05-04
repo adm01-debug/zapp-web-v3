@@ -246,7 +246,15 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                 const cleanText = msg.content?.replace(/\[.*?\]/g, '').replace(/https?:\/\/\S+/g, '').trim();
 
                 return (
-                  <div style={style}>
+                  <div style={style} ref={(el) => {
+                    if (el && !itemHeights.current[index]) {
+                      const h = el.getBoundingClientRect().height;
+                      if (h > 0) {
+                        itemHeights.current[index] = h;
+                        s.listRef.current?.resetAfterIndex(index);
+                      }
+                    }
+                  }}>
                     <ContextMenu key={msg.id}>
                       <ContextMenuTrigger asChild>
                         <div data-testid={`message-container-${msg.id}`} className="group/msg relative px-4">
