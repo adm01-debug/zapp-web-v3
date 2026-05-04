@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { getLogger } from '@/lib/logger';
 import { useAuth } from '@/features/auth';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
@@ -6,12 +6,25 @@ import { useUserSettings } from '@/hooks/useUserSettings';
 import { useTeamMessages, useSendTeamMessage, useDeleteTeamMessage, useEditTeamMessage, useToggleMuteConversation, useUpdateTeamMessageStatus, TeamMessage, TeamConversation } from '@/hooks/useTeamChat';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useDebouncedValue } from '@/hooks/useDebounce';
 
 const log = getLogger('useTeamChatPanel');
 
 export function useTeamChatPanel(conversation: TeamConversation) {
   const { profile } = useAuth();
-  const { data: messages = [], isLoading } = useTeamMessages(conversation.id);
+  
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebouncedValue(searchQuery, 400);
+
+  const { 
+    messages = [], 
+    isLoading, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useTeamMessages(conversation.id, debouncedSearch);
+
   const sendMutation = useSendTeamMessage();
   const deleteMutation = useDeleteTeamMessage();
   const editMutation = useEditTeamMessage();
@@ -28,11 +41,20 @@ export function useTeamChatPanel(conversation: TeamConversation) {
   const [replyTo, setReplyTo] = useState<TeamMessage | null>(null);
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [showAddMembers, setShowAddMembers] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // Performance metrics
+  const lastMetricsRef = useRef({ lastRender: Date.now() });
+  useEffect(() => {
+    const now = Date.now();
+    const duration = now - lastMetricsRef.current.lastRender;
+    if (duration > 50) {
+      log.warn(`Long render detected: ${duration}ms`);
+    }
+    lastMetricsRef.current.lastRender = now;
+  });
 
   const { settings, updateSettings, saveSettings } = useUserSettings();
   const handleVoiceChange = (v: string) => { updateSettings({ tts_voice_id: v }); setTimeout(() => saveSettings(), 100); };
@@ -104,14 +126,8 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     navigator.clipboard.writeText(content).then(() => toast.success('Copiado!')).catch(() => toast.error('Erro ao copiar'));
   }, []);
 
-  const filteredMessages = useMemo(() => {
-    if (!searchQuery.trim()) return messages;
-    const q = searchQuery.toLowerCase();
-    return messages.filter(m => m.content?.toLowerCase().includes(q));
-  }, [messages, searchQuery]);
-
   return {
-    profile, messages, isLoading, isMuted, filteredMessages,
+    profile, messages, isLoading, isMuted, filteredMessages: messages,
     text, setText, editingId, editText, setEditText,
     isRecordingAudio, setIsRecordingAudio, replyTo, setReplyTo,
     showScrollDown, showAddMembers, setShowAddMembers,
@@ -121,5 +137,6 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     checkNearBottom, scrollToBottom, handleSend, handleSendSticker, handleSendAudioMeme,
     handleSendCustomEmoji, handleFileSent, handleAudioSend,
     handleDelete, handleStartEdit, handleSaveEdit, handleCancelEdit, handleCopyMessage,
+    fetchNextPage, hasNextPage, isFetchingNextPage, debouncedSearch
   };
 }
