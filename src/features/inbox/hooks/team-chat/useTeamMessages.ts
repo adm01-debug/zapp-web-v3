@@ -21,7 +21,7 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
     error
   } = useInfiniteQuery({
     queryKey: ['team-messages', conversationId, searchQuery],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam }) => {
       if (!conversationId) return { messages: [], nextCursor: null };
       
       let query = supabase
@@ -29,7 +29,11 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
         .select('*, sender:profiles!team_messages_sender_id_fkey(id, name, avatar_url)')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: false }) // Get latest first for infinite scroll up
-        .range(pageParam, pageParam + MESSAGES_PER_PAGE - 1);
+        .limit(MESSAGES_PER_PAGE);
+
+      if (pageParam) {
+        query = query.lt('created_at', pageParam);
+      }
 
       if (searchQuery.trim()) {
         query = query.ilike('content', `%${searchQuery.trim()}%`);
@@ -44,12 +48,13 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
       
       return {
         messages: sortedMessages,
-        nextCursor: messages?.length === MESSAGES_PER_PAGE ? pageParam + MESSAGES_PER_PAGE : null,
+        nextCursor: messages?.length === MESSAGES_PER_PAGE ? messages[messages.length - 1].created_at : null,
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!conversationId && !!profile,
-    initialPageParam: 0,
+    initialPageParam: null as string | null,
+
   });
 
   // Flatten messages from all pages and ensure chronological order (ascending)

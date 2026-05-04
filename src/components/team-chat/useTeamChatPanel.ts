@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getLogger } from '@/lib/logger';
 import { useAuth } from '@/features/auth';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
@@ -9,10 +10,12 @@ import { toast } from 'sonner';
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { usePerformanceMetrics } from '@/hooks/usePerformanceMetrics';
 
+
 const log = getLogger('useTeamChatPanel');
 
 export function useTeamChatPanel(conversation: TeamConversation) {
   const { profile } = useAuth();
+  const queryClient = useQueryClient();
   
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,11 +52,10 @@ export function useTeamChatPanel(conversation: TeamConversation) {
   const lastScrollTopRef = useRef(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollOffsetRef = useRef<number>(0);
-
+  const anchorMessageIdRef = useRef<string | null>(null);
   
-  // Performance metrics
+  // Performance metrics and instrumentation
   usePerformanceMetrics('TeamChatPanel');
-
 
   const { settings, updateSettings, saveSettings } = useUserSettings();
   const handleVoiceChange = (v: string) => { updateSettings({ tts_voice_id: v }); setTimeout(() => saveSettings(), 100); };
@@ -63,28 +65,67 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     onVoiceChange: handleVoiceChange, onSpeedChange: handleSpeedChange,
   });
 
+  // Unified function to sync search filter with the infinite query cache
+  const syncSearchWithCache = useCallback((newQuery: string) => {
+    const start = performance.now();
+    setSearchQuery(newQuery);
+    
+    // If clearing search, we might want to pre-populate or clean up
+    if (!newQuery.trim()) {
+      queryClient.invalidateQueries({ queryKey: ['team-messages', conversation.id, ''] });
+    }
+    
+    const duration = performance.now() - start;
+    log.info(`Search sync duration: ${duration.toFixed(2)}ms`);
+  }, [conversation.id, queryClient]);
+
   const checkNearBottom = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    const threshold = 150;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
     isNearBottomRef.current = nearBottom;
     setShowScrollDown(!nearBottom);
-    if (nearBottom) setHasNewMessagesUnseen(false);
+    if (nearBottom) {
+      setHasNewMessagesUnseen(false);
+    }
   }, []);
 
   const scrollToBottom = useCallback(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-    setHasNewMessagesUnseen(false);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+      setHasNewMessagesUnseen(false);
+      isNearBottomRef.current = true;
+    }
   }, []);
 
   // Monitor new messages from others to show indicator
   useEffect(() => {
     if (!messages.length || isNearBottomRef.current) return;
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg.sender_id !== profile?.id) {
+    if (lastMsg && lastMsg.sender_id !== profile?.id) {
       setHasNewMessagesUnseen(true);
+      setShowScrollDown(true); // Ensure indicator shows up
     }
   }, [messages.length, profile?.id]);
+
+  useEffect(() => {
+    // Scroll anchor for infinite scroll UP
+    if (scrollRef.current && isFetchingNextPage) {
+      scrollOffsetRef.current = scrollRef.current.scrollHeight - scrollRef.current.scrollTop;
+    }
+  }, [isFetchingNextPage]);
+
+  useEffect(() => {
+    // Apply scroll anchor after new messages are loaded from infinite scroll
+    if (scrollOffsetRef.current > 0 && scrollRef.current && !isFetchingNextPage) {
+      const newScrollTop = scrollRef.current.scrollHeight - scrollOffsetRef.current;
+      scrollRef.current.scrollTop = newScrollTop;
+      scrollOffsetRef.current = 0;
+    }
+  }, [messages.length, isFetchingNextPage]);
+
+
 
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
@@ -138,6 +179,18 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     navigator.clipboard.writeText(content).then(() => toast.success('Copiado!')).catch(() => toast.error('Erro ao copiar'));
   }, []);
 
+  // Instrumentation for render cost and update time
+  const renderStartTimeRef = useRef<number>(0);
+  useEffect(() => {
+    renderStartTimeRef.current = performance.now();
+    return () => {
+      const duration = performance.now() - renderStartTimeRef.current;
+      if (duration > 16) { // Only log slow renders (> 1 frame)
+        log.debug(`Slow render detected: ${duration.toFixed(2)}ms`);
+      }
+    };
+  });
+
   return {
     profile, messages, isLoading, isMuted, filteredMessages: messages,
     text, setText, editingId, editText, setEditText,
@@ -149,6 +202,7 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     checkNearBottom, scrollToBottom, handleSend, handleSendSticker, handleSendAudioMeme,
     handleSendCustomEmoji, handleFileSent, handleAudioSend,
     handleDelete, handleStartEdit, handleSaveEdit, handleCancelEdit, handleCopyMessage,
-    fetchNextPage, hasNextPage, isFetchingNextPage, debouncedSearch
+    fetchNextPage, hasNextPage, isFetchingNextPage, debouncedSearch,
+    syncSearchWithCache
   };
 }

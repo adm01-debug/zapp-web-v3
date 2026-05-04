@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, UserPlus, UserMinus, Shield, Loader2, History, Link2, Copy, Trash2, Download, FileSpreadsheet } from 'lucide-react';
+import { Search, UserPlus, UserMinus, Shield, Loader2, History, Link2, Copy, Trash2, Download, FileSpreadsheet, MessageSquare, Settings2, Globe, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface Department {
   id: string;
@@ -41,11 +42,33 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-export function DepartmentManagementDialog({ department, open, onOpenChange }: Props) {
+export function DepartmentManagementDialog({ department: initialDepartment, open, onOpenChange }: Props) {
   const { profile: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [view, setView] = useState<'members' | 'audit' | 'invites'>('members');
+  const [view, setView] = useState<'members' | 'audit' | 'invites' | 'whatsapp'>('members');
+  const [whatsappMode, setWhatsappMode] = useState<'evolution' | 'official' | 'none'>('none');
+  const [whatsappApiKey, setWhatsappApiKey] = useState('');
+  const [whatsappInstanceId, setWhatsappInstanceId] = useState('');
+
+  const { data: department = initialDepartment } = useQuery({
+    queryKey: ['department-details', initialDepartment.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('*')
+        .eq('id', initialDepartment.id)
+        .single();
+      if (error) throw error;
+      
+      setWhatsappMode((data.whatsapp_mode as any) || 'none');
+      setWhatsappApiKey(data.whatsapp_api_key || '');
+      setWhatsappInstanceId(data.whatsapp_instance_id || '');
+      
+      return data;
+    },
+    enabled: open,
+  });
 
   const { data: allProfiles = [], isLoading: loadingProfiles } = useQuery({
     queryKey: ['profiles-for-dept-mgmt'],
@@ -118,6 +141,27 @@ export function DepartmentManagementDialog({ department, open, onOpenChange }: P
     }
   });
 
+  const updateWhatsappMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('departments')
+        .update({
+          whatsapp_mode: whatsappMode,
+          whatsapp_api_key: whatsappApiKey,
+          whatsapp_instance_id: whatsappInstanceId,
+        })
+        .eq('id', department.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['department-details', department.id] });
+      toast({ title: 'Configurações de WhatsApp atualizadas' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Erro ao atualizar WhatsApp', description: err.message, variant: 'destructive' });
+    }
+  });
+
   const exportAuditCsv = () => {
     if (auditLogs.length === 0) return;
     const headers = ['Data', 'Ação', 'Usuário', 'ID'];
@@ -180,10 +224,11 @@ export function DepartmentManagementDialog({ department, open, onOpenChange }: P
             <DialogTitle className="flex items-center gap-2">
               Gerenciar Departamento: {department.name}
             </DialogTitle>
-            <div className="flex gap-1 bg-muted p-1 rounded-lg">
-              <Button variant={view === 'members' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setView('members')}>Membros</Button>
-              <Button variant={view === 'invites' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setView('invites')}>Convites</Button>
-              <Button variant={view === 'audit' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setView('audit')}>Auditoria</Button>
+            <div className="flex gap-1 bg-muted p-1 rounded-lg overflow-x-auto no-scrollbar">
+              <Button variant={view === 'members' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-[11px] px-2" onClick={() => setView('members')}>Membros</Button>
+              <Button variant={view === 'invites' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-[11px] px-2" onClick={() => setView('invites')}>Convites</Button>
+              <Button variant={view === 'whatsapp' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-[11px] px-2" onClick={() => setView('whatsapp')}>WhatsApp</Button>
+              <Button variant={view === 'audit' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-[11px] px-2" onClick={() => setView('audit')}>Auditoria</Button>
             </div>
           </div>
         </DialogHeader>
@@ -262,6 +307,104 @@ export function DepartmentManagementDialog({ department, open, onOpenChange }: P
                   {invitations.length === 0 && <div className="text-center py-10 text-muted-foreground">Nenhum convite ativo.</div>}
                 </div>
               </ScrollArea>
+            </div>
+          )}
+
+          {view === 'whatsapp' && (
+            <div className="flex flex-col h-full px-6 py-6 space-y-6">
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold flex items-center gap-2 text-primary">
+                  <MessageSquare className="w-4 h-4" /> Integração Híbrida WhatsApp
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Configure como este departamento interage com o WhatsApp. Você pode alternar entre API Oficial (Cloud) e Não-Oficial (Evolution).
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div 
+                  className={cn(
+                    "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all cursor-pointer hover:border-primary/50",
+                    whatsappMode === 'none' ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card opacity-60"
+                  )}
+                  onClick={() => setWhatsappMode('none')}
+                >
+                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2", whatsappMode === 'none' ? "bg-primary/20" : "bg-muted")}>
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs font-bold">Desativado</p>
+                  <p className="text-[10px] text-muted-foreground text-center mt-1">Apenas chat interno</p>
+                  {whatsappMode === 'none' && <div className="absolute top-1 right-1"><Shield className="w-3 h-3 text-primary" /></div>}
+                </div>
+
+                <div 
+                  className={cn(
+                    "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all cursor-pointer hover:border-primary/50",
+                    whatsappMode === 'evolution' ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card"
+                  )}
+                  onClick={() => setWhatsappMode('evolution')}
+                >
+                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2", whatsappMode === 'evolution' ? "bg-primary/20" : "bg-muted")}>
+                    <Globe className="w-5 h-5 text-green-500" />
+                  </div>
+                  <p className="text-xs font-bold">Não-Oficial</p>
+                  <p className="text-[10px] text-muted-foreground text-center mt-1">Conexão via QR Code</p>
+                  {whatsappMode === 'evolution' && <div className="absolute top-1 right-1"><Shield className="w-3 h-3 text-primary" /></div>}
+                </div>
+
+                <div 
+                  className={cn(
+                    "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all cursor-pointer hover:border-primary/50",
+                    whatsappMode === 'official' ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card"
+                  )}
+                  onClick={() => setWhatsappMode('official')}
+                >
+                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2", whatsappMode === 'official' ? "bg-primary/20" : "bg-muted")}>
+                    <Shield className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <p className="text-xs font-bold">API Oficial</p>
+                  <p className="text-[10px] text-muted-foreground text-center mt-1">WhatsApp Cloud API</p>
+                  {whatsappMode === 'official' && <div className="absolute top-1 right-1"><Shield className="w-3 h-3 text-primary" /></div>}
+                </div>
+              </div>
+
+              {whatsappMode !== 'none' && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">ID da Instância / Phone Number ID</label>
+                    <div className="relative">
+                      <Settings2 className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Ex: 1234567890" 
+                        value={whatsappInstanceId} 
+                        onChange={e => setWhatsappInstanceId(e.target.value)}
+                        className="pl-9 h-10 text-sm bg-background"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Chave da API / Token de Acesso</label>
+                    <Input 
+                      type="password"
+                      placeholder="••••••••••••••••" 
+                      value={whatsappApiKey} 
+                      onChange={e => setWhatsappApiKey(e.target.value)}
+                      className="h-10 text-sm bg-background"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 mt-auto">
+                <Button 
+                  className="w-full h-10 font-bold tracking-tight bg-primary hover:bg-primary/90 shadow-md" 
+                  onClick={() => updateWhatsappMutation.mutate()}
+                  disabled={updateWhatsappMutation.isPending}
+                >
+                  {updateWhatsappMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : 'Salvar Configurações'}
+                </Button>
+              </div>
             </div>
           )}
 
