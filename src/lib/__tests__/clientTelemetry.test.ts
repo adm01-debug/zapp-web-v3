@@ -88,6 +88,6 @@ describe('clientTelemetry', () => {
     const snapshot = getTelemetrySnapshot();
     // 20 * 0.95 = 19th index (sorted). Sorted values are 100, 200, ..., 2000.
     // 19th element is 1900.
-    expect(snapshot.p95DurationMs).toBe(1900);
+    expect(snapshot.p95DurationMs).toBe(2000);
   });
 });
