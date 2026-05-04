@@ -56,7 +56,9 @@ describe('TeamChatPanel Behavior', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
+        <TooltipProvider>
+          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
+        </TooltipProvider>
       </QueryClientProvider>
     );
 
@@ -90,7 +92,9 @@ describe('TeamChatPanel Behavior', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
+        <TooltipProvider>
+          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
+        </TooltipProvider>
       </QueryClientProvider>
     );
 
@@ -129,7 +133,9 @@ describe('TeamChatPanel Behavior', () => {
     // Since we mock it, we at least verify the component renders correctly in that state.
     render(
       <QueryClientProvider client={queryClient}>
-        <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
+        <TooltipProvider>
+          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
+        </TooltipProvider>
       </QueryClientProvider>
     );
     
