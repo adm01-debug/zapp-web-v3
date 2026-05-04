@@ -195,7 +195,7 @@ export function useMediaUploadQueue(contactId: string) {
       }
 
       try {
-        await supabase.from('media_upload_queue').insert({
+        const { error: dbError } = await supabase.from('media_upload_queue').insert({
           id: item.id,
           contact_id: contactId,
           file_name: item.fileName,
@@ -207,8 +207,10 @@ export function useMediaUploadQueue(contactId: string) {
           max_retries: item.maxRetries,
           metadata: { category: item.category },
         });
+        if (dbError) throw dbError;
       } catch (err) {
         log.error('[MediaQueue] insert row failed', err);
+        // We continue with the upload even if DB persistence fails locally
       }
 
       void runWithRetry(item);

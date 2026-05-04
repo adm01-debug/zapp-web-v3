@@ -103,11 +103,13 @@ export function useOptimisticMessages() {
 
       for (const opt of pendingList) {
         let confirmed = false;
+        // Verify by external_id or fuzzy match content
         if (opt.external_id && realExternalIds.has(opt.external_id)) confirmed = true;
         else if (realContentSet.has(opt.content)) confirmed = true;
         
         const age = Date.now() - opt.timestamp.getTime();
-        if (confirmed || age > 60000) {
+        // Remove if confirmed or timed out (2 minutes)
+        if (confirmed || age > 120000) {
           toRemove.push(opt.id);
         } else {
           stillPending.push(opt);
