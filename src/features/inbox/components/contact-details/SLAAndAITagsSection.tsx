@@ -32,7 +32,7 @@ export function SLAAndAITagsSection({ slaInfo, aiTags }: SLAAndAITagsSectionProp
       {/* SLA Indicator */}
       {hasSLA && (
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-xs bg-muted/20 rounded-lg p-2.5 hover:bg-muted/30 transition-colors">
+          <div className="flex items-center justify-between text-xs bg-background/40 rounded-lg p-2.5 hover:bg-muted/30 transition-colors">
             <div className="flex items-center gap-2">
               <Shield className="w-3.5 h-3.5 text-primary" />
               <span className="text-muted-foreground">1ª Resposta</span>
@@ -53,7 +53,7 @@ export function SLAAndAITagsSection({ slaInfo, aiTags }: SLAAndAITagsSectionProp
               </Badge>
             )}
           </div>
-          <div className="flex items-center justify-between text-xs bg-muted/20 rounded-lg p-2.5 hover:bg-muted/30 transition-colors">
+          <div className="flex items-center justify-between text-xs bg-background/40 rounded-lg p-2.5 hover:bg-muted/30 transition-colors">
             <div className="flex items-center gap-2">
               <Shield className="w-3.5 h-3.5 text-primary" />
               <span className="text-muted-foreground">Resolução</span>

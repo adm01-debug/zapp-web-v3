@@ -100,7 +100,7 @@ export function ContactStatsSection({ contactId }: ContactStatsSectionProps) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: idx * 0.05, duration: 0.2 }}
-          className="bg-muted/20 rounded-xl p-3 border border-border/20 hover:border-primary/20 transition-all relative overflow-hidden"
+          className="bg-background/40 rounded-xl p-3 border border-border/20 hover:border-primary/20 transition-all relative overflow-hidden"
         >
           {/* Sparkline in background */}
           <div className="absolute bottom-1 right-1.5 opacity-40">

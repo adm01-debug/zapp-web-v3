@@ -78,7 +78,7 @@ export function SLADeliveryConfigSection({ contactId }: SLADeliveryConfigSection
   if (isLoading) return <div className="flex justify-center p-4"><Loader2 className="w-4 h-4 animate-spin" /></div>;
 
   return (
-    <Card className="p-4 border-dashed bg-muted/5 space-y-4">
+    <Card className="p-4 border-dashed bg-background/40 space-y-4">
       <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         <Clock className="w-3.5 h-3.5" />
         Thresholds de Entrega (min)

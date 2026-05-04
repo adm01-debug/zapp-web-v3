@@ -24,7 +24,7 @@ export function KnowledgeBaseSearchPanel({ onInsertText, className }: KnowledgeB
   };
 
   return (
-    <Card className={cn('border-border/30', className)}>
+    <Card className={cn('border-border/30 bg-background/40', className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-primary" />
