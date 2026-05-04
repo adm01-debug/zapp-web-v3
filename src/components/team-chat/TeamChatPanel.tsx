@@ -312,6 +312,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             </div>
           </div>
         )}
+        </div>
       </div>
 
 
