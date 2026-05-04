@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, memo } from 'react';
+import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
 // @ts-ignore
 import { FixedSizeList as List } from 'react-window';
 import { useAuth } from '@/features/auth';
@@ -62,6 +62,30 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
   const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
+
+  // Keyboard shortcuts for chat
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // CMD/CTRL + K to focus search inside chat
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        s.setShowSearch(prev => !prev);
+      }
+      
+      // ESC to close search or go back
+      if (e.key === 'Escape') {
+        if (s.showSearch) {
+          s.setShowSearch(false);
+          s.setSearchQuery('');
+        } else if (onBack) {
+          onBack();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [s.showSearch, onBack, s.setShowSearch, s.setSearchQuery]);
 
   
   const isDeptMember = useMemo(() => {
