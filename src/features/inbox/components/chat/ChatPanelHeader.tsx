@@ -15,7 +15,7 @@ import { openChatPopup } from '@/lib/popupManager';
 import { useContactAvatar } from '@/features/inbox';
 
 interface ChatMessage { id: string; content: string; sender: string; timestamp: string; }
-type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
+type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | null;
 
 interface ChatPanelHeaderProps {
   conversation: Conversation;
