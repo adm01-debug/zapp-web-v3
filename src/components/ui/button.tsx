@@ -10,18 +10,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-none hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-none",
-        outline: "border border-white/20 bg-black hover:bg-white/5 hover:text-accent-foreground hover:border-primary/50",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-none",
+        default: "bg-primary text-primary-foreground shadow-none hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(var(--primary),0.3)]",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-none hover:shadow-[0_0_15px_rgba(var(--destructive),0.3)]",
+        outline: "border border-white/20 bg-black hover:bg-white/5 hover:text-accent-foreground hover:border-primary/50 hover:shadow-[0_0_15px_rgba(255,255,255,0.05)]",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-none hover:shadow-[0_0_15px_rgba(var(--secondary),0.3)]",
         ghost: "hover:bg-white/5 hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        whatsapp: "bg-whatsapp text-primary-foreground hover:bg-whatsapp-dark shadow-none",
-        glowPurple: "bg-secondary/20 text-secondary hover:bg-secondary/30 border border-secondary/30 shadow-none",
-        glowGradient: "bg-primary text-primary-foreground border border-white/10 shadow-none",
-        neon: "bg-transparent border border-secondary text-secondary hover:bg-secondary/10 shadow-none",
-        neonOutline: "bg-transparent border border-secondary/40 text-secondary hover:border-secondary shadow-none hover:bg-secondary/10",
-        success: "bg-success text-success-foreground hover:bg-success/90 shadow-none",
+        whatsapp: "bg-whatsapp text-primary-foreground hover:bg-whatsapp-dark shadow-none hover:shadow-[0_0_15px_rgba(var(--whatsapp),0.3)]",
+        glowPurple: "bg-secondary/20 text-secondary hover:bg-secondary/30 border border-secondary/30 shadow-none hover:shadow-[0_0_15px_rgba(var(--secondary),0.2)]",
+        glowGradient: "bg-primary text-primary-foreground border border-white/10 shadow-none hover:shadow-[0_0_20px_rgba(var(--primary),0.4)]",
+        neon: "bg-transparent border border-secondary text-secondary hover:bg-secondary/10 shadow-none hover:shadow-[0_0_15px_rgba(var(--secondary),0.3)]",
+        neonOutline: "bg-transparent border border-secondary/40 text-secondary hover:border-secondary shadow-none hover:bg-secondary/10 hover:shadow-[0_0_15px_rgba(var(--secondary),0.2)]",
+        success: "bg-success text-success-foreground hover:bg-success/90 shadow-none hover:shadow-[0_0_15px_rgba(var(--success),0.3)]",
       },
       size: {
         default: "h-10 px-4 py-2",
