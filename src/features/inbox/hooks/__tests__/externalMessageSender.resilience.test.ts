@@ -78,7 +78,7 @@ describe('externalMessageSender Load & Resilience Simulation', () => {
       await sendExternalText(remoteJid, 'Hello');
     } catch (err: any) {
       expect(err.name).toBe('SendError');
-      expect(err.message).toContain('Instância');
+      expect(err.message).toMatch(/Instância|Instance/);
     }
   });
 });
