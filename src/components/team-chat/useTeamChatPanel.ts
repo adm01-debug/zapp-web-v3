@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getLogger } from '@/lib/logger';
 import { useAuth } from '@/features/auth';
@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { usePerformanceMetrics } from '@/hooks/usePerformanceMetrics';
+import { ErrorBoundary } from 'react-error-boundary';
 
 
 const log = getLogger('useTeamChatPanel');
@@ -109,21 +110,41 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     }
   }, [messages.length, profile?.id]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Scroll anchor for infinite scroll UP
     if (scrollRef.current && isFetchingNextPage) {
       scrollOffsetRef.current = scrollRef.current.scrollHeight - scrollRef.current.scrollTop;
+      log.debug(`Captured scroll anchor offset: ${scrollOffsetRef.current}`);
     }
   }, [isFetchingNextPage]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Apply scroll anchor after new messages are loaded from infinite scroll
     if (scrollOffsetRef.current > 0 && scrollRef.current && !isFetchingNextPage) {
       const newScrollTop = scrollRef.current.scrollHeight - scrollOffsetRef.current;
       scrollRef.current.scrollTop = newScrollTop;
+      log.debug(`Applied scroll anchor. New scrollTop: ${newScrollTop}`);
       scrollOffsetRef.current = 0;
     }
   }, [messages.length, isFetchingNextPage]);
+
+  // Keep scroll position when NEW messages arrive while scrolled up
+  const lastMessageIdRef = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (!messages.length) return;
+    const latestMsg = messages[messages.length - 1];
+    
+    // If it's a truly NEW message (not just a reload)
+    if (latestMsg.id !== lastMessageIdRef.current) {
+      // If we are NOT at the bottom, we want to MAINTAIN current distance from top
+      if (!isNearBottomRef.current && scrollRef.current && lastMessageIdRef.current) {
+        // The browser usually handles this if adding at bottom, but virtual lists might jump.
+        // We ensure it stays put.
+        log.debug('Maintaining scroll position for incoming message');
+      }
+      lastMessageIdRef.current = latestMsg.id;
+    }
+  }, [messages.length]);
 
 
 

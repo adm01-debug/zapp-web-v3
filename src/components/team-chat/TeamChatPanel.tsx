@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { getLogger } from '@/lib/logger';
 // @ts-ignore
 import { List } from 'react-window';
 // @ts-ignore
@@ -59,7 +61,20 @@ const MediaTypeIcon = memo(function MediaTypeIcon({ type }: { type: string | nul
 
 interface Props { conversation: TeamConversation; onBack: () => void; onToggleDetails?: () => void; showDetails?: boolean; }
 
-export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetails }: Props) {
+const log = getLogger('TeamChatPanel');
+
+export function TeamChatPanel(props: Props) {
+  return (
+    <ErrorBoundary 
+      fallback={<div className="p-4 text-center text-destructive">Erro ao carregar o chat. Por favor, tente recarregar.</div>}
+      onError={(error) => log.error('TeamChatPanel error:', error)}
+    >
+      <TeamChatPanelContent {...props} />
+    </ErrorBoundary>
+  );
+}
+
+function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetails }: Props) {
   const [showStats, setShowStats] = useState(false);
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
