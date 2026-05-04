@@ -1,5 +1,5 @@
 const { jsPDF } = require("jspdf");
-require("jspdf-autotable");
+const autoTable = require("jspdf-autotable");
 const fs = require("fs");
 const path = require("path");
 
@@ -20,7 +20,6 @@ function markdownToPdf(inputPath, outputPath) {
   const maxLineWidth = pageWidth - (margin * 2);
   let y = 20;
 
-  // Header / Title
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
   doc.setTextColor(44, 62, 80);
@@ -51,14 +50,7 @@ function markdownToPdf(inputPath, outputPath) {
         tableData = [];
       }
       
-      // Skip separator lines | :--- |
       if (line.includes(':---') || line.includes('---:')) continue;
-      
-      const rows = line.split('|').filter(cell => cell.trim() !== '' || line.startsWith('|') && line.endsWith('|')).map(cell => cell.trim());
-      // Handle the case where split includes empty start/end
-      if (line.startsWith('|') && rows.length > 0) {
-          // rows are fine
-      }
       
       const cleanRows = line.split('|').map(c => c.trim()).filter((c, idx, arr) => {
           if (idx === 0 && c === '') return false;
@@ -66,12 +58,14 @@ function markdownToPdf(inputPath, outputPath) {
           return true;
       });
 
-      tableData.push(cleanRows);
+      if (cleanRows.length > 0) tableData.push(cleanRows);
       continue;
     } else if (inTable) {
       inTable = false;
       if (tableData.length > 0) {
-        doc.autoTable({
+        // Try both ways to handle jspdf-autotable's weirdness in CJS
+        const at = (autoTable.default || autoTable);
+        at(doc, {
           startY: y,
           head: [tableData[0]],
           body: tableData.slice(1),
@@ -122,7 +116,5 @@ function markdownToPdf(inputPath, outputPath) {
   console.log(`PDF gerado: ${outputPath}`);
 }
 
-// Generate reports
 markdownToPdf(REPORT_V6, OUTPUT_PDF);
 markdownToPdf('docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.md', 'docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.pdf');
-
