@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useMessages, type Message } from '@/hooks/useMessages';
 import { useMessageQueue, type PendingMessage } from '@/hooks/messaging/useMessageQueue';
 import { useContactTyping } from '@/hooks/useContactTyping';
-import { MessageCircle, CheckCircle2, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw } from 'lucide-react';
+import { MessageCircle, Check, CheckCheck, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -161,7 +161,14 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
                   {msg.is_important && <AlertCircle className="h-3 w-3 text-orange-400" />}
                   {msg.is_starred && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                   <span className="text-[10px] font-medium uppercase">{formatTime(msg.created_at)}</span>
-                  {isMe && <CheckCircle2 className="h-3 w-3 text-blue-300" />}
+                  {isMe && (
+                    <div className="flex items-center">
+                      {msg.status === 1 && <Check className="h-3 w-3 text-primary-foreground/40" />}
+                      {msg.status === 2 && <CheckCheck className="h-3 w-3 text-primary-foreground/40" />}
+                      {msg.status >= 3 && <CheckCheck className="h-3 w-3 text-blue-300" />}
+                      {msg.status === 0 && <AlertCircle className="h-3 w-3 text-red-300" />}
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Menu (Visible on hover) */}
