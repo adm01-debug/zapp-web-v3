@@ -1,4 +1,5 @@
-import { Message, FailureCategory } from '@/types/chat';
+import { Message } from '@/types/chat';
+import { FailureCategory } from './hooks/useChatFilters';
 
 interface FailureFilterBarProps {
   failuresOnly: boolean;
