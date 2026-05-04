@@ -19,7 +19,6 @@ import { TeamChatInputArea } from './TeamChatInputArea';
 import { useTeamChatPanel } from './useTeamChatPanel';
 import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
 import { MessageReactions, QUICK_EMOJIS, TeamQuickReactionBar } from './MessageReactions';
-import { memo } from 'react';
 import { TeamMessage } from '@/hooks/useTeamChat';
 import { isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
