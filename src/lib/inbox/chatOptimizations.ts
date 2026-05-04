@@ -28,3 +28,33 @@ export const deduplicateMessages = (existing: Message[], incoming: Message[]) =>
   const existingIds = new Set(existing.map(m => m.message_id || m.id));
   return incoming.filter(m => !existingIds.has(m.message_id || m.id));
 };
+
+/**
+ * Track last received message per contact for UX enhancements.
+ */
+const LAST_RECEIVED_KEY = 'chat_last_received_v1';
+
+export interface LastReceivedInfo {
+  message_id: string;
+  timestamp: string;
+  content: string;
+}
+
+export const setLastReceived = (remoteJid: string, info: LastReceivedInfo) => {
+  try {
+    const data = JSON.parse(localStorage.getItem(LAST_RECEIVED_KEY) || '{}');
+    data[remoteJid] = info;
+    localStorage.setItem(LAST_RECEIVED_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Error saving last received info', e);
+  }
+};
+
+export const getLastReceived = (remoteJid: string): LastReceivedInfo | null => {
+  try {
+    const data = JSON.parse(localStorage.getItem(LAST_RECEIVED_KEY) || '{}');
+    return data[remoteJid] || null;
+  } catch (e) {
+    return null;
+  }
+};
