@@ -40,7 +40,7 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
     <>
       <div className="p-3 border-b border-border space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-foreground text-lg">Teams</h2>
+          <h2 className="font-bold text-foreground text-base tracking-tight">Teams</h2>
           <Button size="icon" variant="ghost" onClick={onNewConversation} title="Nova conversa">
             <Plus className="w-4 h-4" />
           </Button>

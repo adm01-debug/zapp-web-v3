@@ -85,8 +85,8 @@ export function TeamChatHeader({
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-[15px] text-foreground truncate">{conversation.name}</h3>
-          <p className="text-xs text-muted-foreground">
+          <h3 className="font-bold text-[14px] leading-tight text-foreground truncate">{conversation.name}</h3>
+          <p className="text-[11px] leading-tight text-muted-foreground mt-0.5">
             {conversation.type === 'department'
               ? 'Grupo de Departamento'
               : conversation.type === 'group'
