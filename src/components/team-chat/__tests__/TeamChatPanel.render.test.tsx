@@ -6,6 +6,14 @@ import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTea
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 
+// Mock ResizeObserver for react-window
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+global.ResizeObserver = ResizeObserverMock;
+
 // Mock dependencies
 vi.mock('../useTeamChatPanel');
 vi.mock('@/features/auth');
