@@ -152,7 +152,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
                 onClick={toggleZen}
                 className={cn(
                   'absolute top-3 right-3 z-30 h-8 rounded-full flex items-center gap-1.5 transition-all duration-200',
-                  'border backdrop-blur-sm shadow-sm',
+                  'border border-border/40 shadow-none',
                   isZen
                     ? 'px-3 bg-primary/15 border-primary/30 text-primary hover:bg-primary/25 hover:border-primary/50 shadow-primary/10'
                     : 'px-2.5 bg-card/80 border-border/40 text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 hover:border-border/70'

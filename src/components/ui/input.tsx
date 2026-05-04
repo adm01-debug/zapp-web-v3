@@ -8,10 +8,10 @@ const inputVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        glow: "border-input focus-visible:outline-none focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:shadow-[0_0_15px_hsl(var(--primary)/0.3)]",
-        neon: "border-secondary/30 focus-visible:outline-none focus-visible:border-secondary focus-visible:ring-4 focus-visible:ring-secondary/20 focus-visible:shadow-[0_0_20px_hsl(var(--secondary)/0.4)]",
-        ghost: "border-transparent bg-muted/50 focus-visible:outline-none focus-visible:bg-background focus-visible:border-input",
+        default: "border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary",
+        glow: "border-input focus-visible:outline-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary focus-visible:shadow-[0_0_10px_hsl(var(--primary)/0.2)]",
+        neon: "border-secondary/40 focus-visible:outline-none focus-visible:border-secondary focus-visible:ring-1 focus-visible:ring-secondary focus-visible:shadow-[0_0_15px_hsl(var(--secondary)/0.3)]",
+        ghost: "border-transparent bg-muted/20 focus-visible:outline-none focus-visible:bg-background focus-visible:border-primary",
         underline: "border-0 border-b-2 border-input rounded-none px-0 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0",
       },
       inputSize: {

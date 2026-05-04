@@ -65,7 +65,7 @@ export default function Auth() {
 
           {/* Card */}
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}>
-            <Card className="glass-strong border-border/50 shadow-2xl shadow-primary/10">
+            <Card className="border-border/50 shadow-none">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <CardHeader className="pb-0">
                   <TabsList className="grid w-full grid-cols-2 glass border border-border/30">
@@ -130,7 +130,7 @@ export default function Auth() {
                       </motion.div>
                       
                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
-                        <RippleButton type="submit" variant="primary" className="w-full text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all group bg-primary rounded-md px-4 py-2 font-medium" disabled={loading}>
+                        <RippleButton type="submit" variant="primary" className="w-full text-primary-foreground transition-all group bg-primary rounded-md px-4 py-2 font-medium" disabled={loading}>
                           {loading ? <motion.span animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}>Entrando...</motion.span> : <>Entrar<ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" /></>}
                         </RippleButton>
                       </motion.div>
