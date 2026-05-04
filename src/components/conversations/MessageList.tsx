@@ -21,9 +21,10 @@ import {
 
 interface MessageListProps {
   remoteJid: string;
+  searchTerm?: string;
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
+export const MessageList: React.FC<MessageListProps> = ({ remoteJid, searchTerm = '' }) => {
   const { 
     messages, loading, loadingMore, hasMore, loadMore, 
     toggleStar, toggleImportant 
@@ -32,6 +33,12 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
   const isTyping = useContactTyping(remoteJid);
   
   const currentPending = pendingMessages.filter(p => p.remote_jid === remoteJid);
+  
+  // Local filtering for search
+  const filteredMessages = messages.filter(m => 
+    !searchTerm || (m.content && m.content.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -151,10 +158,11 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
         </div>
       )}
 
-      {messages.map((msg, idx) => {
+      {filteredMessages.map((msg, idx) => {
         const isMe = msg.from_me;
         const showDate = idx === 0 || 
-          format(new Date(msg.created_at), 'yyyy-MM-dd') !== format(new Date(messages[idx-1].created_at), 'yyyy-MM-dd');
+          format(new Date(msg.created_at), 'yyyy-MM-dd') !== format(new Date(filteredMessages[idx-1].created_at), 'yyyy-MM-dd');
+
 
         return (
           <React.Fragment key={msg.id}>
@@ -168,7 +176,8 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
             
             <div className={cn(
               "flex group max-w-[85%] sm:max-w-[75%] lg:max-w-[65%]",
-              isMe ? "self-end flex-row-reverse" : "self-start"
+              isMe ? "self-end flex-row-reverse" : "self-start",
+              searchTerm && msg.content?.toLowerCase().includes(searchTerm.toLowerCase()) && "ring-2 ring-primary/30 rounded-lg"
             )}>
               <div className={cn(
                 "relative px-3 py-1.5 rounded-lg shadow-sm border",
