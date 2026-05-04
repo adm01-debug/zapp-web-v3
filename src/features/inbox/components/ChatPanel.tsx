@@ -188,66 +188,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   });
 
   // Monitora atraso na entrega (SLA Delivery)
-  useEffect(() => {
-    if (!conversation.contact.id || !messages.length) return;
-    
-    // Thresholds padrão ou customizados
-    const checkDeliveryDelay = async () => {
-      // 1. Busca regra customizada para o contato
-      const { data: customRule } = await supabase
-        .from('sla_delivery_rules')
-        .select('*')
-        .eq('contact_id', conversation.contact.id)
-        .eq('is_active', true)
-        .maybeSingle();
+  useSLADelivery({ contactId: conversation.contact.id, messages });
 
-      const WARNING_THRESHOLD = (customRule?.warning_threshold_minutes || 30) * 60 * 1000;
-      const BREACH_THRESHOLD = (customRule?.breach_threshold_minutes || 60) * 60 * 1000;
-      const customMsg = customRule?.custom_message;
-      
-      // Simulation mode: force alert if enabled
-      const isSimulating = localStorage.getItem('zappweb:sla-simulation') === 'true';
-      if (isSimulating) {
-        window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
-          detail: { contactId: conversation.contact.id, status: 'warning', delay: 35 * 60 * 1000, message: 'SIMULAÇÃO: Esta é uma mensagem de teste.' } 
-        }));
-      }
-      // Pega a última mensagem outbound que está entregue mas não lida
-      const lastOutbound = [...messages].reverse().find(m => 
-        m.sender === 'agent' && 
-        m.status === 'delivered'
-      );
-      
-      if (!lastOutbound) return;
-      
-      const deliveredAt = new Date(lastOutbound.updated_at).getTime();
-      const delay = Date.now() - deliveredAt;
-      
-      if (delay >= BREACH_THRESHOLD) {
-        window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
-          detail: { 
-            contactId: conversation.contact.id, 
-            status: 'breached', 
-            delay,
-            message: customMsg || undefined 
-          } 
-        }));
-      } else if (delay >= WARNING_THRESHOLD) {
-        window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
-          detail: { 
-            contactId: conversation.contact.id, 
-            status: 'warning', 
-            delay,
-            message: customMsg || undefined
-          } 
-        }));
-      }
-    };
-    
-    const interval = setInterval(checkDeliveryDelay, 60000); // Check every minute
-    checkDeliveryDelay();
-    return () => clearInterval(interval);
-  }, [conversation.contact.id, messages]);
   const lastMsgIdRef = useRef<string | null>(null);
   useEffect(() => {
     const lastId = messages[messages.length - 1]?.id ?? null;
@@ -276,9 +218,10 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   });
 
   useEffect(() => {
-    setActiveTool(null); setHighlightedMessageIds(new Set()); setActiveHighlightId(null); setSearchQuery('');
+    setActiveTool(null); 
+    resetSearch();
     setFailuresOnly(false);
-  }, [conversation.id]);
+  }, [conversation.id, resetSearch, setFailuresOnly]);
 
   // Deep-link "Ver no chat": quando o caller abre o Inbox apontando para
   // uma mensagem específica, scrollamos até ela e aplicamos um destaque
