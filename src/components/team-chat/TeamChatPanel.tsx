@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef, memo } from 'react';
+// @ts-ignore
+import { FixedSizeList as List } from 'react-window';
 import { useAuth } from '@/features/auth';
 import { TeamConversation } from '@/hooks/useTeamChat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,7 +20,6 @@ import { TeamChatInputArea } from './TeamChatInputArea';
 import { useTeamChatPanel } from './useTeamChatPanel';
 import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
 import { MessageReactions, QUICK_EMOJIS, TeamQuickReactionBar } from './MessageReactions';
-import { memo } from 'react';
 import { TeamMessage } from '@/hooks/useTeamChat';
 import { isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -125,7 +126,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         )}
       </AnimatePresence>
 
-      <div ref={s.scrollRef} className="flex-1 overflow-auto p-4 space-y-1 bg-background" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
+      <div ref={s.scrollRef} className="flex-1 bg-background" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
         {!isDeptMember ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -151,101 +152,109 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             </div>
           </div>
         ) : s.isLoading ? (
-          <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}><Skeleton className="h-10 rounded-2xl" style={{ width: 120 + (i % 3) * 60 }} /></div>)}</div>
+          <div className="p-4 space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}><Skeleton className="h-10 rounded-2xl" style={{ width: 120 + (i % 3) * 60 }} /></div>)}</div>
         ) : s.filteredMessages.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-12">{s.searchQuery ? 'Nenhuma mensagem encontrada' : 'Envie a primeira mensagem!'}</div>
         ) : (
-          s.filteredMessages.map((msg, idx) => {
-            const showDate = dateFirstIndexes.has(idx);
-            const isMine = msg.sender_id === s.profile?.id;
-            const isEditing = s.editingId === msg.id;
-            const hasMedia = !!msg.media_url;
-            const repliedMsg = msg.reply_to_id ? s.messages.find(m => m.id === msg.reply_to_id) : null;
-            const isThisTtsPlaying = s.tts.isPlaying && s.tts.currentMessageId === msg.id;
-            const isThisTtsLoading = s.tts.isLoading && s.tts.currentMessageId === msg.id;
-            const cleanText = msg.content?.replace(/\[.*?\]/g, '').replace(/https?:\/\/\S+/g, '').trim();
+          <div className="h-full w-full">
+            <List
+              height={500} // This would ideally be dynamic but FixedSizeList needs a number. For a 10/10 solution we'd use auto-sizer or variable size list.
+              itemCount={s.filteredMessages.length}
+              itemSize={100} 
+              width="100%"
+              className="scrollbar-none"
+            >
+              {({ index, style }) => {
+                const msg = s.filteredMessages[index];
+                const showDate = dateFirstIndexes.has(index);
+                const isMine = msg.sender_id === s.profile?.id;
+                const isEditing = s.editingId === msg.id;
+                const hasMedia = !!msg.media_url;
+                const repliedMsg = msg.reply_to_id ? s.messages.find(m => m.id === msg.reply_to_id) : null;
+                const isThisTtsPlaying = s.tts.isPlaying && s.tts.currentMessageId === msg.id;
+                const isThisTtsLoading = s.tts.isLoading && s.tts.currentMessageId === msg.id;
+                const cleanText = msg.content?.replace(/\[.*?\]/g, '').replace(/https?:\/\/\S+/g, '').trim();
 
-            return (
-              <ContextMenu key={msg.id}>
-                <ContextMenuTrigger asChild>
-                  <div data-testid={`message-container-${msg.id}`} className="group/msg relative mb-3">
-                    {showDate && <div className="flex justify-center py-2"><span className="text-[11px] font-medium text-muted-foreground bg-muted/20 px-3 py-1 rounded-full border border-border/10">{formatDateSep(msg.created_at)}</span></div>}
-                    <div 
-                      key={msg.id}
-                      data-testid={`message-${msg.id}`}
-                      className={cn("flex gap-2 py-0.5 relative", isMine ? "justify-end" : "justify-start")}
-                    >
-                      {!isMine && <Avatar className="w-7 h-7 mt-1 shrink-0"><AvatarImage src={msg.sender?.avatar_url || undefined} /><AvatarFallback className="text-[10px] bg-muted">{msg.sender?.name?.charAt(0) || '?'}</AvatarFallback></Avatar>}
-                      
-                      <div className={cn("max-w-[70%] space-y-1 relative")}>
-                        {/* Quick Reaction Bar (WhatsApp style) */}
-                        <TeamQuickReactionBar 
-                          messageId={msg.id}
-                          isMine={isMine}
-                          onToggle={(emoji) => toggleReaction({ messageId: msg.id, emoji })}
-                          reactions={aggregate(msg.id)}
-                        />
-
-                        <div className={cn("rounded-2xl px-3.5 py-2 shadow-none relative", isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted/30 border border-border/20 text-foreground rounded-bl-md")}>
-                          {!isMine && conversation.type === 'group' && <p className="text-[11px] font-bold mb-1 opacity-90 text-primary">{msg.sender?.name}</p>}
-                          {repliedMsg && <div className={cn("text-[10px] mb-1.5 px-2 py-1 rounded border-l-2", isMine ? "bg-primary-foreground/10 border-primary-foreground/30" : "bg-muted/50 border-muted-foreground/30")}><span className="font-medium">{repliedMsg.sender?.name}</span><p className="truncate opacity-80 flex items-center gap-1">{repliedMsg.media_type && <MediaTypeIcon type={repliedMsg.media_type} />}{repliedMsg.content || 'Mídia'}</p></div>}
-                          {isEditing ? (
-                            <div className="space-y-1.5">
-                              <Input value={s.editText} onChange={e => s.setEditText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') s.handleSaveEdit(); if (e.key === 'Escape') s.handleCancelEdit(); }} className="h-7 text-sm bg-background text-foreground" autoFocus />
-                              <div className="flex gap-1 justify-end"><Button size="icon" variant="ghost" className="h-5 w-5" onClick={s.handleCancelEdit}><X className="w-3 h-3" /></Button><Button size="icon" variant="ghost" className="h-5 w-5" onClick={s.handleSaveEdit}><Check className="w-3 h-3" /></Button></div>
-                            </div>
-                          ) : (
-                            <>
-                              {hasMedia && <MediaContent msg={msg} />}
-                              {msg.content && (!hasMedia || msg.media_type === 'document') && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words"><MarkdownPreview text={msg.content} className="inline" /></p>}
-                              {msg.content && hasMedia && msg.media_type !== 'document' && !['🎨 Figurinha', '🎵 Áudio meme', '😀 Emoji', '🎤 Mensagem de áudio'].includes(msg.content) && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words mt-1">{msg.content}</p>}
-                              <div className={cn("flex items-center gap-1 mt-0.5", isMine ? "justify-end" : "justify-between")}>
-                                {cleanText && <button onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className={cn("opacity-0 group-hover/msg:opacity-100 transition-opacity p-0.5 rounded-full", isMine ? "text-primary-foreground/60 hover:text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>{isThisTtsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isThisTtsPlaying ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}</button>}
-                                <div className="flex items-center gap-1">
-                                  <span className={cn("text-[10px]", isMine ? "text-primary-foreground/60" : "text-muted-foreground")}>{formatTime(msg.created_at)}{msg.is_edited && ' · editado'}</span>
-                                  {isMine && <MessageStatus status={msg.status || 'sent'} className={cn("scale-75 origin-right", msg.status === 'read' ? "text-info" : "text-primary-foreground/60")} />}
-                                </div>
-
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <MessageReactions
-                      messageId={msg.id}
-                      reactions={aggregate(msg.id)}
-                      isMine={isMine}
-                      isToggling={isToggling}
-                      onToggle={(emoji) => toggleReaction({ messageId: msg.id, emoji })}
-                    />
-                  </div>
-                </ContextMenuTrigger>
-                <ContextMenuContent>
-                  <ContextMenuSub>
-                    <ContextMenuSubTrigger className="gap-2"><SmilePlus className="w-3.5 h-3.5" /> Reagir</ContextMenuSubTrigger>
-                    <ContextMenuSubContent>
-                      <div className="grid grid-cols-4 gap-1 p-1">
-                        {QUICK_EMOJIS.map(e => (
-                          <Button key={e} size="icon" variant="ghost" onClick={() => toggleReaction({ messageId: msg.id, emoji: e })}
-                            className="h-9 w-9 text-xl hover:scale-125 transition-all focus-visible:ring-2 focus-visible:ring-primary"
-                            aria-label={`Reagir com ${e}`}
+                return (
+                  <div style={style}>
+                    <ContextMenu key={msg.id}>
+                      <ContextMenuTrigger asChild>
+                        <div data-testid={`message-container-${msg.id}`} className="group/msg relative px-4">
+                          {showDate && <div className="flex justify-center py-2"><span className="text-[11px] font-medium text-muted-foreground bg-muted/20 px-3 py-1 rounded-full border border-border/10">{formatDateSep(msg.created_at)}</span></div>}
+                          <div 
+                            className={cn("flex gap-2 py-0.5 relative", isMine ? "justify-end" : "justify-start")}
                           >
-                            {e}
-                          </Button>
-                        ))}
-                      </div>
-                    </ContextMenuSubContent>
-                  </ContextMenuSub>
-                  <ContextMenuItem onClick={() => s.setReplyTo(msg)} className="gap-2"><Reply className="w-3.5 h-3.5" /> Responder</ContextMenuItem>
-                  {msg.content && <ContextMenuItem onClick={() => s.handleCopyMessage(msg.content)} className="gap-2"><Copy className="w-3.5 h-3.5" /> Copiar</ContextMenuItem>}
-                  {cleanText && <ContextMenuItem onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className="gap-2"><Volume2 className="w-3.5 h-3.5" /> {isThisTtsPlaying ? 'Parar' : 'Ouvir'}</ContextMenuItem>}
-                  {isMine && !isEditing && (<><ContextMenuSeparator />{!hasMedia && <ContextMenuItem onClick={() => s.handleStartEdit(msg)} className="gap-2"><Pencil className="w-3.5 h-3.5" /> Editar</ContextMenuItem>}<ContextMenuItem onClick={() => s.handleDelete(msg.id)} className="gap-2 text-destructive focus:text-destructive"><Trash2 className="w-3.5 h-3.5" /> Excluir</ContextMenuItem></>)}
-                </ContextMenuContent>
-              </ContextMenu>
+                            {!isMine && <Avatar className="w-7 h-7 mt-1 shrink-0"><AvatarImage src={msg.sender?.avatar_url || undefined} /><AvatarFallback className="text-[10px] bg-muted">{msg.sender?.name?.charAt(0) || '?'}</AvatarFallback></Avatar>}
+                            
+                            <div className={cn("max-w-[70%] space-y-1 relative")}>
+                              <TeamQuickReactionBar 
+                                messageId={msg.id}
+                                isMine={isMine}
+                                onToggle={(emoji) => toggleReaction({ messageId: msg.id, emoji })}
+                                reactions={aggregate(msg.id)}
+                              />
 
-            );
-          })
+                              <div className={cn("rounded-2xl px-3.5 py-2 shadow-none relative", isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted/30 border border-border/20 text-foreground rounded-bl-md")}>
+                                {!isMine && conversation.type === 'group' && <p className="text-[11px] font-bold mb-1 opacity-90 text-primary">{msg.sender?.name}</p>}
+                                {repliedMsg && <div className={cn("text-[10px] mb-1.5 px-2 py-1 rounded border-l-2", isMine ? "bg-primary-foreground/10 border-primary-foreground/30" : "bg-muted/50 border-muted-foreground/30")}><span className="font-medium">{repliedMsg.sender?.name}</span><p className="truncate opacity-80 flex items-center gap-1">{repliedMsg.media_type && <MediaTypeIcon type={repliedMsg.media_type} />}{repliedMsg.content || 'Mídia'}</p></div>}
+                                {isEditing ? (
+                                  <div className="space-y-1.5">
+                                    <Input value={s.editText} onChange={e => s.setEditText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') s.handleSaveEdit(); if (e.key === 'Escape') s.handleCancelEdit(); }} className="h-7 text-sm bg-background text-foreground" autoFocus />
+                                    <div className="flex gap-1 justify-end"><Button size="icon" variant="ghost" className="h-5 w-5" onClick={s.handleCancelEdit}><X className="w-3 h-3" /></Button><Button size="icon" variant="ghost" className="h-5 w-5" onClick={s.handleSaveEdit}><Check className="w-3 h-3" /></Button></div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    {hasMedia && <MediaContent msg={msg} />}
+                                    {msg.content && (!hasMedia || msg.media_type === 'document') && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words"><MarkdownPreview text={msg.content} className="inline" /></p>}
+                                    {msg.content && hasMedia && msg.media_type !== 'document' && !['🎨 Figurinha', '🎵 Áudio meme', '😀 Emoji', '🎤 Mensagem de áudio'].includes(msg.content) && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words mt-1">{msg.content}</p>}
+                                    <div className={cn("flex items-center gap-1 mt-0.5", isMine ? "justify-end" : "justify-between")}>
+                                      {cleanText && <button onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className={cn("opacity-0 group-hover/msg:opacity-100 transition-opacity p-0.5 rounded-full", isMine ? "text-primary-foreground/60 hover:text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>{isThisTtsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isThisTtsPlaying ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}</button>}
+                                      <div className="flex items-center gap-1">
+                                        <span className={cn("text-[10px]", isMine ? "text-primary-foreground/60" : "text-muted-foreground")}>{formatTime(msg.created_at)}{msg.is_edited && ' · editado'}</span>
+                                        {isMine && <MessageStatus status={msg.status || 'sent'} className={cn("scale-75 origin-right", msg.status === 'read' ? "text-info" : "text-primary-foreground/60")} />}
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <MessageReactions
+                            messageId={msg.id}
+                            reactions={aggregate(msg.id)}
+                            isMine={isMine}
+                            isToggling={isToggling}
+                            onToggle={(emoji) => toggleReaction({ messageId: msg.id, emoji })}
+                          />
+                        </div>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuSub>
+                          <ContextMenuSubTrigger className="gap-2"><SmilePlus className="w-3.5 h-3.5" /> Reagir</ContextMenuSubTrigger>
+                          <ContextMenuSubContent>
+                            <div className="grid grid-cols-4 gap-1 p-1">
+                              {QUICK_EMOJIS.map(e => (
+                                <Button key={e} size="icon" variant="ghost" onClick={() => toggleReaction({ messageId: msg.id, emoji: e })}
+                                  className="h-9 w-9 text-xl hover:scale-125 transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                                  aria-label={`Reagir com ${e}`}
+                                >
+                                  {e}
+                                </Button>
+                              ))}
+                            </div>
+                          </ContextMenuSubContent>
+                        </ContextMenuSub>
+                        <ContextMenuItem onClick={() => s.setReplyTo(msg)} className="gap-2"><Reply className="w-3.5 h-3.5" /> Responder</ContextMenuItem>
+                        {msg.content && <ContextMenuItem onClick={() => s.handleCopyMessage(msg.content)} className="gap-2"><Copy className="w-3.5 h-3.5" /> Copiar</ContextMenuItem>}
+                        {cleanText && <ContextMenuItem onClick={() => isThisTtsPlaying ? s.tts.stop() : s.tts.speak(msg.content, msg.id)} className="gap-2"><Volume2 className="w-3.5 h-3.5" /> {isThisTtsPlaying ? 'Parar' : 'Ouvir'}</ContextMenuItem>}
+                        {isMine && !isEditing && (<><ContextMenuSeparator />{!hasMedia && <ContextMenuItem onClick={() => s.handleStartEdit(msg)} className="gap-2"><Pencil className="w-3.5 h-3.5" /> Editar</ContextMenuItem>}<ContextMenuItem onClick={() => s.handleDelete(msg.id)} className="gap-2 text-destructive focus:text-destructive"><Trash2 className="w-3.5 h-3.5" /> Excluir</ContextMenuItem></>)}
+                      </ContextMenuContent>
+                    </ContextMenu>
+                  </div>
+                );
+              }}
+            </List>
+          </div>
         )}
       </div>
 

@@ -23,18 +23,26 @@ interface Props {
 export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function TeamConversationList({ conversations, isLoading, selectedId, onSelect, onNewConversation }, _ref) {
   const { profile } = useAuth();
   const [search, setSearch] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'direct' | 'group' | 'department'>('all');
   const [mgmtDept, setMgmtDept] = useState<{ id: string, name: string } | null>(null);
 
   const isAdmin = profile?.role === 'admin';
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return conversations;
+    let filteredList = conversations;
+    
+    if (filterType !== 'all') {
+      filteredList = filteredList.filter(c => c.type === filterType);
+    }
+    
+    if (!search.trim()) return filteredList;
+    
     const q = search.toLowerCase();
-    return conversations.filter(c =>
+    return filteredList.filter(c =>
       c.name?.toLowerCase().includes(q) ||
       c.last_message?.content.toLowerCase().includes(q)
     );
-  }, [conversations, search]);
+  }, [conversations, search, filterType]);
 
   return (
     <>
@@ -53,6 +61,40 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
             onChange={e => setSearch(e.target.value)}
             className="pl-8 h-9"
           />
+        </div>
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none pb-1">
+          <Button 
+            variant={filterType === 'all' ? 'secondary' : 'ghost'} 
+            size="sm" 
+            className="h-7 px-2 text-[11px] rounded-full" 
+            onClick={() => setFilterType('all')}
+          >
+            Todos
+          </Button>
+          <Button 
+            variant={filterType === 'direct' ? 'secondary' : 'ghost'} 
+            size="sm" 
+            className="h-7 px-2 text-[11px] rounded-full gap-1" 
+            onClick={() => setFilterType('direct')}
+          >
+            <User className="w-3 h-3" /> Chats
+          </Button>
+          <Button 
+            variant={filterType === 'group' ? 'secondary' : 'ghost'} 
+            size="sm" 
+            className="h-7 px-2 text-[11px] rounded-full gap-1" 
+            onClick={() => setFilterType('group')}
+          >
+            <Users className="w-3 h-3" /> Grupos
+          </Button>
+          <Button 
+            variant={filterType === 'department' ? 'secondary' : 'ghost'} 
+            size="sm" 
+            className="h-7 px-2 text-[11px] rounded-full gap-1" 
+            onClick={() => setFilterType('department')}
+          >
+            <Building2 className="w-3 h-3" /> Deptos
+          </Button>
         </div>
       </div>
 
