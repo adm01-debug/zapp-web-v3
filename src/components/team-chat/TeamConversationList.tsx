@@ -150,7 +150,7 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
           </div>
         ) : (
           <div className="space-y-0.5 p-1">
-            {filtered.map(conv => (
+            {filtered.map((conv, index) => (
               <button
                 key={conv.id}
                 tabIndex={0}
@@ -160,6 +160,8 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(conv.id); } }}
                 role="option"
                 aria-selected={selectedId === conv.id}
+                aria-setsize={filtered.length}
+                aria-posinset={index + 1}
                 aria-label={`Conversa com ${conv.name || 'Sem nome'}${(conv.unread_count ?? 0) > 0 ? `, ${conv.unread_count} não lidas` : ''}`}
                 className={cn(
                   "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors",
