@@ -8,14 +8,14 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-border bg-card shadow-sm",
-        elevated: "border-border/50 bg-card-elevated shadow-lg shadow-foreground/5",
-        interactive: "border-border bg-card shadow-sm hover:shadow-md hover:border-primary/30 cursor-pointer",
-        selected: "border-primary bg-primary/5 shadow-md shadow-primary/10 ring-1 ring-primary/20",
+        default: "border-border bg-card",
+        elevated: "border-border bg-card-elevated shadow-none",
+        interactive: "border-border bg-card hover:border-primary/50 cursor-pointer shadow-none",
+        selected: "border-primary bg-primary/10 ring-1 ring-primary/30",
         ghost: "border-transparent bg-transparent",
-        glass: "border-border/30 bg-card/80 backdrop-blur-lg shadow-lg",
-        neon: "border-secondary/50 bg-card shadow-[0_0_15px_hsl(var(--secondary)/0.15)] hover:shadow-[0_0_25px_hsl(var(--secondary)/0.25)] hover:border-secondary/70",
-        gradient: "border-0 bg-gradient-to-br from-card via-card to-muted/30 shadow-lg",
+        glass: "border-border bg-card", /* No glass blur for OLED */
+        neon: "border-secondary bg-card shadow-[0_0_15px_hsl(var(--secondary)/0.1)]",
+        gradient: "border-0 bg-gradient-to-br from-card to-card/90",
       },
       padding: {
         none: "",
