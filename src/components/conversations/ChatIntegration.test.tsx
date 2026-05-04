@@ -152,19 +152,19 @@ describe('Chat Integration - Flow Tests', () => {
       toggleImportant: vi.fn(),
     });
 
-    let observerCallback: (entries: any[]) => void = () => {};
-    const mockObserver = vi.fn(function(this: any, cb: (entries: any[]) => void) {
-      observerCallback = cb;
-      this.observe = vi.fn();
-      this.disconnect = vi.fn();
-      this.unobserve = vi.fn();
-    });
-    window.IntersectionObserver = mockObserver as any;
-
-    render(<MessageList remoteJid="test@jid" />);
+    const { container } = render(<MessageList remoteJid="test@jid" />);
     
-    // Simula a interseção do elemento do topo
-    observerCallback([{ isIntersecting: true }]);
+    // Find scroll container
+    const scrollContainer = container.querySelector('.overflow-y-auto');
+    if (!scrollContainer) throw new Error('Scroll container not found');
+
+    // Mock scroll properties
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 50, configurable: true });
+    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 1000, configurable: true });
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 500, configurable: true });
+
+    // Trigger scroll
+    fireEvent.scroll(scrollContainer);
     
     expect(loadMoreMock).toHaveBeenCalled();
   });
