@@ -4,19 +4,19 @@
   /* ===== CARD STYLES — Removida "neblina" e opacidades excessivas ===== */
   .card-base { @apply bg-card rounded-xl border border-border p-6 transition-all duration-200; }
   .card-elevated { @apply bg-card-elevated rounded-xl border border-border p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
-  .card-elevated:hover { box-shadow: var(--shadow-md); @apply border-primary/40; transform: translateY(-1px); }
+  .card-elevated:hover { box-shadow: var(--shadow-md); @apply border-primary; transform: translateY(-1px); }
 
   .card-interactive {
     @apply relative bg-card rounded-xl border border-border p-6 cursor-pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .card-interactive:hover { @apply border-primary/50 bg-accent; box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .card-interactive:hover { @apply border-primary bg-accent; box-shadow: var(--shadow-md); transform: translateY(-2px); }
   .card-interactive:active { transform: translateY(0) scale(0.995); transition-duration: 0.1s; }
 
-  .card-glow-purple { @apply relative bg-card rounded-xl border border-primary/30 p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
-  .card-glow-purple:hover { box-shadow: var(--shadow-glow-primary); @apply border-primary/60; transform: translateY(-2px); }
+  .card-glow-purple { @apply relative bg-card rounded-xl border border-primary p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
+  .card-glow-purple:hover { box-shadow: var(--shadow-glow-primary); @apply border-primary; transform: translateY(-2px); }
 
-  .card-glow-gradient { @apply relative bg-card rounded-xl border border-primary/25 p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
+  .card-glow-gradient { @apply relative bg-card rounded-xl border border-primary p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
   .card-glow-gradient:hover { box-shadow: var(--shadow-glow-primary); transform: translateY(-1px); }
 
   .glass-card { @apply rounded-xl p-6 border transition-all duration-200; background: hsl(var(--card)); border-color: hsl(var(--border)); }
@@ -25,11 +25,11 @@
   .glass-panel { @apply border transition-all duration-200; background: hsl(var(--card)); border-color: hsl(var(--border)); box-shadow: var(--shadow-lg); }
 
   .stat-card { @apply bg-card rounded-xl border border-border p-4; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
-  .stat-card:hover { @apply border-primary/40; box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+  .stat-card:hover { @apply border-primary; box-shadow: var(--shadow-sm); transform: translateY(-1px); }
 
   .card-subtle { @apply bg-muted border-transparent; }
-  .card-prominent { @apply bg-card-elevated border-primary/20; box-shadow: var(--shadow-md); }
-  .card-featured { @apply bg-card-elevated border-primary/40 ring-1 ring-primary/20; box-shadow: var(--shadow-lg); }
+  .card-prominent { @apply bg-card-elevated border-primary; box-shadow: var(--shadow-md); }
+  .card-featured { @apply bg-card-elevated border-primary ring-1 ring-primary; box-shadow: var(--shadow-lg); }
 
   /* Shimmer highlight */
   .card-shimmer { @apply relative overflow-hidden; }
@@ -80,7 +80,7 @@
     @apply hover:bg-accent;
   }
   .conversation-item.active {
-    @apply bg-primary/20 border-l-[3px] border-primary;
+    @apply bg-primary/30 border-l-[4px] border-primary;
     box-shadow: inset 4px 0 8px -4px hsl(var(--primary) / 0.15);
   }
 
