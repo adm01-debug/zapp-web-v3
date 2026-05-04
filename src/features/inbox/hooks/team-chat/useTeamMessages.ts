@@ -52,8 +52,20 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
     initialPageParam: 0,
   });
 
-  // Flatten messages from all pages
-  const messages = data?.pages.flatMap(page => page.messages) ?? [];
+  // Flatten messages from all pages and ensure chronological order (ascending)
+  // Since useInfiniteQuery appends new pages at the END of data.pages, 
+  // and each page contains older messages (because of DESC order in query),
+  // we need to combine them such that the OLDEST messages (from later pages) are at the START.
+  const messages = useMemo(() => {
+    if (!data?.pages) return [];
+    // pages[0] = newest 50
+    // pages[1] = previous 50
+    // ...
+    // To display correctly in UI (oldest to newest): [...pages[last], ..., pages[1], pages[0]]
+    const allMessages = [...data.pages].reverse().flatMap(page => page.messages);
+    return allMessages;
+  }, [data?.pages]);
+
 
   useEffect(() => {
     if (!conversationId) return;
