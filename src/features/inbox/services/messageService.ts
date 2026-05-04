@@ -1,4 +1,5 @@
-import { messageRepository, Message } from '@/features/inbox/data-access/messageRepository';
+import { messageRepository } from '@/features/inbox/data-access/messageRepository';
+import type { Message } from '@/types/chat';
 
 import { getLogger } from '@/lib/logger';
 
