@@ -31,6 +31,9 @@ import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import { useChatPanelHandlers } from './chat/useChatPanelHandlers';
 import { ActiveTool } from './chat/ChatHeaderToolbar';
+import { useChatFilters, FailureCategory } from './chat/hooks/useChatFilters';
+import { useSLADelivery } from './chat/hooks/useSLADelivery';
+import { useChatSearchState } from './chat/hooks/useChatSearchState';
 import { useSearchParams } from 'react-router-dom';
 import { useTransferConversation } from '@/features/inbox/hooks/useTransferConversation';
 import { useInboxShortcuts } from '@/features/inbox/hooks/useInboxShortcuts';
@@ -132,49 +135,19 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   }, [activeTool]);
 
   const [callDirection, setCallDirection] = useState<'inbound' | 'outbound'>('outbound');
-  const [highlightedMessageIds, setHighlightedMessageIds] = useState<Set<string>>(new Set());
-  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    highlightedMessageIds, setHighlightedMessageIds,
+    activeHighlightId, setActiveHighlightId,
+    searchQuery, setSearchQuery,
+    resetSearch, handleHighlightChange
+  } = useChatSearchState();
+
+  const {
+    failuresOnly, failureCategory, setFailuresOnly, setFailureCategory,
+    failedMessages, categoryCounts, categoryFilteredMessages, visibleMessages
+  } = useChatFilters(messages);
+
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  // Filtro: somente mensagens com falha terminal (failed/failed_auth/failed_retries).
-  // Persistido em ?failuresOnly=1 (toggle global) e, opcionalmente, em
-  // ?failureCategory=<failed|failed_auth|failed_retries> (subcategoria).
-  // Ambos sobrevivem a recarregamento e tornam o link compartilhável.
-  const [searchParams, setSearchParams] = useSearchParams();
-  const failuresOnly = searchParams.get('failuresOnly') === '1';
-  const FAILURE_CATEGORIES = ['failed', 'failed_auth', 'failed_retries'] as const;
-  type FailureCategory = typeof FAILURE_CATEGORIES[number];
-  const rawCategory = searchParams.get('failureCategory');
-  const failureCategory: FailureCategory | null =
-    rawCategory && (FAILURE_CATEGORIES as readonly string[]).includes(rawCategory)
-      ? (rawCategory as FailureCategory)
-      : null;
-
-  const setFailuresOnly = useCallback((next: boolean | ((prev: boolean) => boolean)) => {
-    setSearchParams((prev) => {
-      const sp = new URLSearchParams(prev);
-      const current = sp.get('failuresOnly') === '1';
-      const value = typeof next === 'function' ? next(current) : next;
-      if (value) {
-        sp.set('failuresOnly', '1');
-      } else {
-        sp.delete('failuresOnly');
-        // Disabling the global filter also clears the subcategory so the
-        // shared link doesn't carry orphan state.
-        sp.delete('failureCategory');
-      }
-      return sp;
-    }, { replace: true });
-  }, [setSearchParams]);
-
-  const setFailureCategory = useCallback((next: FailureCategory | null) => {
-    setSearchParams((prev) => {
-      const sp = new URLSearchParams(prev);
-      if (next) sp.set('failureCategory', next);
-      else sp.delete('failureCategory');
-      return sp;
-    }, { replace: true });
-  }, [setSearchParams]);
 
   const fileUploaderRef = useRef<FileUploaderRef>(null);
   const messagesAreaRef = useRef<ChatMessagesAreaRef>(null);
@@ -215,66 +188,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   });
 
   // Monitora atraso na entrega (SLA Delivery)
-  useEffect(() => {
-    if (!conversation.contact.id || !messages.length) return;
-    
-    // Thresholds padrão ou customizados
-    const checkDeliveryDelay = async () => {
-      // 1. Busca regra customizada para o contato
-      const { data: customRule } = await supabase
-        .from('sla_delivery_rules')
-        .select('*')
-        .eq('contact_id', conversation.contact.id)
-        .eq('is_active', true)
-        .maybeSingle();
+  useSLADelivery({ contactId: conversation.contact.id, messages });
 
-      const WARNING_THRESHOLD = (customRule?.warning_threshold_minutes || 30) * 60 * 1000;
-      const BREACH_THRESHOLD = (customRule?.breach_threshold_minutes || 60) * 60 * 1000;
-      const customMsg = customRule?.custom_message;
-      
-      // Simulation mode: force alert if enabled
-      const isSimulating = localStorage.getItem('zappweb:sla-simulation') === 'true';
-      if (isSimulating) {
-        window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
-          detail: { contactId: conversation.contact.id, status: 'warning', delay: 35 * 60 * 1000, message: 'SIMULAÇÃO: Esta é uma mensagem de teste.' } 
-        }));
-      }
-      // Pega a última mensagem outbound que está entregue mas não lida
-      const lastOutbound = [...messages].reverse().find(m => 
-        m.sender === 'agent' && 
-        m.status === 'delivered'
-      );
-      
-      if (!lastOutbound) return;
-      
-      const deliveredAt = new Date(lastOutbound.updated_at).getTime();
-      const delay = Date.now() - deliveredAt;
-      
-      if (delay >= BREACH_THRESHOLD) {
-        window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
-          detail: { 
-            contactId: conversation.contact.id, 
-            status: 'breached', 
-            delay,
-            message: customMsg || undefined 
-          } 
-        }));
-      } else if (delay >= WARNING_THRESHOLD) {
-        window.dispatchEvent(new CustomEvent('sla-delivery-alert', { 
-          detail: { 
-            contactId: conversation.contact.id, 
-            status: 'warning', 
-            delay,
-            message: customMsg || undefined
-          } 
-        }));
-      }
-    };
-    
-    const interval = setInterval(checkDeliveryDelay, 60000); // Check every minute
-    checkDeliveryDelay();
-    return () => clearInterval(interval);
-  }, [conversation.contact.id, messages]);
   const lastMsgIdRef = useRef<string | null>(null);
   useEffect(() => {
     const lastId = messages[messages.length - 1]?.id ?? null;
@@ -303,9 +218,10 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   });
 
   useEffect(() => {
-    setActiveTool(null); setHighlightedMessageIds(new Set()); setActiveHighlightId(null); setSearchQuery('');
+    setActiveTool(null); 
+    resetSearch();
     setFailuresOnly(false);
-  }, [conversation.id]);
+  }, [conversation.id, resetSearch, setFailuresOnly]);
 
   // Deep-link "Ver no chat": quando o caller abre o Inbox apontando para
   // uma mensagem específica, scrollamos até ela e aplicamos um destaque
@@ -382,27 +298,6 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   }, [initialHighlightMessageId, messages, onHighlightConsumed]);
 
   const canGenerateSummary = messages.length >= 10;
-
-  // Pré-computa o conjunto de mensagens com falha terminal — alimenta o
-  // contador no header e o filtro do MessagesArea sem reescanear a lista
-  // a cada render. Quando `failureCategory` está setado via URL, restringe
-  // ainda mais para a categoria selecionada (failed | failed_auth | failed_retries).
-  const failedMessages = useMemo(
-    () => messages.filter(
-      (m) => m.status === 'failed' || m.status === 'failed_auth' || m.status === 'failed_retries',
-    ),
-    [messages],
-  );
-  const categoryCounts = useMemo(() => ({
-    failed: failedMessages.filter((m) => m.status === 'failed').length,
-    failed_auth: failedMessages.filter((m) => m.status === 'failed_auth').length,
-    failed_retries: failedMessages.filter((m) => m.status === 'failed_retries').length,
-  }), [failedMessages]);
-  const categoryFilteredMessages = useMemo(
-    () => (failureCategory ? failedMessages.filter((m) => m.status === failureCategory) : failedMessages),
-    [failedMessages, failureCategory],
-  );
-  const visibleMessages = failuresOnly ? categoryFilteredMessages : messages;
 
   // Memoize expensive derived arrays to avoid re-creation on every keystroke
   const lastContactMessages = useMemo(
@@ -519,11 +414,11 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const ambient = useAmbientColor(conversation.sentiment);
 
   return (
-    <div className={`flex h-full min-h-0 min-w-0 overflow-hidden relative bg-[#000000] dark:bg-[#000000]`} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}>
+    <div className={`flex h-full min-h-0 min-w-0 overflow-hidden relative bg-background`} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}>
       <ChatDragOverlay isDraggingOver={isDraggingOver} />
       <CRMAutoSync conversation={conversation} messageCount={messages.length} messages={messages} />
 
-      <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden bg-[#000000] dark:bg-[#000000]">
+      <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden bg-background">
         {!hideHeader && (
           <ChatPanelHeader
             conversation={conversation}
