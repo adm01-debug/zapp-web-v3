@@ -28,6 +28,7 @@ import {
   Building2,
   ArrowRightLeft,
   BarChart3,
+  Activity,
 } from 'lucide-react';
 import { TransferConversationDialog } from './TransferConversationDialog';
 import { useAuth } from '@/features/auth';
@@ -47,6 +48,7 @@ interface TeamChatHeaderProps {
   onSpeedChange: (speed: number) => void;
   onToggleMute?: () => void;
   onToggleStats?: () => void;
+  onTogglePerformance?: () => void;
   showStats?: boolean;
 }
 
@@ -65,6 +67,7 @@ export function TeamChatHeader({
   onSpeedChange,
   onToggleMute,
   onToggleStats,
+  onTogglePerformance,
   showStats,
 }: TeamChatHeaderProps) {
   const [showTransfer, setShowTransfer] = useState(false);
@@ -135,6 +138,22 @@ export function TeamChatHeader({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">Estatísticas do grupo</TooltipContent>
+          </Tooltip>
+        )}
+        
+        {onTogglePerformance && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted")}
+                onClick={onTogglePerformance}
+              >
+                <Activity className="w-[18px] h-[18px]" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Performance do Chat</TooltipContent>
           </Tooltip>
         )}
 

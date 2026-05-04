@@ -33,7 +33,8 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
         .limit(MESSAGES_PER_PAGE);
 
       if (pageParam) {
-        query = query.lt('created_at', pageParam);
+        const [createdAt, id] = (pageParam as string).split('|');
+        query = query.or(`created_at.lt."${createdAt}",and(created_at.eq."${createdAt}",id.lt."${id}"))`);
       }
 
       if (searchQuery.trim()) {
@@ -49,7 +50,7 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
       
       return {
         messages: sortedMessages,
-        nextCursor: messages?.length === MESSAGES_PER_PAGE ? messages[messages.length - 1].created_at : null,
+        nextCursor: messages?.length === MESSAGES_PER_PAGE ? `${messages[messages.length - 1].created_at}|${messages[messages.length - 1].id}` : null,
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
