@@ -46,10 +46,12 @@ vi.mock('react-window', async () => {
   const actual = await vi.importActual('react-window');
   return {
     ...actual,
-    List: ({ rowCount, children }: any) => (
+    List: ({ rowCount, rowComponent: Row }: any) => (
       <div data-testid="virtual-list" data-rowcount={rowCount}>
         {Array.from({ length: rowCount }).map((_, index) => (
-          <div key={index}>{children({ index, style: {} })}</div>
+          <div key={index}>
+            <Row index={index} style={{}} ariaAttributes={{}} />
+          </div>
         ))}
       </div>
     ),
