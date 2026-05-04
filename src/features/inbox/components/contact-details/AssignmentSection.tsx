@@ -60,7 +60,7 @@ export function AssignmentSection({ conversation }: AssignmentSectionProps) {
             defaultValue={conversation.assignedTo?.id}
             onValueChange={(value) => assignAgent(value)}
           >
-            <SelectTrigger className="w-full border-border/30 hover:border-primary/30 transition-colors bg-muted/20 h-9">
+            <SelectTrigger className="w-full border-border/30 hover:border-primary/30 transition-colors bg-background/40 h-9">
               <SelectValue placeholder="Selecionar atendente" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border/30">
@@ -96,7 +96,7 @@ export function AssignmentSection({ conversation }: AssignmentSectionProps) {
             defaultValue={conversation.queue?.id}
             onValueChange={(value) => assignQueue(value)}
           >
-            <SelectTrigger className="w-full border-border/30 hover:border-primary/30 transition-colors bg-muted/20 h-9">
+            <SelectTrigger className="w-full border-border/30 hover:border-primary/30 transition-colors bg-background/40 h-9">
               <SelectValue placeholder="Selecionar fila" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border/30">
