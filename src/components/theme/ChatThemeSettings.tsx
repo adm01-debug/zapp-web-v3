@@ -56,10 +56,16 @@ export const ChatThemeSettings = () => {
             
             <div className="space-y-3">
               <Label>Intensidade Neon (Glow)</Label>
-              <Slider defaultValue={[70]} max={100} step={1} className="py-2" />
+              <Slider 
+                value={[neonIntensity]} 
+                onValueChange={(v) => setNeonIntensity(v[0])} 
+                max={100} 
+                step={1} 
+                className="py-2" 
+              />
               <div className="flex justify-between text-[10px] text-muted-foreground uppercase font-bold">
                 <span>Discreto</span>
-                <span>Vibrante</span>
+                <span>Vibrante ({neonIntensity}%)</span>
               </div>
             </div>
           </TabsContent>
