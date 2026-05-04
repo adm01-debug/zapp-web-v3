@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, lazy, Suspense, useReducer, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense, useCallback, useMemo } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { Conversation, Message } from '@/types/chat';
@@ -31,14 +31,13 @@ import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import { useChatPanelHandlers } from './chat/useChatPanelHandlers';
 import { ActiveTool } from './chat/ChatHeaderToolbar';
-import { useChatFilters, FailureCategory } from './chat/hooks/useChatFilters';
+import { FailureFilterBar } from './chat/FailureFilterBar';
+import { useChatFilters } from './chat/hooks/useChatFilters';
 import { useSLADelivery } from './chat/hooks/useSLADelivery';
 import { useChatSearchState } from './chat/hooks/useChatSearchState';
-import { useSearchParams } from 'react-router-dom';
+import { useChatDialogs } from './chat/hooks/useChatDialogs';
 import { useTransferConversation } from '@/features/inbox/hooks/useTransferConversation';
 import { useInboxShortcuts } from '@/features/inbox/hooks/useInboxShortcuts';
-import { useScheduledMediaUpload } from '@/features/inbox/hooks/useScheduledMediaUpload';
-import { useSafeInteractiveMessage } from '@/features/inbox/hooks/useSafeInteractiveMessage';
 import { dbFrom } from '@/integrations/datasource/db';
 
 const WhisperMode = lazy(() => import('./WhisperMode').then(m => ({ default: m.WhisperMode })));
@@ -61,67 +60,15 @@ interface ChatPanelProps extends LoadOlderProps {
   onToggleDetails?: () => void;
   onBack?: () => void;
   hideHeader?: boolean;
-  /**
-   * Quando definido, ao montar (ou ao mudar para esta conversa) o painel
-   * dá scroll até a mensagem indicada e aplica destaque temporário (~3 s).
-   * Aceita o `id` interno da mensagem (`evolution_messages.id`) ou o
-   * `external_id` retornado pelo webhook — o `ChatMessagesArea` resolve
-   * ambos via `data-message-id`.
-   */
   initialHighlightMessageId?: string | null;
-  /** Notifica o pai de que o destaque foi aplicado (limpa o pending). */
   onHighlightConsumed?: () => void;
-  /**
-   * Paginacao "carregar mensagens antigas" herdada de `LoadOlderProps`:
-   *  - Modo local: omitir (ou passar `undefined`) ambos os callbacks.
-   *  - Modo externo: fornecer ambos; loadingOlder/hasMoreOlder refletem o
-   *    estado real do fetcher remoto.
-   */
   whisperCount?: number;
 }
-
-type DialogKey = 'quickReplies' | 'slashCommands' | 'transferDialog' | 'scheduleDialog' | 
-  'callDialog' | 'globalSearch' | 'chatSearch' | 'interactiveBuilder' | 'forwardDialog' | 
-  'locationPicker' | 'aiAssistant' | 'catalogDirect' | 'whisper' | 'templatesWithVars' | 
-  'realtimeTranscription' | 'closeDialog';
-
-type DialogState = Record<DialogKey, boolean>;
-type DialogAction = 
-  | { type: 'TOGGLE'; key: DialogKey }
-  | { type: 'OPEN'; key: DialogKey }
-  | { type: 'CLOSE'; key: DialogKey }
-  | { type: 'RESET'; keys: DialogKey[] };
-
-const initialDialogState: DialogState = {
-  quickReplies: false, slashCommands: false, transferDialog: false, scheduleDialog: false,
-  callDialog: false, globalSearch: false, chatSearch: false, interactiveBuilder: false,
-  forwardDialog: false, locationPicker: false, aiAssistant: false, catalogDirect: false,
-  whisper: false, templatesWithVars: false, realtimeTranscription: false, closeDialog: false,
-};
-
-function dialogReducer(state: DialogState, action: DialogAction): DialogState {
-  switch (action.type) {
-    case 'TOGGLE': return { ...state, [action.key]: !state[action.key] };
-    case 'OPEN': return state[action.key] ? state : { ...state, [action.key]: true };
-    case 'CLOSE': return state[action.key] ? { ...state, [action.key]: false } : state;
-    case 'RESET': {
-      const next = { ...state };
-      let changed = false;
-      for (const k of action.keys) { if (next[k]) { next[k] = false; changed = true; } }
-      return changed ? next : state;
-    }
-    default: return state;
-  }
-}
-
-// type ActiveTool is imported from chat/ChatHeaderToolbar
 
 export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0 }: ChatPanelProps) {
   const { templates: quickReplyTemplates } = useQuickReplies();
   const [selectedQuickReplyIndex, setSelectedQuickReplyIndex] = useState(0);
-  const [dialogs, dispatch] = useReducer(dialogReducer, initialDialogState);
-  const openDialog = useCallback((key: DialogKey) => dispatch({ type: 'OPEN', key }), []);
-  const closeDialog = useCallback((key: DialogKey) => dispatch({ type: 'CLOSE', key }), []);
+  const { dialogs, openDialog, closeDialog, toggleDialog, resetDialogs } = useChatDialogs();
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
@@ -130,22 +77,23 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   }, []);
 
   useEffect(() => {
-    dispatch({ type: activeTool === 'chatSearch' ? 'OPEN' : 'CLOSE', key: 'chatSearch' });
-    dispatch({ type: activeTool === 'aiAssistant' ? 'OPEN' : 'CLOSE', key: 'aiAssistant' });
-  }, [activeTool]);
+    const isSearch = (activeTool as string) === 'chatSearch';
+    const isAssistant = (activeTool as string) === 'aiAssistant';
+    
+    if (isSearch) openDialog('chatSearch');
+    else closeDialog('chatSearch');
+
+    if (isAssistant) openDialog('aiAssistant');
+    else closeDialog('aiAssistant');
+  }, [activeTool, openDialog, closeDialog]);
 
   const [callDirection, setCallDirection] = useState<'inbound' | 'outbound'>('outbound');
-  const {
-    highlightedMessageIds, setHighlightedMessageIds,
-    activeHighlightId, setActiveHighlightId,
-    searchQuery, setSearchQuery,
-    resetSearch, handleHighlightChange
-  } = useChatSearchState();
+  
+  const chatSearch = useChatSearchState();
+  const { highlightedMessageIds, activeHighlightId, searchQuery, setSearchQuery, resetSearch, handleHighlightChange, setHighlightedMessageIds, setActiveHighlightId } = chatSearch;
 
-  const {
-    failuresOnly, failureCategory, setFailuresOnly, setFailureCategory,
-    failedMessages, categoryCounts, categoryFilteredMessages, visibleMessages
-  } = useChatFilters(messages);
+  const filters = useChatFilters(messages);
+  const { failuresOnly, failureCategory, setFailuresOnly, setFailureCategory, failedMessages, categoryCounts, categoryFilteredMessages, visibleMessages } = filters;
 
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
@@ -175,7 +123,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const handlers = useChatPanelHandlers({
     conversationId: conversation.id, contactId: conversation.contact.id, contactPhone: conversation.contact.phone,
     instanceName, onSendMessage, editMessageApi: editMessage, applySignature,
-    handleTypingStart, handleTypingStop, openDialog: openDialog as (key: string) => void, closeDialog: closeDialog as (key: string) => void, handleSetActiveTool,
+    handleTypingStart, handleTypingStop, openDialog: openDialog as any, closeDialog: closeDialog as any, handleSetActiveTool,
   });
 
   useEffect(() => { initResolve(); }, [conversation.contact.id]);
@@ -381,7 +329,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     whatsappConnectionId,
   });
 
-  const handleScheduleMessage = async (message: string, scheduledAt: Date, attachment?: File) => {
+  const handleScheduleMessage = async (content: string, scheduledAt: Date, attachment?: File) => {
     try {
       let mediaUrl: string | undefined;
       let messageType = 'text';
@@ -390,14 +338,13 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
         const { error: uploadError } = await supabase.storage.from('whatsapp-media').upload(fileName, attachment);
         if (uploadError) {
           toast({ title: 'Erro no upload', description: `Falha ao anexar: ${uploadError.message}`, variant: 'destructive' });
-        }
-        if (!uploadError) {
-          const { data: signedData , error } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 604800); // 7 days for scheduled messages
+        } else {
+          const { data: signedData } = await supabase.storage.from('whatsapp-media').createSignedUrl(fileName, 604800);
           mediaUrl = signedData?.signedUrl;
           messageType = attachment.type.startsWith('audio') ? 'audio' : attachment.type.startsWith('image') ? 'image' : attachment.type.startsWith('video') ? 'video' : 'document';
         }
       }
-      await scheduleMessage({ contactId: conversation.contact.id, content: message, scheduledAt, messageType, mediaUrl });
+      await scheduleMessage({ contactId: conversation.contact.id, content, scheduledAt, messageType, mediaUrl });
       closeDialog('scheduleDialog');
     } catch (err) { log.error('Failed to schedule message:', err); }
   };
@@ -446,66 +393,25 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           />
         )}
 
-        <ChatSearchBar messages={messages} isOpen={activeTool === 'chatSearch'}
+        <ChatSearchBar messages={messages} isOpen={(activeTool as string) === 'chatSearch'}
           onClose={() => { handleSetActiveTool('chatSearch'); setTimeout(() => handlers.inputRef.current?.focus(), 150); }}
           onNavigateToMessage={(id) => messagesAreaRef.current?.scrollToMessage(id)}
-          onHighlightChange={(ids, activeId) => { setHighlightedMessageIds(ids); setActiveHighlightId(activeId); }}
+          onHighlightChange={handleHighlightChange}
           onSearchQueryChange={setSearchQuery} />
 
         <TicketActionsBar contactId={conversation.contact.id} onOpenHistory={() => setHistoryOpen(true)} />
         <TicketHistorySheet contactId={conversation.contact.id} open={historyOpen} onOpenChange={setHistoryOpen} />
         <ChatAssignedBar conversation={conversation} onOpenTransfer={() => openDialog('transferDialog')} />
 
-        {failuresOnly && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 text-xs bg-destructive/10 text-destructive border-b border-destructive/20"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium">
-                {categoryFilteredMessages.length === 0
-                  ? 'Nenhuma mensagem nesta categoria.'
-                  : `${categoryFilteredMessages.length} ${categoryFilteredMessages.length === 1 ? 'mensagem' : 'mensagens'}`}
-              </span>
-              <div className="flex items-center gap-1" role="tablist" aria-label="Categoria de falha">
-                {([
-                  { key: null, label: 'Todas', count: failedMessages.length },
-                  { key: 'failed' as const, label: 'Sem conexão', count: categoryCounts.failed },
-                  { key: 'failed_auth' as const, label: 'Auth', count: categoryCounts.failed_auth },
-                  { key: 'failed_retries' as const, label: 'Esgotadas', count: categoryCounts.failed_retries },
-                ]).map(({ key, label, count }) => {
-                  const isActive = (failureCategory ?? null) === key;
-                  return (
-                    <button
-                      key={key ?? 'all'}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      onClick={() => setFailureCategory(key)}
-                      className={
-                        'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium transition-colors ' +
-                        (isActive
-                          ? 'bg-destructive text-destructive-foreground border-destructive'
-                          : 'bg-background/40 border-destructive/30 hover:bg-destructive/20')
-                      }
-                    >
-                      {label}
-                      <span className="opacity-70">({count})</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <button
-              type="button"
-              className="font-medium underline hover:no-underline"
-              onClick={() => setFailuresOnly(false)}
-            >
-              Limpar filtro
-            </button>
-          </div>
-        )}
+        <FailureFilterBar
+          failuresOnly={failuresOnly}
+          failureCategory={failureCategory}
+          categoryFilteredMessages={categoryFilteredMessages}
+          failedMessagesCount={failedMessages.length}
+          categoryCounts={categoryCounts}
+          setFailureCategory={setFailureCategory}
+          setFailuresOnly={setFailuresOnly}
+        />
 
         <Suspense fallback={null}>
           <NextBestActionEngine contactId={conversation.contact.id} contactName={conversation.contact.name} />
