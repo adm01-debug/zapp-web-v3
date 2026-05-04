@@ -232,17 +232,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
           <div className="h-full w-full flex flex-col relative">
             {s.isFetchingNextPage && <div className="p-2 text-center text-xs text-muted-foreground animate-pulse">Carregando mensagens anteriores...</div>}
             <div className="flex-1 relative">
-            <AutoSizer>
-              {({ height, width }: { height: number, width: number }) => (
-                <List
-                  listRef={s.listRef}
-                  height={height}
-                  rowCount={s.filteredMessages.length}
-                  rowHeight={100}
-                  width={width}
-                  className="scrollbar-none"
-                  overscanCount={10}
-                  rowComponent={({ index, style }: { index: number, style: React.CSSProperties }) => {
+              <List<{}>
+                listRef={s.listRef}
+                rowCount={s.filteredMessages.length}
+                rowHeight={100}
+                rowProps={{} as any}
+                className="scrollbar-none absolute inset-0"
+                overscanCount={10}
+                rowComponent={({ index, style }: { index: number, style: React.CSSProperties }) => {
                 const msg = s.filteredMessages[index];
                 const showDate = dateFirstIndexes.has(index);
                 const isMine = msg.sender_id === s.profile?.id;
@@ -342,11 +339,9 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                       </ContextMenuContent>
                     </ContextMenu>
                   </div>
-                    );
-                  }}
-                />
-              )}
-            </AutoSizer>
+                  );
+                }}
+              />
             </div>
           </div>
         )}
