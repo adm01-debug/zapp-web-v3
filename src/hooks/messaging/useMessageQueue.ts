@@ -13,7 +13,7 @@ export interface PendingMessage {
 }
 
 export function useMessageQueue(instanceName: string = 'wpp2') {
-  const { sendMessage } = useEvolutionApi();
+  const { sendTextMessage } = useEvolutionApi();
   const { toast } = useToast();
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const queueRef = useRef<PendingMessage[]>([]);
@@ -33,11 +33,12 @@ export function useMessageQueue(instanceName: string = 'wpp2') {
       );
 
       try {
-        await sendMessage({
+        const number = msg.remote_jid.split('@')[0];
+        await sendTextMessage(
           instanceName,
-          remoteJid: msg.remote_jid,
-          message: { text: msg.content }
-        });
+          number,
+          msg.content
+        );
         
         // Remove from queue after successful send
         // Note: We don't remove from pendingMessages state yet, 
