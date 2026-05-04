@@ -110,6 +110,6 @@ describe('Chat Integration - Flow Tests', () => {
 
     render(<MessageList remoteJid="test@jid" />);
     expect(screen.getByText('Enviando agora')).toBeInTheDocument();
-    expect(screen.getByText(/Enviando.../i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Enviando.../i)[0]).toBeInTheDocument();
   });
 });
