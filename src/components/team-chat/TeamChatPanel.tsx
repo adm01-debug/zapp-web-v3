@@ -234,7 +234,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             <div className="flex-1 relative">
             <AutoSizer>
               {({ height, width }: { height: number, width: number }) => (
-                <List
+                <VariableSizeList
                   ref={s.listRef}
                   height={height}
                   itemCount={s.filteredMessages.length}
