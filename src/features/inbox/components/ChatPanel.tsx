@@ -34,6 +34,7 @@ import { ActiveTool } from './chat/ChatHeaderToolbar';
 import { useChatFilters, FailureCategory } from './chat/hooks/useChatFilters';
 import { useSLADelivery } from './chat/hooks/useSLADelivery';
 import { useChatSearchState } from './chat/hooks/useChatSearchState';
+import { useChatDialogs, DialogKey } from './chat/hooks/useChatDialogs';
 import { useSearchParams } from 'react-router-dom';
 import { useTransferConversation } from '@/features/inbox/hooks/useTransferConversation';
 import { useInboxShortcuts } from '@/features/inbox/hooks/useInboxShortcuts';
@@ -61,67 +62,15 @@ interface ChatPanelProps extends LoadOlderProps {
   onToggleDetails?: () => void;
   onBack?: () => void;
   hideHeader?: boolean;
-  /**
-   * Quando definido, ao montar (ou ao mudar para esta conversa) o painel
-   * dá scroll até a mensagem indicada e aplica destaque temporário (~3 s).
-   * Aceita o `id` interno da mensagem (`evolution_messages.id`) ou o
-   * `external_id` retornado pelo webhook — o `ChatMessagesArea` resolve
-   * ambos via `data-message-id`.
-   */
   initialHighlightMessageId?: string | null;
-  /** Notifica o pai de que o destaque foi aplicado (limpa o pending). */
   onHighlightConsumed?: () => void;
-  /**
-   * Paginacao "carregar mensagens antigas" herdada de `LoadOlderProps`:
-   *  - Modo local: omitir (ou passar `undefined`) ambos os callbacks.
-   *  - Modo externo: fornecer ambos; loadingOlder/hasMoreOlder refletem o
-   *    estado real do fetcher remoto.
-   */
   whisperCount?: number;
 }
-
-type DialogKey = 'quickReplies' | 'slashCommands' | 'transferDialog' | 'scheduleDialog' | 
-  'callDialog' | 'globalSearch' | 'chatSearch' | 'interactiveBuilder' | 'forwardDialog' | 
-  'locationPicker' | 'aiAssistant' | 'catalogDirect' | 'whisper' | 'templatesWithVars' | 
-  'realtimeTranscription' | 'closeDialog';
-
-type DialogState = Record<DialogKey, boolean>;
-type DialogAction = 
-  | { type: 'TOGGLE'; key: DialogKey }
-  | { type: 'OPEN'; key: DialogKey }
-  | { type: 'CLOSE'; key: DialogKey }
-  | { type: 'RESET'; keys: DialogKey[] };
-
-const initialDialogState: DialogState = {
-  quickReplies: false, slashCommands: false, transferDialog: false, scheduleDialog: false,
-  callDialog: false, globalSearch: false, chatSearch: false, interactiveBuilder: false,
-  forwardDialog: false, locationPicker: false, aiAssistant: false, catalogDirect: false,
-  whisper: false, templatesWithVars: false, realtimeTranscription: false, closeDialog: false,
-};
-
-function dialogReducer(state: DialogState, action: DialogAction): DialogState {
-  switch (action.type) {
-    case 'TOGGLE': return { ...state, [action.key]: !state[action.key] };
-    case 'OPEN': return state[action.key] ? state : { ...state, [action.key]: true };
-    case 'CLOSE': return state[action.key] ? { ...state, [action.key]: false } : state;
-    case 'RESET': {
-      const next = { ...state };
-      let changed = false;
-      for (const k of action.keys) { if (next[k]) { next[k] = false; changed = true; } }
-      return changed ? next : state;
-    }
-    default: return state;
-  }
-}
-
-// type ActiveTool is imported from chat/ChatHeaderToolbar
 
 export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0 }: ChatPanelProps) {
   const { templates: quickReplyTemplates } = useQuickReplies();
   const [selectedQuickReplyIndex, setSelectedQuickReplyIndex] = useState(0);
-  const [dialogs, dispatch] = useReducer(dialogReducer, initialDialogState);
-  const openDialog = useCallback((key: DialogKey) => dispatch({ type: 'OPEN', key }), []);
-  const closeDialog = useCallback((key: DialogKey) => dispatch({ type: 'CLOSE', key }), []);
+  const { dialogs, openDialog, closeDialog, toggleDialog, resetDialogs } = useChatDialogs();
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
@@ -130,9 +79,13 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   }, []);
 
   useEffect(() => {
-    dispatch({ type: activeTool === 'chatSearch' ? 'OPEN' : 'CLOSE', key: 'chatSearch' });
-    dispatch({ type: activeTool === 'aiAssistant' ? 'OPEN' : 'CLOSE', key: 'aiAssistant' });
-  }, [activeTool]);
+    if (activeTool === 'chatSearch') openDialog('chatSearch');
+    else if (activeTool === 'aiAssistant') openDialog('aiAssistant');
+    else {
+      closeDialog('chatSearch');
+      closeDialog('aiAssistant');
+    }
+  }, [activeTool, openDialog, closeDialog]);
 
   const [callDirection, setCallDirection] = useState<'inbound' | 'outbound'>('outbound');
   const {
