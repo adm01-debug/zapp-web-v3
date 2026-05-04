@@ -203,11 +203,13 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
             <DialogTitle className="flex items-center gap-2">
               Gerenciar Departamento: {department.name}
             </DialogTitle>
-            <div className="flex gap-1 bg-muted p-1 rounded-lg">
-              <Button variant={view === 'members' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setView('members')}>Membros</Button>
-              <Button variant={view === 'invites' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setView('invites')}>Convites</Button>
-              <Button variant={view === 'audit' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setView('audit')}>Auditoria</Button>
+            <div className="flex gap-1 bg-muted p-1 rounded-lg overflow-x-auto no-scrollbar">
+              <Button variant={view === 'members' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-[11px] px-2" onClick={() => setView('members')}>Membros</Button>
+              <Button variant={view === 'invites' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-[11px] px-2" onClick={() => setView('invites')}>Convites</Button>
+              <Button variant={view === 'whatsapp' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-[11px] px-2" onClick={() => setView('whatsapp')}>WhatsApp</Button>
+              <Button variant={view === 'audit' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-[11px] px-2" onClick={() => setView('audit')}>Auditoria</Button>
             </div>
+
           </div>
         </DialogHeader>
 
