@@ -35,11 +35,14 @@ function computeInstanceUptimes(logs: HealthLog[], now: Date): InstanceUptime[] 
   });
 }
 
-function computeSparklines(logs: HealthLog[], msgs: { sender: string; created_at: string }[], now: Date): SparklineData {
+function computeSparklines(logs: HealthLog[], msgs: { sender: string; created_at: string }[], now: Date, period: TimePeriod): SparklineData {
   const r: SparklineData = { messages: [], latency: [], uptime: [] };
+  const ms = periodMs[period];
+  const bucketSize = ms / 8;
+
   for (let i = 7; i >= 0; i--) {
-    const s = new Date(now.getTime() - (i + 1) * 3600000);
-    const e = new Date(now.getTime() - i * 3600000);
+    const s = new Date(now.getTime() - (i + 1) * bucketSize);
+    const e = new Date(now.getTime() - i * bucketSize);
     const hl = logs.filter(l => { const t = new Date(l.checked_at); return t >= s && t < e; });
     const hh = hl.filter(l => HEALTHY_STATUSES.includes(l.status));
     r.uptime.push(hl.length > 0 ? Math.round((hh.length / hl.length) * 100) : 100);
@@ -65,7 +68,7 @@ export function useMonitoringData(onConnectionsUpdate?: (c: ConnectionInfo[]) =>
       const since = new Date(now.getTime() - periodMs[period]);
       const [connRes, logsRes, msgRes] = await Promise.all([
         supabase.from('whatsapp_connections').select('id, instance_id, phone_number, status, health_status, health_response_ms, last_health_check, updated_at'),
-        supabase.from('connection_health_logs').select('*').order('checked_at', { ascending: false }).limit(500),
+        supabase.from('connection_health_logs').select('*').gte('checked_at', since.toISOString()).order('checked_at', { ascending: false }).limit(2000),
         supabase.from('messages').select('sender, created_at').gte('created_at', since.toISOString()).order('created_at', { ascending: true }),
       ]);
 
@@ -83,21 +86,21 @@ export function useMonitoringData(onConnectionsUpdate?: (c: ConnectionInfo[]) =>
         const buckets: Record<string, { incoming: number; outgoing: number }> = {};
         for (let i = bucketCount - 1; i >= 0; i--) {
           const bTime = new Date(now.getTime() - i * bucketSize);
-          const key = period === '7d'
-            ? `${bTime.getDate().toString().padStart(2, '0')}/${(bTime.getMonth() + 1).toString().padStart(2, '0')}`
+          const key = period === '7d' || period === '24h'
+            ? `${bTime.getDate().toString().padStart(2, '0')}/${(bTime.getMonth() + 1).toString().padStart(2, '0')} ${bTime.getHours().toString().padStart(2, '0')}h`
             : `${bTime.getHours().toString().padStart(2, '0')}:00`;
           buckets[key] = { incoming: 0, outgoing: 0 };
         }
         msgRes.data.forEach(m => {
           const mTime = new Date(m.created_at);
-          const key = period === '7d'
-            ? `${mTime.getDate().toString().padStart(2, '0')}/${(mTime.getMonth() + 1).toString().padStart(2, '0')}`
+          const key = period === '7d' || period === '24h'
+            ? `${mTime.getDate().toString().padStart(2, '0')}/${(mTime.getMonth() + 1).toString().padStart(2, '0')} ${mTime.getHours().toString().padStart(2, '0')}h`
             : `${mTime.getHours().toString().padStart(2, '0')}:00`;
           if (buckets[key]) { if (m.sender === 'contact') buckets[key].incoming++; else buckets[key].outgoing++; }
         });
         setMessageStats({ incoming, outgoing, total: msgRes.data.length, hourlyData: Object.entries(buckets).map(([hour, d]) => ({ hour, ...d })) });
       }
-      if (logsRes.data && msgRes.data) setSparklines(computeSparklines(logsRes.data, msgRes.data, now));
+      if (logsRes.data && msgRes.data) setSparklines(computeSparklines(logsRes.data, msgRes.data, now, period));
     } catch (err) {
       console.error('Monitoring fetch error:', err);
     } finally {

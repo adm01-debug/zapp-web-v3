@@ -31,21 +31,26 @@ export function MonitoringAvailabilityHeatmap({ healthLogs }: Props) {
     const cells: { total: number; healthy: number; ratio: number; date: Date; hour: number }[][] = [];
     const labels: string[] = [];
 
+    // Pre-group logs by day and hour for O(N) lookup
+    const logsBySlot = new Map<string, HealthLog[]>();
+    healthLogs.forEach(log => {
+      const d = new Date(log.checked_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
+      if (!logsBySlot.has(key)) logsBySlot.set(key, []);
+      logsBySlot.get(key)!.push(log);
+    });
+
     for (let d = DAYS - 1; d >= 0; d--) {
       const day = subDays(now, d);
       labels.push(format(day, 'EEE dd/MM', { locale: ptBR }));
       const row: typeof cells[0] = [];
 
       for (const h of HOURS) {
-        const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0);
-        const end = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 59, 59);
-        const logsInSlot = healthLogs.filter(l => {
-          const t = new Date(l.checked_at);
-          return t >= start && t <= end;
-        });
+        const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${h}`;
+        const logsInSlot = logsBySlot.get(key) || [];
         const healthyCount = logsInSlot.filter(l => HEALTHY.includes(l.status)).length;
         row.push({
-          date: start,
+          date: new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0),
           hour: h,
           total: logsInSlot.length,
           healthy: healthyCount,

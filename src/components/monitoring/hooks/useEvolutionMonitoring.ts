@@ -40,9 +40,8 @@ export function useEvolutionMonitoring() {
 
   useEffect(() => {
     const channel = supabase
-      .channel('monitoring-connections')
+      .channel('monitoring-status')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_connections' }, () => fetchData())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => fetchData())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [fetchData]);
