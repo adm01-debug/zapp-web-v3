@@ -212,10 +212,10 @@
   .dark {
     --background: 0 0% 0%; /* PRETO VIVO (OLED Black) */
     --foreground: 210 20% 98%;
-    --card: 0 0% 4%; /* Sutil distinção para profundidade */
+    --card: 0 0% 0%; /* Preto OLED puro */
     --card-foreground: 210 20% 98%;
-    --card-elevated: 0 0% 7%;
-    --popover: 0 0% 3%;
+    --card-elevated: 0 0% 3%;
+    --popover: 0 0% 0%; /* Preto OLED puro */
     --popover-foreground: 210 20% 98%;
     --primary: 221 95% 60%;
     --primary-foreground: 0 0% 100%;
@@ -228,8 +228,8 @@
     --accent-foreground: 221 100% 88%;
     --destructive: 0 95% 62%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 25% 22%;
-    --input: 222 22% 16%;
+    --border: 0 0% 12%; /* Borda sutil para OLED */
+    --input: 0 0% 10%;
     --ring: 221 95% 60%;
     --success: 142 90% 50%;
     --success-foreground: 0 0% 100%;
@@ -267,8 +267,8 @@
     --chat-bubble-sent-foreground: 0 0% 100%;
     --chat-bubble-received: 0 0% 7%; /* Ligeiramente mais claro que o fundo OLED */
     --chat-bubble-received-foreground: 0 0% 98%;
-    --chat-header: 0 0% 3%;
-    --chat-input-bg: 0 0% 2%;
+    --chat-header: 0 0% 0%;
+    --chat-input-bg: 0 0% 0%;
     --status-open: 221 95% 60%;
     --status-pending: 42 100% 60%;
     --status-resolved: 152 85% 50%;
