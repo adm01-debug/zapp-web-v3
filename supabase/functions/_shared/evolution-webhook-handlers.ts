@@ -14,11 +14,11 @@ export async function handleLogoutInstance(supabase: any, instance: string, data
     ?? null;
 
   const { data: prev } = await supabase.from('whatsapp_connections')
-    .select('id, status, phone_number').eq('instance_id', instance).maybeSingle();
+    .select('id, status, phone_number').eq('instance_name', instance).maybeSingle();
 
   await supabase.from('whatsapp_connections')
     .update({ status: 'logged_out', qr_code: null, updated_at: new Date().toISOString() })
-    .eq('instance_id', instance);
+    .eq('instance_name', instance);
 
   if (prev && prev.status !== 'logged_out') {
     const phone = prev.phone_number ? ` (${prev.phone_number})` : '';
@@ -105,11 +105,11 @@ export async function handleConnectionUpdate(supabase: any, instance: string, ba
     (baseData.status as string) === 'close' ? 'disconnected' : 'connecting';
 
   const { data: prevConn } = await supabase.from('whatsapp_connections')
-    .select('status, phone_number').eq('instance_id', instance).single();
+    .select('status, phone_number').eq('instance_name', instance).single();
 
   await supabase.from('whatsapp_connections')
     .update({ status, qr_code: null, updated_at: new Date().toISOString() })
-    .eq('instance_id', instance);
+    .eq('instance_name', instance);
 
   console.log(`Connection ${instance} status: ${status}`);
 
@@ -434,7 +434,7 @@ export async function handleChatsDelete(supabase: any, instance: string, data: u
 export async function handleApplicationStartup(supabase: any, instance: string) {
   console.log(`Application startup event from instance: ${instance}`);
   const { data: conn } = await supabase.from('whatsapp_connections')
-    .select('id, status').eq('instance_id', instance).maybeSingle();
+    .select('id, status').eq('instance_name', instance).maybeSingle();
   if (conn && conn.status === 'disconnected') {
     await supabase.from('whatsapp_connections')
       .update({ status: 'connecting', updated_at: new Date().toISOString() }).eq('id', conn.id);

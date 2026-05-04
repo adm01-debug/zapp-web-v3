@@ -140,7 +140,7 @@ serve(async (req) => {
       if (qrCode) {
         await supabase.from('whatsapp_connections')
           .update({ qr_code: qrCode, status: 'qr_pending', updated_at: new Date().toISOString() })
-          .eq('instance_id', instance);
+          .eq('instance_name', instance);
       }
     }
 
