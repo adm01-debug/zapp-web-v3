@@ -135,6 +135,9 @@ export function TeamChatInputArea({
           <div className="flex-1 min-w-0 relative">
             <MentionAutocomplete inputValue={text} cursorPosition={mentionCursorPos} onSelect={handleMentionSelect} onClose={closeMention} isOpen={mentionOpen} />
             <textarea ref={textareaRef} value={text}
+              aria-label="Campo de entrada de mensagem para chat interno"
+              aria-multiline="true"
+              tabIndex={0}
               onChange={(e) => { setText(e.target.value); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
               onKeyDown={handleKeyDown} onPaste={draft.handlePaste}
               onClick={(e) => { const t = e.target as HTMLTextAreaElement; checkForMention(t.value, t.selectionStart ?? 0); }}
