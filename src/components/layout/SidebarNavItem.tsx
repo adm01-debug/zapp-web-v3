@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Star } from 'lucide-react';
+import { useUserRole } from '@/features/auth';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover';
 
@@ -34,6 +35,12 @@ interface SidebarNavItemProps {
 }
 
 export const SidebarNavItem = React.memo(function SidebarNavItem({ item, currentView, onViewChange, badge, badgeVariant = 'destructive', badgeTitle, collapsed = true, onToggleFavorite, isFavorite }: SidebarNavItemProps) {
+  const { hasRole } = useUserRole();
+  
+  if (item.requiredRoles && !item.requiredRoles.some(role => hasRole(role))) {
+    return null;
+  }
+
   const Icon = item.icon;
   const isActive = currentView === item.id;
   const shortcut = item.shortcut || SHORTCUT_MAP[item.id];
