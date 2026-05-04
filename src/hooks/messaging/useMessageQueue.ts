@@ -109,7 +109,8 @@ export function useMessageQueue(instanceName: string = 'wpp2') {
       remote_jid,
       content,
       status: 'pending',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      retries: 0
     };
     
     queueRef.current.push(newMsg);
