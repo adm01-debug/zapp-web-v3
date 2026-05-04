@@ -101,19 +101,35 @@ export {
 
 // deno-lint-ignore no-explicit-any
 export async function handleConnectionUpdate(supabase: any, instance: string, baseData: Record<string, unknown>) {
-  const status = (baseData.status as string) === 'open' ? 'connected' :
-    (baseData.status as string) === 'close' ? 'disconnected' : 'connecting';
+  // Lê estado de várias chaves possíveis (Evolution varia entre status/state/connectionStatus,
+  // direto ou aninhado em .data). qrcode reset agora é responsabilidade da RPC central.
+  const evoState = (baseData.state ?? baseData.status ?? baseData.connectionStatus
+    ?? (baseData.data as Record<string,unknown>)?.state
+    ?? (baseData.data as Record<string,unknown>)?.status
+    ?? (baseData.data as Record<string,unknown>)?.connectionStatus) as string | undefined;
 
   const { data: prevConn } = await supabase.from('whatsapp_connections')
-    .select('status, phone_number').eq('instance_name', instance).single();
+    .select('status, phone_number').eq('instance_name', instance).maybeSingle();
 
-  await supabase.from('whatsapp_connections')
-    .update({ status, qr_code: null, updated_at: new Date().toISOString() })
-    .eq('instance_name', instance);
+  // Delega ao RPC autoritário público.fn_apply_connection_update (single-source-of-truth):
+  // ele faz mapping open→connected/connecting/close, popula instance_id/phone/owner_jid,
+  // ajusta health_status, e dispara trigger de history com source=webhook_push.
+  const event = { instance, data: { ...baseData, state: evoState } };
+  const { data: rpcRes, error: rpcErr } = await supabase.rpc('fn_apply_connection_update', { p_event: event });
+  if (rpcErr) {
+    console.error(`[connection.update] rpc_error instance=${instance} err=${rpcErr.message ?? rpcErr.code}`);
+  } else {
+    console.log(`[connection.update] instance=${instance} action=${(rpcRes as Record<string,unknown>)?.action} new_status=${(rpcRes as Record<string,unknown>)?.new_status}`);
+  }
 
-  console.log(`Connection ${instance} status: ${status}`);
+  // Reset QR sempre que recebermos uma transição não-pendente (open ou close).
+  if (evoState === 'open' || evoState === 'close') {
+    await supabase.from('whatsapp_connections').update({ qr_code: null }).eq('instance_name', instance);
+  }
 
-  if (status === 'disconnected' && prevConn?.status === 'connected') {
+  // Alertas warroom: olhar status do RPC retornado (autoritário) ao invés do baseData.
+  const newStatus = (rpcRes as Record<string,unknown>)?.new_status as string | undefined;
+  if (newStatus === 'disconnected' && prevConn?.status === 'connected') {
     const phone = prevConn.phone_number ? ` (${prevConn.phone_number})` : '';
     await supabase.from('warroom_alerts').insert({
       alert_type: 'critical',
@@ -123,7 +139,7 @@ export async function handleConnectionUpdate(supabase: any, instance: string, ba
     });
   }
 
-  if (status === 'connected' && prevConn?.status !== 'connected') {
+  if (newStatus === 'connected' && prevConn?.status !== 'connected') {
     await supabase.from('warroom_alerts').insert({
       alert_type: 'info',
       title: `🟢 Conexão ${instance} restaurada`,
