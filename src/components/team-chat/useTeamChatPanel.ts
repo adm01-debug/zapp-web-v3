@@ -7,6 +7,7 @@ import { useTeamMessages, useSendTeamMessage, useDeleteTeamMessage, useEditTeamM
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useDebouncedValue } from '@/hooks/useDebounce';
+import { usePerformanceMetrics } from '@/hooks/usePerformanceMetrics';
 
 const log = getLogger('useTeamChatPanel');
 
