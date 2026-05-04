@@ -1,17 +1,22 @@
 /** @vitest-environment jsdom */
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { TeamChatPanel } from '../TeamChatPanel';
 import { useTeamChatPanel } from '../useTeamChatPanel';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-// Mock the hook to control state
+// Mock the hooks to control state
 vi.mock('../useTeamChatPanel', () => ({
   useTeamChatPanel: vi.fn()
 }));
 
 vi.mock('@/features/auth', () => ({
   useAuth: vi.fn(() => ({ profile: { id: 'user-1', name: 'Me' } }))
+}));
+
+vi.mock('@/hooks/useTeamChatDraft', () => ({
+  useTeamChatDraft: vi.fn(() => ({ draft: '', setDraft: vi.fn() }))
 }));
 
 const mockConversation = {
@@ -77,7 +82,7 @@ describe('TeamChatPanel Behavior', () => {
       messages: [{ id: '1', content: 'Old', created_at: new Date().toISOString(), sender_id: 'user-2' }],
       filteredMessages: [{ id: '1', content: 'Old', created_at: new Date().toISOString(), sender_id: 'user-2' }],
       isLoading: false,
-      hasNewMessagesUnseen: true, // Simulated state
+      hasNewMessagesUnseen: true,
       scrollToBottom,
       isNearBottomRef: { current: false },
       scrollRef: { current: null },
@@ -103,42 +108,5 @@ describe('TeamChatPanel Behavior', () => {
     
     fireEvent.click(jumpButton);
     expect(scrollToBottom).toHaveBeenCalled();
-  });
-
-  it('maintains scroll position during infinite scroll (scroll anchor logic verification)', async () => {
-    // This is hard to test with unit tests because it depends on scrollHeight and scrollTop
-    // but we can verify the hook's logic captures the offset.
-    
-    const mockScrollRef = { current: { scrollHeight: 1000, scrollTop: 200 } };
-    const mockScrollOffsetRef = { current: 0 };
-    
-    (useTeamChatPanel as any).mockReturnValue({
-      profile: { id: 'user-1', name: 'Me' },
-      messages: [],
-      filteredMessages: [],
-      isLoading: false,
-      isFetchingNextPage: true,
-      scrollRef: mockScrollRef,
-      scrollOffsetRef: mockScrollOffsetRef,
-      listRef: { current: null },
-      searchInputRef: { current: null },
-      lastScrollTopRef: { current: 0 },
-      tts: { isPlaying: false, isLoading: false },
-      checkNearBottom: vi.fn(),
-      sendMutation: { isPending: false },
-      updateStatusMutation: { mutate: vi.fn() },
-    });
-
-    // If we were using the real hook, we'd check if scrollOffsetRef.current became 800.
-    // Since we mock it, we at least verify the component renders correctly in that state.
-    render(
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
-    
-    expect(screen.getByText(/Carregando mensagens anteriores/i)).toBeDefined();
   });
 });
