@@ -15,9 +15,26 @@ export interface PendingMessage {
 export function useMessageQueue(instanceName: string = 'wpp2') {
   const { sendTextMessage } = useEvolutionApi();
   const { toast } = useToast();
-  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem(`pending_msgs_${instanceName}`);
+    return saved ? JSON.parse(saved) : [];
+  });
   const queueRef = useRef<PendingMessage[]>([]);
   const isProcessingRef = useRef(false);
+
+  // Initialize queueRef from state on mount
+  useEffect(() => {
+    queueRef.current = [...pendingMessages];
+    if (pendingMessages.length > 0) {
+      processQueue();
+    }
+  }, []);
+
+  // Persist to localStorage
+  useEffect(() => {
+    localStorage.setItem(`pending_msgs_${instanceName}`, JSON.stringify(pendingMessages));
+  }, [pendingMessages, instanceName]);
 
   const processQueue = useCallback(async () => {
     if (isProcessingRef.current || queueRef.current.length === 0) return;
