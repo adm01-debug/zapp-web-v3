@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, render, screen } from '@testing-library/react';
+import React from 'react';
 import { useMessageQueue } from '../useMessageQueue';
 
 // Mock Evolution API
@@ -72,5 +73,29 @@ describe('useMessageQueue - Persistence', () => {
     const saved = JSON.parse(localStorage.getItem(localStorageKey) || '[]');
     expect(saved).toHaveLength(0);
     vi.useRealTimers();
+  });
+
+  it('deve retomar processamento da fila após refresh (recuperação do localStorage)', async () => {
+    const initialMsgs = [{
+      id: 'pending_recovery',
+      remote_jid: '5511999999999@s.whatsapp.net',
+      content: 'Mensagem para recuperar',
+      status: 'pending',
+      timestamp: Date.now(),
+      retries: 0
+    }];
+    localStorage.setItem(localStorageKey, JSON.stringify(initialMsgs));
+
+    // Render hook should trigger processQueue automatically on mount
+    renderHook(() => useMessageQueue(instanceName));
+
+    // Verify it called sendTextMessage
+    await vi.waitFor(() => {
+      expect(mockSendTextMessage).toHaveBeenCalledWith(
+        instanceName,
+        '5511999999999',
+        'Mensagem para recuperar'
+      );
+    });
   });
 });
