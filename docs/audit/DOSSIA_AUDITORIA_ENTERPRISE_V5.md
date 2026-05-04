@@ -16,13 +16,13 @@ Mapeamento detalhado de funcionalidades para arquivos e caminhos de implementaç
 | Módulo | Funcionalidade | Path no Repositório | Dependências Principais | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | 2026-05-04 22:31:06 | CI Audit (dev) | gpt-engineer-app[bot] | `ddf47fc3` | Sucesso |
-| **Inbox** | Virtualização de Chat | `src/components/team-chat/TeamChatPanel.tsx` | react-window, useTeamChat | ✅ Implementado |
-| **Inbox** | Filtro & Busca | `src/hooks/useTeamChat.ts` | Supabase JS | ✅ Implementado |
-| **CRM** | Gestão de Contatos | `src/components/contacts/ContactForm.tsx` | react-hook-form, zod | ✅ Implementado |
-| **Segurança** | MFA / Auth | `src/hooks/useMFA.ts` | Supabase Auth | ✅ Implementado |
-| **Segurança** | RLS & Policies | `supabase/migrations/` | PostgreSQL | ✅ Implementado |
-| **IA** | Proxy de IA / Fallback | `supabase/functions/evolution-api/` | Deno, OpenAI/Evolution | ✅ Implementado |
-| **Infra** | CI/CD Audit | `.github/workflows/ci.yml` | GitHub Actions, Scripts JS | ✅ Implementado |
+| **Inbox** | Virtualização de Chat | [`src/components/team-chat/TeamChatPanel.tsx`](src/components/team-chat/TeamChatPanel.tsx) | react-window, useTeamChat | ✅ Implementado |
+| **Inbox** | Filtro & Busca | [`src/hooks/useTeamChat.ts`](src/hooks/useTeamChat.ts) | Supabase JS | ✅ Implementado |
+| **CRM** | Gestão de Contatos | [`src/components/contacts/ContactForm.tsx`](src/components/contacts/ContactForm.tsx) | react-hook-form, zod | ✅ Implementado |
+| **Segurança** | MFA / Auth | [`src/hooks/useMFA.ts`](src/hooks/useMFA.ts) | Supabase Auth | ✅ Implementado |
+| **Segurança** | RLS & Policies | [`supabase/migrations/`](supabase/migrations/) | PostgreSQL | ✅ Implementado |
+| **IA** | Proxy de IA / Fallback | [`supabase/functions/evolution-api/`](supabase/functions/evolution-api/) | Deno, OpenAI/Evolution | ✅ Implementado |
+| **Infra** | CI/CD Audit | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | GitHub Actions, Scripts JS | ✅ Implementado |
 
 ---
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -49,14 +49,14 @@ Status atual do backlog técnico priorizado.
 Evidências rastreáveis para auditoria técnica.
 
 ### 5.1 Inbox & Performance
-- **Código**: `src/components/team-chat/TeamChatPanel.tsx`
+- **Código**: [`src/components/team-chat/TeamChatPanel.tsx`](src/components/team-chat/TeamChatPanel.tsx)
 - **Métrica**: Tempo de renderização inicial < 150ms para 5.000 mensagens.
 - **Teste**: `TeamChatPanel.test.tsx` (ID: TEST-IBX-01)
 - **Evidência**: `import { FixedSizeList as List } from 'react-window'` garante virtualização.
 
 ### 5.2 Segurança & RLS
 - **Query de Validação**: `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND rowsecurity = false;`
-- **Contrato Edge Function**: `supabase/functions/auth-email-hook/index.ts`
+- **Contrato Edge Function**: [`supabase/functions/auth-email-hook/index.ts`](supabase/functions/auth-email-hook/index.ts)
 - **Rota**: `/auth/v1/sso/saml/metadata`
 
 ---
@@ -66,6 +66,7 @@ Evidências rastreáveis para auditoria técnica.
 
 | Data/Hora (UTC) | Ação | Responsável | Commit Ref | Status |
 | :--- | :--- | :--- | :--- | :--- |
+| 2026-05-04 22:32:27 | CI Audit (dev) | gpt-engineer-app[bot] | [`5cc372aa`](https://github.com/user/repo/commit/5cc372aa4a5a51682608d271bfadd613537debc6) | Sucesso |
 | 2026-05-04 22:31:26 | CI Audit (dev) | gpt-engineer-app[bot] | `aae7212c` | Sucesso |
 | 2026-05-04 22:29:36 | CI Audit Generation | gpt-engineer-app[bot] | `5a0a2d2f` | Sucesso |
 
@@ -75,3 +76,12 @@ Evidências rastreáveis para auditoria técnica.
 - **Risco**: Dependência de APIs externas (Evolution API) pode impactar disponibilidade.
 - **Lacuna**: Cobertura de testes unitários em Edge Functions abaixo de 60%.
 - **Mitigação**: Implementação de Mock Server para testes de integração de backend.
+
+## 8. Relatório de Cobertura RLS
+| Tabela | RLS Ativado | Políticas (SELECT/INSERT/UPDATE) | Status |
+| :--- | :---: | :--- | :--- |
+| profiles | ✅ | Definidas (User-bound) | PASS |
+| messages | ✅ | Definidas (User-bound) | PASS |
+| contacts | ✅ | Definidas (User-bound) | PASS |
+| audit_logs | ✅ | Definidas (User-bound) | PASS |
+| webhooks | ✅ | Definidas (User-bound) | PASS |
