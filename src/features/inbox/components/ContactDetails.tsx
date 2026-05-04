@@ -106,9 +106,9 @@ export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
       transition={{ duration: 0.3, ease: 'easeOut' }} ref={panelRef} role="complementary" aria-label="Detalhes do contato"
       data-contact-details data-contact-id={contact.id}
       tabIndex={-1}
-      className="w-80 h-full min-h-0 shrink-0 bg-[#0b141a] dark:bg-[#0b141a] border-l border-white/10 flex flex-col overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40"
+      className="w-80 h-full min-h-0 shrink-0 bg-[#000000] dark:bg-[#000000] border-l border-white/10 flex flex-col overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40"
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0b141a] dark:bg-[#0b141a] shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#000000] dark:bg-[#000000] shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 rounded-full bg-primary" />
           <h3 className="font-semibold text-foreground text-sm">Detalhes do Contato</h3>
@@ -124,7 +124,7 @@ export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
         )}
       </AnimatePresence>
 
-      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto scrollbar-thin bg-[#0b141a] dark:bg-[#0b141a]">
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto scrollbar-thin bg-[#000000] dark:bg-[#000000]">
         <ContactHeaderSection
           contact={contact} enrichedData={enrichedData} conversation={conversation}
           onQuickAction={handleQuickAction} hasExpandedSections={accordionValue.length > 0}

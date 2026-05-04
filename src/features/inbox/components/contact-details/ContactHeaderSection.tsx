@@ -88,7 +88,7 @@ export function ContactHeaderSection({ contact, enrichedData, conversation, onQu
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="p-4 flex flex-col items-center text-center border-b border-white/10 bg-[#0b141a] dark:bg-[#0b141a]">
+        className="p-4 flex flex-col items-center text-center border-b border-white/10 bg-[#000000] dark:bg-[#000000]">
         {/* Avatar with engagement ring */}
         <div className="relative mb-3">
           <div className="relative inline-block">
@@ -122,10 +122,10 @@ export function ContactHeaderSection({ contact, enrichedData, conversation, onQu
                 <TooltipContent>Engajamento: {engagementScore >= 80 ? 'Alto' : engagementScore >= 50 ? 'Médio' : 'Baixo'} ({engagementScore}/100)</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            {channelEmoji && <span className="absolute -bottom-1 -right-1 text-lg bg-[#0b141a] rounded-full p-0.5 ring-2 ring-[#0b141a]">{channelEmoji}</span>}
+            {channelEmoji && <span className="absolute -bottom-1 -right-1 text-lg bg-[#000000] rounded-full p-0.5 ring-2 ring-[#000000]">{channelEmoji}</span>}
             {crmCompany?.logo_url && (
               <img src={crmCompany.logo_url} alt={crmCompany.nome_fantasia || ''}
-                className="absolute -top-1 -left-1 w-8 h-8 rounded-md object-contain bg-[#0b141a] border border-white/10 ring-2 ring-[#0b141a]" />
+                className="absolute -top-1 -left-1 w-8 h-8 rounded-md object-contain bg-[#000000] border border-white/10 ring-2 ring-[#000000]" />
             )}
           </div>
         </div>
