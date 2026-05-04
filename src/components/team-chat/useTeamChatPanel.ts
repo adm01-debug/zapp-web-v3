@@ -41,6 +41,7 @@ export function useTeamChatPanel(conversation: TeamConversation) {
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [replyTo, setReplyTo] = useState<TeamMessage | null>(null);
   const [showScrollDown, setShowScrollDown] = useState(false);
+  const [hasNewMessagesUnseen, setHasNewMessagesUnseen] = useState(false);
   const [showAddMembers, setShowAddMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<any>(null); // Reference to react-window List
@@ -68,9 +69,22 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
     isNearBottomRef.current = nearBottom;
     setShowScrollDown(!nearBottom);
+    if (nearBottom) setHasNewMessagesUnseen(false);
   }, []);
 
-  const scrollToBottom = useCallback(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), []);
+  const scrollToBottom = useCallback(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    setHasNewMessagesUnseen(false);
+  }, []);
+
+  // Monitor new messages from others to show indicator
+  useEffect(() => {
+    if (!messages.length || isNearBottomRef.current) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.sender_id !== profile?.id) {
+      setHasNewMessagesUnseen(true);
+    }
+  }, [messages.length, profile?.id]);
 
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
@@ -128,7 +142,7 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     profile, messages, isLoading, isMuted, filteredMessages: messages,
     text, setText, editingId, editText, setEditText,
     isRecordingAudio, setIsRecordingAudio, replyTo, setReplyTo,
-    showScrollDown, showAddMembers, setShowAddMembers,
+    showScrollDown, hasNewMessagesUnseen, showAddMembers, setShowAddMembers,
     showSearch, setShowSearch, searchQuery, setSearchQuery,
     scrollRef, listRef, isNearBottomRef, searchInputRef, lastScrollTopRef, scrollOffsetRef,
     tts, muteMutation, sendMutation, updateStatusMutation,

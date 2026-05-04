@@ -9,10 +9,19 @@ export function useUpdateTeamMessageStatus() {
     mutationFn: async ({ messageId, status, conversationId }: { messageId: string; status: 'delivered' | 'read'; conversationId: string }) => {
       const { error } = await supabase.from('team_messages').update({ status }).eq('id', messageId);
       if (error) throw error;
-      return { conversationId };
+      return { conversationId, messageId, status };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['team-messages', data.conversationId] });
+      queryClient.setQueriesData({ queryKey: ['team-messages', data.conversationId] }, (oldData: any) => {
+        if (!oldData || !oldData.pages) return oldData;
+        const newPages = oldData.pages.map((page: any) => ({
+          ...page,
+          messages: page.messages.map((m: any) => 
+            m.id === data.messageId ? { ...m, status: data.status } : m
+          )
+        }));
+        return { ...oldData, pages: newPages };
+      });
     },
   });
 }
@@ -34,8 +43,28 @@ export function useSendTeamMessage() {
       await supabase.from('team_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId);
       return data;
     },
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['team-messages', vars.conversationId] });
+    onSuccess: (data, vars) => {
+      // Manual cache update for new messages
+      queryClient.setQueriesData({ queryKey: ['team-messages', vars.conversationId] }, (oldData: any) => {
+        if (!oldData || !oldData.pages) return oldData;
+        const newPages = [...oldData.pages];
+        if (newPages.length > 0) {
+          // Add sender info manually if it's our own message
+          const msgWithSender = { 
+            ...data, 
+            sender: { 
+              id: profile?.id, 
+              name: profile?.name, 
+              avatar_url: profile?.avatar_url 
+            } 
+          };
+          newPages[0] = {
+            ...newPages[0],
+            messages: [...newPages[0].messages, msgWithSender]
+          };
+        }
+        return { ...oldData, pages: newPages };
+      });
       queryClient.invalidateQueries({ queryKey: ['team-conversations'] });
     },
     onError: () => { toast({ title: 'Erro ao enviar mensagem', variant: 'destructive' }); },
@@ -50,8 +79,15 @@ export function useDeleteTeamMessage() {
       if (error) throw error;
       return { conversationId };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['team-messages', data.conversationId] });
+    onSuccess: (data, vars) => {
+      queryClient.setQueriesData({ queryKey: ['team-messages', data.conversationId] }, (oldData: any) => {
+        if (!oldData || !oldData.pages) return oldData;
+        const newPages = oldData.pages.map((page: any) => ({
+          ...page,
+          messages: page.messages.filter((m: any) => m.id !== vars.messageId)
+        }));
+        return { ...oldData, pages: newPages };
+      });
       queryClient.invalidateQueries({ queryKey: ['team-conversations'] });
     },
     onError: () => { toast({ title: 'Erro ao excluir mensagem', variant: 'destructive' }); },
@@ -66,7 +102,18 @@ export function useEditTeamMessage() {
       if (error) throw error;
       return { conversationId };
     },
-    onSuccess: (data) => { queryClient.invalidateQueries({ queryKey: ['team-messages', data.conversationId] }); },
+    onSuccess: (data, vars) => {
+      queryClient.setQueriesData({ queryKey: ['team-messages', vars.conversationId] }, (oldData: any) => {
+        if (!oldData || !oldData.pages) return oldData;
+        const newPages = oldData.pages.map((page: any) => ({
+          ...page,
+          messages: page.messages.map((m: any) => 
+            m.id === vars.messageId ? { ...m, content: vars.content, is_edited: true } : m
+          )
+        }));
+        return { ...oldData, pages: newPages };
+      });
+    },
     onError: () => { toast({ title: 'Erro ao editar mensagem', variant: 'destructive' }); },
   });
 }

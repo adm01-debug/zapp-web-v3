@@ -4016,6 +4016,9 @@ export type Database = {
           name: string
           slug: string
           updated_at: string
+          whatsapp_api_key: string | null
+          whatsapp_instance_id: string | null
+          whatsapp_mode: string | null
         }
         Insert: {
           created_at?: string
@@ -4025,6 +4028,9 @@ export type Database = {
           name: string
           slug: string
           updated_at?: string
+          whatsapp_api_key?: string | null
+          whatsapp_instance_id?: string | null
+          whatsapp_mode?: string | null
         }
         Update: {
           created_at?: string
@@ -4034,6 +4040,9 @@ export type Database = {
           name?: string
           slug?: string
           updated_at?: string
+          whatsapp_api_key?: string | null
+          whatsapp_instance_id?: string | null
+          whatsapp_mode?: string | null
         }
         Relationships: []
       }
@@ -9793,6 +9802,9 @@ export type Database = {
           name: string | null
           type: string
           updated_at: string
+          whatsapp_api_key: string | null
+          whatsapp_instance_id: string | null
+          whatsapp_mode: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -9805,6 +9817,9 @@ export type Database = {
           name?: string | null
           type?: string
           updated_at?: string
+          whatsapp_api_key?: string | null
+          whatsapp_instance_id?: string | null
+          whatsapp_mode?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -9817,6 +9832,9 @@ export type Database = {
           name?: string | null
           type?: string
           updated_at?: string
+          whatsapp_api_key?: string | null
+          whatsapp_instance_id?: string | null
+          whatsapp_mode?: string | null
         }
         Relationships: [
           {

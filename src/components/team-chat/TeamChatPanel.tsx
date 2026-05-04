@@ -123,25 +123,37 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
-    // If we are loading previous messages (infinite scroll up) OR receiving live messages while scrolled up,
+    // If we are loading previous messages (infinite scroll up),
     // we capture the distance from the bottom to use as an anchor.
-    if (s.scrollRef.current && !s.isNearBottomRef.current) {
+    if (s.scrollRef.current && s.isFetchingNextPage) {
       s.scrollOffsetRef.current = s.scrollRef.current.scrollHeight - s.scrollRef.current.scrollTop;
     }
-  }, [s.isFetchingNextPage, s.filteredMessages.length]);
+  }, [s.isFetchingNextPage]);
+
+  // Handle incoming messages while reading old ones
+  useEffect(() => {
+    if (!s.filteredMessages.length) return;
+    
+    const lastMsg = s.filteredMessages[s.filteredMessages.length - 1];
+    const isNewMessageFromOthers = lastMsg.sender_id !== s.profile?.id;
+
+    if (isNewMessageFromOthers && !s.isNearBottomRef.current && s.scrollRef.current) {
+      // Don't auto-scroll, just keep the anchor to prevent jumping
+      s.scrollOffsetRef.current = s.scrollRef.current.scrollHeight - s.scrollRef.current.scrollTop;
+    }
+  }, [s.filteredMessages.length]);
 
   useEffect(() => {
     // Apply the scroll anchor position after messages update
     if (s.scrollOffsetRef.current > 0 && s.scrollRef.current) {
       const newScrollTop = s.scrollRef.current.scrollHeight - s.scrollOffsetRef.current;
-      // We don't want to adjust if the shift is negligible and not fetching next page
-      if (s.isFetchingNextPage || Math.abs(newScrollTop - s.scrollRef.current.scrollTop) > 5) {
+      if (Math.abs(newScrollTop - s.scrollRef.current.scrollTop) > 1) {
         s.scrollRef.current.scrollTop = newScrollTop;
       }
-      // Reset anchor if we are not fetching (it was a live message)
+      // Reset anchor if we are not fetching
       if (!s.isFetchingNextPage) s.scrollOffsetRef.current = 0;
     }
-  }, [s.filteredMessages.length]);
+  }, [s.filteredMessages.length, s.isFetchingNextPage]);
 
 
   useEffect(() => { if (s.showSearch) s.searchInputRef.current?.focus(); }, [s.showSearch]);
@@ -348,8 +360,25 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         </div>
       </div>
 
-
-      {s.showScrollDown && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10"><Button size="icon" variant="secondary" className="rounded-full shadow-lg h-8 w-8" onClick={s.scrollToBottom}><ArrowDown className="w-4 h-4" /></Button></div>}
+      <AnimatePresence>
+        {s.showScrollDown && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
+          >
+            {s.hasNewMessagesUnseen && (
+              <div className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md animate-bounce">
+                Novas mensagens
+              </div>
+            )}
+            <Button size="icon" variant="secondary" className="rounded-full shadow-lg h-9 w-9 border border-primary/20" onClick={s.scrollToBottom}>
+              <ArrowDown className="w-4 h-4" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isDeptMember ? (
         <TeamChatInputArea conversationId={conversation.id} text={s.text} setText={s.setText} replyTo={s.replyTo}
