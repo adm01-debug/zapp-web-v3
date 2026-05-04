@@ -118,7 +118,7 @@ export const connectionsNav: readonly NavItemConfig[] = [
 
 // ── System & Admin ────────────────────────────────────────
 export const systemNav: readonly NavItemConfig[] = [
-  { id: 'agents', icon: Phone, label: 'TEAMS' },
+  { id: 'agents-system', icon: Phone, label: 'TEAMS' },
   { id: 'agents-ops', icon: UsersRound, label: 'Atendentes Online', requiredRoles: ['supervisor'] },
   { id: 'security', icon: Shield, label: 'Segurança' },
   { id: 'privacy', icon: ShieldCheck, label: 'LGPD' },
