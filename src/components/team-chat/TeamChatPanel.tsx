@@ -183,14 +183,16 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
           <div className="text-center text-muted-foreground text-sm py-12">{s.searchQuery ? 'Nenhuma mensagem encontrada' : 'Envie a primeira mensagem!'}</div>
         ) : (
           <div className="h-full w-full">
-            <List
-              height={700}
-              itemCount={s.filteredMessages.length}
-              itemSize={90} 
-              width="100%"
-              className="scrollbar-none"
-              overscanCount={5}
-            >
+            <AutoSizer>
+              {({ height, width }) => (
+                <List
+                  height={height}
+                  itemCount={s.filteredMessages.length}
+                  itemSize={90} 
+                  width={width}
+                  className="scrollbar-none"
+                  overscanCount={5}
+                >
               {({ index, style }) => {
                 const msg = s.filteredMessages[index];
                 const showDate = dateFirstIndexes.has(index);
