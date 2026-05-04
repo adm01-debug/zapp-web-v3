@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { TeamChatPanel } from '../TeamChatPanel';
 import { useTeamChatPanel } from '../useTeamChatPanel';
