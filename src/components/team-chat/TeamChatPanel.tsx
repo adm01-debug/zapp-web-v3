@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef, memo } from 'react';
+// @ts-ignore
 import { FixedSizeList as List } from 'react-window';
 import { useAuth } from '@/features/auth';
 import { TeamConversation } from '@/hooks/useTeamChat';
