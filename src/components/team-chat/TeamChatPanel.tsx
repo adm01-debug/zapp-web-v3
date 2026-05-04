@@ -224,12 +224,13 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             <AutoSizer>
               {({ height, width }: { height: number, width: number }) => (
                 <List
+                  ref={s.listRef}
                   height={height}
                   itemCount={s.filteredMessages.length}
                   itemSize={90} 
                   width={width}
                   className="scrollbar-none"
-                  overscanCount={5}
+                  overscanCount={10}
                 >
               {({ index, style }: { index: number, style: React.CSSProperties }) => {
                 const msg = s.filteredMessages[index];
