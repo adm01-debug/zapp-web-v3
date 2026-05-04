@@ -8,10 +8,10 @@ const inputVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary",
-        glow: "border-input focus-visible:outline-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary focus-visible:shadow-[0_0_10px_hsl(var(--primary)/0.2)]",
-        neon: "border-secondary/40 focus-visible:outline-none focus-visible:border-secondary focus-visible:ring-1 focus-visible:ring-secondary focus-visible:shadow-[0_0_15px_hsl(var(--secondary)/0.3)]",
-        ghost: "border-transparent bg-muted/20 focus-visible:outline-none focus-visible:bg-background focus-visible:border-primary",
+        default: "border-white/10 bg-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary/50",
+        glow: "border-white/10 bg-black focus-visible:outline-none focus-visible:border-primary/50 focus-visible:ring-1 focus-visible:ring-primary/30",
+        neon: "border-secondary/20 bg-black focus-visible:outline-none focus-visible:border-secondary/50 focus-visible:ring-1 focus-visible:ring-secondary/30",
+        ghost: "border-transparent bg-white/5 focus-visible:outline-none focus-visible:bg-black focus-visible:border-primary/50",
         underline: "border-0 border-b-2 border-input rounded-none px-0 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0",
       },
       inputSize: {
