@@ -9,6 +9,7 @@ import { sanitizeText } from '@/lib/sanitize';
 import { useToast } from '@/hooks/use-toast';
 import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
+import { eventBus } from '@/lib/eventBus';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,14 @@ export function useMessages(remoteJid: string | null) {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [remoteJid]);
+
+  // Listen for reconnection to refresh
+  useEffect(() => {
+    const unsub = eventBus.on('connection:recovered', () => {
+      if (remoteJid) loadMessages(remoteJid);
+    });
+    return unsub;
+  }, [remoteJid, loadMessages]);
 
   // ── Actions ───────────────────────────────────────────────────────────
 
