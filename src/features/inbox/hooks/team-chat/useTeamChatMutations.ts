@@ -12,7 +12,17 @@ export function useUpdateTeamMessageStatus() {
       return { conversationId };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['team-messages', data.conversationId] });
+      // Manual cache update for status
+      queryClient.setQueriesData({ queryKey: ['team-messages', data.conversationId] }, (oldData: any) => {
+        if (!oldData || !oldData.pages) return oldData;
+        const newPages = oldData.pages.map((page: any) => ({
+          ...page,
+          messages: page.messages.map((m: any) => 
+            m.id === (arguments[0] as any).messageId ? { ...m, status: (arguments[0] as any).status } : m
+          )
+        }));
+        return { ...oldData, pages: newPages };
+      });
     },
   });
 }
