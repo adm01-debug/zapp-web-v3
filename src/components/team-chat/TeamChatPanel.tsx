@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
 // @ts-ignore
-import { VariableSizeList as List } from 'react-window';
+import { List } from 'react-window';
 // @ts-ignore
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { useAuth } from '@/features/auth';
@@ -235,15 +235,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             <AutoSizer>
               {({ height, width }: { height: number, width: number }) => (
                 <List
-                  ref={s.listRef}
+                  listRef={s.listRef}
                   height={height}
-                  itemCount={s.filteredMessages.length}
-                  itemSize={(index: number) => itemHeights.current[index] || 100} 
+                  rowCount={s.filteredMessages.length}
+                  rowHeight={100}
                   width={width}
                   className="scrollbar-none"
                   overscanCount={10}
-                >
-              {({ index, style }: { index: number, style: React.CSSProperties }) => {
+                  rowComponent={({ index, style }: { index: number, style: React.CSSProperties }) => {
                 const msg = s.filteredMessages[index];
                 const showDate = dateFirstIndexes.has(index);
                 const isMine = msg.sender_id === s.profile?.id;
@@ -343,9 +342,9 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                       </ContextMenuContent>
                     </ContextMenu>
                   </div>
-                );
-              }}
-            </List>
+                    );
+                  }}
+                />
               )}
             </AutoSizer>
             </div>
