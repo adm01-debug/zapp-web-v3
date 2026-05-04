@@ -71,14 +71,13 @@ describe('useMediaUploadQueue', () => {
 
   it('reenvio manual após falha funciona', async () => {
     uploadMock.mockResolvedValueOnce({ data: null, error: { message: 'fail' } })
-      .mockResolvedValueOnce({ data: null, error: { message: 'fail' } })
       .mockResolvedValueOnce({ data: { path: 'ok' }, error: null });
     const { result } = renderHook(() => useMediaUploadQueue('contact-1'));
     await act(async () => {
       await result.current.addToQueue(file('a.png'), { maxRetries: 0 });
     });
     await waitFor(() => expect(result.current.queue[0].status).toBe('failed'));
-    act(() => result.current.retryUpload(result.current.queue[0].id));
+    await act(async () => { result.current.retryUpload(result.current.queue[0].id); });
     await waitFor(() => expect(result.current.queue[0].status).toBe('uploaded'), { timeout: 8000 });
   }, 15000);
 
