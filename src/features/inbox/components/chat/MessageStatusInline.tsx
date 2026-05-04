@@ -14,6 +14,7 @@
  *    the "2/3" badge survives navigation.
  */
 import { memo, useEffect, useRef } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { log } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
