@@ -113,10 +113,11 @@ const log = getLogger('App');
 function AppContent() {
   const [deferredReady, setDeferredReady] = useState(false);
 
-  // Defer non-critical features to after first paint
   useEffect(() => {
     const id = requestAnimationFrame(() => {
-      setTimeout(() => setDeferredReady(true), 800);
+      // Reduced delay to show content faster
+      const timer = setTimeout(() => setDeferredReady(true), 100);
+      return () => clearTimeout(timer);
     });
     return () => cancelAnimationFrame(id);
   }, []);
@@ -154,29 +155,93 @@ function AppContent() {
       <LiveRegion />
       <GlobalKeyboardProvider>
         {deferredReady && <DeferredProviders />}
-        {deferredReady && <Suspense fallback={null}><DeferredHooks /></Suspense>}
+        {deferredReady && (
+          <Suspense fallback={null}>
+            <DeferredHooks />
+          </Suspense>
+        )}
         <Toaster />
         <Sonner />
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/auth/callback" element={<SSOCallback />} />
-            <Route path="/2fa" element={<TwoFactorAuth />} />
-            <Route path="/install" element={<Install />} />
-            <Route path="/chat-popup/:contactId" element={<ProtectedRoute><ChatPopup /></ProtectedRoute>} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/queue/:id" element={<ProtectedRoute><QueueDetails /></ProtectedRoute>} />
-            <Route path="/queues/comparison" element={<ProtectedRoute><QueuesComparison /></ProtectedRoute>} />
-            <Route path="/sla" element={<ProtectedRoute><SLADashboard /></ProtectedRoute>} />
-            <Route path="/sla/history" element={<ProtectedRoute><SLAHistory /></ProtectedRoute>} />
-            <Route path="/admin/roles" element={<ProtectedRoute requiredRoles={['admin']}><RolesPage /></ProtectedRoute>} />
-            <Route path="/admin/rate-limit" element={<ProtectedRoute requiredRoles={['admin']}><RateLimitDashboard /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+        <ErrorBoundary
+          fallback={<div className="p-4 text-center">Erro ao carregar roteamento</div>}
+        >
+          <Suspense fallback={<RouteLoadingFallback />}>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/auth/callback" element={<SSOCallback />} />
+              <Route path="/2fa" element={<TwoFactorAuth />} />
+              <Route path="/install" element={<Install />} />
+              <Route
+                path="/chat-popup/:contactId"
+                element={
+                  <ProtectedRoute>
+                    <ChatPopup />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/queue/:id"
+                element={
+                  <ProtectedRoute>
+                    <QueueDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/queues/comparison"
+                element={
+                  <ProtectedRoute>
+                    <QueuesComparison />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sla"
+                element={
+                  <ProtectedRoute>
+                    <SLADashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sla/history"
+                element={
+                  <ProtectedRoute>
+                    <SLAHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/roles"
+                element={
+                  <ProtectedRoute requiredRoles={["admin"]}>
+                    <RolesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/rate-limit"
+                element={
+                  <ProtectedRoute requiredRoles={["admin"]}>
+                    <RateLimitDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </GlobalKeyboardProvider>
     </BrowserRouter>
   );
