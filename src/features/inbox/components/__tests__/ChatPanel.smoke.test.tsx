@@ -28,7 +28,7 @@ vi.mock('@/hooks/useAutomations', () => ({ useAutomations: () => ({}) }));
 
 const mockConversation: Conversation = {
   id: 'conv-1',
-  contact: { id: 'contact-1', name: 'John Doe', phone: '123456789', avatar: '' },
+  contact: { id: 'contact-1', name: 'John Doe', phone: '123456789', avatar: '', tags: [], createdAt: new Date() },
   status: 'open',
   updatedAt: new Date(),
 };
