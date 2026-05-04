@@ -51,48 +51,10 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    VitePWA({
-      registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "apple-touch-icon.png"],
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        navigateFallbackDenylist: [/^\/~oauth/],
-        skipWaiting: true,
-        clientsClaim: true,
-        cleanupOutdatedCaches: true,
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "google-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "gstatic-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          // v6: cache agressivo dos próprios assets versionados
-          {
-            urlPattern: /\/assets\/.*\.(js|css|woff2?|png|svg|webp|avif)$/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "static-assets-cache",
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
-      },
-      manifest: false,
-    }),
+    // VitePWA disabled temporarily to debug 412 error
+    // VitePWA({
+    //   ...
+    // }),
     compression({ algorithm: "gzip", exclude: [/\.(br|gz)$/], threshold: 1024 }),
     compression({ algorithm: "brotliCompress", exclude: [/\.(br|gz)$/], threshold: 1024 }),
     stripLazyModulepreloadsPlugin,
