@@ -1,6 +1,19 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
 
+// Fix for localStorage in jsdom environment for Supabase client
+if (typeof window !== 'undefined' && !window.localStorage) {
+  const mockStorage = {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+    length: 0,
+    key: vi.fn(),
+  };
+  Object.defineProperty(window, 'localStorage', { value: mockStorage });
+}
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string) => ({
