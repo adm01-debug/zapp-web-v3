@@ -236,6 +236,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                 listRef={s.listRef}
                 rowCount={s.filteredMessages.length}
                 rowHeight={100}
+                rowProps={{}}
                 className="scrollbar-none absolute inset-0"
                 overscanCount={10}
                 rowComponent={({ index, style }: { index: number, style: React.CSSProperties }) => {
