@@ -74,7 +74,7 @@ describe('externalProxy', () => {
     });
     global.fetch = mockFetch;
 
-    await expect(queryExternalProxy({ table: 'test', action: 'select', signal: controller.signal }))
+    await expect(queryExternalProxy({ table: 'test', signal: controller.signal }))
       .rejects.toThrow('The user aborted a request.');
   });
 });
