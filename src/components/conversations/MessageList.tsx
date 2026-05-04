@@ -186,6 +186,13 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid, searchTerm 
                   ? "bg-primary text-primary-foreground rounded-tr-none border-primary/20" 
                   : "bg-background text-foreground rounded-tl-none border-border"
               )}>
+                {/* Quoted Message Preview */}
+                {msg.quoted_message_id && (
+                  <div className="mb-1 p-2 rounded bg-black/5 dark:bg-white/5 border-l-4 border-l-primary/50 text-[11px] opacity-80">
+                    {messages.find(m => m.message_id === msg.quoted_message_id)?.content || 'Mensagem citada'}
+                  </div>
+                )}
+
                 {/* Message Content */}
                 <div className="text-sm break-words whitespace-pre-wrap leading-relaxed">
                   {msg.content}
