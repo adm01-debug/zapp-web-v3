@@ -248,13 +248,6 @@ export function useRealtimeInbox() {
     await Promise.all([refetch(), refetchSelectedMessages()]);
   }, [refetch, refetchSelectedMessages]);
 
-  const handleSendMessage = useCallback(async (content: string, attachments?: File[], onProgress?: (p: number) => void) => {
-    if (!selectedContactId) return;
-    
-    // Adiciona à fila para garantir ordem e evitar duplicidades
-    messageQueue.addToQueue(selectedContactId, content, attachments, onProgress);
-  }, [selectedContactId, messageQueue]);
-
   // Função interna que processa cada item da fila
   const processQueuedMessage = useCallback(async (item: any) => {
     const { contactId, content, attachments, onProgress } = item;
@@ -295,7 +288,6 @@ export function useRealtimeInbox() {
       return;
     }
     
-    // Modo legado (local)
     try {
       if (attachments && attachments.length > 0) {
         for (const file of attachments) {
@@ -312,6 +304,11 @@ export function useRealtimeInbox() {
   }, [sendMessage, refreshActiveConversation, externalMsgs, externalData, resolvedSelectedConversation]);
 
   const messageQueue = useMessageQueue(processQueuedMessage);
+
+  const handleSendMessage = useCallback(async (content: string, attachments?: File[], onProgress?: (p: number) => void) => {
+    if (!selectedContactId) return;
+    messageQueue.addToQueue(selectedContactId, content, attachments, onProgress);
+  }, [selectedContactId, messageQueue]);
 
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
