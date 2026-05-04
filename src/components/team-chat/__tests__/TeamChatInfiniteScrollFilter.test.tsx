@@ -26,8 +26,11 @@ vi.mock('../useTeamChatPanel', () => ({
     hasNextPage: false,
     isFetchingNextPage: false,
     fetchNextPage: vi.fn(),
-    updateStatusMutation: { mutate: vi.fn(), isPending: false },
-    muteMutation: { mutate: vi.fn(), isPending: false },
+    updateStatusMutation: { mutate: vi.fn(), isPending: false, isLoading: false },
+    muteMutation: { mutate: vi.fn(), isPending: false, isLoading: false },
+    sendMutation: { mutate: vi.fn(), isPending: false, isLoading: false },
+    deleteMutation: { mutate: vi.fn(), isPending: false, isLoading: false },
+    editMutation: { mutate: vi.fn(), isPending: false, isLoading: false },
     tts: { voiceId: '1', speed: 1, setVoiceId: vi.fn(), setSpeed: vi.fn() }
   }))
 }));
