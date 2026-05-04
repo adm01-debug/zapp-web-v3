@@ -125,8 +125,8 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
         s.updateStatusMutation.mutate({ messageId: id, status: 'read', conversationId: conversation.id });
       });
     }
+    // reset cache if needed (handled by dynamicRowHeight key mostly)
     itemHeights.current = {};
-    s.listRef.current?.resetAfterIndex(0);
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
@@ -134,7 +134,7 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
     if (s.isNearBottomRef.current && s.listRef.current) {
       const lastIndex = s.filteredMessages.length - 1;
       if (lastIndex >= 0) {
-        s.listRef.current.scrollToItem(lastIndex, 'end');
+        s.listRef.current.scrollToRow({ index: lastIndex, align: 'end' });
       }
     }
   }, [s.filteredMessages.length, conversation.id]);
