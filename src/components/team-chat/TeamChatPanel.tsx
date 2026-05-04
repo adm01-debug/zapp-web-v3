@@ -235,14 +235,14 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
             <AutoSizer>
               {({ height, width }: { height: number, width: number }) => (
                 <List
-                  listRef={s.listRef}
+                  ref={s.listRef}
                   height={height}
-                  rowCount={s.filteredMessages.length}
-                  rowHeight={100} 
-                  defaultWidth={width}
+                  itemCount={s.filteredMessages.length}
+                  itemSize={100}
+                  width={width}
                   className="scrollbar-none"
                   overscanCount={10}
-                  rowComponent={({ index, style }: { index: number, style: React.CSSProperties }) => {
+                >
 
                 const msg = s.filteredMessages[index];
                 const showDate = dateFirstIndexes.has(index);
