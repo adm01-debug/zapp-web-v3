@@ -243,6 +243,26 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
           <div className="text-center text-muted-foreground text-sm py-12">{s.searchQuery ? 'Nenhuma mensagem encontrada' : 'Envie a primeira mensagem!'}</div>
         ) : (
           <div className="h-full w-full flex flex-col relative">
+            <AnimatePresence>
+              {s.hasNewMessagesUnseen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: 20 }}
+                  className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
+                >
+                  <Button 
+                    size="sm" 
+                    className="rounded-full shadow-lg gap-2 bg-primary hover:bg-primary/90 text-primary-foreground" 
+                    onClick={s.scrollToBottom}
+                  >
+                    <ArrowDown className="w-4 h-4 animate-bounce" />
+                    Pular para mensagens novas
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {s.isFetchingNextPage && <div className="p-2 text-center text-xs text-muted-foreground animate-pulse">Carregando mensagens anteriores...</div>}
             <div className="flex-1 relative">
               <List
