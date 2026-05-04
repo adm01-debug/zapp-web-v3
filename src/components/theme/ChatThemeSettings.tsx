@@ -1,14 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Palette, Zap, Type, Maximize } from 'lucide-react';
+import { Palette, Zap, Type } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const ChatThemeSettings = () => {
   const { theme, setTheme } = useTheme();
+  const [neonIntensity, setNeonIntensity] = useState(70);
+  const [fontSize, setFontSize] = useState(14);
+  const [roundedBubbles, setRoundedBubbles] = useState(true);
+
+  // Sync with local preferences or global CSS
+  useEffect(() => {
+    document.documentElement.style.setProperty('--neon-glow-intensity', `${neonIntensity / 100}`);
+    document.documentElement.style.setProperty('--chat-font-size', `${fontSize}px`);
+    document.documentElement.style.setProperty('--chat-bubble-radius', roundedBubbles ? '20px' : '4px');
+  }, [neonIntensity, fontSize, roundedBubbles]);
   
   return (
     <Card className="border-secondary/20 bg-card/50 backdrop-blur-md">
