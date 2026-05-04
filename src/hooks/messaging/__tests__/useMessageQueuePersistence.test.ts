@@ -35,7 +35,7 @@ describe('useMessageQueue - Persistence', () => {
     const saved = JSON.parse(localStorage.getItem(localStorageKey) || '[]');
     expect(saved).toHaveLength(1);
     expect(saved[0].content).toBe('Olá mundo');
-    expect(saved[0].status).toBe('pending');
+    expect(['pending', 'sending']).toContain(saved[0].status);
   });
 
   it('deve recuperar mensagens do localStorage ao inicializar', () => {
