@@ -3,13 +3,13 @@ import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const skeletonVariants = cva(
-  "rounded-md bg-muted relative overflow-hidden",
+  "rounded-md bg-white/[0.03] relative overflow-hidden",
   {
     variants: {
       variant: {
         pulse: "animate-pulse-soft",
-        shimmer: "skeleton-shimmer",
-        wave: "skeleton-wave",
+        shimmer: "bg-white/[0.03] before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/[0.05] before:to-transparent",
+        wave: "bg-white/[0.03] after:absolute after:inset-0 after:-translate-x-full after:animate-shimmer after:bg-gradient-to-r after:from-transparent after:via-white/[0.02] after:to-transparent",
         subtle: "animate-pulse opacity-60",
       },
       // More subtle and slower animation speeds
