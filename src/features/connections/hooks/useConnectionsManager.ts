@@ -98,7 +98,11 @@ export function useConnectionsManager() {
       return;
     }
     if (!connection.instance_id) {
-      toast({ title: 'Erro', description: 'Instância não configurada.', variant: 'destructive' });
+      toast({
+        title: 'Aguardando sincronização',
+        description: `A instância "${connection.name || connection.phone_number || 'WhatsApp'}" ainda não recebeu o ID da Evolution. Tente novamente em alguns segundos.`,
+        variant: 'destructive',
+      });
       return;
     }
     setQrCodeDialog({

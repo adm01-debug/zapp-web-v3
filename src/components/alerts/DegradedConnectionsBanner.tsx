@@ -5,7 +5,9 @@ import { AlertTriangle, ArrowRight, X } from 'lucide-react';
 
 interface DegradedInstance {
   id: string;
-  instance_id: string;
+  name: string | null;
+  instance_name: string | null;
+  instance_id: string | null;
   health_status: string | null;
   health_response_ms: number | null;
   last_health_check: string | null;
@@ -31,7 +33,7 @@ export function DegradedConnectionsBanner({ onNavigate, recentWindowMs = 10 * 60
     const since = new Date(Date.now() - recentWindowMs).toISOString();
     const { data, error } = await supabase
       .from('whatsapp_connections')
-      .select('id, instance_id, health_status, health_response_ms, last_health_check, degraded_at')
+      .select('id, name, instance_id, instance_name, health_status, health_response_ms, last_health_check, degraded_at')
       .eq('health_status', 'degraded')
       .gte('last_health_check', since);
     setDegraded((data as DegradedInstance[]) ?? []);
@@ -71,7 +73,7 @@ export function DegradedConnectionsBanner({ onNavigate, recentWindowMs = 10 * 60
 
   const firstDegradedAt = formatDegradedAt(degraded[0]?.degraded_at ?? null);
   const label = degraded.length === 1
-    ? `Conexão "${degraded[0].instance_id}" rebaixada${firstDegradedAt ? ` em ${firstDegradedAt}` : ''}`
+    ? `Conexão "${degraded[0].name || degraded[0].instance_name || degraded[0].instance_id || 'sem nome'}" rebaixada${firstDegradedAt ? ` em ${firstDegradedAt}` : ''}`
     : `${degraded.length} conexões com desempenho degradado`;
 
   return (
