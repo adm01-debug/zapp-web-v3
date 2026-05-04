@@ -43,8 +43,28 @@ export function useSendTeamMessage() {
       await supabase.from('team_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId);
       return data;
     },
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['team-messages', vars.conversationId] });
+    onSuccess: (data, vars) => {
+      // Manual cache update for new messages
+      queryClient.setQueriesData({ queryKey: ['team-messages', vars.conversationId] }, (oldData: any) => {
+        if (!oldData || !oldData.pages) return oldData;
+        const newPages = [...oldData.pages];
+        if (newPages.length > 0) {
+          // Add sender info manually if it's our own message
+          const msgWithSender = { 
+            ...data, 
+            sender: { 
+              id: profile?.id, 
+              name: profile?.name, 
+              avatar_url: profile?.avatar_url 
+            } 
+          };
+          newPages[0] = {
+            ...newPages[0],
+            messages: [...newPages[0].messages, msgWithSender]
+          };
+        }
+        return { ...oldData, pages: newPages };
+      });
       queryClient.invalidateQueries({ queryKey: ['team-conversations'] });
     },
     onError: () => { toast({ title: 'Erro ao enviar mensagem', variant: 'destructive' }); },
