@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Users, User, Building2, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useMemo, forwardRef, useEffect, useRef } from 'react';
+import { useState, useMemo, forwardRef, useEffect, useRef, useCallback } from 'react';
+import { useDebouncedValue } from '@/hooks/useDebounce';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,6 +31,8 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
 
   const isAdmin = profile?.role === 'admin';
 
+  const debouncedSearch = useDebouncedValue(search, 300);
+
   const filtered = useMemo(() => {
     let filteredList = conversations;
     
@@ -37,14 +40,14 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
       filteredList = filteredList.filter(c => c.type === filterType);
     }
     
-    if (!search.trim()) return filteredList;
+    if (!debouncedSearch.trim()) return filteredList;
     
-    const q = search.toLowerCase();
+    const q = debouncedSearch.toLowerCase();
     return filteredList.filter(c =>
       c.name?.toLowerCase().includes(q) ||
       c.last_message?.content.toLowerCase().includes(q)
     );
-  }, [conversations, search, filterType]);
+  }, [conversations, debouncedSearch, filterType]);
 
   // Keyboard shortcuts
   useEffect(() => {
