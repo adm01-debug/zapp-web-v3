@@ -37,11 +37,13 @@ export function ContactBulkTagDialog({
   }, [allTags, newTag, search]);
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => {
-      const next = new Set(prev);
-      next.has(tag) ? next.delete(tag) : next.add(tag);
-      return next;
-    });
+    const next = new Set(selectedTags);
+    if (next.has(tag)) {
+      next.delete(tag);
+    } else {
+      next.add(tag);
+    }
+    setSelectedTags(next);
   };
 
   const addNewTag = () => {
