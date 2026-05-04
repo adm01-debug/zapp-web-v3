@@ -243,7 +243,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                   className="scrollbar-none"
                   overscanCount={10}
                 >
-
+                  {({ index, style }: { index: number, style: React.CSSProperties }) => {
                 const msg = s.filteredMessages[index];
                 const showDate = dateFirstIndexes.has(index);
                 const isMine = msg.sender_id === s.profile?.id;
