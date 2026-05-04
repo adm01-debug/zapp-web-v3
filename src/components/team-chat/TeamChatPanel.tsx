@@ -126,7 +126,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         )}
       </AnimatePresence>
 
-      <div ref={s.scrollRef} className="flex-1 bg-background" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
+      <div className="flex-1 relative bg-background min-h-0">
+        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto" onScroll={s.checkNearBottom} role="log" aria-label="Mensagens da conversa" aria-live="polite">
         {!isDeptMember ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -257,6 +258,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
           </div>
         )}
       </div>
+    </div>
 
       {s.showScrollDown && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10"><Button size="icon" variant="secondary" className="rounded-full shadow-lg h-8 w-8" onClick={s.scrollToBottom}><ArrowDown className="w-4 h-4" /></Button></div>}
 
