@@ -210,13 +210,13 @@
 
   /* ===== DARK MODE - Vivid Corporate Blue (sem neblina) ===== */
   .dark {
-    --background: 222 35% 4%;
-    --foreground: 0 0% 98%;
-    --card: 222 28% 10%;
-    --card-foreground: 0 0% 98%;
-    --card-elevated: 222 28% 14%;
-    --popover: 222 30% 9%;
-    --popover-foreground: 0 0% 98%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 222 30% 6%;
+    --card-foreground: 0 0% 100%;
+    --card-elevated: 222 30% 10%;
+    --popover: 222 30% 5%;
+    --popover-foreground: 0 0% 100%;
     --primary: 221 95% 60%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 225 100% 65%;
@@ -255,8 +255,8 @@
     --away: 42 100% 60%;
     --offline: 0 0% 45%;
     --unread: 0 95% 62%;
-    --sidebar-background: 222 32% 8%;
-    --sidebar-foreground: 0 0% 98%;
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 221 95% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 221 75% 26%;
@@ -281,7 +281,7 @@
     --gradient-success: linear-gradient(135deg, hsl(152 85% 50%), hsl(165 80% 55%));
     --gradient-xp: linear-gradient(90deg, hsl(221 95% 58%), hsl(230 95% 62%));
     --gradient-gold: linear-gradient(135deg, hsl(42 100% 60%), hsl(35 100% 55%));
-    --gradient-surface: linear-gradient(180deg, hsl(222 28% 10%), hsl(222 32% 6%));
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 0%), hsl(0 0% 0%));
     --gradient-divider: linear-gradient(90deg, transparent, hsl(221 80% 45%), transparent);
     --gradient-vibrant: linear-gradient(135deg, hsl(221 95% 58%), hsl(205 100% 62%), hsl(230 95% 62%));
     --gradient-purple-green: linear-gradient(135deg, hsl(221 95% 58%), hsl(152 85% 50%));
