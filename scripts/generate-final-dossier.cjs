@@ -1,4 +1,5 @@
 const { jsPDF } = require("jspdf");
+const autoTable = require("jspdf-autotable");
 const fs = require("fs");
 const path = require("path");
 
@@ -14,78 +15,106 @@ function markdownToPdf(inputPath, outputPath) {
   const content = fs.readFileSync(inputPath, "utf8");
   const doc = new jsPDF();
   
-  // Custom layout settings
   const margin = 14;
   const pageWidth = 210;
   const maxLineWidth = pageWidth - (margin * 2);
   let y = 20;
 
-  // Title
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(24);
+  doc.setFontSize(22);
   doc.setTextColor(44, 62, 80);
-  doc.text("Compliance & Audit Report", margin, y);
+  doc.text("Relatório de Auditoria Enterprise", margin, y);
   y += 10;
   
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(127, 140, 141);
-  doc.text(`Version: V6 | Generated: ${new Date().toISOString()}`, margin, y);
+  doc.text(`Versão: Final | Gerado em: ${new Date().toLocaleString('pt-BR')}`, margin, y);
   y += 15;
 
   const lines = content.split('\n');
-  
-  lines.forEach(line => {
-    if (y > 270) {
+  let tableData = [];
+  let inTable = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+
+    if (y > 275) {
       doc.addPage();
       y = 20;
     }
 
+    if (line.startsWith('|')) {
+      if (!inTable) {
+        inTable = true;
+        tableData = [];
+      }
+      
+      if (line.includes(':---') || line.includes('---:')) continue;
+      
+      const cleanRows = line.split('|').map(c => c.trim()).filter((c, idx, arr) => {
+          if (idx === 0 && c === '') return false;
+          if (idx === arr.length - 1 && c === '') return false;
+          return true;
+      });
+
+      if (cleanRows.length > 0) tableData.push(cleanRows);
+      continue;
+    } else if (inTable) {
+      inTable = false;
+      if (tableData.length > 0) {
+        // Try both ways to handle jspdf-autotable's weirdness in CJS
+        const at = (autoTable.default || autoTable);
+        at(doc, {
+          startY: y,
+          head: [tableData[0]],
+          body: tableData.slice(1),
+          theme: 'striped',
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [41, 128, 185] },
+          margin: { left: margin, right: margin }
+        });
+        y = doc.lastAutoTable.finalY + 10;
+      }
+    }
+
     if (line.startsWith('# ')) {
-      y += 10;
+      y += 5;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(20);
+      doc.setFontSize(18);
       doc.setTextColor(41, 128, 185);
       doc.text(line.replace('# ', ''), margin, y);
-      y += 10;
+      y += 12;
     } else if (line.startsWith('## ')) {
-      y += 8;
+      y += 5;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
+      doc.setFontSize(14);
       doc.setTextColor(52, 73, 94);
       doc.text(line.replace('## ', ''), margin, y);
-      y += 8;
+      y += 10;
     } else if (line.startsWith('### ')) {
-      y += 6;
+      y += 3;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text(line.replace('### ', ''), margin, y);
-      y += 6;
-    } else if (line.trim().startsWith('|')) {
-      // Very basic table handling
-      doc.setFont("courier", "normal");
-      doc.setFontSize(8);
+      doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
-      const cleanLine = line.substring(0, 110);
-      doc.text(cleanLine, margin, y);
-      y += 5;
-    } else if (line.trim() !== '') {
+      doc.text(line.replace('### ', ''), margin, y);
+      y += 8;
+    } else if (line !== '') {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
       const splitText = doc.splitTextToSize(line, maxLineWidth);
       doc.text(splitText, margin, y);
-      y += splitText.length * 6;
+      y += splitText.length * 5 + 2;
     } else {
-      y += 4;
+      y += 3;
     }
-  });
+  }
 
   const pdfOutput = doc.output();
   fs.writeFileSync(outputPath, pdfOutput, 'binary');
-  console.log(`PDF generated at ${outputPath}`);
+  console.log(`PDF gerado: ${outputPath}`);
 }
 
 markdownToPdf(REPORT_V6, OUTPUT_PDF);
-// Also keep V5 updated for backward compatibility
 markdownToPdf('docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.md', 'docs/audit/DOSSIA_AUDITORIA_ENTERPRISE_V5.pdf');

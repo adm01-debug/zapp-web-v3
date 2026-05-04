@@ -12,11 +12,11 @@ This report provides a high-level overview of the system's compliance, security,
 ## 2. Module Inventory & Status
 | Module | Feature | Implementation Path | Status |
 | :--- | :--- | :--- | :--- |
-| **Inbox** | Real-time Chat | [[[[`src/components/team-chat/`](src/components/team-chat/)](src/components/team-chat/)](src/components/team-chat/)](src/components/team-chat/) | ✅ Implementado |
-| **CRM** | Contact Management | [[[[`src/components/contacts/`](src/components/contacts/)](src/components/contacts/)](src/components/contacts/)](src/components/contacts/) | ✅ Implementado |
-| **Security** | RLS / Policies | [[[[`supabase/migrations/`](supabase/migrations/)](supabase/migrations/)](supabase/migrations/)](supabase/migrations/) | ✅ Implementado |
-| **IA** | Proxy API | [[[[`supabase/functions/evolution-api/`](supabase/functions/evolution-api/)](supabase/functions/evolution-api/)](supabase/functions/evolution-api/)](supabase/functions/evolution-api/) | ✅ Implementado |
-| **Infra** | CI/CD Pipeline | [[[[`.github/workflows/ci.yml`](.github/workflows/ci.yml)](.github/workflows/ci.yml)](.github/workflows/ci.yml)](.github/workflows/ci.yml) | ✅ Implementado |
+| **Inbox** | Real-time Chat | [[`src/components/team-chat/`](src/components/team-chat/)](src/components/team-chat/) | ✅ Implementado |
+| **CRM** | Contact Management | [[`src/components/contacts/`](src/components/contacts/)](src/components/contacts/) | ✅ Implementado |
+| **Security** | RLS / Policies | [[`supabase/migrations/`](supabase/migrations/)](supabase/migrations/) | ✅ Implementado |
+| **IA** | Proxy API | [[`supabase/functions/evolution-api/`](supabase/functions/evolution-api/)](supabase/functions/evolution-api/) | ✅ Implementado |
+| **Infra** | CI/CD Pipeline | [[`.github/workflows/ci.yml`](.github/workflows/ci.yml)](.github/workflows/ci.yml) | ✅ Implementado |
 
 ---
 
@@ -32,23 +32,21 @@ This report provides a high-level overview of the system's compliance, security,
 ## 4. Quantified Gaps (Audit Findings)
 | ID | Gap Description | Evidence | Severity | File Path |
 | :--- | :--- | :--- | :--- | :--- |
-| GAP-01 | Edge Function Coverage < 60% | CI Coverage Report | P1 | [[[[`supabase/functions/`](supabase/functions/)](supabase/functions/)](supabase/functions/)](supabase/functions/) |
-| GAP-02 | Missing Rate Limiting on Public API | Security Scan | P2 | [[[[`supabase/functions/`](supabase/functions/)](supabase/functions/)](supabase/functions/)](supabase/functions/) |
+| GAP-01 | Edge Function Coverage < 60% | CI Coverage Report | P1 | [[`supabase/functions/`](supabase/functions/)](supabase/functions/) |
+| GAP-02 | Missing Rate Limiting on Public API | Security Scan | P2 | [[`supabase/functions/`](supabase/functions/)](supabase/functions/) |
 
 ---
 
 ## 5. Technical Evidence Deep-Dive
 ### 5.1 Security
 - **Evidence**: RLS is enabled on all tables.
-- **Path**: [[[[`supabase/migrations/`](supabase/migrations/)](supabase/migrations/)](supabase/migrations/)](supabase/migrations/)
+- **Path**: [[`supabase/migrations/`](supabase/migrations/)](supabase/migrations/)
 
 ---
 
 ## 6. Operational Audit Trail (Evidence Genesis)
 | Data/Hora (UTC) | Ação | Responsável | Commit Ref | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| 2026-05-04 22:33:13 | CI Audit (dev) | gpt-engineer-app[bot] | [`53b2fe84`](https://github.com/user/repo/commit/53b2fe84380c0b7cc643dd4e300e5239c2ed1fa5) | Sucesso |
-| 2026-05-04 22:32:53 | CI Audit (dev) | gpt-engineer-app[bot] | [`903d7f0e`](https://github.com/user/repo/commit/903d7f0e0772c6329516e52385b4885174b40a27) | Sucesso |
 | 2026-05-04 22:32:41 | CI Audit (dev) | gpt-engineer-app[bot] | [`5949e68c`](https://github.com/user/repo/commit/5949e68c4b9d33fafc03ab90d1048087a3c01256) | Sucesso |
 | 2026-05-04 22:32:27 | CI Audit (dev) | gpt-engineer-app[bot] | [`5cc372aa`](https://github.com/user/repo/commit/5cc372aa4a5a51682608d271bfadd613537debc6) | Sucesso |
 | 2026-05-04 22:31:26 | CI Audit (dev) | gpt-engineer-app[bot] | `aae7212c` | Sucesso |
