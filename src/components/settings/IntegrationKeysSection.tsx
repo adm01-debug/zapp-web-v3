@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useGlobalSettings } from '@/hooks/useGlobalSettings';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -52,6 +52,7 @@ export function IntegrationKeysSection() {
     message: string; 
     details?: { instances: number; status: string; version?: string } 
   } | null>(null);
+  const [detectedInstances, setDetectedInstances] = useState<any[]>([]);
 
   const { syncAll } = useEvolutionAutoSync();
 
@@ -84,6 +85,7 @@ export function IntegrationKeysSection() {
       if (Array.isArray(result) || (result && typeof result === 'object')) {
         const instances = Array.isArray(result) ? result : [];
         const count = instances.length;
+        setDetectedInstances(instances);
         
         setTestResult({ 
           success: true, 
@@ -275,6 +277,43 @@ export function IntegrationKeysSection() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            {testResult && testResult.success && detectedInstances.length > 0 && (
+              <div className="space-y-2 mt-4 pt-4 border-t border-border/30">
+                <h5 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Instâncias Detectadas</h5>
+                <div className="grid gap-2">
+                  {detectedInstances.map((inst, idx) => {
+                    const status = inst.instance?.status || 'unknown';
+                    const isOnline = status === 'open';
+                    const name = inst.instance?.instanceName || 'Sem nome';
+                    const number = inst.instance?.number || 'Não vinculado';
+                    
+                    return (
+                      <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-muted/20 border border-border/10 hover:bg-muted/30 transition-all group">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-2.5 h-2.5 rounded-full",
+                            isOnline ? "bg-success shadow-[0_0_8px_hsl(var(--success))]" : "bg-muted-foreground/30"
+                          )} />
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-foreground">{name}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono">{number}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={cn(
+                            "text-[9px] h-5 px-1.5 font-bold uppercase tracking-tight shadow-none border-0",
+                            isOnline ? "bg-success/10 text-success" : "bg-muted/10 text-muted-foreground"
+                          )}>
+                            {isOnline ? 'Online' : 'Offline'}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors">v2.x</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
