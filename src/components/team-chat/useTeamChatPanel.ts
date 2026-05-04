@@ -165,6 +165,18 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     navigator.clipboard.writeText(content).then(() => toast.success('Copiado!')).catch(() => toast.error('Erro ao copiar'));
   }, []);
 
+  // Instrumentation for render cost and update time
+  const renderStartTimeRef = useRef<number>(0);
+  useEffect(() => {
+    renderStartTimeRef.current = performance.now();
+    return () => {
+      const duration = performance.now() - renderStartTimeRef.current;
+      if (duration > 16) { // Only log slow renders (> 1 frame)
+        log.debug(`Slow render detected: ${duration.toFixed(2)}ms`);
+      }
+    };
+  });
+
   return {
     profile, messages, isLoading, isMuted, filteredMessages: messages,
     text, setText, editingId, editText, setEditText,
@@ -176,6 +188,7 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     checkNearBottom, scrollToBottom, handleSend, handleSendSticker, handleSendAudioMeme,
     handleSendCustomEmoji, handleFileSent, handleAudioSend,
     handleDelete, handleStartEdit, handleSaveEdit, handleCancelEdit, handleCopyMessage,
-    fetchNextPage, hasNextPage, isFetchingNextPage, debouncedSearch
+    fetchNextPage, hasNextPage, isFetchingNextPage, debouncedSearch,
+    syncSearchWithCache
   };
 }
