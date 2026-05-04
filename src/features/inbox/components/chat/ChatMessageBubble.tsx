@@ -211,7 +211,7 @@ export function ChatMessageBubble({
             message.isWhisper
               ? 'rounded-lg bg-amber-950/30 border-amber-900/50 text-amber-200 shadow-inner'
               : isSent 
-                ? 'rounded-lg rounded-tr-none bg-[#005c4b] text-[#e9edef]' 
+                ? 'rounded-lg rounded-tr-none bg-[#1e3a5f] text-[#e9edef]' 
                 : 'rounded-lg rounded-tl-none bg-[#202c33] text-[#e9edef]'
           )}
         >
@@ -222,7 +222,7 @@ export function ChatMessageBubble({
             )}>
               <div className={cn(
                 "w-3 h-3 rotate-45 transform origin-top-left",
-                isSent ? "bg-[#005c4b]" : "bg-[#202c33]"
+                isSent ? "bg-[#1e3a5f]" : "bg-[#202c33]"
               )} />
             </div>
           )}
