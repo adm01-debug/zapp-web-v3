@@ -9,16 +9,15 @@ export function useUpdateTeamMessageStatus() {
     mutationFn: async ({ messageId, status, conversationId }: { messageId: string; status: 'delivered' | 'read'; conversationId: string }) => {
       const { error } = await supabase.from('team_messages').update({ status }).eq('id', messageId);
       if (error) throw error;
-      return { conversationId };
+      return { conversationId, messageId, status };
     },
     onSuccess: (data) => {
-      // Manual cache update for status
       queryClient.setQueriesData({ queryKey: ['team-messages', data.conversationId] }, (oldData: any) => {
         if (!oldData || !oldData.pages) return oldData;
         const newPages = oldData.pages.map((page: any) => ({
           ...page,
           messages: page.messages.map((m: any) => 
-            m.id === (arguments[0] as any).messageId ? { ...m, status: (arguments[0] as any).status } : m
+            m.id === data.messageId ? { ...m, status: data.status } : m
           )
         }));
         return { ...oldData, pages: newPages };
