@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { getLogger } from '@/lib/logger';
-// @ts-ignore
-import { List } from 'react-window';
-// @ts-ignore
+import { List, useDynamicRowHeight } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { useAuth } from '@/features/auth';
 import { TeamConversation } from '@/hooks/useTeamChat';
