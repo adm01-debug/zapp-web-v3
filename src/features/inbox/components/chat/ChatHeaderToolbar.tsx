@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle } from 'lucide-react';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 
-type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
+export type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | null;
 
 interface ChatHeaderToolbarProps {
   activeTool?: ActiveTool;

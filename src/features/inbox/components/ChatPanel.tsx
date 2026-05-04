@@ -16,7 +16,7 @@ import { CRMAutoSync } from './CRMAutoSync';
 import { useAmbientColor } from '@/hooks/useAmbientColor';
 import { ChatToolPanels } from './chat/ChatToolPanels';
 import { ChatDialogs } from './chat/ChatDialogs';
-import { ChatHeader } from './chat/ChatHeader';
+import { ChatPanelHeader } from './chat/ChatPanelHeader';
 import { ChatAssignedBar } from './chat/ChatAssignedBar';
 import { TicketActionsBar } from './chat/TicketActionsBar';
 import { TicketHistorySheet } from './TicketHistorySheet';
@@ -30,6 +30,7 @@ import { ChatDragOverlay } from './chat/ChatDragOverlay';
 import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import { useChatPanelHandlers } from './chat/useChatPanelHandlers';
+import { ActiveTool } from './chat/ChatHeaderToolbar';
 import { useSearchParams } from 'react-router-dom';
 import { useTransferConversation } from '@/features/inbox/hooks/useTransferConversation';
 import { useInboxShortcuts } from '@/features/inbox/hooks/useInboxShortcuts';
@@ -110,7 +111,7 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
   }
 }
 
-type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | null;
+// type ActiveTool is imported from chat/ChatHeaderToolbar
 
 export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0 }: ChatPanelProps) {
   const { templates: quickReplyTemplates } = useQuickReplies();
@@ -524,9 +525,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
       <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden bg-[#0b141a] dark:bg-[#0b141a]">
         {!hideHeader && (
-          <ChatHeader
+          <ChatPanelHeader
             conversation={conversation}
-            messages={messages}
             isContactTyping={isContactTyping}
             showAIAssistant={activeTool === 'aiAssistant'}
             showDetails={showDetails}
@@ -541,13 +541,13 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onVoiceChange={setVoiceId}
             onSpeedChange={setSpeed}
             onBack={onBack}
-            onGenerateSummary={(tool) => handleSetActiveTool(tool === 'teamFiles' ? 'teamFiles' : 'summary')}
+            onGenerateSummary={() => handleSetActiveTool('summary')}
             onCloseConversation={() => openDialog('closeDialog')}
             failuresOnly={failuresOnly}
             failuresCount={failedMessages.length}
             onToggleFailuresOnly={() => setFailuresOnly((v) => !v)}
-            onOpenWhisper={() => dispatch({ type: 'TOGGLE', key: 'whisper' })}
-            whisperCount={whisperCount}
+            activeTool={activeTool}
+            onSetActiveTool={handleSetActiveTool}
           />
         )}
 

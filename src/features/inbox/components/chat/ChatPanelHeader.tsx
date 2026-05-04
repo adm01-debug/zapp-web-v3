@@ -13,9 +13,9 @@ import {
 import { MoreVertical, Tag, Archive, CheckCircle, Clock, ArrowRight, ArrowLeft, ExternalLink, XCircle } from 'lucide-react';
 import { openChatPopup } from '@/lib/popupManager';
 import { useContactAvatar } from '@/features/inbox';
+import { ActiveTool } from './ChatHeaderToolbar';
 
 interface ChatMessage { id: string; content: string; sender: string; timestamp: string; }
-type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | null;
 
 interface ChatPanelHeaderProps {
   conversation: Conversation;
