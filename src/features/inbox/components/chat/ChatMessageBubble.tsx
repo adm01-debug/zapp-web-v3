@@ -209,10 +209,10 @@ export function ChatMessageBubble({
               ? 'p-0'
               : density === 'comfortable' ? 'px-3 py-1.5' : density === 'compact' ? 'px-2 py-1' : 'px-1.5 py-0.5',
             message.isWhisper
-              ? 'rounded-lg bg-amber-950/30 border-amber-900/50 text-amber-200 shadow-inner'
+              ? 'rounded-lg bg-amber-950/20 border-amber-800/40 text-amber-100 shadow-inner'
               : isSent 
-                ? 'rounded-lg rounded-tr-none bg-[#1e3a5f] text-[hsl(var(--foreground))]' 
-                : 'rounded-lg rounded-tl-none bg-card text-[hsl(var(--foreground))]'
+                ? 'rounded-lg rounded-tr-none bg-chat-sent text-chat-sent-foreground' 
+                : 'rounded-lg rounded-tl-none bg-chat-received text-chat-received-foreground'
           )}
         >
           {!message.isWhisper && (
@@ -222,7 +222,7 @@ export function ChatMessageBubble({
             )}>
               <div className={cn(
                 "w-3 h-3 rotate-45 transform origin-top-left",
-                isSent ? "bg-[#1e3a5f]" : "bg-card"
+                isSent ? "bg-chat-sent" : "bg-chat-received"
               )} />
             </div>
           )}

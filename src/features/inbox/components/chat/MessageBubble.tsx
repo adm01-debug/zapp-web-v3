@@ -201,11 +201,11 @@ export function MessageBubble({
               whileHover={{ scale: 1.002 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={cn(
-                'relative transition-all overflow-visible border border-transparent shadow-[0_1.5px_2px_rgba(0,0,0,0.15)]',
+                'relative transition-all overflow-visible border border-transparent',
                 (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2.5 py-2' : 'px-2 py-1.5',
                 isSent
-                  ? cn('bg-[#1e3a5f] text-[hsl(var(--foreground))] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
-                  : cn('bg-card text-[hsl(var(--foreground))] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
+                  ? cn('bg-chat-sent text-chat-sent-foreground font-medium', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
+                  : cn('bg-chat-received text-chat-received-foreground font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
                 message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 ring-1 ring-amber-500/30 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
@@ -223,8 +223,8 @@ export function MessageBubble({
                     className={cn(
                       "w-3 h-3 rotate-45 transform origin-top",
                       isSent 
-                        ? "bg-[#1e3a5f] -translate-x-1.5" 
-                        : "bg-card translate-x-1.5"
+                        ? "bg-chat-sent -translate-x-1.5" 
+                        : "bg-chat-received translate-x-1.5"
                     )} 
                   />
                 </div>

@@ -52,7 +52,7 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
     <div
       className={cn(
         "flex items-center gap-3 p-2.5 rounded-md min-w-[240px] max-w-[320px] cursor-pointer transition-colors",
-        isSent ? "bg-[#1e3a5f]" : "bg-card border border-[hsl(var(--border))]"
+        isSent ? "bg-chat-sent/20 border border-chat-sent/30" : "bg-chat-received border border-border"
       )}
       onClick={handleOpen}
     >
