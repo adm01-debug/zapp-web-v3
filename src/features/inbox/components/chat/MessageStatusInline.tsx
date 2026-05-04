@@ -125,7 +125,9 @@ export const MessageStatusInline = memo(function MessageStatusInline({
 
   return (
     <MessageStatusPanel message={message}>
-      <button
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
         type="button"
         className={cn(
           'inline-flex items-center gap-0.5 cursor-pointer rounded-sm focus-visible:outline-none',
