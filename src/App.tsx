@@ -9,8 +9,6 @@ import { LiveRegion } from "@/components/ui/visually-hidden";
 import { ThemeInitializer } from "@/components/ThemeInitializer";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { AppRoutes } from "@/components/routing/AppRoutes";
-import { PreviewHttpLogPanel } from "@/components/dev/PreviewHttpLogPanel";
-import { PreviewPreconditionBanner } from "@/features/auth/components/PreviewPreconditionBanner";
 
 const log = getLogger('App');
 
@@ -91,8 +89,6 @@ function AppContent() {
         {deferredReady && <Suspense fallback={null}><DeferredHooks /></Suspense>}
         <Toaster />
         <Sonner />
-        <PreviewPreconditionBanner />
-        <PreviewHttpLogPanel />
         <AppRoutes />
       </GlobalKeyboardProvider>
     </BrowserRouter>

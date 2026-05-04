@@ -6,10 +6,6 @@ import "./i18n"; // Initialize i18n
 import { getLogger } from "./lib/logger";
 import { initSentry, SentryErrorBoundary } from "./lib/sentry";
 import { initWebVitals } from "./lib/web-vitals";
-import { installPreviewHttpLogger } from "./lib/previewHttpLogger";
-
-// Intercepta fetch para capturar 412 / Failed to fetch no preview Lovable
-installPreviewHttpLogger();
 
 // Init Sentry first (no-op se VITE_SENTRY_DSN não estiver configurada)
 const sentryEnabled = initSentry();
