@@ -21,7 +21,7 @@ const SLA_CONFIG: Record<SLAStatus, { label: string; icon: React.ReactNode; colo
   within:   { label: 'Dentro do SLA', icon: <CheckCircle2 className="h-3 w-3" />, colorClass: 'text-primary border-primary bg-primary/10 dark:bg-primary/30 dark:text-primary' },
   warning:  { label: 'SLA próximo',   icon: <Timer className="h-3 w-3" />,        colorClass: 'text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 animate-pulse' },
   breached: { label: 'SLA estourado', icon: <AlertTriangle className="h-3 w-3" />, colorClass: 'text-red-700 border-red-300 bg-red-50 dark:bg-red-950/30 dark:text-red-400' },
-  paused:   { label: 'SLA pausado',   icon: <Pause className="h-3 w-3" />,         colorClass: 'text-gray-600 border-gray-300 bg-gray-50 dark:bg-gray-800' },
+  paused:   { label: 'SLA pausado',   icon: <Pause className="h-3 w-3" />,         colorClass: 'text-slate-600 border-border bg-slate-50 dark:bg-muted/10' },
   none:     { label: 'Sem SLA',       icon: <Clock className="h-3 w-3" />,         colorClass: 'text-gray-400 border-gray-200' },
 };
 
