@@ -74,7 +74,7 @@ export function useMessageQueue(instanceName: string = 'wpp2') {
     }
     
     isProcessingRef.current = false;
-  }, [instanceName, sendMessage, toast]);
+  }, [instanceName, sendTextMessage, toast]);
 
   const enqueueMessage = useCallback((remote_jid: string, content: string) => {
     const id = `pending_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
