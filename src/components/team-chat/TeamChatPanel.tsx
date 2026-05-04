@@ -283,6 +283,8 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                 );
               }}
             </List>
+              )}
+            </AutoSizer>
           </div>
         )}
       </div>
