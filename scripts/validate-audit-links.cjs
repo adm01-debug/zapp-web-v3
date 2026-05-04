@@ -48,7 +48,9 @@ async function validate() {
     } else {
       // Local file link
       const cleanPath = link.url.split('#')[0]; // Remove anchors
-      const fullPath = path.resolve(path.dirname(DOSSIER_PATH), cleanPath);
+      // Dossier is at docs/audit/ file is relative to project root usually in the dossier
+      // But based on the file content, they are like "src/..."
+      const fullPath = path.resolve(process.cwd(), cleanPath);
       isValid = fs.existsSync(fullPath);
     }
 
