@@ -71,15 +71,40 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
     if (!conversationId) return;
     const channel = supabase
       .channel(`team-messages-${conversationId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'team_messages', filter: `conversation_id=eq.${conversationId}` }, () => {
-        // For infinite scroll, we might need a more sophisticated strategy, 
-        // but for now invalidating is safer to keep it consistent.
-        queryClient.invalidateQueries({ queryKey: ['team-messages', conversationId] });
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'team_messages', 
+        filter: `conversation_id=eq.${conversationId}` 
+      }, (payload) => {
+        const newMessage = payload.new as TeamMessage;
+        
+        // Optimistic update of the infinite query cache
+        queryClient.setQueryData(['team-messages', conversationId, searchQuery], (oldData: any) => {
+          if (!oldData || !oldData.pages) return oldData;
+          
+          // Add the new message to the first page (which holds the newest messages)
+          const newPages = [...oldData.pages];
+          if (newPages.length > 0) {
+            newPages[0] = {
+              ...newPages[0],
+              messages: [newMessage, ...newPages[0].messages].slice(0, MESSAGES_PER_PAGE + 1)
+            };
+          }
+          
+          return {
+            ...oldData,
+            pages: newPages
+          };
+        });
+
+        // Also invalidate conversation list to update snippets
         queryClient.invalidateQueries({ queryKey: ['team-conversations'] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [conversationId, queryClient]);
+  }, [conversationId, queryClient, searchQuery]);
+
 
   useEffect(() => {
     if (!conversationId || !profile) return;
