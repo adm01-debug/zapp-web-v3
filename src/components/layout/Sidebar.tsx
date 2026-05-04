@@ -129,7 +129,7 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
       <div className="flex flex-col items-center gap-1.5 pt-1.5 pb-3 shrink-0">
         <div className="mx-3 h-px bg-border self-stretch" />
         {!collapsed && <div className="px-3 self-stretch flex items-center gap-1.5 pb-0.5"><span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Controles rápidos</span></div>}
-        <div className={cn('flex items-center gap-1 rounded-xl border border-border bg-muted/50 px-1.5 py-1.5 shadow-sm', collapsed ? 'flex-col' : 'flex-row self-stretch mx-2')}>
+        <div className={cn('flex items-center gap-1 rounded-xl border border-border bg-muted/20 px-1.5 py-1.5 shadow-none', collapsed ? 'flex-col' : 'flex-row self-stretch mx-2')}>
           <ScreenProtectionToggle className="w-[36px] h-[36px]" />
           <PushNotificationToggle className="w-[36px] h-[36px]" />
           <SoundMuteToggle className="w-[36px] h-[36px]" />
