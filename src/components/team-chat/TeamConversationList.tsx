@@ -82,6 +82,7 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
             {filtered.map(conv => (
               <button
                 key={conv.id}
+                tabIndex={0}
                 data-testid={`conversation-${conv.id}`}
                 data-test-name={conv.name}
                 onClick={() => onSelect(conv.id)}
