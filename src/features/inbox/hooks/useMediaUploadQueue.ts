@@ -164,6 +164,10 @@ export function useMediaUploadQueue(contactId: string) {
 
   const addToQueue = useCallback(
     async (file: File, options?: { caption?: string; maxRetries?: number }): Promise<string | null> => {
+      if (!agentIdRef.current) {
+        const { data } = await supabase.auth.getUser();
+        agentIdRef.current = data.user?.id || null;
+      }
       if (!agentIdRef.current) return null;
 
       const validation = validateFile(file);
