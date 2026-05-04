@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { MessageList } from '../MessageList';
+import { MessageList } from './MessageList';
 
 // Mocking Supabase client to avoid localStorage issues in tests
 vi.mock('@/integrations/supabase/client', () => ({
