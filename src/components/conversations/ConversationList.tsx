@@ -49,12 +49,13 @@ const ConvItem = memo(({
   isSelected: boolean;
   onSelect:   () => void;
 }) => {
+  const isTyping    = useContactTyping(conv.remote_jid);
   const displayName = sanitizeText(conv.contact_name ?? conv.remote_jid?.split('@')[0] ?? 'Desconhecido');
   const initials    = displayName.split(' ').filter(Boolean).slice(0,2).map((n) => n[0].toUpperCase()).join('');
   const phone       = formatPhoneForDisplay(conv.contact_phone ?? conv.remote_jid?.replace(/@.*$/, '') ?? '');
   const lastMsg     = conv.last_message_content ? sanitizeText(conv.last_message_content).slice(0, 60) : null;
   const timeStr     = conv.last_message_at
-    ? new Date(conv.last_message_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true, locale: ptBR })
     : '';
 
   return (
