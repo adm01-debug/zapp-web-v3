@@ -124,7 +124,7 @@ export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
         )}
       </AnimatePresence>
 
-      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto scrollbar-thin bg-[#0b141a] dark:bg-[#0b141a]">
         <ContactHeaderSection
           contact={contact} enrichedData={enrichedData} conversation={conversation}
           onQuickAction={handleQuickAction} hasExpandedSections={accordionValue.length > 0}
