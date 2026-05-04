@@ -41,11 +41,34 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-export function DepartmentManagementDialog({ department, open, onOpenChange }: Props) {
+export function DepartmentManagementDialog({ department: initialDepartment, open, onOpenChange }: Props) {
   const { profile: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [view, setView] = useState<'members' | 'audit' | 'invites'>('members');
+  const [view, setView] = useState<'members' | 'audit' | 'invites' | 'whatsapp'>('members');
+  const [whatsappMode, setWhatsappMode] = useState<'evolution' | 'official' | 'none'>('none');
+  const [whatsappApiKey, setWhatsappApiKey] = useState('');
+  const [whatsappInstanceId, setWhatsappInstanceId] = useState('');
+
+  const { data: department = initialDepartment, refetch: refetchDept } = useQuery({
+    queryKey: ['department-details', initialDepartment.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('*')
+        .eq('id', initialDepartment.id)
+        .single();
+      if (error) throw error;
+      
+      setWhatsappMode((data.whatsapp_mode as any) || 'none');
+      setWhatsappApiKey(data.whatsapp_api_key || '');
+      setWhatsappInstanceId(data.whatsapp_instance_id || '');
+      
+      return data;
+    },
+    enabled: open,
+  });
+
 
   const { data: allProfiles = [], isLoading: loadingProfiles } = useQuery({
     queryKey: ['profiles-for-dept-mgmt'],
