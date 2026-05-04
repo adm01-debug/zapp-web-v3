@@ -135,7 +135,7 @@ export function TeamChatInputArea({
           <div className="flex-1 min-w-0 relative">
             <MentionAutocomplete inputValue={text} cursorPosition={mentionCursorPos} onSelect={handleMentionSelect} onClose={closeMention} isOpen={mentionOpen} />
             <textarea ref={textareaRef} value={text}
-              aria-label="Campo de entrada de mensagem para chat interno"
+              aria-label="Digite sua mensagem para o chat da equipe"
               aria-multiline="true"
               tabIndex={0}
               onChange={(e) => { setText(e.target.value); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
@@ -145,7 +145,7 @@ export function TeamChatInputArea({
               className={cn("w-full bg-transparent border border-border/50 rounded-xl outline-none text-sm text-foreground placeholder:text-muted-foreground resize-none transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
                 isMobile ? "px-3 py-2.5 text-[16px] min-h-[42px] max-h-[200px]" : "px-3 py-2 min-h-[40px] max-h-[200px]",
                 draft.isOverLimit && "border-destructive/50 focus:border-destructive focus:ring-destructive/20")}
-              aria-label="Digite sua mensagem" aria-describedby={draft.charCount > 0 ? "team-char-counter" : undefined}
+              aria-describedby={draft.charCount > 0 ? "team-char-counter" : undefined}
             />
             {draft.charCount > 100 && (
               <span id="team-char-counter" className={cn("absolute bottom-1 right-2 text-[10px] select-none pointer-events-none",
