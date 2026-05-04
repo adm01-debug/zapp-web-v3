@@ -120,7 +120,7 @@ export function TextToAudioButton({ inputValue, onAudioReady, disabled }: TextTo
     }
   };
 
-  const hasText = inputValue.trim().length > 0;
+  const hasText = (inputValue || '').trim().length > 0;
 
   return (
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) cleanup(); }}>
