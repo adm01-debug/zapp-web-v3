@@ -13,6 +13,7 @@ const log = getLogger('useTeamChatPanel');
 
 export function useTeamChatPanel(conversation: TeamConversation) {
   const { profile } = useAuth();
+  const queryClient = useQueryClient();
   
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,11 +50,10 @@ export function useTeamChatPanel(conversation: TeamConversation) {
   const lastScrollTopRef = useRef(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollOffsetRef = useRef<number>(0);
-
+  const anchorMessageIdRef = useRef<string | null>(null);
   
-  // Performance metrics
+  // Performance metrics and instrumentation
   usePerformanceMetrics('TeamChatPanel');
-
 
   const { settings, updateSettings, saveSettings } = useUserSettings();
   const handleVoiceChange = (v: string) => { updateSettings({ tts_voice_id: v }); setTimeout(() => saveSettings(), 100); };
@@ -63,28 +63,53 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     onVoiceChange: handleVoiceChange, onSpeedChange: handleSpeedChange,
   });
 
+  // Unified function to sync search filter with the infinite query cache
+  const syncSearchWithCache = useCallback((newQuery: string) => {
+    const start = performance.now();
+    setSearchQuery(newQuery);
+    
+    // If clearing search, we might want to pre-populate or clean up
+    if (!newQuery.trim()) {
+      queryClient.invalidateQueries({ queryKey: ['team-messages', conversation.id, ''] });
+    }
+    
+    const duration = performance.now() - start;
+    log.info(`Search sync duration: ${duration.toFixed(2)}ms`);
+  }, [conversation.id, queryClient]);
+
   const checkNearBottom = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    const threshold = 150;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
     isNearBottomRef.current = nearBottom;
     setShowScrollDown(!nearBottom);
-    if (nearBottom) setHasNewMessagesUnseen(false);
+    if (nearBottom) {
+      setHasNewMessagesUnseen(false);
+    }
   }, []);
 
   const scrollToBottom = useCallback(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-    setHasNewMessagesUnseen(false);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+      setHasNewMessagesUnseen(false);
+      isNearBottomRef.current = true;
+    }
   }, []);
 
   // Monitor new messages from others to show indicator
   useEffect(() => {
     if (!messages.length || isNearBottomRef.current) return;
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg.sender_id !== profile?.id) {
+    if (lastMsg && lastMsg.sender_id !== profile?.id) {
+      // Record LCP/INP equivalent for new message reception
+      const start = performance.now();
       setHasNewMessagesUnseen(true);
+      const end = performance.now();
+      log.debug(`New message UI update took: ${(end - start).toFixed(2)}ms`);
     }
   }, [messages.length, profile?.id]);
+
 
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
