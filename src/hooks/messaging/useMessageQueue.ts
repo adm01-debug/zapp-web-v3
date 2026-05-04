@@ -10,6 +10,7 @@ export interface PendingMessage {
   content: string;
   status: 'pending' | 'sending' | 'failed';
   timestamp: number;
+  retries: number;
 }
 
 export function useMessageQueue(instanceName: string = 'wpp2') {
