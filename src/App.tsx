@@ -26,7 +26,7 @@ const InAppNotificationProvider = lazy(() => import("@/components/mobile/InAppNo
 
 function DeferredProviders({ children }: { children?: React.ReactNode }) {
   return (
-    <Suspense fallback={<div className="sr-only">Carregando provedores...</div>}>
+    <Suspense fallback={null}>
       <RealtimeSentimentAlertProvider />
       <IncomingCallAlert />
       <InAppNotificationProvider>
@@ -114,9 +114,8 @@ function AppContent() {
   const [deferredReady, setDeferredReady] = useState(false);
 
   useEffect(() => {
-    console.log("[App] Critical initialization starting...");
+    // Immediate activation for critical UI parts
     setDeferredReady(true);
-    console.log("[App] deferredReady set to true");
   }, []);
 
   // Global unhandled rejection handler
@@ -153,7 +152,7 @@ function AppContent() {
       <GlobalKeyboardProvider>
         {deferredReady && <DeferredProviders />}
         {deferredReady && (
-          <Suspense fallback={<div className="sr-only">Carregando ganchos...</div>}>
+          <Suspense fallback={null}>
             <DeferredHooks />
           </Suspense>
         )}
