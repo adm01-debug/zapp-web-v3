@@ -15,7 +15,7 @@ interface ApiLog {
   id: string;
   action: string;
   created_at: string;
-  details: Record<string, any> | null;
+  details: Record<string, unknown> | null;
   entity_type: string | null;
 }
 
