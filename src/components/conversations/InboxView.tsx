@@ -9,8 +9,10 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MessageCircle, Users, BarChart2, X, CheckCircle2, RotateCcw, UserCheck, MoreHorizontal } from 'lucide-react';
 import { ConversationList } from '@/components/conversations/ConversationList';
+import { MessageList } from '@/components/conversations/MessageList';
 import { ConversationsDashboard } from '@/components/conversations/ConversationsDashboard';
 import { ContactSidebarPanel } from '@/components/contacts/ContactSidebarPanel';
+import { useMessageQueue } from '@/hooks/messaging/useMessageQueue';
 import { useConversations, type Conversation } from '@/hooks/useConversations';
 import { type Contact } from '@/hooks/useContacts';
 import { sanitizeText } from '@/lib/sanitize';
@@ -25,10 +27,18 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 'wpp2' }) => {
   const { closeConversation, markAsRead } = useConversations();
+  const { enqueueMessage, pendingMessages } = useMessageQueue(instanceName);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [showStats,    setShowStats]    = useState(false);
   const [showContact,  setShowContact]  = useState(true);
   const [closing,      setClosing]      = useState(false);
+  const [message,      setMessage]      = useState('');
+
+  const handleSend = () => {
+    if (!selectedConv || !message.trim()) return;
+    enqueueMessage(selectedConv.remote_jid, message.trim());
+    setMessage('');
+  };
 
   const handleSelectConv = useCallback(async (conv: Conversation) => {
     setSelectedConv(conv);
@@ -123,17 +133,8 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
                 </DropdownMenu>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col bg-[#efeae2] dark:bg-background/95 relative">
-              <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.02] pointer-events-none" 
-                style={{ backgroundImage: 'url("https://wweb.static.whatsapp.net/7/7b/7b2e3e9d8e7e1c1f1f1f1f1f1f1f1f1f.png")' }} />
-              
-              <div className="flex-1 flex flex-col justify-end gap-3 z-10">
-                <div className="text-center text-muted-foreground py-8">
-                  <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm font-medium">Início da conversa com {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid?.split('@')[0] ?? 'este contato')}</p>
-                  <p className="text-xs opacity-60">As mensagens são protegidas com criptografia de ponta a ponta.</p>
-                </div>
-              </div>
+            <div className="flex-1 overflow-hidden relative flex flex-col">
+              <MessageList remoteJid={selectedConv.remote_jid} />
             </div>
             <div className="bg-[#f0f2f5] dark:bg-muted/30 px-4 py-2.5 shrink-0 z-10">
               <div className="flex items-center gap-2">
@@ -141,10 +142,18 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
                   <input 
                     type="text" 
                     placeholder="Digite uma mensagem..." 
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     className="bg-transparent border-none outline-none text-sm w-full placeholder:text-muted-foreground/60"
                   />
                 </div>
-                <Button size="icon" className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 shadow-sm shrink-0">
+                <Button 
+                  size="icon" 
+                  onClick={handleSend}
+                  disabled={!message.trim()}
+                  className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 shadow-sm shrink-0"
+                >
                   <MessageCircle className="h-5 w-5" />
                 </Button>
               </div>

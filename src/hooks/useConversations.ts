@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { sanitizeText } from '@/lib/sanitize';
 import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
+import { eventBus } from '@/lib/eventBus';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -239,6 +240,16 @@ export function useConversations() {
 
     return () => { supabase.removeChannel(channel); };
   }, [filters.instance_name, filters.status]);
+
+  // Listen for reconnection to refresh
+  useEffect(() => {
+    const unsub = eventBus.on('connection:recovered', ({ instanceName }) => {
+      if (instanceName === filters.instance_name) {
+        loadConversations();
+      }
+    });
+    return unsub;
+  }, [filters.instance_name, loadConversations]);
 
   return {
     conversations, loading, loadingMore, hasMore, total, filters,
