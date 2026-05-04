@@ -151,6 +151,12 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid, searchTerm 
         ref={parentRef}
         className="flex-1 overflow-y-auto p-4"
       >
+        {allItems.length === 0 && !loading && (
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40 mt-10">
+            <MessageCircle className="h-12 w-12 mb-3 opacity-20" />
+            <p className="text-sm font-medium">Nenhuma mensagem nesta conversa</p>
+          </div>
+        )}
         <div
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
