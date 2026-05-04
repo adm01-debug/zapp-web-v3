@@ -111,7 +111,7 @@ function dialogReducer(state: DialogState, action: DialogAction): DialogState {
   }
 }
 
-type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | null;
+// type ActiveTool is imported from chat/ChatHeaderToolbar
 
 export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0 }: ChatPanelProps) {
   const { templates: quickReplyTemplates } = useQuickReplies();
