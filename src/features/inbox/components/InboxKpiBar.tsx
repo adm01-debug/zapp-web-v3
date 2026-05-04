@@ -98,7 +98,7 @@ export function InboxKpiBar({ conversations }: InboxKpiBarProps) {
             <Icon className={cn('w-4 h-4 shrink-0', TONE[c.tone])} />
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">{c.label}</div>
-              <div className="text-sm font-semibold tabular-nums truncate">{c.value}</div>
+              <div className="text-[13px] font-semibold tabular-nums truncate">{c.value}</div>
             </div>
           </Card>
         );
