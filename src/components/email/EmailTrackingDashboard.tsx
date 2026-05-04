@@ -48,7 +48,7 @@ function OpenIndicator({ count, firstAt }: { count: number; firstAt: string | nu
   return (
     <div className="flex items-center gap-1.5">
       <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-      <span className="text-xs font-medium text-green-700 dark:text-green-400">
+      <span className="text-xs font-medium text-primary dark:text-primary">
         {count}x aberto
       </span>
       {firstAt && (
@@ -175,7 +175,7 @@ function EmailTrackingDetail({
                       <p className="text-muted-foreground truncate">{link.original_url}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-green-600">{link.click_count} cliques</p>
+                      <p className="font-bold text-primary">{link.click_count} cliques</p>
                       {link.first_clicked_at && (
                         <p className="text-muted-foreground">{formatDate(link.first_clicked_at)}</p>
                       )}
@@ -245,7 +245,7 @@ export function EmailTrackingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Taxa de Abertura</p>
-                    <p className={`text-2xl font-bold ${stats.open_rate >= 50 ? 'text-green-600' : stats.open_rate >= 25 ? 'text-amber-600' : 'text-red-600'}`}>
+                    <p className={`text-2xl font-bold ${stats.open_rate >= 50 ? 'text-primary' : stats.open_rate >= 25 ? 'text-amber-600' : 'text-red-600'}`}>
                       {stats.open_rate}%
                     </p>
                     <p className="text-xs text-muted-foreground">{stats.unique_opens} únicos</p>
@@ -259,7 +259,7 @@ export function EmailTrackingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Taxa de Cliques</p>
-                    <p className={`text-2xl font-bold ${stats.click_rate >= 10 ? 'text-green-600' : 'text-amber-600'}`}>
+                    <p className={`text-2xl font-bold ${stats.click_rate >= 10 ? 'text-primary' : 'text-amber-600'}`}>
                       {stats.click_rate}%
                     </p>
                     <p className="text-xs text-muted-foreground">{stats.total_clicks} total</p>
@@ -273,7 +273,7 @@ export function EmailTrackingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Bounces</p>
-                    <p className={`text-2xl font-bold ${stats.bounce_count > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    <p className={`text-2xl font-bold ${stats.bounce_count > 0 ? 'text-red-600' : 'text-primary'}`}>
                       {stats.bounce_count}
                     </p>
                     <p className="text-xs text-muted-foreground">emails retornados</p>

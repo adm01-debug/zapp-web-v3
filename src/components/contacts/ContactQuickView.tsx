@@ -144,7 +144,7 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
                 </div>
               )}
               {health >= 90 && (
-                <div className="flex items-start gap-2 text-[11px] text-emerald-600 bg-primary/5 p-2 rounded-lg border border-primary/20">
+                <div className="flex items-start gap-2 text-[11px] text-primary bg-primary/5 p-2 rounded-lg border border-primary/20">
                   <TrendingUp className="w-3 h-3 mt-0.5 shrink-0" />
                   <p><strong>Engajamento:</strong> Este contato possui dados completos. Pronto para campanhas de alta conversão!</p>
                 </div>

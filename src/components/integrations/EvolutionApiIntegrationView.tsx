@@ -244,7 +244,7 @@ export function EvolutionApiIntegrationView() {
                 ) : (
                   <XCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
                 )}
-                <span className={`text-xs ${testResult === 'success' ? 'text-emerald-300' : 'text-red-300'}`}>
+                <span className={`text-xs ${testResult === 'success' ? 'text-primary' : 'text-red-300'}`}>
                   {testMessage}
                 </span>
               </motion.div>

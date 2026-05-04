@@ -50,7 +50,7 @@ export function DeletedMessagePlaceholder({ isSent, content }: DeletedMessagePla
         {hasOriginalContent ? (
           <div>
             {!isSent && (
-              <div className="flex items-center gap-1 mb-1.5 text-[10px] text-emerald-600 dark:text-primary font-medium">
+              <div className="flex items-center gap-1 mb-1.5 text-[10px] text-primary dark:text-primary font-medium">
                 <Eye className="w-3 h-3" />
                 <span>Conteúdo original preservado</span>
               </div>

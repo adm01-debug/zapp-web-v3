@@ -83,7 +83,7 @@ export const VirusTotalConfig = () => {
         </div>
 
         {testResult && (
-          <div className={`p-4 rounded-lg flex items-start gap-3 ${testResult.success ? 'bg-primary/10 text-green-700 border border-primary/20' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          <div className={`p-4 rounded-lg flex items-start gap-3 ${testResult.success ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {testResult.success ? <ShieldCheck className="w-5 h-5 mt-0.5" /> : <ShieldAlert className="w-5 h-5 mt-0.5" />}
             <div>
               <p className="font-semibold">{testResult.success ? 'Conexão Ativa' : 'Falha na Conexão'}</p>

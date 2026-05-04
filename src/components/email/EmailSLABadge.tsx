@@ -26,7 +26,7 @@ const CONFIG: Record<SLAStatus, {
     label: 'No prazo',
     icon: CheckCircle,
     variant: 'outline',
-    className: 'border-green-500/50 text-green-600 dark:text-green-400',
+    className: 'border-primary/50 text-primary dark:text-primary',
   },
   warning: {
     label: 'Atenção',
@@ -44,7 +44,7 @@ const CONFIG: Record<SLAStatus, {
     label: 'Respondido',
     icon: CheckCircle,
     variant: 'secondary',
-    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    className: 'bg-primary text-primary dark:bg-primary/30 dark:text-primary',
   },
 };
 

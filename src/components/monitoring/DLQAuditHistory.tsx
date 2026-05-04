@@ -29,7 +29,7 @@ function actionBadge(action: string) {
   const Icon = meta.icon;
   const cls = {
     default:     'border-border text-foreground/80 bg-muted/40',
-    success:     'border-primary/40 text-emerald-600 bg-primary/10',
+    success:     'border-primary/40 text-primary bg-primary/10',
     warning:     'border-amber-500/40 text-amber-600 bg-amber-500/10',
     destructive: 'border-destructive/40 text-destructive bg-destructive/10',
   }[meta.tone];
@@ -58,7 +58,7 @@ function summary(entry: DlqAuditEntry): React.ReactNode {
       if (processed === 0) return <span className="text-muted-foreground">Nenhum item pendente.</span>;
       return (
         <span className="font-mono text-[11px]">
-          {processed} processado(s) · <span className="text-emerald-600">✓{succeeded}</span> · <span className="text-amber-600">↻{failed}</span> · <span className="text-destructive">⚠{abandoned}</span>
+          {processed} processado(s) · <span className="text-primary">✓{succeeded}</span> · <span className="text-amber-600">↻{failed}</span> · <span className="text-destructive">⚠{abandoned}</span>
         </span>
       );
     }

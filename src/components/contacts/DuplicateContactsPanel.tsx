@@ -184,9 +184,9 @@ export const DuplicateContactsPanel: React.FC<Props> = ({
       {/* No duplicates */}
       {done && groups.length === 0 && !autoMerging && (
         <Alert className="border-primary/20 bg-primary/10">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <CheckCircle2 className="h-4 w-4 text-primary" />
           <AlertTitle className="text-sm text-primary-foreground">✅ Nenhum duplicado!</AlertTitle>
-          <AlertDescription className="text-xs text-green-700">
+          <AlertDescription className="text-xs text-primary">
             Todos os contatos têm números únicos.
           </AlertDescription>
         </Alert>

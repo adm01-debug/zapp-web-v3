@@ -137,7 +137,7 @@ export const ContactConsentManager: React.FC<ContactConsentManagerProps> = ({
       {/* Consent Status Badge */}
       <div className="flex items-center gap-2">
         {hasConsent ? (
-          <Badge className="gap-1 bg-green-100 text-primary-foreground border-green-300">
+          <Badge className="gap-1 bg-primary text-primary-foreground border-primary">
             <CheckCircle2 className="h-3 w-3" />
             Consentimento registrado
           </Badge>

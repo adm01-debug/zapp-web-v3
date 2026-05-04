@@ -285,7 +285,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
         collapsed ? 'h-9 w-9 justify-center' : 'h-7 px-2',
         hasIssue
           ? 'bg-destructive/10 text-destructive hover:bg-destructive/15 border border-destructive/30'
-          : 'bg-primary/10 text-emerald-600 dark:text-primary hover:bg-primary/15 border border-primary/20'
+          : 'bg-primary/10 text-primary dark:text-primary hover:bg-primary/15 border border-primary/20'
       )}
     >
       {hasIssue ? (

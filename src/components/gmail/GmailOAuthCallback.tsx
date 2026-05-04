@@ -99,7 +99,7 @@ export function GmailOAuthCallback() {
 
         {/* Email conectado */}
         {email && status === 'success' && (
-          <div className="bg-primary/10 dark:bg-green-950/20 rounded-lg p-3 text-sm text-green-700 dark:text-green-400">
+          <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-3 text-sm text-primary dark:text-primary">
             <strong>{email}</strong> conectado ao ZAPP WEB
           </div>
         )}

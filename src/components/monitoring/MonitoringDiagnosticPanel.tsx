@@ -194,7 +194,7 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
                         {d.webhookIssue && <span className="text-xs text-muted-foreground">— {d.webhookIssue}</span>}
                       </div>
                       {d.autoFix && (
-                        <div className={cn('p-3 rounded-lg text-xs font-medium', d.autoFix.applied ? 'bg-primary/10 text-emerald-600' : 'bg-destructive/10 text-destructive')}>
+                        <div className={cn('p-3 rounded-lg text-xs font-medium', d.autoFix.applied ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive')}>
                           {d.autoFix.applied ? '✅ Auto-fix aplicado com sucesso' : '❌ Auto-fix falhou'}
                         </div>
                       )}

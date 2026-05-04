@@ -27,7 +27,7 @@ interface SLAStats {
 }
 
 function getComplianceColor(rate: number): string {
-  if (rate >= 95) return 'text-green-600';
+  if (rate >= 95) return 'text-primary';
   if (rate >= 80) return 'text-amber-600';
   return 'text-red-600';
 }
@@ -146,7 +146,7 @@ export const SLADashboard: React.FC<Props> = ({
       <div className="grid grid-cols-3 gap-2 text-xs">
         <Card>
           <CardContent className="p-2.5 text-center">
-            <p className={`text-xl font-bold ${stats.first_response_violations > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            <p className={`text-xl font-bold ${stats.first_response_violations > 0 ? 'text-red-600' : 'text-primary'}`}>
               {stats.first_response_violations}
             </p>
             <p className="text-muted-foreground">1ª Resposta</p>
@@ -154,7 +154,7 @@ export const SLADashboard: React.FC<Props> = ({
         </Card>
         <Card>
           <CardContent className="p-2.5 text-center">
-            <p className={`text-xl font-bold ${stats.resolution_violations > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            <p className={`text-xl font-bold ${stats.resolution_violations > 0 ? 'text-red-600' : 'text-primary'}`}>
               {stats.resolution_violations}
             </p>
             <p className="text-muted-foreground">Resolução</p>
@@ -173,7 +173,7 @@ export const SLADashboard: React.FC<Props> = ({
       </div>
 
       {stats.compliance_rate_pct >= 95 && !hasViolations && (
-        <div className="flex items-center gap-2 text-sm text-green-700 bg-primary/10 rounded-lg p-2.5">
+        <div className="flex items-center gap-2 text-sm text-primary bg-primary/10 rounded-lg p-2.5">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>Todos os SLAs cumpridos no período! 🎉</span>
         </div>

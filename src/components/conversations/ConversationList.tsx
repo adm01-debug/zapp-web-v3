@@ -80,15 +80,15 @@ const ConvItem = memo(({
       <div className="flex-1 min-w-0 py-0.5">
         <div className="flex items-center justify-between gap-1 mb-0.5">
           <span className="text-sm font-semibold truncate leading-tight">{displayName}</span>
-          <span className={`text-[11px] shrink-0 ${conv.unread_count > 0 ? 'text-green-600 font-medium' : 'text-muted-foreground'}`}>{timeStr}</span>
+          <span className={`text-[11px] shrink-0 ${conv.unread_count > 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>{timeStr}</span>
         </div>
         <div className="flex items-center gap-1.5 h-5">
           {isTyping ? (
-            <p className="text-xs text-green-600 font-medium animate-pulse flex items-center gap-1">
+            <p className="text-xs text-primary font-medium animate-pulse flex items-center gap-1">
               <span className="flex gap-0.5">
-                <span className="w-1 h-1 bg-green-600 rounded-full animate-bounce"></span>
-                <span className="w-1 h-1 bg-green-600 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                <span className="w-1 h-1 bg-green-600 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce"></span>
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></span>
               </span>
               Digitando...
             </p>
@@ -98,7 +98,7 @@ const ConvItem = memo(({
             </p>
           )}
           {conv.unread_count > 0 && (
-            <Badge className="text-[10px] min-w-[18px] h-4.5 px-1 bg-primary hover:bg-green-600 text-white border-none rounded-full flex items-center justify-center font-bold">
+            <Badge className="text-[10px] min-w-[18px] h-4.5 px-1 bg-primary hover:bg-primary text-white border-none rounded-full flex items-center justify-center font-bold">
               {conv.unread_count > 99 ? '99+' : conv.unread_count}
             </Badge>
           )}

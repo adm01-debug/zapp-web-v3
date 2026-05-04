@@ -113,7 +113,7 @@ export function EmailContactPanel({ thread, messages, accountId, className }: Em
               {slaRecord.frt_minutes != null && (
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">1ª resposta em</span>
-                  <span className="font-medium text-green-600">
+                  <span className="font-medium text-primary">
                     {slaRecord.frt_minutes}min
                   </span>
                 </div>

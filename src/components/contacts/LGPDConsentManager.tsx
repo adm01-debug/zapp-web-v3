@@ -72,7 +72,7 @@ export const LGPDConsentManager: React.FC<Props> = ({ contact, onUpdated, readon
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2"><Shield className="h-4 w-4 text-muted-foreground" /><span className="text-sm font-medium">Consentimento LGPD</span></div>
-        {hasConsent && <Badge className="bg-green-100 text-primary-foreground border-green-300 gap-1"><CheckCircle2 className="h-3 w-3" />Ativo</Badge>}
+        {hasConsent && <Badge className="bg-primary text-primary-foreground border-primary gap-1"><CheckCircle2 className="h-3 w-3" />Ativo</Badge>}
         {hasOptedOut && <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" />Opt-out</Badge>}
         {!hasConsent && !hasOptedOut && <Badge variant="outline" className="text-amber-700 border-amber-400 gap-1"><AlertTriangle className="h-3 w-3" />Sem consentimento</Badge>}
       </div>

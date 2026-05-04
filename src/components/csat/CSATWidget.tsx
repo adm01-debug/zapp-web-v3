@@ -23,7 +23,7 @@ interface CSATStats {
 }
 
 function getNPSColor(nps: number): string {
-  if (nps >= 50)  return 'text-green-600';
+  if (nps >= 50)  return 'text-primary';
   if (nps >= 0)   return 'text-amber-600';
   return 'text-red-600';
 }
@@ -124,7 +124,7 @@ export const CSATWidget: React.FC<Props> = ({
             <p className={`text-3xl font-bold ${npsColor}`}>{stats.nps_score}</p>
             <div className="flex items-center justify-center gap-1 mt-0.5">
               {stats.nps_score >= 50
-                ? <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+                ? <TrendingUp className="h-3.5 w-3.5 text-primary" />
                 : stats.nps_score < 0
                   ? <TrendingDown className="h-3.5 w-3.5 text-red-600" />
                   : <Minus className="h-3.5 w-3.5 text-amber-600" />}
@@ -135,7 +135,7 @@ export const CSATWidget: React.FC<Props> = ({
         <Card>
           <CardContent className="p-3 text-center space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-green-600">👍 {stats.nps_promoters}</span>
+              <span className="text-primary">👍 {stats.nps_promoters}</span>
               <span className="text-muted-foreground">😐 {stats.nps_passives}</span>
               <span className="text-red-600">👎 {stats.nps_detractors}</span>
             </div>

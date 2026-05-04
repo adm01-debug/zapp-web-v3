@@ -123,8 +123,8 @@ export function ConnectionCard({
                 </motion.div>
                 {isConnected && !isPhantomLike && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border-2 border-card" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary border-2 border-card" />
                   </span>
                 )}
               </div>
@@ -156,7 +156,7 @@ export function ConnectionCard({
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <Badge variant="outline" className={cn('text-[11px] px-2 py-0.5 gap-1.5 font-medium', status.bgClass, status.color)}>
                     <span className={cn('w-1.5 h-1.5 rounded-full shrink-0',
-                      isConnected && !isPhantomLike ? 'bg-emerald-400' : needsAction ? 'bg-red-400' : 'bg-amber-400'
+                      isConnected && !isPhantomLike ? 'bg-primary' : needsAction ? 'bg-red-400' : 'bg-amber-400'
                     )} />
                     {isPhantomLike ? (reasonInfo?.short ?? 'Precisa reconectar') : status.label}
                   </Badge>

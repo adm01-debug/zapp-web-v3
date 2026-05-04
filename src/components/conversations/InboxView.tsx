@@ -124,7 +124,7 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
                   <DropdownMenuContent align="end" className="w-48">
                     {selectedConv.status === 'open' && (
                       <DropdownMenuItem onClick={handleClose} disabled={closing} className="gap-2 py-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
                         <span className="font-medium text-sm">{closing ? 'Encerrando...' : 'Encerrar conversa'}</span>
                       </DropdownMenuItem>
                     )}

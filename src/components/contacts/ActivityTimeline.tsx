@@ -18,7 +18,7 @@ const ICONS: Record<ActivityType, string> = {
 };
 
 const CHANNEL_STYLES: Record<string, string> = {
-  whatsapp:'bg-green-100 text-primary-foreground',
+  whatsapp:'bg-primary text-primary-foreground',
   instagram:'bg-pink-100 text-pink-800',
   telegram:'bg-blue-100 text-blue-800',
   email:'bg-gray-100 text-gray-700',

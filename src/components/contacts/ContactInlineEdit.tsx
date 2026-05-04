@@ -126,7 +126,7 @@ export function ContactInlineEdit({
         <button
           onClick={save}
           disabled={isSaving}
-          className="p-1 text-green-600 hover:bg-primary/10 rounded"
+          className="p-1 text-primary hover:bg-primary/10 rounded"
           aria-label="Salvar"
         >
           <Check className="h-3.5 w-3.5" />
