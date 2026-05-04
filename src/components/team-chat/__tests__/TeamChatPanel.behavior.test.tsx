@@ -5,7 +5,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock the hook to control state
-vi.mock('../useTeamChatPanel');
+vi.mock('../useTeamChatPanel', () => ({
+  useTeamChatPanel: vi.fn()
+}));
 
 const mockConversation = {
   id: 'conv-1',
