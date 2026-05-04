@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useMessages, type Message } from '@/hooks/useMessages';
 import { useMessageQueue, type PendingMessage } from '@/hooks/messaging/useMessageQueue';
 import { useContactTyping } from '@/hooks/useContactTyping';
-import { MessageCircle, Check, CheckCheck, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw } from 'lucide-react';
+import { MessageCircle, Check, CheckCheck, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -36,9 +36,24 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
   
   // Infinite scroll (top loading)
   const topObserverRef = useRef<HTMLDivElement>(null);
+  
+  // Track messages to show unread count if not at bottom
+  const prevMessagesLength = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length > prevMessagesLength.current) {
+      if (!shouldAutoScroll) {
+        setNewMessagesCount(prev => prev + (messages.length - prevMessagesLength.current));
+        setShowScrollBottom(true);
+      }
+    }
+    prevMessagesLength.current = messages.length;
+  }, [messages.length, shouldAutoScroll]);
+
   
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -75,9 +90,20 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
   // Detect manual scroll up
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
-    const isAtBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 100;
-    setShouldAutoScroll(isAtBottom);
+    const isBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 150;
+    setShouldAutoScroll(isBottom);
+    if (isBottom) {
+      setShowScrollBottom(false);
+      setNewMessagesCount(0);
+    }
   };
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setShowScrollBottom(false);
+    setNewMessagesCount(0);
+  };
+
 
   const formatTime = (dateStr: string) => {
     return format(new Date(dateStr), 'HH:mm', { locale: ptBR });
@@ -97,11 +123,13 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
   }
 
   return (
-    <div 
-      ref={scrollRef}
-      onScroll={handleScroll}
-      className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 relative"
-    >
+    <div className="flex-1 overflow-hidden relative">
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="h-full overflow-y-auto p-4 flex flex-col gap-3"
+      >
+
       {/* Background Overlay */}
       <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.02] pointer-events-none sticky top-0" 
         style={{ backgroundImage: 'url("https://wweb.static.whatsapp.net/7/7b/7b2e3e9d8e7e1c1f1f1f1f1f1f1f1f1f.png")' }} />
@@ -240,6 +268,23 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid }) => {
       ))}
       
       <div ref={bottomRef} className="h-1 shrink-0" />
+      </div>
+
+      {/* Floating Scroll to Bottom Button */}
+      {showScrollBottom && (
+        <button 
+          onClick={scrollToBottom}
+          className="absolute bottom-6 right-6 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center animate-in fade-in slide-in-from-bottom-2 duration-300 z-30"
+          aria-label="Ir para o final"
+        >
+          <ChevronDown className="h-6 w-6" />
+          {newMessagesCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] font-bold h-5 min-w-[20px] px-1.5 rounded-full border-2 border-background flex items-center justify-center">
+              {newMessagesCount > 9 ? '9+' : newMessagesCount}
+            </span>
+          )}
+        </button>
+      )}
     </div>
   );
 };
