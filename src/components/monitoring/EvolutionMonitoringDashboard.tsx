@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Activity, Wifi, Webhook, RefreshCw, Stethoscope, Timer, Bell, BellOff, CalendarDays, BarChart3, Clock, Volume2, VolumeX } from 'lucide-react';
@@ -196,10 +197,21 @@ export function EvolutionMonitoringDashboard() {
 
       {/* Chart + Timeline */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
+        <motion.div 
+          className="lg:col-span-2"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <MonitoringMessageChart messageStats={messageStats} period={period} />
-        </div>
-        <MonitoringEventTimeline />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <MonitoringEventTimeline />
+        </motion.div>
       </div>
 
       <Tabs defaultValue="connections" className="space-y-4">
@@ -242,48 +254,92 @@ export function EvolutionMonitoringDashboard() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="connections">
-          <MonitoringConnectionsList
-            connections={connections}
-            webhookTest={webhookTest}
-            onCheckWebhook={checkWebhookConfig}
-            onTestWebhook={testWebhookDelivery}
-          />
-        </TabsContent>
+        <AnimatePresence mode="wait">
+          <TabsContent value="connections" key="connections">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MonitoringConnectionsList
+                connections={connections}
+                webhookTest={webhookTest}
+                onCheckWebhook={checkWebhookConfig}
+                onTestWebhook={testWebhookDelivery}
+              />
+            </motion.div>
+          </TabsContent>
 
-        <TabsContent value="webhook">
-          <MonitoringWebhookPanel
-            connections={connections}
-            webhookTest={webhookTest}
-            webhookConfig={webhookConfig}
-            reconfiguring={reconfiguring}
-            onTest={testWebhookDelivery}
-            onReconfigure={reconfigureWebhook}
-            onCheckConfig={checkWebhookConfig}
-          />
-        </TabsContent>
+          <TabsContent value="webhook" key="webhook">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MonitoringWebhookPanel
+                connections={connections}
+                webhookTest={webhookTest}
+                webhookConfig={webhookConfig}
+                reconfiguring={reconfiguring}
+                onTest={testWebhookDelivery}
+                onReconfigure={reconfigureWebhook}
+                onCheckConfig={checkWebhookConfig}
+              />
+            </motion.div>
+          </TabsContent>
 
-        <TabsContent value="diagnostic">
-          <MonitoringDiagnosticPanel
-            diagnostic={diagnostic}
-            diagnosing={diagnosing}
-            onRunDiagnostic={runDiagnostic}
-            onReconfigureWebhook={reconfigureWebhook}
-            reconfiguring={reconfiguring}
-          />
-        </TabsContent>
+          <TabsContent value="diagnostic" key="diagnostic">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MonitoringDiagnosticPanel
+                diagnostic={diagnostic}
+                diagnosing={diagnosing}
+                onRunDiagnostic={runDiagnostic}
+                onReconfigureWebhook={reconfigureWebhook}
+                reconfiguring={reconfiguring}
+              />
+            </motion.div>
+          </TabsContent>
 
-        <TabsContent value="sla">
-          <MonitoringSLAPanel uptime={uptime} instanceUptimes={instanceUptimes} />
-        </TabsContent>
+          <TabsContent value="sla" key="sla">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MonitoringSLAPanel uptime={uptime} instanceUptimes={instanceUptimes} />
+            </motion.div>
+          </TabsContent>
 
-        <TabsContent value="heatmap">
-          <MonitoringAvailabilityHeatmap healthLogs={healthLogs} />
-        </TabsContent>
+          <TabsContent value="heatmap" key="heatmap">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MonitoringAvailabilityHeatmap healthLogs={healthLogs} />
+            </motion.div>
+          </TabsContent>
 
-        <TabsContent value="health-logs">
-          <MonitoringHealthLogs healthLogs={healthLogs} />
-        </TabsContent>
+          <TabsContent value="health-logs" key="health-logs">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MonitoringHealthLogs healthLogs={healthLogs} />
+            </motion.div>
+          </TabsContent>
+        </AnimatePresence>
       </Tabs>
     </div>
   );

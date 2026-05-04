@@ -136,21 +136,25 @@ export function MonitoringStatsCards({ connections, messageStats, uptime, sparkl
           transition={{ delay: i * 0.05, duration: 0.25 }}
         >
           <Card className="hover:shadow-md transition-shadow border-border/60 h-full">
-            <CardContent className="pt-4 pb-3 px-4">
+            <CardContent className="pt-4 pb-3 px-4 flex flex-col h-full">
               <div className="flex items-start justify-between mb-2">
-                <div className={cn('p-2 rounded-lg', bgColor)}>
+                <div className={cn('p-2 rounded-lg shrink-0', bgColor)}>
                   <Icon className={cn('w-4 h-4', iconColor)} />
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 overflow-hidden">
                   {sparkline && sparkline.length > 1 && (
-                    <MiniSparkline data={sparkline} color={sparkColor} />
+                    <div className="hidden xs:block opacity-60 hover:opacity-100 transition-opacity">
+                      <MiniSparkline data={sparkline} color={sparkColor} />
+                    </div>
                   )}
                   {pulse && <PulseDot active />}
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</p>
-              <p className="text-lg font-bold truncate mt-0.5">{value}</p>
-              <p className="text-[11px] text-muted-foreground">{subtitle}</p>
+              <div className="mt-auto">
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</p>
+                <p className="text-lg font-bold truncate mt-0.5 tabular-nums">{value}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
