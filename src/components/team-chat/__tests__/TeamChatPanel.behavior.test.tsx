@@ -225,4 +225,31 @@ describe('TeamChatPanel Behavior Tests', () => {
     // Verifica que o indicador de novas mensagens apareceu (confirmando que a UI sabe que não deve pular)
     expect(screen.getByRole('button', { name: /Pular para mensagens novas/i })).toBeInTheDocument();
   });
+
+  it('garante que o cursor determinístico não mistura mensagens fora do filtro durante o scroll', () => {
+    const allMessages = [
+      { id: '1', content: 'Apple 1', sender_id: 'u1', created_at: '2023-01-01T10:00:00Z' },
+      { id: '2', content: 'Banana', sender_id: 'u1', created_at: '2023-01-01T10:01:00Z' },
+      { id: '3', content: 'Apple 2', sender_id: 'u1', created_at: '2023-01-01T10:02:00Z' },
+    ];
+
+    const filtered = allMessages.filter(m => m.content.includes('Apple'));
+    
+    const mockState = getMockState({
+      messages: allMessages,
+      filteredMessages: filtered,
+      searchQuery: 'Apple',
+      showSearch: true
+    });
+
+    (useTeamChatPanel as any).mockReturnValue(mockState);
+
+    render(<TeamChatPanel conversation={mockConversation} onBack={vi.fn()} />);
+    
+    // Verifica que apenas "Apple" aparece
+    expect(screen.getByTestId('virtual-list')).toHaveAttribute('data-rowcount', '2');
+    expect(screen.queryByText('Banana')).not.toBeInTheDocument();
+    expect(screen.getByText('Apple 1')).toBeInTheDocument();
+    expect(screen.getByText('Apple 2')).toBeInTheDocument();
+  });
 });
