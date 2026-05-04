@@ -175,13 +175,18 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
       </AnimatePresence>
 
       <div className="flex-1 relative bg-background min-h-0">
-        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto" onScroll={(e) => {
+        <div ref={s.scrollRef} className="absolute inset-0 overflow-auto scrollbar-thin scrollbar-thumb-primary/20 hover:scrollbar-thumb-primary/40" onScroll={(e) => {
           s.checkNearBottom();
           const el = e.target as HTMLDivElement;
-          if (el.scrollTop === 0 && s.hasNextPage && !s.isFetchingNextPage) {
+          
+          // Infinite scroll UP
+          if (el.scrollTop < 100 && s.hasNextPage && !s.isFetchingNextPage) {
             s.fetchNextPage();
           }
+          
+          s.lastScrollTopRef.current = el.scrollTop;
         }} role="log" aria-label="Mensagens da conversa" aria-live="polite">
+
         {!isDeptMember ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
