@@ -7,9 +7,9 @@
     --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 
     /* ===== TYPOGRAPHY SCALE (fluid clamp) ===== */
-    --text-xs: 11px;
-    --text-sm: 13px;
-    --text-base: 14.5px;
+    --text-xs: 12px;
+    --text-sm: 14px;
+    --text-base: 16px;
     --text-lg: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
     --text-xl: clamp(1.0625rem, 1rem + 0.3vw, 1.125rem);
     --text-2xl: clamp(1.125rem, 1.05rem + 0.4vw, 1.375rem);
@@ -71,8 +71,8 @@
     --secondary-foreground: 0 0% 100%;
 
     /* ===== MUTED ===== */
-    --muted: 221 15% 92%;
-    --muted-foreground: 221 10% 45%;
+    --muted: 221 15% 90%;
+    --muted-foreground: 221 12% 40%;
 
     /* ===== ACCENT ===== */
     --accent: 221 55% 95%;
@@ -222,8 +222,8 @@
     --primary-glow: 225 100% 65%;
     --secondary: 215 90% 60%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 222 22% 16%;
-    --muted-foreground: 220 18% 78%;
+    --muted: 222 22% 14%;
+    --muted-foreground: 220 15% 85%;
     --accent: 221 80% 28%;
     --accent-foreground: 221 100% 88%;
     --destructive: 0 95% 62%;
