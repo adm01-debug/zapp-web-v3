@@ -360,8 +360,25 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
         </div>
       </div>
 
-
-      {s.showScrollDown && <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10"><Button size="icon" variant="secondary" className="rounded-full shadow-lg h-8 w-8" onClick={s.scrollToBottom}><ArrowDown className="w-4 h-4" /></Button></div>}
+      <AnimatePresence>
+        {s.showScrollDown && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
+          >
+            {s.hasNewMessagesUnseen && (
+              <div className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md animate-bounce">
+                Novas mensagens
+              </div>
+            )}
+            <Button size="icon" variant="secondary" className="rounded-full shadow-lg h-9 w-9 border border-primary/20" onClick={s.scrollToBottom}>
+              <ArrowDown className="w-4 h-4" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isDeptMember ? (
         <TeamChatInputArea conversationId={conversation.id} text={s.text} setText={s.setText} replyTo={s.replyTo}
