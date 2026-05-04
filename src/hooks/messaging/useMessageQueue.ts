@@ -10,14 +10,32 @@ export interface PendingMessage {
   content: string;
   status: 'pending' | 'sending' | 'failed';
   timestamp: number;
+  retries: number;
 }
 
 export function useMessageQueue(instanceName: string = 'wpp2') {
   const { sendTextMessage } = useEvolutionApi();
   const { toast } = useToast();
-  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem(`pending_msgs_${instanceName}`);
+    return saved ? JSON.parse(saved) : [];
+  });
   const queueRef = useRef<PendingMessage[]>([]);
   const isProcessingRef = useRef(false);
+
+  // Initialize queueRef from state on mount
+  useEffect(() => {
+    queueRef.current = [...pendingMessages];
+    if (pendingMessages.length > 0) {
+      processQueue();
+    }
+  }, []);
+
+  // Persist to localStorage
+  useEffect(() => {
+    localStorage.setItem(`pending_msgs_${instanceName}`, JSON.stringify(pendingMessages));
+  }, [pendingMessages, instanceName]);
 
   const processQueue = useCallback(async () => {
     if (isProcessingRef.current || queueRef.current.length === 0) return;
@@ -57,19 +75,27 @@ export function useMessageQueue(instanceName: string = 'wpp2') {
       } catch (err) {
         log.error(`[MessageQueue] Failed to send ${msg.id}:`, err);
         
-        setPendingMessages(prev => 
-          prev.map(p => p.id === msg.id ? { ...p, status: 'failed' } : p)
-        );
+        msg.retries += 1;
         
-        toast({
-          title: 'Erro ao enviar mensagem',
-          description: 'A mensagem será tentada novamente em breve.',
-          variant: 'destructive'
-        });
-        
-        // Move to end of queue or wait? 
-        // For now, let's stop and wait for a manual retry or backoff
-        break;
+        if (msg.retries >= 3) {
+          setPendingMessages(prev => 
+            prev.map(p => p.id === msg.id ? { ...p, status: 'failed' } : p)
+          );
+          queueRef.current.shift(); // Remove after max retries
+          
+          toast({
+            title: 'Erro ao enviar mensagem',
+            description: 'A mensagem não pôde ser enviada após várias tentativas.',
+            variant: 'destructive'
+          });
+        } else {
+          // Exponential backoff wait
+          const waitTime = Math.pow(2, msg.retries) * 1000;
+          log.info(`[MessageQueue] Retrying ${msg.id} in ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          // Keep in queue for next iteration
+        }
+        break; 
       }
     }
     
@@ -83,7 +109,8 @@ export function useMessageQueue(instanceName: string = 'wpp2') {
       remote_jid,
       content,
       status: 'pending',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      retries: 0
     };
     
     queueRef.current.push(newMsg);

@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { MessageList } from './MessageList';
 
@@ -31,6 +31,22 @@ const mockUseMessageQueue = vi.fn(() => ({
 }));
 vi.mock('@/hooks/messaging/useMessageQueue', () => ({
   useMessageQueue: () => mockUseMessageQueue(),
+}));
+
+// Mock react-virtual
+const mockScrollToIndex = vi.fn();
+vi.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: vi.fn(({ count }) => ({
+    getVirtualItems: () => Array.from({ length: count }).map((_, index) => ({
+      index,
+      key: index,
+      start: index * 100,
+      size: 100,
+    })),
+    getTotalSize: () => count * 100,
+    scrollToIndex: mockScrollToIndex,
+    measureElement: vi.fn(),
+  })),
 }));
 
 const mockUseContactTyping = vi.fn(() => false);
@@ -84,9 +100,6 @@ describe('Chat Integration - Flow Tests', () => {
   });
 
   it('mantém o scroll no fundo ao receber novas mensagens (auto-scroll)', () => {
-    const scrollIntoViewMock = vi.fn();
-    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
-
     const { rerender } = render(<MessageList remoteJid="test@jid" />);
     
     // Simulate new messages
@@ -101,7 +114,7 @@ describe('Chat Integration - Flow Tests', () => {
     });
 
     rerender(<MessageList remoteJid="test@jid" />);
-    expect(scrollIntoViewMock).toHaveBeenCalled();
+    expect(mockScrollToIndex).toHaveBeenCalled();
   });
 
   it('mostra indicador de "Enviando..." para mensagens na fila', () => {
@@ -139,19 +152,19 @@ describe('Chat Integration - Flow Tests', () => {
       toggleImportant: vi.fn(),
     });
 
-    let observerCallback: (entries: any[]) => void = () => {};
-    const mockObserver = vi.fn(function(this: any, cb: (entries: any[]) => void) {
-      observerCallback = cb;
-      this.observe = vi.fn();
-      this.disconnect = vi.fn();
-      this.unobserve = vi.fn();
-    });
-    window.IntersectionObserver = mockObserver as any;
-
-    render(<MessageList remoteJid="test@jid" />);
+    const { container } = render(<MessageList remoteJid="test@jid" />);
     
-    // Simula a interseção do elemento do topo
-    observerCallback([{ isIntersecting: true }]);
+    // Find scroll container
+    const scrollContainer = container.querySelector('.overflow-y-auto');
+    if (!scrollContainer) throw new Error('Scroll container not found');
+
+    // Mock scroll properties
+    Object.defineProperty(scrollContainer, 'scrollTop', { value: 50, configurable: true });
+    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 1000, configurable: true });
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 500, configurable: true });
+
+    // Trigger scroll
+    fireEvent.scroll(scrollContainer);
     
     expect(loadMoreMock).toHaveBeenCalled();
   });
