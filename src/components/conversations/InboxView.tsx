@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MessageCircle, Users, BarChart2, X, CheckCircle2, RotateCcw, UserCheck, MoreHorizontal } from 'lucide-react';
+import { MessageCircle, Users, BarChart2, X, CheckCircle2, RotateCcw, UserCheck, MoreHorizontal, Search } from 'lucide-react';
 import { ConversationList } from '@/components/conversations/ConversationList';
 import { MessageList } from '@/components/conversations/MessageList';
 import { ConversationsDashboard } from '@/components/conversations/ConversationsDashboard';
@@ -33,6 +33,8 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
   const [showContact,  setShowContact]  = useState(true);
   const [closing,      setClosing]      = useState(false);
   const [message,      setMessage]      = useState('');
+  const [showSearch,   setShowSearch]   = useState(false);
+  const [searchTerm,   setSearchTerm]   = useState('');
 
   const handleSend = () => {
     if (!selectedConv || !message.trim()) return;
@@ -103,6 +105,10 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
+                 <Button variant={showSearch ? 'default' : 'ghost'} size="icon" className="h-9 w-9 rounded-full"
+                  onClick={() => setShowSearch(!showSearch)} title="Pesquisar mensagens">
+                  <Search className="h-4.5 w-4.5" />
+                </Button>
                 <Button variant={showContact ? 'default' : 'ghost'} size="icon" className="h-9 w-9 rounded-full"
                   onClick={() => setShowContact((v) => !v)} aria-pressed={showContact} title="CRM 360°">
                   <Users className="h-4.5 w-4.5" />
@@ -133,8 +139,26 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
                 </DropdownMenu>
               </div>
             </div>
+            {showSearch && (
+              <div className="px-4 py-2 border-b bg-background/95 backdrop-blur-sm flex items-center gap-2 animate-in slide-in-from-top duration-200">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <input 
+                    type="text" 
+                    placeholder="Pesquisar nesta conversa..." 
+                    className="w-full bg-muted/50 border-none rounded-md pl-9 pr-3 py-1.5 text-sm focus:ring-1 focus:ring-primary outline-none"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setShowSearch(false); setSearchTerm(''); }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
             <div className="flex-1 overflow-hidden relative flex flex-col">
-              <MessageList remoteJid={selectedConv.remote_jid} />
+              <MessageList remoteJid={selectedConv.remote_jid} searchTerm={searchTerm} />
             </div>
             <div className="bg-[#f0f2f5] dark:bg-muted/30 px-4 py-2.5 shrink-0 z-10">
               <div className="flex items-center gap-2">
