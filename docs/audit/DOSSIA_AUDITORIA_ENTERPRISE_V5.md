@@ -15,6 +15,7 @@ Mapeamento detalhado de funcionalidades para arquivos e caminhos de implementaç
 
 | Módulo | Funcionalidade | Path no Repositório | Dependências Principais | Status |
 | :--- | :--- | :--- | :--- | :--- |
+| 2026-05-04 22:31:06 | CI Audit (dev) | gpt-engineer-app[bot] | `ddf47fc3` | Sucesso |
 | **Inbox** | Virtualização de Chat | `src/components/team-chat/TeamChatPanel.tsx` | react-window, useTeamChat | ✅ Implementado |
 | **Inbox** | Filtro & Busca | `src/hooks/useTeamChat.ts` | Supabase JS | ✅ Implementado |
 | **CRM** | Gestão de Contatos | `src/components/contacts/ContactForm.tsx` | react-hook-form, zod | ✅ Implementado |
@@ -24,11 +25,6 @@ Mapeamento detalhado de funcionalidades para arquivos e caminhos de implementaç
 | **Infra** | CI/CD Audit | `.github/workflows/ci.yml` | GitHub Actions, Scripts JS | ✅ Implementado |
 
 ---
-
-## 3. Matriz de Riscos e Controles LGPD
-Análise de riscos específicos baseada nos princípios da LGPD.
-
-| ID | Categoria | Risco Identificado | Impacto | Controle Mitigador | Prioridade |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | LGPD-01 | Acesso | Acesso indevido a dados de terceiros | Crítico | Row Level Security (RLS) mandatório | P0 |
 | LGPD-02 | Retenção | Armazenamento de PII além do prazo | Médio | Cron job de expurgo em Edge Function | P1 |
@@ -70,7 +66,8 @@ Evidências rastreáveis para auditoria técnica.
 
 | Data/Hora (UTC) | Ação | Responsável | Commit Ref | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| | 2026-05-04 22:29:36 | CI Audit Generation | gpt-engineer-app[bot] | `5a0a2d2f` | Sucesso | |
+| 2026-05-04 22:31:26 | CI Audit (dev) | gpt-engineer-app[bot] | `aae7212c` | Sucesso |
+| 2026-05-04 22:29:36 | CI Audit Generation | gpt-engineer-app[bot] | `5a0a2d2f` | Sucesso |
 
 ---
 
