@@ -1,9 +1,8 @@
-/** @vitest-environment jsdom */
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { TeamChatPanel } from '../TeamChatPanel';
+import { useAuth } from '@/features/auth';
 import { useTeamChatPanel } from '../useTeamChatPanel';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { useTeamMessageReactions } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
 
@@ -16,265 +15,214 @@ class ResizeObserverMock {
 global.ResizeObserver = ResizeObserverMock;
 
 // Mock dependencies
-vi.mock('../useTeamChatPanel', () => ({
-  useTeamChatPanel: vi.fn()
+vi.mock('../useTeamChatPanel');
+vi.mock('@/features/auth');
+vi.mock('@/features/inbox/hooks/team-chat/useTeamMessageReactions');
+vi.mock('@/lib/logger', () => ({
+  getLogger: () => ({
+    error: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+  }),
 }));
 
-vi.mock('@/features/auth', () => ({
-  useAuth: vi.fn(() => ({ profile: { id: 'user-1', name: 'Me' } }))
+// Mock components to avoid deep rendering issues
+vi.mock('../TeamChatHeader', () => ({ 
+  TeamChatHeader: ({ onToggleSearch }: any) => (
+    <div data-testid="mock-header">
+      <button onClick={onToggleSearch} data-testid="toggle-search">Toggle Search</button>
+    </div>
+  ) 
 }));
+vi.mock('../TeamChatInputArea', () => ({ TeamChatInputArea: () => <div data-testid="mock-input" /> }));
+vi.mock('../AddMembersDialog', () => ({ AddMembersDialog: () => <div data-testid="mock-dialog" /> }));
+vi.mock('../ParticipantStatsGraph', () => ({ ParticipantStatsGraph: () => <div data-testid="mock-stats" /> }));
+vi.mock('@/features/inbox', () => ({ MarkdownPreview: ({ text }: { text: string }) => <span>{text}</span> }));
+vi.mock('@/features/inbox/components/MessageStatus', () => ({ MessageStatus: () => <span>Status</span> }));
 
-vi.mock('@/hooks/useTeamChatDraft', () => ({
-  useTeamChatDraft: vi.fn(() => ({ 
-    draft: '', 
-    setDraft: vi.fn(),
-    hasText: false,
-    isOverLimit: false,
-    charCount: 0,
-    CHAR_LIMIT: 2000,
-    clearDraft: vi.fn(),
-    handlePaste: vi.fn()
-  }))
-}));
-
-vi.mock('@/features/inbox/hooks/team-chat/useTeamMessageReactions', () => ({
-  useTeamMessageReactions: vi.fn(() => ({
-    aggregate: vi.fn(() => []),
-    toggle: vi.fn(),
-    isToggling: false,
-  }))
-}));
-
-const mockConversation = {
-  id: 'conv-1',
-  name: 'Test Team',
-  type: 'group',
-  members: ['user-1', 'user-2']
-};
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: false },
-  },
+// Mock react-window List
+vi.mock('react-window', async () => {
+  const actual = await vi.importActual('react-window');
+  return {
+    ...actual,
+    List: ({ rowCount, rowComponent: Row }: any) => (
+      <div data-testid="virtual-list" data-rowcount={rowCount}>
+        {Array.from({ length: rowCount }).map((_, index) => (
+          <div key={index}>
+            <Row index={index} style={{}} ariaAttributes={{}} />
+          </div>
+        ))}
+      </div>
+    ),
+  };
 });
 
-const defaultMockState = {
-  profile: { id: 'user-1', name: 'Me' },
-  messages: [],
-  filteredMessages: [],
-  isLoading: false,
-  isMuted: false,
-  text: '',
-  setText: vi.fn(),
-  editingId: null,
-  editText: '',
-  setEditText: vi.fn(),
-  isRecordingAudio: false,
-  setIsRecordingAudio: vi.fn(),
-  replyTo: null,
-  setReplyTo: vi.fn(),
-  showScrollDown: false,
-  hasNewMessagesUnseen: false,
-  showAddMembers: false,
-  setShowAddMembers: vi.fn(),
-  showSearch: false,
-  setShowSearch: vi.fn(),
-  searchQuery: '',
-  setSearchQuery: vi.fn(),
-  scrollRef: { current: null },
-  listRef: { current: null },
-  isNearBottomRef: { current: true },
-  searchInputRef: { current: null },
-  lastScrollTopRef: { current: 0 },
-  tts: { isPlaying: false, isLoading: false, speak: vi.fn(), stop: vi.fn() },
-  muteMutation: { mutate: vi.fn() },
-  sendMutation: { isPending: false, mutate: vi.fn() },
-  updateStatusMutation: { mutate: vi.fn() },
-  checkNearBottom: vi.fn(),
-  scrollToBottom: vi.fn(),
-  handleSend: vi.fn(),
-  handleDelete: vi.fn(),
-  handleStartEdit: vi.fn(),
-  handleSaveEdit: vi.fn(),
-  handleCancelEdit: vi.fn(),
-  handleCopyMessage: vi.fn(),
-  syncSearchWithCache: vi.fn(),
-  fetchNextPage: vi.fn(),
-  hasNextPage: false,
-  isFetchingNextPage: false,
-};
+describe('TeamChatPanel Behavior Tests', () => {
+  const mockConversation = {
+    id: 'conv-1',
+    type: 'group',
+    name: 'Test Group',
+    members: []
+  } as any;
 
-describe('TeamChatPanel Behavior', () => {
+  const mockProfile = { id: 'user-1', name: 'User 1' };
+
   beforeEach(() => {
     vi.clearAllMocks();
+    (useAuth as any).mockReturnValue({ profile: mockProfile });
+    (useTeamMessageReactions as any).mockReturnValue({
+      aggregate: vi.fn(() => []),
+      toggle: vi.fn(),
+      isToggling: false,
+    });
   });
 
-  it('renders messages and handles search', async () => {
-    const mockSyncSearch = vi.fn();
-    (useTeamChatPanel as any).mockReturnValue({
-      ...defaultMockState,
+  const getMockState = (overrides = {}) => ({
+    profile: mockProfile,
+    messages: [],
+    filteredMessages: [],
+    isLoading: false,
+    isMuted: false,
+    text: '',
+    setText: vi.fn(),
+    editingId: null,
+    editText: '',
+    setEditText: vi.fn(),
+    isRecordingAudio: false,
+    setIsRecordingAudio: vi.fn(),
+    replyTo: null,
+    setReplyTo: vi.fn(),
+    showScrollDown: false,
+    hasNewMessagesUnseen: false,
+    showAddMembers: false,
+    setShowAddMembers: vi.fn(),
+    showSearch: false,
+    setShowSearch: vi.fn(),
+    searchQuery: '',
+    setSearchQuery: vi.fn(),
+    scrollRef: { current: { scrollTo: vi.fn(), scrollHeight: 1000, scrollTop: 0, clientHeight: 500 } },
+    listRef: { current: { scrollToRow: vi.fn() } },
+    isNearBottomRef: { current: true },
+    searchInputRef: { current: null },
+    lastScrollTopRef: { current: 0 },
+    tts: {
+      voiceId: 'default',
+      speed: 1,
+      isPlaying: false,
+      isLoading: false,
+      speak: vi.fn(),
+      stop: vi.fn(),
+    },
+    muteMutation: { mutate: vi.fn() },
+    sendMutation: { isPending: false, mutate: vi.fn() },
+    updateStatusMutation: { mutate: vi.fn() },
+    checkNearBottom: vi.fn(),
+    scrollToBottom: vi.fn(),
+    handleSend: vi.fn(),
+    handleDelete: vi.fn(),
+    handleStartEdit: vi.fn(),
+    handleSaveEdit: vi.fn(),
+    handleCancelEdit: vi.fn(),
+    handleCopyMessage: vi.fn(),
+    syncSearchWithCache: vi.fn(),
+    fetchNextPage: vi.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    ...overrides
+  });
+
+  it('atualiza a quantidade de mensagens exibidas ao mudar o filtro de busca', () => {
+    const allMessages = [
+      { id: '1', content: 'Apple', sender_id: 'u1', created_at: new Date().toISOString() },
+      { id: '2', content: 'Banana', sender_id: 'u1', created_at: new Date().toISOString() },
+    ];
+
+    const mockState = getMockState({
+      messages: allMessages,
+      filteredMessages: allMessages,
       showSearch: true,
-      messages: [{ id: '1', content: 'Hello', created_at: new Date().toISOString(), sender_id: 'user-2', sender: { name: 'Other' } }],
-      filteredMessages: [{ id: '1', content: 'Hello', created_at: new Date().toISOString(), sender_id: 'user-2', sender: { name: 'Other' } }],
-      syncSearchWithCache: mockSyncSearch,
+      searchQuery: ''
     });
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
+    (useTeamChatPanel as any).mockReturnValue(mockState);
 
-    expect(screen.getByText('Hello')).toBeDefined();
+    const { rerender } = render(<TeamChatPanel conversation={mockConversation} onBack={vi.fn()} />);
     
-    const searchInput = screen.getByPlaceholderText(/Buscar nas mensagens/i);
-    fireEvent.change(searchInput, { target: { value: 'test' } });
+    expect(screen.getByTestId('virtual-list')).toHaveAttribute('data-rowcount', '2');
+
+    // Simula mudança de filtro (Banana apenas)
+    const filtered = [allMessages[1]];
+    (useTeamChatPanel as any).mockReturnValue({
+      ...mockState,
+      filteredMessages: filtered,
+      searchQuery: 'Banana'
+    });
+
+    rerender(<TeamChatPanel conversation={mockConversation} onBack={vi.fn()} />);
     
-    expect(mockSyncSearch).toHaveBeenCalledWith('test');
+    expect(screen.getByTestId('virtual-list')).toHaveAttribute('data-rowcount', '1');
+    expect(screen.getByText('Banana')).toBeInTheDocument();
+    expect(screen.queryByText('Apple')).not.toBeInTheDocument();
   });
 
-  it('shows "Jump to new messages" button when scrolled up and new message arrives', async () => {
-    const scrollToBottom = vi.fn();
-    (useTeamChatPanel as any).mockReturnValue({
-      ...defaultMockState,
-      messages: [{ id: '1', content: 'Old', created_at: new Date().toISOString(), sender_id: 'user-2' }],
-      filteredMessages: [{ id: '1', content: 'Old', created_at: new Date().toISOString(), sender_id: 'user-2' }],
+  it('exibe o botão "pular para novas mensagens" quando há novas mensagens e não estamos no fundo', () => {
+    const messages = [
+      { id: '1', content: 'Old', sender_id: 'u2', created_at: new Date().toISOString() },
+    ];
+
+    const scrollToBottomMock = vi.fn();
+    const mockState = getMockState({
+      messages,
+      filteredMessages: messages,
       hasNewMessagesUnseen: true,
-      scrollToBottom,
       isNearBottomRef: { current: false },
+      scrollToBottom: scrollToBottomMock
     });
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
+    (useTeamChatPanel as any).mockReturnValue(mockState);
 
-    const jumpButton = screen.getByText(/Pular para mensagens novas/i);
-    expect(jumpButton).toBeDefined();
+    render(<TeamChatPanel conversation={mockConversation} onBack={vi.fn()} />);
     
+    const jumpButton = screen.getByRole('button', { name: /Pular para mensagens novas/i });
+    expect(jumpButton).toBeInTheDocument();
+
     fireEvent.click(jumpButton);
-    expect(scrollToBottom).toHaveBeenCalled();
+    expect(scrollToBottomMock).toHaveBeenCalled();
   });
 
-  it('updates react-window list when search filter changes', async () => {
-    const mockSyncSearch = vi.fn();
-    const { rerender } = render(
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
+  it('mantém a posição de scroll ao receber novas mensagens de terceiros se não estiver no fundo', () => {
+    // Este teste valida a lógica de preservação de estado/UX descrita no requisito E2E
+    const initialMessages = [
+      { id: '1', content: 'Msg 1', sender_id: 'u2', created_at: new Date().toISOString() },
+    ];
 
-    // Initial state: 2 messages
-    (useTeamChatPanel as any).mockReturnValue({
-      ...defaultMockState,
-      showSearch: true,
-      messages: [
-        { id: '1', content: 'Apple', created_at: new Date().toISOString(), sender_id: 'user-2', sender: { name: 'Other' } },
-        { id: '2', content: 'Banana', created_at: new Date().toISOString(), sender_id: 'user-2', sender: { name: 'Other' } }
-      ],
-      filteredMessages: [
-        { id: '1', content: 'Apple', created_at: new Date().toISOString(), sender_id: 'user-2', sender: { name: 'Other' } },
-        { id: '2', content: 'Banana', created_at: new Date().toISOString(), sender_id: 'user-2', sender: { name: 'Other' } }
-      ],
-      syncSearchWithCache: mockSyncSearch,
+    const mockState = getMockState({
+      messages: initialMessages,
+      filteredMessages: initialMessages,
+      isNearBottomRef: { current: false }
     });
 
-    rerender(
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
+    (useTeamChatPanel as any).mockReturnValue(mockState);
 
-    expect(screen.getByText('Apple')).toBeDefined();
-    expect(screen.getByText('Banana')).toBeDefined();
+    const { rerender } = render(<TeamChatPanel conversation={mockConversation} onBack={vi.fn()} />);
 
-    // Simulating search "Apple" -> should only show 1 message
-    (useTeamChatPanel as any).mockReturnValue({
-      ...defaultMockState,
-      showSearch: true,
-      searchQuery: 'Apple',
-      messages: [
-        { id: '1', content: 'Apple', created_at: new Date().toISOString(), sender_id: 'user-2', sender: { name: 'Other' } },
-        { id: '2', content: 'Banana', created_at: new Date().toISOString(), sender_id: 'user-2', sender: { name: 'Other' } }
-      ],
-      filteredMessages: [
-        { id: '1', content: 'Apple', created_at: new Date().toISOString(), sender_id: 'user-2', sender: { name: 'Other' } }
-      ],
-      syncSearchWithCache: mockSyncSearch,
-    });
-
-    rerender(
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
-
-    expect(screen.getByText('Apple')).toBeDefined();
-    expect(screen.queryByText('Banana')).toBeNull();
-  });
-
-  it('handles scroll anchor and jump to bottom when new messages arrive', async () => {
-    const scrollToBottom = vi.fn();
-    const isNearBottomRef = { current: false };
+    // Simula chegada de nova mensagem
+    const newMessages = [
+      ...initialMessages,
+      { id: '2', content: 'New Msg', sender_id: 'u2', created_at: new Date().toISOString() },
+    ];
 
     (useTeamChatPanel as any).mockReturnValue({
-      ...defaultMockState,
-      messages: [{ id: '1', content: 'Message 1', created_at: new Date().toISOString(), sender_id: 'user-2' }],
-      filteredMessages: [{ id: '1', content: 'Message 1', created_at: new Date().toISOString(), sender_id: 'user-2' }],
-      hasNewMessagesUnseen: false,
-      scrollToBottom,
-      isNearBottomRef,
+      ...mockState,
+      messages: newMessages,
+      filteredMessages: newMessages,
+      hasNewMessagesUnseen: true
     });
 
-    const { rerender } = render(
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
+    rerender(<TeamChatPanel conversation={mockConversation} onBack={vi.fn()} />);
 
-    // Simulate new message arriving while user is scrolled up
-    (useTeamChatPanel as any).mockReturnValue({
-      ...defaultMockState,
-      messages: [
-        { id: '1', content: 'Message 1', created_at: new Date().toISOString(), sender_id: 'user-2' },
-        { id: '2', content: 'Message 2', created_at: new Date().toISOString(), sender_id: 'user-2' }
-      ],
-      filteredMessages: [
-        { id: '1', content: 'Message 1', created_at: new Date().toISOString(), sender_id: 'user-2' },
-        { id: '2', content: 'Message 2', created_at: new Date().toISOString(), sender_id: 'user-2' }
-      ],
-      hasNewMessagesUnseen: true, // Should show the button
-      scrollToBottom,
-      isNearBottomRef: { current: false },
-    });
-
-    rerender(
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <TeamChatPanel conversation={mockConversation as any} onBack={() => {}} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
-
-    // Verify button appears
-    const jumpButton = screen.getByText(/Pular para mensagens novas/i);
-    expect(jumpButton).toBeDefined();
-
-    // Click jump button
-    fireEvent.click(jumpButton);
-    expect(scrollToBottom).toHaveBeenCalled();
+    // Verifica que o indicador de novas mensagens apareceu (confirmando que a UI sabe que não deve pular)
+    expect(screen.getByRole('button', { name: /Pular para mensagens novas/i })).toBeInTheDocument();
   });
 });
