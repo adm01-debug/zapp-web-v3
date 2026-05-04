@@ -117,6 +117,8 @@ export interface Message {
   contactAvatar?: string | null;
   /** Indica se a mensagem é interna (whisper/nota). */
   isWhisper?: boolean;
+  /** @internal Flag used for optimistic updates in the UI */
+  _optimistic?: boolean;
 }
 
 
