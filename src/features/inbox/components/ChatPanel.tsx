@@ -524,9 +524,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
       <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden bg-[#0b141a] dark:bg-[#0b141a]">
         {!hideHeader && (
-          <ChatHeader
+          <ChatPanelHeader
             conversation={conversation}
-            messages={messages}
             isContactTyping={isContactTyping}
             showAIAssistant={activeTool === 'aiAssistant'}
             showDetails={showDetails}
@@ -541,13 +540,13 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onVoiceChange={setVoiceId}
             onSpeedChange={setSpeed}
             onBack={onBack}
-            onGenerateSummary={(tool) => handleSetActiveTool(tool === 'teamFiles' ? 'teamFiles' : 'summary')}
+            onGenerateSummary={() => handleSetActiveTool('summary')}
             onCloseConversation={() => openDialog('closeDialog')}
             failuresOnly={failuresOnly}
             failuresCount={failedMessages.length}
             onToggleFailuresOnly={() => setFailuresOnly((v) => !v)}
-            onOpenWhisper={() => dispatch({ type: 'TOGGLE', key: 'whisper' })}
-            whisperCount={whisperCount}
+            activeTool={activeTool}
+            onSetActiveTool={handleSetActiveTool}
           />
         )}
 
