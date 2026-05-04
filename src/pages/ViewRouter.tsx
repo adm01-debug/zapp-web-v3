@@ -56,6 +56,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<any
   'inbox': Views.RealtimeInboxView,
   'dashboard': Views.DashboardView,
   'agents': Views.AgentsView,
+  'agents-system': Views.AgentsView,
   'queues': Views.QueuesView,
   'contacts': Views.ContactsView,
   'groups': Views.GroupsView,
