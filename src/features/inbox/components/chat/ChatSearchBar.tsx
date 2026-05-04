@@ -46,10 +46,10 @@ export function ChatSearchBar({ messages, isOpen, onClose, onNavigateToMessage, 
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden border-b border-white/10 bg-[#111b21] shrink-0">
+        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden border-b border-white/10 bg-background shrink-0">
           <div className="px-3 md:px-4 py-3 space-y-2.5" role="search">
             <div className="flex items-center gap-1.5">
-              <div className="relative flex-1 min-w-0 flex items-center gap-2.5 bg-[#202c33] rounded-lg px-3.5 h-10 border-none focus-within:ring-0 transition-all duration-200">
+              <div className="relative flex-1 min-w-0 flex items-center gap-2.5 bg-card rounded-lg px-3.5 h-10 border-none focus-within:ring-0 transition-all duration-200">
                 <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                 <Input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={handleKeyDown} placeholder="Buscar na conversa..."
                   className="h-full text-sm border-none bg-transparent shadow-none focus-visible:ring-0 px-0 min-w-0 text-[#e9edef] placeholder:text-[#8696a0]" />
@@ -60,7 +60,7 @@ export function ChatSearchBar({ messages, isOpen, onClose, onNavigateToMessage, 
                   </span>
                 )}
               </div>
-              <div className="flex items-center shrink-0 bg-[#202c33] rounded-lg">
+              <div className="flex items-center shrink-0 bg-card rounded-lg">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="w-8 h-10 rounded-l-xl rounded-r-none hover:bg-accent" onClick={navigateUp} disabled={results.length === 0} aria-label="Resultado anterior">

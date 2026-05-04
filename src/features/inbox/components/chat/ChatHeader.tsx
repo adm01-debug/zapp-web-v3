@@ -77,7 +77,7 @@ export const ChatHeader = memo(function ChatHeader({
 
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className={cn(
-      "flex items-center justify-between px-4 sm:px-4 border-b border-[#222d34] bg-[#202c33] dark:bg-[#202c33] sticky top-0 z-30 shadow-none h-[59px]",
+      "flex items-center justify-between px-4 sm:px-4 border-b border-border bg-card dark:bg-card sticky top-0 z-30 shadow-none h-[59px]",
       density === 'comfortable' ? 'py-1.5' : 'py-1'
     )}>
       <div className="flex items-center gap-3">
@@ -108,7 +108,7 @@ export const ChatHeader = memo(function ChatHeader({
             </h3>
             <div className="flex-shrink-0 flex items-center gap-1">
               <SLAIndicatorForContact conversation={conversation} />
-              <Badge variant="outline" className="text-[10px] h-4 px-1.5 capitalize border-none bg-[#202c33] text-[#8696a0] whitespace-nowrap rounded-sm">
+              <Badge variant="outline" className="text-[10px] h-4 px-1.5 capitalize border-none bg-card text-[#8696a0] whitespace-nowrap rounded-sm">
                 {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
               </Badge>
             </div>

@@ -205,7 +205,7 @@ export function MessageBubble({
                 (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2.5 py-2' : 'px-2 py-1.5',
                 isSent
                   ? cn('bg-[#1e3a5f] text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
-                  : cn('bg-[#202c33] text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
+                  : cn('bg-card text-[#e9edef] font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
                 message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 ring-1 ring-amber-500/30 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
@@ -224,7 +224,7 @@ export function MessageBubble({
                       "w-3 h-3 rotate-45 transform origin-top",
                       isSent 
                         ? "bg-[#1e3a5f] -translate-x-1.5" 
-                        : "bg-[#202c33] translate-x-1.5"
+                        : "bg-card translate-x-1.5"
                     )} 
                   />
                 </div>
