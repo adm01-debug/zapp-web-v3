@@ -285,7 +285,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
         collapsed ? 'h-9 w-9 justify-center' : 'h-7 px-2',
         hasIssue
           ? 'bg-destructive/10 text-destructive hover:bg-destructive/15 border border-destructive/30'
-          : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15 border border-emerald-500/20'
+          : 'bg-primary/10 text-primary dark:text-primary hover:bg-primary/15 border border-primary/20'
       )}
     >
       {hasIssue ? (
@@ -403,7 +403,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
                     <span
                       className={cn(
                         'w-1.5 h-1.5 rounded-full shrink-0',
-                        isOk ? 'bg-emerald-500' : 'bg-destructive animate-pulse'
+                        isOk ? 'bg-primary' : 'bg-destructive animate-pulse'
                       )}
                       aria-hidden="true"
                     />

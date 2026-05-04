@@ -24,8 +24,8 @@ const LEAD_LABELS: Record<string, string> = {
 };
 const LEAD_COLORS: Record<string, string> = {
   novo: 'bg-gray-100 text-gray-700', em_contato: 'bg-blue-100 text-blue-700',
-  qualificado: 'bg-green-100 text-green-700', proposta: 'bg-purple-100 text-purple-700',
-  negociacao: 'bg-amber-100 text-amber-700', fechado: 'bg-emerald-100 text-emerald-700',
+  qualificado: 'bg-primary text-primary', proposta: 'bg-purple-100 text-purple-700',
+  negociacao: 'bg-amber-100 text-amber-700', fechado: 'bg-primary text-primary',
   perdido: 'bg-red-100 text-red-700',
 };
 
@@ -67,7 +67,7 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
               {safeContact.lead_score > 0 && (
                 <Badge variant="outline" className="text-xs gap-0.5"><Star className="h-2.5 w-2.5" />{safeContact.lead_score}</Badge>
               )}
-              <Badge className={`text-xs ${hasConsent ? 'bg-green-100 text-green-800 border-green-300' : 'bg-amber-50 text-amber-700 border-amber-400'}`}>
+              <Badge className={`text-xs ${hasConsent ? 'bg-primary text-primary-foreground border-primary' : 'bg-amber-50 text-amber-700 border-amber-400'}`}>
                 <Shield className="h-2.5 w-2.5 mr-0.5" />{hasConsent ? 'LGPD ✓' : 'Sem consent.'}
               </Badge>
             </div>

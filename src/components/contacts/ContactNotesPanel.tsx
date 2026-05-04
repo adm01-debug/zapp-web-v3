@@ -29,7 +29,7 @@ const NOTE_TYPES = [
   { value: 'general',  label: '📝 Geral',     color: 'bg-gray-100 text-gray-700' },
   { value: 'call',     label: '📞 Ligação',   color: 'bg-blue-100 text-blue-700' },
   { value: 'meeting',  label: '🤝 Reunião',   color: 'bg-purple-100 text-purple-700' },
-  { value: 'email',    label: '📧 E-mail',    color: 'bg-green-100 text-green-700' },
+  { value: 'email',    label: '📧 E-mail',    color: 'bg-primary text-primary' },
   { value: 'task',     label: '✅ Tarefa',    color: 'bg-amber-100 text-amber-700' },
   { value: 'lgpd',     label: '⚖️ LGPD',      color: 'bg-red-100 text-red-700' },
 ];

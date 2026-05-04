@@ -27,7 +27,7 @@ interface AuditEntry {
 }
 
 const ACTION_CONFIG = {
-  INSERT:  { label: 'Criado',    color: 'bg-green-100 text-green-800 border-green-300' },
+  INSERT:  { label: 'Criado',    color: 'bg-primary text-primary-foreground border-primary' },
   UPDATE:  { label: 'Editado',   color: 'bg-blue-100 text-blue-800 border-blue-300' },
   DELETE:  { label: 'Excluído',  color: 'bg-red-100 text-red-800 border-red-300' },
   RESTORE: { label: 'Restaurado', color: 'bg-purple-100 text-purple-800 border-purple-300' },

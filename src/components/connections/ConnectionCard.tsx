@@ -22,7 +22,7 @@ import type { WhatsAppConnection } from '@/features/connections';
 
 /** Human-friendly status — no jargon. */
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Wifi; bgClass: string }> = {
-  connected: { label: 'Online', color: 'text-emerald-400', icon: Wifi, bgClass: 'bg-emerald-500/10 border-emerald-500/20' },
+  connected: { label: 'Online', color: 'text-primary', icon: Wifi, bgClass: 'bg-primary/10 border-primary/20' },
   disconnected: { label: 'Desconectado', color: 'text-red-400', icon: WifiOff, bgClass: 'bg-red-500/10 border-red-500/20' },
   connecting: { label: 'Conectando...', color: 'text-amber-400', icon: RefreshCw, bgClass: 'bg-amber-500/10 border-amber-500/20' },
   pending: { label: 'Aguardando QR', color: 'text-amber-400', icon: QrCode, bgClass: 'bg-amber-500/10 border-amber-500/20' },
@@ -101,7 +101,7 @@ export function ConnectionCard({
       <Card className={cn(
         'border transition-all overflow-hidden',
         isConnected && !isPhantomLike
-          ? 'border-emerald-500/20 bg-card shadow-emerald-500/5 shadow-lg'
+          ? 'border-primary/20 bg-card shadow-emerald-500/5 shadow-lg'
           : needsAction
             ? 'border-red-500/20 bg-card shadow-red-500/5 shadow-lg'
             : 'border-secondary/20 bg-card',
@@ -116,15 +116,15 @@ export function ConnectionCard({
                   transition={{ duration: 1, repeat: connection.status === 'connecting' ? Infinity : 0, ease: 'linear' }}
                   className={cn(
                     'w-11 h-11 rounded-full flex items-center justify-center',
-                    isConnected && !isPhantomLike ? 'bg-emerald-500/15' : needsAction ? 'bg-red-500/15' : 'bg-muted',
+                    isConnected && !isPhantomLike ? 'bg-primary/15' : needsAction ? 'bg-red-500/15' : 'bg-muted',
                   )}
                 >
-                  <Smartphone className={cn('w-5 h-5', isConnected && !isPhantomLike ? 'text-emerald-400' : needsAction ? 'text-red-400' : 'text-muted-foreground')} />
+                  <Smartphone className={cn('w-5 h-5', isConnected && !isPhantomLike ? 'text-primary' : needsAction ? 'text-red-400' : 'text-muted-foreground')} />
                 </motion.div>
                 {isConnected && !isPhantomLike && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border-2 border-card" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary border-2 border-card" />
                   </span>
                 )}
               </div>
@@ -143,10 +143,10 @@ export function ConnectionCard({
                   <p className="text-sm text-muted-foreground">{connection.phone_number}</p>
                   {connection.battery_level != null && (
                     <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                      {connection.is_plugged ? <BatteryCharging className="w-3.5 h-3.5 text-emerald-400" /> :
+                      {connection.is_plugged ? <BatteryCharging className="w-3.5 h-3.5 text-primary" /> :
                        connection.battery_level <= 20 ? <BatteryLow className="w-3.5 h-3.5 text-destructive" /> :
                        connection.battery_level <= 50 ? <BatteryMedium className="w-3.5 h-3.5 text-amber-400" /> :
-                       <BatteryFull className="w-3.5 h-3.5 text-emerald-400" />}
+                       <BatteryFull className="w-3.5 h-3.5 text-primary" />}
                       {connection.battery_level}%
                     </span>
                   )}
@@ -156,7 +156,7 @@ export function ConnectionCard({
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <Badge variant="outline" className={cn('text-[11px] px-2 py-0.5 gap-1.5 font-medium', status.bgClass, status.color)}>
                     <span className={cn('w-1.5 h-1.5 rounded-full shrink-0',
-                      isConnected && !isPhantomLike ? 'bg-emerald-400' : needsAction ? 'bg-red-400' : 'bg-amber-400'
+                      isConnected && !isPhantomLike ? 'bg-primary' : needsAction ? 'bg-red-400' : 'bg-amber-400'
                     )} />
                     {isPhantomLike ? (reasonInfo?.short ?? 'Precisa reconectar') : status.label}
                   </Badge>

@@ -272,7 +272,7 @@ export default function AdminWhatsAppModePage() {
               <div className="rounded-lg border p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    {verify.handshake.status === "pass" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                    {verify.handshake.status === "pass" && <CheckCircle2 className="h-4 w-4 text-primary" />}
                     {verify.handshake.status === "fail" && <XCircle className="h-4 w-4 text-destructive" />}
                     {verify.handshake.status === "skip" && <AlertTriangle className="h-4 w-4 text-amber-500" />}
                     <span className="text-sm font-medium">1. Handshake do Verify Token</span>
@@ -301,7 +301,7 @@ export default function AdminWhatsAppModePage() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     {verify.delivery.status === "pass"
-                      ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      ? <CheckCircle2 className="h-4 w-4 text-primary" />
                       : <AlertTriangle className="h-4 w-4 text-amber-500" />}
                     <span className="text-sm font-medium">2. Recebimento de eventos (últimas 24h)</span>
                   </div>
@@ -392,7 +392,7 @@ export default function AdminWhatsAppModePage() {
               >
                 <div className="flex items-start gap-3 min-w-0">
                   {s.configured
-                    ? <CheckCircle2 className="h-4 w-4 mt-1 text-emerald-500 shrink-0" />
+                    ? <CheckCircle2 className="h-4 w-4 mt-1 text-primary shrink-0" />
                     : <XCircle className="h-4 w-4 mt-1 text-destructive shrink-0" />}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">

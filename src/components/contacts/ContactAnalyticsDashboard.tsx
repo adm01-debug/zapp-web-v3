@@ -83,8 +83,8 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
         title: 'Crescimento Acelerado',
         description: `Aumento de ${Math.round((newThisWeek / contacts.length) * 100)}% na base esta semana.`,
         icon: ArrowUpRight,
-        color: 'text-green-500',
-        bg: 'bg-green-500/10'
+        color: 'text-primary',
+        bg: 'bg-primary/10'
       });
     }
 

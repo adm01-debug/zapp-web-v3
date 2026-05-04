@@ -25,7 +25,7 @@ function getInitials(name: string | null, email: string | null): string {
 }
 
 function getAvatarColor(email: string | null): string {
-  const colors = ['bg-blue-500','bg-emerald-500','bg-violet-500','bg-amber-500','bg-rose-500'];
+  const colors = ['bg-blue-500','bg-primary','bg-violet-500','bg-amber-500','bg-rose-500'];
   const code = (email ?? '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   return colors[code % colors.length];
 }
@@ -113,7 +113,7 @@ export function EmailContactPanel({ thread, messages, accountId, className }: Em
               {slaRecord.frt_minutes != null && (
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">1ª resposta em</span>
-                  <span className="font-medium text-green-600">
+                  <span className="font-medium text-primary">
                     {slaRecord.frt_minutes}min
                   </span>
                 </div>

@@ -84,8 +84,8 @@ export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
     unknown: 'bg-gray-100 text-gray-700',
     lead: 'bg-blue-100 text-blue-700',
     prospect: 'bg-indigo-100 text-indigo-700',
-    customer: 'bg-green-100 text-green-700',
-    advocate: 'bg-emerald-100 text-emerald-700',
+    customer: 'bg-primary text-primary',
+    advocate: 'bg-primary text-primary',
     churned: 'bg-red-100 text-red-700',
   };
 

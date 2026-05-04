@@ -91,7 +91,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
             {secretStatus ? (
               <>
                 {secretStatus.configured ? (
-                  <Badge className="bg-emerald-500/80 hover:bg-emerald-500/70">
+                  <Badge className="bg-primary/80 hover:bg-primary/70">
                     <CheckCircle2 className="w-3 h-3 mr-1" />Strict mode ativo
                   </Badge>
                 ) : (
@@ -174,10 +174,10 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
             {webhookTest.status !== 'idle' && webhookTest.status !== 'testing' && (
               <div className={cn(
                 'p-4 rounded-lg border',
-                webhookTest.status === 'success' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-destructive/5 border-destructive/20'
+                webhookTest.status === 'success' ? 'bg-primary/5 border-primary/20' : 'bg-destructive/5 border-destructive/20'
               )}>
                 <div className="flex items-center gap-2">
-                  {webhookTest.status === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-destructive" />}
+                  {webhookTest.status === 'success' ? <CheckCircle2 className="w-4 h-4 text-primary" /> : <XCircle className="w-4 h-4 text-destructive" />}
                   <span className="font-medium text-sm">{webhookTest.status === 'success' ? 'Sucesso' : 'Falha'}</span>
                   {webhookTest.latencyMs && <Badge variant="outline" className="text-xs">{webhookTest.latencyMs}ms</Badge>}
                 </div>
@@ -199,7 +199,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
             {webhookConfig ? (
               <>
                 <div className="flex items-center gap-2">
-                  {webhookConfig.configured ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-destructive" />}
+                  {webhookConfig.configured ? <CheckCircle2 className="w-4 h-4 text-primary" /> : <XCircle className="w-4 h-4 text-destructive" />}
                   <span className="font-medium text-sm">{webhookConfig.configured ? 'Configurado' : 'NÃO Configurado'}</span>
                   <Badge variant="outline" className="text-[10px] ml-auto">{configuredEvents.length}/{ALL_EXPECTED_EVENTS.length} eventos</Badge>
                 </div>
@@ -226,7 +226,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                     return (
                       <div key={category} className="p-2.5 rounded-lg bg-muted/30">
                         <div className="flex items-center gap-2 mb-1.5">
-                          {allOk ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <AlertTriangle className="w-3 h-3 text-amber-500" />}
+                          {allOk ? <CheckCircle2 className="w-3 h-3 text-primary" /> : <AlertTriangle className="w-3 h-3 text-amber-500" />}
                           <span className="text-[11px] font-medium">{category}</span>
                           <span className="text-[10px] text-muted-foreground ml-auto">{configured.length}/{events.length}</span>
                         </div>
@@ -237,7 +237,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                               <Badge
                                 key={e}
                                 variant={isConfigured ? 'default' : 'destructive'}
-                                className={cn('text-[9px]', isConfigured && 'bg-emerald-500/80 hover:bg-emerald-500/70')}
+                                className={cn('text-[9px]', isConfigured && 'bg-primary/80 hover:bg-primary/70')}
                               >
                                 {isConfigured ? '✓' : '✗'} {e}
                               </Badge>

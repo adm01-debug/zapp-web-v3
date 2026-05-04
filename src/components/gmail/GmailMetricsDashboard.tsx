@@ -86,7 +86,7 @@ export function GmailMetricsDashboard({ accountId, days = 7 }: GmailMetricsDashb
           label="Respondidos"
           value={summary?.total_replied ?? 0}
           icon={CheckCircle}
-          color="text-green-600"
+          color="text-primary"
           subtitle={`${summary?.reply_rate ?? 0}% taxa de resposta`}
         />
         <MetricCard
@@ -98,7 +98,7 @@ export function GmailMetricsDashboard({ accountId, days = 7 }: GmailMetricsDashb
               ? 'text-red-600'
               : summary?.avg_reply_minutes != null && summary.avg_reply_minutes > 384
               ? 'text-amber-600'
-              : 'text-green-600'
+              : 'text-primary'
           }
           subtitle={summary?.avg_reply_minutes != null ? `${Math.round(summary.avg_reply_minutes / 60)}h ${summary.avg_reply_minutes % 60}min` : undefined}
         />
@@ -107,7 +107,7 @@ export function GmailMetricsDashboard({ accountId, days = 7 }: GmailMetricsDashb
           value={`${summary?.sla_compliance_rate ?? 100}%`}
           icon={TrendingUp}
           color={
-            (summary?.sla_compliance_rate ?? 100) >= 95 ? 'text-green-600' :
+            (summary?.sla_compliance_rate ?? 100) >= 95 ? 'text-primary' :
             (summary?.sla_compliance_rate ?? 100) >= 80 ? 'text-amber-600' :
             'text-red-600'
           }
@@ -125,7 +125,7 @@ export function GmailMetricsDashboard({ accountId, days = 7 }: GmailMetricsDashb
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <SLABar label="Dentro do prazo" value={slaDash.ok_count} total={slaDash.total} color="bg-green-500" />
+            <SLABar label="Dentro do prazo" value={slaDash.ok_count} total={slaDash.total} color="bg-primary" />
             <SLABar label="Atenção (>80% do prazo)" value={slaDash.warning_count} total={slaDash.total} color="bg-amber-500" />
             <SLABar label="SLA Violado" value={slaDash.breached_count} total={slaDash.total} color="bg-red-500" />
             <SLABar label="Respondido no prazo" value={slaDash.met_count} total={slaDash.total} color="bg-blue-500" />

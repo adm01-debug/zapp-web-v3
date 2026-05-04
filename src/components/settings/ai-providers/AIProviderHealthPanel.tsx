@@ -57,19 +57,19 @@ export function AIProviderHealthPanel() {
       label: 'Taxa de Sucesso',
       value: `${successRate}%`,
       icon: successRate >= 95 ? CheckCircle : successRate >= 80 ? AlertTriangle : XCircle,
-      color: successRate >= 95 ? 'text-emerald-500' : successRate >= 80 ? 'text-amber-500' : 'text-destructive',
+      color: successRate >= 95 ? 'text-primary' : successRate >= 80 ? 'text-amber-500' : 'text-destructive',
     },
     {
       label: 'Latência Média',
       value: `${stats.avgLatency}ms`,
       icon: Clock,
-      color: stats.avgLatency < 2000 ? 'text-emerald-500' : stats.avgLatency < 5000 ? 'text-amber-500' : 'text-destructive',
+      color: stats.avgLatency < 2000 ? 'text-primary' : stats.avgLatency < 5000 ? 'text-amber-500' : 'text-destructive',
     },
     {
       label: 'Fallbacks',
       value: String(stats.fallback),
       icon: AlertTriangle,
-      color: stats.fallback === 0 ? 'text-emerald-500' : 'text-amber-500',
+      color: stats.fallback === 0 ? 'text-primary' : 'text-amber-500',
     },
     {
       label: 'Tokens Usados',
@@ -157,7 +157,7 @@ export function AIProviderHealthPanel() {
                   className="flex items-center gap-2 text-xs py-1.5 px-2 rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   {log.status === 'success' ? (
-                    <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0" />
+                    <CheckCircle className="w-3 h-3 text-primary shrink-0" />
                   ) : log.status === 'fallback' ? (
                     <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
                   ) : (

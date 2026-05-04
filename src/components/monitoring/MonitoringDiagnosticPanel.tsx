@@ -16,15 +16,15 @@ interface Props {
 }
 
 const severityConfig: Record<string, { icon: typeof CheckCircle2; color: string; label: string; bg: string }> = {
-  ok: { icon: CheckCircle2, color: 'text-emerald-500', label: 'OK', bg: 'bg-emerald-500/10' },
+  ok: { icon: CheckCircle2, color: 'text-primary', label: 'OK', bg: 'bg-primary/10' },
   warning: { icon: AlertTriangle, color: 'text-amber-500', label: 'Atenção', bg: 'bg-amber-500/10' },
   critical: { icon: XCircle, color: 'text-destructive', label: 'Crítico', bg: 'bg-destructive/10' },
   error: { icon: XCircle, color: 'text-destructive', label: 'Erro', bg: 'bg-destructive/10' },
 };
 
 function ScoreGauge({ score }: { score: number }) {
-  const color = score >= 80 ? 'text-emerald-500' : score >= 50 ? 'text-amber-500' : 'text-destructive';
-  const progressColor = score >= 80 ? '[&>div]:bg-emerald-500' : score >= 50 ? '[&>div]:bg-amber-500' : '[&>div]:bg-destructive';
+  const color = score >= 80 ? 'text-primary' : score >= 50 ? 'text-amber-500' : 'text-destructive';
+  const progressColor = score >= 80 ? '[&>div]:bg-primary' : score >= 50 ? '[&>div]:bg-amber-500' : '[&>div]:bg-destructive';
 
   return (
     <div className="flex items-center gap-4">
@@ -194,7 +194,7 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
                         {d.webhookIssue && <span className="text-xs text-muted-foreground">— {d.webhookIssue}</span>}
                       </div>
                       {d.autoFix && (
-                        <div className={cn('p-3 rounded-lg text-xs font-medium', d.autoFix.applied ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive')}>
+                        <div className={cn('p-3 rounded-lg text-xs font-medium', d.autoFix.applied ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive')}>
                           {d.autoFix.applied ? '✅ Auto-fix aplicado com sucesso' : '❌ Auto-fix falhou'}
                         </div>
                       )}
@@ -218,7 +218,7 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
                 <div className="space-y-2">
                   {checklist.map((item, i) => {
                     const statusIcons = {
-                      ok: <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />,
+                      ok: <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />,
                       warning: <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />,
                       error: <XCircle className="w-4 h-4 text-destructive shrink-0" />,
                     };
@@ -230,7 +230,7 @@ export function MonitoringDiagnosticPanel({ diagnostic, diagnosing, onRunDiagnos
                         transition={{ delay: i * 0.04 }}
                         className={cn(
                           'flex items-center gap-3 p-2.5 rounded-lg',
-                          item.status === 'ok' ? 'bg-emerald-500/5' : item.status === 'warning' ? 'bg-amber-500/5' : 'bg-destructive/5'
+                          item.status === 'ok' ? 'bg-primary/5' : item.status === 'warning' ? 'bg-amber-500/5' : 'bg-destructive/5'
                         )}
                       >
                         {statusIcons[item.status]}

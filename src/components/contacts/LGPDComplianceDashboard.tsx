@@ -104,9 +104,9 @@ export const LGPDComplianceDashboard: React.FC<LGPDComplianceDashboardProps> = (
                 color: 'text-foreground',
               },
               {
-                icon: <UserCheck className="h-4 w-4 text-green-600" />,
+                icon: <UserCheck className="h-4 w-4 text-primary" />,
                 label: 'Com consentimento', value: stats.with_consent,
-                color: 'text-green-700',
+                color: 'text-primary',
               },
               {
                 icon: <UserX className="h-4 w-4 text-red-500" />,
@@ -156,10 +156,10 @@ export const LGPDComplianceDashboard: React.FC<LGPDComplianceDashboardProps> = (
           )}
 
           {stats.without_consent === 0 && stats.opted_out === 0 && (
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-sm text-green-800">100% em conformidade!</AlertTitle>
-              <AlertDescription className="text-xs text-green-700">
+            <Alert className="border-primary/20 bg-primary/10">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <AlertTitle className="text-sm text-primary-foreground">100% em conformidade!</AlertTitle>
+              <AlertDescription className="text-xs text-primary">
                 Todos os contatos ativos têm consentimento LGPD registrado.
               </AlertDescription>
             </Alert>

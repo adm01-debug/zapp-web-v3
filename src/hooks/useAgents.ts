@@ -54,7 +54,7 @@ export const AGENT_STATUS_COLORS: Record<string, string> = {
   testing:      'bg-yellow-100 text-yellow-700',
   staging:      'bg-orange-100 text-orange-700',
   review:       'bg-purple-100 text-purple-700',
-  production:   'bg-green-100 text-green-700',
+  production:   'bg-primary text-primary',
   monitoring:   'bg-teal-100 text-teal-700',
   deprecated:   'bg-amber-100 text-amber-700',
   archived:     'bg-gray-100 text-gray-500',

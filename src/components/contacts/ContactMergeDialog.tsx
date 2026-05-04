@@ -113,7 +113,7 @@ function FieldSelector({ fieldKey, label, primaryValue, secondaryValue, value, o
           {label}
         </p>
         {isSecondaryRecommended && (
-          <Badge variant="outline" className="text-[8px] bg-green-500/5 text-green-600 border-green-500/20">
+          <Badge variant="outline" className="text-[8px] bg-primary/5 text-primary border-primary/20">
             Recomendado: Secundário
           </Badge>
         )}

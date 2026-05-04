@@ -42,7 +42,7 @@ export function WhatsAppConnectionStatus() {
         ) : (
           <Badge 
             variant="outline" 
-            className="h-5 px-1.5 border-emerald-500/20 bg-emerald-500/5 text-emerald-500 gap-1 hover:bg-emerald-500/10 transition-colors"
+            className="h-5 px-1.5 border-primary/20 bg-primary/5 text-primary gap-1 hover:bg-primary/10 transition-colors"
             title="Todas as conexões WhatsApp online"
           >
             <Wifi className="w-3 h-3" />

@@ -29,7 +29,7 @@ const PERIODS: { value: TimePeriod; label: string }[] = [
 function StatusSemaphore({ connections }: { connections: { status: string }[] }) {
   const all = connections.length;
   const active = connections.filter(c => c.status === 'connected').length;
-  const color = active === all && all > 0 ? 'bg-emerald-500' : active > 0 ? 'bg-amber-500' : 'bg-destructive';
+  const color = active === all && all > 0 ? 'bg-primary' : active > 0 ? 'bg-amber-500' : 'bg-destructive';
   const label = active === all && all > 0 ? 'Todas conectadas' : active > 0 ? 'Parcialmente conectado' : 'Sem conexões';
 
   return (
@@ -138,7 +138,7 @@ export function EvolutionMonitoringDashboard() {
                 onClick={requestNotifications}
               >
                 {notificationsEnabled
-                  ? <Bell className="w-4 h-4 text-emerald-500" />
+                  ? <Bell className="w-4 h-4 text-primary" />
                   : <BellOff className="w-4 h-4 text-muted-foreground" />
                 }
               </Button>

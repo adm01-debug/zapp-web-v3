@@ -175,7 +175,7 @@ export function ConnectionsView() {
                   <p>1. Abra o <strong>WhatsApp</strong> no celular deste número</p><p>2. Toque em <strong>Configurações</strong> (⚙️)</p>
                   <p>3. Toque em <strong>Aparelhos conectados</strong></p><p>4. Toque em <strong>Conectar aparelho</strong></p><p>5. Aponte a câmera para o QR Code acima</p>
                 </div>
-                <div className="flex items-center justify-center gap-2 text-xs text-emerald-400/80"><Loader2 className="w-3 h-3 animate-spin" />Aguardando leitura do QR Code...</div>
+                <div className="flex items-center justify-center gap-2 text-xs text-primary/80"><Loader2 className="w-3 h-3 animate-spin" />Aguardando leitura do QR Code...</div>
                 {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
                 {qrCodeDialog.ttlSeconds != null && qrCodeDialog.ttlSource && (
                   <QrTtlBadge ttlSeconds={qrCodeDialog.ttlSeconds} source={qrCodeDialog.ttlSource} />
@@ -208,8 +208,8 @@ export function ConnectionsView() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: 'Total de Conexões', value: connections.length, color: 'text-primary', sub: connections.length + ' instância' + (connections.length !== 1 ? 's' : '') + ' configurada' + (connections.length !== 1 ? 's' : '') },
-          { label: 'Online', value: connections.filter(c => c.status === 'connected').length, color: 'text-emerald-400', sub: connections.filter(c => c.status === 'connected').length > 0 ? 'Recebendo mensagens' : 'Nenhuma ativa' },
-          { label: 'Ações necessárias', value: connections.filter(c => c.status !== 'connected').length, color: connections.filter(c => c.status !== 'connected').length > 0 ? 'text-red-400' : 'text-emerald-400', sub: connections.filter(c => c.status !== 'connected').length > 0 ? 'Precisam reconectar' : 'Tudo funcionando ✔' },
+          { label: 'Online', value: connections.filter(c => c.status === 'connected').length, color: 'text-primary', sub: connections.filter(c => c.status === 'connected').length > 0 ? 'Recebendo mensagens' : 'Nenhuma ativa' },
+          { label: 'Ações necessárias', value: connections.filter(c => c.status !== 'connected').length, color: connections.filter(c => c.status !== 'connected').length > 0 ? 'text-red-400' : 'text-primary', sub: connections.filter(c => c.status !== 'connected').length > 0 ? 'Precisam reconectar' : 'Tudo funcionando ✔' },
         ].map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <Card className="border border-secondary/20 bg-card "><CardContent className="p-4"><p className="text-sm text-muted-foreground">{stat.label}</p><p className={cn('text-3xl font-bold', stat.color)}>{stat.value}</p>{stat.sub && <p className='text-xs text-muted-foreground mt-1'>{stat.sub}</p>}</CardContent></Card>

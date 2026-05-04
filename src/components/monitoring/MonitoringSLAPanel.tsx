@@ -27,7 +27,7 @@ function SLAGauge({ value, target }: { value: number; target: number }) {
       </div>
       <div className="flex items-end gap-3">
         <motion.span
-          className={cn('text-4xl font-bold tabular-nums', met ? 'text-emerald-500' : 'text-destructive')}
+          className={cn('text-4xl font-bold tabular-nums', met ? 'text-primary' : 'text-destructive')}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
         >
@@ -37,7 +37,7 @@ function SLAGauge({ value, target }: { value: number; target: number }) {
       </div>
       <Progress
         value={Math.min(value, 100)}
-        className={cn('h-2', met ? '[&>div]:bg-emerald-500' : '[&>div]:bg-destructive')}
+        className={cn('h-2', met ? '[&>div]:bg-primary' : '[&>div]:bg-destructive')}
       />
     </div>
   );
@@ -59,7 +59,7 @@ export function MonitoringSLAPanel({ uptime, instanceUptimes }: Props) {
 
           <div className="grid grid-cols-3 gap-4 mt-5">
             <div className="p-3 rounded-lg bg-muted/30 text-center">
-              <TrendingUp className="w-4 h-4 mx-auto text-emerald-500 mb-1" />
+              <TrendingUp className="w-4 h-4 mx-auto text-primary mb-1" />
               <p className="text-xl font-bold">{uptime.healthyChecks}</p>
               <p className="text-[10px] text-muted-foreground">Checks OK</p>
             </div>
@@ -104,14 +104,14 @@ export function MonitoringSLAPanel({ uptime, instanceUptimes }: Props) {
                       <span className="font-semibold text-sm">{inst.instanceId}</span>
                       <Badge
                         variant={met ? 'default' : 'destructive'}
-                        className={cn('text-[10px]', met && 'bg-emerald-500/80 hover:bg-emerald-500/70')}
+                        className={cn('text-[10px]', met && 'bg-primary/80 hover:bg-primary/70')}
                       >
                         {inst.percentage}%
                       </Badge>
                     </div>
                     <Progress
                       value={Math.min(inst.percentage, 100)}
-                      className={cn('h-1.5 mb-3', met ? '[&>div]:bg-emerald-500' : '[&>div]:bg-destructive')}
+                      className={cn('h-1.5 mb-3', met ? '[&>div]:bg-primary' : '[&>div]:bg-destructive')}
                     />
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
@@ -121,7 +121,7 @@ export function MonitoringSLAPanel({ uptime, instanceUptimes }: Props) {
                       <div>
                         <p className={cn(
                           'text-sm font-bold',
-                          inst.avgLatency < 300 ? 'text-emerald-500' :
+                          inst.avgLatency < 300 ? 'text-primary' :
                           inst.avgLatency < 800 ? 'text-amber-500' : 'text-destructive'
                         )}>
                           {inst.avgLatency}ms

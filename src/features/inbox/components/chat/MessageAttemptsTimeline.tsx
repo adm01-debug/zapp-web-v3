@@ -68,7 +68,7 @@ export function MessageAttemptsTimeline({ messageId, enabled }: MessageAttemptsT
   if (!row) {
     return (
       <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground p-6 text-center">
-        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+        <CheckCircle2 className="w-5 h-5 text-primary" />
         <p>Nenhuma tentativa registrada na fila de retry.</p>
         <p className="text-muted-foreground/70">Envio direto, sem entradas no DLQ.</p>
       </div>

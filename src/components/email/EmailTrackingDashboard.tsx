@@ -47,8 +47,8 @@ function OpenIndicator({ count, firstAt }: { count: number; firstAt: string | nu
   if (count === 0) return <span className="text-xs text-muted-foreground">Não aberto</span>;
   return (
     <div className="flex items-center gap-1.5">
-      <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-      <span className="text-xs font-medium text-green-700 dark:text-green-400">
+      <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+      <span className="text-xs font-medium text-primary dark:text-primary">
         {count}x aberto
       </span>
       {firstAt && (
@@ -108,7 +108,7 @@ function EmailTrackingDetail({
           <p className="text-xs text-muted-foreground">Aberturas</p>
         </div>
         <div className="text-center p-2 bg-muted/30 rounded-lg">
-          <MousePointerClick className="h-4 w-4 mx-auto text-green-500 mb-1" />
+          <MousePointerClick className="h-4 w-4 mx-auto text-primary mb-1" />
           <p className="text-lg font-bold">{email.click_count}</p>
           <p className="text-xs text-muted-foreground">Cliques</p>
         </div>
@@ -175,7 +175,7 @@ function EmailTrackingDetail({
                       <p className="text-muted-foreground truncate">{link.original_url}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-green-600">{link.click_count} cliques</p>
+                      <p className="font-bold text-primary">{link.click_count} cliques</p>
                       {link.first_clicked_at && (
                         <p className="text-muted-foreground">{formatDate(link.first_clicked_at)}</p>
                       )}
@@ -245,12 +245,12 @@ export function EmailTrackingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Taxa de Abertura</p>
-                    <p className={`text-2xl font-bold ${stats.open_rate >= 50 ? 'text-green-600' : stats.open_rate >= 25 ? 'text-amber-600' : 'text-red-600'}`}>
+                    <p className={`text-2xl font-bold ${stats.open_rate >= 50 ? 'text-primary' : stats.open_rate >= 25 ? 'text-amber-600' : 'text-red-600'}`}>
                       {stats.open_rate}%
                     </p>
                     <p className="text-xs text-muted-foreground">{stats.unique_opens} únicos</p>
                   </div>
-                  <Eye className="h-8 w-8 text-green-500 opacity-20" />
+                  <Eye className="h-8 w-8 text-primary opacity-20" />
                 </div>
               </CardContent>
             </Card>
@@ -259,7 +259,7 @@ export function EmailTrackingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Taxa de Cliques</p>
-                    <p className={`text-2xl font-bold ${stats.click_rate >= 10 ? 'text-green-600' : 'text-amber-600'}`}>
+                    <p className={`text-2xl font-bold ${stats.click_rate >= 10 ? 'text-primary' : 'text-amber-600'}`}>
                       {stats.click_rate}%
                     </p>
                     <p className="text-xs text-muted-foreground">{stats.total_clicks} total</p>
@@ -273,7 +273,7 @@ export function EmailTrackingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Bounces</p>
-                    <p className={`text-2xl font-bold ${stats.bounce_count > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    <p className={`text-2xl font-bold ${stats.bounce_count > 0 ? 'text-red-600' : 'text-primary'}`}>
                       {stats.bounce_count}
                     </p>
                     <p className="text-xs text-muted-foreground">emails retornados</p>

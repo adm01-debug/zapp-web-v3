@@ -189,7 +189,7 @@ export const getFileNameFromUrl = (url: string): string => {
 export const CONTACT_TYPES = [
   { value: 'cliente', label: 'Cliente', color: 'bg-blue-500' },
   { value: 'fornecedor', label: 'Fornecedor', color: 'bg-purple-500' },
-  { value: 'colaborador', label: 'Colaborador', color: 'bg-green-500' },
+  { value: 'colaborador', label: 'Colaborador', color: 'bg-primary' },
   { value: 'prestador_servico', label: 'Prestador de Serviço', color: 'bg-warning' },
   { value: 'lead', label: 'Lead', color: 'bg-yellow-500' },
   { value: 'parceiro', label: 'Parceiro', color: 'bg-destructive' },

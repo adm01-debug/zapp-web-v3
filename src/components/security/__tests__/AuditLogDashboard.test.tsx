@@ -78,13 +78,13 @@ describe('AuditLogDashboard', () => {
   describe('Action color mapping', () => {
     it('maps login to green', () => {
       const colorMap: Record<string, string> = {
-        login: 'bg-green-500/10 text-green-500',
+        login: 'bg-primary/10 text-primary',
         delete: 'bg-destructive/10 text-destructive',
         create: 'bg-blue-500/10 text-blue-500',
         update: 'bg-yellow-500/10 text-yellow-500',
         export: 'bg-purple-500/10 text-purple-500',
         role_change: 'bg-orange-500/10 text-orange-500',
-        mfa_enabled: 'bg-green-500/10 text-green-500',
+        mfa_enabled: 'bg-primary/10 text-primary',
         mfa_disabled: 'bg-destructive/10 text-destructive',
         password_change: 'bg-yellow-500/10 text-yellow-500',
         logout: 'bg-muted text-muted-foreground',

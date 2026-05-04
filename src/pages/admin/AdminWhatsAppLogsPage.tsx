@@ -74,7 +74,7 @@ function modeBadge(mode: ModeFilter) {
 function statusBadge(s: string) {
   const ok = ["delivered", "read", "sent", "received"].includes(s);
   const warn = ["pending", "queued", "routing"].includes(s);
-  if (ok) return <Badge variant="outline" className="border-green-500 text-green-700">{s}</Badge>;
+  if (ok) return <Badge variant="outline" className="border-primary text-primary">{s}</Badge>;
   if (warn) return <Badge variant="outline" className="border-amber-500 text-amber-700">{s}</Badge>;
   return <Badge variant="destructive">{s}</Badge>;
 }
@@ -347,7 +347,7 @@ export default function AdminWhatsAppLogsPage() {
 }
 
 function kindBadge(kind: string) {
-  if (kind === "handshake") return <Badge className="bg-green-600 hover:bg-green-700"><CheckCircle2 className="h-3 w-3 mr-1" />handshake</Badge>;
+  if (kind === "handshake") return <Badge className="bg-primary hover:bg-primary"><CheckCircle2 className="h-3 w-3 mr-1" />handshake</Badge>;
   if (kind === "event") return <Badge variant="secondary">event</Badge>;
   if (kind === "invalid_signature") return <Badge variant="destructive">invalid_signature</Badge>;
   if (kind === "invalid_token") return <Badge variant="destructive">invalid_token</Badge>;

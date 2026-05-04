@@ -265,12 +265,12 @@ Maria Santos,(21) 99876-5432,maria@exemplo.com,XYZ Ltda,fornecedor,
           {result && (
             <div className="rounded-lg border p-4 space-y-3">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <CheckCircle2 className="h-5 w-5 text-primary" />
                 <span className="font-semibold text-sm">Importação concluída!</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
                 {[
-                  { label: 'Criados', value: result.inserted, color: 'text-green-600' },
+                  { label: 'Criados', value: result.inserted, color: 'text-primary' },
                   { label: 'Atualizados', value: result.updated, color: 'text-blue-600' },
                   { label: 'Ignorados', value: result.skipped, color: 'text-amber-600' },
                 ].map(({ label, value, color }) => (

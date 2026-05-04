@@ -269,7 +269,7 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
           </p>
         )}
         {form.phone && validatePhoneDetailed(form.phone).valid && (
-          <p className="text-xs text-green-600">
+          <p className="text-xs text-primary">
             ✓ {validatePhoneDetailed(form.phone).formatted} ({validatePhoneDetailed(form.phone).type === 'mobile' ? 'Celular' : validatePhoneDetailed(form.phone).type === 'landline' ? 'Fixo' : 'Internacional'})
           </p>
         )}

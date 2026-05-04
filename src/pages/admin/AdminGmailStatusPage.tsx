@@ -163,7 +163,7 @@ export default function AdminGmailStatusPage() {
 
   const getStatusIcon = (status?: string) => {
     switch (status) {
-      case 'healthy': return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+      case 'healthy': return <CheckCircle2 className="w-5 h-5 text-primary" />;
       case 'degraded': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
       case 'error': return <AlertCircle className="w-5 h-5 text-destructive" />;
       default: return <Clock className="w-5 h-5 text-muted-foreground" />;

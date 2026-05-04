@@ -86,7 +86,7 @@ export const ConversationsDashboard: React.FC<{
           <Badge variant="destructive" className="text-xs">{stats.unread_total} não lidas</Badge>
         )}
         {stats.new_today > 0 && (
-          <span className="flex items-center gap-1 text-green-600">
+          <span className="flex items-center gap-1 text-primary">
             <TrendingUp className="h-3.5 w-3.5" />+{stats.new_today} hoje
           </span>
         )}
@@ -130,11 +130,11 @@ export const ConversationsDashboard: React.FC<{
         <Card>
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-green-600">{stats.total_closed_period.toLocaleString('pt-BR')}</p>
+                <p className="text-2xl font-bold text-primary">{stats.total_closed_period.toLocaleString('pt-BR')}</p>
                 <p className="text-xs text-muted-foreground">Encerradas</p>
               </div>
             </div>

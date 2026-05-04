@@ -23,7 +23,7 @@ interface CSATStats {
 }
 
 function getNPSColor(nps: number): string {
-  if (nps >= 50)  return 'text-green-600';
+  if (nps >= 50)  return 'text-primary';
   if (nps >= 0)   return 'text-amber-600';
   return 'text-red-600';
 }
@@ -124,7 +124,7 @@ export const CSATWidget: React.FC<Props> = ({
             <p className={`text-3xl font-bold ${npsColor}`}>{stats.nps_score}</p>
             <div className="flex items-center justify-center gap-1 mt-0.5">
               {stats.nps_score >= 50
-                ? <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+                ? <TrendingUp className="h-3.5 w-3.5 text-primary" />
                 : stats.nps_score < 0
                   ? <TrendingDown className="h-3.5 w-3.5 text-red-600" />
                   : <Minus className="h-3.5 w-3.5 text-amber-600" />}
@@ -135,13 +135,13 @@ export const CSATWidget: React.FC<Props> = ({
         <Card>
           <CardContent className="p-3 text-center space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-green-600">👍 {stats.nps_promoters}</span>
+              <span className="text-primary">👍 {stats.nps_promoters}</span>
               <span className="text-muted-foreground">😐 {stats.nps_passives}</span>
               <span className="text-red-600">👎 {stats.nps_detractors}</span>
             </div>
             <div className="flex gap-0.5 h-3 rounded overflow-hidden">
               {stats.nps_promoters > 0 && (
-                <div className="bg-green-500" style={{ flex: stats.nps_promoters }} />
+                <div className="bg-primary" style={{ flex: stats.nps_promoters }} />
               )}
               {stats.nps_passives > 0 && (
                 <div className="bg-amber-400" style={{ flex: stats.nps_passives }} />
@@ -163,7 +163,7 @@ export const CSATWidget: React.FC<Props> = ({
             {[10,9,8,7,6,5,4,3,2,1,0].map((score) => {
               const count = stats.score_distribution[score.toString()] ?? 0;
               const pct   = maxDist > 0 ? Math.round((count / maxDist) * 100) : 0;
-              const color = score >= 9 ? 'bg-green-500' : score >= 7 ? 'bg-amber-400' : 'bg-red-400';
+              const color = score >= 9 ? 'bg-primary' : score >= 7 ? 'bg-amber-400' : 'bg-red-400';
               return count > 0 ? (
                 <div key={score} className="flex items-center gap-2 text-xs">
                   <span className="w-4 text-right text-muted-foreground">{score}</span>
