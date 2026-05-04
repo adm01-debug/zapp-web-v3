@@ -114,8 +114,10 @@ export function MessageBubble({
         ) : (
           <div className={cn(
             'relative rounded-2xl shadow-sm transition-all overflow-hidden',
-            (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0' : 'px-4 py-2.5',
-            isSent ? 'rounded-br-md bg-primary text-primary-foreground' : 'rounded-bl-md bg-card border border-border/30 text-foreground'
+            (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0' : 'px-4 py-2',
+            isSent 
+              ? 'rounded-br-sm bg-primary text-primary-foreground ml-12' 
+              : 'rounded-bl-sm bg-card border border-border/30 text-foreground mr-12'
           )}>
             {message.replyTo && <QuotedMessage replyTo={message.replyTo} isSent={isSent} onClick={() => scrollToMessage(message.replyTo!.messageId)} />}
             {message.buttonResponse && <ButtonResponseBadge buttonTitle={message.buttonResponse.buttonTitle} isSent={isSent} />}
