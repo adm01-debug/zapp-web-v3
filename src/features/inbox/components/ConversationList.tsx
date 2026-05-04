@@ -227,18 +227,18 @@ export function ConversationList({
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-normal text-[17px] text-foreground truncate">
+                            <span className="font-medium text-[14px] leading-tight text-foreground truncate">
                               {conversation.contact.name}
                             </span>
-                            <span className="text-[12px] text-muted-foreground tabular-nums">
+                            <span className="text-[11px] leading-tight text-muted-foreground tabular-nums flex-shrink-0 ml-2">
                               {formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}
                             </span>
                           </div>
 
                           <div className="flex items-center justify-between">
                             <p className={cn(
-                              "text-[14px] truncate pr-2",
-                              conversation.unreadCount > 0 ? "text-foreground" : "text-muted-foreground"
+                              "text-[13px] leading-tight truncate pr-2",
+                              conversation.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground font-normal"
                             )}>
                               {conversation.lastMessage?.content || 'Sem mensagens'}
                             </p>
