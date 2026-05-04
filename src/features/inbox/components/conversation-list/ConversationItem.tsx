@@ -164,7 +164,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className={cn("font-normal text-[17px] truncate", isSelected ? "text-[#e9edef]" : "text-[#e9edef]")}>{conversation.contact.name}</span>
+                <span className={cn("font-normal text-[16px] md:text-[17px] truncate", isSelected ? "text-[#e9edef]" : "text-[#e9edef]")}>{conversation.contact.name}</span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
