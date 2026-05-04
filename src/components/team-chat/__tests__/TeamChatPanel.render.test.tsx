@@ -41,7 +41,7 @@ describe('TeamChatPanel Component Rendering', () => {
     vi.clearAllMocks();
     (useAuth as any).mockReturnValue({ profile: mockProfile });
     (useTeamMessageReactions as any).mockReturnValue({
-      aggregate: vi.fn(() => ({})),
+      aggregate: vi.fn(() => []),
       toggle: vi.fn(),
       isToggling: false,
     });
