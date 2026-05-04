@@ -79,17 +79,11 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   }, []);
 
   useEffect(() => {
-    if (activeTool === 'chatSearch') openDialog('chatSearch');
-    else if (activeTool === 'aiAssistant') openDialog('aiAssistant');
+    if ((activeTool as string) === 'chatSearch') openDialog('chatSearch');
+    else if ((activeTool as string) === 'aiAssistant') openDialog('aiAssistant');
     else {
-      // Don't close everything, just the ones managed by activeTool
-      // Actually ChatPanel originally had:
-      // useEffect(() => {
-      //   dispatch({ type: activeTool === 'chatSearch' ? 'OPEN' : 'CLOSE', key: 'chatSearch' });
-      //   dispatch({ type: activeTool === 'aiAssistant' ? 'OPEN' : 'CLOSE', key: 'aiAssistant' });
-      // }, [activeTool]);
-      if (activeTool !== 'chatSearch') closeDialog('chatSearch');
-      if (activeTool !== 'aiAssistant') closeDialog('aiAssistant');
+      if ((activeTool as string) !== 'chatSearch') closeDialog('chatSearch');
+      if ((activeTool as string) !== 'aiAssistant') closeDialog('aiAssistant');
     }
   }, [activeTool, openDialog, closeDialog]);
 
