@@ -143,8 +143,8 @@ describe('TeamChatPanel Component Rendering', () => {
     render(<TeamChatPanel conversation={mockConversation} onBack={vi.fn()} />);
     
     // We expect some skeleton loaders (divs with Skeleton class)
-    // The component renders 4 skeletons
-    const skeletons = document.querySelectorAll('.animate-pulse');
+    // The component renders 4 skeletons with role="status"
+    const skeletons = screen.getAllByRole('status');
     expect(skeletons.length).toBeGreaterThan(0);
   });
 });
