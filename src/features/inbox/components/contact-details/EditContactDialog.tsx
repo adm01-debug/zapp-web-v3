@@ -81,7 +81,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
   const [conflict,     setConflict]     = useState<ConflictInfo | null>(null);
   const [pendingData,  setPendingData]  = useState<Record<string, unknown> | null>(null);
 
-  // Reset form when contact changes
+  // Reset form when contact changes (use contact.id to avoid infinite re-render loop — #310)
   useEffect(() => {
     setName(contact.name);
     setEmail(contact.email ?? '');
@@ -92,7 +92,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
         ? contact.phone_numbers
         : contact.phone ? [{ number: contact.phone, type: 'mobile' as const, is_whatsapp: true, is_primary: true }] : []
     );
-  }, [contact]);
+  }, [contact.id]);
 
   const buildUpdateData = () => ({
     name:          sanitizeText(name).trim(),
