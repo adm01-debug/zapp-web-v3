@@ -331,7 +331,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                       </motion.div>
                     ) : (
                       <motion.div key="mic" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                        <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
+                        <Mic className={cn("w-5 h-5 md:w-6 md:h-6", isRecordingAudio && "animate-pulse")} />
                       </motion.div>
                     )}
                   </AnimatePresence>
