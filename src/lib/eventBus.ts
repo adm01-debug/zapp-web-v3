@@ -21,6 +21,7 @@ interface EventMap {
   'conversation:closed': { contactId: string };
   'sla:breach': { contactId: string; slaMinutes: number };
   'connection:status': { isOnline: boolean; isConnected: boolean };
+  'connection:recovered': { instanceName: string };
   'notification:show': { title: string; body: string; type: 'info' | 'warning' | 'error' };
   'agent:status': { agentId: string; status: 'online' | 'away' | 'offline' };
   'queue:update': { queueId: string; count: number };
