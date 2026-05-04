@@ -92,7 +92,7 @@ export const TeamConversationList = forwardRef<HTMLDivElement, Props>(function T
                 className={cn(
                   "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors",
                   "hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1",
-                  selectedId === conv.id && "bg-accent"
+                  selectedId === conv.id && "bg-primary/10 border-r-2 border-primary"
                 )}
               >
                 <Avatar className="w-10 h-10 shrink-0">
