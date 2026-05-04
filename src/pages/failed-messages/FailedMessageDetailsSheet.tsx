@@ -110,8 +110,8 @@ export function FailedMessageDetailsSheet({ selected, onClose, onViewInChat }: {
                   Copiar JSON
                 </Button>
               </div>
-              <ScrollArea className="h-[250px] w-full rounded border bg-slate-950 p-3">
-                <pre className="text-[11px] text-slate-300 font-mono">
+              <ScrollArea className="h-[250px] w-full rounded border bg-black p-3">
+                <pre className="text-[11px] text-muted-foreground font-mono">
                   {JSON.stringify(selected.payload, null, 2)}
                 </pre>
               </ScrollArea>

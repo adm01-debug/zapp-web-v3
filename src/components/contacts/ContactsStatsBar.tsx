@@ -59,7 +59,7 @@ export const ContactsStatsBar: React.FC<ContactsStatsBarProps> = ({
               >
                 <Badge
                   variant="outline"
-                  className="gap-1 py-0 text-xs border-amber-400 text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40"
+                  className="gap-1 py-0 text-[10.5px] border-amber-400/30 text-amber-700 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/20"
                 >
                   <AlertTriangle className="h-3 w-3" />
                   {stats.noConsent} sem LGPD
@@ -85,7 +85,7 @@ export const ContactsStatsBar: React.FC<ContactsStatsBarProps> = ({
               >
                 <Badge
                   variant="outline"
-                  className="gap-1 py-0 text-xs border-pink-400 text-pink-700 bg-pink-50 dark:text-pink-300 dark:bg-pink-950/40"
+                  className="gap-1 py-0 text-[10.5px] border-pink-400/30 text-pink-700 bg-pink-50 dark:text-pink-400 dark:bg-pink-950/20"
                 >
                   <Cake className="h-3 w-3" />
                   {stats.birthdayToday} aniversário{stats.birthdayToday !== 1 ? 's' : ''} hoje
@@ -110,7 +110,7 @@ export const ContactsStatsBar: React.FC<ContactsStatsBarProps> = ({
               >
                 <Badge
                   variant="outline"
-                  className="gap-1 py-0 text-xs border-slate-400 text-slate-600 bg-slate-50 dark:text-slate-300 dark:bg-slate-900/40"
+                  className="gap-1 py-0 text-[10.5px] border-border text-slate-600 bg-slate-50 dark:text-muted-foreground dark:bg-muted/10"
                 >
                   <Trash2 className="h-3 w-3" />
                   {stats.deletedPending} na lixeira
