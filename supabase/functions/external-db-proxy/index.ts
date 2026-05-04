@@ -12,12 +12,7 @@ Deno.serve(async (req) => {
 
   try {
     const url = Deno.env.get('EXTERNAL_SUPABASE_URL')
-    const key = Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY')
-    if (!url || !key) {
-      return new Response(JSON.stringify({ error: 'External DB not configured' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
+    
 
     const ext = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false }
