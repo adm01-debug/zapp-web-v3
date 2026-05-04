@@ -100,7 +100,9 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     searchQuery,
     setSearchQuery,
     resetSearch,
-    handleHighlightChange
+    handleHighlightChange,
+    setHighlightedMessageIds,
+    setActiveHighlightId
   } = useChatSearchState();
 
   const {
