@@ -15,6 +15,8 @@ import { openChatPopup } from '@/lib/popupManager';
 import { useContactAvatar } from '@/features/inbox';
 import { ActiveTool } from './ChatHeaderToolbar';
 
+interface ChatMessage { id: string; content: string; sender: string; timestamp: string; }
+
 interface ChatPanelHeaderProps {
   conversation: Conversation;
   isContactTyping: boolean;
