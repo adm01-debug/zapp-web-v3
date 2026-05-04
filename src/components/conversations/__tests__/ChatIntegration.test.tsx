@@ -4,6 +4,17 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { MessageList } from '../MessageList';
 
+// Mocking Supabase client to avoid localStorage issues in tests
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+    })),
+    removeChannel: vi.fn(),
+  },
+}));
+
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
