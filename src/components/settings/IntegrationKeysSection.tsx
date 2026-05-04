@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plug, Eye, EyeOff, Save, CheckCircle2, AlertCircle, RefreshCw, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import { cn } from '@/lib/utils';
 
 interface KeyField {
   key: string;
