@@ -344,7 +344,7 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
                   </div>
                     );
                   }}
-                </List>
+                />
               )}
             </AutoSizer>
             </div>
