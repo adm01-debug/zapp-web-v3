@@ -112,7 +112,7 @@ export function ConversationList({
       {/* Header */}
       <div className="p-3 border-b border-[#222d34] bg-[#111b21] space-y-3 shrink-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[#e9edef]">Conversas</h2>
+          <h2 className="text-xl font-bold text-[#e9edef] select-none">Conversas</h2>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className="w-8 h-8 rounded-full text-[#8696a0] hover:bg-[#2a3942] hover:text-[#e9edef]">
               <Filter className="w-4 h-4" />
