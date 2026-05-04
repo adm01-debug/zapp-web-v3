@@ -86,7 +86,7 @@ function EditableField({ value, icon, onSave, placeholder, label }: EditableFiel
   }
 
   return (
-    <div className="flex items-center justify-between gap-2 text-sm bg-muted/20 rounded-lg p-2.5 hover:bg-muted/30 transition-colors group cursor-pointer">
+    <div className="flex items-center justify-between gap-2 text-sm bg-background/40 rounded-lg p-2.5 hover:bg-muted/30 transition-colors group cursor-pointer">
       <div className="flex items-center gap-2.5 min-w-0">
         <span className="text-primary shrink-0">{icon}</span>
         <span className="text-foreground truncate">{value}</span>
@@ -113,7 +113,7 @@ export function ContactInfoSection({ contact, enrichedData }: ContactInfoSection
     <div className="space-y-1.5">
       {/* Phone — always visible, copyable */}
       <div
-        className="flex items-center justify-between gap-2 text-sm bg-muted/20 rounded-lg p-2.5 hover:bg-muted/30 transition-colors group cursor-pointer"
+        className="flex items-center justify-between gap-2 text-sm bg-background/40 rounded-lg p-2.5 hover:bg-muted/30 transition-colors group cursor-pointer"
         onClick={() => copyToClipboard(contact.phone, 'Telefone')}
       >
         <div className="flex items-center gap-2.5">
