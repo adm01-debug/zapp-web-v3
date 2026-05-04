@@ -118,17 +118,28 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
   useEffect(() => {
     // If we are at the bottom, stay at the bottom
     if (s.isNearBottomRef.current && s.listRef.current) {
-      s.listRef.current.scrollToItem(s.filteredMessages.length - 1, 'end');
+      const lastIndex = s.filteredMessages.length - 1;
+      if (lastIndex >= 0) {
+        s.listRef.current.scrollToItem(lastIndex, 'end');
+      }
     }
   }, [s.filteredMessages.length, conversation.id]);
 
   useEffect(() => {
-    // If we are loading previous messages (infinite scroll up),
-    // we capture the distance from the bottom to use as an anchor.
+    // Scroll anchor for infinite scroll UP
     if (s.scrollRef.current && s.isFetchingNextPage) {
       s.scrollOffsetRef.current = s.scrollRef.current.scrollHeight - s.scrollRef.current.scrollTop;
     }
   }, [s.isFetchingNextPage]);
+
+  useEffect(() => {
+    // Apply scroll anchor after new messages are loaded from infinite scroll
+    if (s.scrollOffsetRef.current > 0 && s.scrollRef.current && !s.isFetchingNextPage) {
+      const newScrollTop = s.scrollRef.current.scrollHeight - s.scrollOffsetRef.current;
+      s.scrollRef.current.scrollTop = newScrollTop;
+      s.scrollOffsetRef.current = 0;
+    }
+  }, [s.filteredMessages.length, s.isFetchingNextPage]);
 
   // Handle incoming messages while reading old ones
   useEffect(() => {
@@ -138,22 +149,12 @@ export function TeamChatPanel({ conversation, onBack, onToggleDetails, showDetai
     const isNewMessageFromOthers = lastMsg.sender_id !== s.profile?.id;
 
     if (isNewMessageFromOthers && !s.isNearBottomRef.current && s.scrollRef.current) {
-      // Don't auto-scroll, just keep the anchor to prevent jumping
-      s.scrollOffsetRef.current = s.scrollRef.current.scrollHeight - s.scrollRef.current.scrollTop;
+      // Don't auto-scroll, just keep position. 
+      // The scroll container naturally stays where it is if content is added at the end, 
+      // unless we are using a virtualized list that might shift things.
     }
   }, [s.filteredMessages.length]);
 
-  useEffect(() => {
-    // Apply the scroll anchor position after messages update
-    if (s.scrollOffsetRef.current > 0 && s.scrollRef.current) {
-      const newScrollTop = s.scrollRef.current.scrollHeight - s.scrollOffsetRef.current;
-      if (Math.abs(newScrollTop - s.scrollRef.current.scrollTop) > 1) {
-        s.scrollRef.current.scrollTop = newScrollTop;
-      }
-      // Reset anchor if we are not fetching
-      if (!s.isFetchingNextPage) s.scrollOffsetRef.current = 0;
-    }
-  }, [s.filteredMessages.length, s.isFetchingNextPage]);
 
 
   useEffect(() => { if (s.showSearch) s.searchInputRef.current?.focus(); }, [s.showSearch]);
