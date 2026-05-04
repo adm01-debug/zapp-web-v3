@@ -123,7 +123,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
                   <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   <span className="font-mono">{formatPhoneForDisplay(p.number)}</span>
                   {p.is_primary && <Badge variant="outline" className="text-xs h-4 px-1">Principal</Badge>}
-                  {p.is_whatsapp && <span title="WhatsApp"><MessageCircle className="h-3 w-3 text-green-500" /></span>}
+                  {p.is_whatsapp && <span title="WhatsApp"><MessageCircle className="h-3 w-3 text-primary" /></span>}
                   <button
                     type="button"
                     onClick={() => (openContactInChat as any)(contact.id, p.number)}
