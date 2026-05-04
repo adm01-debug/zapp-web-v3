@@ -108,11 +108,11 @@ export function ConversationList({
   });
 
   return (
-    <div className="flex flex-col h-full bg-[#111b21] border-r border-[#222d34]">
+    <div className="flex flex-col h-full bg-[#111b21] border-r border-[#222d34] overflow-hidden">
       {/* Header */}
       <div className="p-3 border-b border-[#222d34] bg-[#111b21] space-y-3 shrink-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[#e9edef]">Conversas</h2>
+          <h2 className="text-xl font-bold text-[#e9edef] select-none">Conversas</h2>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className="w-8 h-8 rounded-full text-[#8696a0] hover:bg-[#2a3942] hover:text-[#e9edef]">
               <Filter className="w-4 h-4" />
@@ -122,14 +122,14 @@ export function ConversationList({
 
         {/* Search */}
         <div className="relative group">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none z-10">
             <Search className="w-4 h-4 text-[#8696a0] group-focus-within:text-[#00a884] transition-colors" />
           </div>
           <Input
             placeholder="Buscar conversas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 h-[35px] bg-[#202c33] border-none rounded-lg text-sm text-[#e9edef] placeholder:text-[#8696a0] focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+            className="pl-10 pr-4 h-[40px] md:h-[35px] bg-[#202c33] border-none rounded-lg text-[16px] md:text-sm text-[#e9edef] placeholder:text-[#8696a0] focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
           />
         </div>
 

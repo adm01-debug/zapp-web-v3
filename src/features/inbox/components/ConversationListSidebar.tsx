@@ -161,14 +161,14 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               onChange={(e) => handleContactSearch(e.target.value)}
               className={cn(
                 "pl-8 pr-7 bg-muted/40 border-0 rounded-lg text-xs placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30",
-                isMobile ? "h-8" : "h-7 text-[11px]"
+                isMobile ? "h-[40px] text-[16px]" : "h-7 text-[11px]"
               )}
               aria-label="Buscar conversa"
             />
             {contactSearch && (
               <Button variant="ghost" size="icon" onClick={clearContactSearch}
-                className="absolute right-0.5 top-1/2 -translate-y-1/2 w-6 h-6 hover:bg-transparent" aria-label="Limpar busca">
-                <X className="w-3 h-3 text-muted-foreground" />
+                className="absolute right-0.5 top-1/2 -translate-y-1/2 w-8 h-8 md:w-6 md:h-6 hover:bg-transparent" aria-label="Limpar busca">
+                <X className="w-4 h-4 md:w-3 md:h-3 text-muted-foreground" />
               </Button>
             )}
             <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:block pointer-events-none">

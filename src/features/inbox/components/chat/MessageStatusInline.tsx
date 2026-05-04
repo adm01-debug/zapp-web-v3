@@ -14,6 +14,7 @@
  *    the "2/3" badge survives navigation.
  */
 import { memo, useEffect, useRef } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { log } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/types/chat';
@@ -125,7 +126,9 @@ export const MessageStatusInline = memo(function MessageStatusInline({
 
   return (
     <MessageStatusPanel message={message}>
-      <button
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
         type="button"
         className={cn(
           'inline-flex items-center gap-0.5 cursor-pointer rounded-sm focus-visible:outline-none',
@@ -161,7 +164,12 @@ export const MessageStatusInline = memo(function MessageStatusInline({
           </span>
         )}
         <MessageStatusTimestamps message={message} className="ml-1" />
-      </button>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-[10px] px-2 py-1 bg-popover/95 border-border/40 backdrop-blur-md">
+          {tooltip}
+        </TooltipContent>
+      </Tooltip>
     </MessageStatusPanel>
   );
 });

@@ -86,8 +86,8 @@
 
   /* ===== MESSAGE BUBBLES ===== */
   .message-bubble { 
-    @apply max-w-[70%] px-4 py-2; 
-    border-radius: var(--chat-bubble-radius, 20px);
+    @apply max-w-[85%] sm:max-w-[70%] px-4 py-2; 
+    padding: var(--chat-bubble-padding, 0.625rem 1rem);
     font-size: var(--chat-font-size, 14px);
   }
   .message-bubble.sent { @apply bg-[hsl(var(--chat-bubble-sent))] text-[hsl(var(--chat-bubble-sent-foreground))]; }
