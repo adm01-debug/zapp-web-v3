@@ -14,7 +14,7 @@ const tooltipVariants = cva(
   {
     variants: {
       variant: {
-        default: "border border-border bg-black px-3 py-1.5 text-foreground",
+        default: "border border-white/10 bg-black px-3 py-1.5 text-foreground",
         dark: "bg-foreground px-3 py-1.5 text-background border-0",
         info: "bg-info px-3 py-2 text-info-foreground border-0",
         success: "bg-success px-3 py-2 text-success-foreground border-0",

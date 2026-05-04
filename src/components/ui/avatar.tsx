@@ -53,7 +53,7 @@ const AvatarFallback = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Fallback
     ref={ref}
-    className={cn("flex h-full w-full items-center justify-center rounded-full bg-muted font-medium", className)}
+    className={cn("flex h-full w-full items-center justify-center rounded-full bg-white/5 font-medium text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -180,7 +180,7 @@ function AvatarGroup({ avatars, max = 4, size = 'default', className }: AvatarGr
       ))}
       {remainingCount > 0 && (
         <Avatar size={size} className="ring-2 ring-black">
-          <AvatarFallback className="bg-muted text-muted-foreground">
+          <AvatarFallback className="bg-white/5 text-muted-foreground">
             +{remainingCount}
           </AvatarFallback>
         </Avatar>
