@@ -47,15 +47,8 @@ export function useTeamChatPanel(conversation: TeamConversation) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Performance metrics
-  const lastMetricsRef = useRef({ lastRender: Date.now() });
-  useEffect(() => {
-    const now = Date.now();
-    const duration = now - lastMetricsRef.current.lastRender;
-    if (duration > 50) {
-      log.warn(`Long render detected: ${duration}ms`);
-    }
-    lastMetricsRef.current.lastRender = now;
-  });
+  usePerformanceMetrics('TeamChatPanel');
+
 
   const { settings, updateSettings, saveSettings } = useUserSettings();
   const handleVoiceChange = (v: string) => { updateSettings({ tts_voice_id: v }); setTimeout(() => saveSettings(), 100); };
