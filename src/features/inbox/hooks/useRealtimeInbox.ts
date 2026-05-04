@@ -13,6 +13,7 @@ import { validatePttBlob } from '@/lib/audio/pttLimits';
 import { seedAvatarCache } from '@/features/inbox';
 import { mapToLegacyConversation, mapToLegacyMessages } from '@/adapters/inboxLegacyMapper';
 import { dbFrom } from '@/integrations/datasource/db';
+import { useMessageQueue } from './useMessageQueue';
 
 const log = getLogger('useRealtimeInbox');
 
