@@ -31,6 +31,10 @@ const mockConversation: Conversation = {
   contact: { id: 'contact-1', name: 'John Doe', phone: '123456789', avatar: '', tags: [], createdAt: new Date() },
   status: 'open',
   updatedAt: new Date(),
+  createdAt: new Date(),
+  unreadCount: 0,
+  priority: 'medium',
+  tags: [],
 };
 
 const mockMessages: Message[] = [
