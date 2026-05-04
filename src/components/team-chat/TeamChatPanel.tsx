@@ -77,6 +77,7 @@ function TeamChatPanelContent({ conversation, onBack, onToggleDetails, showDetai
   const s = useTeamChatPanel(conversation);
   const { profile: liveProfile } = useAuth();
   const { aggregate, toggle: toggleReaction, isToggling } = useTeamMessageReactions(conversation.id);
+  const dynamicRowHeight = useDynamicRowHeight({ defaultRowHeight: 100, key: conversation.id });
   const itemHeights = useRef<Record<number, number>>({});
 
 
