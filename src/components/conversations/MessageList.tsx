@@ -6,6 +6,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useMessages, type Message } from '@/hooks/useMessages';
 import { useMessageQueue, type PendingMessage } from '@/hooks/messaging/useMessageQueue';
+import { useContactTyping } from '@/hooks/useContactTyping';
 import { MessageCircle, CheckCircle2, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
