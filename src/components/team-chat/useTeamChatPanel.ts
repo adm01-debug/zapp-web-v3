@@ -104,13 +104,27 @@ export function useTeamChatPanel(conversation: TeamConversation) {
     if (!messages.length || isNearBottomRef.current) return;
     const lastMsg = messages[messages.length - 1];
     if (lastMsg && lastMsg.sender_id !== profile?.id) {
-      // Record LCP/INP equivalent for new message reception
-      const start = performance.now();
       setHasNewMessagesUnseen(true);
-      const end = performance.now();
-      log.debug(`New message UI update took: ${(end - start).toFixed(2)}ms`);
+      setShowScrollDown(true); // Ensure indicator shows up
     }
   }, [messages.length, profile?.id]);
+
+  useEffect(() => {
+    // Scroll anchor for infinite scroll UP
+    if (scrollRef.current && isFetchingNextPage) {
+      scrollOffsetRef.current = scrollRef.current.scrollHeight - scrollRef.current.scrollTop;
+    }
+  }, [isFetchingNextPage]);
+
+  useEffect(() => {
+    // Apply scroll anchor after new messages are loaded from infinite scroll
+    if (scrollOffsetRef.current > 0 && scrollRef.current && !isFetchingNextPage) {
+      const newScrollTop = scrollRef.current.scrollHeight - scrollOffsetRef.current;
+      scrollRef.current.scrollTop = newScrollTop;
+      scrollOffsetRef.current = 0;
+    }
+  }, [messages.length, isFetchingNextPage]);
+
 
 
   const handleSend = useCallback(() => {
