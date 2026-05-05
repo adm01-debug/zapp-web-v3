@@ -168,7 +168,27 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   }, [isRecording, isPaused]);
 
   const uploadAudio = useCallback(async (blob: Blob, conversationId: string) => {
-    // ... keep existing code
+    const fileName = `${conversationId}/${Date.now()}.webm`;
+    
+    const { data, error } = await supabase.storage
+      .from('audio-messages')
+      .upload(fileName, blob, {
+        contentType: 'audio/webm',
+      });
+    
+    if (error) {
+      throw error;
+    }
+    
+    const { data: signedData, error: signError } = await supabase.storage
+      .from('audio-messages')
+      .createSignedUrl(fileName, 3600); // 1 hour expiry
+    
+    if (signError || !signedData?.signedUrl) {
+      throw signError || new Error('Failed to create signed URL');
+    }
+    
+    return signedData.signedUrl;
   }, []);
 
   const formatDuration = useCallback((seconds: number) => {
