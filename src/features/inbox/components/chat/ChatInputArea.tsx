@@ -335,6 +335,15 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             <textarea ref={inputRef} value={inputValue}
               onChange={(e) => { onInputChange(e); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
               onKeyDown={(e) => {
+                // Enter to send, Shift+Enter for new line
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!isSending && (logic.hasText || logic.attachments.length > 0 || editingMessage)) {
+                    logic.handleSendWithAnimation();
+                  }
+                  return;
+                }
+                
                 onKeyDown(e);
                 if (e.key === 'ArrowUp' && !inputValue && messages.length > 0) {
                   const lastOwnMessage = [...messages].reverse().find(m => m.sender === 'agent' && !m.is_deleted);
