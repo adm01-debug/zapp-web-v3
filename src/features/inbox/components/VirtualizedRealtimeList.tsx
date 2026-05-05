@@ -215,8 +215,6 @@ function ConversationItem({
             </div>
           )}
         </div>
-          )}
-        </div>
       </button>
     </div>
   );
