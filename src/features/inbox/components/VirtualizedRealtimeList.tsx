@@ -150,14 +150,14 @@ function ConversationItem({
           )}
         </div>
 
-        <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="flex-1 min-w-0 overflow-hidden font-sans">
           <div className="flex items-center justify-between gap-2 mb-0.5">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               {isPinned && <Pin className="w-3 h-3 text-primary flex-shrink-0" />}
               {conversation.contact.contact_type === 'sicoob_gifts' && (
                 <Gift className="w-3.5 h-3.5 text-info flex-shrink-0" />
               )}
-              <span className="font-medium text-foreground truncate text-sm">
+              <span className="font-semibold text-foreground truncate text-[14px] leading-tight tracking-[-0.01em]">
                 {(() => {
                   const firstName = (conversation.contact.name || 'Sem nome').split(' ')[0];
                   const company = conversation.contact.company;
@@ -170,14 +170,14 @@ function ConversationItem({
                 </span>
               )}
               {conversation.contact.contact_type === 'sicoob_gifts' && (
-                <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 border-info/40 text-info bg-info/10 flex-shrink-0">
-                  Sicoob Gifts
+                <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0 h-4 border-info/40 text-info bg-info/10 flex-shrink-0">
+                  Sicoob
                 </Badge>
               )}
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {conversation.lastMessage && (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                   {formatDistanceToNow(new Date(conversation.lastMessage.created_at), {
                     addSuffix: false,
                     locale: ptBR,
@@ -185,7 +185,7 @@ function ConversationItem({
                 </span>
               )}
               {conversation.unreadCount > 0 && (
-                <span className="min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] rounded-full flex items-center justify-center font-bold">
+                <span className="min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] rounded-full flex items-center justify-center font-bold tabular-nums">
                   {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
                 </span>
               )}
@@ -193,6 +193,7 @@ function ConversationItem({
           </div>
           <ConversationPreviewLine
             contactId={contactId}
+            unread={conversation.unreadCount > 0}
             fallback={
               conversation.contact.contact_type === 'sicoob_gifts' && conversation.contact.company
                 ? `${conversation.contact.company} · ${conversation.lastMessage?.content || 'Sem mensagens'}`
@@ -202,16 +203,18 @@ function ConversationItem({
           {conversation.contact.tags && conversation.contact.tags.length > 0 && (
             <div className="flex gap-1 mt-1.5">
               {conversation.contact.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                <Badge key={tag} variant="outline" className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0 h-4">
                   {tag}
                 </Badge>
               ))}
               {conversation.contact.tags.length > 2 && (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
                   +{conversation.contact.tags.length - 2}
                 </span>
               )}
             </div>
+          )}
+        </div>
           )}
         </div>
       </button>
