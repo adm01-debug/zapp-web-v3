@@ -146,6 +146,9 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
         });
       }, 300);
       
+      const durationMs = Date.now() - (audioBlob.size / 100); // Rough estimate for start time if not tracked
+      log.info(`[INBOX_METRIC] action=audio_upload_success size=${audioBlob.size} duration=${durationMs}ms`);
+      
       await onSend(audioBlob);
       
       clearInterval(interval);
