@@ -108,24 +108,23 @@ interface ConversationItemProps {
 
 /** Build "FirstName · Company" or fallbacks. */
 function buildPrimaryLabel(conversation: any): string {
-  const name = (conversation.contact?.name || conversation.contact?.pushName || '').trim();
+  const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || '').trim();
   const company = conversation.contact?.company?.trim();
-  // Ensure we don't use "Você" as name
   const safeName = name === 'Você' ? '' : name;
   const firstName = safeName?.split(/\s+/)[0] || safeName;
   
   if (firstName && company) return `${firstName} · ${company}`;
-  if (firstName) return `${firstName} · Sem empresa`;
+  if (firstName) return firstName;
   if (company) return `Contato · ${company}`;
-  return 'Contato · Sem empresa';
+  return 'Contato';
 }
 
 function buildFullPrimaryLabel(conversation: any): string {
-  const name = (conversation.contact?.name || conversation.contact?.pushName || 'Contato').trim();
-  const company = conversation.contact?.company?.trim() || 'Sem empresa';
-  // Ensure we don't return "Você"
+  const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || 'Contato').trim();
+  const company = conversation.contact?.company?.trim();
   const safeName = name === 'Você' ? 'Contato' : name;
-  return `${safeName} · ${company}`;
+  if (company) return `${safeName} · ${company}`;
+  return safeName;
 }
 
 
@@ -306,14 +305,12 @@ export function ConversationItem({
                       </Tooltip>
                     )}
                   </>
-                ) : (
-                  <span className="text-[10px] text-muted-foreground/60 font-medium">Sem tags</span>
-                )}
+                ) : null}
               </div>
-              {conversation.lastMessage && (
+              {lastMessage && (
                 <div className="mt-1 flex flex-col gap-1">
                   <SLAIndicatorForContact conversation={conversation} compact={isCompactMode} className="w-full justify-start" />
-                  <RetryFailureBadge message={conversation.lastMessage} compact />
+                  <RetryFailureBadge message={lastMessage} compact />
                 </div>
               )}
             </div>
@@ -454,8 +451,8 @@ export function ConversationItem({
                     data-testid="conversation-preview"
                     className={cn(
                       'font-sans text-[13.5px] leading-[1.35] truncate pr-2 min-w-0 transition-colors duration-300',
-                      conversation.lastMessage
-                        ? conversation.unreadCount > 0
+                      lastMessage
+                        ? unreadCount > 0
                           ? isSelected ? 'text-primary/90 font-bold' : 'text-foreground font-bold'
                           : isSelected ? 'text-primary/70 font-medium' : 'text-muted-foreground font-normal'
                         : 'text-muted-foreground/60 font-normal italic'
@@ -501,9 +498,7 @@ export function ConversationItem({
                       </Tooltip>
                     )}
                   </>
-                ) : (
-                  <span className="text-[10px] text-muted-foreground/60 font-medium">Sem tags</span>
-                )}
+                ) : null}
               </div>
             </div>
             {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
