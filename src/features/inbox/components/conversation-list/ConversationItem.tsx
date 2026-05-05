@@ -95,16 +95,21 @@ function TruncatedTooltip({
 }
 
 interface ConversationItemProps {
-  conversation: Conversation;
+  conversation: any; // Allow flexibility for mapped types
   isSelected: boolean;
-  onSelect: (conversation: Conversation) => void;
+  onSelect: (conversation: any) => void;
   compact?: boolean;
+  // Selection Mode Props (for VirtualizedRealtimeList integration)
+  selectionMode?: boolean;
+  isMultiSelected?: boolean;
+  onToggleSelection?: (id: string) => void;
+  isPinned?: boolean;
 }
 
 /** Build "FirstName · Company" or fallbacks. */
-function buildPrimaryLabel(conversation: Conversation): string {
-  const name = conversation.contact.name?.trim();
-  const company = conversation.contact.company?.trim();
+function buildPrimaryLabel(conversation: any): string {
+  const name = (conversation.contact?.name || conversation.contact?.pushName || '').trim();
+  const company = conversation.contact?.company?.trim();
   const firstName = name?.split(/\s+/)[0];
   if (firstName && company) return `${firstName} · ${company}`;
   if (name) return name;
@@ -112,7 +117,16 @@ function buildPrimaryLabel(conversation: Conversation): string {
   return 'Contato';
 }
 
-export function ConversationItem({ conversation, isSelected, onSelect, compact: forceCompact = false }: ConversationItemProps) {
+export function ConversationItem({ 
+  conversation, 
+  isSelected, 
+  onSelect, 
+  compact: forceCompact = false,
+  selectionMode = false,
+  isMultiSelected = false,
+  onToggleSelection,
+  isPinned = false
+}: ConversationItemProps) {
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense' || forceCompact;
 
