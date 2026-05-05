@@ -87,8 +87,16 @@ export function useTypingPresence({
     // Chave do canal: prefere `remoteJid` quando fornecido (sincroniza com webhook).
     const channelKey = remoteJid ?? conversationId;
 
+    // IMPORTANTE: usar topic dedicado para presence de agentes para NÃO colidir
+    // com `typing:${remoteJid}` consumido por `useContactTyping` em listas.
+    // Supabase Realtime deduplica canais por topic; reutilizar um canal já
+    // subscrito impede registrar novos callbacks (`presence`/`broadcast`) e
+    // crashava o ChatPanel ("cannot add `presence` callbacks ... after `subscribe()`").
+    const presenceTopic = `typing-agents:${channelKey}`;
+    const broadcastTopic = `typing:${channelKey}`;
+
     // Create presence channel for this conversation
-    const channel = supabase.channel(`typing:${channelKey}`, {
+    const channel = supabase.channel(presenceTopic, {
       config: {
         presence: {
           key: currentUserId,
@@ -97,6 +105,9 @@ export function useTypingPresence({
     });
 
     channelRef.current = channel;
+
+    // Canal separado, somente leitura, para o broadcast `contact_typing` do webhook.
+    const broadcastChannel = supabase.channel(`${broadcastTopic}:listener:${currentUserId}`);
 
     // Handle presence sync (agent-to-agent typing)
     channel.on('presence', { event: 'sync' }, () => {
