@@ -13,7 +13,7 @@ import { useContactTyping } from '@/hooks/useContactTyping';
 import { useInViewport } from '@/hooks/useInViewport';
 import {
   Clock, CheckCircle2, AlertCircle, Loader2, ExternalLink,
-  MessageCircle, Instagram, Mail, Phone,
+  MessageCircle, Instagram, Mail, Phone, Pin
 } from 'lucide-react';
 import { openChatPopup } from '@/lib/popupManager';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
