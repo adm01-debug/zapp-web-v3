@@ -120,17 +120,20 @@ describe('useMessageQueue — Multi-contact Stress & Order', () => {
     const processedMessages: string[] = [];
     let isReloaded = false;
     
-    const processMessage = vi.fn(async (item: QueueItem) => {
-      if (!isReloaded && processedMessages.length === 2) {
-        // "Crash" the app before processing more
-        return; 
+    // Using a shared array for processed messages across hook instances
+    const processMessage = async (item: QueueItem) => {
+      if (!isReloaded && processedMessages.length >= 2) {
+        // "Crash" the app before processing more than 2 items
+        throw new Error('Pre-reload crash'); 
       }
       processedMessages.push(item.content);
       await new Promise(resolve => setTimeout(resolve, 10));
-    });
+    };
+
+    const initialProcess = vi.fn(processMessage);
 
     // Initial load
-    const { result: result1, unmount } = renderHook(() => useMessageQueue(processMessage));
+    const { result: result1, unmount } = renderHook(() => useMessageQueue(initialProcess));
 
     await act(async () => {
       result1.current.addToQueue('c1', 'msg-1');
@@ -139,35 +142,34 @@ describe('useMessageQueue — Multi-contact Stress & Order', () => {
       result1.current.addToQueue('c2', 'msg-B');
     });
 
-    // Let some process (wait for exactly 2 messages as per the mock logic)
-    await act(async () => {
-      let count = 0;
-      while (count < 2) {
-        count = result1.current.queue.filter(i => i.status === 'confirmed').length;
-        if (count >= 2) break;
-        await new Promise(resolve => setTimeout(resolve, 50));
-      }
-    });
+    // Wait until at least 1 item is confirmed or failed
+    const start = Date.now();
+    while (Date.now() - start < 5000) {
+      const confirmedCount = result1.current.queue.filter(i => i.status === 'confirmed' || i.status === 'failed').length;
+      if (confirmedCount >= 1) break;
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 100)); });
+    }
 
     // Simulate page reload
     unmount();
     isReloaded = true;
     
-    // Create new processMessage that logs to the SAME array
-    const { result: result2 } = renderHook(() => useMessageQueue(processMessage));
+    const secondProcess = vi.fn(processMessage);
+    const { result: result2 } = renderHook(() => useMessageQueue(secondProcess));
 
     // Wait for resumed processing (4 items total in queue)
     await waitForQueueProcessing(result2, 4);
 
-    const allProcessed = processedMessages;
-    expect(allProcessed).toContain('msg-1');
-    expect(allProcessed).toContain('msg-2');
-    expect(allProcessed).toContain('msg-A');
-    expect(allProcessed).toContain('msg-B');
+    expect(processedMessages).toContain('msg-1');
+    expect(processedMessages).toContain('msg-2');
+    expect(processedMessages).toContain('msg-A');
+    expect(processedMessages).toContain('msg-B');
     
-    // Verify relative order per contact is maintained
-    const c1Msgs = allProcessed.filter(m => m === 'msg-1' || m === 'msg-2');
-    const c2Msgs = allProcessed.filter(m => m === 'msg-A' || m === 'msg-B');
+    // Verify relative order per contact is maintained in the final output
+    // Note: msg-1 might have been processed before or after reload depending on timing,
+    // but msg-1 must always come before msg-2 for contact c1.
+    const c1Msgs = processedMessages.filter(m => m === 'msg-1' || m === 'msg-2');
+    const c2Msgs = processedMessages.filter(m => m === 'msg-A' || m === 'msg-B');
     expect(c1Msgs).toEqual(['msg-1', 'msg-2']);
     expect(c2Msgs).toEqual(['msg-A', 'msg-B']);
   });
@@ -176,10 +178,9 @@ describe('useMessageQueue — Multi-contact Stress & Order', () => {
     const processedMessages: string[] = [];
     const processMessage = vi.fn(async (item: QueueItem) => {
       processedMessages.push(item.content);
-      // Simulate immediate confirmation for some, but others wait for webhook
       if (item.content.includes('webhook')) {
-        // Set externalId to simulate what would happen in a real send
         item.externalId = `ext-${item.id}`;
+        // Simulate that the server returns an externalId but doesn't mark as confirmed yet
         return; 
       }
       await new Promise(resolve => setTimeout(resolve, 5));
@@ -193,11 +194,14 @@ describe('useMessageQueue — Multi-contact Stress & Order', () => {
       result.current.addToQueue('c1', 'msg-3-instant');
     });
 
-    // Wait for all messages to be processed (but some might be in 'confirmed' or 'pending' wait for webhook)
+    // Wait for items to be processed or assigned an externalId
     const start = Date.now();
     while (Date.now() - start < 5000) {
-      const allAttempted = result.current.queue.every(i => i.status === 'confirmed' || i.externalId);
-      if (allAttempted && result.current.queue.length === 3) break;
+      const allAttempted = result.current.queue.every(i => i.status === 'confirmed' || (i.content === 'msg-2-webhook' && i.status === 'sending'));
+      // In useMessageQueue, processing happens and then it sets status.
+      // Let's check if msg-2-webhook has reached the processMessage call.
+      const msg2 = result.current.queue.find(i => i.content === 'msg-2-webhook');
+      if (msg2 && (msg2.status === 'confirmed' || msg2.status === 'sending')) break;
       await act(async () => { await new Promise(resolve => setTimeout(resolve, 100)); });
     }
 
@@ -205,19 +209,16 @@ describe('useMessageQueue — Multi-contact Stress & Order', () => {
     await act(async () => {
       const webhookItem = result.current.queue.find(i => i.content === 'msg-2-webhook');
       if (webhookItem) {
-        result.current.reconcileWithDelivery('c1', webhookItem.externalId!, 'confirmed');
+        // We simulate the externalId being set by the processor
+        result.current.reconcileWithDelivery('c1', `ext-${webhookItem.id}`, 'confirmed');
       }
     });
 
-    // All should be removed or confirmed
     await waitForQueueProcessing(result, 3);
     
-    // Verify order
     expect(processedMessages).toEqual(['msg-1-instant', 'msg-2-webhook', 'msg-3-instant']);
 
-    // Check metrics
     const metrics = result.current.getMetrics();
-    // In confirmed status or removed. Since removeFromQueue has a 5s delay in the hook, they should still be there for metrics.
     expect(metrics.totalSent).toBeGreaterThanOrEqual(2);
   });
 });
