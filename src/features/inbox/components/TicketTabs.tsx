@@ -19,8 +19,9 @@ import { useQueues } from '@/hooks/useQueues';
 import { useAllTicketStates } from '@/features/inbox';
 import { ConversationWithMessages } from '@/features/inbox';
 
-export type MainTab = 'open' | 'resolved' | 'search';
+export type MainTab = 'open' | 'resolved' | 'search' | 'unread';
 export type SubTab = 'attending' | 'waiting';
+
 
 interface TicketTabsProps {
   conversations: ConversationWithMessages[];
