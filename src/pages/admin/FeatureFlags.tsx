@@ -206,6 +206,49 @@ export function FeatureFlagsAdmin() {
         </div>
 
         <div className="space-y-6">
+          <Card className="border-2 border-primary/10">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-bold">Health & Performance</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={executeHealthCheck} 
+                disabled={checkingHealth}
+                className={checkingHealth ? 'animate-spin' : ''}
+              >
+                <RefreshCcw className="w-4 h-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/50 p-3 rounded-lg text-center">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Queue Pending</p>
+                  <p className="text-2xl font-black">{metrics.pendingRetries}</p>
+                </div>
+                <div className="bg-muted/50 p-3 rounded-lg text-center">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Queue Failed</p>
+                  <p className="text-2xl font-black text-destructive">{metrics.failedTotal}</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {healthResults.map((res, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 rounded bg-muted/20 text-xs border border-border/30">
+                    <span className="font-medium">{res.service}</span>
+                    <div className="flex items-center gap-2">
+                      {res.latency && <span className="text-[9px] text-muted-foreground font-mono">{res.latency}ms</span>}
+                      {res.status === 'ok' ? (
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 text-destructive" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-2 border-primary/10 sticky top-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -214,7 +257,7 @@ export function FeatureFlagsAdmin() {
               <CardDescription>Rastreabilidade total de alterações.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="max-h-[600px] overflow-y-auto px-4 pb-4 space-y-3">
+              <div className="max-h-[400px] overflow-y-auto px-4 pb-4 space-y-3">
                 {auditLogs.map((log, i) => (
                   <div key={i} className="group p-3 rounded-lg bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
                     <div className="flex items-center justify-between mb-1">
@@ -222,9 +265,9 @@ export function FeatureFlagsAdmin() {
                       <span className="text-[10px] bg-primary/10 text-primary px-1.5 rounded uppercase font-bold">{log.action}</span>
                     </div>
                     <div className="text-[11px] font-mono break-all line-clamp-2">
-                      <span className="font-bold text-foreground">{(log.new_data as any)?.key?.replace('feature_', '')}</span>
+                      <span className="font-bold text-foreground">{(log.details as any)?.new?.key?.replace('feature_', '')}</span>
                       <p className="text-muted-foreground mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                        {JSON.stringify(log.new_data?.value)}
+                        {JSON.stringify((log.details as any)?.new?.value)}
                       </p>
                     </div>
                   </div>
