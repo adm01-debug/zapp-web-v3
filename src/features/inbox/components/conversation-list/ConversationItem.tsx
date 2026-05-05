@@ -118,6 +118,13 @@ function buildPrimaryLabel(conversation: any): string {
   return 'Contato · Sem empresa';
 }
 
+function buildFullPrimaryLabel(conversation: any): string {
+  const name = (conversation.contact?.name || conversation.contact?.pushName || 'Contato').trim();
+  const company = conversation.contact?.company?.trim() || 'Sem empresa';
+  return `${name} · ${company}`;
+}
+
+
 export function ConversationItem({ 
   conversation, 
   isSelected, 
@@ -157,6 +164,7 @@ export function ConversationItem({
   const isTyping = useContactTyping(contactId, inView);
 
   const primaryLabel = buildPrimaryLabel(conversation);
+  const fullPrimaryLabel = buildFullPrimaryLabel(conversation);
   const hasTags = tags.length > 0;
   const previewText = lastMessage?.content?.trim() || 'Sem mensagens ainda';
   const visibleTags = tags.slice(0, 2);
@@ -222,7 +230,7 @@ export function ConversationItem({
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1 min-w-0 flex-1">
                   {isPinned && <Pin className="w-2.5 h-2.5 text-primary flex-shrink-0" />}
-                  <TruncatedTooltip fullText={primaryLabel}>
+                  <TruncatedTooltip fullText={fullPrimaryLabel}>
                     {(ref) => (
                       <span
                         ref={ref}
@@ -399,7 +407,7 @@ export function ConversationItem({
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   {isPinned && <Pin className="w-3 h-3 text-primary flex-shrink-0" />}
-                  <TruncatedTooltip fullText={primaryLabel}>
+                  <TruncatedTooltip fullText={fullPrimaryLabel}>
                     {(ref) => (
                       <span
                         ref={ref}
