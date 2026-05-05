@@ -8,6 +8,16 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConversationItem } from './conversation-list/ConversationItem';
 import { ConversationContextMenu } from './ConversationContextMenu';
 import { useDensity } from '@/hooks/useDensity';
+import { MOCK_CONVERSATIONS } from './conversation-list/__mocks__/mockConversations';
+
+/**
+ * DEV ONLY: Quando `localStorage.setItem('mockConversations', '1')` está ativo,
+ * a sidebar exibe um conjunto rico de dados mockados para análise visual do layout.
+ * Para desligar: `localStorage.removeItem('mockConversations')` e recarregar.
+ */
+const USE_MOCKS =
+  typeof window !== 'undefined' &&
+  window.localStorage?.getItem('mockConversations') === '1';
 import {
   Search,
   Filter,
@@ -32,9 +42,11 @@ export function ConversationList({
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense';
 
+  const sourceConversations = USE_MOCKS ? MOCK_CONVERSATIONS : conversations;
+
   const filteredConversations = useMemo(() => {
     const q = search.toLowerCase();
-    return conversations.filter((conv) => {
+    return sourceConversations.filter((conv) => {
       const matchesSearch = !q || 
         conv.contact.name.toLowerCase().includes(q) ||
         conv.contact.phone.includes(q) ||
@@ -42,17 +54,17 @@ export function ConversationList({
       const matchesFilter = filter === 'all' || conv.status === filter;
       return matchesSearch && matchesFilter;
     });
-  }, [conversations, search, filter]);
+  }, [sourceConversations, search, filter]);
 
   const counts = useMemo(() => {
-    const c = { all: conversations.length, open: 0, pending: 0, waiting: 0 };
-    for (const conv of conversations) {
+    const c = { all: sourceConversations.length, open: 0, pending: 0, waiting: 0 };
+    for (const conv of sourceConversations) {
       if (conv.status === 'open') c.open++;
       else if (conv.status === 'pending') c.pending++;
       else if (conv.status === 'waiting') c.waiting++;
     }
     return c;
-  }, [conversations]);
+  }, [sourceConversations]);
 
   const virtualizer = useVirtualizer({
     count: filteredConversations.length,
