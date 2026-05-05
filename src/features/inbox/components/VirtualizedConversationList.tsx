@@ -23,11 +23,13 @@ interface VirtualizedConversationListProps {
   onMarkRead?: (conversation: Conversation) => void;
 }
 
-export function VirtualizedConversationList({ conversations, selectedId, onSelect, compactMode = false }: VirtualizedConversationListProps) {
+export function VirtualizedConversationList({ conversations, selectedId, onSelect, compactMode: forceCompact = false }: VirtualizedConversationListProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const parentRef = useRef<HTMLDivElement>(null);
-  const itemHeight = compactMode ? COMPACT_ITEM_HEIGHT : ITEM_HEIGHT;
+  const { density } = useDensity();
+  const isCompactMode = density === 'compact' || density === 'dense' || forceCompact;
+  const itemHeight = isCompactMode ? 64 : 78; // Consistência com ConversationList.tsx
 
   const filteredConversations = useMemo(() => {
     return conversations.filter((conv) => {
