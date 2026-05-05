@@ -241,16 +241,16 @@ export function EmailChatBubble({
       {expanded && (
         <div className="px-4 pb-4 pl-15 animate-in slide-in-from-top-2 duration-300">
           <div className="pl-11">
-            <div className="bg-background/40 rounded-2xl p-4 border border-border/10 shadow-inner">
+            <div className="bg-background/60 backdrop-blur-xl rounded-2xl p-5 border border-border/10 shadow-2xl relative">
               {hasHtml ? (
                 <div
                   ref={contentRef}
-                  className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-relaxed overflow-hidden font-sans"
-                  style={{ maxHeight: showFullHtml ? 'none' : '400px' }}
+                  className="prose prose-sm dark:prose-invert max-w-none text-[14px] leading-relaxed overflow-hidden font-sans text-foreground/90 selection:bg-primary/20"
+                  style={{ maxHeight: showFullHtml ? 'none' : '500px' }}
                   dangerouslySetInnerHTML={{ __html: displayHtml }}
                 />
               ) : (
-                <p className="text-[13px] whitespace-pre-wrap leading-relaxed font-sans text-foreground/90">{displayHtml}</p>
+                <p className="text-[14px] whitespace-pre-wrap leading-relaxed font-sans text-foreground/90 selection:bg-primary/20">{displayHtml}</p>
               )}
 
               {/* Mostrar citação */}
