@@ -148,7 +148,6 @@ export function SecondaryToolbar({
         showDialog={!onFileSelect}
       />
       <RichTextToggle active={showRichToolbar} onToggle={onToggleRichToolbar} />
-      <VoiceDictationButton onTranscript={onVoiceDictation} disabled={isRecordingAudio} />
       <TextToAudioButton inputValue={inputValue} onAudioReady={onAudioSend} />
     </div>
   );
