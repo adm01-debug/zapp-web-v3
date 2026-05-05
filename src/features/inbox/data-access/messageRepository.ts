@@ -1,6 +1,6 @@
 import { dbFrom, dbChannel, dbClient, dbTable, dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
-import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { RealtimePostgresChangesPayload, RealtimeChannel } from '@supabase/supabase-js';
 
 export interface Message {
   id: string;
