@@ -98,9 +98,8 @@
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.9) 100%);
   }
   .message-bubble.received { 
-    @apply bg-muted/50 dark:bg-muted/30 text-foreground shadow-sm border border-border/10;
+    @apply bg-muted/50 dark:bg-muted/30 text-foreground shadow-sm border border-border/10 backdrop-blur-sm;
     border-bottom-left-radius: 4px;
-    backdrop-blur-sm;
   }
 
   /* ===== STATUS DOT ===== */
