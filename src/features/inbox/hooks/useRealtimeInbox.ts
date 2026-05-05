@@ -343,7 +343,15 @@ export function useRealtimeInbox() {
       const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
       
       try {
-        if (attachments && attachments.length > 0) {
+        if (item.type === 'audio' && attachments?.[0]) {
+          const { sendExternalAudio } = await import('..');
+          const { optimistic } = await sendExternalAudio(contactId, attachments[0], { 
+            contactAvatar: currentAvatar,
+            onProgress: (p) => { messageQueue.updateProgress(item.id, p); }
+          });
+          if (optimistic.external_id) item.externalId = optimistic.external_id;
+          try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+        } else if (attachments && attachments.length > 0) {
           for (let i = 0; i < attachments.length; i++) {
             const file = attachments[i];
             const isLarge = file.size > 10 * 1024 * 1024; // > 10MB
