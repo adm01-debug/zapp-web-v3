@@ -482,7 +482,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     : logic.isOverLimit 
                     ? "⚠️ Limite de caracteres excedido"
                     : (!logic.hasText && logic.attachments.length === 0 && !editingMessage)
-                    ? "✨ Digite algo para enviar"
+                    ? "📎 Clique para anexar arquivo"
                     : editingMessage ? "✅ Confirmar alterações" : "🚀 Enviar mensagem (Enter)"}
                 </TooltipContent>
               </Tooltip>
