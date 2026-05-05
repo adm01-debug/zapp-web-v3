@@ -32,7 +32,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   const lastBlobRef = useRef<Blob | null>(null);
   const lastTranscriptionRef = useRef<string>('');
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async (isRecovery = false) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
