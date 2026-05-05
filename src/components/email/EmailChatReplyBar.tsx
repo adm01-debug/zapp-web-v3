@@ -187,12 +187,12 @@ export function EmailChatReplyBar({
         )}
 
         {/* Textarea */}
-        <div className="relative">
+        <div className="relative group/input bg-muted/20 rounded-2xl border border-border/5 p-4 transition-all duration-300 focus-within:bg-muted/30 focus-within:border-primary/20 focus-within:shadow-2xl focus-within:shadow-primary/5">
           <Textarea
             value={bodyHtml.replace(/<[^>]*>/g, '')}
             onChange={e => setBody(e.target.value)}
-            placeholder="Escreva sua resposta..."
-            className="min-h-[100px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-sm leading-relaxed"
+            placeholder="Escreva sua resposta comercial..."
+            className="min-h-[120px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-[14px] font-medium leading-relaxed font-sans placeholder:text-muted-foreground/30"
           />
         </div>
 
