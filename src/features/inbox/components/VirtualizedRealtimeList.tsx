@@ -60,7 +60,7 @@ const VirtualizedItem = memo(({
         height: `${virtualRow.size}px`,
         transform: `translateY(${virtualRow.start}px)`,
       }}
-      className="px-2 py-1"
+      className="w-full"
     >
       <SharedConversationItem 
         conversation={conversation}
