@@ -89,15 +89,8 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
         // Optimistic update of the infinite query cache
         // Note: we ONLY update if searchQuery is empty to avoid showing results that don't match the filter
         if (!searchQuery.trim()) {
-          queryClient.setQueryData(['team-messages', conversationId, ''], (oldData: any) => {
+          queryClient.setQueryData(['team-messages', conversationId, ''], (oldData: { pages: { messages: TeamMessage[] }[] } | undefined) => {
             if (!oldData || !oldData.pages) return oldData;
-            
-            // For a new message (INSERT), we add it to the newest page (pages[0])
-            // Since our pages are stored oldest-to-newest internally (sortedMessages in queryFn),
-            // and useTeamMessages reverses the pages order to combine them,
-            // we must be careful. 
-            // queryFn returns newest 50 reversed -> oldest of those 50 first.
-            // pages[0] has the 50 MOST RECENT messages, in ascending order.
             
             const newPages = [...oldData.pages];
             if (newPages.length > 0) {

@@ -4,6 +4,7 @@ import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogg
 import { messageService } from '@/features/inbox/services/messageService';
 import { messageRepository } from '@/features/inbox/data-access/messageRepository';
 import type { Message } from '@/types/chat';
+import type { RealtimeMessage } from '@/features/inbox/hooks/useRealtimeMessages';
 
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
@@ -50,8 +51,8 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
 
   // Handle new message from realtime
   const handleNewMessage = useCallback(
-    (payload: RealtimePostgresChangesPayload<any>) => {
-      const newMessage = messageService.mapMessage(payload.new);
+    (payload: RealtimePostgresChangesPayload<RealtimeMessage>) => {
+      const newMessage = messageService.mapMessage(payload.new as Record<string, any>);
       
       if (newMessage.conversationId === contactId) {
         setMessages((prev) => {
@@ -66,8 +67,8 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   );
 
   const handleMessageUpdate = useCallback(
-    (payload: RealtimePostgresChangesPayload<any>) => {
-      const updatedMessage = messageService.mapMessage(payload.new);
+    (payload: RealtimePostgresChangesPayload<RealtimeMessage>) => {
+      const updatedMessage = messageService.mapMessage(payload.new as Record<string, any>);
 
       if (updatedMessage.conversationId === contactId) {
         setMessages((prev) =>
@@ -79,8 +80,8 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   );
 
   const handleMessageDelete = useCallback(
-    (payload: RealtimePostgresChangesPayload<any>) => {
-      const deletedMessage = payload.old as any;
+    (payload: RealtimePostgresChangesPayload<RealtimeMessage>) => {
+      const deletedMessage = payload.old as RealtimeMessage;
 
       if (deletedMessage && (deletedMessage.contact_id === contactId || deletedMessage.id)) {
         setMessages((prev) => prev.filter((m) => m.id !== deletedMessage.id));

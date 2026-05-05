@@ -14,6 +14,7 @@ export interface OptimisticMessage extends Message {
 
 export function useOptimisticMessages() {
   const [pending, setPending] = useState<Record<string, OptimisticMessage>>({});
+  const lastRemovedIdRef = useRef<string | null>(null);
   
   // Use a ref to store the latest pending state for non-reactive logic if needed,
   // but we prefer state for UI reactivity.
@@ -85,48 +86,6 @@ export function useOptimisticMessages() {
     return result;
   }, []);
 
-  const mergeWithReal = useCallback(
-    (realMessages: Message[]): (Message | OptimisticMessage)[] => {
-      const pendingList = Object.values(pending);
-      if (pendingList.length === 0) return realMessages;
-
-      const realExternalIds = new Set(realMessages.map(m => m.external_id).filter(Boolean));
-      const realContentSet = new Set(
-        realMessages
-          .filter((m) => m.sender === 'agent')
-          .slice(-20)
-          .map((m) => m.content),
-      );
-
-      const stillPending: OptimisticMessage[] = [];
-      const toRemove: string[] = [];
-
-      for (const opt of pendingList) {
-        let confirmed = false;
-        // Verify by external_id or fuzzy match content
-        if (opt.external_id && realExternalIds.has(opt.external_id)) confirmed = true;
-        else if (realContentSet.has(opt.content)) confirmed = true;
-        
-        const age = Date.now() - new Date(opt.timestamp).getTime();
-        // Remove if confirmed or timed out (2 minutes)
-        if (confirmed || age > 120000) {
-          toRemove.push(opt.id);
-        } else {
-          stillPending.push(opt);
-        }
-      }
-
-      // NO SETTIMEOUT HERE - IT BREAKS TESTS
-      
-      if (stillPending.length === 0) return realMessages;
-
-      return [...realMessages, ...stillPending].sort(
-        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      );
-    },
-    [pending],
-  );
-
   const cleanup = useCallback((ids: string[]) => {
     if (ids.length === 0) return;
     setPending(prev => {
@@ -141,6 +100,57 @@ export function useOptimisticMessages() {
       return changed ? next : prev;
     });
   }, []);
+
+  const mergeWithReal = useCallback(
+    (realMessages: Message[]): (Message | OptimisticMessage)[] => {
+      const pendingList = Object.values(pending);
+      if (pendingList.length === 0) return realMessages;
+
+      const realExternalIds = new Set(realMessages.map(m => m.external_id).filter(Boolean));
+      // Fingerprint match criteria: agent messages, recently sent, match content
+      const recentAgentSends = realMessages.filter(m => m.sender === 'agent').slice(-15);
+      const realContentSet = new Set(recentAgentSends.map((m) => m.content));
+
+      const stillPending: OptimisticMessage[] = [];
+      const toRemove: string[] = [];
+
+      for (const opt of pendingList) {
+        let confirmed = false;
+        
+        // 1. External ID match (best accuracy)
+        if (opt.external_id && realExternalIds.has(opt.external_id)) {
+          confirmed = true;
+        } 
+        // 2. Content match (fallback for before ID is known or missing ID in real event)
+        else if (realContentSet.has(opt.content)) {
+          confirmed = true;
+        }
+        
+        const age = Date.now() - new Date(opt.timestamp).getTime();
+        // 3. TTL Expiry (2 minutes)
+        if (confirmed || age > 120000) {
+          toRemove.push(opt.id);
+        } else {
+          stillPending.push(opt);
+        }
+      }
+
+      if (toRemove.length > 0) {
+        // Trigger cleanup in next tick to avoid state updates during render
+        Promise.resolve().then(() => cleanup(toRemove));
+      }
+      
+      if (stillPending.length === 0) return realMessages;
+
+      // Ensure we don't duplicate if a message was just removed but still in state
+      const filteredStillPending = stillPending.filter(p => !toRemove.includes(p.id));
+
+      return [...realMessages, ...filteredStillPending].sort(
+        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+    },
+    [pending, cleanup],
+  );
 
   return {
     createOptimistic,
