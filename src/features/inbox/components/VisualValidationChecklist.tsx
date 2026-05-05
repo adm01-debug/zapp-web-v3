@@ -119,7 +119,7 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
                     {item.category}
                   </span>
                   <span className={cn(
-                    "text-[14px] font-bold tracking-tight",
+                    "text-[14px] font-bold tracking-tight block truncate",
                     item.isApproved ? "text-primary" : "text-foreground"
                   )}>
                     {item.label}
