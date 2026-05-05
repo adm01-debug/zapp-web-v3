@@ -518,7 +518,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           onOpenCatalog={() => openDialog('catalogDirect')} onSelectSuggestion={(text) => handlers.setInputValue(text)} onSelectTemplate={(text) => handlers.setInputValue(text)}
           onOpenTeamFiles={() => handleSetActiveTool('teamFiles')}
           fileUploaderRef={fileUploaderRef} inputRef={handlers.inputRef} 
-          queue={messageQueue?.queue} onRetry={messageQueue?.retryMessage} />
+          queue={messageQueue?.queue} onRetry={messageQueue?.retryMessage} onRemoveFromQueue={messageQueue?.removeFromQueue} />
 
         <ChatDialogs
           dialogs={dialogs} openDialog={openDialog} closeDialog={closeDialog}
