@@ -186,6 +186,12 @@ export function useMessageQueue(
               log.error(`[QUEUE_ERROR] id=${itemToProcess.id} contact=${contactId} attempt=${itemToProcess.retryCount} err=${errorMsg}`);
               
               const analytics = (window as any).analytics;
+              const startTimeStr = new Date(startTime).toISOString();
+              const durationMs = Date.now() - startTime;
+              
+              // New Monitoring Logs for Dashboard
+              log.info(`[INBOX_METRIC] action=send_fail contact=${contactId} duration=${durationMs}ms attempt=${itemToProcess.retryCount}`);
+              
               if (analytics) {
                 analytics.track('Message Queue Failure', {
                   messageId: itemToProcess.id,
