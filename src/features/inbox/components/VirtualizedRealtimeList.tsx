@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useMemo, forwardRef } from 'react';
+import { useRef, useState, useCallback, useMemo, forwardRef, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ConversationWithMessages } from '@/features/inbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
