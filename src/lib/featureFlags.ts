@@ -1,9 +1,10 @@
 /**
  * Feature flags system for ZAPP WEB.
- *
- * Allows enabling/disabling features at runtime without deploying.
- * Flags are stored in Supabase `app_settings` table and cached locally.
- * Falls back to defaults when Supabase is unreachable.
+ * 
+ * Supports:
+ * 1. Simple boolean toggles.
+ * 2. Percentage-based rollout (value: 0-100).
+ * 3. Targeting specific agent IDs.
  */
 
 import { supabase } from '@/integrations/supabase/client';
