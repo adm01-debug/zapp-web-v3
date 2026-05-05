@@ -107,7 +107,7 @@ export const ChatHeader = memo(function ChatHeader({
         </motion.div>
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
-            <h3 className="font-sans font-black text-[16px] text-foreground truncate max-w-[240px] sm:max-w-md tracking-tight leading-tight">
+            <h3 className="font-semibold text-[15px] text-foreground truncate max-w-[240px] sm:max-w-md tracking-normal leading-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>
               {conversation.contact.name}
             </h3>
             <div className="flex-shrink-0 flex items-center gap-1.5">
@@ -122,11 +122,11 @@ export const ChatHeader = memo(function ChatHeader({
           </div>
           <div className="flex items-center h-4">
             {isContactTyping ? (
-              <span className="text-[11px] text-primary font-bold italic animate-pulse flex items-center gap-1">
+              <span className="text-[10.5px] text-primary font-semibold italic animate-pulse flex items-center gap-1 uppercase tracking-wider" style={{ fontFamily: 'Outfit, sans-serif' }}>
                 <span className="w-1 h-1 rounded-full bg-primary" /> digitando...
               </span>
             ) : (
-              <span className="text-[11px] text-muted-foreground/50 font-medium truncate max-w-[200px] tracking-tight uppercase tracking-widest text-[9px]">Status: Ativo</span>
+              <span className="text-[10.5px] text-muted-foreground/50 font-semibold truncate max-w-[200px] uppercase tracking-wider" style={{ fontFamily: 'Outfit, sans-serif' }}>Status: Ativo</span>
             )}
           </div>
         </div>
