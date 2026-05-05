@@ -105,6 +105,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
     inputValue, contactId, editingMessage, inputRef, fileUploaderRef, onSend, onPasteFiles,
   });
 
+  const isV2AudioEnabled = isFeatureEnabled('v2_audio_recorder');
+  const isRetryEnabled = isFeatureEnabled('message_queue_retry');
+
   const { isOpen: mentionOpen, cursorPos: mentionCursorPos, checkForMention, handleSelect: handleMentionSelect, close: closeMention } = useMentions(inputRef);
 
   const tertiaryTools = useMemo(() => (
