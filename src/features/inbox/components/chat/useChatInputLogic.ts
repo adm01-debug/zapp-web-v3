@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { validateFile } from '@/utils/whatsappFileTypes';
 import { toast } from '@/hooks/use-toast';
@@ -29,7 +29,9 @@ export function useChatInputLogic({
   const [showRichToolbar, setShowRichToolbar] = useState(false);
   const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
   const [sendAnimation, setSendAnimation] = useState(false);
+  const [isSendingFiles, setIsSendingFiles] = useState(false);
   const [attachments, setAttachments] = useState<ChatInputAttachment[]>([]);
+  const lastErrorRef = useRef<string | null>(null);
   const isMobile = useIsMobile();
 
   const hasText = inputValue.trim().length > 0;
@@ -126,21 +128,37 @@ export function useChatInputLogic({
   }, [inputRef]);
 
   // Send with animation
-  const handleSendWithAnimation = useCallback(() => {
+  const handleSendWithAnimation = useCallback(async () => {
     // If no text/attachments and not editing, we handle mic record toggle
     if (!hasText && attachments.length === 0 && !editingMessage) {
-      return; // Prop handles the actual call to onRecordToggle
+      return; 
     }
 
-    if (isOverLimit) return;
+    if (isOverLimit || isSendingFiles) return;
     
     setSendAnimation(true);
-    try { localStorage.removeItem(`${DRAFT_KEY_PREFIX}${contactId}`); } catch { /* storage unavailable */ }
-    if (isMobile && navigator.vibrate) navigator.vibrate(50);
-    onSend(attachments.map(a => a.file));
-    setAttachments([]);
-    setTimeout(() => setSendAnimation(false), 400);
-  }, [hasText, attachments, isOverLimit, contactId, isMobile, onSend, editingMessage]);
+    setIsSendingFiles(true);
+    lastErrorRef.current = null;
+    
+    try {
+      try { localStorage.removeItem(`${DRAFT_KEY_PREFIX}${contactId}`); } catch { /* storage unavailable */ }
+      if (isMobile && navigator.vibrate) navigator.vibrate(50);
+      
+      await onSend(attachments.map(a => a.file));
+      setAttachments([]);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Erro ao enviar';
+      lastErrorRef.current = errorMsg;
+      toast({
+        title: 'Falha no envio',
+        description: `${errorMsg}. Tente novamente.`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSendingFiles(false);
+      setTimeout(() => setSendAnimation(false), 400);
+    }
+  }, [hasText, attachments, isOverLimit, isSendingFiles, contactId, isMobile, onSend, editingMessage]);
 
   return {
     showRichToolbar, setShowRichToolbar,
