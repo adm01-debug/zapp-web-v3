@@ -162,19 +162,19 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-0.5">
+            <div className="flex items-center justify-between mb-0.5 gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className={cn("font-semibold text-[14px] truncate", isSelected ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--foreground))]")}>
+                <span className="font-sans font-semibold text-[14px] leading-tight tracking-[-0.01em] truncate text-[hsl(var(--foreground))]">
                   {(() => {
                     const firstName = conversation.contact.name?.trim().split(/\s+/)[0] || conversation.contact.name;
                     const company = conversation.contact.company?.trim();
-                    return company ? `${firstName} - ${company}` : conversation.contact.name;
+                    return company ? `${firstName} · ${company}` : conversation.contact.name;
                   })()}
                 </span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
-              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <span className="text-[11px] text-[hsl(var(--muted-foreground))] tabular-nums">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="font-sans text-[11px] font-medium text-[hsl(var(--muted-foreground))] tabular-nums tracking-tight">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -188,13 +188,15 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 </TooltipProvider>
               </div>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               {isTyping ? (
                 <TypingIndicatorCompact isVisible={true} />
               ) : (
                 <p className={cn(
-                  "text-[13px] truncate pr-4 transition-colors duration-300",
-                  conversation.unreadCount > 0 ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--muted-foreground))]"
+                  "font-sans text-[13px] leading-snug truncate pr-2 transition-colors duration-300",
+                  conversation.unreadCount > 0
+                    ? "text-[hsl(var(--foreground))] font-medium"
+                    : "text-[hsl(var(--muted-foreground))] font-normal"
                 )}>
                   {conversation.lastMessage?.content || 'Sem mensagens'}
                 </p>
@@ -203,25 +205,25 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 <motion.span 
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="flex-shrink-0 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-bold bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(var(--primary),0.3)]"
+                  className="flex-shrink-0 min-w-[18px] h-[18px] px-1.5 rounded-full flex items-center justify-center font-sans text-[10px] font-bold tabular-nums bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(var(--primary),0.3)]"
                 >
                   {conversation.unreadCount}
                 </motion.span>
               )}
             </div>
             {conversation.contact.tags && conversation.contact.tags.length > 0 && (
-              <div className="flex items-center gap-1 mt-1">
+              <div className="flex items-center gap-1 mt-1.5">
                 {conversation.contact.tags.slice(0, 2).map((tag) => (
                   <Badge
                     key={tag}
                     variant="outline"
-                    className="text-[10px] h-4 px-1.5 py-0 leading-none font-medium bg-warning/15 text-warning border-warning/30"
+                    className="font-sans text-[10px] h-[16px] px-1.5 py-0 leading-none font-semibold uppercase tracking-wide bg-warning/15 text-warning border-warning/30"
                   >
                     {tag}
                   </Badge>
                 ))}
                 {conversation.contact.tags.length > 2 && (
-                  <Badge variant="outline" className="text-[10px] h-4 px-1.5 py-0 leading-none font-medium bg-muted/40 text-muted-foreground border-border/40">
+                  <Badge variant="outline" className="font-sans text-[10px] h-[16px] px-1.5 py-0 leading-none font-semibold tabular-nums bg-muted/40 text-muted-foreground border-border/40">
                     +{conversation.contact.tags.length - 2}
                   </Badge>
                 )}
