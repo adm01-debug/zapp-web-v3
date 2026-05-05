@@ -8,6 +8,7 @@ interface UseInboxShortcutsProps {
   onArchive: () => void;
   onTransfer: () => void;
   onRefresh: () => void;
+  onSearchFocusChat?: () => void;
   enabled?: boolean;
 }
 
