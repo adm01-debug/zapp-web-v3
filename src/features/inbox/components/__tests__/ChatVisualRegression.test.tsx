@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { MessageBubble } from '../chat/MessageBubble';
+import { ChatPanel } from '../ChatPanel';
 import { Message } from '@/types/chat';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { MemoryRouter } from 'react-router-dom';
