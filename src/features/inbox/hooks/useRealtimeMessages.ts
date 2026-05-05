@@ -249,7 +249,11 @@ export function useRealtimeMessages() {
   };
 
   const markAsRead = async (contactId: string) => {
-    const { error } = await dbFrom('messages').update({ is_read: true }).eq('contact_id', contactId).eq('sender', 'contact').eq('is_read', false);
+    const { error } = await dbFrom('messages')
+      .update({ is_read: true })
+      .eq('contact_id', contactId)
+      .eq('sender', 'contact')
+      .eq('is_read', false);
     if (error) log.error('Error marking messages as read:', error);
     
     // But better to update last_seen for routing load calculations
