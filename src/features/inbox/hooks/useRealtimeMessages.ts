@@ -354,7 +354,7 @@ export function useRealtimeMessages() {
      */
     optimistic: {
       pendingCount: 0,
-      mergeWithReal: (m: any) => m
+      mergeWithReal: <T>(m: T): T => m
     }
   };
 }
