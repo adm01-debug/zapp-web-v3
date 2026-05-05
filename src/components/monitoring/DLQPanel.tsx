@@ -25,8 +25,8 @@ const STATUS_OPTIONS: Array<{ value: FailedMessageStatus | 'all'; label: string 
 
 function statusBadge(status: FailedMessageStatus) {
   switch (status) {
-    case 'pending': return <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500">pending</Badge>;
-    case 'retrying': return <Badge variant="outline" className="text-[10px] border-blue-500/40 text-blue-500">retrying</Badge>;
+    case 'pending': return <Badge variant="outline" className="text-[10px] border-warning/40 text-warning">pending</Badge>;
+    case 'retrying': return <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">retrying</Badge>;
     case 'succeeded': return <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">succeeded</Badge>;
     case 'abandoned': return <Badge variant="destructive" className="text-[10px]">abandoned</Badge>;
   }
@@ -102,8 +102,8 @@ export function DLQPanel() {
       <CardContent className="space-y-4">
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard label="Pendentes" value={aggregates.pending} icon={<Clock className="w-3.5 h-3.5 text-amber-500" />} />
-          <KpiCard label="Em retry" value={aggregates.retrying} icon={<RotateCw className="w-3.5 h-3.5 text-blue-500" />} />
+          <KpiCard label="Pendentes" value={aggregates.pending} icon={<Clock className="w-3.5 h-3.5 text-warning" />} />
+          <KpiCard label="Em retry" value={aggregates.retrying} icon={<RotateCw className="w-3.5 h-3.5 text-primary" />} />
           <KpiCard label="Abandonadas" value={aggregates.abandoned24h} icon={<AlertOctagon className="w-3.5 h-3.5 text-destructive" />} />
           <KpiCard label="Sucesso pós-retry" value={`${aggregates.successAfterRetryRate}%`} icon={<ListChecks className="w-3.5 h-3.5 text-primary" />} />
         </div>
