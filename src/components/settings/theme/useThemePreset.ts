@@ -39,11 +39,19 @@ export function useThemePreset() {
     // Fonte por skin: aplica no token global ou volta ao default
     // (o tokens.css define o fallback em :root).
     if (preset.font) {
-      root.style.setProperty('--font-sans', preset.font);
-      root.style.setProperty('--font-display', preset.font);
+      const currentComputed = getComputedStyle(root).getPropertyValue('--font-sans').trim();
+      if (currentComputed !== preset.font) {
+        root.style.setProperty('--font-sans', preset.font);
+        root.style.setProperty('--font-display', preset.font);
+      }
     } else {
-      root.style.removeProperty('--font-sans');
-      root.style.removeProperty('--font-display');
+      // Remove apenas se houver estilo inline, permitindo que o CSS (:root) tome conta
+      if (root.style.getPropertyValue('--font-sans')) {
+        root.style.removeProperty('--font-sans');
+      }
+      if (root.style.getPropertyValue('--font-display')) {
+        root.style.removeProperty('--font-display');
+      }
     }
   }, []);
 

@@ -59,17 +59,26 @@ export function ThemeInitializer() {
         cssVarsCache[key] = value;
       }
 
-      // Safely apply fonts: only if preset defines one AND it's not already overridden by global tokens.css
-      // We check if the property is already set in a way that should be preserved.
-      // But since ThemeInitializer runs on every theme change, we check if the preset itself HAS a font.
+      // Safely apply fonts: only if preset defines one AND it's different from the one in tokens.css
+      // If the preset DOES NOT define a font, we remove the inline style to let tokens.css take over.
       if (preset.font) {
-        root.style.setProperty('--font-sans', preset.font);
-        root.style.setProperty('--font-display', preset.font);
+        // Only set if different from current computed value to avoid unnecessary inline styles
+        const currentComputed = getComputedStyle(root).getPropertyValue('--font-sans').trim();
+        if (currentComputed !== preset.font) {
+          root.style.setProperty('--font-sans', preset.font);
+          root.style.setProperty('--font-display', preset.font);
+        }
       } else {
-        // If the preset DOES NOT define a font, we MUST remove the inline style 
-        // to let the :root definitions in tokens.css or other CSS files take over.
-        root.style.removeProperty('--font-sans');
-        root.style.removeProperty('--font-display');
+        // We ALWAYS remove the inline property if no font is specified in the preset.
+        // This is the ONLY way to "preserve" the variables defined in tokens.css,
+        // as inline styles always have higher specificity.
+        // However, we only call it if there IS an inline style to remove.
+        if (root.style.getPropertyValue('--font-sans')) {
+          root.style.removeProperty('--font-sans');
+        }
+        if (root.style.getPropertyValue('--font-display')) {
+          root.style.removeProperty('--font-display');
+        }
       }
 
       try {

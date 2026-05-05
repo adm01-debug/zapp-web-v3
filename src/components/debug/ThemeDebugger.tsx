@@ -5,11 +5,22 @@ import { X, Bug, RefreshCw } from 'lucide-react';
 
 export function ThemeDebugger() {
   const [isOpen, setIsOpen] = useState(false);
-  const [tokens, setTokens] = useState<Record<string, string>>({});
+  const [tokens, setTokens] = useState<Record<string, { value: string; source: 'inline' | 'css' | 'not set' }>>({});
+  const [activePreset, setActivePreset] = useState<string>('unknown');
 
   const refreshTokens = () => {
     const root = document.documentElement;
-    const style = getComputedStyle(root);
+    const computedStyle = getComputedStyle(root);
+    const saved = localStorage.getItem('purpure-chat-theme-v2');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setActivePreset(parsed.preset || 'default');
+      } catch (e) {
+        setActivePreset('error');
+      }
+    }
+
     const relevant = [
       '--primary',
       '--background',
@@ -20,9 +31,18 @@ export function ThemeDebugger() {
       '--border'
     ];
     
-    const values: Record<string, string> = {};
+    const values: Record<string, { value: string; source: 'inline' | 'css' | 'not set' }> = {};
     relevant.forEach(token => {
-      values[token] = style.getPropertyValue(token).trim() || root.style.getPropertyValue(token).trim() || 'not set';
+      const inlineValue = root.style.getPropertyValue(token).trim();
+      const computedValue = computedStyle.getPropertyValue(token).trim();
+      
+      if (inlineValue) {
+        values[token] = { value: inlineValue, source: 'inline' };
+      } else if (computedValue) {
+        values[token] = { value: computedValue, source: 'css' };
+      } else {
+        values[token] = { value: 'not set', source: 'not set' };
+      }
     });
     setTokens(values);
   };
@@ -54,6 +74,9 @@ export function ThemeDebugger() {
         <h3 className="font-bold text-sm flex items-center gap-2">
           <Bug className="h-4 w-4 text-primary" />
           Theme Debugger
+          <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[9px] uppercase">
+            {activePreset}
+          </span>
         </h3>
         <div className="flex gap-1">
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={refreshTokens}>
@@ -66,10 +89,18 @@ export function ThemeDebugger() {
       </div>
       
       <div className="space-y-2 font-mono text-[10px]">
-        {Object.entries(tokens).map(([key, value]) => (
+        {Object.entries(tokens).map(([key, data]) => (
           <div key={key} className="flex flex-col border-b border-border/50 pb-1">
-            <span className="text-muted-foreground">{key}</span>
-            <span className="text-foreground truncate" title={value}>{value}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">{key}</span>
+              <span className={`text-[8px] px-1 rounded ${
+                data.source === 'inline' ? 'bg-orange-500/20 text-orange-500' : 
+                data.source === 'css' ? 'bg-blue-500/20 text-blue-500' : 'bg-muted text-muted-foreground'
+              }`}>
+                {data.source}
+              </span>
+            </div>
+            <span className="text-foreground truncate" title={data.value}>{data.value}</span>
           </div>
         ))}
       </div>
