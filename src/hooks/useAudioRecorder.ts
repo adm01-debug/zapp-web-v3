@@ -39,6 +39,29 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       
       streamRef.current = stream;
       chunksRef.current = [];
+
+      // Audio Level Analyzer
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const updateLevel = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(dataArray);
+        const sum = dataArray.reduce((acc, val) => acc + val, 0);
+        const average = sum / bufferLength;
+        setAudioLevel(average / 128); // Normalize to 0-1
+        animationFrameRef.current = requestAnimationFrame(updateLevel);
+      };
+      updateLevel();
       
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
@@ -57,10 +80,18 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
         onRecordingComplete?.(audioBlob, url);
+        
+        // Clean up analyzer
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        if (audioContextRef.current) audioContextRef.current.close();
+        analyserRef.current = null;
+        audioContextRef.current = null;
+        setAudioLevel(0);
       };
       
       mediaRecorder.start(100);
       setIsRecording(true);
+      setIsPaused(false);
       setDuration(0);
       
       intervalRef.current = setInterval(() => {
@@ -86,6 +117,24 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       });
     }
   }, [maxDuration, onRecordingComplete]);
+
+  const pauseRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.pause();
+      setIsPaused(true);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+  }, []);
+
+  const resumeRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+      mediaRecorderRef.current.resume();
+      setIsPaused(false);
+      intervalRef.current = setInterval(() => {
+        setDuration(prev => prev + 1);
+      }, 1000);
+    }
+  }, []);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
