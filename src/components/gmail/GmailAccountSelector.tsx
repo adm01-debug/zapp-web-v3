@@ -64,36 +64,40 @@ export function GmailAccountSelector({
   }
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div className={cn('flex items-center gap-2 p-1 bg-background/40 rounded-xl border border-border/10 shadow-sm', className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/60 transition-colors min-w-0 flex-1">
+          <button className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-muted/80 transition-all duration-200 min-w-0 flex-1 group">
             <div className="relative shrink-0">
-              <Avatar className="h-7 w-7">
+              <Avatar className="h-8 w-8 border border-primary/10 group-hover:border-primary/30 transition-colors">
                 <AvatarImage src={activeAccount?.picture_url ?? ''} alt={activeAccount?.display_name ?? ''} />
-                <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                <AvatarFallback className="text-xs bg-primary/10 text-primary font-bold">
                   {(activeAccount?.email ?? '?')[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {/* Status dot */}
-              <span className={cn('absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background',
-                activeStatus === 'valid' && 'bg-primary',
+              <span className={cn('absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background shadow-sm',
+                activeStatus === 'valid' && 'bg-emerald-500',
                 activeStatus === 'expiring' && 'bg-amber-500',
-                activeStatus === 'expired' && 'bg-destructive',
-                (activeStatus === 'loading' || activeStatus === 'disconnected') && 'bg-muted-foreground',
+                activeStatus === 'expired' && 'bg-rose-500',
+                (activeStatus === 'loading' || activeStatus === 'disconnected') && 'bg-slate-400',
               )} />
             </div>
 
             <div className="flex-1 min-w-0 text-left">
-              <p className="text-xs font-medium truncate">{activeAccount?.display_name ?? activeAccount?.email}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{activeAccount?.email}</p>
+              <p className="text-[13px] font-bold tracking-tight truncate leading-none mb-1">{activeAccount?.display_name ?? activeAccount?.email}</p>
+              <div className="flex items-center gap-1">
+                <p className="text-[10px] font-medium text-muted-foreground/70 truncate">{activeAccount?.email}</p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               {totalUnread > 0 && (
-                <Badge className="h-4 text-[10px] px-1.5">{totalUnread > 99 ? '99+' : totalUnread}</Badge>
+                <Badge className="h-4.5 min-w-[18px] text-[9px] font-black px-1 bg-primary text-primary-foreground border-none">
+                  {totalUnread > 99 ? '99+' : totalUnread}
+                </Badge>
               )}
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-foreground transition-colors" />
             </div>
           </button>
         </DropdownMenuTrigger>
