@@ -291,8 +291,9 @@ export function VirtualizedRealtimeList({
 
   // Filter out invalid conversations
   const safeConversations = useMemo(() => {
-    if (!Array.isArray(conversations)) return [];
-    return conversations.filter(c => c?.contact?.id);
+    const base = USE_MOCKS ? MOCK_CONVERSATIONS : conversations;
+    if (!Array.isArray(base)) return [];
+    return base.filter(c => c?.contact?.id);
   }, [conversations]);
 
   // Sort: pinned first, then by last message date. 
