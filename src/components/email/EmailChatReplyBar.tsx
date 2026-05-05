@@ -146,12 +146,12 @@ export function EmailChatReplyBar({
 
   return (
     <div className={cn('border-t bg-background/80 backdrop-blur-md sticky bottom-0', className)}>
-      <div className="px-4 py-3 space-y-3">
+      <div className="px-5 py-4 space-y-4">
         {/* Header: Para + CC/BCC toggle */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="shrink-0 font-medium">Para:</span>
-            <span className="truncate">{toEmails.join(', ')}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="shrink-0 font-sans text-[10px] font-bold text-primary/60 uppercase tracking-widest">Para:</span>
+            <span className="font-sans text-[12px] font-semibold text-muted-foreground truncate">{toEmails.join(', ')}</span>
           </div>
           <button
             className="shrink-0 flex items-center gap-1 hover:text-foreground transition-colors"
