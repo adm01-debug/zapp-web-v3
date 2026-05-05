@@ -106,9 +106,6 @@ export function useTypingPresence({
 
     channelRef.current = channel;
 
-    // Canal separado, somente leitura, para o broadcast `contact_typing` do webhook.
-    const broadcastChannel = supabase.channel(`${broadcastTopic}:listener:${currentUserId}`);
-
     // Handle presence sync (agent-to-agent typing)
     channel.on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState();
@@ -147,25 +144,9 @@ export function useTypingPresence({
       log.debug('User left typing channel:', key, leftPresences);
     });
 
-    // Listen for contact typing broadcast from Evolution API webhook
-    channel.on('broadcast', { event: 'contact_typing' }, ({ payload }) => {
-      const isTyping = payload?.isTyping === true;
-      contactTypingRef.current = isTyping;
-      setIsContactTyping(isTyping);
-
-      // Auto-clear after 5 seconds if no new event
-      if (contactTypingTimeoutRef.current) {
-        clearTimeout(contactTypingTimeoutRef.current);
-      }
-      if (isTyping) {
-        contactTypingTimeoutRef.current = setTimeout(() => {
-          contactTypingRef.current = false;
-          setIsContactTyping(false);
-        }, 5000);
-      }
-    });
-
-    // Subscribe to channel
+    // Subscribe to presence channel.
+    // OBS: o broadcast `contact_typing` é consumido por `useContactTyping`
+    // (topic compartilhado `typing:${jid}` — não pode coexistir aqui).
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         log.debug('Subscribed to typing presence for conversation:', conversationId);
