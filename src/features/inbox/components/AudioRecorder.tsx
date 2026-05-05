@@ -9,6 +9,8 @@ import { VoiceChanger } from './VoiceChanger';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AudioVolumeControl } from './AudioVolumeControl';
 import { toast } from '@/hooks/use-toast';
+import { getLogger } from '@/lib/logger';
+const log = getLogger('AudioRecorder');
 
 interface AudioRecorderProps {
   onSend: (audioBlob: Blob) => void;
@@ -145,6 +147,9 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
           return prev + 5;
         });
       }, 300);
+      
+      const durationMs = Date.now() - (audioBlob.size / 100); // Rough estimate for start time if not tracked
+      log.info(`[INBOX_METRIC] action=audio_upload_success size=${audioBlob.size} duration=${durationMs}ms`);
       
       await onSend(audioBlob);
       

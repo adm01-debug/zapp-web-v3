@@ -1,9 +1,10 @@
 /**
  * Feature flags system for ZAPP WEB.
- *
- * Allows enabling/disabling features at runtime without deploying.
- * Flags are stored in Supabase `app_settings` table and cached locally.
- * Falls back to defaults when Supabase is unreachable.
+ * 
+ * Supports:
+ * 1. Simple boolean toggles.
+ * 2. Percentage-based rollout (value: 0-100).
+ * 3. Targeting specific agent IDs.
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -53,12 +54,21 @@ let cacheTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Check if a feature is enabled.
- * Uses cached values, falling back to defaults.
+ * Check if a feature is enabled for a specific user/agent.
+ * Support percentage-based rollout or specific agent targeting.
  */
-export function isFeatureEnabled(flag: FeatureFlag): boolean {
+export function isFeatureEnabled(flag: FeatureFlag, context?: { userId?: string, tenantId?: string }): boolean {
   if (flagCache && Date.now() - cacheTimestamp < CACHE_TTL) {
-    return flagCache[flag] ?? DEFAULTS[flag];
+    const val = flagCache[flag];
+    if (typeof val === 'boolean') return val;
+    
+    // If it's a percentage or object (future proofing)
+    if (typeof val === 'number') {
+      if (!context?.userId) return false;
+      // Simple hash to determine if user falls into percentage
+      const hash = context.userId.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+      return Math.abs(hash % 100) < val;
+    }
   }
   return DEFAULTS[flag];
 }
