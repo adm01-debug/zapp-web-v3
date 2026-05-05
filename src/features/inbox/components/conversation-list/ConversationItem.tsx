@@ -217,7 +217,7 @@ export function ConversationItem({
               <Avatar className="w-[38px] h-[38px]">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                  {(contact?.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                  {(contact?.name && contact.name !== 'Você' ? contact.name : 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
