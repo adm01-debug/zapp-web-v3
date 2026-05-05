@@ -110,18 +110,22 @@ interface ConversationItemProps {
 function buildPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || '').trim();
   const company = conversation.contact?.company?.trim();
-  const firstName = name?.split(/\s+/)[0] || name;
+  // Ensure we don't use "Você" as name
+  const safeName = name === 'Você' ? '' : name;
+  const firstName = safeName?.split(/\s+/)[0] || safeName;
   
   if (firstName && company) return `${firstName} · ${company}`;
   if (firstName) return `${firstName} · Sem empresa`;
-  if (company) return `${name || 'Contato'} · ${company}`;
-  return `${name || 'Contato'} · Sem empresa`;
+  if (company) return `Contato · ${company}`;
+  return 'Contato · Sem empresa';
 }
 
 function buildFullPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || 'Contato').trim();
   const company = conversation.contact?.company?.trim() || 'Sem empresa';
-  return `${name} · ${company}`;
+  // Ensure we don't return "Você"
+  const safeName = name === 'Você' ? 'Contato' : name;
+  return `${safeName} · ${company}`;
 }
 
 
@@ -213,7 +217,7 @@ export function ConversationItem({
               <Avatar className="w-[38px] h-[38px]">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                  {(contact?.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                  {(contact?.name && contact.name !== 'Você' ? contact.name : 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
@@ -303,7 +307,7 @@ export function ConversationItem({
                     )}
                   </>
                 ) : (
-                  <span className="text-[10px] text-muted-foreground/40 italic">Sem tags</span>
+                  <span className="text-[10px] text-muted-foreground/60 font-medium">Sem tags</span>
                 )}
               </div>
               {conversation.lastMessage && (
@@ -385,7 +389,7 @@ export function ConversationItem({
                   'text-sm font-semibold tracking-tighter transition-colors duration-200',
                   isSelected ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
                 )}>
-                  {(contact?.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  {(contact?.name && contact.name !== 'Você' ? contact.name : 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
@@ -498,7 +502,7 @@ export function ConversationItem({
                     )}
                   </>
                 ) : (
-                  <span className="text-[10px] text-muted-foreground/40 italic">Sem tags</span>
+                  <span className="text-[10px] text-muted-foreground/60 font-medium">Sem tags</span>
                 )}
               </div>
             </div>

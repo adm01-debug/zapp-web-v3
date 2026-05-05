@@ -173,7 +173,8 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
     // que enviou (ex: "Você", "Lucas"), NÃO o nome do contato remoto.
     // Antes esse valor sobrescrevia o nome do contato, fazendo a sidebar
     // exibir "Você" em vez do nome real do cliente.
-    const safePushName = !msg.from_me ? msg.push_name : undefined;
+    // Tambem filtramos explicitamente "Você" caso algum webhook venha errado.
+    const safePushName = (!msg.from_me && msg.push_name && msg.push_name !== 'Você') ? msg.push_name : undefined;
 
     if (!existing) {
       contactMap.set(msg.remote_jid, {
@@ -192,7 +193,9 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
       existing.messageCount++;
       if (isUnread) existing.unreadCount++;
       // Só atualiza pushName se ainda não tiver um, e a mensagem for inbound.
-      if (!existing.pushName && safePushName) existing.pushName = safePushName;
+      if (!existing.pushName && safePushName) {
+        existing.pushName = safePushName;
+      }
       if (new Date(msg.created_at) > new Date(existing.lastMessageAt)) {
         existing.lastMessageAt = msg.created_at;
         existing.lastMessageContent = msg.content || msg.caption;

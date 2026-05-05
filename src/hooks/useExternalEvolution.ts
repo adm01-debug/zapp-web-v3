@@ -387,12 +387,19 @@ export function useExternalConversations(enabled = true) {
             if (extra) {
               if (extra.tags) conv.contact.tags = extra.tags;
               if (extra.company) conv.contact.company = extra.company;
-                if (extra.ai_sentiment) conv.contact.ai_sentiment = extra.ai_sentiment;
-                // ✨ FIX: also update name if current is just phone and we found a real push_name
-                if (extra.push_name && (conv.contact.name === conv.contact.phone)) {
-                  conv.contact.name = extra.push_name;
-                  conv.contact.nickname = extra.push_name;
+              if (extra.ai_sentiment) conv.contact.ai_sentiment = extra.ai_sentiment;
+              
+              // ✨ FIX: update name if current is just phone/jid AND we found a real push_name or name
+              const currentName = conv.contact.name;
+              const isGeneric = !currentName || currentName === conv.contact.phone || currentName === conv.contact.id;
+              
+              if (isGeneric) {
+                const newName = extra.name || extra.push_name;
+                if (newName && newName !== 'Você') {
+                  conv.contact.name = newName;
+                  conv.contact.nickname = newName;
                 }
+              }
             }
           });
         } catch (err) {
