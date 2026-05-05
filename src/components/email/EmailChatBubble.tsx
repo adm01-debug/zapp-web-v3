@@ -185,8 +185,7 @@ export function EmailChatBubble({
           )}
         </div>
 
-        {/* Actions (aparecem no hover) */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
+        <div className="opacity-0 group-hover/header:opacity-100 transition-opacity flex items-center gap-0.5 ml-auto" onClick={e => e.stopPropagation()}>
           {onReply && (
             <Tooltip>
               <TooltipTrigger asChild>
