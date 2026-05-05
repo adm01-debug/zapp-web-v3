@@ -186,6 +186,7 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
         lastMessageContent: msg.content || msg.caption,
         lastMessageDirection: msg.direction,
         instanceName: msg.instance_name,
+        tags: msg.tags ? (typeof msg.tags === 'string' ? msg.tags.split(',') : msg.tags) : undefined,
       });
     } else {
       existing.messageCount++;
