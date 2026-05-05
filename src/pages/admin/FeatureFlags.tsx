@@ -38,7 +38,7 @@ export function FeatureFlagsAdmin() {
       })));
     }
     setLoading(false);
-  };
+  }, []);
 
   const fetchAuditLogs = async () => {
     const { data, error } = await supabase
