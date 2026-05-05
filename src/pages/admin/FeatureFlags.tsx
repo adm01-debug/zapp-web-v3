@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { ShieldAlert, History, Activity, Terminal } from 'lucide-react';
+import { ShieldAlert, History, Activity, Terminal, CheckCircle2, AlertCircle, RefreshCcw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { runFullHealthCheck, type HealthStatus } from '@/lib/healthCheck';
 
 interface FeatureConfig {
   enabled: boolean;
