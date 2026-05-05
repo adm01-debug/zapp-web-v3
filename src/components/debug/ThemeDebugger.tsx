@@ -2,11 +2,18 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Bug, RefreshCw } from 'lucide-react';
+import { useUserRole } from '@/features/auth/hooks/useUserRole';
 
 export function ThemeDebugger() {
+  const { roles, loading: rolesLoading } = useUserRole();
+  // Restrito ESTRITAMENTE a usuários com role 'dev' no banco — não usamos
+  // isDev hierárquico aqui porque queremos esconder de admin/manager também.
+  const isDevExact = roles.includes('dev');
+
   const [isOpen, setIsOpen] = useState(false);
   const [tokens, setTokens] = useState<Record<string, { value: string; source: 'inline' | 'css' | 'not set' }>>({});
   const [activePreset, setActivePreset] = useState<string>('unknown');
+
 
   const refreshTokens = () => {
     const root = document.documentElement;
