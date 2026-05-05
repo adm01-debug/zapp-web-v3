@@ -87,8 +87,16 @@ export function useTypingPresence({
     // Chave do canal: prefere `remoteJid` quando fornecido (sincroniza com webhook).
     const channelKey = remoteJid ?? conversationId;
 
+    // IMPORTANTE: usar topic dedicado para presence de agentes para NÃO colidir
+    // com `typing:${remoteJid}` consumido por `useContactTyping` em listas.
+    // Supabase Realtime deduplica canais por topic; reutilizar um canal já
+    // subscrito impede registrar novos callbacks (`presence`/`broadcast`) e
+    // crashava o ChatPanel ("cannot add `presence` callbacks ... after `subscribe()`").
+    const presenceTopic = `typing-agents:${channelKey}`;
+    const broadcastTopic = `typing:${channelKey}`;
+
     // Create presence channel for this conversation
-    const channel = supabase.channel(`typing:${channelKey}`, {
+    const channel = supabase.channel(presenceTopic, {
       config: {
         presence: {
           key: currentUserId,
@@ -136,25 +144,9 @@ export function useTypingPresence({
       log.debug('User left typing channel:', key, leftPresences);
     });
 
-    // Listen for contact typing broadcast from Evolution API webhook
-    channel.on('broadcast', { event: 'contact_typing' }, ({ payload }) => {
-      const isTyping = payload?.isTyping === true;
-      contactTypingRef.current = isTyping;
-      setIsContactTyping(isTyping);
-
-      // Auto-clear after 5 seconds if no new event
-      if (contactTypingTimeoutRef.current) {
-        clearTimeout(contactTypingTimeoutRef.current);
-      }
-      if (isTyping) {
-        contactTypingTimeoutRef.current = setTimeout(() => {
-          contactTypingRef.current = false;
-          setIsContactTyping(false);
-        }, 5000);
-      }
-    });
-
-    // Subscribe to channel
+    // Subscribe to presence channel.
+    // OBS: o broadcast `contact_typing` é consumido por `useContactTyping`
+    // (topic compartilhado `typing:${jid}` — não pode coexistir aqui).
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         log.debug('Subscribed to typing presence for conversation:', conversationId);

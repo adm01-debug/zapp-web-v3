@@ -72,7 +72,7 @@ describe('useTypingPresence', () => {
       remoteJid: '5511999999999@s.whatsapp.net',
     }));
     expect(supabase.channel).toHaveBeenCalledWith(
-      'typing:5511999999999@s.whatsapp.net',
+      'typing-agents:5511999999999@s.whatsapp.net',
       expect.any(Object),
     );
   });

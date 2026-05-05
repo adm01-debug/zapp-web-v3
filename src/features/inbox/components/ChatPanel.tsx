@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { FileUploaderRef } from './FileUploader';
 import { useTypingPresence } from '@/hooks/useTypingPresence';
+import { useContactTyping } from '@/hooks/useContactTyping';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { useQuickReplies } from '@/features/inbox';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
@@ -111,12 +112,18 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const messagesAreaRef = useRef<ChatMessagesAreaRef>(null);
   const dragCounterRef = useRef(0);
 
-  const { isContactTyping, typingUsers, handleTypingStart, handleTypingStop } = useTypingPresence({
+  const { typingUsers, handleTypingStart, handleTypingStop } = useTypingPresence({
     conversationId: conversation.id,
     remoteJid: conversation.contact.id,
     currentUserId: conversation.assignedTo?.id || 'agent',
     currentUserName: conversation.assignedTo?.name || 'Agente',
   });
+  // `isContactTyping` vem do canal compartilhado `typing:${jid}` (broadcast do webhook).
+  // Mantido em hook dedicado para evitar colisão de canais Realtime no client.
+  const isContactTyping = useContactTyping(
+    conversation.contact.id,
+    { allowGroups: conversation.contact.id?.endsWith('@g.us') === true },
+  );
   const { quickReplies: dbQuickReplies, incrementUseCount } = useQuickReplies();
   const { settings, updateSettings, saveSettings } = useUserSettings();
   const { editMessage } = useEvolutionApi();
