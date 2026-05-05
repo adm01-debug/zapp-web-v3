@@ -94,9 +94,16 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
+            {/* Linha 1: Primeiro nome + Nome fantasia */}
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1 min-w-0">
-                <span className={cn("font-sans font-semibold text-[14px] leading-[1.2] truncate", isSelected ? "text-primary" : "text-foreground")}>{conversation.contact.name}</span>
+                <span className={cn("font-sans font-semibold text-[14px] leading-[1.2] truncate", isSelected ? "text-primary" : "text-foreground")}>
+                  {(() => {
+                    const firstName = conversation.contact.name?.trim().split(/\s+/)[0] || 'Contato';
+                    const company = conversation.contact.company?.trim();
+                    return company ? `${firstName} · ${company}` : (conversation.contact.name || 'Contato');
+                  })()}
+                </span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -104,6 +111,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
                 {conversation.unreadCount > 0 && <span className="min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-sans text-[10px] font-medium bg-primary text-primary-foreground">{conversation.unreadCount}</span>}
               </div>
             </div>
+            {/* Linha 2: Última mensagem */}
             {isTyping ? (
               <TypingIndicatorCompact isVisible={true} className="text-[12px]" />
             ) : (
@@ -111,6 +119,25 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
                 "font-sans text-[12px] truncate leading-[1.35]",
                 conversation.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground font-normal"
               )}>{conversation.lastMessage?.content || 'Sem mensagens'}</p>
+            )}
+            {/* Linha 3: Tags */}
+            {conversation.contact.tags && conversation.contact.tags.length > 0 && (
+              <div className="flex items-center gap-1 mt-1">
+                {conversation.contact.tags.slice(0, 2).map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="outline"
+                    className="font-sans text-[10px] h-[15px] px-1.5 py-0 leading-none font-semibold uppercase tracking-wide bg-warning/15 text-warning border-warning/30"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+                {conversation.contact.tags.length > 2 && (
+                  <Badge variant="outline" className="font-sans text-[10px] h-[15px] px-1.5 py-0 leading-none font-semibold tabular-nums bg-muted/40 text-muted-foreground border-border/40">
+                    +{conversation.contact.tags.length - 2}
+                  </Badge>
+                )}
+              </div>
             )}
             {conversation.lastMessage && (
               <div className="mt-1 flex flex-col gap-1">
