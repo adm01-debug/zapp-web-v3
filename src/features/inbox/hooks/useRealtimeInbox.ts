@@ -227,11 +227,11 @@ export function useRealtimeInbox() {
     const updateStatus = async (status: string) => {
       setOnlineStatus(status);
       setIsOnline(status === 'online');
-      await (dbFrom('profiles') as any)
+      await supabase.from('profiles')
         .update({ 
-          online_status: status as any,
+          online_status: status as 'online' | 'offline' | 'busy',
           last_seen: new Date().toISOString()
-        } as any)
+        })
         .eq('id', profile.id);
     };
 
