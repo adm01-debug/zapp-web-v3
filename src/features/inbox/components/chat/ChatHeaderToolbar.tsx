@@ -22,6 +22,7 @@ interface ChatHeaderToolbarProps {
   onToggleFailuresOnly?: () => void;
   /** Quantidade de mensagens em falha — exibida no aria-label e como contador. */
   failuresCount?: number;
+  onOpenValidation?: () => void;
 }
 
 interface ToolButtonProps {
