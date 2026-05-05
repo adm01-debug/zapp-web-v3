@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock } from 'lucide-react';
+import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/features/auth';
 import { useUserRole } from '@/features/auth';
 import { useQueues } from '@/hooks/useQueues';
