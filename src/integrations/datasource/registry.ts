@@ -1,10 +1,10 @@
 /**
  * Datasource Registry — fonte única da verdade para roteamento de entidades.
  *
- * O ZAPP Web vive em DOIS Supabase coexistindo:
- *  - `lovable`  → Lovable Cloud (auth, profiles, queues, whatsapp_connections, etc.)
- *  - `external` → Supabase self-hosted em supabase.atomicabr.com.br
- *                 (todo o domínio de WhatsApp/CRM nas tabelas evolution_*).
+ * O ZAPP Web agora usa UM ÚNICO Supabase (self-hosted em supabase.atomicabr.com.br):
+ *  - `lovable`  → Supabase Self-Hosted (auth + dados + realtime + tudo)
+ *                 Após consolidação, todas as tabelas estão no mesmo BD.
+ *  - `external` → DEPRECATED (mantido por compatibilidade, aponta pro mesmo BD).
  *
  * Toda chamada a `messages`, `contacts`, `conversations`, `audit_log`, `calls`
  * DEVE passar pelos helpers em `./db.ts` para acertar automaticamente o cliente
@@ -46,19 +46,20 @@ export interface EntityMapping {
 }
 
 export const ENTITY_MAP = {
-  // ── Self-hosted (supabase.atomicabr.com.br) ─────────────────────────────
-  messages:             { client: 'external', table: 'evolution_messages' },
-  contacts:             { client: 'external', table: 'evolution_contacts' },
-  conversations:        { client: 'external', table: 'evolution_conversations' },
-  audit_log:            { client: 'external', table: 'evolution_audit_log' },
-  calls:                { client: 'external', table: 'evolution_calls' },
-  deleted_contacts:     { client: 'external', table: 'v_deleted_contacts' },
-
-  // ── Lovable Cloud ───────────────────────────────────────────────────────
-  profiles:             { client: 'lovable',  table: 'profiles' },
-  user_roles:           { client: 'lovable',  table: 'user_roles' },
-  queues:               { client: 'lovable',  table: 'queues' },
-  whatsapp_connections: { client: 'lovable',  table: 'whatsapp_connections' },
+  // ── Tudo unificado no Self-Hosted (supabase.atomicabr.com.br) ───────────
+  // Após consolidação, todas as entidades usam o client principal (lovable)
+  // que tem auth session. As tabelas sem prefixo evolution_* têm o schema
+  // Lovable (name, phone, etc) — as evolution_* são raw Evolution API format.
+  messages:             { client: 'lovable', table: 'messages' },
+  contacts:             { client: 'lovable', table: 'contacts' },
+  conversations:        { client: 'lovable', table: 'conversations' },
+  audit_log:            { client: 'lovable', table: 'audit_log' },
+  calls:                { client: 'lovable', table: 'calls' },
+  deleted_contacts:     { client: 'lovable', table: 'v_deleted_contacts' },
+  profiles:             { client: 'lovable', table: 'profiles' },
+  user_roles:           { client: 'lovable', table: 'user_roles' },
+  queues:               { client: 'lovable', table: 'queues' },
+  whatsapp_connections: { client: 'lovable', table: 'whatsapp_connections' },
 } as const satisfies Record<LogicalEntity, EntityMapping>;
 
 export function getEntityMapping(entity: LogicalEntity): EntityMapping {
