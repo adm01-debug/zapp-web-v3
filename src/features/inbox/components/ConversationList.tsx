@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConversationItem } from './conversation-list/ConversationItem';
 import { ConversationContextMenu } from './ConversationContextMenu';
+import { useDensity } from '@/hooks/useDensity';
 import {
   Search,
   Filter,
@@ -28,6 +29,8 @@ export function ConversationList({
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const parentRef = useRef<HTMLDivElement>(null);
+  const { density } = useDensity();
+  const isCompactMode = density === 'compact' || density === 'dense';
 
   const filteredConversations = useMemo(() => {
     const q = search.toLowerCase();
@@ -54,19 +57,28 @@ export function ConversationList({
   const virtualizer = useVirtualizer({
     count: filteredConversations.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 78, // Based on ConversationItem min-h
+    estimateSize: () => isCompactMode ? 64 : 78,
     overscan: 10,
   });
 
   return (
     <div className="flex flex-col h-full bg-background border-r border-border overflow-hidden font-sans">
       {/* Header */}
-      <div className="p-3 border-b border-border bg-background space-y-3 shrink-0">
+      <div className={cn(
+        "border-b border-border bg-background shrink-0",
+        isCompactMode ? "p-2 space-y-2" : "p-3 space-y-3"
+      )}>
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-foreground select-none tracking-tight">Conversas</h2>
+          <h2 className={cn(
+            "font-bold text-foreground select-none tracking-tight",
+            isCompactMode ? "text-[15px]" : "text-lg"
+          )}>Conversas</h2>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className="w-8 h-8 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
-              <Filter className="w-4 h-4" />
+            <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className={cn(
+              "rounded-full text-muted-foreground hover:bg-accent hover:text-foreground",
+              isCompactMode ? "w-7 h-7" : "w-8 h-8"
+            )}>
+              <Filter className={cn(isCompactMode ? "w-3.5 h-3.5" : "w-4 h-4")} />
             </Button>
           </div>
         </div>
@@ -74,19 +86,28 @@ export function ConversationList({
         {/* Search */}
         <div className="relative group">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none z-10">
-            <Search className="w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Search className={cn(
+              "text-muted-foreground group-focus-within:text-primary transition-colors",
+              isCompactMode ? "w-3.5 h-3.5" : "w-4 h-4"
+            )} />
           </div>
           <Input
-            placeholder="Buscar conversas..."
+            placeholder="Buscar..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 h-[36px] bg-muted/30 border-none rounded-xl text-sm text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-background transition-all"
+            className={cn(
+              "pl-9 pr-4 bg-muted/30 border-none rounded-xl text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-background transition-all",
+              isCompactMode ? "h-[30px] text-[12px]" : "h-[36px] text-sm"
+            )}
           />
         </div>
 
         {/* Tabs */}
         <Tabs value={filter} onValueChange={setFilter} className="w-full">
-          <TabsList className="w-full h-9 p-1 bg-muted/30 border-none rounded-xl">
+          <TabsList className={cn(
+            "w-full p-1 bg-muted/30 border-none rounded-xl",
+            isCompactMode ? "h-8" : "h-9"
+          )}>
             {[
               { id: 'all', label: 'Todas', count: counts.all },
               { id: 'open', label: 'Abertas', count: counts.open },
@@ -96,7 +117,10 @@ export function ConversationList({
               <TabsTrigger 
                 key={t.id}
                 value={t.id} 
-                className="flex-1 text-[11px] font-semibold h-7 rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground transition-all"
+                className={cn(
+                  "flex-1 font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground transition-all",
+                  isCompactMode ? "text-[10px] h-6" : "text-[11px] h-7"
+                )}
               >
                 {t.label}
               </TabsTrigger>
@@ -125,11 +149,14 @@ export function ConversationList({
         ) : filteredConversations.length === 0 ? (
           <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-muted/30">
-                <Search className="w-7 h-7 text-muted-foreground/50" />
+              <div className={cn(
+                "rounded-full flex items-center justify-center mx-auto bg-muted/30",
+                isCompactMode ? "w-12 h-12 mb-3" : "w-16 h-16 mb-4"
+              )}>
+                <Search className={cn("text-muted-foreground/50", isCompactMode ? "w-5 h-5" : "w-7 h-7")} />
               </div>
-              <h3 className="font-semibold text-foreground mb-1">Nenhuma conversa</h3>
-              <p className="text-sm text-muted-foreground max-w-[200px]">
+              <h3 className={cn("font-semibold text-foreground mb-1", isCompactMode ? "text-[13px]" : "text-base")}>Nenhuma conversa</h3>
+              <p className={cn("text-muted-foreground max-w-[200px] mx-auto", isCompactMode ? "text-[11px]" : "text-sm")}>
                 {search ? 'Nenhum resultado para sua busca' : 'Suas conversas aparecerão aqui'}
               </p>
             </div>

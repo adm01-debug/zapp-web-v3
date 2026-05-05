@@ -13,11 +13,19 @@ interface EmptyStateProps {
   secondaryActionLabel?: string;
   onSecondaryAction?: () => void;
   illustration?: keyof typeof illustrations;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
 }
 
 const sizeClasses = {
+  xs: {
+    container: 'py-4',
+    illustration: 'w-20 h-16',
+    icon: 'w-4 h-4',
+    iconContainer: 'w-8 h-8',
+    title: 'text-[13px]',
+    description: 'text-[11px]',
+  },
   sm: {
     container: 'py-6',
     illustration: 'w-28 h-22',
