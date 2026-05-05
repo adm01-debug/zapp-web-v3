@@ -188,7 +188,7 @@ const ConversationItemContent = memo(({
                 </span>
             )}
             {conversation.unreadCount > 0 && (
-              <span className={cn("min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] rounded-full flex items-center justify-center font-black shadow-lg shadow-rose-500/20 ring-2 ring-background transition-all", isCompact ? "min-w-[16px] h-[16px] text-[8px]" : "min-w-[20px] h-[20px] text-[10px]")}>
+              <span className={cn("min-w-[18px] h-[18px] px-1 bg-rose-500 text-white rounded-full flex items-center justify-center font-black shadow-lg shadow-rose-500/20 ring-2 ring-background transition-all", isCompact ? "min-w-[16px] h-[16px] text-[9.5px]" : "min-w-[20px] h-[20px] text-[10px]")}>
                 {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
               </span>
             )}
