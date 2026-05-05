@@ -54,7 +54,14 @@ function getInitials(name: string | null, email: string | null): string {
 }
 
 function getAvatarColor(email: string | null): string {
-  const colors = ['bg-blue-500', 'bg-primary', 'bg-violet-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500'];
+  const colors = [
+    'bg-blue-600 shadow-[0_0_10px_-2px_rgba(37,99,235,0.4)]',
+    'bg-primary shadow-[0_0_10px_-2px_rgba(var(--primary),0.4)]',
+    'bg-violet-600 shadow-[0_0_10px_-2px_rgba(124,58,237,0.4)]',
+    'bg-amber-600 shadow-[0_0_10px_-2px_rgba(217,119,6,0.4)]',
+    'bg-rose-600 shadow-[0_0_10px_-2px_rgba(225,29,72,0.4)]',
+    'bg-cyan-600 shadow-[0_0_10px_-2px_rgba(8,145,178,0.4)]'
+  ];
   const code = (email ?? '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   return colors[code % colors.length];
 }
