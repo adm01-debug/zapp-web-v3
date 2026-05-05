@@ -244,7 +244,7 @@ export function MessageBubble({
                 <TextWithLinks 
                   text={message.content} 
                   className={cn(
-                    "text-[14px] whitespace-pre-wrap leading-[1.5] tracking-[-0.01em]",
+                    "text-[15px] whitespace-pre-wrap leading-[1.5] tracking-[-0.01em]",
                     searchQuery && highlightedMessageIds?.has(message.id) ? "" : ""
                   )}
                   showPreviews={!message.isWhisper}
