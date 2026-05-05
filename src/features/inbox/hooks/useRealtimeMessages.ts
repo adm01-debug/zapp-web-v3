@@ -214,7 +214,19 @@ export function useRealtimeMessages() {
   }, [fetchConversations, handleNewMessage, handleMessageUpdate]);
 
   const sendMessage = async (contactId: string, content: string, messageType: string = 'text', mediaUrl?: string, mediaPayload?: string) => {
-    return sendMessageToContact(contactId, content, messageType, mediaUrl, mediaPayload);
+    const response = await sendMessageToContact(contactId, content, messageType, mediaUrl, mediaPayload);
+    
+    // Check if conversation needs routing status update
+    try {
+      const { data: conv } = await dbFrom('team_conversations').select('id, routing_status').eq('id', contactId).maybeSingle();
+      if (conv && conv.routing_status === 'pending') {
+        await dbFrom('team_conversations').update({ routing_status: 'assigned' }).eq('id', contactId);
+      }
+    } catch (err) {
+      log.error('Error checking routing status on send:', err);
+    }
+    
+    return response;
   };
 
   const markAsRead = async (contactId: string) => {
