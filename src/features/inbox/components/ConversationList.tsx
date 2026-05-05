@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConversationItem } from './conversation-list/ConversationItem';
 import { ConversationContextMenu } from './ConversationContextMenu';
+import { useDensity } from '@/hooks/useDensity';
 import {
   Search,
   Filter,
