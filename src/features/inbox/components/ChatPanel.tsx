@@ -74,6 +74,9 @@ interface ChatPanelProps extends LoadOlderProps {
 
 export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0, isLoading = false }: ChatPanelProps) {
   const { templates: quickReplyTemplates } = useQuickReplies();
+  // Ferramentas de desenvolvimento (Checklist 10/10) só para devs reais.
+  const { roles: userRoles } = useUserRole();
+  const isDevExact = userRoles.includes('dev');
   const [selectedQuickReplyIndex, setSelectedQuickReplyIndex] = useState(0);
   const { dialogs, openDialog, closeDialog, toggleDialog, resetDialogs } = useChatDialogs();
   const [historyOpen, setHistoryOpen] = useState(false);
