@@ -145,7 +145,7 @@ export function EmailChatReplyBar({
   };
 
   return (
-    <div className={cn('border-t bg-background/80 backdrop-blur-md sticky bottom-0', className)}>
+    <div className={cn('border-t bg-background/80 backdrop-blur-md sticky bottom-0 z-20', className)}>
       <div className="px-5 py-4 space-y-4">
         {/* Header: Para + CC/BCC toggle */}
         <div className="flex items-center justify-between">
@@ -187,7 +187,7 @@ export function EmailChatReplyBar({
         )}
 
         {/* Textarea */}
-        <div className="relative group/input bg-muted/20 rounded-2xl border border-border/5 p-4 transition-all duration-300 focus-within:bg-muted/30 focus-within:border-primary/20 focus-within:shadow-2xl focus-within:shadow-primary/5">
+        <div className="relative group/input bg-background/50 rounded-2xl border border-border/5 p-4 transition-all duration-300 focus-within:bg-background focus-within:border-primary/20 focus-within:shadow-2xl focus-within:shadow-primary/5">
           <Textarea
             value={bodyHtml.replace(/<[^>]*>/g, '')}
             onChange={e => setBody(e.target.value)}

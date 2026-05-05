@@ -102,7 +102,7 @@ export function GmailAccountSelector({
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="start" className="w-64">
+        <DropdownMenuContent align="start" className="w-64 bg-card/95 backdrop-blur-xl border-border/30 shadow-2xl">
           {/* Status do token */}
           <div className={cn('flex items-center gap-2 px-3 py-2 text-xs', statusConfig.color)}>
             <StatusIcon className={cn('h-3.5 w-3.5 shrink-0', activeStatus === 'loading' && 'animate-spin')} />
