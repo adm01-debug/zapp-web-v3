@@ -65,6 +65,7 @@ export const ChatHeader = memo(function ChatHeader({
   voiceId, onToggleAIAssistant, onToggleDetails, onStartCall, onOpenSearch,
   onOpenTransfer, onOpenSchedule, onVoiceChange, onBack, onCloseConversation,
   onGenerateSummary, failuresOnly, onToggleFailuresOnly, failuresCount, onOpenWhisper, whisperCount,
+  onOpenValidation,
 }: ChatHeaderProps) {
   const { data: crmData } = useExternalContact360(isExternalConfigured ? conversation.contact.phone : undefined);
   const crmCompany = crmData?.found ? crmData.company : null;
