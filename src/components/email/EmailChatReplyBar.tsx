@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { gmailSendMessage } from '@/hooks/gmail/gmailApi';
+import { MessageTemplates } from '@/features/inbox/components/MessageTemplates';
 import { useEmailSignature } from '@/hooks/useEmailSignature';
 import { useEmailDraft } from '@/hooks/useEmailDraft';
 import { useEmailSLA } from '@/hooks/useEmailSLA';
