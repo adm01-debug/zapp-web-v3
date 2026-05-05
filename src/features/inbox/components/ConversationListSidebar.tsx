@@ -319,7 +319,8 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             fallback={<div className="p-8 text-center"><MessageSquare className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-sm text-muted-foreground">Erro ao carregar. Recarregue.</p></div>}
           >
             <VirtualizedRealtimeList
-              conversations={inboxFilters.filteredConversations}
+              conversations={inbox.conversations}
+
               selectedContactId={inbox.selectedContactId}
               onSelectConversation={inbox.handleSelectConversation}
               selectionMode={bulkActions.selectionMode}
