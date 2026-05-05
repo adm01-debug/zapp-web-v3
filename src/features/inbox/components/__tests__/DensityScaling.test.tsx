@@ -3,11 +3,29 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useDensity } from '@/hooks/useDensity';
 import { ConversationItem } from '../conversation-list/ConversationItem';
 import { Conversation } from '@/types/chat';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 // Mock density hook for testing
 vi.mock('@/hooks/useDensity', () => ({
   useDensity: vi.fn()
 }));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+const Wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      {children}
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 const mockConversation: Conversation = {
   id: 'conv-1',
@@ -50,7 +68,8 @@ describe('Density Scaling', () => {
         conversation={mockConversation} 
         isSelected={false} 
         onSelect={() => {}} 
-      />
+      />,
+      { wrapper: Wrapper }
     );
     
     // Check for comfortable height/padding (min-h-[78px])
@@ -70,7 +89,8 @@ describe('Density Scaling', () => {
         conversation={mockConversation} 
         isSelected={false} 
         onSelect={() => {}} 
-      />
+      />,
+      { wrapper: Wrapper }
     );
     
     // Check for compact height/padding (min-h-[64px])
