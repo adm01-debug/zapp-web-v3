@@ -43,6 +43,7 @@ import { useChatDialogs } from './chat/hooks/useChatDialogs';
 import { useTransferConversation } from '@/features/inbox/hooks/useTransferConversation';
 import { useInboxShortcuts } from '@/features/inbox/hooks/useInboxShortcuts';
 import { dbFrom } from '@/integrations/datasource/db';
+import { useUserRole } from '@/features/auth/hooks/useUserRole';
 
 const WhisperMode = lazy(() => import('./WhisperMode').then(m => ({ default: m.WhisperMode })));
 const VisualValidationChecklist = lazy(() => import('./VisualValidationChecklist').then(m => ({ default: m.VisualValidationChecklist })));
@@ -73,6 +74,9 @@ interface ChatPanelProps extends LoadOlderProps {
 
 export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0, isLoading = false }: ChatPanelProps) {
   const { templates: quickReplyTemplates } = useQuickReplies();
+  // Ferramentas de desenvolvimento (Checklist 10/10) só para devs reais.
+  const { roles: userRoles } = useUserRole();
+  const isDevExact = userRoles.includes('dev');
   const [selectedQuickReplyIndex, setSelectedQuickReplyIndex] = useState(0);
   const { dialogs, openDialog, closeDialog, toggleDialog, resetDialogs } = useChatDialogs();
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -381,7 +385,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onToggleDetails={onToggleDetails || (() => {})}
             onStartCall={() => { setCallDirection('outbound'); openDialog('callDialog'); }}
             onOpenSearch={() => handleSetActiveTool('chatSearch')}
-            onOpenValidation={() => openDialog('visualValidation')}
+            onOpenValidation={isDevExact ? () => openDialog('visualValidation') : undefined}
             onOpenTransfer={() => openDialog('transferDialog')}
             onOpenSchedule={() => openDialog('scheduleDialog')}
             onVoiceChange={setVoiceId}
