@@ -4,6 +4,7 @@ import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogg
 import { messageService } from '@/features/inbox/services/messageService';
 import { messageRepository } from '@/features/inbox/data-access/messageRepository';
 import type { Message } from '@/types/chat';
+import type { RealtimeMessage } from '@/features/inbox/hooks/useRealtimeMessages';
 
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
