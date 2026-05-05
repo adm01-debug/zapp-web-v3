@@ -429,33 +429,6 @@ export function useRealtimeInbox() {
     const file = new File([blob], `audio_${Date.now()}.ogg`, { type: 'audio/ogg' });
     messageQueue.addToQueue(selectedContactId, "Mensagem de áudio", [file], 'audio');
   }, [selectedContactId, messageQueue]);
-        log.error('Error sending external audio:', err);
-        // Re-throw para o SendErrorBanner via useChatPanelHandlers.
-        throw err;
-      }
-      return;
-    }
-    try {
-      const fileName = `${selectedContactId}/${Date.now()}.webm`;
-      const { error: uploadError } = await supabase.storage.from('audio-messages').upload(fileName, blob, { contentType: 'audio/webm' });
-      if (uploadError) {
-        log.error('Error uploading audio:', uploadError);
-        // Propaga (em vez de engolir) para alimentar o retry de áudio.
-        throw new Error(uploadError.message || 'Falha no upload do áudio');
-      }
-      const { data: signedData, error: signError } = await supabase.storage.from('audio-messages').createSignedUrl(fileName, 3600);
-      if (signError || !signedData?.signedUrl) {
-        log.error('Error creating signed URL:', signError);
-        throw new Error(signError?.message || 'Falha ao gerar URL do áudio');
-      }
-      await sendMessage(selectedContactId, '[Áudio]', 'audio', signedData.signedUrl);
-    } catch (err) {
-      log.error('Error in handleSendAudio:', err);
-      throw err;
-    } finally {
-      await refreshActiveConversation();
-    }
-  }, [selectedContactId, sendMessage, refreshActiveConversation, externalMsgs, externalData]);
 
   // Convert to legacy format using the pure mapper
   const legacyConversation = useMemo(
