@@ -85,7 +85,7 @@ export function EmailChatInbox({ className }: EmailChatInboxProps) {
       {/* Sidebar: Thread list */}
       <div className="w-[340px] shrink-0 flex flex-col border-r h-full bg-background/50">
         {/* Account selector + search */}
-        <div className="p-3 space-y-2 border-b">
+        <div className="p-3 space-y-3 border-b bg-muted/5">
           <GmailAccountSelector
             accounts={accounts}
             activeAccountId={activeAccountId}
