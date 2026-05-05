@@ -2,6 +2,7 @@ import { lazy, Suspense, useState, useCallback, useRef, useEffect, useMemo } fro
 import { useDebounce } from '@/hooks/useDebounce';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useDensity } from '@/hooks/useDensity';
 import { MobilePullToRefreshIndicator } from '@/components/mobile/MobilePullToRefresh';
 import { VirtualizedRealtimeList } from './VirtualizedRealtimeList';
 import { ErrorBoundary } from '@/components/errors/ErrorBoundary';
@@ -24,7 +25,7 @@ import {
 // Tooltips were removed from this header to avoid Radix Slot ref-loop bug
 // (TooltipTrigger asChild on inline span/Button caused Maximum update depth).
 // Replaced with native title/aria-label which are equivalent for these controls.
-import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle, MessageCircle } from 'lucide-react';
+import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle, MessageCircle, LayoutList, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
 import { WhatsAppConnectionStatus } from '@/features/connections';
@@ -42,6 +43,7 @@ interface ConversationListSidebarProps {
 
 export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pullToRefresh }: ConversationListSidebarProps) {
   const isMobile = useIsMobile();
+  const { density, setDensity } = useDensity();
   const contactSearchRef = useRef<HTMLInputElement>(null);
   const [contactSearch, setContactSearch] = useState('');
   
@@ -128,11 +130,17 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
         isLoading={bulkActions.bulkLoading}
       />
 
-      <div className={cn("px-4 border-b border-border/20 space-y-4 shrink-0 transition-all", isMobile ? "pt-2 pb-3" : "pt-6 pb-4 bg-accent/10")}>
+      <div className={cn(
+        "px-4 border-b border-border/20 shrink-0 transition-all", 
+        isMobile ? "pt-2 pb-3 space-y-4" : (density === 'compact' ? "pt-3 pb-2 space-y-2 bg-accent/5" : "pt-6 pb-4 space-y-4 bg-accent/10")
+      )}>
         {!isMobile && (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-[18px] font-extrabold text-foreground tracking-tight font-sans bg-clip-text">Inbox</h2>
+              <h2 className={cn(
+                "font-extrabold text-foreground tracking-tight font-sans bg-clip-text transition-all",
+                density === 'compact' ? "text-[15px]" : "text-[18px]"
+              )}>Inbox</h2>
               <span
                 title={inbox.isOnline ? 'Mensagens: tempo real ativo' : 'Mensagens: desconectado'}
                 className={cn('w-2 h-2 rounded-full ring-2 ring-background', inbox.isOnline ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]')}
@@ -167,6 +175,19 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               </Button>
               
               <div className="h-4 w-px bg-border/40 mx-1" />
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
+                className="w-7 h-7 rounded-lg hover:bg-muted/60 active:scale-90 transition-all duration-150"
+                aria-label={density === 'compact' ? "Modo Confortável" : "Modo Compacto"}
+                title={density === 'compact' ? "Modo Confortável" : "Modo Compacto"}
+              >
+                {density === 'compact' ? <LayoutGrid className="w-3.5 h-3.5" /> : <LayoutList className="w-3.5 h-3.5" />}
+              </Button>
+              
+              <div className="h-4 w-px bg-border/40 mx-0.5" />
               
               <Select value={inbox.sortBy} onValueChange={inbox.setSortBy}>
                 <SelectTrigger className="w-auto h-7 text-[10px] font-bold border-none bg-transparent hover:bg-muted/60 rounded-lg px-2 gap-1.5 focus:ring-0">
@@ -196,7 +217,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               onChange={(e) => handleContactSearch(e.target.value)}
               className={cn(
                 "pl-9 pr-8 bg-muted/40 hover:bg-muted/60 focus:bg-background border border-border/10 focus:border-primary/30 rounded-2xl font-sans text-xs placeholder:text-muted-foreground/30 transition-all duration-500 shadow-sm focus:shadow-md",
-                isMobile ? "h-[46px] text-[16px]" : "h-[40px] text-[13px]"
+                isMobile ? "h-[46px] text-[16px]" : (density === 'compact' ? "h-[34px] text-[12px]" : "h-[40px] text-[13px]")
               )}
               aria-label="Buscar conversa"
             />
