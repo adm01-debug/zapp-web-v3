@@ -34,8 +34,8 @@ const EMPTY_SET = new Set<string>();
  * Linha de preview que escuta o canal `typing:${contactId}` e troca o conteúdo
  * por "digitando…" enquanto o contato está compondo.
  */
-const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; fallback: string }>(
-  function ConversationPreviewLine({ contactId, fallback }, _ref) {
+const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; fallback: string; unread?: boolean }>(
+  function ConversationPreviewLine({ contactId, fallback, unread = false }, _ref) {
     const localRef = useRef<HTMLDivElement>(null);
     const inView = useInViewport(localRef, { rootMargin: '200px', keepVisibleMs: 1500 });
     const isTyping = useContactTyping(contactId, inView);
@@ -44,7 +44,10 @@ const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; 
         {isTyping ? (
           <TypingIndicatorCompact isVisible={true} />
         ) : (
-          <p className="text-muted-foreground font-normal truncate tracking-[-0.005em]">{fallback}</p>
+          <p className={cn(
+            'truncate tracking-[-0.005em]',
+            unread ? 'text-foreground font-medium' : 'text-muted-foreground font-normal'
+          )}>{fallback}</p>
         )}
       </div>
     );
