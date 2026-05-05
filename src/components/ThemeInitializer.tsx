@@ -59,8 +59,15 @@ export function ThemeInitializer() {
         cssVarsCache[key] = value;
       }
 
-      // Font variables are managed via CSS tokens to allow designer/user customization
-      // without JavaScript overrides.
+      // Apply preset font only if it's explicitly defined and doesn't conflict with global tokens
+      if (preset.font) {
+        root.style.setProperty('--font-sans', preset.font);
+        root.style.setProperty('--font-display', preset.font);
+      } else {
+        // Remove any inline style to let CSS tokens (src/styles/tokens.css) take over
+        root.style.removeProperty('--font-sans');
+        root.style.removeProperty('--font-display');
+      }
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
