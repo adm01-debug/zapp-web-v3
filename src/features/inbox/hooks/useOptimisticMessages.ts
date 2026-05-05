@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import { Message } from '@/types/chat';
 
 /**
