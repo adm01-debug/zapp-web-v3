@@ -35,9 +35,10 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
       log.info(`Processing message in queue: ${nextItem.id}`);
       await processMessage(nextItem);
       
-      // Remove from queue on success
-      setQueue(prev => prev.filter(item => item.id !== nextItem.id));
-      log.info(`Message ${nextItem.id} processed successfully`);
+      // Removed filter-on-success here. Status 'sending' remains until
+      // confirmed by external event (webhook/websocket) via reconciliation logic,
+      // or manually removed by parent if needed.
+      log.info(`Message ${nextItem.id} processed via API, awaiting confirmation`);
     } catch (err) {
       log.error(`Failed to process message ${nextItem.id}:`, err);
       
