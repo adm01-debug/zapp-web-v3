@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useDensity } from '@/hooks/useDensity';
 import { MobilePullToRefreshIndicator } from '@/components/mobile/MobilePullToRefresh';
@@ -344,9 +344,14 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             };
             const msg = inboxFilters.search ? 'Nenhuma conversa encontrada' : emptyMessages[inboxFilters.selectedContactType || ''] || 'Sem conversas';
             return (
-              <motion.div key={inboxFilters.selectedContactType || 'all'} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-8 text-center">
-                <EmptyIcon className={cn('w-10 h-10 mx-auto mb-3', activeOpt?.iconColor || 'text-muted-foreground/30')} />
-                <p className="text-sm text-muted-foreground">{msg}</p>
+              <motion.div 
+                key={inboxFilters.selectedContactType || 'all'} 
+                initial={{ opacity: 0, y: 8 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                className={cn("text-center", density === 'compact' ? "p-4" : "p-8")}
+              >
+                <EmptyIcon className={cn('mx-auto mb-3 transition-all duration-300', density === 'compact' ? 'w-7 h-7' : 'w-10 h-10', activeOpt?.iconColor || 'text-muted-foreground/30')} />
+                <p className={cn("text-muted-foreground", density === 'compact' ? "text-xs" : "text-sm")}>{msg}</p>
               </motion.div>
             );
           })()
