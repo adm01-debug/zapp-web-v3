@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ChatInputArea } from '../ChatInputArea';
 import React from 'react';
 import { useChatInputLogic } from '../useChatInputLogic';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 // Mock dependências complexas
 vi.mock('../useChatInputLogic', () => ({
@@ -22,6 +23,11 @@ vi.mock('../RichTextToolbar', () => ({
 
 vi.mock('../InputPreviewBars', () => ({
   InputPreviewBars: () => null,
+}));
+
+vi.mock('../ChatInputToolbars', () => ({
+  TertiaryToolsMenu: () => null,
+  SecondaryToolbar: () => null,
 }));
 
 vi.mock('../../AudioRecorder', () => ({
@@ -69,12 +75,16 @@ describe('ChatInputArea Interaction Transitions', () => {
     onSelectSuggestion: vi.fn(),
     onSelectTemplate: vi.fn(),
     fileUploaderRef: { current: null },
-    inputRef: { current: null },
+    inputRef: { current: { value: '', focus: vi.fn(), style: {} } },
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
+
+  const renderWithProvider = (ui: React.ReactElement) => {
+    return render(<TooltipProvider>{ui}</TooltipProvider>);
+  };
 
   it('deve desabilitar gravação quando há texto', () => {
     (useChatInputLogic as any).mockReturnValue({
@@ -87,7 +97,7 @@ describe('ChatInputArea Interaction Transitions', () => {
       handleSendWithAnimation: vi.fn(),
     });
 
-    render(<ChatInputArea {...defaultProps} inputValue="Olá" />);
+    renderWithProvider(<ChatInputArea {...defaultProps} inputValue="Olá" />);
     
     const micButton = screen.getByLabelText(/Gravar áudio/i);
     expect(micButton).toBeDisabled();
@@ -103,7 +113,7 @@ describe('ChatInputArea Interaction Transitions', () => {
       handleSendWithAnimation: vi.fn(),
     });
 
-    render(<ChatInputArea {...defaultProps} />);
+    renderWithProvider(<ChatInputArea {...defaultProps} />);
     
     const sendButton = screen.getByLabelText(/Enviar mensagem/i);
     expect(sendButton).toBeDisabled();
@@ -119,7 +129,7 @@ describe('ChatInputArea Interaction Transitions', () => {
       handleSendWithAnimation: vi.fn(),
     });
 
-    render(<ChatInputArea {...defaultProps} />);
+    renderWithProvider(<ChatInputArea {...defaultProps} />);
     
     const sendButton = screen.getByLabelText(/Enviar mensagem/i);
     expect(sendButton).not.toBeDisabled();
@@ -138,7 +148,7 @@ describe('ChatInputArea Interaction Transitions', () => {
       handleSendWithAnimation: vi.fn(),
     });
 
-    render(<ChatInputArea {...defaultProps} isSending={true} />);
+    renderWithProvider(<ChatInputArea {...defaultProps} isSending={true} />);
     
     expect(screen.getByLabelText(/Enviar mensagem/i)).toBeDisabled();
     expect(screen.getByText(/Enviando/i)).toBeDefined();
