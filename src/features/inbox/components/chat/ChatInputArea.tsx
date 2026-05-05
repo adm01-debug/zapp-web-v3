@@ -317,21 +317,42 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.button
-                    onClick={(!logic.hasText && logic.attachments.length === 0 && !editingMessage) ? onRecordToggle : logic.handleSendWithAnimation}
-                    disabled={logic.isOverLimit || isSending}
+                    onClick={onRecordToggle}
+                    disabled={isSending || logic.hasText || logic.attachments.length > 0}
                     whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9, rotate: (logic.hasText || logic.attachments.length > 0) ? 10 : 0 }}
+                    whileTap={{ scale: 0.9 }}
                     className={cn(
                       "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-500 outline-none",
                       isRecordingAudio
                         ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10"
-                        : (logic.hasText || logic.attachments.length > 0)
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 scale-110"
-                          : "text-muted-foreground/40 hover:text-primary hover:bg-primary/5",
+                        : "text-muted-foreground/40 hover:text-primary hover:bg-primary/5",
+                      logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
+                    )}
+                    aria-label="Gravar áudio"
+                  >
+                    <Mic className={cn("w-5 h-5 md:w-6 md:h-6", isRecordingAudio && "animate-pulse")} />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px] font-medium">Gravar áudio</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={logic.handleSendWithAnimation}
+                    disabled={logic.isOverLimit || isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9, rotate: 10 }}
+                    className={cn(
+                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-500 outline-none",
+                      (logic.hasText || logic.attachments.length > 0 || editingMessage)
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 scale-110"
+                        : "text-muted-foreground/40 hover:text-primary hover:bg-primary/5",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]",
                       logic.sendAnimation && "motion-safe:animate-bounce"
                     )}
-                    aria-label={editingMessage ? "Confirmar edição" : (logic.hasText || logic.attachments.length > 0 ? "Enviar mensagem" : "Gravar áudio")}>
+                    aria-label={editingMessage ? "Confirmar edição" : "Enviar mensagem"}
+                  >
                     <AnimatePresence mode="wait">
                       {isSending ? (
                         <motion.div key="loading" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
@@ -341,13 +362,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                         <motion.div key="edit" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
                           <Check className="w-5 h-5" />
                         </motion.div>
-                      ) : (logic.hasText || logic.attachments.length > 0) ? (
+                      ) : (
                         <motion.div key="send" initial={{ opacity: 0, scale: 0.5, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.5, rotate: 20 }}>
                           <Send className="w-6 h-6" />
-                        </motion.div>
-                      ) : (
-                        <motion.div key="mic" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Mic className={cn("w-5 h-5 md:w-6 md:h-6", isRecordingAudio && "animate-pulse")} />
                         </motion.div>
                       )}
                     </AnimatePresence>
