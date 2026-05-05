@@ -96,12 +96,12 @@ function ThreadListItem({
 
           {/* Labels */}
           {thread.label_ids.filter(l => !['INBOX','UNREAD','STARRED','SENT'].includes(l)).length > 0 && (
-            <div className="flex gap-1 mt-1 flex-wrap">
+            <div className="flex gap-1 mt-2 flex-wrap">
               {thread.label_ids
                 .filter(l => !['INBOX','UNREAD','STARRED','SENT'].includes(l))
-                .slice(0, 3)
+                .slice(0, 2)
                 .map(l => (
-                  <Badge key={l} variant="outline" className="text-[9px] h-3.5 px-1 border-muted-foreground/30 text-muted-foreground">
+                  <Badge key={l} variant="outline" className="text-[9px] h-4.5 px-2 font-black uppercase tracking-widest border-0 bg-primary/10 text-primary shadow-sm">
                     {l}
                   </Badge>
                 ))}

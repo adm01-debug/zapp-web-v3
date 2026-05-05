@@ -132,7 +132,7 @@ export function EmailChatBubble({
   };
 
   return (
-    <div className={cn('group relative animate-in fade-in slide-in-from-bottom-2 duration-500', className)}>
+    <div className={cn('group relative animate-in fade-in slide-in-from-bottom-2 duration-700 ease-out', className)}>
       {/* Header */}
       <div
         className={cn(
