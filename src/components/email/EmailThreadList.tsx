@@ -56,16 +56,16 @@ function ThreadListItem({
           <SLADot status={slaStatus} />
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 py-0.5">
           {/* From + date */}
-          <div className="flex items-center justify-between gap-2 mb-0.5">
-            <span className={cn('text-sm truncate', isUnread && 'font-semibold')}>
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span className={cn('text-[13px] truncate tracking-tight transition-colors', isUnread ? 'font-bold text-foreground' : 'font-medium text-muted-foreground group-hover:text-foreground/80')}>
               {thread.participant_emails?.[0] ?? '—'}
             </span>
             <div className="flex items-center gap-1.5 shrink-0">
               {isStarred && <Star className="h-3 w-3 text-amber-400 fill-amber-400" />}
               {lastActivity && (
-                <span className="text-[10px] text-muted-foreground tabular-nums">
+                <span className="text-[10px] font-bold text-muted-foreground/60 tabular-nums uppercase tracking-tighter">
                   {formatDistanceToNow(lastActivity, { locale: ptBR, addSuffix: false })}
                 </span>
               )}
@@ -73,19 +73,25 @@ function ThreadListItem({
           </div>
 
           {/* Subject */}
-          <p className={cn('text-xs truncate', isUnread ? 'text-foreground font-medium' : 'text-muted-foreground')}>
+          <p className={cn('text-xs truncate mb-1 transition-colors', isUnread ? 'text-foreground font-bold' : 'text-muted-foreground/80 group-hover:text-foreground/70')}>
             {thread.subject || '(sem assunto)'}
           </p>
 
           {/* Snippet + badges */}
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <p className="text-[11px] text-muted-foreground truncate flex-1">{thread.snippet}</p>
-            {thread.message_count > 1 && (
-              <Badge variant="secondary" className="text-[9px] h-4 px-1.5 shrink-0">{thread.message_count}</Badge>
-            )}
-            {thread.unread_count > 0 && (
-              <Badge className="text-[9px] h-4 px-1.5 shrink-0">{thread.unread_count}</Badge>
-            )}
+          <div className="flex items-center gap-2">
+            <p className="text-[11px] text-muted-foreground/60 truncate flex-1 leading-relaxed">{thread.snippet}</p>
+            <div className="flex items-center gap-1 shrink-0">
+              {thread.message_count > 1 && (
+                <Badge variant="secondary" className="text-[9px] font-black h-4 px-1.5 bg-muted/50 border-none text-muted-foreground/70">
+                  {thread.message_count}
+                </Badge>
+              )}
+              {thread.unread_count > 0 && (
+                <Badge className="text-[9px] font-black h-4 px-1.5 bg-primary text-primary-foreground border-none">
+                  {thread.unread_count}
+                </Badge>
+              )}
+            </div>
           </div>
 
           {/* Labels */}
