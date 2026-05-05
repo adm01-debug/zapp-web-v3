@@ -162,9 +162,9 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-0.5 gap-2">
+            <div className="flex items-center justify-between mb-1 gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="font-sans font-semibold text-[14px] leading-tight tracking-[-0.01em] truncate text-[hsl(var(--foreground))]">
+                <span className="font-sans font-semibold text-[15px] leading-[1.2] tracking-[-0.01em] truncate text-[hsl(var(--foreground))]">
                   {(() => {
                     const firstName = conversation.contact.name?.trim().split(/\s+/)[0] || conversation.contact.name;
                     const company = conversation.contact.company?.trim();
@@ -174,7 +174,9 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                <span className="font-sans text-[11px] font-medium text-[hsl(var(--muted-foreground))] tabular-nums tracking-tight">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
+                <span className="font-sans text-[11px] font-semibold uppercase text-[hsl(var(--muted-foreground))] tabular-nums tracking-[0.04em]">
+                  {formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}
+                </span>
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -193,7 +195,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 <TypingIndicatorCompact isVisible={true} />
               ) : (
                 <p className={cn(
-                  "font-sans text-[13px] leading-snug truncate pr-2 transition-colors duration-300",
+                  "font-sans text-[13.5px] leading-[1.35] truncate pr-2 transition-colors duration-300",
                   conversation.unreadCount > 0
                     ? "text-[hsl(var(--foreground))] font-medium"
                     : "text-[hsl(var(--muted-foreground))] font-normal"
@@ -205,7 +207,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 <motion.span 
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="flex-shrink-0 min-w-[18px] h-[18px] px-1.5 rounded-full flex items-center justify-center font-sans text-[10px] font-bold tabular-nums bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(var(--primary),0.3)]"
+                  className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center font-sans text-[11px] font-bold tabular-nums bg-[hsl(0,75%,55%)] text-white shadow-[0_2px_6px_hsl(0,75%,55%,0.35)]"
                 >
                   {conversation.unreadCount}
                 </motion.span>
