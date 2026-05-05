@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RichTextToolbar } from './RichTextToolbar';
@@ -314,7 +313,6 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0 ml-1">
-            <div className="flex items-center gap-1.5 shrink-0 ml-1">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.button
@@ -381,8 +379,6 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               </Tooltip>
             </div>
           </div>
-
-          {/* SecondaryToolbar moved to the left side of textarea to match WA web */}
 
           {logic.isMobile && (
             <div className="flex items-center gap-0.5 shrink-0">
