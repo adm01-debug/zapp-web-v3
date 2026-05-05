@@ -135,7 +135,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
         className={cn(
           'relative p-3 cursor-pointer transition-colors duration-200 min-h-[78px] mx-0 border-b border-[hsl(var(--border))]', 
           isSelected 
-            ? 'bg-accent' 
+            ? 'bg-[hsl(var(--primary)/0.08)]' 
             : 'hover:bg-card bg-background'
         )}>
         <div className="flex items-start gap-3.5 relative z-10">
