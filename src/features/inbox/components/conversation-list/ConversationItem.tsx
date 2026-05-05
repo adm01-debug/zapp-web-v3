@@ -114,8 +114,8 @@ function buildPrimaryLabel(conversation: any): string {
   
   if (firstName && company) return `${firstName} · ${company}`;
   if (firstName) return `${firstName} · Sem empresa`;
-  if (company) return `${name || 'Contato'} · ${company}`;
-  return `${name || 'Contato'} · Sem empresa`;
+  if (company) return `Contato · ${company}`;
+  return 'Contato · Sem empresa';
 }
 
 function buildFullPrimaryLabel(conversation: any): string {
