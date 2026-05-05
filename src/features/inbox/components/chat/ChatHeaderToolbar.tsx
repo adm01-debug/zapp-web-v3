@@ -108,6 +108,9 @@ export function ChatHeaderToolbar({
       {onToggleDetails && (
         <ToolButton icon={<Info className="w-[18px] h-[18px]" />} label="Detalhes do contato" active={showDetails} onClick={onToggleDetails} badge={!showDetails} />
       )}
+      {onOpenValidation && (
+        <ToolButton icon={<ClipboardCheck className="w-[18px] h-[18px]" />} label="Checklist de Validação 10/10" onClick={onOpenValidation} highlight />
+      )}
     </>
   );
 }
