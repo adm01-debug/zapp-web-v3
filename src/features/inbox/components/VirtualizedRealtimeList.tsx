@@ -57,7 +57,7 @@ const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; 
 /**
  * Componente interno para renderizar um item da lista com suporte a carregamento de avatar.
  */
-function ConversationItem({
+const ConversationItem = memo(({
   conversation,
   virtualRow,
   selectedContactId,
@@ -77,7 +77,7 @@ function ConversationItem({
   onToggleSelection?: (id: string) => void;
   onSelectConversation: (id: string) => void;
   handleClick: (id: string, e: React.MouseEvent) => void;
-}) {
+}) => {
   const contactId = conversation.contact.id;
   const isSelected = selectedIds.has(contactId);
   const isPinned = pinnedIds.has(contactId);
