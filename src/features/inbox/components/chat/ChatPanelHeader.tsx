@@ -47,6 +47,7 @@ interface ChatPanelHeaderProps {
   failuresOnly?: boolean;
   onToggleFailuresOnly?: () => void;
   failuresCount?: number;
+  onOpenValidation?: () => void;
 }
 
 export function ChatPanelHeader({
@@ -54,6 +55,7 @@ export function ChatPanelHeader({
   onToggleAIAssistant, onToggleDetails, onOpenSearch, onOpenTransfer, onOpenSchedule,
   onBack, onGenerateSummary, isSummaryLoading, onCloseConversation, activeTool, onSetActiveTool,
   sendState = 'idle', failuresOnly, onToggleFailuresOnly, failuresCount,
+  onOpenValidation,
 }: ChatPanelHeaderProps) {
   const isMobile = useIsMobile();
   const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
@@ -125,6 +127,7 @@ export function ChatPanelHeader({
           onToggleAIAssistant={onToggleAIAssistant} onToggleDetails={onToggleDetails}
           onGenerateSummary={onGenerateSummary}
           failuresOnly={failuresOnly} onToggleFailuresOnly={onToggleFailuresOnly} failuresCount={failuresCount}
+          onOpenValidation={onOpenValidation}
         />
 
         <DropdownMenu>

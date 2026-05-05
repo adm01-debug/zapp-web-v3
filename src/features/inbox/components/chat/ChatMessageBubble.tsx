@@ -202,17 +202,17 @@ export function ChatMessageBubble({
         </div>
 
         <motion.div
-          whileHover={{ scale: 1.005 }}
+          whileHover={{ y: -1 }}
           className={cn(
-            'relative shadow-sm transition-all overflow-visible border border-transparent',
+            'relative shadow-sm transition-all duration-300 overflow-visible border',
             (message.type === 'image' || message.type === 'video') && !message.content
               ? 'p-0'
-              : density === 'comfortable' ? 'px-3 py-1.5' : density === 'compact' ? 'px-2 py-1' : 'px-1.5 py-0.5',
+              : density === 'comfortable' ? 'px-3.5 py-2' : density === 'compact' ? 'px-2.5 py-1.5' : 'px-2 py-1',
             message.isWhisper
-              ? 'rounded-lg bg-amber-950/20 border-amber-800/40 text-amber-100 shadow-inner'
+              ? 'rounded-2xl bg-amber-500/10 border-amber-500/20 text-amber-900 dark:text-amber-100 shadow-inner'
               : isSent 
-                ? 'rounded-lg rounded-tr-none bg-chat-sent text-chat-sent-foreground' 
-                : 'rounded-lg rounded-tl-none bg-chat-received text-chat-received-foreground'
+                ? 'rounded-2xl rounded-tr-none bg-primary text-primary-foreground border-primary/20 shadow-md shadow-primary/10' 
+                : 'rounded-2xl rounded-tl-none bg-muted/50 text-foreground border-border/50 hover:bg-muted/80'
           )}
         >
           {!message.isWhisper && (

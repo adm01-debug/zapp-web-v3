@@ -21,7 +21,7 @@ import { CrmBadges } from './CrmBadges';
 import { BusinessHoursBadge } from '@/features/inbox/components/BusinessHoursBadge';
 import { AnalysisBadges } from '@/features/inbox/components/AnalysisBadges';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2, ArrowLeft, XCircle, AlertCircle, EyeOff, Share2 } from 'lucide-react';
+import { MoreVertical, Video, Tag, Archive, CheckCircle, Clock, ArrowRight, PhoneCall, Search, Brain, Info, Users, UserCheck, Truck, Wrench, LayoutGrid, Maximize2, Minimize2, ArrowLeft, XCircle, AlertCircle, EyeOff, Share2, ClipboardCheck } from 'lucide-react';
 import { useContactAvatar } from '@/features/inbox';
 import { useDensity } from '@/hooks/useDensity';
 
@@ -57,6 +57,7 @@ interface ChatHeaderProps {
   failuresCount?: number;
   onOpenWhisper?: () => void;
   whisperCount?: number;
+  onOpenValidation?: () => void;
 }
 
 export const ChatHeader = memo(function ChatHeader({
@@ -64,6 +65,7 @@ export const ChatHeader = memo(function ChatHeader({
   voiceId, onToggleAIAssistant, onToggleDetails, onStartCall, onOpenSearch,
   onOpenTransfer, onOpenSchedule, onVoiceChange, onBack, onCloseConversation,
   onGenerateSummary, failuresOnly, onToggleFailuresOnly, failuresCount, onOpenWhisper, whisperCount,
+  onOpenValidation,
 }: ChatHeaderProps) {
   const { data: crmData } = useExternalContact360(isExternalConfigured ? conversation.contact.phone : undefined);
   const crmCompany = crmData?.found ? crmData.company : null;
@@ -133,6 +135,23 @@ export const ChatHeader = memo(function ChatHeader({
       </div>
 
       <div className="flex items-center gap-1">
+        {onOpenValidation && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 px-2 text-primary hover:bg-primary/5"
+                onClick={onOpenValidation}
+              >
+                <ClipboardCheck className="w-4 h-4" />
+                <span className="text-[10px] font-bold uppercase tracking-tight hidden sm:inline">Checklist</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Validação Visual 10/10</TooltipContent>
+          </Tooltip>
+        )}
+
         {failuresCount != null && failuresCount > 0 && (
           <Tooltip>
             <TooltipTrigger asChild>

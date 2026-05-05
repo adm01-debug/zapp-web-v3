@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle, LayoutTemplate } from 'lucide-react';
+import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle, LayoutTemplate, ClipboardCheck } from 'lucide-react';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 
 export type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | 'templates' | null;
@@ -22,6 +22,7 @@ interface ChatHeaderToolbarProps {
   onToggleFailuresOnly?: () => void;
   /** Quantidade de mensagens em falha — exibida no aria-label e como contador. */
   failuresCount?: number;
+  onOpenValidation?: () => void;
 }
 
 interface ToolButtonProps {
@@ -64,6 +65,7 @@ export function ChatHeaderToolbar({
   activeTool, showAIAssistant, showDetails, showSummaryPanel, isSummaryLoading,
   onOpenSearch, onSetActiveTool, onToggleAIAssistant, onToggleDetails, onGenerateSummary,
   failuresOnly, onToggleFailuresOnly, failuresCount = 0,
+  onOpenValidation,
 }: ChatHeaderToolbarProps) {
   return (
     <>
@@ -105,6 +107,9 @@ export function ChatHeaderToolbar({
       )}
       {onToggleDetails && (
         <ToolButton icon={<Info className="w-[18px] h-[18px]" />} label="Detalhes do contato" active={showDetails} onClick={onToggleDetails} badge={!showDetails} />
+      )}
+      {onOpenValidation && (
+        <ToolButton icon={<ClipboardCheck className="w-[18px] h-[18px]" />} label="Checklist de Validação 10/10" onClick={onOpenValidation} highlight />
       )}
     </>
   );

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense, useCallback, useMemo } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { Conversation, Message } from '@/types/chat';
@@ -44,6 +45,7 @@ import { useInboxShortcuts } from '@/features/inbox/hooks/useInboxShortcuts';
 import { dbFrom } from '@/integrations/datasource/db';
 
 const WhisperMode = lazy(() => import('./WhisperMode').then(m => ({ default: m.WhisperMode })));
+const VisualValidationChecklist = lazy(() => import('./VisualValidationChecklist').then(m => ({ default: m.VisualValidationChecklist })));
 const NextBestActionEngine = lazy(() => import('./NextBestActionEngine').then(m => ({ default: m.NextBestActionEngine })));
 
 if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
@@ -382,6 +384,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onToggleDetails={onToggleDetails || (() => {})}
             onStartCall={() => { setCallDirection('outbound'); openDialog('callDialog'); }}
             onOpenSearch={() => handleSetActiveTool('chatSearch')}
+            onOpenValidation={() => openDialog('visualValidation')}
             onOpenTransfer={() => openDialog('transferDialog')}
             onOpenSchedule={() => openDialog('scheduleDialog')}
             onVoiceChange={setVoiceId}
@@ -459,6 +462,14 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           hasMoreOlder={failuresOnly ? false : hasMoreOlder} isLoading={isLoading} />
 
         <ChatQuickRepliesPopover show={dialogs.quickReplies} replies={filteredQuickReplies} onSelect={handleQuickReply} onClose={() => closeDialog('quickReplies')} selectedIndex={selectedQuickReplyIndex} />
+
+        <AnimatePresence>
+          {dialogs.visualValidation && (
+            <Suspense fallback={null}>
+              <VisualValidationChecklist onClose={() => closeDialog('visualValidation')} />
+            </Suspense>
+          )}
+        </AnimatePresence>
 
         {dialogs.whisper && (
           <Suspense fallback={null}>

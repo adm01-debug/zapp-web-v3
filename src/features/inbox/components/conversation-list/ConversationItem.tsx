@@ -133,17 +133,30 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
     <QuickPeek preview={quickPeekPreview} enabled={!isSelected} delay={500}>
       <div ref={rootRef} onClick={() => onSelect(conversation)} 
         className={cn(
-          'relative p-3 cursor-pointer transition-colors duration-200 min-h-[78px] mx-0 border-b border-[hsl(var(--border))]', 
+          'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group', 
           isSelected 
-            ? 'bg-[hsl(var(--primary)/0.08)]' 
-            : 'hover:bg-card bg-background'
+            ? 'bg-primary/10 shadow-[inset_0_0_20px_rgba(var(--primary),0.03)]' 
+            : 'hover:bg-muted/30 bg-background'
         )}>
+        {isSelected && (
+          <motion.div 
+            layoutId="activeIndicator"
+            className="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r-full z-20"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          />
+        )}
         <div className="flex items-start gap-3.5 relative z-10">
           <div className="relative flex-shrink-0">
             <ChannelBadge type={conversation.contact.contact_type} />
-            <Avatar className="w-[49px] h-[49px] ring-0">
+            <Avatar className={cn(
+              "w-[49px] h-[49px] ring-0 transition-transform duration-300",
+              isSelected ? "scale-105" : "group-hover:scale-105"
+            )}>
               <AvatarImage src={conversation.contact.avatar} className="object-cover" />
-              <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold tracking-tighter">
+              <AvatarFallback className={cn(
+                "text-sm font-semibold tracking-tighter transition-colors duration-200",
+                isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+              )}>
                 {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -164,7 +177,10 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1 gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="font-sans font-semibold text-[15px] leading-[1.2] tracking-[-0.01em] truncate text-[hsl(var(--foreground))]">
+                <span className={cn(
+                  "font-sans font-semibold text-[15px] leading-[1.2] tracking-[-0.01em] truncate transition-colors duration-200",
+                  isSelected ? "text-primary" : "text-foreground"
+                )}>
                   {(() => {
                     const firstName = conversation.contact.name?.trim().split(/\s+/)[0] || conversation.contact.name;
                     const company = conversation.contact.company?.trim();
@@ -197,8 +213,8 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 <p className={cn(
                   "font-sans text-[13.5px] leading-[1.35] truncate pr-2 transition-colors duration-300",
                   conversation.unreadCount > 0
-                    ? "text-[hsl(var(--foreground))] font-semibold"
-                    : "text-[hsl(var(--muted-foreground))] font-normal"
+                    ? isSelected ? "text-primary/90 font-bold" : "text-foreground font-bold"
+                    : isSelected ? "text-primary/70 font-medium" : "text-muted-foreground font-normal"
                 )}>
                   {conversation.lastMessage?.content || 'Sem mensagens'}
                 </p>
