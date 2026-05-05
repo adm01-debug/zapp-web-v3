@@ -51,9 +51,13 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
 
   const {
     isRecording,
+    isPaused,
     duration,
     audioUrl,
+    audioLevel,
     startRecording,
+    pauseRecording,
+    resumeRecording,
     stopRecording,
     cancelRecording,
     formatDuration,
