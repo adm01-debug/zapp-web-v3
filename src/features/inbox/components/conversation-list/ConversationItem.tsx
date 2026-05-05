@@ -182,9 +182,9 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                   isSelected ? "text-primary" : "text-foreground"
                 )}>
                   {(() => {
-                    const firstName = conversation.contact.name?.trim().split(/\s+/)[0] || conversation.contact.name;
+                    const firstName = conversation.contact.name?.trim().split(/\s+/)[0] || 'Contato';
                     const company = conversation.contact.company?.trim();
-                    return company ? `${firstName} · ${company}` : conversation.contact.name;
+                    return company ? `${firstName} · ${company}` : conversation.contact.name || 'Contato';
                   })()}
                 </span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
