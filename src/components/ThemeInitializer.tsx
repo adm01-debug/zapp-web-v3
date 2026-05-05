@@ -59,12 +59,15 @@ export function ThemeInitializer() {
         cssVarsCache[key] = value;
       }
 
-      // Apply preset font only if it's explicitly defined and doesn't conflict with global tokens
+      // Safely apply fonts: only if preset defines one AND it's not already overridden by global tokens.css
+      // We check if the property is already set in a way that should be preserved.
+      // But since ThemeInitializer runs on every theme change, we check if the preset itself HAS a font.
       if (preset.font) {
         root.style.setProperty('--font-sans', preset.font);
         root.style.setProperty('--font-display', preset.font);
       } else {
-        // Remove any inline style to let CSS tokens (src/styles/tokens.css) take over
+        // If the preset DOES NOT define a font, we MUST remove the inline style 
+        // to let the :root definitions in tokens.css or other CSS files take over.
         root.style.removeProperty('--font-sans');
         root.style.removeProperty('--font-display');
       }
