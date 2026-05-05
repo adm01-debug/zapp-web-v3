@@ -5,6 +5,20 @@ import { toast } from '@/hooks/use-toast';
 
 const log = getLogger('useMessageQueue');
 
+export interface QueueConfig {
+  maxRetries: number;
+  baseDelay: number;
+  maxDelay: number;
+  jitter: boolean;
+}
+
+export const DEFAULT_QUEUE_CONFIG: QueueConfig = {
+  maxRetries: 3,
+  baseDelay: 1000, // 1s
+  maxDelay: 30000, // 30s
+  jitter: true
+};
+
 export interface QueueItem {
   id: string;
   contactId: string;
@@ -19,6 +33,7 @@ export interface QueueItem {
   externalId?: string;
   createdAt: number;
   completedAt?: number;
+  nextRetryAt?: number;
   attempts: Array<{
     timestamp: number;
     error?: string;
@@ -35,11 +50,31 @@ export interface QueueMetrics {
   byConversation: Record<string, { sent: number; failed: number; latency: number[] }>;
 }
 
-export function useMessageQueue(processMessage: (item: QueueItem) => Promise<void>) {
+export function useMessageQueue(
+  processMessage: (item: QueueItem) => Promise<void>,
+  configOverrides?: Partial<Record<string, Partial<QueueConfig>>>
+) {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const isProcessingRef = useRef<Record<string, boolean>>({});
-  const MAX_AUTO_RETRIES = 2;
   const QUEUE_STORAGE_KEY = 'chat_message_queue';
+
+  const getConfig = useCallback((contactId: string): QueueConfig => {
+    const overrides = configOverrides?.[contactId] || {};
+    return { ...DEFAULT_QUEUE_CONFIG, ...overrides };
+  }, [configOverrides]);
+
+  const calculateNextRetryDelay = useCallback((retryCount: number, config: QueueConfig) => {
+    // Backoff exponencial: baseDelay * 2^retryCount
+    let delay = config.baseDelay * Math.pow(2, retryCount);
+    
+    if (config.jitter) {
+      // Jitter: +/- 20% de variação aleatória para evitar "thundering herd"
+      const jitterAmount = delay * 0.2;
+      delay = delay + (Math.random() * jitterAmount * 2 - jitterAmount);
+    }
+    
+    return Math.min(delay, config.maxDelay);
+  }, []);
 
   // Persistência: Carregar fila ao iniciar
   useEffect(() => {
@@ -47,12 +82,11 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
     if (savedQueue) {
       try {
         const parsed = JSON.parse(savedQueue) as QueueItem[];
-        // Marcar itens que estavam 'sending' como 'failed' ou 'pending' para retomar
         const restored = parsed.map(item => ({
           ...item,
           status: item.status === 'sending' ? 'pending' : item.status,
           progress: item.status === 'sending' ? 0 : item.progress,
-          attachments: undefined // Arquivos File não são serializáveis
+          attachments: undefined
         }));
         setQueue(restored);
         log.info('Restored message queue from localStorage');
@@ -101,66 +135,80 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
       // Se achamos um item, marcamos como enviando e iniciamos o processo fora do setQueue
       isProcessingRef.current[contactId] = true;
       
-      // Iniciamos o processamento assíncrono
-      (async () => {
-        const startTime = Date.now();
-        try {
-          log.info(`Processing message ${itemToProcess.id} for contact ${contactId}`);
-          
-          // Marcamos como 'sending' no estado
-          setQueue(q => q.map(i => i.id === itemToProcess.id ? { ...i, status: 'sending', progress: 0 } : i));
-          
-          await processMessage(itemToProcess);
-          
-          const completedAt = Date.now();
-          const duration = completedAt - startTime;
-          setQueue(q => q.map(i => 
-            i.id === itemToProcess.id ? { 
-              ...i, 
-              status: 'confirmed', 
-              progress: 100,
-              completedAt,
-              attempts: [...(i.attempts || []), { timestamp: Date.now(), duration }]
-            } : i
-          ));
-          
-          // Remover confirmados após 5s
-          setTimeout(() => {
-            setQueue(q => q.filter(i => i.id !== itemToProcess.id));
-          }, 5000);
+          // Iniciamos o processamento assíncrono
+          (async () => {
+            const config = getConfig(contactId);
+            const startTime = Date.now();
+            
+            try {
+              // Verificar se o item já passou do tempo de retry se estiver pendente após falha
+              if (itemToProcess.nextRetryAt && itemToProcess.nextRetryAt > Date.now()) {
+                isProcessingRef.current[contactId] = false;
+                // Agendar verificação para o tempo exato do retry
+                setTimeout(() => processNextInQueue(contactId), itemToProcess.nextRetryAt - Date.now() + 10);
+                return;
+              }
 
-          log.info(`Message ${itemToProcess.id} processed successfully`);
-        } catch (err) {
-          const duration = Date.now() - startTime;
-          const errorMsg = err instanceof Error ? err.message : String(err);
-          log.error(`Failed to process message ${itemToProcess.id}:`, err);
-          
-          const shouldAutoRetry = itemToProcess.retryCount < MAX_AUTO_RETRIES;
-          
-          setQueue(q => q.map(i => 
-            i.id === itemToProcess.id ? { 
-              ...i, 
-              status: shouldAutoRetry ? 'pending' : 'failed',
-              retryCount: i.retryCount + (shouldAutoRetry ? 1 : 0),
-              error: err,
-              progress: 0,
-              attempts: [...(i.attempts || []), { timestamp: Date.now(), error: errorMsg, duration }]
-            } : i
-          ));
+              log.info(`Processing message ${itemToProcess.id} for contact ${contactId} (Retry: ${itemToProcess.retryCount})`);
+              
+              setQueue(q => q.map(i => i.id === itemToProcess.id ? { ...i, status: 'sending', progress: 0 } : i));
+              
+              await processMessage(itemToProcess);
+              
+              const completedAt = Date.now();
+              const duration = completedAt - startTime;
+              setQueue(q => q.map(i => 
+                i.id === itemToProcess.id ? { 
+                  ...i, 
+                  status: 'confirmed', 
+                  progress: 100,
+                  completedAt,
+                  nextRetryAt: undefined,
+                  attempts: [...(i.attempts || []), { timestamp: Date.now(), duration }]
+                } : i
+              ));
+              
+              setTimeout(() => {
+                setQueue(q => q.filter(i => i.id !== itemToProcess.id));
+              }, 5000);
 
-          if (!shouldAutoRetry) {
-            toast({
-              title: "Falha no envio",
-              description: "Não foi possível enviar a mensagem. Tente novamente.",
-              variant: "destructive"
-            });
-          }
-        } finally {
-          isProcessingRef.current[contactId] = false;
-          // Tentar processar o próximo após um pequeno delay
-          setTimeout(() => processNextInQueue(contactId), 100);
-        }
-      })();
+              log.info(`Message ${itemToProcess.id} processed successfully`);
+            } catch (err) {
+              const duration = Date.now() - startTime;
+              const errorMsg = err instanceof Error ? err.message : String(err);
+              log.error(`Failed to process message ${itemToProcess.id}:`, err);
+              
+              const shouldAutoRetry = itemToProcess.retryCount < config.maxRetries;
+              const delay = shouldAutoRetry ? calculateNextRetryDelay(itemToProcess.retryCount, config) : 0;
+              const nextRetryAt = shouldAutoRetry ? Date.now() + delay : undefined;
+              
+              setQueue(q => q.map(i => 
+                i.id === itemToProcess.id ? { 
+                  ...i, 
+                  status: shouldAutoRetry ? 'pending' : 'failed',
+                  retryCount: i.retryCount + (shouldAutoRetry ? 1 : 0),
+                  error: err,
+                  progress: 0,
+                  nextRetryAt,
+                  attempts: [...(i.attempts || []), { timestamp: Date.now(), error: errorMsg, duration }]
+                } : i
+              ));
+
+              if (!shouldAutoRetry) {
+                toast({
+                  title: "Falha definitiva",
+                  description: "Atingido limite de tentativas. Você pode tentar manualmente ou remover o item.",
+                  variant: "destructive"
+                });
+              } else {
+                log.info(`Scheduled retry for ${itemToProcess.id} in ${Math.round(delay/1000)}s`);
+              }
+            } finally {
+              isProcessingRef.current[contactId] = false;
+              // Tentar processar o próximo após um pequeno delay ou o tempo do retry
+              setTimeout(() => processNextInQueue(contactId), 500);
+            }
+          })();
 
       return currentQueue; // O estado será atualizado dentro do bloco assíncrono
     });

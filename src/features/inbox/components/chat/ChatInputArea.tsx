@@ -81,6 +81,7 @@ interface ChatInputAreaProps {
   onOpenTeamFiles?: () => void;
   queue?: any[];
   onRetry?: (id: string) => void;
+  onRemoveFromQueue?: (id: string) => void;
 }
 
 export function ChatInputArea(props: ChatInputAreaProps) {
@@ -96,7 +97,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
     onPasteFiles, signatureEnabled, signatureName, onToggleSignature,
     isWhisper, onToggleWhisper,
     fileUploaderRef, inputRef, onOpenTeamFiles,
-    queue, onRetry,
+    queue, onRetry, onRemoveFromQueue,
   } = props;
 
   const logic = useChatInputLogic({
@@ -226,6 +227,12 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                           className="text-[10px] font-black text-primary hover:text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full transition-colors"
                         >
                           Tentar novamente
+                        </button>
+                        <button 
+                          onClick={() => props.onRemoveFromQueue?.(item.id)}
+                          className="text-[10px] font-black text-destructive hover:text-destructive/80 bg-destructive/10 px-2 py-0.5 rounded-full transition-colors"
+                        >
+                          Cancelar
                         </button>
                       </div>
                     )}
