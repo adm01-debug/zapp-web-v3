@@ -380,9 +380,15 @@ export function useRealtimeInbox() {
 
     // Auto-assign on audio reply if pending
     try {
-      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', selectedContactId).maybeSingle();
+      const { data: conv } = await dbFrom('team_conversations')
+        .select('id, routing_status')
+        .eq('id', selectedContactId)
+        .maybeSingle();
+        
       if (conv && conv.routing_status === 'pending') {
-        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', selectedContactId);
+        await dbFrom('team_conversations')
+          .update({ routing_status: 'assigned' })
+          .eq('id', selectedContactId);
       }
     } catch (err) {
       log.error('Error auto-assigning on audio reply:', err);
