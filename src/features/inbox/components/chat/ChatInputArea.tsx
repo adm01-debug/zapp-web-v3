@@ -201,7 +201,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                       <div className="w-3 h-3 rounded-full bg-primary/20" />
                     )}
                     <span className="text-[10px] font-medium text-primary uppercase tracking-wider">
-                      {item.status === 'failed' ? 'Erro no envio' : 'Enviando...'}
+                      {item.status === 'failed' ? 'Erro no envio' : item.status === 'sending' ? 'Enviando...' : 'Aguardando...'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                       </button>
                     )}
                     <span className="text-[10px] font-bold text-primary">
-                      {item.status === 'failed' ? '!' : `${Math.round(sendProgress || 0)}%`}
+                      {item.status === 'failed' ? '!' : `${Math.round(item.progress || 0)}%`}
                     </span>
                   </div>
                 </div>
@@ -222,28 +222,12 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   <motion.div 
                     className={cn("h-full", item.status === 'failed' ? "bg-destructive" : "bg-primary")}
                     initial={{ width: 0 }}
-                    animate={{ width: item.status === 'failed' ? '100%' : `${sendProgress || 0}%` }}
+                    animate={{ width: item.status === 'failed' ? '100%' : `${item.progress || 0}%` }}
                     transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
                   />
                 </div>
               </div>
             ))}
-            {isSending && !props.queue?.length && (
-              <>
-                <div className="flex items-center justify-between gap-3 mb-1">
-                  <span className="text-[10px] font-medium text-primary uppercase tracking-wider">Enviando...</span>
-                  <span className="text-[10px] font-bold text-primary">{Math.round(sendProgress)}%</span>
-                </div>
-                <div className="h-1 w-full bg-primary/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-primary"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${sendProgress}%` }}
-                    transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-                  />
-                </div>
-              </>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

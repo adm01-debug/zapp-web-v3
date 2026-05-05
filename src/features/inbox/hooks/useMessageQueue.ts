@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { getLogger } from '@/lib/logger';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/hooks/use-toast';
@@ -14,31 +14,64 @@ export interface QueueItem {
   status: 'pending' | 'sending' | 'failed';
   error?: any;
   retryCount: number;
+  progress?: number;
+  externalId?: string; // Para reconciliação com delivery
 }
 
 export function useMessageQueue(processMessage: (item: QueueItem) => Promise<void>) {
   const [queue, setQueue] = useState<QueueItem[]>([]);
-  const isProcessingRef = useRef(false);
+  const isProcessingRef = useRef<Record<string, boolean>>({});
   const MAX_AUTO_RETRIES = 2;
+  const QUEUE_STORAGE_KEY = 'chat_message_queue';
 
-  const processQueue = useCallback(async () => {
-    if (isProcessingRef.current || queue.length === 0) return;
+  // Persistência: Carregar fila ao iniciar
+  useEffect(() => {
+    const savedQueue = localStorage.getItem(QUEUE_STORAGE_KEY);
+    if (savedQueue) {
+      try {
+        const parsed = JSON.parse(savedQueue) as QueueItem[];
+        // Marcar itens que estavam 'sending' como 'failed' ou 'pending' para retomar
+        const restored = parsed.map(item => ({
+          ...item,
+          status: item.status === 'sending' ? 'pending' : item.status,
+          progress: item.status === 'sending' ? 0 : item.progress,
+          attachments: undefined // Arquivos File não são serializáveis, precisam ser re-anexados ou perdidos
+        }));
+        setQueue(restored);
+        log.info('Restored message queue from localStorage');
+      } catch (e) {
+        log.error('Failed to parse saved queue', e);
+      }
+    }
+  }, []);
 
-    const nextItem = queue.find(item => item.status === 'pending');
+  // Persistência: Salvar fila ao mudar
+  useEffect(() => {
+    const queueToSave = queue.map(item => ({
+      ...item,
+      attachments: undefined // Não serializável
+    }));
+    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queueToSave));
+  }, [queue]);
+
+  const processQueueForContact = useCallback(async (contactId: string) => {
+    if (isProcessingRef.current[contactId]) return;
+
+    const contactQueue = queue.filter(item => item.contactId === contactId);
+    const nextItem = contactQueue.find(item => item.status === 'pending');
+    
     if (!nextItem) return;
 
-    isProcessingRef.current = true;
+    isProcessingRef.current[contactId] = true;
     
-    // Update status to sending
     setQueue(prev => prev.map(item => 
-      item.id === nextItem.id ? { ...item, status: 'sending' } : item
+      item.id === nextItem.id ? { ...item, status: 'sending', progress: 0 } : item
     ));
 
     try {
-      log.info(`Processing message in queue: ${nextItem.id}`);
+      log.info(`Processing message ${nextItem.id} for contact ${contactId}`);
       await processMessage(nextItem);
       
-      // Remove from queue after successful process
       setQueue(prev => prev.filter(item => item.id !== nextItem.id));
       log.info(`Message ${nextItem.id} processed successfully`);
     } catch (err) {
@@ -47,18 +80,17 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
       const shouldAutoRetry = nextItem.retryCount < MAX_AUTO_RETRIES;
       
       if (shouldAutoRetry) {
-        log.info(`Auto-retrying ${nextItem.id} (${nextItem.retryCount + 1}/${MAX_AUTO_RETRIES})`);
         setQueue(prev => prev.map(item => 
           item.id === nextItem.id ? { 
             ...item, 
             status: 'pending', 
-            retryCount: item.retryCount + 1 
+            retryCount: item.retryCount + 1,
+            progress: 0
           } : item
         ));
       } else {
-        // Update status to failed
         setQueue(prev => prev.map(item => 
-          item.id === nextItem.id ? { ...item, status: 'failed', error: err } : item
+          item.id === nextItem.id ? { ...item, status: 'failed', error: err, progress: 0 } : item
         ));
         toast({
           title: "Falha no envio",
@@ -67,41 +99,63 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
         });
       }
     } finally {
-      isProcessingRef.current = false;
-      // Process next item with a small delay to ensure state updates
-      setTimeout(() => processQueue(), 100);
+      isProcessingRef.current[contactId] = false;
+      setTimeout(() => processQueueForContact(contactId), 100);
     }
   }, [queue, processMessage]);
 
-  const addToQueue = useCallback((contactId: string, content: string, attachments?: File[], onProgress?: (p: number) => void) => {
+  // Trigger processing for all active contacts in queue
+  useEffect(() => {
+    const contactIds = Array.from(new Set(queue.filter(i => i.status === 'pending').map(i => i.contactId)));
+    contactIds.forEach(id => processQueueForContact(id));
+  }, [queue, processQueueForContact]);
+
+  const addToQueue = useCallback((contactId: string, content: string, attachments?: File[]) => {
     const newItem: QueueItem = {
       id: `queue:${uuidv4()}`,
       contactId,
       content,
       attachments,
-      onProgress,
       status: 'pending',
-      retryCount: 0
+      retryCount: 0,
+      progress: 0
     };
     
     setQueue(prev => [...prev, newItem]);
     log.info(`Added message to queue: ${newItem.id}`);
-    
-    // Trigger queue processing
-    setTimeout(() => processQueue(), 0);
-  }, [processQueue]);
+  }, []);
+
+  const updateProgress = useCallback((id: string, progress: number) => {
+    setQueue(prev => prev.map(item => 
+      item.id === id ? { ...item, progress } : item
+    ));
+  }, []);
 
   const retryMessage = useCallback((id: string) => {
     setQueue(prev => prev.map(item => 
-      item.id === id ? { ...item, status: 'pending', error: undefined, retryCount: 0 } : item
+      item.id === id ? { 
+        ...item, 
+        status: 'pending', 
+        error: undefined, 
+        retryCount: 0, 
+        progress: 0 // Garantir que zera o progresso no retry
+      } : item
     ));
-    setTimeout(() => processQueue(), 0);
-  }, [processQueue]);
+  }, []);
+
+  // Reconciliação: Remover da fila se uma confirmação externa chegar
+  const reconcileWithDelivery = useCallback((contactId: string, externalId: string) => {
+    setQueue(prev => prev.filter(item => 
+      !(item.contactId === contactId && item.externalId === externalId)
+    ));
+  }, []);
 
   return {
     queue,
     addToQueue,
     retryMessage,
+    updateProgress,
+    reconcileWithDelivery,
     removeFromQueue: (id: string) => {
       setQueue(prev => prev.filter(item => item.id !== id));
     }
