@@ -128,8 +128,8 @@ export function EmailChatBubble({
       {/* Header */}
       <div
         className={cn(
-          'flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors rounded-t-lg',
-          !expanded && 'rounded-b-lg'
+          'flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-all duration-200 rounded-lg group/header',
+          expanded && 'bg-muted/10'
         )}
         onClick={() => setExpanded(v => !v)}
       >
