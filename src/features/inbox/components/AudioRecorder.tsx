@@ -386,6 +386,38 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
       {/* Stop/Send controls */}
       {isRecording || isPaused ? (
         <div className="flex items-center gap-2">
+          {/* Upload Progress Overlay */}
+          <AnimatePresence>
+            {isUploading && (
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-50 bg-background/80 backdrop-blur-md flex flex-col items-center justify-center p-6"
+              >
+                <div className="w-full max-w-xs space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-sm font-bold uppercase tracking-widest text-primary">Enviando Áudio...</span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-primary">{uploadProgress}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-primary"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-center animate-pulse">
+                    O áudio está sendo processado e enviado para a conversa.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Pause/Resume Toggle */}
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
