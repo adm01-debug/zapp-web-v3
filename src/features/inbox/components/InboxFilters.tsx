@@ -17,6 +17,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useDensity } from '@/hooks/useDensity';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAgents } from '@/features/admin';
@@ -55,6 +56,8 @@ export function InboxFilters({ filters, onFiltersChange }: InboxFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { agents } = useAgents();
   const { tags } = useTags();
+  const { density } = useDensity();
+  const isCompact = density === 'compact' || density === 'dense';
 
   const activeFiltersCount =
     filters.status.length +
@@ -118,7 +121,8 @@ export function InboxFilters({ filters, onFiltersChange }: InboxFiltersProps) {
             variant="ghost"
             size="sm"
             className={cn(
-              'h-6 px-2 gap-1 text-[11px] rounded-md',
+              'gap-1 rounded-md transition-all duration-300',
+              isCompact ? 'h-5 px-1.5 text-[10px]' : 'h-6 px-2 text-[11px]',
               activeFiltersCount > 0
                 ? 'text-primary bg-primary/10 hover:bg-primary/15'
                 : 'text-muted-foreground hover:text-foreground'
@@ -278,7 +282,7 @@ export function InboxFilters({ filters, onFiltersChange }: InboxFiltersProps) {
           <Badge
             key={status}
             variant="secondary"
-            className="h-5 gap-0.5 px-1.5 text-[10px] cursor-pointer hover:bg-destructive/15 hover:text-destructive transition-colors"
+            className={cn("gap-0.5 cursor-pointer hover:bg-destructive/15 hover:text-destructive transition-all duration-300", isCompact ? "h-4.5 px-1 text-[9px]" : "h-5 px-1.5 text-[10px]")}
             onClick={() => removeFilter('status', status)}
           >
             {opt?.label}
@@ -293,7 +297,7 @@ export function InboxFilters({ filters, onFiltersChange }: InboxFiltersProps) {
           <Badge
             key={tagId}
             variant="secondary"
-            className="h-5 gap-0.5 px-1.5 text-[10px] cursor-pointer hover:bg-destructive/15 transition-colors"
+            className={cn("gap-0.5 cursor-pointer hover:bg-destructive/15 transition-all duration-300", isCompact ? "h-4.5 px-1 text-[9px]" : "h-5 px-1.5 text-[10px]")}
             style={{ backgroundColor: `${tag.color}15`, color: tag.color }}
             onClick={() => removeFilter('tag', tagId)}
           >
@@ -306,7 +310,7 @@ export function InboxFilters({ filters, onFiltersChange }: InboxFiltersProps) {
       {filters.agentId && (
         <Badge
           variant="secondary"
-          className="h-5 gap-0.5 px-1.5 text-[10px] cursor-pointer hover:bg-destructive/15 hover:text-destructive transition-colors"
+          className={cn("gap-0.5 cursor-pointer hover:bg-destructive/15 hover:text-destructive transition-all duration-300", isCompact ? "h-4.5 px-1 text-[9px]" : "h-5 px-1.5 text-[10px]")}
           onClick={() => removeFilter('agent')}
         >
           {agents.find(a => a.id === filters.agentId)?.name || 'Atendente'}
@@ -317,7 +321,7 @@ export function InboxFilters({ filters, onFiltersChange }: InboxFiltersProps) {
       {filters.dateRange.from && (
         <Badge
           variant="secondary"
-          className="h-5 gap-0.5 px-1.5 text-[10px] cursor-pointer hover:bg-destructive/15 hover:text-destructive transition-colors"
+          className={cn("gap-0.5 cursor-pointer hover:bg-destructive/15 hover:text-destructive transition-all duration-300", isCompact ? "h-4.5 px-1 text-[9px]" : "h-5 px-1.5 text-[10px]")}
           onClick={() => removeFilter('date')}
         >
           {format(filters.dateRange.from, "dd/MM", { locale: ptBR })}

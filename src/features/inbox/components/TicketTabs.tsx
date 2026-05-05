@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useDensity } from '@/hooks/useDensity';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -49,6 +50,8 @@ export function TicketTabs({
   const { user } = useAuth();
   const { isSupervisor } = useUserRole();
   const { queues } = useQueues();
+  const { density } = useDensity();
+  const isCompact = density === 'compact' || density === 'dense';
   const ticketStates = useAllTicketStates();
   const isMobile = useIsMobile();
   // Operação ampla — supervisor+ vê todos os tickets (admin e dev incluídos por hierarquia).
@@ -125,9 +128,12 @@ export function TicketTabs({
   ];
 
   return (
-    <div className="space-y-2">
+    <div className={cn("transition-all duration-300", isCompact ? "space-y-1" : "space-y-2")}>
       {/* Main Tabs */}
-      <div className="flex items-center gap-1 bg-muted/30 dark:bg-muted/10 rounded-2xl p-1 border border-border/20 shadow-sm font-sans">
+      <div className={cn(
+        "flex items-center gap-1 bg-muted/30 dark:bg-muted/10 rounded-2xl border border-border/20 shadow-sm font-sans transition-all",
+        isCompact ? "p-0.5" : "p-1"
+      )}>
         {mainTabs.map(tab => {
           const Icon = tab.icon;
           const isActive = mainTab === tab.id;
@@ -136,13 +142,14 @@ export function TicketTabs({
               key={tab.id}
               onClick={() => onMainTabChange(tab.id)}
               className={cn(
-                'flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-500 ease-out relative overflow-hidden',
+                'flex-1 flex items-center justify-center gap-2 rounded-xl font-bold transition-all duration-500 ease-out relative overflow-hidden',
+                isCompact ? 'px-2 py-1.5 text-[11px]' : 'px-3 py-2.5 text-[12px]',
                 isActive
                   ? tab.activeColor + ' shadow-lg scale-[1.02] ring-1 ring-white/10'
                   : 'text-muted-foreground/70 hover:text-foreground hover:bg-muted/60'
               )}
             >
-              <Icon className={cn("w-4 h-4 transition-transform duration-500", isActive && "scale-110")} />
+              <Icon className={cn("transition-transform duration-500", isCompact ? "w-3.5 h-3.5" : "w-4 h-4", isActive && "scale-110")} />
               <span className="tracking-tight">{tab.label}</span>
               {tab.count !== null && (
                 <Badge 
@@ -173,7 +180,10 @@ export function TicketTabs({
 
       {/* Sub-tabs for "Abertos" — separated visually */}
       {mainTab === 'open' && (
-        <div className="flex items-center gap-1 px-0.5 flex-wrap border-t border-border/10 pt-3 mt-1 animate-in fade-in slide-in-from-top-1 duration-500">
+        <div className={cn(
+          "flex items-center gap-1 px-0.5 flex-wrap border-t border-border/10 animate-in fade-in slide-in-from-top-1 duration-500 transition-all",
+          isCompact ? "pt-1.5 mt-0.5" : "pt-3 mt-1"
+        )}>
           {subTabs.map(tab => {
             const Icon = tab.icon;
             const isActive = subTab === tab.id;
@@ -182,13 +192,14 @@ export function TicketTabs({
                 key={tab.id}
                 onClick={() => onSubTabChange(tab.id)}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300 border shadow-sm font-sans relative overflow-hidden',
+                  'flex items-center gap-2 font-bold transition-all duration-300 border shadow-sm font-sans relative overflow-hidden',
+                  isCompact ? 'px-2.5 py-1 text-[10px] rounded-lg' : 'px-4 py-2 text-[11px] rounded-full',
                   isActive
                     ? 'bg-primary/5 text-primary border-primary/20 shadow-primary/5'
                     : 'bg-muted/20 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 border-transparent'
                 )}
               >
-                <Icon className={cn("w-3.5 h-3.5 transition-transform", isActive && "rotate-[10deg]")} />
+                <Icon className={cn("transition-transform", isCompact ? "w-3 h-3" : "w-3.5 h-3.5", isActive && "rotate-[10deg]")} />
                 {tab.label}
                 <span className={cn(
                   'text-[10px] font-black tabular-nums bg-muted/40 px-1.5 py-0.5 rounded-md ml-1',

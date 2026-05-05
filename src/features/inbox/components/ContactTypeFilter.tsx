@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { useDensity } from '@/hooks/useDensity';
 import {
   Users, MessageSquare, UsersRound, FileText, ShieldCheck,
   ClipboardList, Handshake, UserCheck, Truck, Wrench, ChevronDown,
@@ -93,6 +94,8 @@ interface ContactTypeFilterProps {
  */
 export function ContactTypeFilter({ value, onChange, conversations }: ContactTypeFilterProps) {
   const [open, setOpen] = useState(false);
+  const { density } = useDensity();
+  const isCompact = density === 'compact' || density === 'dense';
   const containerRef = useRef<HTMLDivElement>(null);
 
   const stats = useMemo(() => computeStats(conversations, FILTER_OPTIONS), [conversations]);
@@ -129,7 +132,8 @@ export function ContactTypeFilter({ value, onChange, conversations }: ContactTyp
         aria-expanded={open}
         aria-label={`Filtro: ${activeOption.label}`}
         className={cn(
-          'flex items-center justify-between w-full h-7 text-[11px] bg-muted/40 border-0 rounded-md',
+          'flex items-center justify-between w-full bg-muted/40 border-0 rounded-md transition-all',
+          isCompact ? 'h-6 text-[10px] px-1.5 gap-0.5' : 'h-7 text-[11px] px-2 gap-1',
           'focus:outline-none focus:ring-1 focus:ring-primary/30 px-2 gap-1',
         )}
       >
@@ -162,7 +166,8 @@ export function ContactTypeFilter({ value, onChange, conversations }: ContactTyp
                   aria-selected={selected}
                   onClick={() => handleSelect(opt.value)}
                   className={cn(
-                    'w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-left text-[11px]',
+                    'w-full flex items-center gap-2 px-2 rounded-sm text-left transition-all',
+                    isCompact ? 'py-1 text-[10px]' : 'py-1.5 text-[11px]',
                     'hover:bg-accent hover:text-accent-foreground focus:outline-none focus:bg-accent',
                     selected && 'bg-accent/60',
                     opt.indent && 'pl-5',

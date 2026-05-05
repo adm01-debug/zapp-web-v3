@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useMemo, forwardRef, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ConversationWithMessages } from '@/features/inbox';
+import { useDensity } from '@/hooks/useDensity';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,7 +28,8 @@ interface VirtualizedRealtimeListProps {
   pinnedIds?: Set<string>;
 }
 
-const ITEM_HEIGHT = 80;
+const ITEM_HEIGHT_NORMAL = 80;
+const ITEM_HEIGHT_COMPACT = 64;
 const EMPTY_SET = new Set<string>();
 
 /**
@@ -36,11 +38,13 @@ const EMPTY_SET = new Set<string>();
  */
 const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; fallback: string; unread?: boolean }>(
   function ConversationPreviewLine({ contactId, fallback, unread = false }, _ref) {
+    const { density } = useDensity();
+    const isCompact = density === 'compact' || density === 'dense';
     const localRef = useRef<HTMLDivElement>(null);
     const inView = useInViewport(localRef, { rootMargin: '200px', keepVisibleMs: 1500 });
     const isTyping = useContactTyping(contactId, inView);
     return (
-      <div ref={localRef} className="text-[13.5px] leading-snug min-h-[1em]" style={{ fontFamily: 'Outfit, sans-serif' }}>
+      <div ref={localRef} className={cn("leading-snug min-h-[1em] transition-all duration-300", isCompact ? "text-[11.5px]" : "text-[13.5px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
         {isTyping ? (
           <TypingIndicatorCompact isVisible={true} />
         ) : (
@@ -75,6 +79,8 @@ const ConversationItemContent = memo(({
   handleClick: (id: string, e: React.MouseEvent) => void;
 }) => {
   const contactId = conversation.contact.id;
+  const { density } = useDensity();
+  const isCompact = density === 'compact' || density === 'dense';
   const isSelected = selectedIds.has(contactId);
   const isPinned = pinnedIds.has(contactId);
 
@@ -88,7 +94,8 @@ const ConversationItemContent = memo(({
       aria-label={`Conversa com ${conversation.contact.name || 'Contato'}${conversation.unreadCount > 0 ? `, ${conversation.unreadCount} mensagens não lidas` : ''}`}
       role="option"
       className={cn(
-        'w-full px-3 py-3.5 flex items-center gap-3 transition-all text-left rounded-2xl relative group overflow-hidden',
+        'w-full flex items-center gap-3 transition-all text-left rounded-2xl relative group overflow-hidden',
+        isCompact ? 'px-2 py-2' : 'px-3 py-3.5',
         'hover:bg-muted/40 hover:shadow-sm active:scale-[0.98]',
         selectedContactId === contactId ? 'bg-primary/10 shadow-md ring-1 ring-primary/20' : 'bg-transparent',
         !selectedContactId && 'border-b border-border/10 rounded-none last:border-0',
@@ -113,7 +120,10 @@ const ConversationItemContent = memo(({
       )}
 
       <div className="relative flex-shrink-0">
-        <Avatar className="w-11 h-11 shadow-sm ring-2 ring-background ring-offset-1 transition-transform group-hover:scale-105 duration-300">
+        <Avatar className={cn(
+          "shadow-sm ring-2 ring-background ring-offset-1 transition-all group-hover:scale-105 duration-300",
+          isCompact ? "w-9 h-9" : "w-11 h-11"
+        )}>
           <AvatarImage 
             src={avatarUrl || undefined} 
             referrerPolicy="no-referrer" 
@@ -146,11 +156,11 @@ const ConversationItemContent = memo(({
       <div className="flex-1 min-w-0 overflow-hidden font-sans">
         <div className="flex items-center justify-between gap-2 mb-0.5">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {isPinned && <Pin className="w-3 h-3 text-primary flex-shrink-0" />}
+            {isPinned && <Pin className={cn("text-primary flex-shrink-0 transition-all", isCompact ? "w-2.5 h-2.5" : "w-3 h-3")} />}
             {conversation.contact.contact_type === 'sicoob_gifts' && (
               <Gift className="w-3.5 h-3.5 text-info flex-shrink-0" />
             )}
-            <span className="font-semibold text-foreground truncate text-[15px] leading-tight tracking-normal" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            <span className={cn("font-semibold text-foreground truncate leading-tight tracking-normal transition-all duration-300", isCompact ? "text-[12.5px]" : "text-[15px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
               {(() => {
                 const firstName = (conversation.contact.name || 'Sem nome').split(' ')[0];
                 const company = conversation.contact.company;
@@ -170,7 +180,7 @@ const ConversationItemContent = memo(({
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {conversation.lastMessage && (
-                <span className="text-[11px] font-semibold text-muted-foreground/60 tabular-nums uppercase tracking-wider" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                <span className={cn("font-semibold text-muted-foreground/60 tabular-nums uppercase tracking-wider transition-all duration-300", isCompact ? "text-[10px]" : "text-[11px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
                   {formatDistanceToNow(new Date(conversation.lastMessage.created_at), {
                     addSuffix: false,
                     locale: ptBR,
@@ -178,7 +188,7 @@ const ConversationItemContent = memo(({
                 </span>
             )}
             {conversation.unreadCount > 0 && (
-              <span className="min-w-[20px] h-[20px] px-1 bg-rose-500 text-white text-[10px] rounded-full flex items-center justify-center font-black shadow-lg shadow-rose-500/20 ring-2 ring-background">
+              <span className={cn("min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] rounded-full flex items-center justify-center font-black shadow-lg shadow-rose-500/20 ring-2 ring-background transition-all", isCompact ? "min-w-[16px] h-[16px] text-[8px]" : "min-w-[20px] h-[20px] text-[10px]")}>
                 {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
               </span>
             )}
@@ -270,6 +280,8 @@ export function VirtualizedRealtimeList({
   onPin,
   pinnedIds = EMPTY_SET,
 }: VirtualizedRealtimeListProps) {
+  const { density } = useDensity();
+  const isCompact = density === 'compact' || density === 'dense';
   const parentRef = useRef<HTMLDivElement>(null);
 
   // Filter out invalid conversations
@@ -306,7 +318,7 @@ export function VirtualizedRealtimeList({
   const virtualizer = useVirtualizer({
     count: sortedConversations.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => ITEM_HEIGHT,
+    estimateSize: () => isCompact ? ITEM_HEIGHT_COMPACT : ITEM_HEIGHT_NORMAL,
     overscan: 5,
   });
 
