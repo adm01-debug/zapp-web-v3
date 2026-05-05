@@ -23,7 +23,10 @@ type FeatureFlag =
   | 'optimistic_messages'
   | 'auto_retry_failed'
   | 'whisper_mode'
-  | 'dark_mode';
+  | 'dark_mode'
+  | 'v2_audio_recorder'
+  | 'advanced_transcription'
+  | 'message_queue_retry';
 
 const DEFAULTS: Record<FeatureFlag, boolean> = {
   ai_agents: true,
@@ -40,6 +43,9 @@ const DEFAULTS: Record<FeatureFlag, boolean> = {
   auto_retry_failed: true,
   whisper_mode: true,
   dark_mode: true,
+  v2_audio_recorder: false, // Início desligado para rollout seguro
+  advanced_transcription: false,
+  message_queue_retry: true,
 };
 
 let flagCache: Record<string, boolean> | null = null;
