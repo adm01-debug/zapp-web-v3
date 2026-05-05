@@ -53,7 +53,11 @@ describe('useMessageQueue', () => {
   });
 
   it('should reset progress on retry', async () => {
-    const processMessage = vi.fn().mockImplementation(() => new Promise((_, reject) => setTimeout(() => reject(new Error('Fail')), 50)));
+    const processMessage = vi.fn().mockImplementation(() => new Promise((_, reject) => {
+      // Usar setTimeout real para evitar conflitos de simulação se necessário, 
+      // mas aqui mantemos o reject rápido para o teste fluir.
+      reject(new Error('Fail'));
+    }));
     const { result } = renderHook(() => useMessageQueue(processMessage));
 
     act(() => {
@@ -61,11 +65,9 @@ describe('useMessageQueue', () => {
     });
 
     // Run processing (including MAX_AUTO_RETRIES = 2)
-    // 1st attempt: 50ms (fail) + 100ms (debounce)
-    // 2nd attempt: 50ms (fail) + 100ms (debounce)
-    // 3rd attempt: 50ms (fail)
+    // Precisamos de múltiplos "ticks" do React e do event loop
     await act(async () => {
-      vi.advanceTimersByTime(500);
+      vi.runAllTimers();
     });
 
     expect(result.current.queue[0].status).toBe('failed');
@@ -75,7 +77,6 @@ describe('useMessageQueue', () => {
     });
     expect(result.current.queue[0].progress).toBe(50);
 
-    // Stop timers before retry to catch 'pending' state
     act(() => {
       result.current.retryMessage(result.current.queue[0].id);
     });
