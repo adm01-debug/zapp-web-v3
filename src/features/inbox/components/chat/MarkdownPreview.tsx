@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import DOMPurify from 'dompurify';
 
 /**
  * Converts WhatsApp markdown-style formatting to HTML for preview.
@@ -32,7 +33,7 @@ interface MarkdownPreviewProps {
 }
 
 export function MarkdownPreview({ text, className }: MarkdownPreviewProps) {
-  const html = useMemo(() => formatWhatsAppText(text), [text]);
+  const html = useMemo(() => DOMPurify.sanitize(formatWhatsAppText(text), { ALLOWED_TAGS: ['b', 'strong', 'i', 'em', 'del', 's', 'code', 'pre', 'br', 'span'], ALLOWED_ATTR: ['class'] }), [text]);
   
   if (!text.trim()) return null;
   
