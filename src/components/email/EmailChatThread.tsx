@@ -115,8 +115,16 @@ export function EmailChatThread({
       <ScrollArea className="flex-1">
         <div className="divide-y divide-border/40">
           {isLoading ? (
-            <div className="flex items-center justify-center h-48">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="flex flex-col h-full p-4 space-y-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className={cn("flex flex-col gap-2 max-w-[80%]", i % 2 === 0 ? "self-end items-end" : "self-start items-start")}>
+                  <div className="flex gap-2 items-center">
+                    <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                    <div className="h-4 w-12 bg-muted animate-pulse rounded" />
+                  </div>
+                  <div className={cn("h-16 w-64 bg-muted animate-pulse rounded-2xl", i % 2 === 0 ? "rounded-tr-none" : "rounded-tl-none")} />
+                </div>
+              ))}
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 gap-2 text-muted-foreground">
