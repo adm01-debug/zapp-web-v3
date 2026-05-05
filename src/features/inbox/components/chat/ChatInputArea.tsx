@@ -81,6 +81,7 @@ interface ChatInputAreaProps {
   onOpenTeamFiles?: () => void;
   queue?: any[];
   onRetry?: (id: string) => void;
+  onRemoveFromQueue?: (id: string) => void;
 }
 
 export function ChatInputArea(props: ChatInputAreaProps) {
