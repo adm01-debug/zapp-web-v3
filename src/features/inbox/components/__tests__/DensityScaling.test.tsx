@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useDensity } from '@/hooks/useDensity';
 import { ConversationItem } from '../conversation-list/ConversationItem';
@@ -56,6 +56,10 @@ describe('Density Scaling', () => {
     // Check for comfortable height/padding (min-h-[78px])
     const item = container.querySelector('.min-h-\\[78px\\]');
     expect(item).toBeTruthy();
+    
+    // Check for larger avatar size (w-[49px])
+    const avatar = container.querySelector('.w-\\[49px\\]');
+    expect(avatar).toBeTruthy();
   });
 
   it('should render ConversationItem in compact mode when density is compact', () => {
@@ -69,8 +73,16 @@ describe('Density Scaling', () => {
       />
     );
     
-    // Check for compact attribute/class (min-h-[64px] was added in my previous edit)
-    // Wait, did I actually apply the logic to use min-h-[64px]? 
-    // Let me check the file content again.
+    // Check for compact height/padding (min-h-[64px])
+    const item = container.querySelector('.min-h-\\[64px\\]');
+    expect(item).toBeTruthy();
+    
+    // Check for smaller avatar size (w-[38px])
+    const avatar = container.querySelector('.w-\\[38px\\]');
+    expect(avatar).toBeTruthy();
+    
+    // Check for smaller font size on name (text-[12.5px])
+    const name = container.querySelector('.text-\\[12\\.5px\\]');
+    expect(name).toBeTruthy();
   });
 });
