@@ -502,7 +502,7 @@ export function ConversationItem({
                     )}
                   </>
                 ) : (
-                  <span className="text-[10px] text-muted-foreground/40 italic">Sem tags</span>
+                  <span className="text-[10px] text-muted-foreground/60 font-medium">Sem tags</span>
                 )}
               </div>
             </div>
