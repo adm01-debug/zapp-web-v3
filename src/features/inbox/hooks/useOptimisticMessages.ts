@@ -92,24 +92,27 @@ export function useOptimisticMessages() {
       if (pendingList.length === 0) return realMessages;
 
       const realExternalIds = new Set(realMessages.map(m => m.external_id).filter(Boolean));
-      const realContentSet = new Set(
-        realMessages
-          .filter((m) => m.sender === 'agent')
-          .slice(-20)
-          .map((m) => m.content),
-      );
+      // Fingerprint match criteria: agent messages, recently sent, match content
+      const recentAgentSends = realMessages.filter(m => m.sender === 'agent').slice(-15);
+      const realContentSet = new Set(recentAgentSends.map((m) => m.content));
 
       const stillPending: OptimisticMessage[] = [];
       const toRemove: string[] = [];
 
       for (const opt of pendingList) {
         let confirmed = false;
-        // Verify by external_id or fuzzy match content
-        if (opt.external_id && realExternalIds.has(opt.external_id)) confirmed = true;
-        else if (realContentSet.has(opt.content)) confirmed = true;
+        
+        // 1. External ID match (best accuracy)
+        if (opt.external_id && realExternalIds.has(opt.external_id)) {
+          confirmed = true;
+        } 
+        // 2. Content match (fallback for before ID is known or missing ID in real event)
+        else if (realContentSet.has(opt.content)) {
+          confirmed = true;
+        }
         
         const age = Date.now() - new Date(opt.timestamp).getTime();
-        // Remove if confirmed or timed out (2 minutes)
+        // 3. TTL Expiry (2 minutes)
         if (confirmed || age > 120000) {
           toRemove.push(opt.id);
         } else {
@@ -117,15 +120,21 @@ export function useOptimisticMessages() {
         }
       }
 
-      // NO SETTIMEOUT HERE - IT BREAKS TESTS
+      if (toRemove.length > 0) {
+        // Trigger cleanup in next tick to avoid state updates during render
+        Promise.resolve().then(() => cleanup(toRemove));
+      }
       
       if (stillPending.length === 0) return realMessages;
 
-      return [...realMessages, ...stillPending].sort(
+      // Ensure we don't duplicate if a message was just removed but still in state
+      const filteredStillPending = stillPending.filter(p => !toRemove.includes(p.id));
+
+      return [...realMessages, ...filteredStillPending].sort(
         (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
     },
-    [pending],
+    [pending, cleanup],
   );
 
   const cleanup = useCallback((ids: string[]) => {
