@@ -57,14 +57,14 @@ export function ConversationList({
   }, [sourceConversations, search, filter]);
 
   const counts = useMemo(() => {
-    const c = { all: conversations.length, open: 0, pending: 0, waiting: 0 };
-    for (const conv of conversations) {
+    const c = { all: sourceConversations.length, open: 0, pending: 0, waiting: 0 };
+    for (const conv of sourceConversations) {
       if (conv.status === 'open') c.open++;
       else if (conv.status === 'pending') c.pending++;
       else if (conv.status === 'waiting') c.waiting++;
     }
     return c;
-  }, [conversations]);
+  }, [sourceConversations]);
 
   const virtualizer = useVirtualizer({
     count: filteredConversations.length,
