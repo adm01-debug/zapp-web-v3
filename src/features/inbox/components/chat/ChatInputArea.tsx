@@ -17,7 +17,7 @@ import { StickerPicker } from '@/features/inbox/components/StickerPicker';
 import { CustomEmojiPicker } from '@/features/inbox/components/CustomEmojiPicker';
 import { RichTextToggle } from './RichTextToolbar';
 import { FileUploader } from '@/features/inbox/components/FileUploader';
-import { Send, Mic, Check, Plus, Loader2, X, Image as ImageIcon, FileText, FileVideo, FileAudio } from 'lucide-react';
+import { Send, Mic, Check, Plus, Loader2, X, Image as ImageIcon, FileText, FileVideo, FileAudio, Clock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { InputPreviewBars } from './InputPreviewBars';
 import { useChatInputLogic, setNativeValue } from './useChatInputLogic';
