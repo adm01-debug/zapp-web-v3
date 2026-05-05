@@ -43,7 +43,9 @@ export function ThemeCustomizer() {
           <p className="text-sm text-muted-foreground">Escolha sua skin favorita</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
+          <ThemeDebugTooltip />
+          <div className="flex gap-2">
           <Button variant="default" size="sm" onClick={() => {
             const preset = PRESETS.find(p => p.id === activePreset);
             toast.success(`Tema "${preset?.name || 'Padrão'}" salvo com sucesso!`);
