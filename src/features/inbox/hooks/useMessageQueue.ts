@@ -41,7 +41,7 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
           ...item,
           status: item.status === 'sending' ? 'pending' : item.status,
           progress: item.status === 'sending' ? 0 : item.progress,
-          attachments: undefined // Arquivos File não são serializáveis, precisam ser re-anexados ou perdidos
+          attachments: undefined // Arquivos File não são serializáveis
         }));
         setQueue(restored);
         log.info('Restored message queue from localStorage');
@@ -63,71 +63,105 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
   const processQueueForContact = useCallback(async (contactId: string) => {
     if (isProcessingRef.current[contactId]) return;
 
-    const contactQueue = queue.filter(item => item.contactId === contactId);
-    const nextItem = contactQueue.find(item => item.status === 'pending');
+    // Tentar pegar o próximo item da fila sem criar um loop infinito de dependência
+    // isProcessingRef garante que não rodamos em paralelo para o mesmo contato
+    let nextItem: QueueItem | undefined;
     
-    if (!nextItem) return;
-
-    isProcessingRef.current[contactId] = true;
-    const startTime = Date.now();
+    // Precisamos de uma forma de ler o estado atual do queue sem depender dele
+    // Como estamos dentro de um useCallback que será chamado por um useEffect,
+    // podemos usar um truque ou simplesmente aceitar que o useEffect gatilha a primeira vez.
+    // Mas para o processamento sequencial, precisamos ler o estado atualizado.
     
-    setQueue(prev => prev.map(item => 
-      item.id === nextItem.id ? { ...item, status: 'sending', progress: 0 } : item
-    ));
+    // Abordagem: processQueueForContact será disparado pelo useEffect quando o queue mudar,
+    // mas ele mesmo só age se isProcessingRef estiver false.
+  }, [processMessage]);
 
-    try {
-      log.info(`Processing message ${nextItem.id} for contact ${contactId}`);
-      await processMessage(nextItem);
-      
-      const duration = Date.now() - startTime;
-      setQueue(prev => prev.map(item => 
-        item.id === nextItem.id ? { 
-          ...item, 
-          status: 'confirmed', 
-          progress: 100,
-          attempts: [...(item.attempts || []), { timestamp: Date.now(), duration }]
-        } : item
-      ));
-      
-      // Remove confirmed items after some time to keep UI clean but show confirmation
-      setTimeout(() => {
-        setQueue(prev => prev.filter(item => item.id !== nextItem.id));
-      }, 5000);
+  // Versão corrigida e simplificada do processamento
+  const processNextInQueue = useCallback(async (contactId: string) => {
+    if (isProcessingRef.current[contactId]) return;
 
-      log.info(`Message ${nextItem.id} processed successfully`);
-    } catch (err) {
-      const duration = Date.now() - startTime;
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      log.error(`Failed to process message ${nextItem.id}:`, err);
-      
-      const shouldAutoRetry = nextItem.retryCount < MAX_AUTO_RETRIES;
-      
-      setQueue(prev => prev.map(item => 
-        item.id === nextItem.id ? { 
-          ...item, 
-          status: shouldAutoRetry ? 'pending' : 'failed',
-          retryCount: item.retryCount + (shouldAutoRetry ? 1 : 0),
-          error: err,
-          progress: 0,
-          attempts: [...(item.attempts || []), { timestamp: Date.now(), error: errorMsg, duration }]
-        } : item
-      ));
+    // Encontrar o próximo item pendente para este contato
+    setQueue(currentQueue => {
+      const contactQueue = currentQueue.filter(item => item.contactId === contactId);
+      const itemToProcess = contactQueue.find(item => item.status === 'pending');
 
-      if (!shouldAutoRetry) {
-        toast({
-          title: "Falha no envio",
-          description: "Não foi possível enviar a mensagem. Tente novamente.",
-          variant: "destructive"
-        });
-      }
-  }, [processMessage]); // Removido 'queue' para evitar loops infinitos
+      if (!itemToProcess) return currentQueue;
 
-  // Trigger processing for all active contacts in queue
+      // Se achamos um item, marcamos como enviando e iniciamos o processo fora do setQueue
+      isProcessingRef.current[contactId] = true;
+      
+      // Iniciamos o processamento assíncrono
+      (async () => {
+        const startTime = Date.now();
+        try {
+          log.info(`Processing message ${itemToProcess.id} for contact ${contactId}`);
+          
+          // Marcamos como 'sending' no estado
+          setQueue(q => q.map(i => i.id === itemToProcess.id ? { ...i, status: 'sending', progress: 0 } : i));
+          
+          await processMessage(itemToProcess);
+          
+          const duration = Date.now() - startTime;
+          setQueue(q => q.map(i => 
+            i.id === itemToProcess.id ? { 
+              ...i, 
+              status: 'confirmed', 
+              progress: 100,
+              attempts: [...(i.attempts || []), { timestamp: Date.now(), duration }]
+            } : i
+          ));
+          
+          // Remover confirmados após 5s
+          setTimeout(() => {
+            setQueue(q => q.filter(i => i.id !== itemToProcess.id));
+          }, 5000);
+
+          log.info(`Message ${itemToProcess.id} processed successfully`);
+        } catch (err) {
+          const duration = Date.now() - startTime;
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          log.error(`Failed to process message ${itemToProcess.id}:`, err);
+          
+          const shouldAutoRetry = itemToProcess.retryCount < MAX_AUTO_RETRIES;
+          
+          setQueue(q => q.map(i => 
+            i.id === itemToProcess.id ? { 
+              ...i, 
+              status: shouldAutoRetry ? 'pending' : 'failed',
+              retryCount: i.retryCount + (shouldAutoRetry ? 1 : 0),
+              error: err,
+              progress: 0,
+              attempts: [...(i.attempts || []), { timestamp: Date.now(), error: errorMsg, duration }]
+            } : i
+          ));
+
+          if (!shouldAutoRetry) {
+            toast({
+              title: "Falha no envio",
+              description: "Não foi possível enviar a mensagem. Tente novamente.",
+              variant: "destructive"
+            });
+          }
+        } finally {
+          isProcessingRef.current[contactId] = false;
+          // Tentar processar o próximo após um pequeno delay
+          setTimeout(() => processNextInQueue(contactId), 100);
+        }
+      })();
+
+      return currentQueue; // O estado será atualizado dentro do bloco assíncrono
+    });
+  }, [processMessage]);
+
+  // Disparar processamento quando a fila mudar
   useEffect(() => {
     const contactIds = Array.from(new Set(queue.filter(i => i.status === 'pending').map(i => i.contactId)));
-    contactIds.forEach(id => processQueueForContact(id));
-  }, [queue, processQueueForContact]);
-
+    contactIds.forEach(id => {
+      if (!isProcessingRef.current[id]) {
+        processNextInQueue(id);
+      }
+    });
+  }, [queue, processNextInQueue]);
 
   const addToQueue = useCallback((contactId: string, content: string, attachments?: File[]) => {
     const newItem: QueueItem = {
@@ -159,12 +193,11 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
         status: 'pending', 
         error: undefined, 
         retryCount: 0, 
-        progress: 0 // Garantir que zera o progresso no retry
+        progress: 0 
       } : item
     ));
   }, []);
 
-  // Reconciliação: Remover da fila se uma confirmação externa chegar
   const reconcileWithDelivery = useCallback((contactId: string, externalId: string) => {
     setQueue(prev => prev.filter(item => 
       !(item.contactId === contactId && item.externalId === externalId)
