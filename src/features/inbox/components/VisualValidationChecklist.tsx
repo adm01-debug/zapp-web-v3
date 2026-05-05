@@ -75,11 +75,11 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
         <div className="space-y-2">
           <div className="flex justify-between items-end">
             <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Progresso da Meta 10/10</span>
-            <span className="text-sm font-black text-primary">{progress}%</span>
+            <span className="text-sm font-black text-primary">{approvedCount}/{items.length} ({progress}%)</span>
           </div>
           <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
             <motion.div 
-              initial={{ width: 0 }}
+              initial={false}
               animate={{ width: `${progress}%` }}
               className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]"
             />
