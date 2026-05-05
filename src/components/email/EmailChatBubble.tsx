@@ -227,29 +227,31 @@ export function EmailChatBubble({
 
       {/* Body */}
       {expanded && (
-        <div className="px-4 pb-4 pl-15">
+        <div className="px-4 pb-4 pl-15 animate-in slide-in-from-top-2 duration-300">
           <div className="pl-11">
-            {hasHtml ? (
-              <div
-                ref={contentRef}
-                className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed overflow-hidden"
-                style={{ maxHeight: showFullHtml ? 'none' : '400px' }}
-                dangerouslySetInnerHTML={{ __html: displayHtml }}
-              />
-            ) : (
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">{displayHtml}</p>
-            )}
+            <div className="bg-background/40 rounded-2xl p-4 border border-border/10 shadow-inner">
+              {hasHtml ? (
+                <div
+                  ref={contentRef}
+                  className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-relaxed overflow-hidden font-sans"
+                  style={{ maxHeight: showFullHtml ? 'none' : '400px' }}
+                  dangerouslySetInnerHTML={{ __html: displayHtml }}
+                />
+              ) : (
+                <p className="text-[13px] whitespace-pre-wrap leading-relaxed font-sans text-foreground/90">{displayHtml}</p>
+              )}
 
-            {/* Mostrar citação */}
-            {hasQuote && !showFullHtml && (
-              <button
-                className="mt-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                onClick={e => { e.stopPropagation(); setShowFullHtml(true); }}
-              >
-                <span className="text-lg leading-none">···</span>
-                <span>Mostrar conteúdo citado</span>
-              </button>
-            )}
+              {/* Mostrar citação */}
+              {hasQuote && !showFullHtml && (
+                <button
+                  className="mt-3 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors bg-primary/5 px-2.5 py-1 rounded-full"
+                  onClick={e => { e.stopPropagation(); setShowFullHtml(true); }}
+                >
+                  <span className="text-sm leading-none">···</span>
+                  <span>Conteúdo citado</span>
+                </button>
+              )}
+            </div>
 
             {/* Attachments */}
             {message.has_attachments && (
