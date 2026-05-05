@@ -228,7 +228,7 @@ export function derivedToConversationContact(dc: DerivedContact): ConversationCo
     whatsapp_connection_id: null,
     contact_type: 'whatsapp',
     group_category: null,
-    ai_sentiment: null,
+    ai_sentiment: dc.ai_sentiment || null,
   };
 }
 

@@ -352,7 +352,42 @@ export function useExternalConversations(enabled = true) {
         () => fetchRecentMessagesWindow(),
         { lockTtl: 8_000, resultTtl: POLL_INTERVAL - 500, waitTimeout: 6_000 },
       );
-      return buildExternalConversations(messages);
+      
+      const conversations = buildExternalConversations(messages);
+      
+      // ✨ Enrichment: Fetch extra contact metadata (tags, company, ai_sentiment)
+      // from evolution_contacts for the sidebar list.
+      const jids = Array.from(new Set(conversations.map(c => c.contact.id)));
+      if (jids.length > 0) {
+        try {
+          const contactsResult = await queryExternalProxy<any>({
+            table: 'evolution_contacts',
+            select: 'remote_jid,tags,company,ai_sentiment',
+            filters: [
+              { column: 'remote_jid', operator: 'in', value: jids },
+              { column: 'instance_name', operator: 'eq', value: DEFAULT_INSTANCE }
+            ],
+            limit: jids.length
+          });
+          
+          if (contactsResult.data && contactsResult.data.length > 0) {
+            const contactMap = new Map(contactsResult.data.map(c => [c.remote_jid, c]));
+            conversations.forEach(conv => {
+              const extra = contactMap.get(conv.contact.id);
+              if (extra) {
+                // Prioritize database metadata over message-derived fields
+                if (extra.tags) conv.contact.tags = extra.tags;
+                if (extra.company) conv.contact.company = extra.company;
+                if (extra.ai_sentiment) conv.contact.ai_sentiment = extra.ai_sentiment;
+              }
+            });
+          }
+        } catch (err) {
+          log.warn('Failed to enrich contacts in sidebar', err);
+        }
+      }
+
+      return conversations;
     },
     enabled,
     refetchInterval: POLL_INTERVAL,
