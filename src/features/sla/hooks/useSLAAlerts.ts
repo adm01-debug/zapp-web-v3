@@ -18,7 +18,9 @@ interface SLAAlertParams {
   awaitingMs: number | null;
   resolutionDurationMs: number | null;
   /** Optional delivery delay context */
+  deliveryDelayStatus?: SLAStatus | null;
   deliveryDelayMs?: number | null;
+  customMessage?: string | null;
   /** Optional callback wired to the toast's "Abrir conversa" action button. */
   onOpenConversation?: () => void;
 }
