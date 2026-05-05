@@ -40,13 +40,13 @@ const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; 
     const inView = useInViewport(localRef, { rootMargin: '200px', keepVisibleMs: 1500 });
     const isTyping = useContactTyping(contactId, inView);
     return (
-      <div ref={localRef} className="font-sans text-[13px] leading-snug min-h-[1em]">
+      <div ref={localRef} className="text-[13.5px] leading-snug min-h-[1em]" style={{ fontFamily: 'Outfit, sans-serif' }}>
         {isTyping ? (
           <TypingIndicatorCompact isVisible={true} />
         ) : (
           <p className={cn(
-            'truncate tracking-[-0.005em]',
-            unread ? 'text-foreground font-medium' : 'text-muted-foreground font-normal'
+            'truncate tracking-normal',
+            unread ? 'text-foreground/90 font-medium' : 'text-muted-foreground/70 font-normal'
           )}>{fallback}</p>
         )}
       </div>
@@ -161,7 +161,7 @@ function ConversationItem({
               {conversation.contact.contact_type === 'sicoob_gifts' && (
                 <Gift className="w-3.5 h-3.5 text-info flex-shrink-0" />
               )}
-              <span className="font-bold text-foreground truncate text-[14.5px] leading-tight tracking-tight group-hover:text-primary transition-colors">
+              <span className="font-semibold text-foreground truncate text-[15px] leading-tight tracking-normal" style={{ fontFamily: 'Outfit, sans-serif' }}>
                 {(() => {
                   const firstName = (conversation.contact.name || 'Sem nome').split(' ')[0];
                   const company = conversation.contact.company;
@@ -181,7 +181,7 @@ function ConversationItem({
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {conversation.lastMessage && (
-                  <span className="text-[10px] font-bold text-muted-foreground/50 tabular-nums uppercase tracking-widest group-hover:text-muted-foreground transition-colors">
+                  <span className="text-[10.5px] font-semibold text-muted-foreground/60 tabular-nums uppercase tracking-wider" style={{ fontFamily: 'Outfit, sans-serif' }}>
                     {formatDistanceToNow(new Date(conversation.lastMessage.created_at), {
                       addSuffix: false,
                       locale: ptBR,
