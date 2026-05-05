@@ -290,58 +290,78 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
             </div>
           </>
         ) : audioUrl ? (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handlePlayPause}
-              className="text-primary shrink-0"
-              aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
-            >
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            </Button>
-            <audio
-              ref={audioRef}
-              src={audioUrl}
-              onEnded={() => { setIsPlaying(false); setPlaybackProgress(0); setCurrentTime(0); }}
-              onLoadedMetadata={(e) => { (e.currentTarget as HTMLAudioElement).volume = volume; }}
-              className="hidden"
-            />
-            {/* Progress bar with actual playback tracking */}
-            <div
-              className="flex-1 h-2 bg-muted rounded-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              role="slider"
-              aria-label="Progresso da gravação"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={playbackProgress}
-              tabIndex={0}
-              onClick={(e) => {
-                const audio = audioRef.current;
-                if (!audio || !audio.duration) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
-              }}
-              onKeyDown={(e) => {
-                const audio = audioRef.current;
-                if (!audio || !audio.duration) return;
-                if (e.key === 'ArrowRight') audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
-                if (e.key === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5);
-              }}
-            >
-              <motion.div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  voiceChanged ? "bg-primary" : "bg-primary"
-                )}
-                style={{ width: `${playbackProgress}%` }}
+          <div className="flex-1 flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePlayPause}
+                className="text-primary shrink-0 bg-primary/5 hover:bg-primary/10 rounded-full h-10 w-10"
+                aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
+              >
+                {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+              </Button>
+              <audio
+                ref={audioRef}
+                src={audioUrl}
+                onEnded={() => { setIsPlaying(false); setPlaybackProgress(0); setCurrentTime(0); }}
+                onLoadedMetadata={(e) => { (e.currentTarget as HTMLAudioElement).volume = volume; }}
+                className="hidden"
               />
+              <div
+                className="flex-1 h-3 bg-muted rounded-full overflow-hidden cursor-pointer relative group"
+                onClick={(e) => {
+                  const audio = audioRef.current;
+                  if (!audio || !audio.duration) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+                }}
+              >
+                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <motion.div
+                  className="h-full bg-primary relative"
+                  style={{ width: `${playbackProgress}%` }}
+                >
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform" />
+                </motion.div>
+              </div>
+              <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums min-w-[90px] text-right">
+                {formatDuration(Math.floor(currentTime))} / {formatDuration(duration)}
+              </span>
+              <AudioVolumeControl volume={volume} onChange={setVolume} size="sm" />
             </div>
-            <span className="text-sm font-mono text-muted-foreground w-20 text-right tabular-nums">
-              {formatDuration(Math.floor(currentTime))} / {formatDuration(duration)}
-            </span>
-            <AudioVolumeControl volume={volume} onChange={setVolume} size="sm" />
-          </>
+
+            {/* Transcription Toggle & Content */}
+            {transcription && (
+              <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                    <Type className="w-3 h-3" /> Transcrição
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 text-[10px] uppercase font-black px-2 hover:bg-primary/5"
+                    onClick={() => setShowTranscription(!showTranscription)}
+                  >
+                    {showTranscription ? 'Recolher' : 'Visualizar'}
+                  </Button>
+                </div>
+                <AnimatePresence>
+                  {showTranscription && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-sm text-foreground/80 italic leading-relaxed font-medium border-t border-border/30 pt-2"
+                    >
+                      {transcription}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
         ) : null}
       </div>
 
