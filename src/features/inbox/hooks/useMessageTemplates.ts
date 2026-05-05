@@ -24,7 +24,7 @@ export function useMessageTemplates() {
   const { user } = useAuth();
 
   const fetchTemplates = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -38,7 +38,7 @@ export function useMessageTemplates() {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   const addTemplate = useCallback(async (template: { title: string; content: string; shortcut: string; category: string }) => {
     if (!user || !template.title || !template.content) {
