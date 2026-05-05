@@ -59,7 +59,7 @@ export function ChatPanelHeader({
   const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
 
   return (
-    <div className="flex items-center justify-between px-3 md:px-5 h-[56px] md:h-[64px] border-b border-white/10 bg-background sticky top-0 z-30 shrink-0 transition-all duration-300">
+    <div className="flex items-center justify-between px-3 md:px-6 h-[56px] md:h-[72px] border-b border-white/5 bg-background sticky top-0 z-30 shrink-0 transition-all duration-300">
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
         {isMobile && onBack && (
           <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl shrink-0 touch-manipulation" onClick={onBack} aria-label="Voltar">
@@ -67,7 +67,7 @@ export function ChatPanelHeader({
           </Button>
         )}
         <div className="relative shrink-0">
-          <Avatar className="w-9 h-9 md:w-10 md:h-10">
+          <Avatar className="w-9 h-9 md:w-11 md:h-11 shadow-sm border border-border/50">
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
@@ -83,7 +83,7 @@ export function ChatPanelHeader({
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground text-[14px]">{conversation.contact.name}</h3>
+            <h3 className="font-bold text-foreground text-[15px] tracking-tight leading-none">{conversation.contact.name}</h3>
             <SLAIndicatorForContact conversation={conversation} />
             {sendState === 'retrying' && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-warning/15 text-warning border border-warning/30">
@@ -113,7 +113,9 @@ export function ChatPanelHeader({
               </div>
             )}
           </div>
+        <div className="hidden md:flex h-8 w-px bg-border/40 mx-2" />
         </div>
+      </div>
       </div>
 
       <div className="flex items-center gap-0.5">
