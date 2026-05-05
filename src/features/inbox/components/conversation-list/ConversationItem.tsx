@@ -80,7 +80,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
         <div className="flex items-center gap-2 relative z-10">
           <div className="relative flex-shrink-0">
             <ChannelBadge type={conversation.contact.contact_type} />
-            <Avatar className="w-8 h-8">
+            <Avatar className="w-[38px] h-[38px]">
               <AvatarImage src={conversation.contact.avatar} />
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">{conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}</AvatarFallback>
             </Avatar>
