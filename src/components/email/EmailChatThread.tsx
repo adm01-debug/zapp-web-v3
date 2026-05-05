@@ -113,7 +113,7 @@ export function EmailChatThread({
 
       {/* Messages */}
       <ScrollArea className="flex-1">
-        <div className="divide-y divide-border/40">
+        <div className="divide-y divide-border/20 bg-background/30">
           {isLoading ? (
             <div className="flex flex-col h-full p-4 space-y-6">
               {[1, 2, 3].map(i => (
