@@ -498,9 +498,7 @@ export function ConversationItem({
                       </Tooltip>
                     )}
                   </>
-                ) : (
-                  <span className="text-[10px] text-muted-foreground/60 font-medium">Sem tags</span>
-                )}
+                ) : null}
               </div>
             </div>
             {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
