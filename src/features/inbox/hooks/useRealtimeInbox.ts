@@ -313,8 +313,18 @@ export function useRealtimeInbox() {
   }, [refetch, refetchSelectedMessages]);
 
   // Função interna que processa cada item da fila
-  const processQueuedMessage = useCallback(async (item: { contactId: string, content: string, attachments?: File[], onProgress?: (p: number) => void }) => {
-    const { contactId, content, attachments, onProgress } = item;
+  const processQueuedMessage = useCallback(async (item: QueueItem) => {
+    const { contactId, content, attachments } = item;
+
+    // Webhook reconciliation - remove if already delivered/confirmed externally
+    const checkReconcile = () => {
+      const messagesToCheck = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
+      const lastMsg = messagesToCheck[messagesToCheck.length - 1];
+      if (lastMsg?.external_id && lastMsg.sender === 'agent') {
+        messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id);
+      }
+    };
+    checkReconcile();
 
     // Auto-assign on first reply if pending
     try {
@@ -338,7 +348,6 @@ export function useRealtimeInbox() {
       
       try {
         if (attachments && attachments.length > 0) {
-          const CHUNK_SIZE = 1; // Process one at a time for order
           for (let i = 0; i < attachments.length; i++) {
             const file = attachments[i];
             const isLarge = file.size > 10 * 1024 * 1024; // > 10MB
@@ -348,12 +357,11 @@ export function useRealtimeInbox() {
                 contactAvatar: currentAvatar,
                 caption: i === 0 ? content : undefined,
                 onProgress: (p) => {
-                  if (onProgress) {
-                    const total = ((i / attachments.length) * 100) + (p / attachments.length);
-                    onProgress(total);
-                  }
+                  const total = ((i / attachments.length) * 100) + (p / attachments.length);
+                  messageQueue.updateProgress(item.id, total);
                 }
               });
+              if (optimistic.external_id) item.externalId = optimistic.external_id;
               try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
             } catch (mediaErr) {
               if (isLarge) {
@@ -366,8 +374,9 @@ export function useRealtimeInbox() {
         } else {
           const { optimistic } = await sendExternalText(contactId, content, { 
             contactAvatar: currentAvatar,
-            onProgress: (p) => { if (onProgress) onProgress(p); }
+            onProgress: (p) => { messageQueue.updateProgress(item.id, p); }
           });
+          if (optimistic.external_id) item.externalId = optimistic.external_id;
           try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
         }
       } catch (err) {
@@ -392,7 +401,7 @@ export function useRealtimeInbox() {
     } finally {
       await refreshActiveConversation();
     }
-  }, [sendMessage, refreshActiveConversation, externalMsgs, externalData, resolvedSelectedConversation]);
+  }, [sendMessage, refreshActiveConversation, externalMsgs, externalData, resolvedSelectedConversation, localMsgs.messages, messageQueue]);
 
   const messageQueue = useMessageQueue(processQueuedMessage);
 
