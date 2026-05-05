@@ -186,7 +186,7 @@ export function ConversationItem({
               className="flex-shrink-0 flex items-center mr-1"
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleSelection?.(conversation.contact.id);
+                onToggleSelection?.(contactId);
               }}
             >
               <input 
@@ -200,11 +200,11 @@ export function ConversationItem({
 
           <div className="flex items-start gap-2 relative z-10 flex-1 min-w-0">
             <div className="relative flex-shrink-0 mt-0.5">
-              <ChannelBadge type={conversation.contact.contact_type} />
+              <ChannelBadge type={contact?.contact_type} />
               <Avatar className="w-[38px] h-[38px]">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                  {(conversation.contact.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                  {(contact?.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
@@ -213,7 +213,7 @@ export function ConversationItem({
                   <AvatarFallback className="bg-secondary text-secondary-foreground text-[7px] font-bold">{conversation.assignedTo.name[0]}</AvatarFallback>
                 </Avatar>
               ) : (
-                <span className={cn('absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-1 ring-sidebar', statusColors[conversation.status as keyof typeof statusColors] || 'bg-muted')} />
+                <span className={cn('absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-1 ring-sidebar', statusColors[status as keyof typeof statusColors] || 'bg-muted')} />
               )}
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
