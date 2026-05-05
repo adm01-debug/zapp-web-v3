@@ -384,35 +384,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             </div>
           )}
 
-          {/* Mic + Send (last) */}
+          {/* Send + Mic (last) — always glowing in primary/blue */}
           <div className="flex items-center gap-1.5 shrink-0 self-end mb-[1px]">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.button
-                  onClick={onRecordToggle}
-                  disabled={isSending || logic.hasText || logic.attachments.length > 0}
-                  whileHover={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 1.1 } : {}}
-                  whileTap={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 0.9 } : {}}
-                  className={cn(
-                    "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
-                    isRecordingAudio
-                      ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10"
-                      : (logic.hasText || logic.attachments.length > 0)
-                        ? "text-muted-foreground/20 cursor-not-allowed opacity-50"
-                        : "text-muted-foreground/60 hover:text-primary hover:bg-primary/5",
-                    logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
-                  )}
-                  aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
-                  aria-pressed={isRecordingAudio}
-                >
-                  <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
-                </motion.button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] font-medium">
-                {isRecordingAudio ? "Parar Gravação" : (logic.hasText || logic.attachments.length > 0) ? "Apague o texto para gravar" : "Gravar Áudio"}
-              </TooltipContent>
-            </Tooltip>
-
+            {/* SEND first */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <motion.button
@@ -422,9 +396,8 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   whileTap={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 0.9 } : {}}
                   className={cn(
                     "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
-                    (logic.hasText || logic.attachments.length > 0 || editingMessage)
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                      : "text-muted-foreground/20 cursor-not-allowed opacity-50",
+                    "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.55),0_0_36px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.7),0_0_48px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40",
+                    (isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) && "opacity-70 cursor-not-allowed",
                     logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
                   )}
                   aria-label="Enviar mensagem"
@@ -448,6 +421,33 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               </TooltipTrigger>
               <TooltipContent side="top" className="text-[10px] font-medium">
                 {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* MIC second */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button
+                  onClick={onRecordToggle}
+                  disabled={isSending || logic.hasText || logic.attachments.length > 0}
+                  whileHover={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 1.1 } : {}}
+                  whileTap={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 0.9 } : {}}
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
+                    isRecordingAudio
+                      ? "bg-rose-500 text-white hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-125 z-10 ring-2 ring-rose-400/60"
+                      : "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.55),0_0_36px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.7),0_0_48px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40",
+                    !isRecordingAudio && (isSending || logic.hasText || logic.attachments.length > 0) && "opacity-70 cursor-not-allowed",
+                    logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
+                  )}
+                  aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
+                  aria-pressed={isRecordingAudio}
+                >
+                  <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px] font-medium">
+                {isRecordingAudio ? "Parar Gravação" : (logic.hasText || logic.attachments.length > 0) ? "Apague o texto para gravar" : "Gravar Áudio"}
               </TooltipContent>
             </Tooltip>
           </div>
