@@ -90,12 +90,38 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         analyserRef.current = null;
         audioContextRef.current = null;
         setAudioLevel(0);
+
+        // Stop transcription
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
       };
       
       mediaRecorder.start(100);
       setIsRecording(true);
       setIsPaused(false);
       setDuration(0);
+      setTranscription('');
+
+      // Web Speech API for real-time transcription
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'pt-BR';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event: any) => {
+          let currentTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            currentTranscript += event.results[i][0].transcript;
+          }
+          setTranscription(prev => prev + ' ' + currentTranscript);
+        };
+        
+        recognition.start();
+        recognitionRef.current = recognition;
+      }
       
       intervalRef.current = setInterval(() => {
         setDuration((prev) => {
