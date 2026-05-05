@@ -146,12 +146,12 @@ export function EmailChatReplyBar({
 
   return (
     <div className={cn('border-t bg-background/80 backdrop-blur-md sticky bottom-0', className)}>
-      <div className="px-4 py-3 space-y-3">
+      <div className="px-5 py-4 space-y-4">
         {/* Header: Para + CC/BCC toggle */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="shrink-0 font-medium">Para:</span>
-            <span className="truncate">{toEmails.join(', ')}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="shrink-0 font-sans text-[10px] font-bold text-primary/60 uppercase tracking-widest">Para:</span>
+            <span className="font-sans text-[12px] font-semibold text-muted-foreground truncate">{toEmails.join(', ')}</span>
           </div>
           <button
             className="shrink-0 flex items-center gap-1 hover:text-foreground transition-colors"
@@ -187,12 +187,12 @@ export function EmailChatReplyBar({
         )}
 
         {/* Textarea */}
-        <div className="relative">
+        <div className="relative group/input bg-muted/20 rounded-2xl border border-border/5 p-4 transition-all duration-300 focus-within:bg-muted/30 focus-within:border-primary/20 focus-within:shadow-2xl focus-within:shadow-primary/5">
           <Textarea
             value={bodyHtml.replace(/<[^>]*>/g, '')}
             onChange={e => setBody(e.target.value)}
-            placeholder="Escreva sua resposta..."
-            className="min-h-[100px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-sm leading-relaxed"
+            placeholder="Escreva sua resposta comercial..."
+            className="min-h-[120px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-[14px] font-medium leading-relaxed font-sans placeholder:text-muted-foreground/30"
           />
         </div>
 
@@ -282,11 +282,11 @@ export function EmailChatReplyBar({
 
           <Button
             size="sm"
-            className="gap-2 h-9 px-5 rounded-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="gap-2.5 h-[42px] px-6 rounded-xl font-black uppercase tracking-widest bg-primary text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] hover:shadow-primary/30"
             onClick={handleSend}
             disabled={isSending}
           >
-            {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {isSending ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <Send className="h-4.5 w-4.5 fill-current" />}
             Enviar
           </Button>
         </div>
