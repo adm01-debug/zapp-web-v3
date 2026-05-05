@@ -28,7 +28,7 @@ import { validateEntityAccess, validateRpcAccess } from './sentinel';
 
 export function dbClient(entity: LogicalEntity): SupabaseClient {
   const mapping = ENTITY_MAP[entity];
-  const target = mapping.client === 'external' ? externalSupabase : supabase;
+  const target = (mapping.client as string) === 'external' ? externalSupabase : supabase;
   if (!target) {
     throw new Error(
       `[datasource] Cliente "${mapping.client}" para entidade "${entity}" não está configurado.`,
