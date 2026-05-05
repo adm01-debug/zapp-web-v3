@@ -6,16 +6,16 @@ import { getLogger } from '@/lib/logger';
 const log = getLogger('messageService');
 
 export const messageService = {
-  mapMessage(m: any): Message {
+  mapMessage(m: Record<string, any>): Message {
     return {
       ...m,
       id: m.id,
       conversationId: m.conversationId || m.contact_id,
       timestamp: new Date(m.created_at || m.timestamp),
       isEdited: !!m.is_edited,
-      type: m.message_type || m.type || 'text',
+      type: (m.message_type || m.type || 'text') as Message['type'],
       mediaUrl: m.media_url || m.mediaUrl,
-      sender: m.sender || (m.sender_id ? 'agent' : 'contact'),
+      sender: (m.sender || (m.sender_id ? 'agent' : 'contact')) as Message['sender'],
     } as Message;
   },
 

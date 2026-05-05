@@ -47,7 +47,7 @@ export function useRealtimeInbox() {
   const { sendMessage, markAsRead } = localRealtime;
   const { newMessageNotification, dismissNotification, setSelectedContact, setSoundEnabled } = localRealtime;
 
-  const [deliveryAlert, setDeliveryAlert] = useState<{ status: 'warning' | 'breached', delay: number } | null>(null);
+  const [deliveryAlert, setDeliveryAlert] = useState<{ status: 'warning' | 'breached', delay: number, message?: string } | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [selectedContactFallback, setSelectedContactFallback] = useState<ConversationContact | null>(null);
   const [showDetails, setShowDetails] = useState(true);
@@ -175,9 +175,9 @@ export function useRealtimeInbox() {
     window.addEventListener('open-contact-chat', handler);
 
     const deliveryHandler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { contactId: string; status: 'warning' | 'breached'; delay: number; message?: string };
-      if (detail.contactId === selectedContactId) {
-        setDeliveryAlert({ status: detail.status, delay: detail.delay, message: detail.message } as any);
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.contactId === selectedContactId) {
+        setDeliveryAlert({ status: detail.status, delay: detail.delay, message: detail.message });
       }
     };
     window.addEventListener('sla-delivery-alert', deliveryHandler);
@@ -227,11 +227,11 @@ export function useRealtimeInbox() {
     const updateStatus = async (status: string) => {
       setOnlineStatus(status);
       setIsOnline(status === 'online');
-      await (dbFrom('profiles') as any)
+      await supabase.from('profiles')
         .update({ 
-          online_status: status as any,
+          online_status: status as 'online' | 'offline' | 'busy',
           last_seen: new Date().toISOString()
-        } as any)
+        })
         .eq('id', profile.id);
     };
 
@@ -298,7 +298,7 @@ export function useRealtimeInbox() {
   }, [refetch, refetchSelectedMessages]);
 
   // Função interna que processa cada item da fila
-  const processQueuedMessage = useCallback(async (item: any) => {
+  const processQueuedMessage = useCallback(async (item: { contactId: string, content: string, attachments?: File[], onProgress?: (p: number) => void }) => {
     const { contactId, content, attachments, onProgress } = item;
 
     // Auto-assign on first reply if pending
