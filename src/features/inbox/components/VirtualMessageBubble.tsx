@@ -141,7 +141,7 @@ export const MessageBubble = memo(({
       </div>
     </motion.div>
   );
-}
+});
 
 function ActionButton({ icon, title, onClick }: { icon: React.ReactNode; title: string; onClick: () => void }) {
   return (
