@@ -355,9 +355,50 @@ export function useExternalConversations(enabled = true) {
       
       const conversations = buildExternalConversations(messages);
       
-      // ✨ Enrichment: tags/company/ai_sentiment já vêm via buildExternalConversations.
-      // RPC bulk `rpc_get_contacts` ainda não existe no FATOR X — enrichment opcional desabilitado.
-      // TODO: criar rpc_get_contacts(p_instance_name, p_remote_jids[]) no FATOR X para reabilitar.
+      // ✨ Enrichment: Fetch extra contact metadata (tags, company, ai_sentiment)
+      // from evolution_contacts via individual RPC calls for the sidebar list.
+      // Limit to first 20 to ensure performance.
+      const firstJids = Array.from(new Set(conversations.map(c => c.contact.id))).slice(0, 20);
+      if (firstJids.length > 0) {
+        try {
+          // Individual calls are safer as rpc_get_contacts (plural) is missing in FATOR X.
+          const enrichments = await Promise.all(
+            firstJids.map(jid => 
+              queryExternalProxy<any>({
+                action: 'rpc',
+                rpc: 'rpc_get_contact',
+                params: {
+                  p_remote_jid: jid,
+                  p_instance: DEFAULT_INSTANCE
+                }
+              }).catch(() => null)
+            )
+          );
+          
+          const contactMap = new Map();
+          enrichments.forEach(res => {
+            if (res?.data) {
+              contactMap.set(res.data.remote_jid, res.data);
+            }
+          });
+
+          conversations.forEach(conv => {
+            const extra = contactMap.get(conv.contact.id);
+            if (extra) {
+              if (extra.tags) conv.contact.tags = extra.tags;
+              if (extra.company) conv.contact.company = extra.company;
+                if (extra.ai_sentiment) conv.contact.ai_sentiment = extra.ai_sentiment;
+                // ✨ FIX: also update name if current is just phone and we found a real push_name
+                if (extra.push_name && (conv.contact.name === conv.contact.phone)) {
+                  conv.contact.name = extra.push_name;
+                  conv.contact.nickname = extra.push_name;
+                }
+            }
+          });
+        } catch (err) {
+          log.warn('Failed to enrich contacts in sidebar via individual RPCs', err);
+        }
+      }
 
 
       return conversations;
