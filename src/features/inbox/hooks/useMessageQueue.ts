@@ -185,8 +185,9 @@ export function useMessageQueue(
               // Observability: Telemetry for failures
               log.error(`[QUEUE_ERROR] id=${itemToProcess.id} contact=${contactId} attempt=${itemToProcess.retryCount} err=${errorMsg}`);
               
-              if (window.analytics) {
-                window.analytics.track('Message Queue Failure', {
+              const analytics = (window as any).analytics;
+              if (analytics) {
+                analytics.track('Message Queue Failure', {
                   messageId: itemToProcess.id,
                   contactId,
                   attempt: itemToProcess.retryCount,
