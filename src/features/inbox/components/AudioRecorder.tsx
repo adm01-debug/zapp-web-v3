@@ -483,7 +483,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                   <Button
                     size="icon"
                     className="bg-primary hover:bg-primary/90 shadow-md h-9 w-9 md:h-10 md:w-10"
-                    onClick={handleSend}
+                    onClick={handleSendAction}
                     aria-label="Confirmar e enviar áudio"
                   >
                     <CheckCircle2 className="w-5 h-5" />
