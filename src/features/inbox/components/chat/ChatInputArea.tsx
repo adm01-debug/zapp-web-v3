@@ -325,11 +325,12 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                       isRecordingAudio
                         ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10"
                         : (logic.hasText || logic.attachments.length > 0)
-                          ? "text-muted-foreground/20 cursor-not-allowed"
+                          ? "text-muted-foreground/20 cursor-not-allowed opacity-50"
                           : "text-muted-foreground/60 hover:text-primary hover:bg-primary/5",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
                     )}
-                    aria-label="Gravar áudio"
+                    aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
+                    aria-pressed={isRecordingAudio}
                   >
                     <Mic className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6", isRecordingAudio && "animate-pulse")} />
                   </motion.button>
@@ -355,26 +356,27 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                       logic.sendAnimation && "motion-safe:animate-bounce"
                     )}
                     aria-label={editingMessage ? "Confirmar edição" : "Enviar mensagem"}
+                    aria-busy={isSending}
                   >
                     <AnimatePresence mode="wait">
                       {isSending ? (
                         <motion.div key="loading" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Loader2 className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6", "animate-spin")} />
+                          <Loader2 className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6", "animate-spin")} aria-hidden="true" />
                         </motion.div>
                       ) : editingMessage ? (
                         <motion.div key="edit" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Check className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6")} />
+                          <Check className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6")} aria-hidden="true" />
                         </motion.div>
                       ) : (
                         <motion.div key="send" initial={{ opacity: 0, scale: 0.5, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.5, rotate: 20 }}>
-                          <Send className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6")} />
+                          <Send className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6")} aria-hidden="true" />
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </motion.button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[10px] font-medium">
-                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
+                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem (Enter)"}
                 </TooltipContent>
               </Tooltip>
             </div>
