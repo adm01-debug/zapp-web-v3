@@ -79,6 +79,10 @@ describe('useMessageQueue E2E & Persistence', () => {
     
     // Simulate reload
     unmount();
+    
+    // Explicitly clean document.body to avoid duplicate renders in the same test
+    document.body.innerHTML = '';
+    
     localStorage.setItem('chat_message_queue', JSON.stringify([{
       id: 'queue:saved-1',
       contactId: 'contact-1',
@@ -93,8 +97,7 @@ describe('useMessageQueue E2E & Persistence', () => {
     render(<QueueTestComponent processMessage={processMessage} contactId="contact-1" />);
     
     // Should have 1 item restored from localStorage
-    const lengths = screen.getAllByTestId('queue-length');
-    expect(lengths[lengths.length - 1].textContent).toBe('1');
-    expect(screen.getAllByText('failed').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('queue-length').textContent).toBe('1');
+    expect(screen.getByText('failed')).toBeDefined();
   });
 });
