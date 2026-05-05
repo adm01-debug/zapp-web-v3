@@ -59,7 +59,7 @@ export function VirtualizedConversationList({ conversations, selectedId, onSelec
         className={cn("p-5 border-b border-border/10 bg-sidebar/50 backdrop-blur-md sticky top-0 z-20", compactMode ? "space-y-3" : "space-y-5")}
       >
         <div className="flex items-center justify-between">
-          <h2 className={cn("font-display font-bold tracking-tight text-foreground/90", compactMode ? "text-lg" : "text-xl")}>
+          <h2 className={cn("font-display font-semibold tracking-normal text-foreground/90", compactMode ? "text-[14px]" : "text-[15px]")}>
             Conversas
           </h2>
           <div className="flex items-center gap-1">

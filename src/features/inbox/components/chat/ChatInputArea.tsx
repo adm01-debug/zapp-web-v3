@@ -279,7 +279,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Escreva sua mensagem..."}
               rows={1}
               className={cn(
-                "w-full bg-muted/30 hover:bg-muted/50 focus:bg-background border border-border/10 focus:border-primary/20 rounded-[24px] outline-none font-sans text-[14.5px] font-bold tracking-tight text-foreground shadow-sm",
+                "w-full bg-muted/30 hover:bg-muted/50 focus:bg-background border border-border/10 focus:border-primary/20 rounded-[24px] outline-none font-sans text-[15px] font-semibold tracking-normal text-foreground shadow-sm",
                 "placeholder:text-muted-foreground/30 placeholder:font-normal resize-none transition-all duration-500 ease-out",
                 "focus:ring-4 focus:ring-primary/5 focus:shadow-lg",
                 logic.isMobile ? "px-5 py-3.5 text-[16px] min-h-[48px] max-h-[160px]" : "px-5 py-[14px] min-h-[48px] max-h-[220px]",
