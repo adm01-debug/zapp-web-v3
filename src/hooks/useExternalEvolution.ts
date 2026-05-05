@@ -355,36 +355,9 @@ export function useExternalConversations(enabled = true) {
       
       const conversations = buildExternalConversations(messages);
       
-      // ✨ Enrichment: Fetch extra contact metadata (tags, company, ai_sentiment)
-      // from evolution_contacts via optimized RPC for the sidebar list.
-      const jids = Array.from(new Set(conversations.map(c => c.contact.id)));
-      if (jids.length > 0) {
-        try {
-          const contactsResult = await queryExternalProxy<any>({
-            action: 'rpc',
-            rpc: 'rpc_get_contacts',
-            params: {
-              p_remote_jids: jids,
-              p_instance_name: DEFAULT_INSTANCE
-            }
-          });
-          
-          if (contactsResult.data && contactsResult.data.length > 0) {
-            const contactMap = new Map(contactsResult.data.map((c: any) => [c.remote_jid, c]));
-            conversations.forEach(conv => {
-              const extra = contactMap.get(conv.contact.id);
-              if (extra) {
-                // Prioritize database metadata over message-derived fields
-                if (extra.tags) conv.contact.tags = extra.tags;
-                if (extra.company) conv.contact.company = extra.company;
-                if (extra.ai_sentiment) conv.contact.ai_sentiment = extra.ai_sentiment;
-              }
-            });
-          }
-        } catch (err) {
-          log.warn('Failed to enrich contacts in sidebar via RPC', err);
-        }
-      }
+      // ✨ Enrichment: tags/company/ai_sentiment já vêm via buildExternalConversations.
+      // RPC bulk `rpc_get_contacts` ainda não existe no FATOR X — enrichment opcional desabilitado.
+      // TODO: criar rpc_get_contacts(p_instance_name, p_remote_jids[]) no FATOR X para reabilitar.
 
 
       return conversations;
