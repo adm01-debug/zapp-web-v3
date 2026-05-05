@@ -47,7 +47,7 @@ export function useRealtimeInbox() {
   const { sendMessage, markAsRead } = localRealtime;
   const { newMessageNotification, dismissNotification, setSelectedContact, setSoundEnabled } = localRealtime;
 
-  const [deliveryAlert, setDeliveryAlert] = useState<{ status: 'warning' | 'breached', delay: number } | null>(null);
+  const [deliveryAlert, setDeliveryAlert] = useState<{ status: 'warning' | 'breached', delay: number, message?: string } | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [selectedContactFallback, setSelectedContactFallback] = useState<ConversationContact | null>(null);
   const [showDetails, setShowDetails] = useState(true);
