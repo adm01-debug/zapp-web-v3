@@ -163,12 +163,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
           </Button>
         ),
       });
-      // Store current blob for undo
-      if (mediaRecorderRef?.current) {
-        // Since we don't have direct access to the current blob here easily without stopping
-        // we'll rely on a simple cancel if it's very short, or just cancel.
-        // For a more robust undo we'd need to stop and store.
-      }
+      // For a more robust undo we'd need to stop and store.
     }
     cancelRecording();
     onCancel();
