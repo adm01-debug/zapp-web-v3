@@ -130,7 +130,7 @@ export function ConversationItem({
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense' || forceCompact;
 
-  const StatusIcon = statusIcons[conversation.status];
+  const StatusIcon = statusIcons[conversation.status] || AlertCircle;
   const sentiment: SentimentLevel | null = conversation.sentiment ||
     (conversation.sentimentScore !== undefined ? getSentimentFromScore(conversation.sentimentScore) : null);
 
@@ -145,6 +145,9 @@ export function ConversationItem({
   const visibleTags = tags.slice(0, 2);
   const hiddenTagsCount = Math.max(0, tags.length - visibleTags.length);
   const hiddenTagsLabel = tags.slice(2).join(', ');
+  
+  const avatarUrl = conversation.contact.avatar || conversation.contact.avatar_url;
+  const displayDate = conversation.updatedAt || (conversation.lastMessage?.created_at ? new Date(conversation.lastMessage.created_at) : new Date());
 
   if (isCompactMode) {
     return (
@@ -158,18 +161,37 @@ export function ConversationItem({
           whileTap={{ scale: 0.98 }}
           transition={{ duration: 0.15 }}
           className={cn(
-            'relative p-2.5 rounded-lg cursor-pointer transition-all duration-200 mx-2 min-h-[64px]',
-            isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent'
+            'relative p-2.5 rounded-lg cursor-pointer transition-all duration-200 mx-2 min-h-[64px] flex items-center gap-2',
+            isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent',
+            isMultiSelected && 'bg-primary/15'
           )}
         >
           {isSelected && <motion.div layoutId="conversationActiveCompact" className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full bg-primary" />}
-          <div className="flex items-start gap-2 relative z-10">
+          
+          {selectionMode && (
+            <div
+              className="flex-shrink-0 flex items-center mr-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelection?.(conversation.contact.id);
+              }}
+            >
+              <input 
+                type="checkbox" 
+                checked={isMultiSelected} 
+                onChange={() => {}} 
+                className="w-3.5 h-3.5 rounded border-border text-primary focus:ring-primary/20" 
+              />
+            </div>
+          )}
+
+          <div className="flex items-start gap-2 relative z-10 flex-1 min-w-0">
             <div className="relative flex-shrink-0 mt-0.5">
               <ChannelBadge type={conversation.contact.contact_type} />
               <Avatar className="w-[38px] h-[38px]">
-                <AvatarImage src={conversation.contact.avatar} />
+                <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                  {(conversation.contact.name || 'C').split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                  {(conversation.contact.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
@@ -178,7 +200,7 @@ export function ConversationItem({
                   <AvatarFallback className="bg-secondary text-secondary-foreground text-[7px] font-bold">{conversation.assignedTo.name[0]}</AvatarFallback>
                 </Avatar>
               ) : (
-                <span className={cn('absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-1 ring-sidebar', statusColors[conversation.status])} />
+                <span className={cn('absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-1 ring-sidebar', statusColors[conversation.status as keyof typeof statusColors] || 'bg-muted')} />
               )}
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
