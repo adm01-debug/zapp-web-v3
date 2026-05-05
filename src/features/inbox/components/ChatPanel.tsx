@@ -364,11 +364,11 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
   const ambient = useAmbientColor(conversation.sentiment);
 
   return (
-    <div className={`flex h-full min-h-0 min-w-0 overflow-hidden relative bg-black`} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}>
+    <div className={`flex h-full min-h-0 min-w-0 overflow-hidden relative bg-[hsl(var(--background))]`} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}>
       <ChatDragOverlay isDraggingOver={isDraggingOver} />
       <CRMAutoSync conversation={conversation} messageCount={messages.length} messages={messages} />
 
-      <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden bg-black">
+      <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden bg-[hsl(var(--background))]">
         {!hideHeader && (
           <ChatPanelHeader
             conversation={conversation}
