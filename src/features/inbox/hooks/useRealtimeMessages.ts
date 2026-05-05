@@ -19,6 +19,10 @@ const SEEDED_CONTACT_LIMIT = 500;
 const RECENT_MESSAGES_LIMIT = 1000;
 const CONTACT_FETCH_CHUNK_SIZE = 200;
 
+const USE_MOCKS =
+  typeof window !== 'undefined' &&
+  window.localStorage?.getItem('mockConversations') === '1';
+
 export interface NewMessageNotification {
   id: string;
   contactId: string;
