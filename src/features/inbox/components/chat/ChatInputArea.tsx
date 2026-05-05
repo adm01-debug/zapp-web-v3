@@ -395,7 +395,16 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           </div>
 
             {/* Send + Mic (third and fourth) — always glowing in primary/blue */}
-            <div className="flex items-center gap-1.5 shrink-0 self-end mb-[1px]">
+            <div className="flex items-center gap-2 shrink-0 self-end mb-[1px]">
+              {isSending && !logic.isMobile && (
+                <motion.span
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-[10px] font-black uppercase tracking-tighter text-primary/60"
+                >
+                  Enviando...
+                </motion.span>
+              )}
               {/* SEND */}
               <Tooltip>
                 <TooltipTrigger asChild>
