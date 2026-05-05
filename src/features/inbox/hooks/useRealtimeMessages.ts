@@ -308,7 +308,16 @@ export function useRealtimeMessages() {
   void sendStateTick; // ensure dep tracked
 
   const filteredConversations = useMemo(() => {
-    let filtered = [...conversations];
+    let filtered = USE_MOCKS ? [] : [...conversations];
+    
+    if (USE_MOCKS) {
+       // Em modo mock, as conversas são injetadas via external client 
+       // ou poderiam ser injetadas aqui se não estivéssemos em USE_EXTERNAL_DB.
+       // Mas como o projeto usa FATOR X (external), o mock vai lá.
+       // Para segurança, se cairmos aqui, retornamos a lista original.
+       filtered = [...conversations];
+    }
+
 
     // 1. Search
     if (search) {
