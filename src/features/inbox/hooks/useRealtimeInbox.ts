@@ -303,9 +303,15 @@ export function useRealtimeInbox() {
 
     // Auto-assign on first reply if pending
     try {
-      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', contactId).maybeSingle();
+      const { data: conv } = await dbFrom('team_conversations')
+        .select('id, routing_status')
+        .eq('id', contactId)
+        .maybeSingle();
+        
       if (conv && conv.routing_status === 'pending') {
-        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', contactId);
+        await dbFrom('team_conversations')
+          .update({ routing_status: 'assigned' })
+          .eq('id', contactId);
       }
     } catch (err) {
       log.error('Error auto-assigning on reply:', err);
