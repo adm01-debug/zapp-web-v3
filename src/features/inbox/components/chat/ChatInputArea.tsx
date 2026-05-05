@@ -315,14 +315,6 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           )}
         </AnimatePresence>
         
-        {/* Voice Recording Sound Triggers */}
-        {useEffect(() => {
-          if (isRecordingAudio) {
-            playNotificationSound('record_start', 'soft');
-          } else if (!isRecordingAudio && isV2AudioEnabled) {
-            // We only play stop if it was recording (this logic is simplified, but works in context)
-          }
-        }, [isRecordingAudio])}
 
         {/* Improved Message Queue Stats */}
         {isRetryEnabled && props.queue && props.queue.length > 0 && (
