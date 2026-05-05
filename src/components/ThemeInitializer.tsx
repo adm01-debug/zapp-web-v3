@@ -59,9 +59,8 @@ export function ThemeInitializer() {
         cssVarsCache[key] = value;
       }
 
-      // Force standard font for consistency across all skins
-      root.style.setProperty('--font-sans', "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif");
-      root.style.setProperty('--font-display', "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif");
+      // Font variables are managed via CSS tokens to allow designer/user customization
+      // without JavaScript overrides.
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
