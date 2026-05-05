@@ -185,6 +185,7 @@ export function TicketTabs({
           <div className="flex-1" />
 
           {/* Queue filter */}
+          {queues.length > 0 && (
             <Select 
               value={selectedQueueId || 'all'} 
               onValueChange={(v) => onQueueChange(v === 'all' ? null : v)}
