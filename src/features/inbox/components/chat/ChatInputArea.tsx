@@ -228,39 +228,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             </motion.div>
         )}
 
-        <div className="flex items-end gap-[5px]" role="toolbar" aria-label="Barra de mensagem">
-          <div className="flex items-center">
-            <Popover>
-              <PopoverTrigger asChild>
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  className={cn(
-                    "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] hover:bg-transparent shrink-0 transition-all rounded-full outline-none", 
-                    logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]"
-                  )}
-                  aria-label="Mais opções de mensagem"
-                >
-                  <Plus className="w-6 h-6" />
-                </motion.button>
-              </PopoverTrigger>
-              <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-300" align="start" side="top">{tertiaryTools}</PopoverContent>
-            </Popover>
-
-            {!logic.isMobile && (
-              <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
-                showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
-                isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
-                onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
-                fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
-                contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
-                onFileSelect={logic.handleFileSelect}
-                isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
-              />
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0 relative">
+        <div className="flex flex-col gap-2" role="toolbar" aria-label="Barra de mensagem">
+          {/* ROW 1: Textarea (campo de digitar mensagem em cima) */}
+          <div className="min-w-0 relative w-full">
             <MentionAutocomplete inputValue={inputValue} cursorPosition={mentionCursorPos} onSelect={handleMentionSelect} onClose={closeMention} isOpen={mentionOpen} />
 
             <AnimatePresence>
