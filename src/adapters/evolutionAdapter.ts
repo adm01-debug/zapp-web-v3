@@ -188,6 +188,8 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
         lastMessageDirection: msg.direction,
         instanceName: msg.instance_name,
         tags: msg.tags,
+        company: null, // Mensagens não costumam ter company, vem via RPC
+        ai_sentiment: msg.sentiment,
       });
     } else {
       existing.messageCount++;
@@ -196,6 +198,19 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
       if (!existing.pushName && safePushName) {
         existing.pushName = safePushName;
       }
+      
+      // Atualiza sentiment se a mensagem for mais recente e tiver um
+      if (msg.sentiment && new Date(msg.created_at) >= new Date(existing.lastMessageAt)) {
+        existing.ai_sentiment = msg.sentiment;
+      }
+
+      // Merge tags (union)
+      if (msg.tags && Array.isArray(msg.tags)) {
+        const currentTags = new Set(existing.tags || []);
+        msg.tags.forEach(t => currentTags.add(t));
+        existing.tags = Array.from(currentTags);
+      }
+
       if (new Date(msg.created_at) > new Date(existing.lastMessageAt)) {
         existing.lastMessageAt = msg.created_at;
         existing.lastMessageContent = msg.content || msg.caption;
