@@ -29,86 +29,101 @@ type FeatureFlag =
   | 'advanced_transcription'
   | 'message_queue_retry';
 
-const DEFAULTS: Record<FeatureFlag, boolean> = {
-  ai_agents: true,
-  sla_siren: true,
-  semantic_search: true,
-  voip_sip: true,
-  email_channel: true,
-  instagram_channel: true,
-  telegram_channel: true,
-  csat_surveys: true,
-  media_library: true,
-  talk_x: true,
-  optimistic_messages: true,
-  auto_retry_failed: true,
-  whisper_mode: true,
-  dark_mode: true,
-  v2_audio_recorder: false, // Início desligado para rollout seguro
-  advanced_transcription: false,
-  message_queue_retry: true,
-};
-
-let flagCache: Record<string, boolean> | null = null;
-let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-/**
- * Check if a feature is enabled for a specific user/agent.
- * Support percentage-based rollout or specific agent targeting.
- */
-export function isFeatureEnabled(flag: FeatureFlag, context?: { userId?: string, tenantId?: string }): boolean {
-  if (flagCache && Date.now() - cacheTimestamp < CACHE_TTL) {
-    const val = flagCache[flag];
-    if (typeof val === 'boolean') return val;
-    
-    // If it's a percentage or object (future proofing)
-    if (typeof val === 'number') {
-      if (!context?.userId) return false;
-      // Simple hash to determine if user falls into percentage
-      const hash = context.userId.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
-      return Math.abs(hash % 100) < val;
-    }
-  }
-  return DEFAULTS[flag];
+interface FeatureConfig {
+  enabled: boolean;
+  percentage?: number; // 0-100
+  segments?: string[]; // user IDs or tenant IDs
+  killSwitch?: boolean;
 }
 
-/**
- * Load feature flags from Supabase.
- * Call once on app init and periodically to refresh.
- */
+const DEFAULTS: Record<FeatureFlag, FeatureConfig> = {
+  ai_agents: { enabled: true },
+  sla_siren: { enabled: true },
+  semantic_search: { enabled: true },
+  voip_sip: { enabled: true },
+  email_channel: { enabled: true },
+  instagram_channel: { enabled: true },
+  telegram_channel: { enabled: true },
+  csat_surveys: { enabled: true },
+  media_library: { enabled: true },
+  talk_x: { enabled: true },
+  optimistic_messages: { enabled: true },
+  auto_retry_failed: { enabled: true },
+  whisper_mode: { enabled: true },
+  dark_mode: { enabled: true },
+  v2_audio_recorder: { enabled: false, percentage: 0 },
+  advanced_transcription: { enabled: false },
+  message_queue_retry: { enabled: true },
+};
+
+let flagCache: Record<string, FeatureConfig> | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 1 * 60 * 1000; // Reduce TTL to 1 minute for better control
+
+export function isFeatureEnabled(flag: FeatureFlag, context?: { userId?: string, tenantId?: string }): boolean {
+  const config = flagCache?.[flag] || DEFAULTS[flag];
+  
+  if (config.killSwitch) return false;
+  if (!config.enabled) return false;
+
+  // Segment-based check
+  if (config.segments && config.segments.length > 0) {
+    if (context?.userId && config.segments.includes(context.userId)) return true;
+    if (context?.tenantId && config.segments.includes(context.tenantId)) return true;
+    // If segments are defined and user/tenant doesn't match, it's disabled for them
+    return false;
+  }
+
+  // Percentage-based check
+  if (typeof config.percentage === 'number') {
+    if (!context?.userId) return false;
+    const hash = context.userId.split('').reduce((a, b) => { 
+      a = ((a << 5) - a) + b.charCodeAt(0); 
+      return a & a; 
+    }, 0);
+    return Math.abs(hash % 100) < config.percentage;
+  }
+
+  return true;
+}
+
 export async function loadFeatureFlags(): Promise<void> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('app_settings')
       .select('key, value')
       .like('key', 'feature_%');
 
     if (error) throw error;
 
-    const flags: Record<string, boolean> = { ...DEFAULTS };
+    const flags: Record<string, FeatureConfig> = { ...DEFAULTS };
     if (data) {
       for (const row of data) {
-        const flagName = row.key.replace('feature_', '');
-        flags[flagName] = row.value === 'true' || row.value === true;
+        const flagName = row.key.replace('feature_', '') as FeatureFlag;
+        try {
+          // Parse value if it's JSON string, or use as boolean if it's simple
+          const parsed = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+          
+          if (typeof parsed === 'boolean') {
+            flags[flagName] = { ...flags[flagName], enabled: parsed };
+          } else if (typeof parsed === 'object' && parsed !== null) {
+            flags[flagName] = { ...flags[flagName], ...parsed };
+          }
+        } catch (e) {
+          // Fallback to boolean if JSON parse fails
+          flags[flagName] = { ...flags[flagName], enabled: row.value === 'true' || row.value === true };
+        }
       }
     }
 
     flagCache = flags;
     cacheTimestamp = Date.now();
-    log.info('[FeatureFlags] Loaded', Object.keys(flags).length, 'flags');
+    log.info('[FeatureFlags] Sync complete', Object.keys(flags).length, 'flags active');
   } catch (err) {
-    log.warn('[FeatureFlags] Failed to load, using defaults:', err);
-    // Keep using defaults or stale cache
+    log.warn('[FeatureFlags] Load failed, using safety defaults', err);
   }
 }
 
-/**
- * Get all flags for debugging / admin panel.
- */
-export function getAllFlags(): Record<FeatureFlag, boolean> {
-  if (flagCache) {
-    return { ...DEFAULTS, ...flagCache } as Record<FeatureFlag, boolean>;
-  }
-  return { ...DEFAULTS };
+export function getAllFlags(): Record<string, FeatureConfig> {
+  return flagCache || DEFAULTS;
 }

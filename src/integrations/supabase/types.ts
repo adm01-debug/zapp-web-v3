@@ -5850,6 +5850,45 @@ export type Database = {
           },
         ]
       }
+      message_retry_queue: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          id: string
+          last_error: string | null
+          max_attempts: number | null
+          message_id: string
+          next_retry_at: string | null
+          payload: Json | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          last_error?: string | null
+          max_attempts?: number | null
+          message_id: string
+          next_retry_at?: string | null
+          payload?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          last_error?: string | null
+          max_attempts?: number | null
+          message_id?: string
+          next_retry_at?: string | null
+          payload?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       message_templates: {
         Row: {
           category: string | null
