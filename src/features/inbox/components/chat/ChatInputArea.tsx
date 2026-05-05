@@ -303,6 +303,25 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           )}
         </AnimatePresence>
 
+        {/* Improved Message Queue Stats */}
+        {isRetryEnabled && props.queue && props.queue.length > 0 && (
+          <div className="flex items-center justify-between px-2 py-1 bg-muted/20 rounded-lg border border-border/50 mb-2">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sincronização Ativa</span>
+              </div>
+              <div className="h-3 w-px bg-border mx-1" />
+              <span className="text-[10px] font-medium text-muted-foreground">
+                {props.queue.length} {props.queue.length === 1 ? 'mensagem pendente' : 'mensagens pendentes'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-[10px] font-bold text-success uppercase tracking-widest">
+              <Check className="w-3 h-3" /> Online
+            </div>
+          </div>
+        )}
+
         <SlashCommands inputValue={inputValue} onSelectCommand={onSlashCommand} onClose={onCloseSlashCommands} isOpen={showSlashCommands} />
 
         {typingNotification && (

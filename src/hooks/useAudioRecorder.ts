@@ -80,10 +80,33 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         }
       };
       
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
+        
+        // Finalize local transcription if active
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
+
+        // If local transcription is empty and we had issues, try backend STT
+        if (transcription.trim() === '' && audioBlob.size > 1000) {
+          try {
+            setIsTranscribing(true);
+            const { data, error } = await supabase.functions.invoke('speech-to-text', {
+              body: { audio: await blobToBase64(audioBlob) }
+            });
+            if (data?.text) {
+              setTranscription(data.text);
+            }
+          } catch (err) {
+            log.error('Backend STT failed:', err);
+          } finally {
+            setIsTranscribing(false);
+          }
+        }
+
         onRecordingComplete?.(audioBlob, url);
         
         // Clean up analyzer
@@ -92,11 +115,6 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         analyserRef.current = null;
         audioContextRef.current = null;
         setAudioLevel(0);
-
-        // Stop transcription
-        if (recognitionRef.current) {
-          recognitionRef.current.stop();
-        }
       };
       
       mediaRecorder.start(100);
@@ -107,7 +125,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         setTranscription('');
       }
 
-      // Web Speech API for real-time transcription
+      // Enhanced Transcription with Backend Fallback Support
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
@@ -116,15 +134,31 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         recognition.interimResults = true;
         
         recognition.onresult = (event: any) => {
-          let currentTranscript = '';
+          let interimTranscript = '';
           for (let i = event.resultIndex; i < event.results.length; i++) {
-            currentTranscript += event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              setTranscription(prev => (prev + ' ' + event.results[i][0].transcript).trim());
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
           }
-          setTranscription(prev => prev + ' ' + currentTranscript);
+        };
+
+        recognition.onerror = async (event: any) => {
+          log.warn('Speech recognition error:', event.error);
+          if (event.error === 'no-speech') return;
+          
+          if (event.error === 'network' || event.error === 'service-not-allowed') {
+            setIsTranscribing(true); // Indicate background processing
+            // When stopping, we'll trigger the backend STT if local failed
+          }
         };
         
         recognition.start();
         recognitionRef.current = recognition;
+      } else {
+        log.warn('Web Speech API not supported. Background STT will be used after recording.');
+        setIsTranscribing(true);
       }
       
       intervalRef.current = setInterval(() => {
@@ -269,4 +303,16 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     uploadAudio,
     formatDuration,
   };
+}
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      resolve(base64String.split(',')[1]); // Remove data:audio/webm;base64,
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }

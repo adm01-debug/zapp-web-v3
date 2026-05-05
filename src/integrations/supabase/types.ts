@@ -12963,6 +12963,16 @@ export type Database = {
           title: string
         }[]
       }
+      send_message_v2: {
+        Args: {
+          p_content: string
+          p_media_mimetype?: string
+          p_media_url?: string
+          p_message_type: string
+          p_remote_jid: string
+        }
+        Returns: Json
+      }
       skill_based_assign: { Args: { p_queue_id: string }; Returns: string }
       unpause_instance: { Args: { p_instance: string }; Returns: number }
       update_own_profile: {
