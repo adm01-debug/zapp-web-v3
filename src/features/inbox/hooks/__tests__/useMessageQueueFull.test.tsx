@@ -53,40 +53,42 @@ describe('useMessageQueue', () => {
   });
 
   it('should reset progress on retry', async () => {
-    // Processamento que falha imediatamente
-    const processMessage = vi.fn().mockRejectedValue(new Error('Fail'));
+    // Para testar o estado 'pending', precisamos de um delay controlado no processamento
+    const processMessage = vi.fn().mockImplementation(() => new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Fail')), 50);
+    }));
+    
     const { result } = renderHook(() => useMessageQueue(processMessage));
 
     act(() => {
       result.current.addToQueue('contact-1', 'Retry me');
     });
 
-    // Aguarda processamento e as 2 tentativas automáticas
+    // Avança o tempo para falhar as 3 tentativas (original + 2 retries)
+    // Cada uma leva 50ms + 100ms debounce
     await act(async () => {
-      vi.runAllTimers();
+      vi.advanceTimersByTime(1000);
     });
 
-    // Deve estar em estado de falha após esgotar tentativas
     expect(result.current.queue[0].status).toBe('failed');
 
-    // Simula progresso que ficou "preso"
     act(() => {
       result.current.updateProgress(result.current.queue[0].id, 50);
     });
     expect(result.current.queue[0].progress).toBe(50);
 
-    // No retry, o status deve ir para pending e o progresso para 0
-    // Usamos act para garantir que o estado reflete o pending antes que o useEffect dispare o processamento
+    // Agora o ponto crítico: retry deve mudar para pending IMEDIATAMENTE
     act(() => {
       result.current.retryMessage(result.current.queue[0].id);
     });
 
+    // IMPORTANTE: Não avançamos timers aqui ainda, queremos ver o estado síncrono da alteração
     expect(result.current.queue[0].status).toBe('pending');
     expect(result.current.queue[0].progress).toBe(0);
     
-    // Agora limpamos os timers pendentes do novo processamento que o retry disparou
+    // Agora podemos limpar os timers para não vazar para outros testes
     await act(async () => {
-      vi.runAllTimers();
+      vi.runOnlyPendingTimers();
     });
   });
 
