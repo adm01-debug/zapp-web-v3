@@ -144,7 +144,7 @@ describe('ChatInputArea — Interaction Scenarios', () => {
     expect(recordingMic.className).toContain('bg-rose-500');
   });
 
-  it('Scenario 5: Send button visual state', () => {
+  it('Scenario 5: Send button visual state and functionality', () => {
     const { rerender } = render(
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
@@ -155,6 +155,8 @@ describe('ChatInputArea — Interaction Scenarios', () => {
 
     const sendButton = screen.getByLabelText(/enviar mensagem/i);
     expect(sendButton.className).toContain('bg-muted');
+    // Button should NOT be disabled because it can now trigger file picker
+    expect(sendButton.hasAttribute('disabled')).toBe(false);
 
     rerender(
       <QueryClientProvider client={queryClient}>

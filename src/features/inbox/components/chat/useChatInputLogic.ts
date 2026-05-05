@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { validateFile } from '@/utils/whatsappFileTypes';
 import { toast } from '@/hooks/use-toast';
+import { FileUploaderRef } from '@/features/inbox/components/FileUploader';
 
 const DRAFT_KEY_PREFIX = 'chat_draft_';
 const CHAR_LIMIT = 4096;
@@ -18,7 +19,7 @@ interface UseChatInputLogicParams {
   contactId: string;
   editingMessage: { content: string } | null | undefined;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
-  fileUploaderRef: React.RefObject<{ handleExternalFiles: (files: File[]) => void } | null>;
+  fileUploaderRef: React.RefObject<FileUploaderRef | null>;
   onSend: (attachments?: File[]) => void;
   onPasteFiles?: (files: File[]) => void;
 }
@@ -129,8 +130,9 @@ export function useChatInputLogic({
 
   // Send with animation
   const handleSendWithAnimation = useCallback(async () => {
-    // If no text/attachments and not editing, we handle mic record toggle
+    // If no text/attachments and not editing, we handle mic record toggle or trigger file picker
     if (!hasText && attachments.length === 0 && !editingMessage) {
+      fileUploaderRef.current?.triggerFilePicker();
       return; 
     }
 
@@ -158,7 +160,7 @@ export function useChatInputLogic({
       setIsSendingFiles(false);
       setTimeout(() => setSendAnimation(false), 400);
     }
-  }, [hasText, attachments, isOverLimit, isSendingFiles, contactId, isMobile, onSend, editingMessage]);
+  }, [hasText, attachments, isOverLimit, isSendingFiles, contactId, isMobile, onSend, editingMessage, fileUploaderRef]);
 
   return {
     showRichToolbar, setShowRichToolbar,

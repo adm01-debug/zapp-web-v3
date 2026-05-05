@@ -35,6 +35,7 @@ interface FileUploaderProps {
 export interface FileUploaderRef {
   handleExternalFile: (file: File) => void;
   handleExternalFiles: (files: File[]) => void;
+  triggerFilePicker: () => void;
 }
 
 function getCategoryIcon(category: string) {
@@ -98,6 +99,7 @@ export const FileUploader = forwardRef<FileUploaderRef, FileUploaderProps>(({
   useImperativeHandle(ref, () => ({
     handleExternalFile: logic.handleExternalFile,
     handleExternalFiles: logic.handleExternalFiles,
+    triggerFilePicker: () => logic.fileInputRef.current?.click(),
   }));
 
   return (
