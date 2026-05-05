@@ -149,11 +149,14 @@ export function ConversationList({
         ) : filteredConversations.length === 0 ? (
           <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-muted/30">
-                <Search className="w-7 h-7 text-muted-foreground/50" />
+              <div className={cn(
+                "rounded-full flex items-center justify-center mx-auto bg-muted/30",
+                isCompactMode ? "w-12 h-12 mb-3" : "w-16 h-16 mb-4"
+              )}>
+                <Search className={cn("text-muted-foreground/50", isCompactMode ? "w-5 h-5" : "w-7 h-7")} />
               </div>
-              <h3 className="font-semibold text-foreground mb-1">Nenhuma conversa</h3>
-              <p className="text-sm text-muted-foreground max-w-[200px]">
+              <h3 className={cn("font-semibold text-foreground mb-1", isCompactMode ? "text-[13px]" : "text-base")}>Nenhuma conversa</h3>
+              <p className={cn("text-muted-foreground max-w-[200px] mx-auto", isCompactMode ? "text-[11px]" : "text-sm")}>
                 {search ? 'Nenhum resultado para sua busca' : 'Suas conversas aparecerão aqui'}
               </p>
             </div>
