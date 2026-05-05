@@ -55,6 +55,7 @@ export function ChatPanelHeader({
   onToggleAIAssistant, onToggleDetails, onOpenSearch, onOpenTransfer, onOpenSchedule,
   onBack, onGenerateSummary, isSummaryLoading, onCloseConversation, activeTool, onSetActiveTool,
   sendState = 'idle', failuresOnly, onToggleFailuresOnly, failuresCount,
+  onOpenValidation,
 }: ChatPanelHeaderProps) {
   const isMobile = useIsMobile();
   const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
