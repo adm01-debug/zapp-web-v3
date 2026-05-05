@@ -368,6 +368,16 @@ export const RPC = {
     name: 'rpc_log_service_event',
     client: 'lovable',
   }),
+  send_message_v2: def<{
+    p_remote_jid: string;
+    p_content: string;
+    p_message_type: string;
+    p_media_url?: string;
+    p_media_mimetype?: string;
+  }, { success: boolean; message: string }>({
+    name: 'send_message_v2',
+    client: 'lovable',
+  }),
 } as const;
 
 type TEXT = string;

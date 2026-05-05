@@ -1,5 +1,6 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { dbInsert } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { log } from '@/lib/logger';
 import { eventBus } from '@/lib/eventBus';
 
@@ -72,9 +73,8 @@ class MessageQueue {
         msg.status = 'sending';
         this.saveToStorage();
 
-        // Simulate sending via Supabase RPC or direct call
-        // In a real scenario, this calls the evolution API or similar
-        const { error } = await supabase.rpc('send_message_v2', {
+        // Using the typed RPC catalog
+        const { error } = await dbInsert(RPC.send_message_v2, {
           p_remote_jid: msg.remote_jid,
           p_content: msg.content,
           p_message_type: msg.message_type,
