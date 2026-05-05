@@ -39,7 +39,8 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
     ));
   };
 
-  const progress = Math.round((items.filter(i => i.isApproved).length / items.length) * 100);
+  const approvedCount = items.filter(i => i.isApproved).length;
+  const progress = Math.round((approvedCount / items.length) * 100);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
