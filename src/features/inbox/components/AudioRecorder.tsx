@@ -282,29 +282,34 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
       </div>
 
       {/* Stop/Send controls */}
-      {isRecording ? (
+      {isRecording || isPaused ? (
         <div className="flex items-center gap-2">
-          {!isLocked && isMobile && (
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} whileTap={{ scale: 0.9 }}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-primary"
-                onClick={handleLock}
-                aria-label="Travar gravação"
-              >
-                <Lock className="w-4 h-4" />
-              </Button>
-            </motion.div>
-          )}
+          {/* Pause/Resume Toggle */}
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <Button
+              variant="outline"
+              size="icon"
+              className={cn(
+                "h-9 w-9 border-2",
+                isPaused 
+                  ? "border-amber-500 text-amber-500 hover:bg-amber-50" 
+                  : "border-rose-500 text-rose-500 hover:bg-rose-50"
+              )}
+              onClick={isPaused ? resumeRecording : pauseRecording}
+              aria-label={isPaused ? "Retomar gravação" : "Pausar gravação"}
+            >
+              {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
+            </Button>
+          </motion.div>
+
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
               size="icon"
-              className="bg-destructive hover:bg-destructive/90 shadow-sm"
+              className="bg-rose-600 hover:bg-rose-700 shadow-md h-9 w-9"
               onClick={stopRecording}
-              aria-label="Parar gravação"
+              aria-label="Concluir gravação"
             >
-              <Square className="w-4 h-4" />
+              <Square className="w-4 h-4 fill-white" />
             </Button>
           </motion.div>
         </div>
