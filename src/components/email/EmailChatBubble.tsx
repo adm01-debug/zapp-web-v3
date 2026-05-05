@@ -150,11 +150,10 @@ export function EmailChatBubble({
           </Avatar>
         </motion.div>
 
-        {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className={cn('font-sans text-[14px] truncate tracking-tight transition-colors', !isRead ? 'font-bold text-foreground' : 'font-semibold text-muted-foreground group-hover/header:text-foreground/80')}>
+              <span className={cn('font-sans text-[15px] truncate tracking-tight transition-colors', !isRead ? 'font-bold text-foreground' : 'font-semibold text-muted-foreground group-hover/header:text-foreground/80')}>
                 {message.from_name || message.from_email || '?'}
               </span>
               {!isRead && <Badge className="text-[9px] h-4.5 px-2 font-black uppercase tracking-widest border-0 bg-primary text-primary-foreground shadow-sm">Novo</Badge>}
