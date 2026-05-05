@@ -228,6 +228,12 @@ export function useRealtimeInbox() {
     const updateStatus = async (status: string) => {
       setOnlineStatus(status);
       setIsOnline(status === 'online');
+      
+      const now = Date.now();
+      const lastUpdate = (window as any).__lastStatusUpdate || 0;
+      if (now - lastUpdate < 30000 && status !== 'offline') return;
+      (window as any).__lastStatusUpdate = now;
+
       await supabase.from('profiles')
         .update({ 
           online_status: status as 'online' | 'offline' | 'busy',
@@ -276,9 +282,15 @@ export function useRealtimeInbox() {
     setSelectedContactId(contactId);
     setSelectedContact(contactId);
     setDeliveryAlert(null); // Reset alert when changing conversation
-    // No modo externo, ids são remote_jid (string) — markAsRead local
-    // espera UUID e dispararia erro 22P02. Pulamos.
-    if (!USE_EXTERNAL_DB) markAsRead(contactId);
+    
+    // Marcar como lido agora funciona tanto em modo local quanto externo
+    if (USE_EXTERNAL_DB) {
+      void supabase.functions.invoke('evolution-api', {
+        body: { action: 'read-messages', instanceName: 'wpp2', remoteJid: contactId }
+      });
+    } else {
+      markAsRead(contactId);
+    }
   }, [setSelectedContact, markAsRead]);
 
   const handleNotificationView = useCallback(() => {
@@ -528,7 +540,15 @@ export function useRealtimeInbox() {
     handleSendAudio,
     refetch,
     setSelectedContact,
-    markAsRead: USE_EXTERNAL_DB ? (() => { /* noop em modo externo */ }) : markAsRead,
+    markAsRead: USE_EXTERNAL_DB ? (async (contactId: string) => {
+      try {
+        await supabase.functions.invoke('evolution-api', {
+          body: { action: 'read-messages', instanceName: 'wpp2', remoteJid: contactId }
+        });
+      } catch (err) {
+        log.error('Failed to mark external messages as read:', err);
+      }
+    }) : markAsRead,
     // Pagination
     loadOlderMessages,
     cancelLoadOlderMessages,

@@ -18,7 +18,9 @@ interface SLAAlertParams {
   awaitingMs: number | null;
   resolutionDurationMs: number | null;
   /** Optional delivery delay context */
+  deliveryDelayStatus?: SLAStatus | null;
   deliveryDelayMs?: number | null;
+  customMessage?: string | null;
   /** Optional callback wired to the toast's "Abrir conversa" action button. */
   onOpenConversation?: () => void;
 }
@@ -123,7 +125,7 @@ export function useSLAAlerts(params: SLAAlertParams) {
   const firedRef = useRef<Set<string>>(new Set());
   const inflightRef = useRef<Set<string>>(new Set());
   const { preferences } = useSLAAlertPreferences();
-  const [deliveryStatus, setDeliveryStatus] = (params as any).deliveryDelayStatus ? [(params as any).deliveryDelayStatus, (params as any).deliveryDelayMs] : [null, null];
+  // Removed redundant assignment using direct params access
 
   useEffect(() => {
     if (params.scope === 'none' || !params.contactId) return;
@@ -170,7 +172,7 @@ export function useSLAAlerts(params: SLAAlertParams) {
           kind === 'first_response' ? '1ª resposta' : 
           kind === 'delivery_delay' ? 'Atraso na leitura' : 'Resolução';
         
-        const customMsg = (params as any).customMessage;
+        const customMsg = params.customMessage;
         const title = kind === 'delivery_delay' 
           ? `Mensagem não lida — ${params.contactName}`
           : `SLA ${isBreach ? 'violado' : 'em risco'} — ${params.contactName}`;
@@ -247,9 +249,9 @@ export function useSLAAlerts(params: SLAAlertParams) {
     if (params.resolutionStatus === 'warning' || params.resolutionStatus === 'breached') {
       void fire('resolution', params.resolutionStatus, params.resolutionDurationMs);
     }
-    const dStatus = (params as any).deliveryDelayStatus;
+    const dStatus = params.deliveryDelayStatus;
     if (dStatus === 'warning' || dStatus === 'breached') {
-      void fire('delivery_delay', dStatus, (params as any).deliveryDelayMs);
+      void fire('delivery_delay', dStatus, params.deliveryDelayMs ?? null);
     }
   }, [
     params.contactId,
