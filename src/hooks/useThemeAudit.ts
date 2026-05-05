@@ -3,15 +3,38 @@ import { useTheme } from '@/hooks/useTheme';
 import { STORAGE_KEY, DEFAULT_PRESET_ID, PRESETS } from '@/components/settings/theme/presets';
 
 /**
- * Validates that ThemeInitializer is behaving correctly regarding fonts.
- * Logs warnings to console if fonts are being forced inline when they shouldn't be.
+ * Hook para detecção automática de inconsistências visuais (cores fixas hardcoded)
+ * que violam o padrão "Preto OLED puro" (HSL 0 0% 0%).
+ * Agora também valida a integridade das fontes (Theme Safeguard).
  */
-export function useThemeAudit() {
+export const useThemeAudit = () => {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
-    // Wait for ThemeInitializer to finish its work
-    const timeout = setTimeout(() => {
+    // Audit logic
+    const runAudit = () => {
+      // 1. OLED Audit
+      const elements = document.querySelectorAll('*');
+      const oledViolations: string[] = [];
+      
+      elements.forEach((el) => {
+        const style = window.getComputedStyle(el);
+        const bg = style.backgroundColor;
+        
+        if (bg === 'rgb(31, 41, 55)' || bg === 'rgb(17, 24, 39)' || bg === 'rgb(9, 9, 11)') {
+          const path = getElementPath(el);
+          oledViolations.push(`[OLED Audit] Background inconsistente (${bg}) em: ${path}`);
+        }
+      });
+
+      if (oledViolations.length > 0) {
+        console.group('🔍 Relatório de Inconsistências OLED');
+        console.warn(`${oledViolations.length} elementos encontrados com cores de fundo não-OLED.`);
+        oledViolations.forEach(v => console.log(v));
+        console.groupEnd();
+      }
+
+      // 2. Font Safeguard Audit
       const root = document.documentElement;
       const inlineSans = root.style.getPropertyValue('--font-sans');
       const inlineDisplay = root.style.getPropertyValue('--font-display');
@@ -30,7 +53,7 @@ export function useThemeAudit() {
 
       if (!shouldHaveInlineFont && (inlineSans || inlineDisplay)) {
         console.warn(
-          `[ThemeAudit] ⚠️ Font leak detected! Inline fonts found (${inlineSans}) but preset "${presetId}" does not define one. This might override tokens.css.`
+          `[ThemeAudit] ⚠️ Font leak detected! Inline fonts found ("${inlineSans}") but preset "${presetId}" does not define one. This might override tokens.css.`
         );
       }
 
@@ -40,8 +63,23 @@ export function useThemeAudit() {
           `[ThemeAudit] ⚠️ Typography mismatch: --font-sans does not contain "Outfit". Current value: ${computedFont}`
         );
       }
-    }, 1000);
+    };
 
-    return () => clearTimeout(timeout);
+    // Delay audit to allow all initializers to run
+    const timer = setTimeout(runAudit, 2500);
+    return () => clearTimeout(timer);
   }, [resolvedTheme]);
+};
+
+function getElementPath(el: Element): string {
+  const path = [];
+  let current: Element | null = el;
+  while (current && current !== document.body) {
+    let name = current.tagName.toLowerCase();
+    if (current.id) name += `#${current.id}`;
+    if (current.className) name += `.${Array.from(current.classList).join('.')}`;
+    path.unshift(name);
+    current = current.parentElement;
+  }
+  return path.join(' > ');
 }
