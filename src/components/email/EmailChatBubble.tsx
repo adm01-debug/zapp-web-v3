@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { motion } from '@/components/ui/motion';
 import { type GmailMessage } from '@/hooks/gmail/gmailTypes';
 import { EmailAttachmentPreview } from './EmailAttachmentPreview';
 import { EmailSLABadge } from './EmailSLABadge';
