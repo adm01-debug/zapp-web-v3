@@ -7,8 +7,9 @@ import { cn } from '@/lib/utils';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { VoiceChanger } from './VoiceChanger';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { AudioVolumeControl } from './AudioVolumeControl';
 import { toast } from '@/hooks/use-toast';
+import { getLogger } from '@/lib/logger';
+const log = getLogger('AudioRecorder');
 
 interface AudioRecorderProps {
   onSend: (audioBlob: Blob) => void;
