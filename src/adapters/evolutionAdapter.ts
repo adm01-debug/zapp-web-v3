@@ -211,15 +211,15 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
  */
 export function derivedToConversationContact(dc: DerivedContact): ConversationContact {
   return {
-    id: dc.remoteJid, // Use jid as ID since evolution_contacts is empty
+    id: dc.remoteJid,
     name: dc.pushName || dc.phone,
     surname: null,
     nickname: dc.pushName,
     phone: dc.phone,
     email: null,
     avatar_url: dc.profilePictureUrl || null,
-    tags: null,
-    company: null,
+    tags: dc.tags || null,
+    company: dc.company || null,
     job_title: null,
     assigned_to: null,
     queue_id: null,
