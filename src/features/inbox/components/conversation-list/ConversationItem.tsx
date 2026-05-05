@@ -389,7 +389,7 @@ export function ConversationItem({
                   'text-sm font-semibold tracking-tighter transition-colors duration-200',
                   isSelected ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
                 )}>
-                  {(contact?.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  {(contact?.name && contact.name !== 'Você' ? contact.name : 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
