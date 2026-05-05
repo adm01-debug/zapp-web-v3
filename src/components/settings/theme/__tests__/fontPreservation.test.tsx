@@ -4,13 +4,19 @@ import { useThemePreset } from '../useThemePreset';
 import { DEFAULT_PRESET_ID, PRESETS } from '../presets';
 
 // Mock matchMedia
-window.matchMedia = window.matchMedia || function() {
-  return {
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
     matches: false,
-    addListener: function() {},
-    removeListener: function() {}
-  };
-};
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
 
 describe('Theme Font Preservation', () => {
   beforeEach(() => {
