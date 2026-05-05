@@ -29,6 +29,8 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const recognitionRef = useRef<any>(null);
+  const lastBlobRef = useRef<Blob | null>(null);
+  const lastTranscriptionRef = useRef<string>('');
 
   const startRecording = useCallback(async () => {
     try {
