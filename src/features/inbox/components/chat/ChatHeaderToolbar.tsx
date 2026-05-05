@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle, LayoutTemplate, ClipboardCheck } from 'lucide-react';
+import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle, LayoutTemplate, ClipboardCheck, BarChart3 } from 'lucide-react';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 
-export type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | 'templates' | null;
+export type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | 'templates' | 'monitoring' | null;
 
 interface ChatHeaderToolbarProps {
   activeTool?: ActiveTool;
@@ -108,6 +108,7 @@ export function ChatHeaderToolbar({
       {onToggleDetails && (
         <ToolButton icon={<Info className="w-[18px] h-[18px]" />} label="Detalhes do contato" active={showDetails} onClick={onToggleDetails} badge={!showDetails} />
       )}
+      <ToolButton icon={<BarChart3 className="w-[18px] h-[18px]" />} label="Métricas de Envio" active={activeTool === 'monitoring'} onClick={() => onSetActiveTool?.('monitoring')} />
       {onOpenValidation && (
         <ToolButton icon={<ClipboardCheck className="w-[18px] h-[18px]" />} label="Checklist de Validação 10/10" onClick={onOpenValidation} highlight />
       )}
