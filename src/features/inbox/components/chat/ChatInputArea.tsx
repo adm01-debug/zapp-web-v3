@@ -279,7 +279,23 @@ export function ChatInputArea(props: ChatInputAreaProps) {
       )}>
         <AnimatePresence>
           {isRecordingAudio && (
-            <div className="mb-4"><AudioRecorder onSend={onAudioSend} onCancel={onAudioCancel} /></div>
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="mb-4 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 shadow-lg shadow-rose-500/5 backdrop-blur-md"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
+                  <span className="text-xs font-bold text-rose-500 uppercase tracking-widest">Gravando Áudio</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20">
+                  <span className="text-[10px] font-mono font-bold text-rose-500">LIVE</span>
+                </div>
+              </div>
+              <AudioRecorder onSend={onAudioSend} onCancel={onAudioCancel} />
+            </motion.div>
           )}
         </AnimatePresence>
 
