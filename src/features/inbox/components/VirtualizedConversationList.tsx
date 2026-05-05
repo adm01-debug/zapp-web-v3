@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from '@/components/ui/motion';
 import { Search, Filter } from 'lucide-react';
 import { ConversationItem } from './conversation-list/ConversationItem';
+import { useDensity } from '@/hooks/useDensity';
 
 const ITEM_HEIGHT = 140;
 const COMPACT_ITEM_HEIGHT = 80;
