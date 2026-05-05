@@ -106,4 +106,50 @@ describe('Density Scaling', () => {
     const name = container.querySelector('.text-\\[14px\\]');
     expect(name).toBeTruthy();
   });
+
+  describe('ConversationList density', () => {
+    it('should scale headers and inputs in compact mode', () => {
+      (useDensity as any).mockReturnValue({ density: 'compact' });
+      
+      const { container } = render(
+        <ConversationList 
+          conversations={[mockConversation]} 
+          onSelect={() => {}} 
+        />,
+        { wrapper: Wrapper }
+      );
+      
+      // Check for compact header font size (text-[15px])
+      const header = container.querySelector('.text-\\[15px\\]');
+      expect(header).toBeTruthy();
+      
+      // Check for compact search input height (h-[30px])
+      const searchInput = container.querySelector('.h-\\[30px\\]');
+      expect(searchInput).toBeTruthy();
+      
+      // Check for compact tabs text size (text-[10px])
+      const tabTrigger = container.querySelector('.text-\\[10px\\]');
+      expect(tabTrigger).toBeTruthy();
+    });
+
+    it('should scale empty state in compact mode', () => {
+      (useDensity as any).mockReturnValue({ density: 'compact' });
+      
+      const { container } = render(
+        <ConversationList 
+          conversations={[]} 
+          onSelect={() => {}} 
+        />,
+        { wrapper: Wrapper }
+      );
+      
+      // Check for compact empty state icon wrapper (w-12 h-12)
+      const iconWrapper = container.querySelector('.w-12.h-12');
+      expect(iconWrapper).toBeTruthy();
+      
+      // Check for compact empty state title (text-[13px])
+      const emptyTitle = container.querySelector('.text-\\[13px\\]');
+      expect(emptyTitle).toBeTruthy();
+    });
+  });
 });
