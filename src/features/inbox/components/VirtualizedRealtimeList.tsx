@@ -2,6 +2,11 @@ import { useRef, useState, useCallback, useMemo, forwardRef, memo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ConversationWithMessages } from '@/features/inbox';
 import { useDensity } from '@/hooks/useDensity';
+import { MOCK_CONVERSATIONS } from './conversation-list/__mocks__/mockConversations';
+
+const USE_MOCKS =
+  typeof window !== 'undefined' &&
+  window.localStorage?.getItem('mockConversations') === '1';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
