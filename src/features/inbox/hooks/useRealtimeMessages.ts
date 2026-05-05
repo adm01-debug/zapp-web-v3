@@ -189,9 +189,16 @@ export function useRealtimeMessages() {
     try {
       setLoading(true);
       setError(null);
-      const { data: seededContacts, error: contactsError } = await dbFrom('contacts').select('*').order('updated_at', { ascending: false }).limit(SEEDED_CONTACT_LIMIT);
+      const { data: seededContacts, error: contactsError } = await dbFrom('contacts')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(SEEDED_CONTACT_LIMIT);
       if (contactsError) throw contactsError;
-      const { data: recentMessages, error: messagesError } = await dbFrom('messages').select('*').order('created_at', { ascending: false }).limit(RECENT_MESSAGES_LIMIT);
+      
+      const { data: recentMessages, error: messagesError } = await dbFrom('messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(RECENT_MESSAGES_LIMIT);
       if (messagesError) throw messagesError;
 
       const normalizedMessages = ((recentMessages ?? []) as RealtimeMessage[]).map(normalizeMessage);
