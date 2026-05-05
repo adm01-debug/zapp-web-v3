@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { FileUploaderRef } from './FileUploader';
 import { useTypingPresence } from '@/hooks/useTypingPresence';
+import { useContactTyping } from '@/hooks/useContactTyping';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { useQuickReplies } from '@/features/inbox';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
