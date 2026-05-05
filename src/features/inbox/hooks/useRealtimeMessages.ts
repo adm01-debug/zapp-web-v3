@@ -243,11 +243,12 @@ export function useRealtimeMessages() {
     const { error } = await dbFrom('messages').update({ is_read: true }).eq('contact_id', contactId).eq('sender', 'contact').eq('is_read', false);
     if (error) log.error('Error marking messages as read:', error);
     
-    // Auto-update load: if conversation is assigned, marking read might imply activity
     // But better to update last_seen for routing load calculations
-    const { data: profile } = await supabase.auth.getUser();
-    if (profile?.user) {
-      await (dbFrom('profiles') as any).update({ last_seen: new Date().toISOString() }).eq('id', profile.user.id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('id', user.id);
     }
     commitConversations((prev) =>
       prev.map((c) => c.contact.id === contactId
