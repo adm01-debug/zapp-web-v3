@@ -42,9 +42,11 @@ export function ConversationList({
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense';
 
+  const sourceConversations = USE_MOCKS ? MOCK_CONVERSATIONS : conversations;
+
   const filteredConversations = useMemo(() => {
     const q = search.toLowerCase();
-    return conversations.filter((conv) => {
+    return sourceConversations.filter((conv) => {
       const matchesSearch = !q || 
         conv.contact.name.toLowerCase().includes(q) ||
         conv.contact.phone.includes(q) ||
@@ -52,7 +54,7 @@ export function ConversationList({
       const matchesFilter = filter === 'all' || conv.status === filter;
       return matchesSearch && matchesFilter;
     });
-  }, [conversations, search, filter]);
+  }, [sourceConversations, search, filter]);
 
   const counts = useMemo(() => {
     const c = { all: conversations.length, open: 0, pending: 0, waiting: 0 };
