@@ -43,9 +43,9 @@ function ThreadListItem({
   return (
     <button
       className={cn(
-        'w-full text-left px-4 py-3 border-b border-border/40 transition-colors hover:bg-muted/40',
-        selected && 'bg-primary/8 border-l-2 border-l-primary',
-        !selected && 'border-l-2 border-l-transparent',
+        'w-full text-left px-4 py-3 border-b border-border/40 transition-all duration-200 hover:bg-muted/40 relative group',
+        selected && 'bg-primary/10 border-l-[3px] border-l-primary',
+        !selected && 'border-l-[3px] border-l-transparent',
       )}
       onClick={onClick}
     >
