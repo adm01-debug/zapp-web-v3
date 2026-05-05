@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, memo } from 'react';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('VirtualMessageBubble');
