@@ -249,9 +249,9 @@ export function useSLAAlerts(params: SLAAlertParams) {
     if (params.resolutionStatus === 'warning' || params.resolutionStatus === 'breached') {
       void fire('resolution', params.resolutionStatus, params.resolutionDurationMs);
     }
-    const dStatus = (params as any).deliveryDelayStatus;
+    const dStatus = params.deliveryDelayStatus;
     if (dStatus === 'warning' || dStatus === 'breached') {
-      void fire('delivery_delay', dStatus, (params as any).deliveryDelayMs);
+      void fire('delivery_delay', dStatus, params.deliveryDelayMs ?? null);
     }
   }, [
     params.contactId,
