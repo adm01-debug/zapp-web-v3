@@ -151,7 +151,12 @@ export function useMessageQueue(
 
               log.info(`Processing message ${itemToProcess.id} for contact ${contactId} (Retry: ${itemToProcess.retryCount})`);
               
-              setQueue(q => q.map(i => i.id === itemToProcess.id ? { ...i, status: 'sending', progress: 0 } : i));
+              setQueue(q => q.map(i => i.id === itemToProcess.id ? { ...i, status: 'sending', progress: 5 } : i));
+              
+              // Internal tracking for sequential media uploads
+              if (itemToProcess.type !== 'text') {
+                updateProgress(itemToProcess.id, 15);
+              }
               
               await processMessage(itemToProcess);
               
