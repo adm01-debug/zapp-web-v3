@@ -282,7 +282,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         logic.isMobile && "px-3 py-2 safe-area-bottom"
       )}>
         <AnimatePresence>
-          {isRecordingAudio && (
+          {isRecordingAudio && isV2AudioEnabled && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
