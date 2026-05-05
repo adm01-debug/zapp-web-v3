@@ -44,13 +44,14 @@ interface SecondaryToolbarProps {
   isWhisper?: boolean;
   onToggleWhisper?: () => void;
   onFileSelect?: (file: File, category: string) => void;
+  disabled?: boolean;
 }
 
 export function SecondaryToolbar({
   inputRef, inputValue, showRichToolbar, onToggleRichToolbar, isRecordingAudio,
   onSendSticker, onSendAudioMeme, onSendCustomEmoji, onOpenCatalog, onAudioSend,
   fileUploaderRef, instanceName, contactPhone, contactId, contactName, onVoiceDictation,
-  isWhisper, onToggleWhisper, onFileSelect,
+  isWhisper, onToggleWhisper, onFileSelect, disabled,
 }: SecondaryToolbarProps) {
   const handleRewrite = (newText: string) => {
     const el = inputRef.current;
