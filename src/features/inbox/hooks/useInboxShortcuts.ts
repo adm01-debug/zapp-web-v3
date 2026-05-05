@@ -54,4 +54,12 @@ export function useInboxShortcuts({
     e.preventDefault();
     onRefresh();
   }, { enabled });
+
+  // Chat Search: Cmd+F or Ctrl+F
+  useHotkeys('mod+f', (e) => {
+    if (onSearchFocusChat) {
+      e.preventDefault();
+      onSearchFocusChat();
+    }
+  }, { enabled });
 }
