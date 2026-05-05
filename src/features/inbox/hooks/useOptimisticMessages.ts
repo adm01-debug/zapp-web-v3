@@ -14,6 +14,7 @@ export interface OptimisticMessage extends Message {
 
 export function useOptimisticMessages() {
   const [pending, setPending] = useState<Record<string, OptimisticMessage>>({});
+  const lastRemovedIdRef = useRef<string | null>(null);
   
   // Use a ref to store the latest pending state for non-reactive logic if needed,
   // but we prefer state for UI reactivity.
