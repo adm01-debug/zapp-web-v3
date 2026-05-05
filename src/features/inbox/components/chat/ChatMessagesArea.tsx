@@ -2,6 +2,7 @@ import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, us
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Ban, RotateCw, Navigation2, AlertCircle, Info, Lock, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('ChatMessagesArea');
@@ -48,6 +49,7 @@ interface ChatMessagesAreaProps extends LoadOlderProps {
   highlightedMessageIds?: Set<string>;
   activeHighlightId?: string | null;
   searchQuery?: string;
+  isLoading?: boolean;
   /**
    * Duração em ms do badge "Carregamento cancelado". Default: 2500ms.
    * Ignorado em modo local (sem `onLoadOlder`), pois o badge nunca aparece.
