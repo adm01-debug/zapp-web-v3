@@ -144,7 +144,7 @@ export function EmailChatReplyBar({
   };
 
   return (
-    <div className={cn('border-t bg-card', className)}>
+    <div className={cn('border-t bg-background/80 backdrop-blur-md sticky bottom-0', className)}>
       <div className="px-4 py-3 space-y-3">
         {/* Header: Para + CC/BCC toggle */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -186,12 +186,14 @@ export function EmailChatReplyBar({
         )}
 
         {/* Textarea */}
-        <Textarea
-          value={bodyHtml.replace(/<[^>]*>/g, '')}
-          onChange={e => setBody(e.target.value)}
-          placeholder="Escreva sua resposta..."
-          className="min-h-[80px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-sm"
-        />
+        <div className="relative">
+          <Textarea
+            value={bodyHtml.replace(/<[^>]*>/g, '')}
+            onChange={e => setBody(e.target.value)}
+            placeholder="Escreva sua resposta..."
+            className="min-h-[100px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-sm leading-relaxed"
+          />
+        </div>
 
         {/* Assinatura preview */}
         {selectedSignature && (
@@ -272,7 +274,7 @@ export function EmailChatReplyBar({
 
           <Button
             size="sm"
-            className="gap-2 h-8"
+            className="gap-2 h-9 px-5 rounded-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             onClick={handleSend}
             disabled={isSending}
           >

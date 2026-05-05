@@ -54,7 +54,14 @@ function getInitials(name: string | null, email: string | null): string {
 }
 
 function getAvatarColor(email: string | null): string {
-  const colors = ['bg-blue-500', 'bg-primary', 'bg-violet-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500'];
+  const colors = [
+    'bg-blue-600 shadow-[0_0_10px_-2px_rgba(37,99,235,0.4)]',
+    'bg-primary shadow-[0_0_10px_-2px_rgba(var(--primary),0.4)]',
+    'bg-violet-600 shadow-[0_0_10px_-2px_rgba(124,58,237,0.4)]',
+    'bg-amber-600 shadow-[0_0_10px_-2px_rgba(217,119,6,0.4)]',
+    'bg-rose-600 shadow-[0_0_10px_-2px_rgba(225,29,72,0.4)]',
+    'bg-cyan-600 shadow-[0_0_10px_-2px_rgba(8,145,178,0.4)]'
+  ];
   const code = (email ?? '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   return colors[code % colors.length];
 }
@@ -128,8 +135,8 @@ export function EmailChatBubble({
       {/* Header */}
       <div
         className={cn(
-          'flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors rounded-t-lg',
-          !expanded && 'rounded-b-lg'
+          'flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-all duration-200 rounded-lg group/header',
+          expanded && 'bg-muted/10'
         )}
         onClick={() => setExpanded(v => !v)}
       >
@@ -178,8 +185,7 @@ export function EmailChatBubble({
           )}
         </div>
 
-        {/* Actions (aparecem no hover) */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
+        <div className="opacity-0 group-hover/header:opacity-100 transition-opacity flex items-center gap-0.5 ml-auto" onClick={e => e.stopPropagation()}>
           {onReply && (
             <Tooltip>
               <TooltipTrigger asChild>

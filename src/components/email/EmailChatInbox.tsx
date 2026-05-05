@@ -49,26 +49,32 @@ export function EmailChatInbox({ className }: EmailChatInboxProps) {
   // Sem contas conectadas
   if (accounts.length === 0) {
     return (
-      <div className={cn('flex flex-col items-center justify-center h-full gap-6 p-8', className)}>
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <Mail className="h-8 w-8 text-primary" />
+      <div className={cn('flex flex-col items-center justify-center h-full gap-6 p-8 bg-sidebar/30 animate-in fade-in duration-500', className)}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="h-20 w-20 rounded-[22px] bg-primary/10 flex items-center justify-center animate-pulse">
+              <Mail className="h-10 w-10 text-primary" />
+            </div>
+            <div className="absolute -top-1 -right-1 h-5 w-5 bg-primary rounded-full border-2 border-background animate-bounce" />
           </div>
-          <div className="text-center">
-            <h3 className="font-semibold text-lg">Email Chat</h3>
-            <p className="text-muted-foreground text-sm mt-1 max-w-64">
-              Conecte sua conta Gmail para gerenciar emails diretamente no ZAPP WEB.
+          <div className="text-center space-y-2">
+            <h3 className="font-bold text-2xl tracking-tight font-display">Gmail não conectado</h3>
+            <p className="text-muted-foreground text-sm max-w-[320px] leading-relaxed">
+              Conecte sua conta Gmail para gerenciar e-mails diretamente pela plataforma, com interface de chat.
             </p>
           </div>
         </div>
 
-        <Button onClick={startOAuth} className="gap-2 h-10">
-          <Mail className="h-4 w-4" />
-          Conectar conta Gmail
+        <Button 
+          onClick={startOAuth} 
+          className="gap-2.5 h-12 px-8 rounded-xl font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <Mail className="h-5 w-5" />
+          Conectar Gmail
         </Button>
 
-        <p className="text-xs text-muted-foreground text-center max-w-56">
-          Seus emails são sincronizados com segurança via OAuth2. Nunca armazenamos sua senha.
+        <p className="text-[11px] font-medium text-muted-foreground/60 text-center max-w-[280px]">
+          Sincronização segura via Google OAuth2. <br/>Acesso direto e privado às suas mensagens.
         </p>
       </div>
     );
@@ -77,9 +83,9 @@ export function EmailChatInbox({ className }: EmailChatInboxProps) {
   return (
     <div className={cn('flex h-full overflow-hidden', className)}>
       {/* Sidebar: Thread list */}
-      <div className="w-80 shrink-0 flex flex-col border-r h-full">
+      <div className="w-[340px] shrink-0 flex flex-col border-r h-full bg-background/50">
         {/* Account selector + search */}
-        <div className="p-3 space-y-2 border-b">
+        <div className="p-3 space-y-3 border-b bg-muted/5">
           <GmailAccountSelector
             accounts={accounts}
             activeAccountId={activeAccountId}
