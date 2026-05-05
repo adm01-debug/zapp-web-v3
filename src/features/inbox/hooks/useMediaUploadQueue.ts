@@ -157,7 +157,7 @@ export function useMediaUploadQueue(contactId: string) {
         attempt += 1;
       }
       patch(item.id, { status: 'failed', errorMessage: lastError, retryCount: attempt - 1 });
-      await persist(item.id, { status: 'failed', error_message: lastError, retry_count: attempt - 1 });
+      await persist(item.id, { status: 'failed', errorMessage: lastError, retryCount: attempt - 1 });
       toast.error(`Falha no anexo: ${item.fileName}`);
     },
     [patch, performUpload, persist],
