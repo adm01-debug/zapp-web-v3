@@ -29,8 +29,10 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const recognitionRef = useRef<any>(null);
+  const lastBlobRef = useRef<Blob | null>(null);
+  const lastTranscriptionRef = useRef<string>('');
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async (isRecovery = false) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -100,8 +102,10 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       mediaRecorder.start(100);
       setIsRecording(true);
       setIsPaused(false);
-      setDuration(0);
-      setTranscription('');
+      if (!isRecovery) {
+        setDuration(0);
+        setTranscription('');
+      }
 
       // Web Speech API for real-time transcription
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -181,8 +185,14 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     }
   }, [isRecording]);
 
-  const cancelRecording = useCallback(() => {
+  const cancelRecording = useCallback((saveForUndo = false) => {
     if (mediaRecorderRef.current && (isRecording || isPaused)) {
+      if (saveForUndo) {
+        // We'll grab the chunks before clearing
+        lastBlobRef.current = new Blob(chunksRef.current, { type: 'audio/webm' });
+        lastTranscriptionRef.current = transcription;
+      }
+
       mediaRecorderRef.current.stop();
       streamRef.current?.getTracks().forEach(track => track.stop());
       
@@ -196,7 +206,20 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       setDuration(0);
       setAudioUrl(null);
     }
-  }, [isRecording, isPaused]);
+  }, [isRecording, isPaused, transcription]);
+
+  const restoreRecording = useCallback(() => {
+    if (lastBlobRef.current) {
+      const url = URL.createObjectURL(lastBlobRef.current);
+      setAudioUrl(url);
+      setTranscription(lastTranscriptionRef.current);
+      // We can't really "resume" a hardware stream after it's been stopped and discarded by the browser
+      // but we can present the user with the recovered state.
+      onRecordingComplete?.(lastBlobRef.current, url);
+      return true;
+    }
+    return false;
+  }, [onRecordingComplete]);
 
   const uploadAudio = useCallback(async (blob: Blob, conversationId: string) => {
     const fileName = `${conversationId}/${Date.now()}.webm`;
@@ -235,12 +258,14 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     audioUrl,
     audioLevel,
     transcription,
+    setTranscription,
     isTranscribing,
     startRecording,
     pauseRecording,
     resumeRecording,
     stopRecording,
     cancelRecording,
+    restoreRecording,
     uploadAudio,
     formatDuration,
   };

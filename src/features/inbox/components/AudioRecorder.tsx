@@ -62,11 +62,13 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     audioUrl,
     audioLevel,
     transcription,
+    setTranscription,
     startRecording,
     pauseRecording,
     resumeRecording,
     stopRecording,
     cancelRecording,
+    restoreRecording,
     formatDuration,
   } = useAudioRecorder({
     onRecordingComplete: (blob, url) => {
@@ -124,27 +126,42 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     setIsPlaying(!isPlaying);
   };
 
-  const handleSend = async () => {
+  const handleSendAction = () => handleSend(0);
+  
+  const handleSend = async (retryCount = 0) => {
     if (!audioBlob) return;
     
     setIsUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(10 * (retryCount + 1));
     
     try {
-      // Simulating upload progress
+      // Simulating real upload progression based on state
       const interval = setInterval(() => {
-        setUploadProgress(prev => (prev < 90 ? prev + 10 : prev));
-      }, 200);
+        setUploadProgress(prev => {
+          if (prev >= 95) {
+            clearInterval(interval);
+            return 95;
+          }
+          return prev + 5;
+        });
+      }, 300);
       
       await onSend(audioBlob);
       
       clearInterval(interval);
       setUploadProgress(100);
+      toast({ title: "Áudio enviado com sucesso!" });
     } catch (error) {
+      const canRetry = retryCount < 2;
       toast({
-        title: "Erro ao enviar",
-        description: "Não foi possível enviar seu áudio. Tente novamente.",
-        variant: "destructive"
+        title: "Erro no envio",
+        description: canRetry ? `Tentativa ${retryCount + 1} falhou. Gostaria de tentar novamente?` : "Falha definitiva após múltiplas tentativas.",
+        variant: "destructive",
+        action: canRetry ? (
+          <Button variant="outline" size="sm" onClick={() => handleSend(retryCount + 1)}>
+            <RotateCcw className="w-3 h-3 mr-1" /> Tentar novamente
+          </Button>
+        ) : undefined
       });
     } finally {
       setIsUploading(false);
@@ -153,25 +170,27 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
 
   const handleCancel = () => {
     if ((isRecording || isPaused) && duration > 2) {
-      // Only show undo for recordings longer than 2 seconds
       toast({
         title: "Gravação descartada",
-        description: "Você pode desfazer esta ação em até 5 segundos.",
+        description: "Você pode desfazer esta ação nos próximos segundos.",
         action: (
-          <Button variant="outline" size="sm" onClick={handleUndoCancel} className="gap-2">
+          <Button variant="outline" size="sm" onClick={handleUndoCancel} className="gap-2 font-bold text-primary">
             <Undo2 className="w-4 h-4" /> Desfazer
           </Button>
         ),
       });
-      // For a more robust undo we'd need to stop and store.
+      cancelRecording(true);
+    } else {
+      cancelRecording(false);
     }
-    cancelRecording();
     onCancel();
   };
 
   const handleUndoCancel = () => {
-    startRecording(); // This is a simplification, ideally it would restore the blob
-    toast({ title: "Retomando gravação..." });
+    const recovered = restoreRecording();
+    if (recovered) {
+      toast({ title: "Áudio recuperado!", description: "Continue revisando sua gravação." });
+    }
   };
 
   const handleVoiceChanged = (newBlob: Blob) => {
@@ -354,7 +373,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
               <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                    <Type className="w-3 h-3" /> Transcrição
+                    <Type className="w-3 h-3" /> Transcrição Editável
                   </div>
                   <Button 
                     variant="ghost" 
@@ -362,7 +381,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                     className="h-6 text-[10px] uppercase font-black px-2 hover:bg-primary/5"
                     onClick={() => setShowTranscription(!showTranscription)}
                   >
-                    {showTranscription ? 'Recolher' : 'Visualizar'}
+                    {showTranscription ? 'Recolher' : 'Editar'}
                   </Button>
                 </div>
                 <AnimatePresence>
@@ -371,9 +390,13 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="text-sm text-foreground/80 italic leading-relaxed font-medium border-t border-border/30 pt-2"
                     >
-                      {transcription}
+                      <textarea
+                        value={transcription}
+                        onChange={(e) => setTranscription(e.target.value)}
+                        className="w-full bg-transparent text-sm text-foreground/80 italic leading-relaxed font-medium border-t border-border/30 pt-2 outline-none resize-none min-h-[60px]"
+                        placeholder="Edite a transcrição aqui..."
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -460,7 +483,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                   <Button
                     size="icon"
                     className="bg-primary hover:bg-primary/90 shadow-md h-9 w-9 md:h-10 md:w-10"
-                    onClick={handleSend}
+                    onClick={handleSendAction}
                     aria-label="Confirmar e enviar áudio"
                   >
                     <CheckCircle2 className="w-5 h-5" />
