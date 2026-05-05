@@ -237,7 +237,7 @@ export function useRealtimeMessages() {
     // But better to update last_seen for routing load calculations
     const { data: profile } = await supabase.auth.getUser();
     if (profile?.user) {
-      await supabase.from('profiles').update({ last_seen: new Date().toISOString() } as any).eq('id', profile.user.id);
+      await (dbFrom('profiles') as any).update({ last_seen: new Date().toISOString() }).eq('id', profile.user.id);
     }
     commitConversations((prev) =>
       prev.map((c) => c.contact.id === contactId
