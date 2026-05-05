@@ -16,17 +16,24 @@ const mockConversation: Conversation = {
   createdAt: new Date(),
   unreadCount: 0,
   priority: 'medium',
+  tags: [],
   contact: {
     id: 'contact-1',
     name: 'Test Contact',
     avatar: '',
+    phone: '5511999999999',
+    tags: [],
+    createdAt: new Date(),
     contact_type: 'individual'
   },
   lastMessage: {
     id: 'msg-1',
+    conversationId: 'conv-1',
     content: 'Hello world',
+    type: 'text',
     sender: 'contact',
-    timestamp: new Date()
+    timestamp: new Date(),
+    status: 'read'
   }
 };
 
