@@ -109,7 +109,7 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
               )}>
                 {item.isApproved ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 pr-2">
                 <div className="flex items-center gap-2 mb-1">
                   <span className={cn(
                     "text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-muted flex items-center gap-1",
