@@ -138,6 +138,8 @@ export interface EvolutionContact {
   instance_name: string;
   is_group: boolean;
   tags: string[] | null;
+  company: string | null;
+  ai_sentiment: string | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
