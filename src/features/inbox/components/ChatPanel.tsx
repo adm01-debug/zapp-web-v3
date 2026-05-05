@@ -44,6 +44,7 @@ import { useInboxShortcuts } from '@/features/inbox/hooks/useInboxShortcuts';
 import { dbFrom } from '@/integrations/datasource/db';
 
 const WhisperMode = lazy(() => import('./WhisperMode').then(m => ({ default: m.WhisperMode })));
+const VisualValidationChecklist = lazy(() => import('./VisualValidationChecklist').then(m => ({ default: m.VisualValidationChecklist })));
 const NextBestActionEngine = lazy(() => import('./NextBestActionEngine').then(m => ({ default: m.NextBestActionEngine })));
 
 if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
