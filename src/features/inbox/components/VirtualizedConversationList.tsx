@@ -59,10 +59,10 @@ export function VirtualizedConversationList({ conversations, selectedId, onSelec
         initial={{ opacity: 0, y: -10 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.4, ease: "easeOut" }} 
-        className={cn("p-5 border-b border-border/10 bg-sidebar/50 backdrop-blur-md sticky top-0 z-20", compactMode ? "space-y-3" : "space-y-5")}
+        className={cn("p-5 border-b border-border/10 bg-sidebar/50 backdrop-blur-md sticky top-0 z-20", isCompactMode ? "space-y-3" : "space-y-5")}
       >
         <div className="flex items-center justify-between">
-          <h2 className={cn("font-display font-semibold tracking-normal text-foreground/90", compactMode ? "text-[14px]" : "text-[15px]")}>
+          <h2 className={cn("font-display font-semibold tracking-normal text-foreground/90", isCompactMode ? "text-[14px]" : "text-[15px]")}>
             Conversas
           </h2>
           <div className="flex items-center gap-1">
@@ -86,7 +86,7 @@ export function VirtualizedConversationList({ conversations, selectedId, onSelec
               "pl-10 h-9 bg-muted/20 border-border/20 rounded-full text-xs font-light tracking-tight transition-all duration-300",
               "placeholder:text-muted-foreground/40",
               "focus:bg-background focus:border-primary/30 focus:ring-4 focus:ring-primary/5 shadow-sm",
-              compactMode && "h-8"
+              isCompactMode && "h-8"
             )} 
           />
         </div>
@@ -94,7 +94,7 @@ export function VirtualizedConversationList({ conversations, selectedId, onSelec
         <Tabs value={filter} onValueChange={setFilter} className="w-full">
           <TabsList className={cn(
             "w-full h-9 p-1 bg-muted/20 border-none rounded-lg gap-1", 
-            compactMode && "h-8"
+            isCompactMode && "h-8"
           )}>
             {[
               { id: 'all', label: 'Todas', count: counts.all },
@@ -109,7 +109,7 @@ export function VirtualizedConversationList({ conversations, selectedId, onSelec
                   "flex-1 text-[11px] font-normal tracking-tight rounded-md transition-all duration-300",
                   "data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-medium",
                   "text-muted-foreground/70 hover:text-foreground/80",
-                  compactMode && "text-[9px] py-0.5"
+                  isCompactMode && "text-[9px] py-0.5"
                 )}
               >
                 {t.label}
@@ -129,7 +129,7 @@ export function VirtualizedConversationList({ conversations, selectedId, onSelec
               const conversation = filteredConversations[virtualRow.index];
               return (
                 <div key={virtualRow.key} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)` }}>
-                  <ConversationItem conversation={conversation} isSelected={selectedId === conversation.id} onSelect={onSelect} compact={compactMode} />
+                  <ConversationItem conversation={conversation} isSelected={selectedId === conversation.id} onSelect={onSelect} compact={isCompactMode} />
                 </div>
               );
             })}
