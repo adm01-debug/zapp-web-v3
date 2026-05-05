@@ -239,7 +239,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
         </div>
 
         <TicketTabs
-          conversations={inbox.conversations}
+          conversations={inbox.allConversations || inbox.conversations}
           mainTab={inboxFilters.mainTab}
           subTab={inboxFilters.subTab}
           onMainTabChange={inboxFilters.setMainTab}
@@ -249,6 +249,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
           selectedQueueId={inboxFilters.selectedQueueId}
           onQueueChange={inboxFilters.setSelectedQueueId}
         />
+
 
         <InboxFilters filters={inboxFilters.filters} onFiltersChange={inboxFilters.setFilters} />
       </div>
