@@ -274,7 +274,7 @@ export function EmailChatReplyBar({
 
           <Button
             size="sm"
-            className="gap-2 h-8"
+            className="gap-2 h-9 px-5 rounded-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             onClick={handleSend}
             disabled={isSending}
           >
