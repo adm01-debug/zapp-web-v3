@@ -77,6 +77,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   onScrollToMessage, onInteractiveButtonClick, onEditStart, highlightedMessageIds, activeHighlightId, searchQuery,
   onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false,
   loadOlderCancelBadgeMs = 2500,
+  isLoading = false,
 }, ref) => {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
