@@ -141,9 +141,15 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
         <div className="flex items-start gap-3.5 relative z-10">
           <div className="relative flex-shrink-0">
             <ChannelBadge type={conversation.contact.contact_type} />
-            <Avatar className="w-[49px] h-[49px] ring-0">
+            <Avatar className={cn(
+              "w-[49px] h-[49px] ring-0 transition-transform duration-300",
+              isSelected ? "scale-105" : "group-hover:scale-105"
+            )}>
               <AvatarImage src={conversation.contact.avatar} className="object-cover" />
-              <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold tracking-tighter">
+              <AvatarFallback className={cn(
+                "text-sm font-semibold tracking-tighter transition-colors duration-200",
+                isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+              )}>
                 {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
