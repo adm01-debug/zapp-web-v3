@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RichTextToolbar } from './RichTextToolbar';
@@ -319,32 +318,36 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   <motion.button
                     onClick={onRecordToggle}
                     disabled={isSending || logic.hasText || logic.attachments.length > 0}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 1.1 } : {}}
+                    whileTap={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 0.9 } : {}}
                     className={cn(
-                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-500 outline-none",
+                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
                       isRecordingAudio
                         ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10"
-                        : "text-muted-foreground/40 hover:text-primary hover:bg-primary/5",
+                        : (logic.hasText || logic.attachments.length > 0)
+                          ? "text-muted-foreground/20 cursor-not-allowed"
+                          : "text-muted-foreground/60 hover:text-primary hover:bg-primary/5",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
                     )}
                     aria-label="Gravar áudio"
                   >
-                    <Mic className={cn("w-5 h-5 md:w-6 md:h-6", isRecordingAudio && "animate-pulse")} />
+                    <Mic className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6", isRecordingAudio && "animate-pulse")} />
                   </motion.button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">Gravar áudio</TooltipContent>
+                <TooltipContent side="top" className="text-[10px] font-medium">
+                  {logic.hasText || logic.attachments.length > 0 ? "Apague o texto para gravar áudio" : "Gravar áudio"}
+                </TooltipContent>
               </Tooltip>
 
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.button
-                    onClick={logic.handleSendWithAnimation}
+                    onClick={() => logic.handleSendWithAnimation()}
                     disabled={logic.isOverLimit || isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9, rotate: 10 }}
+                    whileHover={!(logic.isOverLimit || isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 1.1 } : {}}
+                    whileTap={!(logic.isOverLimit || isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 0.9, rotate: 10 } : {}}
                     className={cn(
-                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-500 outline-none",
+                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
                       (logic.hasText || logic.attachments.length > 0 || editingMessage)
                         ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 scale-110"
                         : "text-muted-foreground/40 hover:text-primary hover:bg-primary/5",
@@ -356,26 +359,26 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     <AnimatePresence mode="wait">
                       {isSending ? (
                         <motion.div key="loading" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <Loader2 className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6", "animate-spin")} />
                         </motion.div>
                       ) : editingMessage ? (
                         <motion.div key="edit" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Check className="w-5 h-5" />
+                          <Check className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6")} />
                         </motion.div>
                       ) : (
                         <motion.div key="send" initial={{ opacity: 0, scale: 0.5, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.5, rotate: 20 }}>
-                          <Send className="w-6 h-6" />
+                          <Send className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6")} />
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </motion.button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">Enviar</TooltipContent>
+                <TooltipContent side="top" className="text-[10px] font-medium">
+                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
+                </TooltipContent>
               </Tooltip>
             </div>
           </div>
-
-          {/* SecondaryToolbar moved to the left side of textarea to match WA web */}
 
           {logic.isMobile && (
             <div className="flex items-center gap-0.5 shrink-0">
