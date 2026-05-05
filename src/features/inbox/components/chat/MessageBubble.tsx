@@ -140,7 +140,7 @@ export function MessageBubble({
         )}
 
         <div className={cn('max-w-[85%] sm:max-w-[70%] space-y-0.5 relative', isSent && 'items-end')}>
-          {!isSent && isFirstInGroup && <span className="text-[11px] font-semibold text-primary/80 ml-1.5 block tracking-tight">{senderName}</span>}
+          {!isSent && isFirstInGroup && <span className="text-[15px] font-semibold text-primary/80 ml-1.5 block tracking-tight">{senderName}</span>}
           {message.isWhisper && (
             <div className="flex items-center gap-1.5 mb-1 ml-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-full w-fit border border-amber-500/20 shadow-xs">
               <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400 animate-pulse" />
