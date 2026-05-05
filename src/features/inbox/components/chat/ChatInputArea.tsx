@@ -228,6 +228,12 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                         >
                           Tentar novamente
                         </button>
+                        <button 
+                          onClick={() => props.onRemoveFromQueue?.(item.id)}
+                          className="text-[10px] font-black text-destructive hover:text-destructive/80 bg-destructive/10 px-2 py-0.5 rounded-full transition-colors"
+                        >
+                          Cancelar
+                        </button>
                       </div>
                     )}
                     <span className={cn(
