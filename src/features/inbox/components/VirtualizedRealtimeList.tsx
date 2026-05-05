@@ -40,11 +40,11 @@ const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; 
     const inView = useInViewport(localRef, { rootMargin: '200px', keepVisibleMs: 1500 });
     const isTyping = useContactTyping(contactId, inView);
     return (
-      <div ref={localRef} className="text-[13px] min-h-[1em]">
+      <div ref={localRef} className="font-sans text-[13px] leading-snug min-h-[1em]">
         {isTyping ? (
           <TypingIndicatorCompact isVisible={true} />
         ) : (
-          <p className="text-muted-foreground truncate">{fallback}</p>
+          <p className="text-muted-foreground font-normal truncate tracking-[-0.005em]">{fallback}</p>
         )}
       </div>
     );
