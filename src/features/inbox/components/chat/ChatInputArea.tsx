@@ -190,42 +190,75 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             className="px-4 py-1.5 bg-primary/5 border-t border-primary/10"
           >
             {props.queue?.map((item: any) => (
-              <div key={item.id} className="mb-2 last:mb-0">
+              <div key={item.id} className="mb-2 last:mb-0 group">
                 <div className="flex items-center justify-between gap-3 mb-1">
                   <div className="flex items-center gap-2">
                     {item.status === 'sending' ? (
                       <Loader2 className="w-3 h-3 animate-spin text-primary" />
                     ) : item.status === 'failed' ? (
                       <X className="w-3 h-3 text-destructive" />
+                    ) : item.status === 'confirmed' ? (
+                      <Check className="w-3 h-3 text-success" />
                     ) : (
-                      <div className="w-3 h-3 rounded-full bg-primary/20" />
+                      <Clock className="w-3 h-3 text-muted-foreground/50" />
                     )}
-                    <span className="text-[10px] font-medium text-primary uppercase tracking-wider">
-                      {item.status === 'failed' ? 'Erro no envio' : item.status === 'sending' ? 'Enviando...' : 'Aguardando...'}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider",
+                        item.status === 'failed' ? "text-destructive" : item.status === 'confirmed' ? "text-success" : "text-primary"
+                      )}>
+                        {item.status === 'failed' ? 'Erro no envio' : 
+                         item.status === 'sending' ? 'Enviando...' : 
+                         item.status === 'confirmed' ? 'Enviado!' : 'Aguardando na fila...'}
+                      </span>
+                      {item.error && (
+                        <span className="text-[9px] text-destructive/80 line-clamp-1 italic">
+                          {item.error?.message || String(item.error)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {item.status === 'failed' && (
-                      <button 
-                        onClick={() => props.onRetry?.(item.id)}
-                        className="text-[10px] font-bold text-primary hover:underline"
-                      >
-                        Tentar novamente
-                      </button>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => props.onRetry?.(item.id)}
+                          className="text-[10px] font-black text-primary hover:text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full transition-colors"
+                        >
+                          Tentar novamente
+                        </button>
+                      </div>
                     )}
-                    <span className="text-[10px] font-bold text-primary">
+                    <span className={cn(
+                      "text-[10px] font-black tabular-nums",
+                      item.status === 'failed' ? "text-destructive" : "text-primary"
+                    )}>
                       {item.status === 'failed' ? '!' : `${Math.round(item.progress || 0)}%`}
                     </span>
                   </div>
                 </div>
                 <div className="h-1 w-full bg-primary/10 rounded-full overflow-hidden">
                   <motion.div 
-                    className={cn("h-full", item.status === 'failed' ? "bg-destructive" : "bg-primary")}
+                    className={cn(
+                      "h-full", 
+                      item.status === 'failed' ? "bg-destructive" : 
+                      item.status === 'confirmed' ? "bg-success" : "bg-primary"
+                    )}
                     initial={{ width: 0 }}
                     animate={{ width: item.status === 'failed' ? '100%' : `${item.progress || 0}%` }}
                     transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
                   />
                 </div>
+                {item.attempts?.length > 0 && (
+                  <div className="hidden group-hover:block mt-1 pt-1 border-t border-primary/5">
+                    <div className="flex items-center justify-between text-[8px] text-muted-foreground font-mono">
+                      <span>{item.attempts.length} {item.attempts.length === 1 ? 'tentativa' : 'tentativas'}</span>
+                      {item.attempts[item.attempts.length - 1].duration && (
+                        <span>{item.attempts[item.attempts.length - 1].duration}ms</span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </motion.div>
