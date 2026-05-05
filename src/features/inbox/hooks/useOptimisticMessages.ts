@@ -104,7 +104,7 @@ export function useOptimisticMessages(context?: { userId?: string }) {
   const mergeWithReal = useCallback(
     (realMessages: Message[]): (Message | OptimisticMessage)[] => {
       const pendingList = Object.values(pending);
-      if (pendingList.length === 0) return realMessages;
+      if (pendingList.length === 0 || !isFeatureEnabled('optimistic_messages', context)) return realMessages;
 
       const realExternalIds = new Set(realMessages.map(m => m.external_id).filter(Boolean));
       // Fingerprint match criteria: agent messages, recently sent, match content
