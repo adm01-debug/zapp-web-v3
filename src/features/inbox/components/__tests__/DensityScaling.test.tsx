@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useDensity } from '@/hooks/useDensity';
 import { ConversationItem } from '../conversation-list/ConversationItem';
+import { ConversationList } from '../ConversationList';
 import { Conversation } from '@/types/chat';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/components/ui/tooltip';
