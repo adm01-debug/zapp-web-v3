@@ -1,3 +1,4 @@
+import { supabase } from '@/integrations/supabase/client';
 import { messageRepository } from '@/features/inbox/data-access/messageRepository';
 import type { Message } from '@/types/chat';
 
