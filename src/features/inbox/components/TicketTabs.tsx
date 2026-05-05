@@ -117,7 +117,7 @@ export function TicketTabs({
   return (
     <div className="space-y-2">
       {/* Main Tabs */}
-      <div className="flex items-center gap-0.5 bg-accent/30 rounded-xl p-1 border border-border/20 shadow-xs font-sans">
+      <div className="flex items-center gap-1 bg-accent/20 rounded-xl p-1.5 border border-border/10 shadow-none font-sans">
         {mainTabs.map(tab => {
           const Icon = tab.icon;
           const isActive = mainTab === tab.id;
@@ -126,7 +126,7 @@ export function TicketTabs({
               key={tab.id}
               onClick={() => onMainTabChange(tab.id)}
               className={cn(
-                'flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-300',
+                'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-bold transition-all duration-300',
                 isActive
                   ? tab.activeColor + ' shadow-md scale-[1.02]'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
@@ -163,7 +163,7 @@ export function TicketTabs({
                 key={tab.id}
                 onClick={() => onSubTabChange(tab.id)}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 border shadow-xs font-sans',
+                  'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 border shadow-none font-sans',
                   isActive
                     ? 'bg-primary/10 text-primary border-primary/40'
                     : 'bg-muted/10 text-muted-foreground hover:text-foreground hover:bg-muted/30 border-transparent'
@@ -190,7 +190,7 @@ export function TicketTabs({
               value={selectedQueueId || 'all'} 
               onValueChange={(v) => onQueueChange(v === 'all' ? null : v)}
             >
-              <SelectTrigger className={cn("h-6 w-auto text-[10px] border-border/40 bg-transparent px-2 gap-1", isMobile ? "min-w-[60px] max-w-[90px]" : "min-w-[80px] max-w-[120px]")}>
+              <SelectTrigger className={cn("h-7 w-auto text-[10px] font-bold border-border/20 bg-accent/10 px-3 gap-2 rounded-full hover:bg-accent/20 transition-all", isMobile ? "min-w-[70px] max-w-[100px]" : "min-w-[90px] max-w-[140px]")}>
                 <SelectValue placeholder="Fila" />
               </SelectTrigger>
               <SelectContent>

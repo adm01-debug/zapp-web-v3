@@ -107,11 +107,11 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
         isLoading={bulkActions.bulkLoading}
       />
 
-      <div className={cn("px-4 border-b border-border/40 space-y-3 shrink-0 transition-all", isMobile ? "pt-2 pb-3" : "pt-4 pb-3")}>
+      <div className={cn("px-4 border-b border-border/20 space-y-4 shrink-0 transition-all", isMobile ? "pt-2 pb-3" : "pt-6 pb-4 bg-accent/10")}>
         {!isMobile && (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-[14px] font-semibold text-foreground tracking-tight font-sans">Conversas</h2>
+              <h2 className="text-[18px] font-bold text-foreground tracking-tight font-sans">Inbox</h2>
               <span
                 title={inbox.isOnline ? 'Mensagens: tempo real ativo' : 'Mensagens: desconectado'}
                 className={cn('w-1.5 h-1.5 rounded-full ring-2 ring-background', inbox.isOnline ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.4)]')}
@@ -160,7 +160,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               value={contactSearch}
               onChange={(e) => handleContactSearch(e.target.value)}
               className={cn(
-                "pl-8 pr-7 bg-accent/50 hover:bg-accent focus:bg-white dark:focus:bg-accent border-0 rounded-xl font-sans text-xs placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200",
+                "pl-8 pr-7 bg-accent/40 hover:bg-accent/60 focus:bg-background border border-transparent focus:border-primary/20 rounded-xl font-sans text-xs placeholder:text-muted-foreground/40 transition-all duration-300 shadow-none",
                 isMobile ? "h-[44px] text-[16px]" : "h-[36px] text-[13px]"
               )}
               aria-label="Buscar conversa"
