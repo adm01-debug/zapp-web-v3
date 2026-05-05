@@ -369,6 +369,17 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   return (
     <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-4 md:px-24 space-y-1.5 scrollbar-none bg-background relative transition-colors duration-500 font-sans text-[15px] font-semibold tracking-normal" style={{ fontFamily: 'Outfit, sans-serif' }}>
       <ChatWatermark />
+      
+      {isLoading && (
+        <div className="space-y-6 pt-10">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className={cn("flex flex-col gap-2", i % 2 === 0 ? "items-start" : "items-end")}>
+              <Skeleton className={cn("h-16 rounded-2xl", i % 2 === 0 ? "w-2/3 rounded-tl-none" : "w-1/2 rounded-tr-none")} />
+              <Skeleton className="h-3 w-12 rounded" />
+            </div>
+          ))}
+        </div>
+      )}
       {messages.length > 0 && (
         <div className="sticky top-0 z-20 flex flex-col items-center gap-1.5 pointer-events-none -mt-2 mb-2">
           <div className="pointer-events-auto">
