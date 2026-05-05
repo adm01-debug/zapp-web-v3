@@ -346,7 +346,6 @@ export function VirtualizedRealtimeList({
               pinnedIds={pinnedIds}
               selectionMode={selectionMode}
               onToggleSelection={onToggleSelection}
-              onSelectConversation={onSelectConversation}
               handleClick={handleClick}
             />
           );
