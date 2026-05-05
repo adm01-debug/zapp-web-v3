@@ -200,12 +200,15 @@ export function reconcileOptimistic(
   });
 
   const seen = new Set(filteredPrev.map((m) => m.id));
-  const additions = incoming
-    .filter((m) => !seen.has(m.id))
-    .map((m) => {
+  const additions: RealtimeMessage[] = [];
+  
+  for (const m of incoming) {
+    if (!seen.has(m.id)) {
       const patch = canonicalPatches.get(m.id);
-      return patch ? { ...m, ...patch } : m;
-    });
+      additions.push(patch ? { ...m, ...patch } : m);
+      seen.add(m.id); // Prevent duplicates within 'additions'
+    }
+  }
   return { filteredPrev, additions, remap };
 }
 
