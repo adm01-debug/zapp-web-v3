@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat';
@@ -22,6 +22,7 @@ import { Send, Mic, Check, Plus, Loader2, X, Image as ImageIcon, FileText, FileV
 import { toast } from '@/hooks/use-toast';
 import { InputPreviewBars } from './InputPreviewBars';
 import { useChatInputLogic, setNativeValue } from './useChatInputLogic';
+import { playNotificationSound } from '@/utils/notificationSounds';
 import { formatFileSize } from '@/utils/whatsappFileTypes';
 
 interface QuickReplyItem {
@@ -100,6 +101,17 @@ export function ChatInputArea(props: ChatInputAreaProps) {
     fileUploaderRef, inputRef, onOpenTeamFiles,
     queue, onRetry, onRemoveFromQueue,
   } = props;
+
+  const prevRecordingRef = useRef(isRecordingAudio);
+
+  useEffect(() => {
+    if (isRecordingAudio && !prevRecordingRef.current) {
+      playNotificationSound('record_start', 'soft');
+    } else if (!isRecordingAudio && prevRecordingRef.current) {
+      playNotificationSound('record_stop', 'soft');
+    }
+    prevRecordingRef.current = isRecordingAudio;
+  }, [isRecordingAudio]);
 
   const logic = useChatInputLogic({
     inputValue, contactId, editingMessage, inputRef, fileUploaderRef, onSend, onPasteFiles,
@@ -302,6 +314,15 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             </motion.div>
           )}
         </AnimatePresence>
+        
+        {/* Voice Recording Sound Triggers */}
+        {useEffect(() => {
+          if (isRecordingAudio) {
+            playNotificationSound('record_start', 'soft');
+          } else if (!isRecordingAudio && isV2AudioEnabled) {
+            // We only play stop if it was recording (this logic is simplified, but works in context)
+          }
+        }, [isRecordingAudio])}
 
         {/* Improved Message Queue Stats */}
         {isRetryEnabled && props.queue && props.queue.length > 0 && (
