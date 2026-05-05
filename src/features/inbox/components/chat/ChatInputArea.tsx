@@ -463,7 +463,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     whileTap={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 0.9 } : {}}
                     className={cn(
                       "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
-                      isRecordingAudio
+                      isRecordingAudio && isV2AudioEnabled
                         ? "bg-rose-500 text-white hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-110 z-10 ring-2 ring-rose-400/60"
                         : "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.55),0_0_36px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.7),0_0_48px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40",
                       !isRecordingAudio && (isSending || logic.hasText || logic.attachments.length > 0) && "opacity-50 grayscale cursor-not-allowed",
