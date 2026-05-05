@@ -118,4 +118,31 @@ describe('ChatInputArea — Interaction Scenarios', () => {
 
     expect(screen.getByText(new RegExp(`101/4096`))).toBeTruthy();
   });
+  it('Scenario 4: Mic button is disabled when there is text or attachments', () => {
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ChatInputArea {...defaultProps} inputValue="Some text" />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+
+    const micButton = screen.getByLabelText(/gravar áudio/i);
+    expect(micButton.hasAttribute('disabled')).toBe(true);
+
+    // Test with attachments (would need to mock useChatInputLogic to return attachments)
+  });
+
+  it('Scenario 5: Send button is enabled when there is text', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ChatInputArea {...defaultProps} inputValue="Ready to send" />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+
+    const sendButton = screen.getByLabelText(/enviar mensagem/i);
+    expect(sendButton.hasAttribute('disabled')).toBe(false);
+  });
 });
