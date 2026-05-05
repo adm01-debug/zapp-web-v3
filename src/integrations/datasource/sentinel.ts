@@ -12,7 +12,7 @@ export function validateEntityAccess(entity: string, clientName: 'lovable' | 'ex
   // Find if this table/entity is registered as external
   const mapping = Object.values(ENTITY_MAP).find(m => m.table === entity);
   
-  if (mapping && mapping.client === 'external' && clientName === 'lovable') {
+  if (mapping && (mapping.client as string) === 'external' && clientName === 'lovable') {
     const errorMsg = `[Datasource Sentinel] SECURITY VIOLATION: Attempted to access external table "${entity}" using Lovable Cloud client. Use dbFrom('${entity}') or externalSupabase instead.`;
     console.error(errorMsg);
     // In production we might just log, but in dev/test we fail fast
