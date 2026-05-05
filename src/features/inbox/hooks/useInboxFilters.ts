@@ -16,6 +16,9 @@ const log = getLogger('useInboxFilters');
 interface UseInboxFiltersProps {
   conversations: ConversationWithMessages[];
   profileId: string | undefined;
+  search?: string;
+  sortBy?: 'lastMessage' | 'name' | 'unread';
+  statusFilter?: 'all' | 'open' | 'closed' | 'unread';
 }
 
 export function useInboxFilters({ conversations, profileId }: UseInboxFiltersProps) {
