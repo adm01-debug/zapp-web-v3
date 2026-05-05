@@ -125,7 +125,7 @@ export function useSLAAlerts(params: SLAAlertParams) {
   const firedRef = useRef<Set<string>>(new Set());
   const inflightRef = useRef<Set<string>>(new Set());
   const { preferences } = useSLAAlertPreferences();
-  const [deliveryStatus, setDeliveryStatus] = (params as any).deliveryDelayStatus ? [(params as any).deliveryDelayStatus, (params as any).deliveryDelayMs] : [null, null];
+  // Removed redundant assignment using direct params access
 
   useEffect(() => {
     if (params.scope === 'none' || !params.contactId) return;
