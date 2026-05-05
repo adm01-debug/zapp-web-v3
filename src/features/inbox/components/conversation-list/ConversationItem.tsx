@@ -317,10 +317,12 @@ export function ConversationItem({
           data-density="comfortable"
           onClick={() => onSelect(conversation)}
           className={cn(
-            'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group',
+            'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group flex items-start gap-3',
             isSelected
               ? 'bg-primary/10 shadow-[inset_0_0_20px_rgba(var(--primary),0.03)]'
-              : 'hover:bg-muted/30 bg-background'
+              : 'hover:bg-muted/30 bg-background',
+            isMultiSelected && 'bg-primary/15',
+            isPinned && !isSelected && 'bg-muted/30'
           )}
         >
           {isSelected && (
@@ -330,19 +332,37 @@ export function ConversationItem({
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
           )}
-          <div className="flex items-start gap-3.5 relative z-10">
+
+          {selectionMode && (
+            <div
+              className="flex-shrink-0 flex items-center pt-3"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelection?.(conversation.contact.id);
+              }}
+            >
+              <input 
+                type="checkbox" 
+                checked={isMultiSelected} 
+                onChange={() => {}} 
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20" 
+              />
+            </div>
+          )}
+
+          <div className="flex items-start gap-3.5 relative z-10 flex-1 min-w-0">
             <div className="relative flex-shrink-0">
               <ChannelBadge type={conversation.contact.contact_type} />
               <Avatar className={cn(
                 'w-[49px] h-[49px] ring-0 transition-transform duration-300',
                 isSelected ? 'scale-105' : 'group-hover:scale-105'
               )}>
-                <AvatarImage src={conversation.contact.avatar} className="object-cover" />
+                <AvatarImage src={avatarUrl} className="object-cover" />
                 <AvatarFallback className={cn(
                   'text-sm font-semibold tracking-tighter transition-colors duration-200',
                   isSelected ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
                 )}>
-                  {(conversation.contact.name || 'C').split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  {(conversation.contact.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
@@ -353,7 +373,7 @@ export function ConversationItem({
               ) : (
                 <span className={cn(
                   'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background shadow-sm',
-                  statusColors[conversation.status]
+                  statusColors[conversation.status as keyof typeof statusColors] || 'bg-muted'
                 )}>
                   <StatusIcon className="w-2 h-2 text-white" />
                 </span>
