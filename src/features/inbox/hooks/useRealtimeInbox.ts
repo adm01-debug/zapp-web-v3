@@ -497,7 +497,11 @@ export function useRealtimeInbox() {
     soundOn, toggleSound,
     globalSearchOpen, setGlobalSearchOpen,
     showNewConversation, setShowNewConversation,
+    search, setSearch,
+    statusFilter, setStatusFilter,
+    sortBy, setSortBy,
     profile,
+
     // Data
     conversations, cachedConversations, usingCache,
     loading, error,
