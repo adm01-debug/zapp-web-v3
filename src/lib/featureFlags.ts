@@ -23,7 +23,10 @@ type FeatureFlag =
   | 'optimistic_messages'
   | 'auto_retry_failed'
   | 'whisper_mode'
-  | 'dark_mode';
+  | 'dark_mode'
+  | 'v2_audio_recorder'
+  | 'advanced_transcription'
+  | 'message_queue_retry';
 
 const DEFAULTS: Record<FeatureFlag, boolean> = {
   ai_agents: true,
