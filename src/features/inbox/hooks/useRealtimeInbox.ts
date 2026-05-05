@@ -292,6 +292,16 @@ export function useRealtimeInbox() {
   // Função interna que processa cada item da fila
   const processQueuedMessage = useCallback(async (item: any) => {
     const { contactId, content, attachments, onProgress } = item;
+
+    // Auto-assign on first reply if pending
+    try {
+      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', contactId).maybeSingle();
+      if (conv && conv.routing_status === 'pending') {
+        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', contactId);
+      }
+    } catch (err) {
+      log.error('Error auto-assigning on reply:', err);
+    }
     
     if (USE_EXTERNAL_DB) {
       const { sendExternalText, sendExternalMedia } = await import('..');
