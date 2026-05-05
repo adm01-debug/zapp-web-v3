@@ -44,17 +44,18 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
   const contactSearchRef = useRef<HTMLInputElement>(null);
   const [contactSearch, setContactSearch] = useState('');
 
-  // Sync local search to inboxFilters
+  // Sync local search to inbox filters
   const handleContactSearch = useCallback((value: string) => {
     setContactSearch(value);
-    inboxFilters.setSearch(value);
-  }, [inboxFilters]);
+    inbox.setSearch(value);
+  }, [inbox]);
 
   const clearContactSearch = useCallback(() => {
     setContactSearch('');
-    inboxFilters.setSearch('');
+    inbox.setSearch('');
     contactSearchRef.current?.focus();
-  }, [inboxFilters]);
+  }, [inbox]);
+
 
   const sortedFilteredIds = useMemo(() => 
     inboxFilters.filteredConversations.map((c: any) => c.contact.id), 
