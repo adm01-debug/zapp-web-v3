@@ -177,9 +177,9 @@ function ConversationItem({
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {conversation.lastMessage && (
-                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                <span className="text-[11px] font-normal text-muted-foreground tabular-nums lowercase">
                   {formatDistanceToNow(new Date(conversation.lastMessage.created_at), {
-                    addSuffix: false,
+                    addSuffix: true,
                     locale: ptBR,
                   })}
                 </span>
@@ -201,14 +201,30 @@ function ConversationItem({
             }
           />
           {conversation.contact.tags && conversation.contact.tags.length > 0 && (
-            <div className="flex gap-1 mt-1.5">
-              {conversation.contact.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0 h-4">
-                  {tag}
-                </Badge>
-              ))}
+            <div className="flex items-center gap-1 mt-1.5">
+              {conversation.contact.tags.slice(0, 2).map((tag) => {
+                const tagLower = tag.toLowerCase();
+                const isVip = tagLower.includes('vip');
+                const isDecisor = tagLower.includes('decisor') || tagLower.includes('decision');
+                const isHot = tagLower.includes('hot') || tagLower.includes('quente');
+                return (
+                  <Badge
+                    key={tag}
+                    variant="outline"
+                    className={cn(
+                      'text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0 h-4 border',
+                      isVip && 'border-[hsl(var(--warning))]/40 text-[hsl(var(--warning))] bg-[hsl(var(--warning))]/10',
+                      isHot && 'border-destructive/40 text-destructive bg-destructive/10',
+                      isDecisor && 'border-muted-foreground/30 text-muted-foreground bg-muted/40',
+                      !isVip && !isHot && !isDecisor && 'border-border text-muted-foreground bg-muted/30'
+                    )}
+                  >
+                    {tag}
+                  </Badge>
+                );
+              })}
               {conversation.contact.tags.length > 2 && (
-                <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
+                <span className="text-[10px] font-semibold text-muted-foreground tabular-nums px-1">
                   +{conversation.contact.tags.length - 2}
                 </span>
               )}
