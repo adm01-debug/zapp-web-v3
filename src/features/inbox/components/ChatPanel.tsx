@@ -66,9 +66,10 @@ interface ChatPanelProps extends LoadOlderProps {
   initialHighlightMessageId?: string | null;
   onHighlightConsumed?: () => void;
   whisperCount?: number;
+  isLoading?: boolean;
 }
 
-export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0 }: ChatPanelProps) {
+export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0, isLoading = false }: ChatPanelProps) {
   const { templates: quickReplyTemplates } = useQuickReplies();
   const [selectedQuickReplyIndex, setSelectedQuickReplyIndex] = useState(0);
   const { dialogs, openDialog, closeDialog, toggleDialog, resetDialogs } = useChatDialogs();
@@ -455,9 +456,9 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           onLoadOlder={failuresOnly ? undefined : onLoadOlder}
           onCancelLoadOlder={failuresOnly ? undefined : onCancelLoadOlder}
           loadingOlder={failuresOnly ? false : loadingOlder}
-          hasMoreOlder={failuresOnly ? false : hasMoreOlder} />
+          hasMoreOlder={failuresOnly ? false : hasMoreOlder} isLoading={isLoading} />
 
-        <ChatQuickRepliesPopover show={dialogs.quickReplies} replies={filteredQuickReplies} onSelect={handleQuickReply} onClose={() => closeDialog('quickReplies')} />
+        <ChatQuickRepliesPopover show={dialogs.quickReplies} replies={filteredQuickReplies} onSelect={handleQuickReply} onClose={() => closeDialog('quickReplies')} selectedIndex={selectedQuickReplyIndex} />
 
         {dialogs.whisper && (
           <Suspense fallback={null}>

@@ -2,81 +2,32 @@ import { useState, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
-import { SLAIndicatorForContact } from './SLAIndicatorForContact';
+import { ConversationItem } from './conversation-list/ConversationItem';
 import { ConversationContextMenu } from './ConversationContextMenu';
-import { ThreadSLASettingsDialog } from './ThreadSLASettingsDialog';
-import { useExternalContact360Batch, CRMBatchResult } from '@/hooks/useExternalContact360Batch';
-import { isExternalConfigured } from '@/integrations/supabase/externalClient';
 import {
   Search,
   Filter,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  Sparkles,
-  Building,
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-
-/** Renders CRM company badge from pre-fetched batch data (no individual RPC call). */
-
-function CRMConversationBadge({ crmInfo }: { crmInfo: CRMBatchResult | undefined }) {
-  if (!crmInfo?.company_name) return null;
-  return (
-    <div className="flex items-center gap-1 mt-0.5">
-      <Sparkles className="w-3 h-3 text-primary/60 shrink-0" />
-      <span className="text-[10px] text-primary/70 truncate max-w-[140px]">
-        {crmInfo.company_name}
-      </span>
-    </div>
-  );
-}
 
 interface ConversationListProps {
   conversations: Conversation[];
   selectedId?: string;
   onSelect: (conversation: Conversation) => void;
+  isLoading?: boolean;
 }
-
-const statusIcons = {
-  open: AlertCircle,
-  pending: Clock,
-  resolved: CheckCircle2,
-  waiting: Loader2,
-};
-
-const statusColors = {
-  open: 'bg-status-open',
-  pending: 'bg-status-pending',
-  resolved: 'bg-status-resolved',
-  waiting: 'bg-status-waiting',
-};
 
 export function ConversationList({
   conversations,
   selectedId,
   onSelect,
+  isLoading = false,
 }: ConversationListProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
-  const [slaSettingsThreadId, setSlaSettingsThreadId] = useState<string | null>(null);
-  const [isSlaDialogOpen, setIsSlaDialogOpen] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
-
-  // Batch CRM lookup: collect all phones, make 1 single RPC call
-  const allPhones = useMemo(
-    () => conversations.map((c) => c.contact.phone),
-    [conversations]
-  );
-  const { lookup: crmLookup } = useExternalContact360Batch(allPhones);
 
   const filteredConversations = useMemo(() => {
     const q = search.toLowerCase();
@@ -103,16 +54,16 @@ export function ConversationList({
   const virtualizer = useVirtualizer({
     count: filteredConversations.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 65, // 64px item + 1px border
+    estimateSize: () => 78, // Based on ConversationItem min-h
     overscan: 10,
   });
 
   return (
-    <div className="flex flex-col h-full bg-black border-r border-border overflow-hidden">
+    <div className="flex flex-col h-full bg-background border-r border-border overflow-hidden font-sans">
       {/* Header */}
-      <div className="p-3 border-b border-border bg-black space-y-3 shrink-0">
+      <div className="p-3 border-b border-border bg-background space-y-3 shrink-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-foreground select-none">Conversas</h2>
+          <h2 className="text-lg font-bold text-foreground select-none tracking-tight">Conversas</h2>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" aria-label="Filtrar conversas" className="w-8 h-8 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
               <Filter className="w-4 h-4" />
@@ -129,13 +80,13 @@ export function ConversationList({
             placeholder="Buscar conversas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-4 h-[32px] bg-card border-none rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 transition-all"
+            className="pl-10 pr-4 h-[36px] bg-muted/30 border-none rounded-xl text-sm text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-background transition-all"
           />
         </div>
 
         {/* Tabs */}
         <Tabs value={filter} onValueChange={setFilter} className="w-full">
-          <TabsList className="w-full h-8 p-1 bg-card border-none rounded-lg">
+          <TabsList className="w-full h-9 p-1 bg-muted/30 border-none rounded-xl">
             {[
               { id: 'all', label: 'Todas', count: counts.all },
               { id: 'open', label: 'Abertas', count: counts.open },
@@ -145,7 +96,7 @@ export function ConversationList({
               <TabsTrigger 
                 key={t.id}
                 value={t.id} 
-                className="flex-1 text-[11px] h-6 rounded-md data-[state=active]:bg-accent data-[state=active]:text-primary text-muted-foreground hover:text-foreground transition-all"
+                className="flex-1 text-[11px] font-semibold h-7 rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground transition-all"
               >
                 {t.label}
               </TabsTrigger>
@@ -154,14 +105,28 @@ export function ConversationList({
         </Tabs>
       </div>
 
-
       {/* Conversations List */}
       <div ref={parentRef} className="flex-1 overflow-y-auto scrollbar-none" role="listbox" aria-label="Lista de conversas">
-        {filteredConversations.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-0">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="p-3 border-b border-border animate-pulse flex items-start gap-3.5">
+                <div className="w-[49px] h-[49px] rounded-full bg-muted shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2 py-1">
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 w-24 bg-muted rounded" />
+                    <div className="h-3 w-10 bg-muted rounded" />
+                  </div>
+                  <div className="h-3.5 w-full bg-muted rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredConversations.length === 0 ? (
           <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-card">
-                <Search className="w-7 h-7 text-muted-foreground" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-muted/30">
+                <Search className="w-7 h-7 text-muted-foreground/50" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">Nenhuma conversa</h3>
               <p className="text-sm text-muted-foreground max-w-[200px]">
@@ -184,7 +149,6 @@ export function ConversationList({
               return (
                 <div 
                   key={virtualRow.key} 
-                  className="p-0"
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -199,65 +163,16 @@ export function ConversationList({
                     contactName={conversation.contact.name}
                     isMuted={conversation.is_muted}
                   >
-                  <div
-                    role="option"
-                    tabIndex={0}
-                    aria-selected={isSelected}
-                    onClick={() => onSelect(conversation)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(conversation); } }}
-                    className={cn(
-                      'relative p-0 cursor-pointer transition-colors duration-200 outline-none h-full',
-                      isSelected ? 'bg-primary/10' : 'hover:bg-muted/10 bg-black'
-                    )}
-                  >
-                    <div className="px-3 h-full">
-                      <div className="flex items-center gap-3 py-3 border-b border-border h-full">
-                        <div className="relative flex-shrink-0">
-                          <Avatar className="w-[42px] h-[42px] ring-0">
-                            <AvatarImage 
-                              src={conversation.contact.avatar} 
-                              referrerPolicy="no-referrer" 
-                              onError={(e) => { (e.target as HTMLImageElement).removeAttribute('src'); }}
-                            />
-                            <AvatarFallback className="bg-primary/5 text-primary text-sm font-semibold">
-                              {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-[13px] leading-tight text-foreground truncate">
-                              {conversation.contact.name}
-                            </span>
-                            <span className="text-[11px] leading-tight text-muted-foreground tabular-nums flex-shrink-0 ml-2">
-                              {formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <p className={cn(
-                              "text-[12px] leading-tight truncate pr-2",
-                              conversation.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground font-normal"
-                            )}>
-                              {conversation.lastMessage?.content || 'Sem mensagens'}
-                            </p>
-                            {conversation.unreadCount > 0 && (
-                              <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold bg-primary text-background">
-                                {conversation.unreadCount}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    <ConversationItem 
+                      conversation={conversation}
+                      isSelected={isSelected}
+                      onSelect={onSelect}
+                    />
                   </ConversationContextMenu>
                 </div>
               );
             })}
           </div>
-
         )}
       </div>
     </div>

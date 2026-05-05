@@ -2,6 +2,7 @@ import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, us
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Ban, RotateCw, Navigation2, AlertCircle, Info, Lock, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('ChatMessagesArea');
@@ -48,6 +49,7 @@ interface ChatMessagesAreaProps extends LoadOlderProps {
   highlightedMessageIds?: Set<string>;
   activeHighlightId?: string | null;
   searchQuery?: string;
+  isLoading?: boolean;
   /**
    * Duração em ms do badge "Carregamento cancelado". Default: 2500ms.
    * Ignorado em modo local (sem `onLoadOlder`), pois o badge nunca aparece.
@@ -75,6 +77,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   onScrollToMessage, onInteractiveButtonClick, onEditStart, highlightedMessageIds, activeHighlightId, searchQuery,
   onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false,
   loadOlderCancelBadgeMs = 2500,
+  isLoading = false,
 }, ref) => {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -366,6 +369,17 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   return (
     <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-4 md:px-24 space-y-1.5 scrollbar-none bg-background relative transition-colors duration-500 font-sans text-[15px] font-semibold tracking-normal" style={{ fontFamily: 'Outfit, sans-serif' }}>
       <ChatWatermark />
+      
+      {isLoading && (
+        <div className="space-y-6 pt-10">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className={cn("flex flex-col gap-2", i % 2 === 0 ? "items-start" : "items-end")}>
+              <Skeleton className={cn("h-16 rounded-2xl", i % 2 === 0 ? "w-2/3 rounded-tl-none" : "w-1/2 rounded-tr-none")} />
+              <Skeleton className="h-3 w-12 rounded" />
+            </div>
+          ))}
+        </div>
+      )}
       {messages.length > 0 && (
         <div className="sticky top-0 z-20 flex flex-col items-center gap-1.5 pointer-events-none -mt-2 mb-2">
           <div className="pointer-events-auto">
