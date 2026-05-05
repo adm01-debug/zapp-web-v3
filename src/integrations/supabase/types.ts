@@ -6780,15 +6780,18 @@ export type Database = {
           birthday: string | null
           can_download: boolean
           created_at: string
+          current_load: number | null
           department: string | null
           department_id: string | null
           email: string | null
           id: string
           is_active: boolean | null
           job_title: string | null
+          last_seen: string | null
           max_chats: number | null
           name: string
           nickname: string | null
+          online_status: string | null
           permissions: Json | null
           phone: string | null
           role: string | null
@@ -6804,15 +6807,18 @@ export type Database = {
           birthday?: string | null
           can_download?: boolean
           created_at?: string
+          current_load?: number | null
           department?: string | null
           department_id?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
           job_title?: string | null
+          last_seen?: string | null
           max_chats?: number | null
           name: string
           nickname?: string | null
+          online_status?: string | null
           permissions?: Json | null
           phone?: string | null
           role?: string | null
@@ -6828,15 +6834,18 @@ export type Database = {
           birthday?: string | null
           can_download?: boolean
           created_at?: string
+          current_load?: number | null
           department?: string | null
           department_id?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
           job_title?: string | null
+          last_seen?: string | null
           max_chats?: number | null
           name?: string
           nickname?: string | null
+          online_status?: string | null
           permissions?: Json | null
           phone?: string | null
           role?: string | null
@@ -8007,6 +8016,88 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      routing_queues: {
+        Row: {
+          created_at: string | null
+          department_id: string | null
+          id: string
+          name: string
+          priority: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department_id?: string | null
+          id?: string
+          name: string
+          priority?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department_id?: string | null
+          id?: string
+          name?: string
+          priority?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routing_queues_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      routing_rules: {
+        Row: {
+          conditions: Json | null
+          created_at: string | null
+          department_id: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          priority: number | null
+          rule_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          conditions?: Json | null
+          created_at?: string | null
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority?: number | null
+          rule_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          conditions?: Json | null
+          created_at?: string | null
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority?: number | null
+          rule_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routing_rules_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_deals: {
         Row: {
@@ -9792,6 +9883,8 @@ export type Database = {
       }
       team_conversations: {
         Row: {
+          assigned_at: string | null
+          assigned_to: string | null
           avatar_url: string | null
           created_at: string
           created_by: string | null
@@ -9800,6 +9893,7 @@ export type Database = {
           id: string
           metadata: Json | null
           name: string | null
+          routing_status: string | null
           type: string
           updated_at: string
           whatsapp_api_key: string | null
@@ -9807,6 +9901,8 @@ export type Database = {
           whatsapp_mode: string | null
         }
         Insert: {
+          assigned_at?: string | null
+          assigned_to?: string | null
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -9815,6 +9911,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           name?: string | null
+          routing_status?: string | null
           type?: string
           updated_at?: string
           whatsapp_api_key?: string | null
@@ -9822,6 +9919,8 @@ export type Database = {
           whatsapp_mode?: string | null
         }
         Update: {
+          assigned_at?: string | null
+          assigned_to?: string | null
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -9830,6 +9929,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           name?: string | null
+          routing_status?: string | null
           type?: string
           updated_at?: string
           whatsapp_api_key?: string | null
@@ -9837,6 +9937,20 @@ export type Database = {
           whatsapp_mode?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "team_conversations_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_conversations_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "team_conversations_created_by_fkey"
             columns: ["created_by"]
@@ -11620,6 +11734,7 @@ export type Database = {
         }
         Returns: string
       }
+      calculate_agent_load: { Args: { agent_id: string }; Returns: number }
       calculate_level: { Args: { xp_amount: number }; Returns: number }
       can_supervise_profile: {
         Args: { _target_profile_id: string; _user_id: string }
