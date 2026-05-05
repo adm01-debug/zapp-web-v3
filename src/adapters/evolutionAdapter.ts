@@ -227,7 +227,7 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
 
       if (new Date(msg.created_at) > new Date(existing.lastMessageAt)) {
         existing.lastMessageAt = msg.created_at;
-        existing.lastMessageContent = msg.content || msg.caption;
+        existing.lastMessageContent = msg.content || msg.caption || (extractMessageType(msg.message_type).category !== 'text' ? `[${extractMessageType(msg.message_type).label}]` : '');
         existing.lastMessageDirection = msg.direction;
       }
     }
