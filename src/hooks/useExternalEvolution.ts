@@ -356,22 +356,21 @@ export function useExternalConversations(enabled = true) {
       const conversations = buildExternalConversations(messages);
       
       // ✨ Enrichment: Fetch extra contact metadata (tags, company, ai_sentiment)
-      // from evolution_contacts for the sidebar list.
+      // from evolution_contacts via optimized RPC for the sidebar list.
       const jids = Array.from(new Set(conversations.map(c => c.contact.id)));
       if (jids.length > 0) {
         try {
           const contactsResult = await queryExternalProxy<any>({
-            table: 'evolution_contacts',
-            select: 'remote_jid,tags,company,ai_sentiment',
-            filters: [
-              { column: 'remote_jid', operator: 'in', value: jids },
-              { column: 'instance_name', operator: 'eq', value: DEFAULT_INSTANCE }
-            ],
-            limit: jids.length
+            action: 'rpc',
+            rpc: 'rpc_get_contacts',
+            params: {
+              p_remote_jids: jids,
+              p_instance_name: DEFAULT_INSTANCE
+            }
           });
           
           if (contactsResult.data && contactsResult.data.length > 0) {
-            const contactMap = new Map(contactsResult.data.map(c => [c.remote_jid, c]));
+            const contactMap = new Map(contactsResult.data.map((c: any) => [c.remote_jid, c]));
             conversations.forEach(conv => {
               const extra = contactMap.get(conv.contact.id);
               if (extra) {
@@ -383,9 +382,10 @@ export function useExternalConversations(enabled = true) {
             });
           }
         } catch (err) {
-          log.warn('Failed to enrich contacts in sidebar', err);
+          log.warn('Failed to enrich contacts in sidebar via RPC', err);
         }
       }
+
 
       return conversations;
     },
