@@ -144,7 +144,7 @@ export function EmailChatReplyBar({
   };
 
   return (
-    <div className={cn('border-t bg-card', className)}>
+    <div className={cn('border-t bg-background/80 backdrop-blur-md sticky bottom-0', className)}>
       <div className="px-4 py-3 space-y-3">
         {/* Header: Para + CC/BCC toggle */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
