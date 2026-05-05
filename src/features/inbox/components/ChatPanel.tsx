@@ -199,56 +199,55 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
     let cancelled = false;
     let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+    let attempts = 0;
 
-    // Caso 1 — mensagem já está carregada: rola, destaca e agenda
-    // a remoção do ring após ~3.2 s.
-    const internalId = findInternal();
-    if (internalId) {
-      setHighlightedMessageIds(new Set([internalId]));
-      setActiveHighlightId(internalId);
-
-      let attempts = 0;
-      const tryScroll = () => {
-        if (cancelled) return;
-        attempts++;
-        const found = messagesAreaRef.current?.scrollToMessage(internalId) ?? false;
-        if (!found && attempts < 6) setTimeout(tryScroll, 120);
-      };
-      tryScroll();
-
-      highlightTimer = setTimeout(() => {
-        setActiveHighlightId(null);
-        setHighlightedMessageIds(new Set());
-        onHighlightConsumed?.();
-      }, 3200);
-
-      return () => {
-        cancelled = true;
-        if (highlightTimer) clearTimeout(highlightTimer);
-      };
-    }
-
-    // Caso 2 — mensagem ainda não está na lista. Damos uma janela de
-    // graça (~2.5 s) para o fetch inicial / `loadOlder` materializá-la.
-    // Se o effect re-rodar antes (porque `messages` mudou e a mensagem
-    // apareceu), o cleanup cancela o timer e a próxima execução cai no
-    // Caso 1. Caso contrário, mostramos um aviso e seguimos com a
-    // conversa aberta normalmente, consumindo o pending para não
-    // tentar novamente em renders subsequentes.
-    const giveUpTimer = setTimeout(() => {
+    const tryFindAndScroll = () => {
       if (cancelled) return;
-      toast({
-        title: 'Mensagem não encontrada',
-        description:
-          'A mensagem original pode ter sido removida ou ainda não foi carregada. Abrimos a conversa normalmente.',
-        variant: 'destructive',
-      });
-      onHighlightConsumed?.();
-    }, 2500);
+      
+      const internalId = findInternal();
+      if (internalId) {
+        setHighlightedMessageIds(new Set([internalId]));
+        setActiveHighlightId(internalId);
+
+        let scrollAttempts = 0;
+        const tryScroll = () => {
+          if (cancelled) return;
+          scrollAttempts++;
+          const found = messagesAreaRef.current?.scrollToMessage(internalId) ?? false;
+          if (!found && scrollAttempts < 10) setTimeout(tryScroll, 150);
+        };
+        tryScroll();
+
+        highlightTimer = setTimeout(() => {
+          if (cancelled) return;
+          setActiveHighlightId(null);
+          setHighlightedMessageIds(new Set());
+          onHighlightConsumed?.();
+        }, 3500);
+        return;
+      }
+
+      attempts++;
+      
+      // Retry for up to ~5 seconds (20 * 250ms) if not found, 
+      // but only if loading is still in progress or we haven't reached the limit.
+      if (attempts < 20) {
+        setTimeout(tryFindAndScroll, 250);
+      } else {
+        toast({
+          title: 'Mensagem não encontrada',
+          description: 'A mensagem original pode ter sido removida ou ainda não foi carregada.',
+          variant: 'destructive',
+        });
+        onHighlightConsumed?.();
+      }
+    };
+
+    tryFindAndScroll();
 
     return () => {
       cancelled = true;
-      clearTimeout(giveUpTimer);
+      if (highlightTimer) clearTimeout(highlightTimer);
     };
   }, [initialHighlightMessageId, messages, onHighlightConsumed]);
 
