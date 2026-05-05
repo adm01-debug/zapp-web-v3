@@ -61,6 +61,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     duration,
     audioUrl,
     audioLevel,
+    transcription,
     startRecording,
     pauseRecording,
     resumeRecording,
@@ -68,11 +69,29 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     cancelRecording,
     formatDuration,
   } = useAudioRecorder({
-    onRecordingComplete: (blob) => {
+    onRecordingComplete: (blob, url) => {
       setAudioBlob(blob);
       setIsConfirming(true);
     },
   });
+
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isRecording || isPaused) {
+        if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
+          e.preventDefault();
+          isPaused ? resumeRecording() : pauseRecording();
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          handleCancel();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isRecording, isPaused, resumeRecording, pauseRecording]);
 
   useEffect(() => {
     startRecording();
