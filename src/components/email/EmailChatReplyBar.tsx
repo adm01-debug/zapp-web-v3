@@ -237,17 +237,24 @@ export function EmailChatReplyBar({
 
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {/* Attachment */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => fileInputRef.current?.click()}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors" onClick={() => fileInputRef.current?.click()}>
                   <Paperclip className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Anexar arquivo</TooltipContent>
             </Tooltip>
             <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
+
+            {/* Template picker */}
+            <MessageTemplates onSelectTemplate={(content) => {
+              const el = bodyHtml.replace(/<[^>]*>/g, '');
+              const newContent = el ? (el + "\n\n" + content) : content;
+              setBody(newContent);
+            }} />
 
             {/* Signature picker */}
             {signatures.length > 0 && (
@@ -256,7 +263,7 @@ export function EmailChatReplyBar({
                   <div>
                     <Select value={selectedSignatureId ?? 'none'} onValueChange={v => setSelectedSignatureId(v === 'none' ? null : v)}>
                       <SelectTrigger className="h-8 w-8 border-0 bg-transparent p-0 focus:ring-0 [&>svg]:hidden">
-                        <Signature className="h-4 w-4 text-muted-foreground" />
+                        <Signature className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Sem assinatura</SelectItem>
