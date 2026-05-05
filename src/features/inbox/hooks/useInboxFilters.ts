@@ -21,7 +21,7 @@ interface UseInboxFiltersProps {
   statusFilter?: 'all' | 'open' | 'closed' | 'unread';
 }
 
-export function useInboxFilters({ conversations, profileId }: UseInboxFiltersProps) {
+export function useInboxFilters({ conversations, profileId, search: externalSearch, sortBy, statusFilter }: UseInboxFiltersProps) {
   const [mainTab, setMainTab] = useState<MainTab>('open');
   const [subTab, setSubTab] = useState<SubTab>('attending');
   const [showAll, setShowAll] = useState(false);
