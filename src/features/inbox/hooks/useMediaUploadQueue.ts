@@ -144,7 +144,7 @@ export function useMediaUploadQueue(contactId: string) {
         const result = await performUpload(item);
         if (result.ok === true) {
           patch(item.id, { status: 'uploaded', progress: 100, storagePath: result.storagePath, errorMessage: undefined });
-          await persist(item.id, { status: 'uploaded', progress: 100, storage_path: result.storagePath });
+          await persist(item.id, { status: 'uploaded', progress: 100, storagePath: result.storagePath });
           return;
         }
         const errMsg = result.error;
