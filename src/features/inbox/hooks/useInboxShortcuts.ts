@@ -19,6 +19,7 @@ export function useInboxShortcuts({
   onArchive,
   onTransfer,
   onRefresh,
+  onSearchFocusChat,
   enabled = true,
 }: UseInboxShortcutsProps) {
   // Focus search: Cmd+K or Ctrl+K
