@@ -129,7 +129,7 @@ export function MessageBubble({
             {message.type === 'audio' && message.mediaUrl && <div className="mb-2"><AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} refreshKey={mediaRefreshKey} /></div>}
             {message.type === 'document' && message.mediaUrl && <div className="mb-2"><DocumentPreview url={message.mediaUrl} fileName="document" isSent={isSent} /></div>}
             {message.type === 'location' && message.location && <LocationMessageDisplay location={message.location} isSent={isSent} />}
-            {message.content && message.type === 'text' && <p className="text-[14.5px] leading-relaxed font-medium whitespace-pre-wrap break-words tracking-tight">{message.content}</p>}
+            {message.content && message.type === 'text' && <p className="text-[15px] leading-relaxed font-semibold whitespace-pre-wrap break-words tracking-normal">{message.content}</p>}
             <div className={cn('flex items-center gap-1.5 mt-1.5 text-[10px] uppercase font-black tracking-[0.05em]', isSent ? 'text-primary-foreground/50' : 'text-muted-foreground/40')}>
               <span>{formatMessageTime(message.timestamp)}</span>
               {isSent && <MessageStatusInline message={message} />}
