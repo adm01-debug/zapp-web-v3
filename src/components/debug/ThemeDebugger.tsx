@@ -62,6 +62,9 @@ export function ThemeDebugger() {
     }
   }, [isOpen]);
 
+  // Esconde completamente para qualquer usuário que NÃO tenha o role 'dev'.
+  if (rolesLoading || !isDevExact) return null;
+
   if (!isOpen) {
     return (
       <Button 
