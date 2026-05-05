@@ -169,8 +169,10 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
       if (state && state.assignedTo !== undefined) return state.assignedTo;
       return fallback ?? null;
     };
-    const searchTrimmed = (search || '').trim();
-    // 1. Tab-based filtering
+    const effectiveSearch = (externalSearch !== undefined ? externalSearch : search || '').trim();
+    const searchTrimmed = effectiveSearch;
+
+    // 1. Tab and Status Filtering
     if (searchTrimmed.length === 0) {
       if (mainTab === 'open') {
         result = result.filter(c => {
@@ -178,6 +180,9 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
           const isOpenOrProgress = s === 'open' || s === 'in_progress';
           
           if (!isOpenOrProgress) return false;
+
+          // Apply statusFilter if provided (legacy unread button etc)
+          if (statusFilter === 'unread' && c.unreadCount === 0) return false;
 
           if (subTab === 'attending') {
             if (showAll) return true;
@@ -202,7 +207,10 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
       if (mainTab === 'open') {
         result = result.filter(c => {
           const s = statusOf(c.contact.id);
-          return s === 'open' || s === 'in_progress';
+          const isOpen = s === 'open' || s === 'in_progress';
+          if (!isOpen) return false;
+          if (statusFilter === 'unread' && c.unreadCount === 0) return false;
+          return true;
         });
       } else if (mainTab === 'resolved') {
         result = result.filter(c => statusOf(c.contact.id) === 'resolved');
