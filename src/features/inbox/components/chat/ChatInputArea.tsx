@@ -274,7 +274,16 @@ export function ChatInputArea(props: ChatInputAreaProps) {
 
             <textarea ref={inputRef} value={inputValue}
               onChange={(e) => { onInputChange(e); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
-              onKeyDown={onKeyDown} onBlur={onBlur} onPaste={logic.handlePaste}
+              onKeyDown={(e) => {
+                onKeyDown(e);
+                if (e.key === 'ArrowUp' && !inputValue && messages.length > 0) {
+                  const lastOwnMessage = [...messages].reverse().find(m => m.from_me && !m.is_deleted);
+                  if (lastOwnMessage && onEditStart) {
+                    e.preventDefault();
+                    onEditStart(lastOwnMessage);
+                  }
+                }
+              }} onBlur={onBlur} onPaste={logic.handlePaste}
               onClick={(e) => { const t = e.target as HTMLTextAreaElement; checkForMention(t.value, t.selectionStart ?? 0); }}
               placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Escreva sua mensagem..."}
               rows={1}
