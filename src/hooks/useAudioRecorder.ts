@@ -107,7 +107,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         setTranscription('');
       }
 
-      // Web Speech API for real-time transcription
+      // Enhanced Transcription with Fallback
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
@@ -116,15 +116,28 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         recognition.interimResults = true;
         
         recognition.onresult = (event: any) => {
-          let currentTranscript = '';
+          let interimTranscript = '';
           for (let i = event.resultIndex; i < event.results.length; i++) {
-            currentTranscript += event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              setTranscription(prev => (prev + ' ' + event.results[i][0].transcript).trim());
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
           }
-          setTranscription(prev => prev + ' ' + currentTranscript);
+          // Optional: handle interim for display
+        };
+
+        recognition.onerror = (event: any) => {
+          log.warn('Speech recognition error:', event.error);
+          if (event.error === 'network') {
+            toast({ title: 'Erro de rede na transcrição', description: 'Tentando novamente...' });
+          }
         };
         
         recognition.start();
         recognitionRef.current = recognition;
+      } else {
+        log.warn('Web Speech API not supported in this browser.');
       }
       
       intervalRef.current = setInterval(() => {
