@@ -113,9 +113,8 @@ export function ChatPanelHeader({
               </div>
             )}
           </div>
-        <div className="hidden md:flex h-8 w-px bg-border/40 mx-2" />
         </div>
-      </div>
+        <div className="hidden md:flex h-8 w-px bg-border/40 mx-2 shrink-0" />
       </div>
 
       <div className="flex items-center gap-0.5">
