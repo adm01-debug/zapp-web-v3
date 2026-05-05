@@ -382,8 +382,15 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onOpenTransfer={() => openDialog('transferDialog')}
             onOpenSchedule={() => openDialog('scheduleDialog')}
             onVoiceChange={setVoiceId}
-            onSetActiveTool={handleSetActiveTool}
+            onSpeedChange={setSpeed}
+            onBack={onBack}
+            onGenerateSummary={() => handleSetActiveTool('summary')}
+            onCloseConversation={() => openDialog('closeDialog')}
+            failuresOnly={failuresOnly}
+            failuresCount={failedMessages.length}
+            onToggleFailuresOnly={() => setFailuresOnly((v) => !v)}
             activeTool={activeTool}
+            onSetActiveTool={handleSetActiveTool}
           />
         )}
 
@@ -411,17 +418,6 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
               />
             </div>
           </div>
-        )}
-            onSpeedChange={setSpeed}
-            onBack={onBack}
-            onGenerateSummary={() => handleSetActiveTool('summary')}
-            onCloseConversation={() => openDialog('closeDialog')}
-            failuresOnly={failuresOnly}
-            failuresCount={failedMessages.length}
-            onToggleFailuresOnly={() => setFailuresOnly((v) => !v)}
-            activeTool={activeTool}
-            onSetActiveTool={handleSetActiveTool}
-          />
         )}
 
         <ChatSearchBar messages={messages} isOpen={(activeTool as string) === 'chatSearch'}
