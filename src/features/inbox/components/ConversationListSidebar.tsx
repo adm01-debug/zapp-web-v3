@@ -43,6 +43,12 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
   const isMobile = useIsMobile();
   const contactSearchRef = useRef<HTMLInputElement>(null);
   const [contactSearch, setContactSearch] = useState('');
+  
+  const conversationsWithUnreadCount = useMemo(() => 
+    inbox.conversations.filter((c: any) => c.unreadCount > 0).length,
+    [inbox.conversations]
+  );
+
 
   // Sync local search to inbox filters
   const handleContactSearch = useCallback((value: string) => {
