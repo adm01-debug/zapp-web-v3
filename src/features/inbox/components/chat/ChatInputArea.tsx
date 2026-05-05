@@ -228,39 +228,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             </motion.div>
         )}
 
-        <div className="flex items-end gap-[5px]" role="toolbar" aria-label="Barra de mensagem">
-          <div className="flex items-center">
-            <Popover>
-              <PopoverTrigger asChild>
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  className={cn(
-                    "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] hover:bg-transparent shrink-0 transition-all rounded-full outline-none", 
-                    logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]"
-                  )}
-                  aria-label="Mais opções de mensagem"
-                >
-                  <Plus className="w-6 h-6" />
-                </motion.button>
-              </PopoverTrigger>
-              <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-300" align="start" side="top">{tertiaryTools}</PopoverContent>
-            </Popover>
-
-            {!logic.isMobile && (
-              <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
-                showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
-                isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
-                onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
-                fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
-                contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
-                onFileSelect={logic.handleFileSelect}
-                isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
-              />
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0 relative">
+        <div className="flex flex-col gap-2" role="toolbar" aria-label="Barra de mensagem">
+          {/* ROW 1: Textarea (campo de digitar mensagem em cima) */}
+          <div className="min-w-0 relative w-full">
             <MentionAutocomplete inputValue={inputValue} cursorPosition={mentionCursorPos} onSelect={handleMentionSelect} onClose={closeMention} isOpen={mentionOpen} />
 
             <AnimatePresence>
@@ -309,49 +279,82 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0 ml-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.button 
-                  onClick={(!logic.hasText && logic.attachments.length === 0 && !editingMessage) ? onRecordToggle : logic.handleSendWithAnimation}
-                  disabled={logic.isOverLimit || isSending}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9, rotate: (logic.hasText || logic.attachments.length > 0) ? 10 : 0 }}
-                  className={cn(
-                    "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-500 outline-none",
-                    isRecordingAudio 
-                      ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10" 
-                      : (logic.hasText || logic.attachments.length > 0)
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 scale-110"
-                        : "text-muted-foreground/40 hover:text-primary hover:bg-primary/5",
-                    logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]",
-                    logic.sendAnimation && "motion-safe:animate-bounce"
-                  )}
-                  aria-label={editingMessage ? "Confirmar edição" : (logic.hasText || logic.attachments.length > 0 ? "Enviar mensagem" : "Gravar áudio")}>
-                  <AnimatePresence mode="wait">
-                    {isSending ? (
-                      <motion.div key="loading" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      </motion.div>
-                    ) : editingMessage ? (
-                      <motion.div key="edit" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                        <Check className="w-5 h-5" />
-                      </motion.div>
-                    ) : (logic.hasText || logic.attachments.length > 0) ? (
-                      <motion.div key="send" initial={{ opacity: 0, scale: 0.5, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.5, rotate: 20 }}>
-                        <Send className="w-6 h-6" />
-                      </motion.div>
-                    ) : (
-                      <motion.div key="mic" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                        <Mic className={cn("w-5 h-5 md:w-6 md:h-6", isRecordingAudio && "animate-pulse")} />
-                      </motion.div>
+          {/* ROW 2: Toolbar (botões/ferramentas embaixo) + botão Enviar à direita */}
+          <div className="flex items-center gap-[5px] w-full">
+            <div className="flex items-center flex-1 min-w-0">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    className={cn(
+                      "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] hover:bg-transparent shrink-0 transition-all rounded-full outline-none",
+                      logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]"
                     )}
-                  </AnimatePresence>
-                </motion.button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-[10px] font-medium">Enviar</TooltipContent>
-            </Tooltip>
-            {/* Mic button handled by send button logic to mimic WhatsApp toggle */}
+                    aria-label="Mais opções de mensagem"
+                  >
+                    <Plus className="w-6 h-6" />
+                  </motion.button>
+                </PopoverTrigger>
+                <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-300" align="start" side="top">{tertiaryTools}</PopoverContent>
+              </Popover>
+
+              {!logic.isMobile && (
+                <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
+                  showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
+                  isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
+                  onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
+                  fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
+                  contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
+                  onFileSelect={logic.handleFileSelect}
+                  isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
+                />
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0 ml-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={(!logic.hasText && logic.attachments.length === 0 && !editingMessage) ? onRecordToggle : logic.handleSendWithAnimation}
+                    disabled={logic.isOverLimit || isSending}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9, rotate: (logic.hasText || logic.attachments.length > 0) ? 10 : 0 }}
+                    className={cn(
+                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-500 outline-none",
+                      isRecordingAudio
+                        ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10"
+                        : (logic.hasText || logic.attachments.length > 0)
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 scale-110"
+                          : "text-muted-foreground/40 hover:text-primary hover:bg-primary/5",
+                      logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]",
+                      logic.sendAnimation && "motion-safe:animate-bounce"
+                    )}
+                    aria-label={editingMessage ? "Confirmar edição" : (logic.hasText || logic.attachments.length > 0 ? "Enviar mensagem" : "Gravar áudio")}>
+                    <AnimatePresence mode="wait">
+                      {isSending ? (
+                        <motion.div key="loading" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        </motion.div>
+                      ) : editingMessage ? (
+                        <motion.div key="edit" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                          <Check className="w-5 h-5" />
+                        </motion.div>
+                      ) : (logic.hasText || logic.attachments.length > 0) ? (
+                        <motion.div key="send" initial={{ opacity: 0, scale: 0.5, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.5, rotate: 20 }}>
+                          <Send className="w-6 h-6" />
+                        </motion.div>
+                      ) : (
+                        <motion.div key="mic" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                          <Mic className={cn("w-5 h-5 md:w-6 md:h-6", isRecordingAudio && "animate-pulse")} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px] font-medium">Enviar</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
 
           {/* SecondaryToolbar moved to the left side of textarea to match WA web */}
