@@ -184,35 +184,45 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
 
       {/* Recording indicator or playback */}
       <div className="flex-1 flex items-center gap-3">
-        {isRecording ? (
+        {isRecording || isPaused ? (
           <>
             <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              className="w-3 h-3 rounded-full bg-destructive shrink-0"
+              animate={isPaused ? { scale: 1 } : { scale: [1, 1.2, 1] }}
+              transition={{ duration: 1, repeat: isPaused ? 0 : Infinity }}
+              className={cn("w-3 h-3 rounded-full shrink-0 shadow-lg", isPaused ? "bg-amber-500" : "bg-rose-500")}
             />
-            <div className="flex-1 flex items-center gap-2">
-              {/* Waveform visualization */}
-              <div className="h-8 flex-1 flex items-center gap-0.5">
-                {Array.from({ length: 30 }).map((_, i) => (
+            <div className="flex-1 flex items-center gap-3">
+              {/* Level Meter / Waveform */}
+              <div className="h-10 flex-1 flex items-center gap-[2px] bg-muted/20 rounded-lg px-2 border border-border/50">
+                {Array.from({ length: isMobile ? 20 : 40 }).map((_, i) => (
                   <motion.div
                     key={i}
                     animate={{
-                      height: [4, Math.random() * 24 + 4, 4],
+                      height: isPaused ? 4 : [4, (audioLevel * (30 + Math.random() * 10)) + 4, 4],
+                      opacity: isPaused ? 0.3 : 1
                     }}
                     transition={{
-                      duration: 0.5,
-                      repeat: Infinity,
-                      delay: i * 0.02,
+                      duration: 0.2,
+                      repeat: isPaused ? 0 : Infinity,
+                      delay: i * 0.01,
                     }}
-                    className="w-1 bg-primary rounded-full"
+                    className={cn("w-1 rounded-full", isPaused ? "bg-amber-500/50" : "bg-rose-500")}
                   />
                 ))}
               </div>
-              {/* Timer */}
-              <span className="text-sm font-mono text-destructive font-medium w-14 text-right tabular-nums">
-                {formatDuration(duration)}
-              </span>
+              
+              {/* Timer & Status */}
+              <div className="flex flex-col items-end min-w-[70px]">
+                <span className={cn(
+                  "text-sm font-mono font-bold tabular-nums",
+                  isPaused ? "text-amber-600" : "text-rose-600"
+                )}>
+                  {formatDuration(duration)}
+                </span>
+                <span className="text-[8px] uppercase font-black tracking-tighter opacity-60">
+                  {isPaused ? 'Pausado' : 'Gravando'}
+                </span>
+              </div>
             </div>
           </>
         ) : audioUrl ? (
