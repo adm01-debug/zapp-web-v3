@@ -343,7 +343,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.button
-                    onClick={logic.handleSendWithAnimation}
+                    onClick={() => logic.handleSendWithAnimation()}
                     disabled={isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)}
                     whileHover={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 1.1 } : {}}
                     whileTap={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 0.9 } : {}}
@@ -356,65 +356,25 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     )}
                     aria-label="Enviar mensagem"
                   >
-                    {isSending ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : editingMessage ? (
-                      <Check className="w-6 h-6" />
-                    ) : (
-                      <Send className="w-6 h-6" />
-                    )}
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">
-                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
-                </TooltipContent>
-              </Tooltip>
-                  >
-                    <Mic className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6", isRecordingAudio && "animate-pulse")} />
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">
-                  {logic.hasText || logic.attachments.length > 0 ? "Apague o texto para gravar áudio" : "Gravar áudio"}
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    onClick={() => logic.handleSendWithAnimation()}
-                    disabled={logic.isOverLimit || isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)}
-                    whileHover={!(logic.isOverLimit || isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 1.1 } : {}}
-                    whileTap={!(logic.isOverLimit || isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 0.9, rotate: 10 } : {}}
-                    className={cn(
-                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
-                      (logic.hasText || logic.attachments.length > 0 || editingMessage)
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 scale-110"
-                        : "text-muted-foreground/40 hover:text-primary hover:bg-primary/5",
-                      logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]",
-                      logic.sendAnimation && "motion-safe:animate-bounce"
-                    )}
-                    aria-label={editingMessage ? "Confirmar edição" : "Enviar mensagem"}
-                    aria-busy={isSending}
-                  >
                     <AnimatePresence mode="wait">
                       {isSending ? (
                         <motion.div key="loading" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Loader2 className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6", "animate-spin")} aria-hidden="true" />
+                          <Loader2 className="w-6 h-6 animate-spin" />
                         </motion.div>
                       ) : editingMessage ? (
                         <motion.div key="edit" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Check className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6")} aria-hidden="true" />
+                          <Check className="w-6 h-6" />
                         </motion.div>
                       ) : (
-                        <motion.div key="send" initial={{ opacity: 0, scale: 0.5, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.5, rotate: 20 }}>
-                          <Send className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6")} aria-hidden="true" />
+                        <motion.div key="send" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                          <Send className="w-6 h-6" />
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </motion.button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-[10px] font-medium">
-                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem (Enter)"}
+                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
                 </TooltipContent>
               </Tooltip>
             </div>
