@@ -307,10 +307,10 @@ export function ConversationItem({
                   </>
                 ) : null}
               </div>
-              {conversation.lastMessage && (
+              {lastMessage && (
                 <div className="mt-1 flex flex-col gap-1">
                   <SLAIndicatorForContact conversation={conversation} compact={isCompactMode} className="w-full justify-start" />
-                  <RetryFailureBadge message={conversation.lastMessage} compact />
+                  <RetryFailureBadge message={lastMessage} compact />
                 </div>
               )}
             </div>
