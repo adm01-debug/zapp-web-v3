@@ -83,7 +83,7 @@ export function ChatPanelHeader({
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-foreground text-[15px] tracking-tight leading-none">{conversation.contact.name}</h3>
+            <h3 className="font-semibold text-foreground text-[15px] tracking-normal leading-none" style={{ fontFamily: 'Outfit, sans-serif' }}>{conversation.contact.name}</h3>
             <SLAIndicatorForContact conversation={conversation} />
             {sendState === 'retrying' && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-warning/15 text-warning border border-warning/30">
