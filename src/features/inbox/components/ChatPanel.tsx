@@ -384,6 +384,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onToggleDetails={onToggleDetails || (() => {})}
             onStartCall={() => { setCallDirection('outbound'); openDialog('callDialog'); }}
             onOpenSearch={() => handleSetActiveTool('chatSearch')}
+            onOpenValidation={() => openDialog('visualValidation')}
             onOpenTransfer={() => openDialog('transferDialog')}
             onOpenSchedule={() => openDialog('scheduleDialog')}
             onVoiceChange={setVoiceId}
