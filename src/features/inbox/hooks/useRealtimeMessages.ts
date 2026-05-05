@@ -19,6 +19,10 @@ const SEEDED_CONTACT_LIMIT = 500;
 const RECENT_MESSAGES_LIMIT = 1000;
 const CONTACT_FETCH_CHUNK_SIZE = 200;
 
+const USE_MOCKS =
+  typeof window !== 'undefined' &&
+  window.localStorage?.getItem('mockConversations') === '1';
+
 export interface NewMessageNotification {
   id: string;
   contactId: string;
@@ -304,7 +308,16 @@ export function useRealtimeMessages() {
   void sendStateTick; // ensure dep tracked
 
   const filteredConversations = useMemo(() => {
-    let filtered = [...conversations];
+    let filtered = USE_MOCKS ? [] : [...conversations];
+    
+    if (USE_MOCKS) {
+       // Em modo mock, as conversas são injetadas via external client 
+       // ou poderiam ser injetadas aqui se não estivéssemos em USE_EXTERNAL_DB.
+       // Mas como o projeto usa FATOR X (external), o mock vai lá.
+       // Para segurança, se cairmos aqui, retornamos a lista original.
+       filtered = [...conversations];
+    }
+
 
     // 1. Search
     if (search) {
