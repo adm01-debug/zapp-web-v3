@@ -450,7 +450,7 @@ export default function AdminInboxSyncStatusPage() {
           </div>
           <div className="rounded-md border p-3">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <ArrowUpRight className="h-4 w-4 text-blue-500" />
+              <ArrowUpRight className="h-4 w-4 text-primary" />
               Outbound (enviada)
             </div>
             <p className="text-2xl font-semibold mt-1 tabular-nums">{timeAgo(lastEvents.outboundAt)}</p>

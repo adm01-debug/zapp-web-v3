@@ -203,9 +203,10 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-4 py-4 md:px-6 md:py-6 bg-background/95 backdrop-blur-xl border-t border-border/10 relative flex flex-col gap-3 shrink-0 font-sans transition-all duration-500 ease-in-out", 
+        "px-4 py-3 md:px-6 md:py-4 bg-background/95 backdrop-blur-xl border-t border-border/10 relative flex flex-col gap-2 shrink-0 font-sans transition-all duration-500 ease-in-out", 
         isWhisper && "bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-t-2 border-amber-500/30 shadow-[0_-8px_30px_rgba(245,158,11,0.05)]",
-        logic.isMobile && "px-3 py-3 safe-area-bottom"
+        !isWhisper && "focus-within:shadow-[0_-8px_30px_rgba(var(--primary-rgb),0.04)]",
+        logic.isMobile && "px-3 py-2 safe-area-bottom"
       )}>
         <AnimatePresence>
           {isRecordingAudio && (

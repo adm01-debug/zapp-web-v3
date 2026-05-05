@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { TypingIndicatorCompact, TypingIndicatorInline } from '@/features/inbox/components/TypingIndicator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SLAIndicatorForContact } from '@/features/inbox/components/SLAIndicatorForContact';
@@ -86,7 +87,22 @@ export function ChatPanelHeader({
         <div>
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-foreground text-[15px] tracking-normal leading-none" style={{ fontFamily: 'Outfit, sans-serif' }}>{conversation.contact.name}</h3>
+            {conversation.sentiment === 'critical' && <span className="text-destructive animate-pulse" title="Sentimento Crítico">🔥</span>}
+            {conversation.sentiment === 'negative' && <span className="text-destructive/80" title="Sentimento Negativo">😡</span>}
+            {conversation.sentiment === 'positive' && <span className="text-success" title="Sentimento Positivo">🌟</span>}
+            
+            {conversation.queue && (
+              <Badge 
+                variant="outline" 
+                className="text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider bg-primary/5 border-primary/20 text-primary"
+                style={{ borderColor: `${conversation.queue.color}40`, color: conversation.queue.color }}
+              >
+                {conversation.queue.name}
+              </Badge>
+            )}
+            
             <SLAIndicatorForContact conversation={conversation} />
+            
             {sendState === 'retrying' && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-warning/15 text-warning border border-warning/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
