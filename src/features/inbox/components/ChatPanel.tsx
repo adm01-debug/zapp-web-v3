@@ -382,6 +382,36 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             onOpenTransfer={() => openDialog('transferDialog')}
             onOpenSchedule={() => openDialog('scheduleDialog')}
             onVoiceChange={setVoiceId}
+            onSetActiveTool={handleSetActiveTool}
+            activeTool={activeTool}
+          />
+        )}
+
+        {activeTool === 'templates' && (
+          <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm p-4 overflow-auto flex items-center justify-center">
+            <div className="w-full max-w-2xl relative">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute -right-2 -top-2 z-[60] bg-background border border-border rounded-full hover:bg-muted" 
+                onClick={() => setActiveTool(null)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+              <TemplatesWithVariables 
+                onUseTemplate={(content) => {
+                  handlers.setInputValue(content);
+                  setActiveTool(null);
+                  setTimeout(() => handlers.inputRef.current?.focus(), 10);
+                }}
+                contactData={{
+                  name: conversation.contact.name,
+                  company: conversation.contact.company,
+                }}
+              />
+            </div>
+          </div>
+        )}
             onSpeedChange={setSpeed}
             onBack={onBack}
             onGenerateSummary={() => handleSetActiveTool('summary')}

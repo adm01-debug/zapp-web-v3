@@ -6,12 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit2, Copy, Search, Folder, FileText } from 'lucide-react';
+import { Plus, Edit2, Copy, Search, Folder, FileText, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { AVAILABLE_VARIABLES, replaceVariables } from './template-utils';
 import { TemplateEditorDialog, VariableInserter, TemplatePreview } from './templates/TemplateEditorDialog';
-import type { Template } from '@/features/inbox/hooks/useMessageTemplates';
+import { useMessageTemplates, type Template } from '@/features/inbox/hooks/useMessageTemplates';
 
 // Variable highlighter
 function VariableHighlighter({ text, className }: { text: string; className?: string }) {
@@ -80,7 +80,7 @@ export function TemplatesWithVariables({ onUseTemplate, contactData }: TemplateW
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-32"><Folder className="w-4 h-4 mr-2" /><SelectValue /></SelectTrigger>
-            <SelectContent>{categories.map(cat => <SelectItem key={cat} value={cat}>{cat === 'all' ? 'Todas' : cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>)}</SelectContent>
+            <SelectContent>{categories.map((cat: string) => <SelectItem key={cat} value={cat}>{cat === 'all' ? 'Todas' : cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <ScrollArea className="h-64">

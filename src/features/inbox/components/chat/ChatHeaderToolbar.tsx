@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle } from 'lucide-react';
+import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle, LayoutTemplate } from 'lucide-react';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 
-export type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | null;
+export type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | 'templates' | null;
 
 interface ChatHeaderToolbarProps {
   activeTool?: ActiveTool;
@@ -96,7 +96,7 @@ export function ChatHeaderToolbar({
       )}
       <ToolButton icon={<Radar className="w-[18px] h-[18px]" />} label="Monitoramento de Objeções" active={activeTool === 'objections'} onClick={() => onSetActiveTool?.('objections')} />
       <ToolButton icon={<GraduationCap className="w-[18px] h-[18px]" />} label="Ajuda dos Universitários" active={activeTool === 'university'} onClick={() => onSetActiveTool?.('university')} />
-      <ToolButton icon={<VisionIcon className="w-[18px] h-[18px]" />} label="Visão" active={showAIAssistant} onClick={onToggleAIAssistant} />
+      <ToolButton icon={<LayoutTemplate className="w-[18px] h-[18px]" />} label="Templates dinâmicos" active={activeTool === 'templates'} onClick={() => onSetActiveTool?.('templates')} />
       {onGenerateSummary && (
         <ToolButton
           icon={isSummaryLoading ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : <FileText className="w-[18px] h-[18px]" />}
