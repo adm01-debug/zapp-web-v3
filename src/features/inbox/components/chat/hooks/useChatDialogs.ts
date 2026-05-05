@@ -18,6 +18,7 @@ const initialDialogState: DialogState = {
   callDialog: false, globalSearch: false, chatSearch: false, interactiveBuilder: false,
   forwardDialog: false, locationPicker: false, aiAssistant: false, catalogDirect: false,
   whisper: false, templatesWithVars: false, realtimeTranscription: false, closeDialog: false,
+  visualValidation: false,
 };
 
 function dialogReducer(state: DialogState, action: DialogAction): DialogState {
