@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, ShieldAlert, History, Activity, Terminal } from 'lucide-react';
+import { ShieldAlert, History, Activity, Terminal } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Progress } from '@/components/ui/progress';
 
 interface Flag {
   key: string;
@@ -18,11 +17,6 @@ export function FeatureFlagsAdmin() {
   const [flags, setFlags] = useState<Flag[]>([]);
   const [loading, setLoading] = useState(true);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
-
-  useEffect(() => {
-    fetchFlags();
-    fetchAuditLogs();
-  }, []);
 
   const fetchFlags = useCallback(async () => {
     const { data, error } = await supabase
@@ -40,7 +34,7 @@ export function FeatureFlagsAdmin() {
     setLoading(false);
   }, []);
 
-  const fetchAuditLogs = async () => {
+  const fetchAuditLogs = useCallback(async () => {
     const { data, error } = await supabase
       .from('audit_logs')
       .select('*')
@@ -48,7 +42,12 @@ export function FeatureFlagsAdmin() {
       .limit(10);
     
     if (!error && data) setAuditLogs(data);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchFlags();
+    fetchAuditLogs();
+  }, [fetchFlags, fetchAuditLogs]);
 
   const toggleFlag = async (key: string, currentValue: boolean) => {
     const newValue = !currentValue;
@@ -79,6 +78,8 @@ export function FeatureFlagsAdmin() {
     setLoading(false);
   };
 
+  if (loading) return <div className="p-8 text-center animate-pulse">Carregando painel admin...</div>;
+
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
@@ -107,7 +108,7 @@ export function FeatureFlagsAdmin() {
                 </div>
                 <Switch 
                   checked={!!flag.value} 
-                  onCheckedChange={() => toggleFlag(flag.key, !!flag.value)}
+                  onCheckedChange={() => toggleFlag(flag.key, typeof flag.value === 'boolean' ? flag.value : false)}
                 />
               </div>
             ))}
@@ -136,3 +137,4 @@ export function FeatureFlagsAdmin() {
     </div>
   );
 }
+
