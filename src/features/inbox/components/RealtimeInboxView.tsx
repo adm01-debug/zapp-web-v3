@@ -157,7 +157,7 @@ export function RealtimeInboxView() {
           <Suspense fallback={<ChatFallback />}>
             <>
               <div className="flex-1 min-w-0 min-h-0 relative h-full overflow-hidden">
-                {inbox.selectedContactId && inbox.selectedMessagesLoading ? <ChatFallback /> : (
+                {inbox.selectedContactId && (
                   <SectionErrorBoundary sectionName="Chat" className="h-full">
                     <ChatPanel
                       key={inbox.legacyConversation.id}
@@ -173,6 +173,7 @@ export function RealtimeInboxView() {
                       showDetails={isMobile ? false : inbox.showDetails}
                       onToggleDetails={() => inbox.setShowDetails(!inbox.showDetails)}
                       initialHighlightMessageId={inbox.pendingMessageId}
+                      isLoading={inbox.selectedMessagesLoading}
                       onHighlightConsumed={() => {
                         inbox.setPendingMessageId(null);
                         // Strip the one-shot ?message= param so refresh
