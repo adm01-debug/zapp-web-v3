@@ -192,7 +192,7 @@ export function EmailChatReplyBar({
             value={bodyHtml.replace(/<[^>]*>/g, '')}
             onChange={e => setBody(e.target.value)}
             placeholder="Escreva sua resposta comercial..."
-            className="min-h-[120px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-[14px] font-medium leading-relaxed font-sans placeholder:text-muted-foreground/30"
+            className="min-h-[140px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-[15px] font-medium leading-relaxed font-sans placeholder:text-muted-foreground/30 selection:bg-primary/20"
           />
         </div>
 
