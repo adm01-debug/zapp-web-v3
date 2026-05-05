@@ -35,6 +35,14 @@ export function useRealtimeInbox() {
   const error = USE_EXTERNAL_DB ? externalData.error : localRealtime.error;
   const refetch = USE_EXTERNAL_DB ? (() => { externalData.refetch(); }) : localRealtime.refetch;
 
+  // Search and Filter controls (exposed from localRealtime)
+  const { 
+    search, setSearch, 
+    statusFilter, setStatusFilter, 
+    sortBy, setSortBy 
+  } = localRealtime;
+
+
   // These features only available on local for now
   const { sendMessage, markAsRead } = localRealtime;
   const { newMessageNotification, dismissNotification, setSelectedContact, setSoundEnabled } = localRealtime;
@@ -489,7 +497,11 @@ export function useRealtimeInbox() {
     soundOn, toggleSound,
     globalSearchOpen, setGlobalSearchOpen,
     showNewConversation, setShowNewConversation,
+    search, setSearch,
+    statusFilter, setStatusFilter,
+    sortBy, setSortBy,
     profile,
+
     // Data
     conversations, cachedConversations, usingCache,
     loading, error,

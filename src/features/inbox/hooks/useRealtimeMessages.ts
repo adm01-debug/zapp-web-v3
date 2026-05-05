@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { getLogger } from '@/lib/logger';
@@ -87,6 +87,10 @@ export function useRealtimeMessages() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sendStateTick, setSendStateTick] = useState(0);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'closed' | 'unread'>('all');
+  const [sortBy, setSortBy] = useState<'lastMessage' | 'name' | 'unread'>('lastMessage');
+
   const conversationsRef = useRef<ConversationWithMessages[]>([]);
 
   const {
@@ -279,12 +283,65 @@ export function useRealtimeMessages() {
   }
   void sendStateTick; // ensure dep tracked
 
+  const filteredConversations = useMemo(() => {
+    let filtered = [...conversations];
+
+    // 1. Search
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(conv => 
+        conv.contact.name.toLowerCase().includes(q) ||
+        conv.contact.phone.includes(q) ||
+        conv.lastMessage?.content?.toLowerCase().includes(q)
+      );
+    }
+
+    // 2. Status Filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(conv => {
+        if (statusFilter === 'unread') return conv.unreadCount > 0;
+        // Logic for open/closed: check ticket status or last message direction
+        if (statusFilter === 'open') {
+          return !conv.lastMessage || conv.lastMessage.sender === 'contact';
+        }
+        if (statusFilter === 'closed') {
+          return conv.lastMessage?.sender === 'agent';
+        }
+        return true; 
+      });
+    }
+
+    // 3. Sorting
+    filtered.sort((a, b) => {
+      if (sortBy === 'unread') {
+        if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount;
+      }
+      
+      if (sortBy === 'name') {
+        return a.contact.name.localeCompare(b.contact.name);
+      }
+
+      // Default: lastMessage
+      const aTime = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : new Date(a.contact.created_at).getTime();
+      const bTime = b.lastMessage ? new Date(b.lastMessage.created_at).getTime() : new Date(b.contact.created_at).getTime();
+      return bTime - aTime;
+    });
+
+    return filtered;
+  }, [conversations, search, statusFilter, sortBy]);
+
   return {
-    conversations, loading, error, sendMessage, markAsRead,
+    conversations: filteredConversations,
+    allConversations: conversations,
+    search, setSearch,
+    statusFilter, setStatusFilter,
+    sortBy, setSortBy,
+    loading, error, sendMessage, markAsRead,
     refetch: fetchConversations, newMessageNotification,
     dismissNotification, setSelectedContact, setSoundEnabled,
     conversationSendState,
     batcherStatus,
+
     /**
      * @deprecated Use the hook directly where needed
      */

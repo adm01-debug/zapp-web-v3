@@ -12,10 +12,18 @@ import { TicketTabs } from './TicketTabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 // Tooltips were removed from this header to avoid Radix Slot ref-loop bug
 // (TooltipTrigger asChild on inline span/Button caused Maximum update depth).
 // Replaced with native title/aria-label which are equivalent for these controls.
-import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle } from 'lucide-react';
+import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
 import { WhatsAppConnectionStatus } from '@/features/connections';
@@ -35,18 +43,25 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
   const isMobile = useIsMobile();
   const contactSearchRef = useRef<HTMLInputElement>(null);
   const [contactSearch, setContactSearch] = useState('');
+  
+  const conversationsWithUnreadCount = useMemo(() => 
+    inbox.conversations.filter((c: any) => c.unreadCount > 0).length,
+    [inbox.conversations]
+  );
 
-  // Sync local search to inboxFilters
+
+  // Sync local search to inbox filters
   const handleContactSearch = useCallback((value: string) => {
     setContactSearch(value);
-    inboxFilters.setSearch(value);
-  }, [inboxFilters]);
+    inbox.setSearch(value);
+  }, [inbox]);
 
   const clearContactSearch = useCallback(() => {
     setContactSearch('');
-    inboxFilters.setSearch('');
+    inbox.setSearch('');
     contactSearchRef.current?.focus();
-  }, [inboxFilters]);
+  }, [inbox]);
+
 
   const sortedFilteredIds = useMemo(() => 
     inboxFilters.filteredConversations.map((c: any) => c.contact.id), 
@@ -144,9 +159,23 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               >
                 <MessageSquarePlus className="w-3.5 h-3.5" />
               </Button>
+              
+              <div className="h-4 w-px bg-border/40 mx-1" />
+              
+              <Select value={inbox.sortBy} onValueChange={inbox.setSortBy}>
+                <SelectTrigger className="w-auto h-7 text-[10px] font-bold border-none bg-transparent hover:bg-muted/60 rounded-lg px-2 gap-1.5 focus:ring-0">
+                  <SelectValue placeholder="Ordenar" />
+                </SelectTrigger>
+                <SelectContent align="end" className="w-[140px]">
+                  <SelectItem value="lastMessage" className="text-xs font-semibold tracking-tight">Recentes</SelectItem>
+                  <SelectItem value="unread" className="text-xs font-semibold tracking-tight">Não lidas</SelectItem>
+                  <SelectItem value="name" className="text-xs font-semibold tracking-tight">Nome (A-Z)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         )}
+
 
         <div className="flex items-center gap-1.5">
           <div className="relative flex-1 group">
@@ -182,30 +211,29 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             <ContactTypeFilter value={inboxFilters.selectedContactType} onChange={inboxFilters.handleContactTypeChange} conversations={inbox.cachedConversations} />
           </div>
           <Button
-            variant={inboxFilters.showOnlyRetrying ? 'default' : 'ghost'}
+            variant={inbox.statusFilter === 'unread' ? 'default' : 'ghost'}
             size="icon"
-            onClick={() => inboxFilters.setShowOnlyRetrying(!inboxFilters.showOnlyRetrying)}
+            onClick={() => inbox.setStatusFilter(inbox.statusFilter === 'unread' ? 'all' : 'unread')}
             className={cn(
               'shrink-0 relative active:scale-90 transition-all duration-150',
               isMobile ? 'w-8 h-8 rounded-lg' : 'w-7 h-7 rounded-md',
-              inboxFilters.showOnlyRetrying
-                ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              inbox.statusFilter === 'unread'
+                ? 'bg-orange-500 text-white hover:bg-orange-600'
                 : 'hover:bg-muted/60 text-muted-foreground'
             )}
-            aria-label={inboxFilters.showOnlyRetrying ? 'Mostrar todas as conversas' : 'Mostrar apenas conversas com retry/falha'}
-            aria-pressed={inboxFilters.showOnlyRetrying}
-            title={inboxFilters.showOnlyRetrying ? 'Mostrar todas' : `Apenas com retry/falha${inboxFilters.retryingCount > 0 ? ` (${inboxFilters.retryingCount})` : ''}`}
+            aria-label={inbox.statusFilter === 'unread' ? 'Mostrar todas' : 'Mostrar apenas não lidas'}
+            title={inbox.statusFilter === 'unread' ? 'Mostrar todas' : 'Apenas não lidas'}
           >
-            <AlertTriangle className={cn(isMobile ? 'w-4 h-4' : 'w-3.5 h-3.5')} />
-            {inboxFilters.retryingCount > 0 && !inboxFilters.showOnlyRetrying && (
+            <MessageCircle className={cn(isMobile ? 'w-4 h-4' : 'w-3.5 h-3.5')} />
+            {conversationsWithUnreadCount > 0 && inbox.statusFilter !== 'unread' && (
               <span
-                className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-destructive text-destructive-foreground text-[9px] font-semibold leading-none flex items-center justify-center tabular-nums"
-                aria-label={`${inboxFilters.retryingCount} conversas com retry ou falha`}
+                className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-orange-500 text-white text-[9px] font-semibold leading-none flex items-center justify-center tabular-nums shadow-sm"
               >
-                {inboxFilters.retryingCount > 99 ? '99+' : inboxFilters.retryingCount}
+                {conversationsWithUnreadCount > 99 ? '99+' : conversationsWithUnreadCount}
               </span>
             )}
           </Button>
+
           {inboxFilters.showOnlyRetrying && (
             <FailureCategoryFilter
               value={inboxFilters.failureCategoryFilter}
@@ -216,7 +244,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
         </div>
 
         <TicketTabs
-          conversations={inbox.conversations}
+          conversations={inbox.allConversations || inbox.conversations}
           mainTab={inboxFilters.mainTab}
           subTab={inboxFilters.subTab}
           onMainTabChange={inboxFilters.setMainTab}
@@ -226,6 +254,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
           selectedQueueId={inboxFilters.selectedQueueId}
           onQueueChange={inboxFilters.setSelectedQueueId}
         />
+
 
         <InboxFilters filters={inboxFilters.filters} onFiltersChange={inboxFilters.setFilters} />
       </div>
@@ -295,7 +324,8 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             fallback={<div className="p-8 text-center"><MessageSquare className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-sm text-muted-foreground">Erro ao carregar. Recarregue.</p></div>}
           >
             <VirtualizedRealtimeList
-              conversations={inboxFilters.filteredConversations}
+              conversations={inbox.conversations}
+
               selectedContactId={inbox.selectedContactId}
               onSelectConversation={inbox.handleSelectConversation}
               selectionMode={bulkActions.selectionMode}

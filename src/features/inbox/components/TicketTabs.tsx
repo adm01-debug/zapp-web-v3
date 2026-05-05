@@ -12,15 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock } from 'lucide-react';
+import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/features/auth';
 import { useUserRole } from '@/features/auth';
 import { useQueues } from '@/hooks/useQueues';
 import { useAllTicketStates } from '@/features/inbox';
 import { ConversationWithMessages } from '@/features/inbox';
 
-export type MainTab = 'open' | 'resolved' | 'search';
+export type MainTab = 'open' | 'resolved' | 'search' | 'unread';
 export type SubTab = 'attending' | 'waiting';
+
 
 interface TicketTabsProps {
   conversations: ConversationWithMessages[];
@@ -92,6 +93,13 @@ export function TicketTabs({
       activeColor: 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]',
     },
     { 
+      id: 'unread' as MainTab, 
+      label: 'Não lidas', 
+      icon: MessageCircle, 
+      count: conversations.filter(c => c.unreadCount > 0).length,
+      activeColor: 'bg-orange-500 text-white',
+    },
+    { 
       id: 'search' as MainTab, 
       label: 'Busca', 
       icon: Search, 
@@ -99,6 +107,7 @@ export function TicketTabs({
       activeColor: 'bg-muted-foreground text-background',
     },
   ];
+
 
   const subTabs = [
     {
