@@ -270,20 +270,24 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
           )}
         </div>
 
-        <TicketTabs
-          conversations={inbox.allConversations || inbox.conversations}
-          mainTab={inboxFilters.mainTab}
-          subTab={inboxFilters.subTab}
-          onMainTabChange={inboxFilters.setMainTab}
-          onSubTabChange={inboxFilters.setSubTab}
-          showAll={inboxFilters.showAll}
-          onShowAllChange={inboxFilters.setShowAll}
-          selectedQueueId={inboxFilters.selectedQueueId}
-          onQueueChange={inboxFilters.setSelectedQueueId}
-        />
+        <div className={cn("transition-all duration-300", density === 'compact' ? "scale-[0.96] origin-top" : "")}>
+          <TicketTabs
+            conversations={inbox.allConversations || inbox.conversations}
+            mainTab={inboxFilters.mainTab}
+            subTab={inboxFilters.subTab}
+            onMainTabChange={inboxFilters.setMainTab}
+            onSubTabChange={inboxFilters.setSubTab}
+            showAll={inboxFilters.showAll}
+            onShowAllChange={inboxFilters.setShowAll}
+            selectedQueueId={inboxFilters.selectedQueueId}
+            onQueueChange={inboxFilters.setSelectedQueueId}
+          />
+        </div>
 
 
-        <InboxFilters filters={inboxFilters.filters} onFiltersChange={inboxFilters.setFilters} />
+        <div className={cn("transition-all duration-300", density === 'compact' ? "scale-[0.96] origin-top -mt-1" : "")}>
+          <InboxFilters filters={inboxFilters.filters} onFiltersChange={inboxFilters.setFilters} />
+        </div>
       </div>
 
       {isMobile && (
