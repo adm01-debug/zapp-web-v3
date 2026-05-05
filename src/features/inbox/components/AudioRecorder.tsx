@@ -262,39 +262,35 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
         ) : null}
       </div>
 
-      {/* Lock button (during recording, mobile) */}
-      {isRecording && !isLocked && isMobile && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-primary"
-            onClick={handleLock}
-            aria-label="Travar gravação"
-          >
-            <Lock className="w-4 h-4" />
-          </Button>
-        </motion.div>
-      )}
-
       {/* Stop/Send controls */}
       {isRecording ? (
-        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-          <Button
-            size="icon"
-            className="bg-destructive hover:bg-destructive/90"
-            onClick={stopRecording}
-            aria-label="Parar gravação"
-          >
-            <Square className="w-4 h-4" />
-          </Button>
-        </motion.div>
+        <div className="flex items-center gap-2">
+          {!isLocked && isMobile && (
+            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} whileTap={{ scale: 0.9 }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-primary"
+                onClick={handleLock}
+                aria-label="Travar gravação"
+              >
+                <Lock className="w-4 h-4" />
+              </Button>
+            </motion.div>
+          )}
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <Button
+              size="icon"
+              className="bg-destructive hover:bg-destructive/90 shadow-sm"
+              onClick={stopRecording}
+              aria-label="Parar gravação"
+            >
+              <Square className="w-4 h-4" />
+            </Button>
+          </motion.div>
+        </div>
       ) : audioBlob ? (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <VoiceChanger
             audioBlob={audioBlob}
             onVoiceChanged={handleVoiceChanged}
@@ -302,7 +298,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
               size="icon"
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 shadow-md"
               onClick={handleSend}
               aria-label="Enviar áudio"
             >
