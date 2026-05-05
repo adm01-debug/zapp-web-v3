@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { X, Archive, Forward, CheckCheck, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useDensity } from '@/hooks/useDensity';
+import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TransferDialog } from './TransferDialog';
@@ -24,6 +26,8 @@ export function BulkActionsToolbar({
   isLoading = false,
 }: BulkActionsToolbarProps) {
   const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const { density } = useDensity();
+  const isCompact = density === 'compact' || density === 'dense';
 
   if (selectedCount === 0) return null;
 
@@ -39,7 +43,10 @@ export function BulkActionsToolbar({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="absolute top-0 left-0 right-0 z-20 bg-primary/95 backdrop-blur-sm border-b border-primary-foreground/20 p-3"
+          className={cn(
+            "absolute top-0 left-0 right-0 z-20 bg-primary/95 backdrop-blur-sm border-b border-primary-foreground/20 transition-all",
+            isCompact ? "p-1.5" : "p-3"
+          )}
         >
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -49,15 +56,15 @@ export function BulkActionsToolbar({
                     variant="ghost"
                     size="icon"
                     onClick={onClearSelection}
-                    className="text-primary-foreground hover:bg-primary-foreground/20 w-8 h-8"
+                    className={cn("text-primary-foreground hover:bg-primary-foreground/20", isCompact ? "w-7 h-7" : "w-8 h-8")}
                     aria-label="Limpar seleção"
                   >
-                    <X className="w-4 h-4" />
+                    <X className={cn(isCompact ? "w-3.5 h-3.5" : "w-4 h-4")} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Limpar seleção (Esc)</TooltipContent>
               </Tooltip>
-              <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0">
+              <Badge variant="secondary" className={cn("bg-primary-foreground/20 text-primary-foreground border-0 font-bold", isCompact ? "text-[9px] h-4.5 px-1.5" : "text-[11px] h-5 px-2")}>
                 {selectedCount} selecionado{selectedCount > 1 ? 's' : ''}
               </Badge>
             </div>
@@ -70,10 +77,10 @@ export function BulkActionsToolbar({
                     size="sm"
                     onClick={onMarkAsRead}
                     disabled={isLoading}
-                    className="text-primary-foreground hover:bg-primary-foreground/20 gap-2"
+                    className={cn("text-primary-foreground hover:bg-primary-foreground/20 gap-2 font-bold", isCompact ? "h-7 text-[10px]" : "h-8 text-[11px]")}
                     aria-label="Marcar como lido"
                   >
-                    <CheckCheck className="w-4 h-4" />
+                    <CheckCheck className={cn(isCompact ? "w-3.5 h-3.5" : "w-4 h-4")} />
                     <span className="hidden sm:inline">Marcar como lido</span>
                   </Button>
                 </TooltipTrigger>
@@ -87,10 +94,10 @@ export function BulkActionsToolbar({
                     size="sm"
                     onClick={() => setShowTransferDialog(true)}
                     disabled={isLoading}
-                    className="text-primary-foreground hover:bg-primary-foreground/20 gap-2"
+                    className={cn("text-primary-foreground hover:bg-primary-foreground/20 gap-2 font-bold", isCompact ? "h-7 text-[10px]" : "h-8 text-[11px]")}
                     aria-label="Transferir"
                   >
-                    <Forward className="w-4 h-4" />
+                    <Forward className={cn(isCompact ? "w-3.5 h-3.5" : "w-4 h-4")} />
                     <span className="hidden sm:inline">Transferir</span>
                   </Button>
                 </TooltipTrigger>
@@ -104,10 +111,10 @@ export function BulkActionsToolbar({
                     size="sm"
                     onClick={onArchive}
                     disabled={isLoading}
-                    className="text-primary-foreground hover:bg-primary-foreground/20 gap-2"
+                    className={cn("text-primary-foreground hover:bg-primary-foreground/20 gap-2 font-bold", isCompact ? "h-7 text-[10px]" : "h-8 text-[11px]")}
                     aria-label="Arquivar"
                   >
-                    <Archive className="w-4 h-4" />
+                    <Archive className={cn(isCompact ? "w-3.5 h-3.5" : "w-4 h-4")} />
                     <span className="hidden sm:inline">Arquivar</span>
                   </Button>
                 </TooltipTrigger>
