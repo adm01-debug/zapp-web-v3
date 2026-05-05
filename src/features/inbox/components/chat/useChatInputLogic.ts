@@ -6,7 +6,8 @@ import { toast } from '@/hooks/use-toast';
 const DRAFT_KEY_PREFIX = 'chat_draft_';
 const CHAR_LIMIT = 4096;
 
-export interface ChatInputAttachment {
+import { ChatInputAttachment } from './useChatInputLogic';
+import { FileUploaderRef } from '@/features/inbox/components/FileUploader';
   id: string;
   file: File;
   preview?: string;
@@ -18,7 +19,7 @@ interface UseChatInputLogicParams {
   contactId: string;
   editingMessage: { content: string } | null | undefined;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
-  fileUploaderRef: React.RefObject<{ handleExternalFiles: (files: File[]) => void } | null>;
+  fileUploaderRef: React.RefObject<FileUploaderRef | null>;
   onSend: (attachments?: File[]) => void;
   onPasteFiles?: (files: File[]) => void;
 }
