@@ -96,18 +96,21 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1 min-w-0">
-                <span className={cn("font-medium text-[12.5px] truncate", isSelected ? "text-primary" : "text-foreground")}>{conversation.contact.name}</span>
+                <span className={cn("font-sans font-semibold text-[14px] leading-[1.2] truncate", isSelected ? "text-primary" : "text-foreground")}>{conversation.contact.name}</span>
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                <span className="text-[10px] text-muted-foreground">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
-                {conversation.unreadCount > 0 && <span className="min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center text-[9px] font-bold bg-primary text-primary-foreground">{conversation.unreadCount}</span>}
+                <span className="font-sans text-[11px] font-normal text-muted-foreground tabular-nums">{formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}</span>
+                {conversation.unreadCount > 0 && <span className="min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-sans text-[10px] font-medium bg-primary text-primary-foreground">{conversation.unreadCount}</span>}
               </div>
             </div>
             {isTyping ? (
-              <TypingIndicatorCompact isVisible={true} className="text-[11px]" />
+              <TypingIndicatorCompact isVisible={true} className="text-[12px]" />
             ) : (
-              <p className="text-[11px] text-muted-foreground truncate">{conversation.lastMessage?.content || 'Sem mensagens'}</p>
+              <p className={cn(
+                "font-sans text-[12px] truncate leading-[1.35]",
+                conversation.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground font-normal"
+              )}>{conversation.lastMessage?.content || 'Sem mensagens'}</p>
             )}
             {conversation.lastMessage && (
               <div className="mt-1 flex flex-col gap-1">
