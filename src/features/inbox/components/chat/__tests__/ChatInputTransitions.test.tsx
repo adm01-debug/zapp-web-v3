@@ -1,26 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ChatInputArea } from '../ChatInputArea';
 import React from 'react';
+import { useChatInputLogic } from '../useChatInputLogic';
 
-// Mock components to avoid deep testing of logic
+// Mock dependências complexas
 vi.mock('../useChatInputLogic', () => ({
-  useChatInputLogic: vi.fn(() => ({
-    attachments: [],
-    hasText: false,
-    isMobile: false,
-    isOverLimit: false,
-    charCount: 0,
-    CHAR_LIMIT: 4096,
-    sendAnimation: false,
-    showRichToolbar: false,
-    showMarkdownPreview: false,
-    handleSendWithAnimation: vi.fn(),
-    handleFileSelect: vi.fn(),
-    handlePaste: vi.fn(),
-    handleVoiceDictation: vi.fn(),
-    removeAttachment: vi.fn(),
-  })),
+  useChatInputLogic: vi.fn(),
   setNativeValue: vi.fn(),
 }));
 
@@ -29,8 +15,30 @@ vi.mock('../MentionAutocomplete', () => ({
   useMentions: () => ({ isOpen: false, checkForMention: vi.fn(), handleSelect: vi.fn(), close: vi.fn() }),
 }));
 
-describe('ChatInputArea Transitions', () => {
-  const defaultProps = {
+vi.mock('../RichTextToolbar', () => ({
+  RichTextToolbar: () => null,
+  RichTextToggle: () => null,
+}));
+
+vi.mock('../InputPreviewBars', () => ({
+  InputPreviewBars: () => null,
+}));
+
+vi.mock('../../AudioRecorder', () => ({
+  AudioRecorder: ({ onSend, onCancel }: any) => (
+    <div data-testid="audio-recorder">
+      <button onClick={() => onSend(new Blob())}>Confirmar</button>
+      <button onClick={onCancel}>Cancelar</button>
+    </div>
+  ),
+}));
+
+describe('ChatInputArea Interaction Transitions', () => {
+  const mockOnSend = vi.fn();
+  const mockOnRecordToggle = vi.fn();
+  const mockOnInputChange = vi.fn();
+
+  const defaultProps: any = {
     inputValue: '',
     replyToMessage: null,
     isRecordingAudio: false,
@@ -40,15 +48,15 @@ describe('ChatInputArea Transitions', () => {
     contactName: 'Test',
     messages: [],
     quickReplies: [],
-    onInputChange: vi.fn(),
+    onInputChange: mockOnInputChange,
     onKeyDown: vi.fn(),
     onBlur: vi.fn(),
-    onSend: vi.fn(),
+    onSend: mockOnSend,
     onCancelReply: vi.fn(),
     onSlashCommand: vi.fn(),
     onCloseSlashCommands: vi.fn(),
     onQuickReply: vi.fn(),
-    onRecordToggle: vi.fn(),
+    onRecordToggle: mockOnRecordToggle,
     onAudioSend: vi.fn(),
     onAudioCancel: vi.fn(),
     onOpenInteractiveBuilder: vi.fn(),
@@ -60,12 +68,79 @@ describe('ChatInputArea Transitions', () => {
     onSendCustomEmoji: vi.fn(),
     onSelectSuggestion: vi.fn(),
     onSelectTemplate: vi.fn(),
-    fileUploaderRef: { current: null } as any,
-    inputRef: { current: null } as any,
+    fileUploaderRef: { current: null },
+    inputRef: { current: null },
   };
 
-  it('renders correctly', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('deve desabilitar gravação quando há texto', () => {
+    (useChatInputLogic as any).mockReturnValue({
+      attachments: [],
+      hasText: true,
+      isMobile: false,
+      isOverLimit: false,
+      charCount: 10,
+      CHAR_LIMIT: 4096,
+      handleSendWithAnimation: vi.fn(),
+    });
+
+    render(<ChatInputArea {...defaultProps} inputValue="Olá" />);
+    
+    const micButton = screen.getByLabelText(/Gravar áudio/i);
+    expect(micButton).toBeDisabled();
+  });
+
+  it('deve desabilitar envio quando não há texto ou anexos', () => {
+    (useChatInputLogic as any).mockReturnValue({
+      attachments: [],
+      hasText: false,
+      isMobile: false,
+      isOverLimit: false,
+      charCount: 0,
+      handleSendWithAnimation: vi.fn(),
+    });
+
     render(<ChatInputArea {...defaultProps} />);
-    expect(screen.getByPlaceholderText(/Escreva sua mensagem/i)).toBeDefined();
+    
+    const sendButton = screen.getByLabelText(/Enviar mensagem/i);
+    expect(sendButton).toBeDisabled();
+  });
+
+  it('deve permitir envio quando há anexos mesmo sem texto', () => {
+    (useChatInputLogic as any).mockReturnValue({
+      attachments: [{ id: '1', file: new File([], 'test.jpg') }],
+      hasText: false,
+      isMobile: false,
+      isOverLimit: false,
+      charCount: 0,
+      handleSendWithAnimation: vi.fn(),
+    });
+
+    render(<ChatInputArea {...defaultProps} />);
+    
+    const sendButton = screen.getByLabelText(/Enviar mensagem/i);
+    expect(sendButton).not.toBeDisabled();
+    
+    const micButton = screen.getByLabelText(/Gravar áudio/i);
+    expect(micButton).toBeDisabled();
+  });
+
+  it('deve exibir estado de carregando durante o envio', () => {
+    (useChatInputLogic as any).mockReturnValue({
+      attachments: [],
+      hasText: true,
+      isMobile: false,
+      isOverLimit: false,
+      charCount: 5,
+      handleSendWithAnimation: vi.fn(),
+    });
+
+    render(<ChatInputArea {...defaultProps} isSending={true} />);
+    
+    expect(screen.getByLabelText(/Enviar mensagem/i)).toBeDisabled();
+    expect(screen.getByText(/Enviando/i)).toBeDefined();
   });
 });

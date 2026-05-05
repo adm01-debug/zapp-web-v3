@@ -332,6 +332,44 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
                     aria-pressed={isRecordingAudio}
                   >
+                    <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px] font-medium">
+                  {isRecordingAudio ? "Parar Gravação" : (logic.hasText || logic.attachments.length > 0) ? "Apague o texto para gravar" : "Gravar Áudio"}
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={logic.handleSendWithAnimation}
+                    disabled={isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)}
+                    whileHover={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 1.1 } : {}}
+                    whileTap={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 0.9 } : {}}
+                    className={cn(
+                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
+                      (logic.hasText || logic.attachments.length > 0 || editingMessage)
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                        : "text-muted-foreground/20 cursor-not-allowed opacity-50",
+                      logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
+                    )}
+                    aria-label="Enviar mensagem"
+                  >
+                    {isSending ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : editingMessage ? (
+                      <Check className="w-6 h-6" />
+                    ) : (
+                      <Send className="w-6 h-6" />
+                    )}
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-[10px] font-medium">
+                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
+                </TooltipContent>
+              </Tooltip>
+                  >
                     <Mic className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6", isRecordingAudio && "animate-pulse")} />
                   </motion.button>
                 </TooltipTrigger>
