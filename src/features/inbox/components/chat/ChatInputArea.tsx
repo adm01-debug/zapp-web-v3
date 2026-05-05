@@ -485,16 +485,27 @@ export function ChatInputArea(props: ChatInputAreaProps) {
 
             {/* Secondary toolbar (last) */}
             <div className={cn("flex items-center shrink-0 self-end mb-[3px]", logic.isMobile && "mb-0")}>
-              <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
-                showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
-                isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
-                onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
-                fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
-                contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
-                onFileSelect={logic.handleFileSelect}
-                isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
-                disabled={isSending || !!editingMessage || isRecordingAudio}
-              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn(isSending || !!editingMessage || isRecordingAudio ? "cursor-not-allowed" : "")}>
+                    <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
+                      showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
+                      isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
+                      onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
+                      fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
+                      contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
+                      onFileSelect={logic.handleFileSelect}
+                      isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
+                      disabled={isSending || !!editingMessage || isRecordingAudio}
+                    />
+                  </div>
+                </TooltipTrigger>
+                {(isSending || !!editingMessage || isRecordingAudio) && (
+                  <TooltipContent side="top" className="text-[10px] font-medium bg-muted text-muted-foreground border-border shadow-md">
+                    {isSending ? "Aguarde o envio concluir" : !!editingMessage ? "Finalize a edição para usar ferramentas" : "Finalize a gravação para usar ferramentas"}
+                  </TooltipContent>
+                )}
+              </Tooltip>
             </div>
           </div>
         </div>
