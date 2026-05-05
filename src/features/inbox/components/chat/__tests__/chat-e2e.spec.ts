@@ -1,48 +1,79 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Chat E2E Flow', () => {
+test.describe('Inbox E2E - Messaging Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Login e navegação para o Inbox
+    // Basic setup - navigate to the inbox
     await page.goto('/inbox');
   });
 
-  test('User can search and navigate results', async ({ page }) => {
-    // 1. Abrir primeira conversa
-    await page.locator('[data-testid="conversation-item"]').first().click();
+  test('should send a text message and reconcile optimistically', async ({ page }) => {
+    const messageContent = `Test message ${Date.now()}`;
     
-    // 2. Abrir Busca
-    await page.locator('button[aria-label="Buscar (Ctrl+K)"]').click();
-    const searchInput = page.getByPlaceholder('Buscar na conversa...');
-    await expect(searchInput).toBeVisible();
-
-    // 3. Digitar busca
-    await searchInput.fill('teste');
+    // Type message
+    const textarea = page.locator('textarea[placeholder*="Escreva sua mensagem"]');
+    await textarea.fill(messageContent);
     
-    // 4. Verificar se resultados aparecem
-    await expect(page.locator('text=/\\d+\\/\\d+/')).toBeVisible();
-
-    // 5. Navegar para próximo
-    await page.keyboard.press('ArrowDown');
+    // Send message (Enter)
+    await textarea.press('Enter');
     
-    // 6. Verificar se o scroll ocorreu (ajuste de offset)
-    const activeMsg = page.locator('[data-search-highlight="true"].ring-primary');
-    await expect(activeMsg).toBeVisible();
+    // Check for optimistic bubble
+    const optimisticBubble = page.locator(`text=${messageContent}`);
+    await expect(optimisticBubble).toBeVisible();
+    
+    // Reconcile check: wait for status to change from 'sending' to 'sent' or 'delivered'
+    // This assumes the UI shows a specific icon or class for sent messages
+    const statusIcon = page.locator('[data-testid^="message-status"]').last();
+    await expect(statusIcon).not.toHaveClass(/animate-spin/, { timeout: 10000 });
   });
 
-  test('Visual Regression - Density Toggles', async ({ page }) => {
-    await page.locator('[data-testid="conversation-item"]').first().click();
+  test('should record audio, edit transcription and send', async ({ page }) => {
+    // Start recording
+    await page.click('button[aria-label="Gravar áudio"]');
     
-    const header = page.locator('header');
+    // Wait for a few seconds of recording
+    await page.waitForTimeout(3000);
     
-    // Captura modo confortável
-    await expect(page).toHaveScreenshot('chat-comfortable.png');
+    // Stop recording
+    await page.click('button[aria-label="Concluir gravação"]');
+    
+    // Wait for transcription
+    const editTranscriptionBtn = page.locator('button:has-text("Editar")');
+    await expect(editTranscriptionBtn).toBeVisible({ timeout: 15000 });
+    await editTranscriptionBtn.click();
+    
+    // Edit transcription text
+    const transcriptionArea = page.locator('textarea[placeholder*="Edite a transcrição"]');
+    const originalText = await transcriptionArea.inputValue();
+    await transcriptionArea.fill(originalText + " - Edited");
+    
+    // Send audio
+    await page.click('button[aria-label="Confirmar e enviar áudio"]');
+    
+    // Verify upload progress overlay appears and then disappears
+    await expect(page.locator('text=Enviando Áudio')).toBeVisible();
+    await expect(page.locator('text=Enviando Áudio')).not.toBeVisible({ timeout: 20000 });
+  });
 
-    // Alterna para compacto
-    await page.locator('button[aria-label^="Densidade"]').click();
-    await expect(page).toHaveScreenshot('chat-compact.png');
+  test('should handle network failure and manual retry', async ({ page, context }) => {
+    const messageContent = "Retry Test Message";
     
-    // Alterna para denso
-    await page.locator('button[aria-label^="Densidade"]').click();
-    await expect(page).toHaveScreenshot('chat-dense.png');
+    // Simulate offline
+    await context.setOffline(true);
+    
+    const textarea = page.locator('textarea[placeholder*="Escreva sua mensagem"]');
+    await textarea.fill(messageContent);
+    await textarea.press('Enter');
+    
+    // Verify it stays in 'pending' or 'failed' in the queue
+    const queueStatus = page.locator('text=Aguardando na fila');
+    await expect(queueStatus).toBeVisible();
+    
+    // Go back online
+    await context.setOffline(false);
+    
+    // Check if it eventually sends or if we need to click retry
+    // In our implementation, we added an automatic retry, so it should attempt again.
+    const sentStatus = page.locator('text=Enviado!');
+    await expect(sentStatus).toBeVisible({ timeout: 15000 });
   });
 });

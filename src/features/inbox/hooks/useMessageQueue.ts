@@ -181,7 +181,19 @@ export function useMessageQueue(
             } catch (err) {
               const duration = Date.now() - startTime;
               const errorMsg = err instanceof Error ? err.message : String(err);
-              log.error(`Failed to process message ${itemToProcess.id}:`, err);
+              
+              // Observability: Telemetry for failures
+              log.error(`[QUEUE_ERROR] id=${itemToProcess.id} contact=${contactId} attempt=${itemToProcess.retryCount} err=${errorMsg}`);
+              
+              if (window.analytics) {
+                window.analytics.track('Message Queue Failure', {
+                  messageId: itemToProcess.id,
+                  contactId,
+                  attempt: itemToProcess.retryCount,
+                  error: errorMsg,
+                  duration
+                });
+              }
               
               const shouldAutoRetry = itemToProcess.retryCount < config.maxRetries;
               const delay = shouldAutoRetry ? calculateNextRetryDelay(itemToProcess.retryCount, config) : 0;
