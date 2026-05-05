@@ -33,7 +33,7 @@ export function FeatureFlagsAdmin() {
     if (!error && data) {
       setFlags(data.map(f => ({
         key: f.key,
-        value: f.value,
+        value: typeof f.value === 'boolean' || typeof f.value === 'number' ? f.value : false,
         description: f.description || ''
       })));
     }
