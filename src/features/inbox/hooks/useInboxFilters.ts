@@ -16,9 +16,12 @@ const log = getLogger('useInboxFilters');
 interface UseInboxFiltersProps {
   conversations: ConversationWithMessages[];
   profileId: string | undefined;
+  search?: string;
+  sortBy?: 'lastMessage' | 'name' | 'unread';
+  statusFilter?: 'all' | 'open' | 'closed' | 'unread';
 }
 
-export function useInboxFilters({ conversations, profileId }: UseInboxFiltersProps) {
+export function useInboxFilters({ conversations, profileId, search: externalSearch, sortBy, statusFilter }: UseInboxFiltersProps) {
   const [mainTab, setMainTab] = useState<MainTab>('open');
   const [subTab, setSubTab] = useState<SubTab>('attending');
   const [showAll, setShowAll] = useState(false);
@@ -166,8 +169,10 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       if (state && state.assignedTo !== undefined) return state.assignedTo;
       return fallback ?? null;
     };
-    const searchTrimmed = (search || '').trim();
-    // 1. Tab-based filtering
+    const effectiveSearch = (externalSearch !== undefined ? externalSearch : search || '').trim();
+    const searchTrimmed = effectiveSearch;
+
+    // 1. Tab and Status Filtering
     if (searchTrimmed.length === 0) {
       if (mainTab === 'open') {
         result = result.filter(c => {
@@ -175,6 +180,9 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
           const isOpenOrProgress = s === 'open' || s === 'in_progress';
           
           if (!isOpenOrProgress) return false;
+
+          // Apply statusFilter if provided (legacy unread button etc)
+          if (statusFilter === 'unread' && c.unreadCount === 0) return false;
 
           if (subTab === 'attending') {
             if (showAll) return true;
@@ -199,7 +207,10 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
       if (mainTab === 'open') {
         result = result.filter(c => {
           const s = statusOf(c.contact.id);
-          return s === 'open' || s === 'in_progress';
+          const isOpen = s === 'open' || s === 'in_progress';
+          if (!isOpen) return false;
+          if (statusFilter === 'unread' && c.unreadCount === 0) return false;
+          return true;
         });
       } else if (mainTab === 'resolved') {
         result = result.filter(c => statusOf(c.contact.id) === 'resolved');
@@ -298,15 +309,22 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
 
     // 9. Sorting
     return [...result].sort((a, b) => {
-      if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
-      if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+      if (sortBy === 'unread') {
+        if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount;
+      }
+      
+      if (sortBy === 'name') {
+        return (a.contact.name || '').localeCompare(b.contact.name || '');
+      }
+
+      // Default: lastMessage date (descending)
       const aTime = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : new Date(a.contact.updated_at).getTime();
       const bTime = b.lastMessage ? new Date(b.lastMessage.created_at).getTime() : new Date(b.contact.updated_at).getTime();
       return bTime - aTime;
     });
   }, [
     conversations, 
-    search, 
+    search, externalSearch,
     filters, 
     mainTab, 
     subTab, 
@@ -318,7 +336,9 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     failureCategoryById, 
     profileId, 
     contactTagsMap, 
-    ticketStates
+    ticketStates,
+    sortBy,
+    statusFilter
   ]);
 
   const retryingCount = useMemo(

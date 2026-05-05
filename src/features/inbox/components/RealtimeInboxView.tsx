@@ -74,7 +74,13 @@ export function RealtimeInboxView() {
   // Safety net: periodic + on-reconnect refetch in case the realtime
   // channel drops temporarily and caches drift from source of truth.
   useRealtimeFallbackRefetch();
-  const inboxFilters = useInboxFilters({ conversations: inbox.cachedConversations, profileId: inbox.profile?.id });
+  const inboxFilters = useInboxFilters({ 
+    conversations: inbox.cachedConversations, 
+    profileId: inbox.profile?.id,
+    search: inbox.search,
+    sortBy: inbox.sortBy,
+    statusFilter: inbox.statusFilter
+  });
   const bulkActions = useInboxBulkActions({ refetch: inbox.refetch, filteredConversations: inboxFilters.filteredConversations });
   const pullToRefresh = usePullToRefresh({ onRefresh: async () => { await inbox.refetch(); }, disabled: !isMobile || !!inbox.selectedContactId });
 

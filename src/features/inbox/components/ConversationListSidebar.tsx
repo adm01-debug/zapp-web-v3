@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePullToRefreshIndicator } from '@/components/mobile/MobilePullToRefresh';
@@ -50,11 +51,16 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
   );
 
 
+  // Debounced search to prevent heavy filter calculations on every keystroke
+  const debouncedSetSearch = useDebounce((value: string) => {
+    inbox.setSearch(value);
+  }, 250);
+
   // Sync local search to inbox filters
   const handleContactSearch = useCallback((value: string) => {
     setContactSearch(value);
-    inbox.setSearch(value);
-  }, [inbox]);
+    debouncedSetSearch(value);
+  }, [debouncedSetSearch]);
 
   const clearContactSearch = useCallback(() => {
     setContactSearch('');
