@@ -1,24 +1,13 @@
-import { useRef, useState, useCallback, useMemo, forwardRef, memo } from 'react';
+import { useRef, useCallback, useMemo, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ConversationWithMessages } from '@/features/inbox';
 import { useDensity } from '@/hooks/useDensity';
 import { MOCK_CONVERSATIONS } from './conversation-list/__mocks__/mockConversations';
+import { ConversationItem as SharedConversationItem } from './conversation-list/ConversationItem';
 
 const USE_MOCKS =
   typeof window !== 'undefined' &&
   window.localStorage?.getItem('mockConversations') === '1';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Pin, Gift } from 'lucide-react';
-import { TypingIndicatorCompact } from './TypingIndicator';
-import { useContactTyping } from '@/hooks/useContactTyping';
-import { useInViewport } from '@/hooks/useInViewport';
-import { useContactAvatar } from '@/features/inbox';
 
 interface VirtualizedRealtimeListProps {
   conversations: ConversationWithMessages[];
@@ -33,219 +22,19 @@ interface VirtualizedRealtimeListProps {
   pinnedIds?: Set<string>;
 }
 
-const ITEM_HEIGHT_NORMAL = 80;
-const ITEM_HEIGHT_COMPACT = 64;
+const ITEM_HEIGHT_NORMAL = 84; // Slightly increased to fit 3 lines comfortably
+const ITEM_HEIGHT_COMPACT = 68; // Slightly increased for compact mode too
 const EMPTY_SET = new Set<string>();
 
-/**
- * Linha de preview que escuta o canal `typing:${contactId}` e troca o conteúdo
- * por "digitando…" enquanto o contato está compondo.
- */
-const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; fallback: string; unread?: boolean }>(
-  function ConversationPreviewLine({ contactId, fallback, unread = false }, _ref) {
-    const { density } = useDensity();
-    const isCompact = density === 'compact' || density === 'dense';
-    const localRef = useRef<HTMLDivElement>(null);
-    const inView = useInViewport(localRef, { rootMargin: '200px', keepVisibleMs: 1500 });
-    const isTyping = useContactTyping(contactId, inView);
-    return (
-      <div ref={localRef} className={cn("leading-snug min-h-[1em] transition-all duration-300", isCompact ? "text-[12px]" : "text-[13.5px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
-        {isTyping ? (
-          <TypingIndicatorCompact isVisible={true} />
-        ) : (
-          <p className={cn(
-            'truncate tracking-normal',
-            unread ? 'text-foreground/90 font-medium' : 'text-muted-foreground/70 font-normal'
-          )}>{fallback}</p>
-        )}
-      </div>
-    );
-  }
-);
-
-/**
- * Componente interno para renderizar um item da lista com suporte a carregamento de avatar.
- */
-const ConversationItemContent = memo(({
+const VirtualizedItem = memo(({
+  virtualRow,
   conversation,
   selectedContactId,
   selectedIds,
   pinnedIds,
   selectionMode,
   onToggleSelection,
-  handleClick
-}: {
-  conversation: ConversationWithMessages;
-  selectedContactId: string | null;
-  selectedIds: Set<string>;
-  pinnedIds: Set<string>;
-  selectionMode: boolean;
-  onToggleSelection?: (id: string) => void;
-  handleClick: (id: string, e: React.MouseEvent) => void;
-}) => {
-  const contactId = conversation.contact.id;
-  const { density } = useDensity();
-  const isCompact = density === 'compact' || density === 'dense';
-  const isSelected = selectedIds.has(contactId);
-  const isPinned = pinnedIds.has(contactId);
-
-  // Carregamento de avatar com lote e cache
-  const { avatarUrl } = useContactAvatar(contactId, conversation.contact.avatar_url);
-
-  return (
-    <button
-      onClick={(e) => handleClick(contactId, e)}
-      aria-selected={selectedContactId === contactId}
-      aria-label={`Conversa com ${conversation.contact.name || 'Contato'}${conversation.unreadCount > 0 ? `, ${conversation.unreadCount} mensagens não lidas` : ''}`}
-      role="option"
-      className={cn(
-        'w-full flex items-center gap-3 transition-all text-left rounded-2xl relative group overflow-hidden',
-        isCompact ? 'px-2 py-2' : 'px-3 py-3.5',
-        'hover:bg-muted/40 hover:shadow-sm active:scale-[0.98]',
-        selectedContactId === contactId ? 'bg-primary/10 shadow-md ring-1 ring-primary/20' : 'bg-transparent',
-        !selectedContactId && 'border-b border-border/10 rounded-none last:border-0',
-        isSelected && 'bg-primary/15',
-        isPinned && selectedContactId !== contactId && 'bg-muted/30 shadow-inner',
-        conversation.unreadCount > 0 && 'bg-primary/[0.03]'
-      )}
-    >
-      {selectedContactId === contactId && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-10 bg-primary rounded-r-full shadow-[2px_0_8px_rgba(var(--primary),0.3)]" />
-      )}
-      {selectionMode && (
-        <div
-          className="flex-shrink-0 flex items-center"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleSelection?.(contactId);
-          }}
-        >
-          <Checkbox checked={isSelected} className="data-[state=checked]:bg-primary" />
-        </div>
-      )}
-
-      <div className="relative flex-shrink-0">
-        <Avatar className={cn(
-          "shadow-sm ring-2 ring-background ring-offset-1 transition-all group-hover:scale-105 duration-300",
-          isCompact ? "w-9 h-9" : "w-11 h-11"
-        )}>
-          <AvatarImage 
-            src={avatarUrl || undefined} 
-            referrerPolicy="no-referrer" 
-            className="object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).removeAttribute('src');
-            }}
-          />
-          <AvatarFallback className={cn(
-            'text-[13px] font-black tracking-tighter',
-            getAvatarColor(conversation.contact.name || '?').bg,
-            getAvatarColor(conversation.contact.name || '?').text
-          )}>
-            {getInitials(conversation.contact.name || '?')}
-          </AvatarFallback>
-        </Avatar>
-        {conversation.contact.ai_sentiment && (
-          <span
-            className={cn(
-              'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card',
-              conversation.contact.ai_sentiment === 'positive' && 'bg-[hsl(var(--success))]',
-              conversation.contact.ai_sentiment === 'negative' && 'bg-destructive',
-              conversation.contact.ai_sentiment === 'neutral' && 'bg-[hsl(var(--warning))]'
-            )}
-            title={`Sentimento: ${conversation.contact.ai_sentiment}`}
-          />
-        )}
-      </div>
-
-      <div className="flex-1 min-w-0 overflow-hidden font-sans">
-        <div className="flex items-center justify-between gap-2 mb-0.5">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {isPinned && <Pin className={cn("text-primary flex-shrink-0 transition-all", isCompact ? "w-2.5 h-2.5" : "w-3 h-3")} />}
-            {conversation.contact.contact_type === 'sicoob_gifts' && (
-              <Gift className="w-3.5 h-3.5 text-info flex-shrink-0" />
-            )}
-            <span className={cn("font-semibold text-foreground truncate leading-tight tracking-normal transition-all duration-300", isCompact ? "text-[14px]" : "text-[15px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
-              {(() => {
-                const firstName = (conversation.contact.name || 'Sem nome').split(' ')[0];
-                const company = conversation.contact.company;
-                return company ? `${firstName} · ${company}` : firstName;
-              })()}
-            </span>
-            {conversation.contact.ai_sentiment && conversation.contact.ai_sentiment !== 'neutral' && (
-              <span className="text-xs flex-shrink-0" title={`Sentimento: ${conversation.contact.ai_sentiment}`}>
-                {conversation.contact.ai_sentiment === 'positive' ? '😊' : conversation.contact.ai_sentiment === 'negative' ? '😟' : ''}
-              </span>
-            )}
-            {conversation.contact.contact_type === 'sicoob_gifts' && (
-              <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0 h-4 border-info/40 text-info bg-info/10 flex-shrink-0">
-                Sicoob
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {conversation.lastMessage && (
-                <span className={cn("font-semibold text-muted-foreground/60 tabular-nums uppercase tracking-wider transition-all duration-300", isCompact ? "text-[11px]" : "text-[11px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
-                  {formatDistanceToNow(new Date(conversation.lastMessage.created_at), {
-                    addSuffix: false,
-                    locale: ptBR,
-                  })}
-                </span>
-            )}
-            {conversation.unreadCount > 0 && (
-              <span className={cn("min-w-[18px] h-[18px] px-1 bg-rose-500 text-white rounded-full flex items-center justify-center font-black shadow-lg shadow-rose-500/20 ring-2 ring-background transition-all", isCompact ? "min-w-[16px] h-[16px] text-[9.5px]" : "min-w-[20px] h-[20px] text-[10px]")}>
-                {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
-              </span>
-            )}
-          </div>
-        </div>
-        <ConversationPreviewLine
-          contactId={contactId}
-          unread={conversation.unreadCount > 0}
-          fallback={
-            conversation.contact.contact_type === 'sicoob_gifts' && conversation.contact.company
-              ? `${conversation.contact.company} · ${conversation.lastMessage?.content || 'Sem mensagens'}`
-              : conversation.lastMessage?.content || 'Sem mensagens'
-          }
-        />
-        {conversation.contact.tags && conversation.contact.tags.length > 0 && (
-          <div className="flex items-center gap-1 mt-1.5">
-            {conversation.contact.tags.slice(0, 2).map((tag) => {
-              const tagLower = tag.toLowerCase();
-              const isVip = tagLower.includes('vip');
-              const isDecisor = tagLower.includes('decisor') || tagLower.includes('decision');
-              const isHot = tagLower.includes('hot') || tagLower.includes('quente');
-              return (
-                <Badge
-                  key={tag}
-                  variant="outline"
-                  className={cn(
-                    'text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0 h-4 border',
-                    isVip && 'border-[hsl(var(--warning))]/40 text-[hsl(var(--warning))] bg-[hsl(var(--warning))]/10',
-                    isHot && 'border-destructive/40 text-destructive bg-destructive/10',
-                    isDecisor && 'border-muted-foreground/30 text-muted-foreground bg-muted/40',
-                    !isVip && !isHot && !isDecisor && 'border-border text-muted-foreground bg-muted/30'
-                  )}
-                >
-                  {tag}
-                </Badge>
-              );
-            })}
-            {conversation.contact.tags.length > 2 && (
-              <span className="text-[10px] font-semibold text-muted-foreground tabular-nums px-1">
-                +{conversation.contact.tags.length - 2}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    </button>
-  );
-});
-
-const ConversationItem = memo(({
-  virtualRow,
-  ...props
+  onSelectConversation
 }: {
   virtualRow: any;
   conversation: ConversationWithMessages;
@@ -254,8 +43,13 @@ const ConversationItem = memo(({
   pinnedIds: Set<string>;
   selectionMode: boolean;
   onToggleSelection?: (id: string) => void;
-  handleClick: (id: string, e: React.MouseEvent) => void;
+  onSelectConversation: (contactId: string) => void;
 }) => {
+  const contactId = conversation.contact.id;
+  const isSelected = selectedContactId === contactId;
+  const isMultiSelected = selectedIds.has(contactId);
+  const isPinned = pinnedIds.has(contactId);
+
   return (
     <div
       style={{
@@ -266,9 +60,17 @@ const ConversationItem = memo(({
         height: `${virtualRow.size}px`,
         transform: `translateY(${virtualRow.start}px)`,
       }}
-      className="px-2 py-0.5"
+      className="px-2 py-1"
     >
-      <ConversationItemContent {...props} />
+      <SharedConversationItem 
+        conversation={conversation}
+        isSelected={isSelected}
+        onSelect={() => onSelectConversation(contactId)}
+        selectionMode={selectionMode}
+        isMultiSelected={isMultiSelected}
+        onToggleSelection={onToggleSelection}
+        isPinned={isPinned}
+      />
     </div>
   );
 });
@@ -289,20 +91,16 @@ export function VirtualizedRealtimeList({
   const isCompact = density === 'compact' || density === 'dense';
   const parentRef = useRef<HTMLDivElement>(null);
 
-  // Filter out invalid conversations
   const safeConversations = useMemo(() => {
     const base = USE_MOCKS ? MOCK_CONVERSATIONS : conversations;
     if (!Array.isArray(base)) return [];
     return base.filter(c => c?.contact?.id);
   }, [conversations]);
 
-  // Sort: pinned first, then by last message date. 
-  // Safety: dedupe by contact id to prevent "Duplicate Key" errors.
   const sortedConversations = useMemo(() => {
     const deduped: ConversationWithMessages[] = [];
     const seen = new Set<string>();
     
-    // Process safeConversations and keep only first occurrence of each ID
     for (const c of safeConversations) {
       if (!seen.has(c.contact.id)) {
         deduped.push(c);
@@ -328,15 +126,6 @@ export function VirtualizedRealtimeList({
     overscan: 5,
   });
 
-  const handleClick = useCallback((contactId: string, e: React.MouseEvent) => {
-    if (selectionMode && onToggleSelection) {
-      e.preventDefault();
-      onToggleSelection(contactId);
-    } else {
-      onSelectConversation(contactId);
-    }
-  }, [selectionMode, onToggleSelection, onSelectConversation]);
-
   if (sortedConversations.length === 0) {
     return null;
   }
@@ -355,16 +144,16 @@ export function VirtualizedRealtimeList({
           if (!conversation?.contact?.id) return null;
 
           return (
-            <ConversationItem 
+            <VirtualizedItem 
               key={conversation.contact.id}
-              conversation={conversation}
               virtualRow={virtualRow}
+              conversation={conversation}
               selectedContactId={selectedContactId}
               selectedIds={selectedIds}
               pinnedIds={pinnedIds}
               selectionMode={selectionMode}
               onToggleSelection={onToggleSelection}
-              handleClick={handleClick}
+              onSelectConversation={onSelectConversation}
             />
           );
         })}

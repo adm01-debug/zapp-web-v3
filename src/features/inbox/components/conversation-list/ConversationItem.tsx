@@ -13,7 +13,7 @@ import { useContactTyping } from '@/hooks/useContactTyping';
 import { useInViewport } from '@/hooks/useInViewport';
 import {
   Clock, CheckCircle2, AlertCircle, Loader2, ExternalLink,
-  MessageCircle, Instagram, Mail, Phone,
+  MessageCircle, Instagram, Mail, Phone, Pin
 } from 'lucide-react';
 import { openChatPopup } from '@/lib/popupManager';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -95,16 +95,21 @@ function TruncatedTooltip({
 }
 
 interface ConversationItemProps {
-  conversation: Conversation;
+  conversation: any; // Allow flexibility for mapped types
   isSelected: boolean;
-  onSelect: (conversation: Conversation) => void;
+  onSelect: (conversation: any) => void;
   compact?: boolean;
+  // Selection Mode Props (for VirtualizedRealtimeList integration)
+  selectionMode?: boolean;
+  isMultiSelected?: boolean;
+  onToggleSelection?: (id: string) => void;
+  isPinned?: boolean;
 }
 
 /** Build "FirstName · Company" or fallbacks. */
-function buildPrimaryLabel(conversation: Conversation): string {
-  const name = conversation.contact.name?.trim();
-  const company = conversation.contact.company?.trim();
+function buildPrimaryLabel(conversation: any): string {
+  const name = (conversation.contact?.name || conversation.contact?.pushName || '').trim();
+  const company = conversation.contact?.company?.trim();
   const firstName = name?.split(/\s+/)[0];
   if (firstName && company) return `${firstName} · ${company}`;
   if (name) return name;
@@ -112,22 +117,47 @@ function buildPrimaryLabel(conversation: Conversation): string {
   return 'Contato';
 }
 
-export function ConversationItem({ conversation, isSelected, onSelect, compact: forceCompact = false }: ConversationItemProps) {
+export function ConversationItem({ 
+  conversation, 
+  isSelected, 
+  onSelect, 
+  compact: forceCompact = false,
+  selectionMode = false,
+  isMultiSelected = false,
+  onToggleSelection,
+  isPinned = false
+}: ConversationItemProps) {
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense' || forceCompact;
 
-  const StatusIcon = statusIcons[conversation.status];
+  // Normalização de dados entre os tipos Conversation (legado) e ConversationWithMessages (realtime)
+  const contact = conversation.contact;
+  const contactId = contact?.id || conversation.id;
+  const status = conversation.status || 'open';
+  const priority = conversation.priority || 'medium';
+  const unreadCount = conversation.unreadCount || 0;
+  const lastMessage = conversation.lastMessage;
+  const tags = contact?.tags ?? [];
+  const company = contact?.company;
+  const avatarUrl = contact?.avatar || contact?.avatar_url;
+  
+  // Datas
+  const displayDate = conversation.updatedAt || 
+                     (lastMessage?.created_at ? new Date(lastMessage.created_at) : null) || 
+                     (contact?.updated_at ? new Date(contact.updated_at) : new Date());
+
+  const StatusIcon = statusIcons[status as keyof typeof statusIcons] || AlertCircle;
   const sentiment: SentimentLevel | null = conversation.sentiment ||
-    (conversation.sentimentScore !== undefined ? getSentimentFromScore(conversation.sentimentScore) : null);
+    (conversation.sentimentScore !== undefined ? getSentimentFromScore(conversation.sentimentScore) : 
+     (contact?.ai_sentiment ? contact.ai_sentiment : null));
 
   const rootRef = useRef<HTMLDivElement>(null);
   const inView = useInViewport(rootRef, { rootMargin: '200px', keepVisibleMs: 1500 });
-  const isTyping = useContactTyping(conversation.contact.id, inView);
+  const isTyping = useContactTyping(contactId, inView);
 
   const primaryLabel = buildPrimaryLabel(conversation);
-  const tags = conversation.contact.tags ?? [];
   const hasTags = tags.length > 0;
-  const previewText = conversation.lastMessage?.content?.trim() || 'Sem mensagens ainda';
+  const previewText = lastMessage?.content?.trim() || 'Sem mensagens ainda';
   const visibleTags = tags.slice(0, 2);
   const hiddenTagsCount = Math.max(0, tags.length - visibleTags.length);
   const hiddenTagsLabel = tags.slice(2).join(', ');
@@ -144,18 +174,37 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
           whileTap={{ scale: 0.98 }}
           transition={{ duration: 0.15 }}
           className={cn(
-            'relative p-2.5 rounded-lg cursor-pointer transition-all duration-200 mx-2 min-h-[64px]',
-            isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent'
+            'relative p-2.5 rounded-lg cursor-pointer transition-all duration-200 mx-2 min-h-[64px] flex items-center gap-2',
+            isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent',
+            isMultiSelected && 'bg-primary/15'
           )}
         >
           {isSelected && <motion.div layoutId="conversationActiveCompact" className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full bg-primary" />}
-          <div className="flex items-start gap-2 relative z-10">
+          
+          {selectionMode && (
+            <div
+              className="flex-shrink-0 flex items-center mr-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelection?.(contactId);
+              }}
+            >
+              <input 
+                type="checkbox" 
+                checked={isMultiSelected} 
+                onChange={() => {}} 
+                className="w-3.5 h-3.5 rounded border-border text-primary focus:ring-primary/20" 
+              />
+            </div>
+          )}
+
+          <div className="flex items-start gap-2 relative z-10 flex-1 min-w-0">
             <div className="relative flex-shrink-0 mt-0.5">
-              <ChannelBadge type={conversation.contact.contact_type} />
+              <ChannelBadge type={contact?.contact_type} />
               <Avatar className="w-[38px] h-[38px]">
-                <AvatarImage src={conversation.contact.avatar} />
+                <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                  {(conversation.contact.name || 'C').split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                  {(contact?.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
@@ -164,13 +213,14 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
                   <AvatarFallback className="bg-secondary text-secondary-foreground text-[7px] font-bold">{conversation.assignedTo.name[0]}</AvatarFallback>
                 </Avatar>
               ) : (
-                <span className={cn('absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-1 ring-sidebar', statusColors[conversation.status])} />
+                <span className={cn('absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-1 ring-sidebar', statusColors[status as keyof typeof statusColors] || 'bg-muted')} />
               )}
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               {/* Linha 1: Primeiro nome + Empresa */}
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1 min-w-0 flex-1">
+                  {isPinned && <Pin className="w-2.5 h-2.5 text-primary flex-shrink-0" />}
                   <TruncatedTooltip fullText={primaryLabel}>
                     {(ref) => (
                       <span
@@ -189,7 +239,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <span className="font-sans text-[11px] font-normal text-muted-foreground tabular-nums">
-                    {formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}
+                    {formatDistanceToNow(displayDate, { addSuffix: false, locale: ptBR })}
                   </span>
                   {conversation.unreadCount > 0 && (
                     <span className="min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-sans text-[10px] font-medium bg-primary text-primary-foreground">
@@ -281,10 +331,12 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
           data-density="comfortable"
           onClick={() => onSelect(conversation)}
           className={cn(
-            'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group',
+            'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group flex items-start gap-3',
             isSelected
               ? 'bg-primary/10 shadow-[inset_0_0_20px_rgba(var(--primary),0.03)]'
-              : 'hover:bg-muted/30 bg-background'
+              : 'hover:bg-muted/30 bg-background',
+            isMultiSelected && 'bg-primary/15',
+            isPinned && !isSelected && 'bg-muted/30'
           )}
         >
           {isSelected && (
@@ -294,19 +346,37 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
           )}
-          <div className="flex items-start gap-3.5 relative z-10">
+
+          {selectionMode && (
+            <div
+              className="flex-shrink-0 flex items-center pt-3"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelection?.(contactId);
+              }}
+            >
+              <input 
+                type="checkbox" 
+                checked={isMultiSelected} 
+                onChange={() => {}} 
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20" 
+              />
+            </div>
+          )}
+
+          <div className="flex items-start gap-3.5 relative z-10 flex-1 min-w-0">
             <div className="relative flex-shrink-0">
-              <ChannelBadge type={conversation.contact.contact_type} />
+              <ChannelBadge type={contact?.contact_type} />
               <Avatar className={cn(
                 'w-[49px] h-[49px] ring-0 transition-transform duration-300',
                 isSelected ? 'scale-105' : 'group-hover:scale-105'
               )}>
-                <AvatarImage src={conversation.contact.avatar} className="object-cover" />
+                <AvatarImage src={avatarUrl} className="object-cover" />
                 <AvatarFallback className={cn(
                   'text-sm font-semibold tracking-tighter transition-colors duration-200',
                   isSelected ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
                 )}>
-                  {(conversation.contact.name || 'C').split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  {(contact?.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
@@ -317,7 +387,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
               ) : (
                 <span className={cn(
                   'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background shadow-sm',
-                  statusColors[conversation.status]
+                  statusColors[status as keyof typeof statusColors] || 'bg-muted'
                 )}>
                   <StatusIcon className="w-2 h-2 text-white" />
                 </span>
@@ -327,6 +397,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
               {/* Linha 1: Nome + Empresa */}
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  {isPinned && <Pin className="w-3 h-3 text-primary flex-shrink-0" />}
                   <TruncatedTooltip fullText={primaryLabel}>
                     {(ref) => (
                       <span
@@ -345,7 +416,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <span className="font-sans text-[11px] font-semibold uppercase text-[hsl(var(--muted-foreground))] tabular-nums tracking-[0.04em]">
-                    {formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}
+                    {formatDistanceToNow(displayDate, { addSuffix: false, locale: ptBR })}
                   </span>
                   <Tooltip>
                     <TooltipTrigger asChild>

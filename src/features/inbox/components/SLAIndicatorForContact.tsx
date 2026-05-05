@@ -7,7 +7,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils';
 
 interface SLAIndicatorForContactProps {
-  conversation: Conversation;
+  conversation: any; // Allow flexibility for mapped types
   compact?: boolean;
   className?: string;
 }
@@ -95,34 +95,43 @@ function SLATooltipContent({ applicable, isLoading, fallbackFr, fallbackRes, pri
  */
 export function SLAIndicatorForContact({ conversation, compact, className }: SLAIndicatorForContactProps) {
   const contact = conversation.contact;
+  if (!contact) return null;
+
   const { data: applicable, isLoading } = useApplicableSLA({
     contactId: contact.id,
     company: contact.company ?? null,
     jobTitle: contact.job_title ?? null,
     contactType: contact.contact_type ?? null,
-    queueId: conversation.queue?.id ?? null,
-    agentId: conversation.assignedTo?.id ?? null,
+    queueId: conversation.queue?.id || conversation.queue_id || null,
+    agentId: conversation.assignedTo?.id || conversation.assigned_to || null,
   });
 
   const lastSlaRef = useRef<string | null>(null);
+  const convId = conversation.id || contact.id;
+  const priority = conversation.priority || 'medium';
+  const createdAt = conversation.createdAt || (contact.created_at ? new Date(contact.created_at) : new Date());
+  const lastMessage = conversation.lastMessage;
+  const status = conversation.status || 'open';
+  const updatedAt = conversation.updatedAt || (contact.updated_at ? new Date(contact.updated_at) : new Date());
+
   useEffect(() => {
     if (applicable?.ruleName && applicable.ruleName !== lastSlaRef.current) {
-      log.info(`[SLA Match] Conv ${conversation.id.slice(0, 8)} matched rule: ${applicable.ruleName} (${applicable.matchedLevel})`);
+      log.info(`[SLA Match] Conv ${convId.slice(0, 8)} matched rule: ${applicable.ruleName} (${applicable.matchedLevel})`);
       lastSlaRef.current = applicable.ruleName;
     }
-  }, [conversation.id, applicable?.ruleName, applicable?.matchedLevel]);
+  }, [convId, applicable?.ruleName, applicable?.matchedLevel]);
 
-  const fallbackFr = conversation.priority === 'high' ? 2 : 5;
-  const fallbackRes = conversation.priority === 'high' ? 30 : 60;
+  const fallbackFr = priority === 'high' ? 2 : 5;
+  const fallbackRes = priority === 'high' ? 30 : 60;
 
   return (
     <Tooltip delayDuration={200}>
       <TooltipTrigger asChild>
         <span className="inline-flex">
           <SLAIndicator
-            firstMessageAt={conversation.createdAt}
-            firstResponseAt={conversation.lastMessage?.sender === 'agent' ? conversation.lastMessage.timestamp : null}
-            resolvedAt={conversation.status === 'resolved' ? conversation.updatedAt : null}
+            firstMessageAt={createdAt}
+            firstResponseAt={lastMessage?.sender === 'agent' ? (lastMessage.timestamp || new Date(lastMessage.created_at)) : null}
+            resolvedAt={status === 'resolved' ? updatedAt : null}
             firstResponseMinutes={applicable?.firstResponseMinutes ?? fallbackFr}
             resolutionMinutes={applicable?.resolutionMinutes ?? fallbackRes}
             compact={compact}
