@@ -62,11 +62,13 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     audioUrl,
     audioLevel,
     transcription,
+    setTranscription,
     startRecording,
     pauseRecording,
     resumeRecording,
     stopRecording,
     cancelRecording,
+    restoreRecording,
     formatDuration,
   } = useAudioRecorder({
     onRecordingComplete: (blob, url) => {
