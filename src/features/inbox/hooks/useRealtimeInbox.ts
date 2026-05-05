@@ -312,6 +312,22 @@ export function useRealtimeInbox() {
     await Promise.all([refetch(), refetchSelectedMessages()]);
   }, [refetch, refetchSelectedMessages]);
 
+  // Reconciliação automática da fila com base nas mensagens carregadas
+  useEffect(() => {
+    if (!selectedMessages || selectedMessages.length === 0 || !selectedContactId) return;
+    
+    // Pegar as últimas 10 mensagens para reconciliar (caso algum webhook tenha chegado)
+    const recent = selectedMessages.slice(-10);
+    recent.forEach(msg => {
+      if (msg.external_id && msg.sender === 'agent') {
+        const status = (msg.status === 'failed' || msg.status === 'failed_auth' || msg.status === 'failed_retries') 
+          ? 'failed' 
+          : 'confirmed';
+        messageQueue.reconcileWithDelivery(selectedContactId, msg.external_id, status);
+      }
+    });
+  }, [selectedMessages, selectedContactId]);
+
   const messageQueue = useMessageQueue(async (item: QueueItem) => {
     const { contactId, content, attachments } = item;
 
@@ -319,7 +335,7 @@ export function useRealtimeInbox() {
     const messagesToCheck = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
     const lastMsg = messagesToCheck[messagesToCheck.length - 1];
     if (lastMsg?.external_id && lastMsg.sender === 'agent') {
-      messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id);
+      messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id, lastMsg.status === 'failed' ? 'failed' : 'confirmed');
     }
 
     // Auto-assign on first reply if pending
@@ -343,7 +359,15 @@ export function useRealtimeInbox() {
       const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
       
       try {
-        if (attachments && attachments.length > 0) {
+        if (item.type === 'audio' && attachments?.[0]) {
+          const { sendExternalAudio } = await import('..');
+          const { optimistic } = await sendExternalAudio(contactId, attachments[0], { 
+            contactAvatar: currentAvatar,
+            onProgress: (p) => { messageQueue.updateProgress(item.id, p); }
+          });
+          if (optimistic.external_id) item.externalId = optimistic.external_id;
+          try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+        } else if (attachments && attachments.length > 0) {
           for (let i = 0; i < attachments.length; i++) {
             const file = attachments[i];
             const isLarge = file.size > 10 * 1024 * 1024; // > 10MB
@@ -404,76 +428,23 @@ export function useRealtimeInbox() {
     
     // Se o conteúdo for vazio e houver anexos, podemos dar um nome genérico
     const effectiveContent = content || (attachments?.length ? `Enviando ${attachments.length} anexo(s)` : "");
+    const type = attachments?.length ? 'attachment' : 'text';
     
-    messageQueue.addToQueue(selectedContactId, effectiveContent, attachments);
+    messageQueue.addToQueue(selectedContactId, effectiveContent, attachments, type);
   }, [selectedContactId, messageQueue]);
 
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
 
-    // Auto-assign on audio reply if pending
-    try {
-      const { data: conv } = await dbFrom('team_conversations')
-        .select('id, routing_status')
-        .eq('id', selectedContactId)
-        .maybeSingle();
-        
-      if (conv && conv.routing_status === 'pending') {
-        await dbFrom('team_conversations')
-          .update({ routing_status: 'assigned' })
-          .eq('id', selectedContactId);
-      }
-    } catch (err) {
-      log.error('Error auto-assigning on audio reply:', err);
-    }
-
     const validation = await validatePttBlob(blob);
     if (!validation.ok) {
       toast.error(validation.message ?? 'Áudio inválido.');
-      throw new Error(validation.message ?? 'Áudio inválido.');
-    }
-
-    if (USE_EXTERNAL_DB) {
-      // External path (FATOR X): upload + envio via evolution-api + bolha
-      // otimista. O webhook reconcilia o status/ID definitivos em segundos.
-      //
-      // ATENÇÃO: erros (upload OU envio) são PROPAGADOS para que o
-      // `SendErrorBanner` possa oferecer "Reenviar" mantendo o blob original
-      // — repete o upload + envio + cria uma NOVA bolha otimista.
-      const { sendExternalAudio } = await import('..');
-      const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
-      try {
-        const { optimistic } = await sendExternalAudio(selectedContactId, blob, { contactAvatar: currentAvatar });
-        try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
-        setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
-      } catch (err) {
-        log.error('Error sending external audio:', err);
-        // Re-throw para o SendErrorBanner via useChatPanelHandlers.
-        throw err;
-      }
       return;
     }
-    try {
-      const fileName = `${selectedContactId}/${Date.now()}.webm`;
-      const { error: uploadError } = await supabase.storage.from('audio-messages').upload(fileName, blob, { contentType: 'audio/webm' });
-      if (uploadError) {
-        log.error('Error uploading audio:', uploadError);
-        // Propaga (em vez de engolir) para alimentar o retry de áudio.
-        throw new Error(uploadError.message || 'Falha no upload do áudio');
-      }
-      const { data: signedData, error: signError } = await supabase.storage.from('audio-messages').createSignedUrl(fileName, 3600);
-      if (signError || !signedData?.signedUrl) {
-        log.error('Error creating signed URL:', signError);
-        throw new Error(signError?.message || 'Falha ao gerar URL do áudio');
-      }
-      await sendMessage(selectedContactId, '[Áudio]', 'audio', signedData.signedUrl);
-    } catch (err) {
-      log.error('Error in handleSendAudio:', err);
-      throw err;
-    } finally {
-      await refreshActiveConversation();
-    }
-  }, [selectedContactId, sendMessage, refreshActiveConversation, externalMsgs, externalData]);
+
+    const file = new File([blob], `audio_${Date.now()}.ogg`, { type: 'audio/ogg' });
+    messageQueue.addToQueue(selectedContactId, "Mensagem de áudio", [file], 'audio');
+  }, [selectedContactId, messageQueue]);
 
   // Convert to legacy format using the pure mapper
   const legacyConversation = useMemo(

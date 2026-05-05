@@ -36,6 +36,8 @@ import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import { useChatPanelHandlers } from './chat/useChatPanelHandlers';
 import type { ActiveTool } from './chat/ChatHeaderToolbar';
+import { QueueMetricsDashboard } from './monitoring/QueueMetricsDashboard';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FailureFilterBar } from './chat/FailureFilterBar';
 import { useChatFilters } from './chat/hooks/useChatFilters';
 import { useSLADelivery } from './chat/hooks/useSLADelivery';
@@ -533,6 +535,14 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
         messages={messages} contactId={conversation.contact.id}
         contactName={conversation.contact.name} onSelectSuggestion={(text) => handlers.setInputValue(text)}
       />
+      <Dialog open={activeTool === 'monitoring'} onOpenChange={(open) => !open && handleSetActiveTool(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Métricas de Envio e Performance</DialogTitle>
+          </DialogHeader>
+          <QueueMetricsDashboard metrics={messageQueue?.getMetrics() || { totalSent: 0, totalFailed: 0, totalRetries: 0, averageLatency: 0, byType: {}, byConversation: {} }} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

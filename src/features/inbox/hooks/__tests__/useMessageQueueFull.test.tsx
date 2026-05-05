@@ -69,7 +69,7 @@ describe('useMessageQueue', () => {
     });
 
     act(() => {
-      result.current.reconcileWithDelivery('contact-1', 'ext-123');
+      result.current.reconcileWithDelivery('contact-1', 'ext-123', 'confirmed');
     });
 
     expect(result.current.queue.length).toBe(0);
