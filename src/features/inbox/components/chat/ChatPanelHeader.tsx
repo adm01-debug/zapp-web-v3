@@ -47,6 +47,7 @@ interface ChatPanelHeaderProps {
   failuresOnly?: boolean;
   onToggleFailuresOnly?: () => void;
   failuresCount?: number;
+  onOpenValidation?: () => void;
 }
 
 export function ChatPanelHeader({
