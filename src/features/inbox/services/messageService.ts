@@ -1,3 +1,4 @@
+import { supabase } from '@/integrations/supabase/client';
 import { messageRepository } from '@/features/inbox/data-access/messageRepository';
 import type { Message } from '@/types/chat';
 
@@ -42,7 +43,7 @@ export const messageService = {
       }
 
       // Fetch whispers (internal notes)
-      const { data: whispers, error: whisperErr } = await (window as any).supabase
+      const { data: whispers, error: whisperErr } = await supabase
         .from('whisper_messages')
         .select('*')
         .eq('contact_id', contactId);

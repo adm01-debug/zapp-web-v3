@@ -175,7 +175,8 @@ export function useRealtimeInbox() {
     window.addEventListener('open-contact-chat', handler);
 
     const deliveryHandler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
+      const customEvent = e as CustomEvent<{ contactId: string; status: 'warning' | 'breached'; delay: number; message?: string }>;
+      const detail = customEvent.detail;
       if (detail && detail.contactId === selectedContactId) {
         setDeliveryAlert({ status: detail.status, delay: detail.delay, message: detail.message });
       }
@@ -303,9 +304,15 @@ export function useRealtimeInbox() {
 
     // Auto-assign on first reply if pending
     try {
-      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', contactId).maybeSingle();
+      const { data: conv } = await dbFrom('team_conversations')
+        .select('id, routing_status')
+        .eq('id', contactId)
+        .maybeSingle();
+        
       if (conv && conv.routing_status === 'pending') {
-        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', contactId);
+        await dbFrom('team_conversations')
+          .update({ routing_status: 'assigned' })
+          .eq('id', contactId);
       }
     } catch (err) {
       log.error('Error auto-assigning on reply:', err);
@@ -374,9 +381,15 @@ export function useRealtimeInbox() {
 
     // Auto-assign on audio reply if pending
     try {
-      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', selectedContactId).maybeSingle();
+      const { data: conv } = await dbFrom('team_conversations')
+        .select('id, routing_status')
+        .eq('id', selectedContactId)
+        .maybeSingle();
+        
       if (conv && conv.routing_status === 'pending') {
-        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', selectedContactId);
+        await dbFrom('team_conversations')
+          .update({ routing_status: 'assigned' })
+          .eq('id', selectedContactId);
       }
     } catch (err) {
       log.error('Error auto-assigning on audio reply:', err);
@@ -515,7 +528,7 @@ export function useRealtimeInbox() {
     handleSendAudio,
     refetch,
     setSelectedContact,
-    markAsRead: USE_EXTERNAL_DB ? ((_id: string) => { /* noop em modo externo */ }) : markAsRead,
+    markAsRead: USE_EXTERNAL_DB ? (() => { /* noop em modo externo */ }) : markAsRead,
     // Pagination
     loadOlderMessages,
     cancelLoadOlderMessages,

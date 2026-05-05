@@ -116,7 +116,9 @@ export function useRealtimeMessages() {
     if (uniqueIds.length === 0) return [] as ConversationContact[];
     const fetchedContacts: ConversationContact[] = [];
     for (const idsChunk of chunkArray(uniqueIds, CONTACT_FETCH_CHUNK_SIZE)) {
-      const { data, error: contactsError } = await dbFrom('contacts').select('*').in('id', idsChunk);
+      const { data, error: contactsError } = await dbFrom('contacts')
+        .select('*')
+        .in('id', idsChunk);
       if (contactsError) throw contactsError;
       fetchedContacts.push(...((data ?? []) as ConversationContact[]));
     }
@@ -187,9 +189,16 @@ export function useRealtimeMessages() {
     try {
       setLoading(true);
       setError(null);
-      const { data: seededContacts, error: contactsError } = await dbFrom('contacts').select('*').order('updated_at', { ascending: false }).limit(SEEDED_CONTACT_LIMIT);
+      const { data: seededContacts, error: contactsError } = await dbFrom('contacts')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(SEEDED_CONTACT_LIMIT);
       if (contactsError) throw contactsError;
-      const { data: recentMessages, error: messagesError } = await dbFrom('messages').select('*').order('created_at', { ascending: false }).limit(RECENT_MESSAGES_LIMIT);
+      
+      const { data: recentMessages, error: messagesError } = await dbFrom('messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(RECENT_MESSAGES_LIMIT);
       if (messagesError) throw messagesError;
 
       const normalizedMessages = ((recentMessages ?? []) as RealtimeMessage[]).map(normalizeMessage);
@@ -222,9 +231,15 @@ export function useRealtimeMessages() {
     
     // Check if conversation needs routing status update
     try {
-      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', contactId).maybeSingle();
+      const { data: conv } = await dbFrom('team_conversations')
+        .select('id, routing_status')
+        .eq('id', contactId)
+        .maybeSingle();
+        
       if (conv && conv.routing_status === 'pending') {
-        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', contactId);
+        await dbFrom('team_conversations')
+          .update({ routing_status: 'assigned' })
+          .eq('id', contactId);
       }
     } catch (err) {
       log.error('Error checking routing status on send:', err);
@@ -234,14 +249,19 @@ export function useRealtimeMessages() {
   };
 
   const markAsRead = async (contactId: string) => {
-    const { error } = await dbFrom('messages').update({ is_read: true }).eq('contact_id', contactId).eq('sender', 'contact').eq('is_read', false);
+    const { error } = await dbFrom('messages')
+      .update({ is_read: true })
+      .eq('contact_id', contactId)
+      .eq('sender', 'contact')
+      .eq('is_read', false);
     if (error) log.error('Error marking messages as read:', error);
     
-    // Auto-update load: if conversation is assigned, marking read might imply activity
     // But better to update last_seen for routing load calculations
-    const { data: profile } = await supabase.auth.getUser();
-    if (profile?.user) {
-      await (dbFrom('profiles') as any).update({ last_seen: new Date().toISOString() }).eq('id', profile.user.id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('id', user.id);
     }
     commitConversations((prev) =>
       prev.map((c) => c.contact.id === contactId
@@ -347,7 +367,7 @@ export function useRealtimeMessages() {
      */
     optimistic: {
       pendingCount: 0,
-      mergeWithReal: (m: any) => m
+      mergeWithReal: <T>(m: T): T => m
     }
   };
 }
