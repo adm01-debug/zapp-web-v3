@@ -341,6 +341,10 @@ export function useExternalConversations(enabled = true) {
   const query = useQuery({
     queryKey: ['external-evolution', 'conversations', SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT],
     queryFn: async () => {
+      if (USE_MOCKS) {
+        const { MOCK_CONVERSATIONS } = await import('@/features/inbox/components/conversation-list/__mocks__/mockConversations');
+        return MOCK_CONVERSATIONS;
+      }
       // Dedupe cross-aba: a sidebar é igual em todas as abas, então uma única
       // chamada por janela é suficiente — abas adicionais reaproveitam.
       const messages = await dedupedFetch(
