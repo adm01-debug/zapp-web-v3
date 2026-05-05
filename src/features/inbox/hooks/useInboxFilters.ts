@@ -207,10 +207,8 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     }
 
     
-    // DEBUG: if (searchTrimmed) console.log('DEBUG: Before searching result size:', result.length);
-
-
-    // DEBUG: console.log('After Tab Filtering:', result.map(r => r.contact.name));
+    // Filtros de busca e tabs aplicados
+    // ... mantendo lógica original de filtragem
 
     // 2. Search filtering
     if (searchTrimmed) {
