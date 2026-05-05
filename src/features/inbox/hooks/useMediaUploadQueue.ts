@@ -61,9 +61,10 @@ export function useMediaUploadQueue(contactId: string) {
     setQueue((prev) => prev.map((it) => (it.id === id ? { ...it, ...partial } : it)));
   }, []);
 
-  const persist = useCallback(async (id: string, partial: Record<string, any>) => {
+  const persist = useCallback(async (id: string, partial: Partial<MediaUploadItem>) => {
     try {
-      await supabase.from('media_upload_queue').update(partial as any).eq('id', id);
+      const { file, ...updateData } = partial; // Don't try to persist File object
+      await supabase.from('media_upload_queue').update(updateData as any).eq('id', id);
     } catch (err) {
       log.error('[MediaQueue] persist failed', err);
     }
@@ -143,7 +144,7 @@ export function useMediaUploadQueue(contactId: string) {
         const result = await performUpload(item);
         if (result.ok === true) {
           patch(item.id, { status: 'uploaded', progress: 100, storagePath: result.storagePath, errorMessage: undefined });
-          await persist(item.id, { status: 'uploaded', progress: 100, storage_path: result.storagePath });
+          await persist(item.id, { status: 'uploaded', progress: 100, storagePath: result.storagePath });
           return;
         }
         const errMsg = result.error;
@@ -156,7 +157,7 @@ export function useMediaUploadQueue(contactId: string) {
         attempt += 1;
       }
       patch(item.id, { status: 'failed', errorMessage: lastError, retryCount: attempt - 1 });
-      await persist(item.id, { status: 'failed', error_message: lastError, retry_count: attempt - 1 });
+      await persist(item.id, { status: 'failed', errorMessage: lastError, retryCount: attempt - 1 });
       toast.error(`Falha no anexo: ${item.fileName}`);
     },
     [patch, performUpload, persist],
