@@ -43,8 +43,8 @@ export function useRealtimeInbox() {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [selectedContactFallback, setSelectedContactFallback] = useState<ConversationContact | null>(null);
   const [showDetails, setShowDetails] = useState(true);
-  const [isOnline, setIsOnline] = useState(profile?.online_status === 'online');
-  const [onlineStatus, setOnlineStatus] = useState<string>(profile?.online_status || 'offline');
+  const [isOnline, setIsOnline] = useState(false);
+  const [onlineStatus, setOnlineStatus] = useState<string>('offline');
   const [pipContact, setPipContact] = useState<{ name: string; avatar?: string; lastMessage?: string; contactId: string } | null>(null);
   const [pendingContactId, setPendingContactId] = useState<string | null>(null);
   // Mensagem que o ChatPanel deve scrollar e destacar assim que abrir a
@@ -224,7 +224,7 @@ export function useRealtimeInbox() {
         .update({ 
           online_status: status as any,
           last_seen: new Date().toISOString()
-        })
+        } as any)
         .eq('id', profile.id);
     };
 
