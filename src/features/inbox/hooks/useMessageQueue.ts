@@ -50,11 +50,31 @@ export interface QueueMetrics {
   byConversation: Record<string, { sent: number; failed: number; latency: number[] }>;
 }
 
-export function useMessageQueue(processMessage: (item: QueueItem) => Promise<void>) {
+export function useMessageQueue(
+  processMessage: (item: QueueItem) => Promise<void>,
+  configOverrides?: Partial<Record<string, Partial<QueueConfig>>>
+) {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const isProcessingRef = useRef<Record<string, boolean>>({});
-  const MAX_AUTO_RETRIES = 2;
   const QUEUE_STORAGE_KEY = 'chat_message_queue';
+
+  const getConfig = useCallback((contactId: string): QueueConfig => {
+    const overrides = configOverrides?.[contactId] || {};
+    return { ...DEFAULT_QUEUE_CONFIG, ...overrides };
+  }, [configOverrides]);
+
+  const calculateNextRetryDelay = useCallback((retryCount: number, config: QueueConfig) => {
+    // Backoff exponencial: baseDelay * 2^retryCount
+    let delay = config.baseDelay * Math.pow(2, retryCount);
+    
+    if (config.jitter) {
+      // Jitter: +/- 20% de variação aleatória para evitar "thundering herd"
+      const jitterAmount = delay * 0.2;
+      delay = delay + (Math.random() * jitterAmount * 2 - jitterAmount);
+    }
+    
+    return Math.min(delay, config.maxDelay);
+  }, []);
 
   // Persistência: Carregar fila ao iniciar
   useEffect(() => {
@@ -62,12 +82,11 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
     if (savedQueue) {
       try {
         const parsed = JSON.parse(savedQueue) as QueueItem[];
-        // Marcar itens que estavam 'sending' como 'failed' ou 'pending' para retomar
         const restored = parsed.map(item => ({
           ...item,
           status: item.status === 'sending' ? 'pending' : item.status,
           progress: item.status === 'sending' ? 0 : item.progress,
-          attachments: undefined // Arquivos File não são serializáveis
+          attachments: undefined
         }));
         setQueue(restored);
         log.info('Restored message queue from localStorage');
