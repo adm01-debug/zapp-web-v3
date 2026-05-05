@@ -53,7 +53,7 @@ describe('useMessageQueue', () => {
   });
 
   it('should reset progress on retry', async () => {
-    // Para testar o estado 'pending', precisamos de um delay controlado no processamento
+    // Processamento que falha
     const processMessage = vi.fn().mockImplementation(() => new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Fail')), 50);
     }));
@@ -64,11 +64,13 @@ describe('useMessageQueue', () => {
       result.current.addToQueue('contact-1', 'Retry me');
     });
 
-    // Avança o tempo para falhar as 3 tentativas (original + 2 retries)
-    // Cada uma leva 50ms + 100ms debounce
-    await act(async () => {
-      vi.advanceTimersByTime(1000);
-    });
+    // Aguarda o processamento falhar completamente (original + 2 retries)
+    // Usamos vi.advanceTimersByTime repetidamente para garantir que cada ciclo de retry (debounce 100ms + process 50ms) ocorra
+    for (let i = 0; i < 4; i++) {
+      await act(async () => {
+        vi.advanceTimersByTime(200);
+      });
+    }
 
     expect(result.current.queue[0].status).toBe('failed');
 
@@ -77,19 +79,13 @@ describe('useMessageQueue', () => {
     });
     expect(result.current.queue[0].progress).toBe(50);
 
-    // Agora o ponto crítico: retry deve mudar para pending IMEDIATAMENTE
+    // No retry, o status deve ir para pending e o progresso para 0
     act(() => {
       result.current.retryMessage(result.current.queue[0].id);
     });
 
-    // IMPORTANTE: Não avançamos timers aqui ainda, queremos ver o estado síncrono da alteração
     expect(result.current.queue[0].status).toBe('pending');
     expect(result.current.queue[0].progress).toBe(0);
-    
-    // Agora podemos limpar os timers para não vazar para outros testes
-    await act(async () => {
-      vi.runOnlyPendingTimers();
-    });
   });
 
   it('should reconcile with external delivery', () => {
