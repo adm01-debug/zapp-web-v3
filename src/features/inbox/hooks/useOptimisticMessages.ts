@@ -12,7 +12,7 @@ export interface OptimisticMessage extends Message {
   contact_id: string;
 }
 
-export function useOptimisticMessages() {
+export function useOptimisticMessages(context?: { userId?: string }) {
   const [pending, setPending] = useState<Record<string, OptimisticMessage>>({});
   const lastRemovedIdRef = useRef<string | null>(null);
   
