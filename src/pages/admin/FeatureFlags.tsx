@@ -24,7 +24,7 @@ export function FeatureFlagsAdmin() {
     fetchAuditLogs();
   }, []);
 
-  const fetchFlags = async () => {
+  const fetchFlags = useCallback(async () => {
     const { data, error } = await supabase
       .from('app_settings')
       .select('*')
