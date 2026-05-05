@@ -336,8 +336,14 @@ const USE_MOCKS =
   typeof window !== 'undefined' &&
   window.localStorage?.getItem('mockConversations') === '1';
 
+// ─── Global Enrichment Cache to avoid redundant RPC calls ──────────
+const contactEnrichmentCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 300_000; // 5 minutes
+
 // ─── Hook: External Conversations (list for sidebar) ──────────
 export function useExternalConversations(enabled = true) {
+  const queryClient = useQueryClient();
+
   const query = useQuery({
     queryKey: ['external-evolution', 'conversations', SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT],
     queryFn: async () => {
@@ -345,8 +351,7 @@ export function useExternalConversations(enabled = true) {
         const { MOCK_CONVERSATIONS } = await import('@/features/inbox/components/conversation-list/__mocks__/mockConversations');
         return MOCK_CONVERSATIONS;
       }
-      // Dedupe cross-aba: a sidebar é igual em todas as abas, então uma única
-      // chamada por janela é suficiente — abas adicionais reaproveitam.
+      
       const messages = await dedupedFetch(
         `inbox:sidebar:${SIDEBAR_DAYS_BACK}:${SIDEBAR_LIMIT}`,
         () => fetchRecentMessagesWindow(),
@@ -355,15 +360,28 @@ export function useExternalConversations(enabled = true) {
       
       const conversations = buildExternalConversations(messages);
       
-      // ✨ Enrichment: Fetch extra contact metadata (tags, company, ai_sentiment)
-      // from evolution_contacts via individual RPC calls for the sidebar list.
-      // Limit to first 20 to ensure performance.
-      const firstJids = Array.from(new Set(conversations.map(c => c.contact.id))).slice(0, 20);
-      if (firstJids.length > 0) {
+      // ✨ Optimized Enrichment: Fetch extra contact metadata (tags, company, ai_sentiment)
+      // Limit to first 30 most recent to ensure performance, but only if not cached.
+      const now = Date.now();
+      const firstJids = Array.from(new Set(conversations.map(c => c.contact.id))).slice(0, 30);
+      
+      const jidsToFetch = firstJids.filter(jid => {
+        const cached = contactEnrichmentCache.get(jid);
+        if (!cached) return true;
+        
+        // Se o cache é antigo (5min), ou se a conversa tem mensagem nova desde o último cache
+        const conv = conversations.find(c => c.contact.id === jid);
+        const lastMsgTime = conv?.lastMessage ? new Date(conv.lastMessage.created_at).getTime() : 0;
+        
+        return (now - cached.timestamp > CACHE_TTL) || (lastMsgTime > cached.timestamp);
+      });
+
+      if (jidsToFetch.length > 0) {
         try {
           // Individual calls are safer as rpc_get_contacts (plural) is missing in FATOR X.
+          // We limit concurrent fetches to avoid overloading the proxy.
           const enrichments = await Promise.all(
-            firstJids.map(jid => 
+            jidsToFetch.map(jid => 
               queryExternalProxy<any>({
                 action: 'rpc',
                 rpc: 'rpc_get_contact',
@@ -371,42 +389,45 @@ export function useExternalConversations(enabled = true) {
                   p_remote_jid: jid,
                   p_instance: DEFAULT_INSTANCE
                 }
-              }).catch(() => null)
+              }).then(res => ({ jid, res })).catch(() => ({ jid, res: null }))
             )
           );
           
-          const contactMap = new Map();
-          enrichments.forEach(res => {
+          enrichments.forEach(({ jid, res }) => {
             if (res?.data) {
-              contactMap.set(res.data.remote_jid, res.data);
-            }
-          });
-
-          conversations.forEach(conv => {
-            const extra = contactMap.get(conv.contact.id);
-            if (extra) {
-              if (extra.tags) conv.contact.tags = extra.tags;
-              if (extra.company) conv.contact.company = extra.company;
-              if (extra.ai_sentiment) conv.contact.ai_sentiment = extra.ai_sentiment;
-              
-              // ✨ FIX: update name if current is just phone/jid AND we found a real push_name or name
-              const currentName = conv.contact.name;
-              const isGeneric = !currentName || currentName === conv.contact.phone || currentName === conv.contact.id;
-              
-              if (isGeneric) {
-                const newName = extra.name || extra.push_name;
-                if (newName && newName !== 'Você') {
-                  conv.contact.name = newName;
-                  conv.contact.nickname = newName;
-                }
-              }
+              contactEnrichmentCache.set(jid, {
+                data: res.data,
+                timestamp: now
+              });
             }
           });
         } catch (err) {
-          log.warn('Failed to enrich contacts in sidebar via individual RPCs', err);
+          log.warn('Failed to enrich contacts in sidebar', err);
         }
       }
 
+      // Apply enrichment from cache to all conversations (not just the ones we fetched now)
+      conversations.forEach(conv => {
+        const cached = contactEnrichmentCache.get(conv.contact.id);
+        if (cached?.data) {
+          const extra = cached.data;
+          if (extra.tags) conv.contact.tags = Array.isArray(extra.tags) ? extra.tags : (typeof extra.tags === 'string' ? JSON.parse(extra.tags) : []);
+          if (extra.company) conv.contact.company = extra.company;
+          if (extra.ai_sentiment) conv.contact.ai_sentiment = extra.ai_sentiment;
+          
+          // ✨ FIX: update name if current is just phone/jid AND we found a real push_name or name
+          const currentName = conv.contact.name;
+          const isGeneric = !currentName || currentName === conv.contact.phone || currentName === conv.contact.id;
+          
+          if (isGeneric) {
+            const newName = extra.name || extra.push_name;
+            if (newName && newName !== 'Você') {
+              conv.contact.name = newName;
+              conv.contact.nickname = newName;
+            }
+          }
+        }
+      });
 
       return conversations;
     },
