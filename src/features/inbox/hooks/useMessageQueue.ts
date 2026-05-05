@@ -5,6 +5,20 @@ import { toast } from '@/hooks/use-toast';
 
 const log = getLogger('useMessageQueue');
 
+export interface QueueConfig {
+  maxRetries: number;
+  baseDelay: number;
+  maxDelay: number;
+  jitter: boolean;
+}
+
+export const DEFAULT_QUEUE_CONFIG: QueueConfig = {
+  maxRetries: 3,
+  baseDelay: 1000, // 1s
+  maxDelay: 30000, // 30s
+  jitter: true
+};
+
 export interface QueueItem {
   id: string;
   contactId: string;
@@ -19,6 +33,7 @@ export interface QueueItem {
   externalId?: string;
   createdAt: number;
   completedAt?: number;
+  nextRetryAt?: number;
   attempts: Array<{
     timestamp: number;
     error?: string;
