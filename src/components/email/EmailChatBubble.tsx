@@ -131,56 +131,67 @@ export function EmailChatBubble({
   };
 
   return (
-    <div className={cn('group relative', className)}>
+    <div className={cn('group relative animate-in fade-in slide-in-from-bottom-2 duration-500', className)}>
       {/* Header */}
       <div
         className={cn(
-          'flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-all duration-200 rounded-lg group/header',
-          expanded && 'bg-muted/10'
+          'flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-all duration-300 rounded-xl group/header mx-2 my-1',
+          expanded && 'bg-muted/15 shadow-sm border border-border/5'
         )}
         onClick={() => setExpanded(v => !v)}
       >
-        {/* Avatar */}
-        <Avatar className="h-8 w-8 shrink-0">
-          <AvatarFallback className={cn('text-white text-xs font-semibold', getAvatarColor(message.from_email))}>
-            {getInitials(message.from_name, message.from_email)}
-          </AvatarFallback>
-        </Avatar>
+        {/* Avatar com Animação */}
+        <motion.div whileHover={{ scale: 1.1 }} className="relative shrink-0">
+          <Avatar className="h-[38px] w-[44px] ring-2 ring-background shadow-lg border border-white/10">
+            <AvatarFallback className={cn('text-white text-[11px] font-black uppercase tracking-wider', getAvatarColor(message.from_email))}>
+              {getInitials(message.from_name, message.from_email)}
+            </AvatarFallback>
+          </Avatar>
+        </motion.div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className={cn('text-sm truncate', !isRead && 'font-semibold')}>
+              <span className={cn('font-sans text-[14px] truncate tracking-tight transition-colors', !isRead ? 'font-bold text-foreground' : 'font-semibold text-muted-foreground group-hover/header:text-foreground/80')}>
                 {message.from_name || message.from_email || '?'}
               </span>
-              {!isRead && <Badge className="h-4 text-[10px] px-1.5">Novo</Badge>}
+              {!isRead && <Badge className="text-[9px] h-4.5 px-2 font-black uppercase tracking-widest border-0 bg-primary text-primary-foreground shadow-sm">Novo</Badge>}
               {isStarred && <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />}
               {slaStatus && <EmailSLABadge status={slaStatus} compact />}
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {sentAt && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-[11px] text-muted-foreground tabular-nums">
+                    <span className="font-sans text-[10px] font-bold text-muted-foreground/60 tabular-nums uppercase tracking-tighter">
                       {formatDistanceToNow(sentAt, { locale: ptBR, addSuffix: true })}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>{format(sentAt, "dd/MM/yyyy HH:mm", { locale: ptBR })}</TooltipContent>
                 </Tooltip>
               )}
-              {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              <div className="w-6 h-6 rounded-full flex items-center justify-center bg-muted/20 text-muted-foreground/40 transition-transform duration-300" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0)' }}>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </div>
             </div>
           </div>
 
           {!expanded && (
-            <p className="text-xs text-muted-foreground truncate mt-0.5">{message.snippet}</p>
+            <p className="font-sans text-[12px] text-muted-foreground/70 truncate mt-0.5 font-medium">{message.snippet}</p>
           )}
 
           {expanded && (
-            <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
-              <span>Para: {message.to_emails.join(', ')}</span>
-              {message.cc_emails.length > 0 && <span>· Cc: {message.cc_emails.join(', ')}</span>}
+            <div className="flex items-center gap-1.5 font-sans text-[10px] font-bold text-muted-foreground/50 mt-1 uppercase tracking-wider">
+              <span className="text-primary/60">Para:</span>
+              <span className="truncate max-w-[300px]">{message.to_emails.join(', ')}</span>
+              {message.cc_emails.length > 0 && (
+                <>
+                  <span className="mx-1 opacity-30">|</span>
+                  <span className="text-primary/60">Cc:</span>
+                  <span className="truncate max-w-[200px]">{message.cc_emails.join(', ')}</span>
+                </>
+              )}
             </div>
           )}
         </div>
