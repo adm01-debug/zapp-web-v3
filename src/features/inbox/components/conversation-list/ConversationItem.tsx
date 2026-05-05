@@ -108,7 +108,7 @@ interface ConversationItemProps {
 
 /** Build "FirstName · Company" or fallbacks. */
 function buildPrimaryLabel(conversation: any): string {
-  const name = (conversation.contact?.name || conversation.contact?.pushName || '').trim();
+  const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || '').trim();
   const company = conversation.contact?.company?.trim();
   const safeName = name === 'Você' ? '' : name;
   const firstName = safeName?.split(/\s+/)[0] || safeName;
