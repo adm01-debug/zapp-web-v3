@@ -203,9 +203,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-3 py-3 md:px-4 md:py-4 bg-background border-t border-border/40 relative flex flex-col gap-2 shrink-0 font-sans transition-colors duration-300", 
-        isWhisper && "bg-amber-500/[0.03] dark:bg-amber-500/[0.05] border-t border-amber-500/20",
-        logic.isMobile && "px-2 py-2 safe-area-bottom"
+        "px-4 py-4 md:px-6 md:py-6 bg-background/95 backdrop-blur-xl border-t border-border/10 relative flex flex-col gap-3 shrink-0 font-sans transition-all duration-500 ease-in-out", 
+        isWhisper && "bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-t-2 border-amber-500/30 shadow-[0_-8px_30px_rgba(245,158,11,0.05)]",
+        logic.isMobile && "px-3 py-3 safe-area-bottom"
       )}>
         <AnimatePresence>
           {isRecordingAudio && (
@@ -216,16 +216,16 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         <SlashCommands inputValue={inputValue} onSelectCommand={onSlashCommand} onClose={onCloseSlashCommands} isOpen={showSlashCommands} />
 
         {typingNotification && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            className="absolute -top-7 left-6 flex items-center gap-2"
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse" />
-            <span className="text-[10px] font-bold text-amber-600/80 uppercase tracking-widest bg-amber-50/80 dark:bg-amber-950/60 backdrop-blur-sm px-2.5 py-0.5 rounded-full border border-amber-200/30">
-              {typingNotification}
-            </span>
-          </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, y: 15, scale: 0.95 }} 
+              animate={{ opacity: 1, y: 0, scale: 1 }} 
+              className="absolute -top-10 left-8 flex items-center gap-2 z-50"
+            >
+              <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)] animate-pulse" />
+              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.2em] bg-white/90 dark:bg-amber-950/80 backdrop-blur-md px-4 py-1.5 rounded-2xl border border-amber-500/40 shadow-xl">
+                {typingNotification}
+              </span>
+            </motion.div>
         )}
 
         <div className="flex items-end gap-[5px]" role="toolbar" aria-label="Barra de mensagem">
@@ -279,11 +279,11 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Escreva sua mensagem..."}
               rows={1}
               className={cn(
-                "w-full bg-accent/40 hover:bg-accent/60 focus:bg-background border-none rounded-2xl outline-none font-sans text-[14px] font-medium tracking-tight text-foreground shadow-none",
-                "placeholder:text-muted-foreground/50 placeholder:font-normal resize-none transition-all duration-300",
-                "focus:ring-1 focus:ring-primary/20",
-                logic.isMobile ? "px-4 py-3 text-[15px] min-h-[46px] max-h-[160px]" : "px-4 py-[12px] min-h-[46px] max-h-[200px]",
-                isWhisper && "bg-amber-500/10 focus:bg-amber-500/15 ring-amber-500/20",
+                "w-full bg-muted/30 hover:bg-muted/50 focus:bg-background border border-border/10 focus:border-primary/20 rounded-[24px] outline-none font-sans text-[14.5px] font-bold tracking-tight text-foreground shadow-sm",
+                "placeholder:text-muted-foreground/30 placeholder:font-normal resize-none transition-all duration-500 ease-out",
+                "focus:ring-4 focus:ring-primary/5 focus:shadow-lg",
+                logic.isMobile ? "px-5 py-3.5 text-[16px] min-h-[48px] max-h-[160px]" : "px-5 py-[14px] min-h-[48px] max-h-[220px]",
+                isWhisper && "bg-amber-500/5 focus:bg-amber-500/10 ring-amber-500/30 border-amber-500/20",
                 logic.isOverLimit && "text-destructive",
                 isSending && "opacity-60 pointer-events-none"
               )}
@@ -308,11 +308,13 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9, rotate: (logic.hasText || logic.attachments.length > 0) ? 10 : 0 }}
                   className={cn(
-                    "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
+                    "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-500 outline-none",
                     isRecordingAudio 
-                      ? "bg-destructive text-white hover:bg-destructive/90 shadow-lg shadow-destructive/20 scale-110" 
-                      : "text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] hover:text-primary dark:hover:text-primary",
-                    logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]",
+                      ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10" 
+                      : (logic.hasText || logic.attachments.length > 0)
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 scale-110"
+                        : "text-muted-foreground/40 hover:text-primary hover:bg-primary/5",
+                    logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]",
                     logic.sendAnimation && "motion-safe:animate-bounce"
                   )}
                   aria-label={editingMessage ? "Confirmar edição" : (logic.hasText || logic.attachments.length > 0 ? "Enviar mensagem" : "Gravar áudio")}>

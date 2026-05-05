@@ -86,12 +86,21 @@
 
   /* ===== MESSAGE BUBBLES ===== */
   .message-bubble { 
-    @apply max-w-[85%] sm:max-w-[70%] px-4 py-2; 
-    padding: var(--chat-bubble-padding, 0.625rem 1rem);
-    font-size: var(--chat-font-size, 14px);
+    @apply max-w-[85%] sm:max-w-[72%] px-4 py-2.5 rounded-2xl transition-all duration-300; 
+    padding: var(--chat-bubble-padding, 0.75rem 1.125rem);
+    font-size: var(--chat-font-size, 14.5px);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
   }
-  .message-bubble.sent { @apply bg-[hsl(var(--chat-bubble-sent))] text-[hsl(var(--chat-bubble-sent-foreground))]; }
-  .message-bubble.received { @apply bg-[hsl(var(--chat-bubble-received))] text-[hsl(var(--chat-bubble-received-foreground))]; }
+  .message-bubble.sent { 
+    @apply bg-primary text-primary-foreground shadow-md shadow-primary/10;
+    border-bottom-right-radius: 4px;
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.9) 100%);
+  }
+  .message-bubble.received { 
+    @apply bg-muted/50 dark:bg-muted/30 text-foreground shadow-sm border border-border/10 backdrop-blur-sm;
+    border-bottom-left-radius: 4px;
+  }
 
   /* ===== STATUS DOT ===== */
   .status-dot { @apply w-2.5 h-2.5 rounded-full; }

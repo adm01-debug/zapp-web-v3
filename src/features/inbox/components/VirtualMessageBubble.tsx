@@ -78,16 +78,17 @@ export function MessageBubble({
       className={cn('flex group px-4 py-1 gap-2', isSent ? 'justify-end' : 'justify-start')}
     >
       {!isSent && (
-        <Avatar className="w-8 h-8 shrink-0 self-end mb-1 ring-1 ring-border/30">
+        <Avatar className="w-9 h-9 shrink-0 self-end mb-1 ring-2 ring-background shadow-md border border-white/5 transition-transform group-hover:scale-105">
           <AvatarImage 
             src={avatarUrl || undefined} 
             referrerPolicy="no-referrer" 
+            className="object-cover"
             onError={(e) => {
               (e.target as HTMLImageElement).removeAttribute('src');
             }}
           />
-          <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
-            {(message.senderName || 'C').slice(0, 2).toUpperCase()}
+          <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-black tracking-tighter uppercase">
+            {(message.senderName || 'C').slice(0, 2)}
           </AvatarFallback>
         </Avatar>
       )}
@@ -114,9 +115,10 @@ export function MessageBubble({
         ) : (
           <motion.div 
             layout
+            whileHover={{ scale: 1.005 }}
             className={cn(
-              'message-bubble relative shadow-sm transition-all overflow-hidden',
-              (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0' : '',
+              'message-bubble relative transition-all duration-300',
+              (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0 overflow-hidden rounded-2xl' : '',
               isSent ? 'sent ml-12' : 'received mr-12'
             )}>
             {message.replyTo && <QuotedMessage replyTo={message.replyTo} isSent={isSent} onClick={() => scrollToMessage(message.replyTo!.messageId)} />}
@@ -127,8 +129,8 @@ export function MessageBubble({
             {message.type === 'audio' && message.mediaUrl && <div className="mb-2"><AudioMessagePlayer audioUrl={message.mediaUrl} messageId={message.id} isSent={isSent} existingTranscription={message.transcription} transcriptionStatus={message.transcriptionStatus} refreshKey={mediaRefreshKey} /></div>}
             {message.type === 'document' && message.mediaUrl && <div className="mb-2"><DocumentPreview url={message.mediaUrl} fileName="document" isSent={isSent} /></div>}
             {message.type === 'location' && message.location && <LocationMessageDisplay location={message.location} isSent={isSent} />}
-            {message.content && message.type === 'text' && <p className="text-[13.5px] leading-snug whitespace-pre-wrap break-words">{message.content}</p>}
-            <div className={cn('flex items-center gap-1 mt-1 text-[10px]', isSent ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+            {message.content && message.type === 'text' && <p className="text-[14.5px] leading-relaxed font-medium whitespace-pre-wrap break-words tracking-tight">{message.content}</p>}
+            <div className={cn('flex items-center gap-1.5 mt-1.5 text-[10px] uppercase font-black tracking-[0.05em]', isSent ? 'text-primary-foreground/50' : 'text-muted-foreground/40')}>
               <span>{formatMessageTime(message.timestamp)}</span>
               {isSent && <MessageStatusInline message={message} />}
             </div>
@@ -144,8 +146,8 @@ export function MessageBubble({
 function ActionButton({ icon, title, onClick }: { icon: React.ReactNode; title: string; onClick: () => void }) {
   return (
     <motion.button
-      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onClick}
-      className="p-1.5 rounded-full bg-card border border-border/50 text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-sm"
+      whileHover={{ scale: 1.15, rotate: 5 }} whileTap={{ scale: 0.9 }} onClick={onClick}
+      className="p-2 rounded-full bg-background/80 backdrop-blur-md border border-border/20 text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-lg transition-all duration-300"
       title={title}
     >
       {icon}
