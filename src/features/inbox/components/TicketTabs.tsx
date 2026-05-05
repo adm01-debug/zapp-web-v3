@@ -143,19 +143,19 @@ export function TicketTabs({
               onClick={() => onMainTabChange(tab.id)}
               className={cn(
                 'flex-1 flex items-center justify-center gap-2 rounded-xl font-bold transition-all duration-500 ease-out relative overflow-hidden',
-                isCompact ? 'px-2 py-1.5 text-[11px]' : 'px-3 py-2.5 text-[12px]',
+                isCompact ? 'px-2 py-1.5 text-[11px] font-semibold' : 'px-3 py-2.5 text-[12px]',
                 isActive
                   ? tab.activeColor + ' shadow-lg scale-[1.02] ring-1 ring-white/10'
                   : 'text-muted-foreground/70 hover:text-foreground hover:bg-muted/60'
               )}
             >
-              <Icon className={cn("transition-transform duration-500", isCompact ? "w-3.5 h-3.5" : "w-4 h-4", isActive && "scale-110")} />
+              <Icon className={cn("transition-transform duration-500", isCompact ? "w-3 h-3" : "w-4 h-4", isActive && "scale-110")} />
               <span className="tracking-tight">{tab.label}</span>
               {tab.count !== null && (
                 <Badge 
                   variant="outline"
                   className={cn(
-                    'h-4.5 min-w-[18px] px-1.5 text-[9px] font-black leading-none border-0 transition-all duration-500 shadow-sm',
+                    'h-4 min-w-[16px] px-1 text-[10px] font-medium leading-none border-0 transition-all duration-500 shadow-sm',
                     isActive 
                       ? 'bg-white/20 text-white' 
                       : 'bg-muted/60 text-muted-foreground/60'

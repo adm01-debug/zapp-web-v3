@@ -190,7 +190,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               <div className="h-4 w-px bg-border/40 mx-0.5" />
               
               <Select value={inbox.sortBy} onValueChange={inbox.setSortBy}>
-                <SelectTrigger className="w-auto h-7 text-[10px] font-bold border-none bg-transparent hover:bg-muted/60 rounded-lg px-2 gap-1.5 focus:ring-0">
+                <SelectTrigger className="w-auto h-7 text-[11px] font-medium border-none bg-transparent hover:bg-muted/60 rounded-lg px-2 gap-1.5 focus:ring-0">
                   <SelectValue placeholder="Ordenar" />
                 </SelectTrigger>
                 <SelectContent align="end" className="w-[140px]">
@@ -351,7 +351,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
                 className={cn("text-center", density === 'compact' ? "p-4" : "p-8")}
               >
                 <EmptyIcon className={cn('mx-auto mb-3 transition-all duration-300', density === 'compact' ? 'w-7 h-7' : 'w-10 h-10', activeOpt?.iconColor || 'text-muted-foreground/30')} />
-                <p className={cn("text-muted-foreground", density === 'compact' ? "text-xs" : "text-sm")}>{msg}</p>
+                <p className={cn("text-muted-foreground", density === 'compact' ? "text-[12px]" : "text-sm")}>{msg}</p>
               </motion.div>
             );
           })()

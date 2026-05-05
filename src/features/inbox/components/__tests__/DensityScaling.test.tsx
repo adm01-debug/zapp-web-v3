@@ -101,8 +101,8 @@ describe('Density Scaling', () => {
     const avatar = container.querySelector('.w-\\[38px\\]');
     expect(avatar).toBeTruthy();
     
-    // Check for smaller font size on name (text-[12.5px])
-    const name = container.querySelector('.text-\\[12\\.5px\\]');
+    // Check for smaller font size on name (text-[14px])
+    const name = container.querySelector('.text-\\[14px\\]');
     expect(name).toBeTruthy();
   });
 });
