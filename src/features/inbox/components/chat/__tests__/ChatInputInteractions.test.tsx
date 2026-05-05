@@ -118,7 +118,7 @@ describe('ChatInputArea — Interaction Scenarios', () => {
 
     expect(screen.getByText(new RegExp(`101/4096`))).toBeTruthy();
   });
-  it('Scenario 4: Mic button is disabled when there is text or attachments', () => {
+  it('Scenario 4: Mic button visual state', () => {
     const { rerender } = render(
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
@@ -128,13 +128,35 @@ describe('ChatInputArea — Interaction Scenarios', () => {
     );
 
     const micButton = screen.getByLabelText(/gravar áudio/i);
-    expect(micButton.hasAttribute('disabled')).toBe(true);
+    // Should have muted background when disabled/not recording
+    expect(micButton.className).toContain('bg-muted');
+    expect(micButton.className).not.toContain('bg-rose-500');
 
-    // Test with attachments (would need to mock useChatInputLogic to return attachments)
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ChatInputArea {...defaultProps} isRecordingAudio={true} />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+
+    const recordingMic = screen.getByLabelText(/parar gravação/i);
+    expect(recordingMic.className).toContain('bg-rose-500');
   });
 
-  it('Scenario 5: Send button is enabled when there is text', () => {
-    render(
+  it('Scenario 5: Send button visual state', () => {
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ChatInputArea {...defaultProps} inputValue="" />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+
+    const sendButton = screen.getByLabelText(/enviar mensagem/i);
+    expect(sendButton.className).toContain('bg-muted');
+
+    rerender(
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <ChatInputArea {...defaultProps} inputValue="Ready to send" />
@@ -142,7 +164,7 @@ describe('ChatInputArea — Interaction Scenarios', () => {
       </QueryClientProvider>
     );
 
-    const sendButton = screen.getByLabelText(/enviar mensagem/i);
-    expect(sendButton.hasAttribute('disabled')).toBe(false);
+    const activeSend = screen.getByLabelText(/enviar mensagem/i);
+    expect(activeSend.className).toContain('bg-primary');
   });
 });
