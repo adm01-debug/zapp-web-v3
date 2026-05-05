@@ -429,8 +429,14 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     </AnimatePresence>
                   </motion.button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">
-                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
+                <TooltipContent side="top" className="text-[10px] font-medium max-w-[200px] bg-primary text-primary-foreground border-none px-3 py-1.5 rounded-lg shadow-xl">
+                  {isSending 
+                    ? "🚀 Mensagem sendo processada..." 
+                    : logic.isOverLimit 
+                    ? "⚠️ Limite de caracteres excedido"
+                    : (!logic.hasText && logic.attachments.length === 0 && !editingMessage)
+                    ? "✨ Digite algo para enviar"
+                    : editingMessage ? "✅ Confirmar alterações" : "🚀 Enviar mensagem (Enter)"}
                 </TooltipContent>
               </Tooltip>
 
@@ -445,9 +451,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     className={cn(
                       "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
                       isRecordingAudio
-                        ? "bg-rose-500 text-white hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-125 z-10 ring-2 ring-rose-400/60"
+                        ? "bg-rose-500 text-white hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-110 z-10 ring-2 ring-rose-400/60"
                         : "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.55),0_0_36px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.7),0_0_48px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40",
-                      !isRecordingAudio && (isSending || logic.hasText || logic.attachments.length > 0) && "opacity-70 cursor-not-allowed",
+                      !isRecordingAudio && (isSending || logic.hasText || logic.attachments.length > 0) && "opacity-50 grayscale cursor-not-allowed",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
                     )}
                     aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
@@ -456,8 +462,14 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
                   </motion.button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">
-                  {isRecordingAudio ? "Parar Gravação" : (logic.hasText || logic.attachments.length > 0) ? "Apague o texto para gravar" : "Gravar Áudio"}
+                <TooltipContent side="top" className="text-[10px] font-medium max-w-[200px] bg-rose-500 text-white border-none px-3 py-1.5 rounded-lg shadow-xl">
+                  {isRecordingAudio 
+                    ? "🔴 Gravando... Clique para parar" 
+                    : (logic.hasText || logic.attachments.length > 0)
+                    ? "🚫 Limpe o texto para gravar áudio"
+                    : isSending
+                    ? "⏳ Aguarde o envio para gravar"
+                    : "🎤 Gravar áudio (Segure ou clique)"}
                 </TooltipContent>
               </Tooltip>
             </div>
