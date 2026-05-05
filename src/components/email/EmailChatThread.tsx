@@ -51,26 +51,26 @@ export function EmailChatThread({
   return (
     <div className={cn('flex flex-col h-full', className)}>
       {/* Header */}
-      <div className="px-4 py-3 border-b space-y-2">
+      <div className="px-4 py-3 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-10 shadow-sm h-[70px] flex flex-col justify-center">
         <div className="flex items-center gap-3">
           {onBack && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 md:hidden" onClick={onBack}>
+            <Button variant="ghost" size="icon" className="w-8 h-8 md:hidden rounded-full hover:bg-primary/5" onClick={onBack}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
 
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-sm leading-tight truncate">
+            <h2 className="font-sans font-bold text-[15px] text-foreground truncate tracking-tight leading-tight">
               {thread.subject || '(sem assunto)'}
             </h2>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="text-xs text-muted-foreground">
+            <div className="flex items-center h-4 mt-0.5">
+              <span className="font-sans text-[11px] text-[hsl(var(--muted-foreground))] font-semibold uppercase tracking-[0.04em]">
                 {thread.message_count} {thread.message_count === 1 ? 'mensagem' : 'mensagens'}
               </span>
               {(thread as any).participant_emails?.length > 0 && (
                 <>
-                  <span className="text-muted-foreground/50">·</span>
-                  <span className="text-xs text-muted-foreground truncate max-w-48">
+                  <span className="mx-1.5 w-1 h-1 rounded-full bg-border" />
+                  <span className="font-sans text-[11px] text-[hsl(var(--muted-foreground))] font-semibold truncate max-w-md uppercase tracking-[0.04em]">
                     {(thread as any).participant_emails.join(', ')}
                   </span>
                 </>
@@ -87,26 +87,29 @@ export function EmailChatThread({
                 thresholdMinutes={slaRecord.sla_threshold_minutes}
               />
             )}
+            
+            {/* Labels */}
+            {thread.label_ids.filter(l => !['INBOX','UNREAD','STARRED'].includes(l)).length > 0 && (
+              <div className="flex gap-1">
+                {thread.label_ids
+                  .filter(l => !['INBOX','UNREAD','STARRED'].includes(l))
+                  .slice(0, 2)
+                  .map(l => (
+                    <Badge key={l} variant="outline" className="text-[9px] h-4.5 px-2 font-black uppercase tracking-widest border-0 bg-primary/10 text-primary shadow-sm">{l}</Badge>
+                  ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* SLA Progress */}
+        {/* SLA Progress Overlay */}
         {slaRecord && !slaRecord.first_reply_at && (
-          <SLAProgressBar
-            receivedAt={slaRecord.received_at}
-            thresholdMinutes={slaRecord.sla_threshold_minutes}
-            className="mt-1"
-          />
-        )}
-
-        {/* Labels */}
-        {thread.label_ids.filter(l => !['INBOX','UNREAD','STARRED'].includes(l)).length > 0 && (
-          <div className="flex gap-1 flex-wrap">
-            {thread.label_ids
-              .filter(l => !['INBOX','UNREAD','STARRED'].includes(l))
-              .map(l => (
-                <Badge key={l} variant="secondary" className="text-[10px] h-4 px-1.5">{l}</Badge>
-              ))}
+          <div className="absolute bottom-0 left-0 right-0">
+            <SLAProgressBar
+              receivedAt={slaRecord.received_at}
+              thresholdMinutes={slaRecord.sla_threshold_minutes}
+              className="h-0.5 rounded-none bg-transparent"
+            />
           </div>
         )}
       </div>
