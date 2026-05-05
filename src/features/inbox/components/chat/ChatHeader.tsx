@@ -57,6 +57,7 @@ interface ChatHeaderProps {
   failuresCount?: number;
   onOpenWhisper?: () => void;
   whisperCount?: number;
+  onOpenValidation?: () => void;
 }
 
 export const ChatHeader = memo(function ChatHeader({
