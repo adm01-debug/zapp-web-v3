@@ -18,7 +18,7 @@ interface UseDebounceOptions {
  * - Scroll position tracking
  * - Auto-save form fields
  */
-export function useDebounce<T extends (...args: unknown[]) => unknown>(
+export function useDebounce<T extends (...args: any[]) => any>(
   callback: T,
   optionsOrDelay: UseDebounceOptions | number = {},
 ): T {
