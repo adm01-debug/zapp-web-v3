@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { log } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,16 +29,20 @@ function VariableHighlighter({ text, className }: { text: string; className?: st
 }
 
 interface TemplateWithVariablesProps {
-  templates: Template[];
   onUseTemplate: (content: string, variables: Record<string, string>) => void;
   contactData?: { name?: string; company?: string; job_title?: string };
 }
 
-export function TemplatesWithVariables({ templates, onUseTemplate, contactData }: TemplateWithVariablesProps) {
+export function TemplatesWithVariables({ onUseTemplate, contactData }: TemplateWithVariablesProps) {
+  const { templates, fetchTemplates, addTemplate, updateTemplate } = useMessageTemplates();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   const filteredTemplates = useMemo(() => {
     return templates.filter(t => {
@@ -56,10 +60,6 @@ export function TemplatesWithVariables({ templates, onUseTemplate, contactData }
     toast.success(`Template "${template.title}" aplicado!`);
   };
 
-  const handleSave = async (data: Partial<Template>) => {
-    log.debug('Saving template:', { ...editingTemplate, ...data });
-    toast.success(editingTemplate ? 'Template atualizado!' : 'Template criado!');
-  };
 
   return (
     <Card>
@@ -112,7 +112,13 @@ export function TemplatesWithVariables({ templates, onUseTemplate, contactData }
           </div>
         </ScrollArea>
       </CardContent>
-      <TemplateEditorDialog open={editorOpen} onOpenChange={setEditorOpen} template={editingTemplate} onSave={handleSave} />
+      <TemplateEditorDialog open={editorOpen} onOpenChange={setEditorOpen} template={editingTemplate} onSave={async (data) => {
+        if (editingTemplate) {
+          await updateTemplate({ ...editingTemplate, ...data } as Template);
+        } else {
+          await addTemplate(data as { title: string; content: string; shortcut: string; category: string });
+        }
+      }} />
     </Card>
   );
 }
