@@ -12237,6 +12237,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      rpc_get_contacts: {
+        Args: { p_instance_name: string; p_remote_jids: string[] }
+        Returns: {
+          ai_sentiment: string
+          company: string
+          remote_jid: string
+          tags: string[]
+        }[]
+      }
       rpc_get_gmail_health_summary: {
         Args: { p_window_minutes?: number }
         Returns: Json

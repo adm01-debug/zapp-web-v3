@@ -218,7 +218,7 @@ export function derivedToConversationContact(dc: DerivedContact): ConversationCo
     phone: dc.phone,
     email: null,
     avatar_url: dc.profilePictureUrl || null,
-    tags: dc.tags || null,
+    tags: dc.tags || [], // Ensure it's an array
     company: dc.company || null,
     job_title: null,
     assigned_to: null,
@@ -259,3 +259,4 @@ export function buildExternalConversations(messages: EvolutionMessage[]): Conver
     return { contact, messages: realtimeMessages, unreadCount, lastMessage };
   });
 }
+
