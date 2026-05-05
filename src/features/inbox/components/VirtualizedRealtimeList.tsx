@@ -44,7 +44,7 @@ const ConversationPreviewLine = forwardRef<HTMLDivElement, { contactId: string; 
     const inView = useInViewport(localRef, { rootMargin: '200px', keepVisibleMs: 1500 });
     const isTyping = useContactTyping(contactId, inView);
     return (
-      <div ref={localRef} className={cn("leading-snug min-h-[1em] transition-all duration-300", isCompact ? "text-[11.5px]" : "text-[13.5px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
+      <div ref={localRef} className={cn("leading-snug min-h-[1em] transition-all duration-300", isCompact ? "text-[12px]" : "text-[13.5px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
         {isTyping ? (
           <TypingIndicatorCompact isVisible={true} />
         ) : (
