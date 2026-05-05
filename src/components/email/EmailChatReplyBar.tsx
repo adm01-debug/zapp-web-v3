@@ -282,11 +282,11 @@ export function EmailChatReplyBar({
 
           <Button
             size="sm"
-            className="gap-2 h-9 px-5 rounded-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="gap-2.5 h-[42px] px-6 rounded-xl font-black uppercase tracking-widest bg-primary text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97] hover:shadow-primary/30"
             onClick={handleSend}
             disabled={isSending}
           >
-            {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {isSending ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <Send className="h-4.5 w-4.5 fill-current" />}
             Enviar
           </Button>
         </div>
