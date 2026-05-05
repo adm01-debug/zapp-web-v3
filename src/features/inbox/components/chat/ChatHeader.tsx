@@ -76,8 +76,8 @@ export const ChatHeader = memo(function ChatHeader({
   const { density, cycleDensity } = useDensity();
 
   return (
-    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className={cn(
-      "flex items-center justify-between px-4 sm:px-5 border-b border-border/40 bg-card/50 backdrop-blur-md sticky top-0 z-30 shadow-none h-[64px]",
+    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }} className={cn(
+      "flex items-center justify-between px-4 sm:px-6 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-30 shadow-sm h-[70px]",
       density === 'comfortable' ? 'py-2' : 'py-1.5'
     )}>
       <div className="flex items-center gap-3">
@@ -86,8 +86,11 @@ export const ChatHeader = memo(function ChatHeader({
             <ArrowLeft className="w-4 h-4" />
           </Button>
         )}
-        <motion.div>
-          <Avatar className="w-[42px] h-[42px] ring-2 ring-background shadow-sm border border-border/20">
+        <motion.div 
+          whileHover={{ scale: 1.05 }}
+          className="relative group cursor-pointer"
+        >
+          <Avatar className="w-[44px] h-[44px] ring-2 ring-background shadow-xl border border-white/10 transition-shadow group-hover:shadow-primary/20">
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
@@ -96,21 +99,22 @@ export const ChatHeader = memo(function ChatHeader({
                 (e.target as HTMLImageElement).removeAttribute('src');
               }}
             />
-            <AvatarFallback className="bg-muted text-muted-foreground text-[10px] font-bold uppercase">
+            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary text-[11px] font-black uppercase">
               {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
             </AvatarFallback>
           </Avatar>
+          <div className="absolute inset-0 rounded-full bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
         </motion.div>
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 flex-nowrap overflow-hidden">
-            <h3 className="font-sans font-semibold text-[15px] text-[hsl(var(--foreground))] truncate max-w-[240px] sm:max-w-md tracking-tight">
+            <h3 className="font-sans font-black text-[16px] text-foreground truncate max-w-[240px] sm:max-w-md tracking-tight leading-tight">
               {conversation.contact.name}
             </h3>
             <div className="flex-shrink-0 flex items-center gap-1.5">
               <SLAIndicatorForContact conversation={conversation} />
               <Badge variant="outline" className={cn(
-                "text-[10px] h-4 px-1.5 font-semibold uppercase tracking-wide border-none rounded-sm",
-                conversation.status === 'open' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'
+                "text-[9px] h-4.5 px-2 font-black uppercase tracking-widest border-0 shadow-sm",
+                conversation.status === 'open' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted/60 text-muted-foreground'
               )}>
                 {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
               </Badge>
@@ -118,9 +122,11 @@ export const ChatHeader = memo(function ChatHeader({
           </div>
           <div className="flex items-center h-4">
             {isContactTyping ? (
-              <span className="text-[12px] text-primary dark:text-primary font-medium italic animate-pulse">digitando...</span>
+              <span className="text-[11px] text-primary font-bold italic animate-pulse flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-primary" /> digitando...
+              </span>
             ) : (
-              <span className="text-[11.5px] text-muted-foreground font-medium truncate max-w-[200px] tracking-tight">Ver detalhes do contato</span>
+              <span className="text-[11px] text-muted-foreground/50 font-medium truncate max-w-[200px] tracking-tight uppercase tracking-widest text-[9px]">Status: Ativo</span>
             )}
           </div>
         </div>
