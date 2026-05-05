@@ -234,6 +234,8 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     duration,
     audioUrl,
     audioLevel,
+    transcription,
+    isTranscribing,
     startRecording,
     pauseRecording,
     resumeRecording,
