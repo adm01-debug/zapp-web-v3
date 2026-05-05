@@ -142,12 +142,19 @@ export function useThemePreset() {
 
   const resetTheme = useCallback(() => {
     const corporate = PRESETS.find(p => p.id === DEFAULT_PRESET_ID);
+    const root = document.documentElement;
+    
     if (corporate) {
       applyPresetColors(corporate, resolvedTheme);
     }
+
+    // Explicitly clear any font overrides to let tokens.css take over
+    root.style.removeProperty('--font-sans');
+    root.style.removeProperty('--font-display');
+
     setActivePreset(DEFAULT_PRESET_ID);
     setBorderRadius(8);
-    document.documentElement.style.setProperty('--radius', '0.5rem');
+    root.style.setProperty('--radius', '0.5rem');
     save(DEFAULT_PRESET_ID, 8);
     toast.success('Tema restaurado ao padrão!');
   }, [applyPresetColors, resolvedTheme, save]);

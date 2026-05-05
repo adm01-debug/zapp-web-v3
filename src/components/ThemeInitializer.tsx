@@ -59,20 +59,15 @@ export function ThemeInitializer() {
         cssVarsCache[key] = value;
       }
 
-      // Safely apply fonts: only if preset defines one AND it's different from the one in tokens.css
-      // If the preset DOES NOT define a font, we remove the inline style to let tokens.css take over.
+      // Safeguard: Only touch fonts if the preset EXPLICITLY defines one.
+      // If we are on "corporate" (default) or any other preset without font,
+      // we remove the high-specificity inline style to let tokens.css take over.
       if (preset.font) {
-        // Only set if different from current computed value to avoid unnecessary inline styles
-        const currentComputed = getComputedStyle(root).getPropertyValue('--font-sans').trim();
-        if (currentComputed !== preset.font) {
-          root.style.setProperty('--font-sans', preset.font);
-          root.style.setProperty('--font-display', preset.font);
-        }
+        root.style.setProperty('--font-sans', preset.font);
+        root.style.setProperty('--font-display', preset.font);
       } else {
-        // We ALWAYS remove the inline property if no font is specified in the preset.
-        // This is the ONLY way to "preserve" the variables defined in tokens.css,
-        // as inline styles always have higher specificity.
-        // However, we only call it if there IS an inline style to remove.
+        // If the preset has no font, we remove the inline style ONLY IF it exists.
+        // This ensures tokens.css wins.
         if (root.style.getPropertyValue('--font-sans')) {
           root.style.removeProperty('--font-sans');
         }
@@ -80,6 +75,17 @@ export function ThemeInitializer() {
           root.style.removeProperty('--font-display');
         }
       }
+
+      // Debug registry for the ThemeDebugTooltip
+      (window as any).__THEME_DEBUG__ = {
+        presetId: preset.id,
+        presetName: preset.name,
+        hasPresetFont: !!preset.font,
+        fontOrigin: preset.font ? 'Preset Override' : 'CSS tokens.css',
+        activeFont: getComputedStyle(root).getPropertyValue('--font-sans').trim(),
+        mode: resolvedTheme,
+        timestamp: new Date().toISOString()
+      };
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
