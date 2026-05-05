@@ -146,11 +146,12 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       }
       
       setIsRecording(false);
+      setIsPaused(false);
     }
   }, [isRecording]);
 
   const cancelRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && (isRecording || isPaused)) {
       mediaRecorderRef.current.stop();
       streamRef.current?.getTracks().forEach(track => track.stop());
       
@@ -160,33 +161,14 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       
       chunksRef.current = [];
       setIsRecording(false);
+      setIsPaused(false);
       setDuration(0);
       setAudioUrl(null);
     }
-  }, [isRecording]);
+  }, [isRecording, isPaused]);
 
   const uploadAudio = useCallback(async (blob: Blob, conversationId: string) => {
-    const fileName = `${conversationId}/${Date.now()}.webm`;
-    
-    const { data, error } = await supabase.storage
-      .from('audio-messages')
-      .upload(fileName, blob, {
-        contentType: 'audio/webm',
-      });
-    
-    if (error) {
-      throw error;
-    }
-    
-    const { data: signedData, error: signError } = await supabase.storage
-      .from('audio-messages')
-      .createSignedUrl(fileName, 3600); // 1 hour expiry
-    
-    if (signError || !signedData?.signedUrl) {
-      throw signError || new Error('Failed to create signed URL');
-    }
-    
-    return signedData.signedUrl;
+    // ... keep existing code
   }, []);
 
   const formatDuration = useCallback((seconds: number) => {
@@ -197,9 +179,13 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
 
   return {
     isRecording,
+    isPaused,
     duration,
     audioUrl,
+    audioLevel,
     startRecording,
+    pauseRecording,
+    resumeRecording,
     stopRecording,
     cancelRecording,
     uploadAudio,
