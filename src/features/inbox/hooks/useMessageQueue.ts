@@ -11,11 +11,17 @@ export interface QueueItem {
   content: string;
   attachments?: File[];
   onProgress?: (p: number) => void;
-  status: 'pending' | 'sending' | 'failed';
+  status: 'pending' | 'sending' | 'failed' | 'confirmed';
   error?: any;
   retryCount: number;
   progress?: number;
-  externalId?: string; // Para reconciliação com delivery
+  externalId?: string;
+  createdAt: number;
+  attempts: Array<{
+    timestamp: number;
+    error?: string;
+    duration?: number;
+  }>;
 }
 
 export function useMessageQueue(processMessage: (item: QueueItem) => Promise<void>) {
@@ -63,6 +69,7 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
     if (!nextItem) return;
 
     isProcessingRef.current[contactId] = true;
+    const startTime = Date.now();
     
     setQueue(prev => prev.map(item => 
       item.id === nextItem.id ? { ...item, status: 'sending', progress: 0 } : item
@@ -72,26 +79,41 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
       log.info(`Processing message ${nextItem.id} for contact ${contactId}`);
       await processMessage(nextItem);
       
-      setQueue(prev => prev.filter(item => item.id !== nextItem.id));
+      const duration = Date.now() - startTime;
+      setQueue(prev => prev.map(item => 
+        item.id === nextItem.id ? { 
+          ...item, 
+          status: 'confirmed', 
+          progress: 100,
+          attempts: [...(item.attempts || []), { timestamp: Date.now(), duration }]
+        } : item
+      ));
+      
+      // Remove confirmed items after some time to keep UI clean but show confirmation
+      setTimeout(() => {
+        setQueue(prev => prev.filter(item => item.id !== nextItem.id));
+      }, 5000);
+
       log.info(`Message ${nextItem.id} processed successfully`);
     } catch (err) {
+      const duration = Date.now() - startTime;
+      const errorMsg = err instanceof Error ? err.message : String(err);
       log.error(`Failed to process message ${nextItem.id}:`, err);
       
       const shouldAutoRetry = nextItem.retryCount < MAX_AUTO_RETRIES;
       
-      if (shouldAutoRetry) {
-        setQueue(prev => prev.map(item => 
-          item.id === nextItem.id ? { 
-            ...item, 
-            status: 'pending', 
-            retryCount: item.retryCount + 1,
-            progress: 0
-          } : item
-        ));
-      } else {
-        setQueue(prev => prev.map(item => 
-          item.id === nextItem.id ? { ...item, status: 'failed', error: err, progress: 0 } : item
-        ));
+      setQueue(prev => prev.map(item => 
+        item.id === nextItem.id ? { 
+          ...item, 
+          status: shouldAutoRetry ? 'pending' : 'failed',
+          retryCount: item.retryCount + (shouldAutoRetry ? 1 : 0),
+          error: err,
+          progress: 0,
+          attempts: [...(item.attempts || []), { timestamp: Date.now(), error: errorMsg, duration }]
+        } : item
+      ));
+
+      if (!shouldAutoRetry) {
         toast({
           title: "Falha no envio",
           description: "Não foi possível enviar a mensagem. Tente novamente.",
@@ -118,7 +140,9 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
       attachments,
       status: 'pending',
       retryCount: 0,
-      progress: 0
+      progress: 0,
+      createdAt: Date.now(),
+      attempts: []
     };
     
     setQueue(prev => [...prev, newItem]);
