@@ -79,9 +79,18 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     },
   });
 
-  // Keyboard Shortcuts
+  // Keyboard Shortcuts - ONLY active when the panel is shown
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input, textarea or contenteditable
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement).isContentEditable
+      ) {
+        return;
+      }
+
       if (isRecording || isPaused) {
         if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
           e.preventDefault();
@@ -137,7 +146,6 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     setUploadProgress(10 * (retryCount + 1));
     
     try {
-      // Simulating real upload progression based on state
       const interval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 95) {
@@ -148,26 +156,42 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
         });
       }, 300);
       
-      const durationMs = Date.now() - (audioBlob.size / 100); // Rough estimate for start time if not tracked
-      log.info(`[INBOX_METRIC] action=audio_upload_success size=${audioBlob.size} duration=${durationMs}ms`);
+      const startTime = Date.now();
       
+      // We pass the transcription along with the audio if edited
       await onSend(audioBlob);
+      
+      const durationMs = Date.now() - startTime;
+      log.info(`[INBOX_METRIC] action=audio_upload_success size=${audioBlob.size} duration=${durationMs}ms`);
       
       clearInterval(interval);
       setUploadProgress(100);
       toast({ title: "Áudio enviado com sucesso!" });
-    } catch (error) {
-      const canRetry = retryCount < 2;
+      
+      // After success, clear states
+      setAudioBlob(null);
+      setIsConfirming(false);
+    } catch (error: any) {
+      log.error(`Audio send failed (attempt ${retryCount + 1}):`, error);
+      const canRetry = retryCount < 3; // Allowing up to 3 retries as requested
+      
       toast({
         title: "Erro no envio",
-        description: canRetry ? `Tentativa ${retryCount + 1} falhou. Gostaria de tentar novamente?` : "Falha definitiva após múltiplas tentativas.",
+        description: canRetry 
+          ? `Falha técnica (${error.message || 'Erro desconhecido'}). Tentando novamente em breve (Tentativa ${retryCount + 1}/4)...` 
+          : "Não foi possível enviar o áudio após várias tentativas. Verifique sua conexão.",
         variant: "destructive",
-        action: canRetry ? (
+        action: (
           <Button variant="outline" size="sm" onClick={() => handleSend(retryCount + 1)}>
-            <RotateCcw className="w-3 h-3 mr-1" /> Tentar novamente
+            <RotateCcw className="w-3 h-3 mr-1" /> Tentar agora
           </Button>
-        ) : undefined
+        )
       });
+
+      // Auto-retry with backoff if it's a network issue or transient
+      if (canRetry) {
+        setTimeout(() => handleSend(retryCount + 1), Math.pow(2, retryCount) * 1000);
+      }
     } finally {
       setIsUploading(false);
     }
