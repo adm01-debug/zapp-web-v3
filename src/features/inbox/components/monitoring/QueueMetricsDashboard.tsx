@@ -1,0 +1,180 @@
+import React, { useMemo } from 'react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
+  ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend 
+} from 'recharts';
+import { QueueMetrics } from '@/features/inbox/hooks/useMessageQueue';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Send, AlertCircle, RefreshCcw } from 'lucide-react';
+
+interface QueueMetricsDashboardProps {
+  metrics: QueueMetrics;
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ metrics }) => {
+  const typeData = useMemo(() => {
+    return Object.entries(metrics.byType).map(([type, data]) => ({
+      name: type.charAt(0).toUpperCase() + type.slice(1),
+      sent: data.sent,
+      failed: data.failed,
+      latency: data.latency.length > 0 
+        ? Math.round(data.latency.reduce((a, b) => a + b, 0) / data.latency.length) 
+        : 0
+    }));
+  }, [metrics]);
+
+  const conversationData = useMemo(() => {
+    return Object.entries(metrics.byConversation)
+      .map(([id, data]) => ({
+        name: id.split('@')[0], // Shorten JID
+        sent: data.sent,
+        failed: data.failed,
+        latency: data.latency.length > 0 
+          ? Math.round(data.latency.reduce((a, b) => a + b, 0) / data.latency.length) 
+          : 0
+      }))
+      .slice(0, 5); // Only top 5
+  }, [metrics]);
+
+  const pieData = useMemo(() => {
+    return [
+      { name: 'Sucesso', value: metrics.totalSent },
+      { name: 'Falha', value: metrics.totalFailed },
+    ].filter(d => d.value > 0);
+  }, [metrics]);
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 p-4 bg-background overflow-y-auto max-h-[80vh]">
+      <Card className="bg-primary/5 border-primary/20">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Enviado</CardTitle>
+          <Send className="h-4 w-4 text-primary" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{metrics.totalSent}</div>
+          <p className="text-xs text-muted-foreground">Mensagens confirmadas</p>
+        </CardContent>
+      </Card>
+      
+      <Card className="bg-destructive/5 border-destructive/20">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Falhas</CardTitle>
+          <AlertCircle className="h-4 w-4 text-destructive" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{metrics.totalFailed}</div>
+          <p className="text-xs text-muted-foreground">Erros definitivos</p>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-warning/5 border-warning/20">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Retentativas</CardTitle>
+          <RefreshCcw className="h-4 w-4 text-warning" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{metrics.totalRetries}</div>
+          <p className="text-xs text-muted-foreground">Ajustes automáticos</p>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-blue-500/5 border-blue-500/20">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Latência Média</CardTitle>
+          <Clock className="h-4 w-4 text-blue-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{Math.round(metrics.averageLatency)}ms</div>
+          <p className="text-xs text-muted-foreground">Tempo médio de envio</p>
+        </CardContent>
+      </Card>
+
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle className="text-sm font-bold">Volume por Tipo</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={typeData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" fontSize={10} />
+              <YAxis fontSize={10} />
+              <RechartsTooltip />
+              <Legend wrapperStyle={{ fontSize: '10px' }} />
+              <Bar dataKey="sent" name="Sucesso" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="failed" name="Falha" fill="#ef4444" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle className="text-sm font-bold">Latência por Tipo (ms)</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={typeData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" fontSize={10} />
+              <YAxis fontSize={10} />
+              <RechartsTooltip />
+              <Line type="monotone" dataKey="latency" name="Latência" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle className="text-sm font-bold">Taxa de Sucesso</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[200px] flex items-center justify-center">
+          {pieData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.name === 'Sucesso' ? '#10b981' : '#ef4444'} />
+                  ))}
+                </Pie>
+                <RechartsTooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <span className="text-muted-foreground text-xs italic">Aguardando dados...</span>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle className="text-sm font-bold">Top 5 Conversas (ms)</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={conversationData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+              <XAxis type="number" fontSize={10} />
+              <YAxis dataKey="name" type="category" fontSize={10} width={60} />
+              <RechartsTooltip />
+              <Bar dataKey="latency" name="Latência" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
