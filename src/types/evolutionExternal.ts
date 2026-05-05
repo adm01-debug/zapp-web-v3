@@ -172,4 +172,5 @@ export interface DerivedContact {
   profilePictureUrl?: string | null;
   tags?: string[] | null;
   company?: string | null;
+  ai_sentiment?: string | null;
 }
