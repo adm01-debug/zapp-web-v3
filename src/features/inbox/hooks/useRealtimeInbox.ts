@@ -386,7 +386,11 @@ export function useRealtimeInbox() {
 
   const handleSendMessage = useCallback(async (content: string, attachments?: File[], onProgress?: (p: number) => void) => {
     if (!selectedContactId) return;
-    messageQueue.addToQueue(selectedContactId, content, attachments, onProgress);
+    
+    // Se o conteúdo for vazio e houver anexos, podemos dar um nome genérico
+    const effectiveContent = content || (attachments?.length ? `Enviando ${attachments.length} anexo(s)` : "");
+    
+    messageQueue.addToQueue(selectedContactId, effectiveContent, attachments, onProgress);
   }, [selectedContactId, messageQueue]);
 
   const handleSendAudio = useCallback(async (blob: Blob) => {
