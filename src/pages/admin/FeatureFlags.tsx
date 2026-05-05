@@ -63,10 +63,29 @@ export function FeatureFlagsAdmin() {
     if (!error && data) setAuditLogs(data);
   }, []);
 
+  const fetchMetrics = useCallback(async () => {
+    const { data: retries } = await supabase.from('message_retry_queue').select('id').eq('status', 'pending');
+    const { data: failed } = await supabase.from('message_retry_queue').select('id').eq('status', 'failed');
+    setMetrics({
+      pendingRetries: retries?.length || 0,
+      failedTotal: failed?.length || 0
+    });
+  }, []);
+
+  const executeHealthCheck = async () => {
+    setCheckingHealth(true);
+    const results = await runFullHealthCheck();
+    setHealthResults(results);
+    setCheckingHealth(false);
+    toast({ title: "Health Check concluído", description: "Verifique o status dos serviços ao lado." });
+  };
+
   useEffect(() => {
     fetchFlags();
     fetchAuditLogs();
-  }, [fetchFlags, fetchAuditLogs]);
+    fetchMetrics();
+    executeHealthCheck();
+  }, [fetchFlags, fetchAuditLogs, fetchMetrics]);
 
   const updateFlag = async (key: string, newConfig: FeatureConfig) => {
     const { error } = await supabase
