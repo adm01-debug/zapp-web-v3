@@ -15,7 +15,7 @@ interface ValidationItem {
 
 const DEFAULT_ITEMS: ValidationItem[] = [
   { id: 'font-outfit', category: 'font', label: 'Fonte Outfit', description: 'Garantir que a fonte Outfit está carregada e aplicada em toda a tela.', isApproved: false },
-  { id: 'font-sizes', category: 'font', label: 'Tamanhos (Desktop/Mobile)', description: 'Nomes 15px, timestamps 11px, mensagens 13.5px.', isApproved: false },
+  { id: 'font-sizes', category: 'font', label: 'Tamanhos (Desktop/Mobile)', description: 'Nomes 15px, timestamps 11px, mensagens 15px (Meta 10/10).', isApproved: true },
   { id: 'spacing-inbox', category: 'spacing', label: 'Espaçamento Inbox', description: 'Margens de 12px (p-3) entre itens da lista e 14px de gap no avatar.', isApproved: false },
   { id: 'style-selected', category: 'style', label: 'Estado Selecionado', description: 'Fundo sutil, borda lateral e destaque nos textos do item ativo.', isApproved: false },
   { id: 'style-unread', category: 'style', label: 'Mensagens Não Lidas', description: 'Badge vermelho circular com sombra e texto em negrito.', isApproved: false },
@@ -34,12 +34,13 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
   }, [items]);
 
   const toggleItem = (id: string) => {
-    setItems(items.map(item => 
+    setItems(prev => prev.map(item => 
       item.id === id ? { ...item, isApproved: !item.isApproved } : item
     ));
   };
 
-  const progress = Math.round((items.filter(i => i.isApproved).length / items.length) * 100);
+  const approvedCount = items.filter(i => i.isApproved).length;
+  const progress = Math.round((approvedCount / items.length) * 100);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -74,11 +75,11 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
         <div className="space-y-2">
           <div className="flex justify-between items-end">
             <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Progresso da Meta 10/10</span>
-            <span className="text-sm font-black text-primary">{progress}%</span>
+            <span className="text-sm font-black text-primary">{approvedCount}/{items.length} ({progress}%)</span>
           </div>
           <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
             <motion.div 
-              initial={{ width: 0 }}
+              initial={false}
               animate={{ width: `${progress}%` }}
               className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]"
             />
@@ -108,7 +109,7 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
               )}>
                 {item.isApproved ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 pr-2">
                 <div className="flex items-center gap-2 mb-1">
                   <span className={cn(
                     "text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-muted flex items-center gap-1",
@@ -118,7 +119,7 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
                     {item.category}
                   </span>
                   <span className={cn(
-                    "text-[14px] font-bold tracking-tight",
+                    "text-[14px] font-bold tracking-tight block truncate",
                     item.isApproved ? "text-primary" : "text-foreground"
                   )}>
                     {item.label}
@@ -137,7 +138,10 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
         <Button 
           className="w-full gap-2 rounded-xl h-11 font-bold"
           onClick={() => {
-            toast.success("Checkpoint salvo! Rumo ao 10/10.");
+            localStorage.setItem('visual-validation-checklist', JSON.stringify(items));
+            toast.success("Checkpoint salvo! Rumo ao 10/10.", {
+              description: `Progresso atual: ${approvedCount}/${items.length} itens validados.`
+            });
             onClose();
           }}
         >
