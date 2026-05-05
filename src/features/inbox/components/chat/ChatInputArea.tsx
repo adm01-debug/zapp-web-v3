@@ -325,11 +325,12 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                       isRecordingAudio
                         ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10"
                         : (logic.hasText || logic.attachments.length > 0)
-                          ? "text-muted-foreground/20 cursor-not-allowed"
+                          ? "text-muted-foreground/20 cursor-not-allowed opacity-50"
                           : "text-muted-foreground/60 hover:text-primary hover:bg-primary/5",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
                     )}
-                    aria-label="Gravar áudio"
+                    aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
+                    aria-pressed={isRecordingAudio}
                   >
                     <Mic className={cn(logic.isMobile ? "w-5 h-5" : "w-6 h-6", isRecordingAudio && "animate-pulse")} />
                   </motion.button>
