@@ -298,7 +298,7 @@ export function useRealtimeInbox() {
   }, [refetch, refetchSelectedMessages]);
 
   // Função interna que processa cada item da fila
-  const processQueuedMessage = useCallback(async (item: any) => {
+  const processQueuedMessage = useCallback(async (item: { contactId: string, content: string, attachments?: File[], onProgress?: (p: number) => void }) => {
     const { contactId, content, attachments, onProgress } = item;
 
     // Auto-assign on first reply if pending
