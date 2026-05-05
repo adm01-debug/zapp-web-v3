@@ -186,12 +186,14 @@ export function EmailChatReplyBar({
         )}
 
         {/* Textarea */}
-        <Textarea
-          value={bodyHtml.replace(/<[^>]*>/g, '')}
-          onChange={e => setBody(e.target.value)}
-          placeholder="Escreva sua resposta..."
-          className="min-h-[80px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-sm"
-        />
+        <div className="relative">
+          <Textarea
+            value={bodyHtml.replace(/<[^>]*>/g, '')}
+            onChange={e => setBody(e.target.value)}
+            placeholder="Escreva sua resposta..."
+            className="min-h-[100px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-sm leading-relaxed"
+          />
+        </div>
 
         {/* Assinatura preview */}
         {selectedSignature && (
