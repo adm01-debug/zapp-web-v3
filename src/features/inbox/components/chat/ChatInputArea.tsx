@@ -446,9 +446,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                 <TooltipTrigger asChild>
                   <motion.button
                     onClick={() => logic.handleSendWithAnimation()}
-                    disabled={isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)}
-                    whileHover={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 1.1 } : {}}
-                    whileTap={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 0.9 } : {}}
+                    disabled={isSending}
+                    whileHover={!isSending ? { scale: 1.1 } : {}}
+                    whileTap={!isSending ? { scale: 0.9 } : {}}
                     className={cn(
                       "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                       (logic.hasText || logic.attachments.length > 0 || editingMessage)
