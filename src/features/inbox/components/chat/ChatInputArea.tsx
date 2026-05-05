@@ -451,6 +451,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               </TooltipContent>
             </Tooltip>
           </div>
+          </div>
 
           {logic.isMobile && (
             <div className="flex items-center gap-0.5 shrink-0">
