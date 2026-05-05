@@ -13,7 +13,7 @@ import { validatePttBlob } from '@/lib/audio/pttLimits';
 import { seedAvatarCache } from '@/features/inbox';
 import { mapToLegacyConversation, mapToLegacyMessages } from '@/adapters/inboxLegacyMapper';
 import { dbFrom } from '@/integrations/datasource/db';
-import { useMessageQueue } from './useMessageQueue';
+import { useMessageQueue, QueueItem } from './useMessageQueue';
 
 const log = getLogger('useRealtimeInbox');
 
@@ -28,6 +28,7 @@ export function useRealtimeInbox() {
   const localRealtime = useRealtimeMessages();
   // External DB source (FATOR X)
   const externalData = useExternalConversations(USE_EXTERNAL_DB);
+  // ... keep existing code
 
   // Select source based on flag
   const conversations = USE_EXTERNAL_DB ? externalData.conversations : localRealtime.conversations;
