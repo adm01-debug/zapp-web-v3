@@ -117,7 +117,7 @@ export function TicketTabs({
   return (
     <div className="space-y-2">
       {/* Main Tabs */}
-      <div className="flex items-center gap-0.5 bg-muted/40 rounded-lg p-0.5">
+      <div className="flex items-center gap-0.5 bg-accent/30 rounded-xl p-1 border border-border/20 shadow-xs font-sans">
         {mainTabs.map(tab => {
           const Icon = tab.icon;
           const isActive = mainTab === tab.id;
@@ -126,22 +126,22 @@ export function TicketTabs({
               key={tab.id}
               onClick={() => onMainTabChange(tab.id)}
               className={cn(
-                'flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all duration-200',
+                'flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-300',
                 isActive
-                  ? tab.activeColor + ' shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                  ? tab.activeColor + ' shadow-md scale-[1.02]'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
               )}
             >
-              <Icon className="w-3 h-3" />
+              <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
               {tab.count !== null && (
                 <Badge 
                   variant="outline"
                   className={cn(
-                    'h-4 min-w-[16px] px-1 text-[9px] font-bold leading-none border',
+                    'h-4 min-w-[16px] px-1 text-[9px] font-bold leading-none border transition-colors',
                     isActive 
-                      ? 'bg-primary-foreground/15 text-inherit border-primary-foreground/25' 
-                      : 'bg-transparent text-muted-foreground border-border/60'
+                      ? 'bg-primary-foreground/20 text-inherit border-primary-foreground/30' 
+                      : 'bg-transparent text-muted-foreground border-border/40'
                   )}
                 >
                   {tab.count}
@@ -163,16 +163,16 @@ export function TicketTabs({
                 key={tab.id}
                 onClick={() => onSubTabChange(tab.id)}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all',
+                  'flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 border shadow-xs font-sans',
                   isActive
-                    ? 'bg-primary/15 text-primary border border-primary/30'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/40 border border-transparent'
+                    ? 'bg-primary/10 text-primary border-primary/40'
+                    : 'bg-muted/10 text-muted-foreground hover:text-foreground hover:bg-muted/30 border-transparent'
                 )}
               >
-                <Icon className="w-3 h-3" />
+                <Icon className="w-3.5 h-3.5" />
                 {tab.label}
                 <span className={cn(
-                  'text-[10px] font-bold',
+                  'text-[10px] font-bold tabular-nums',
                   isActive ? 'text-primary' : 'text-muted-foreground/70'
                 )}>
                   {tab.count}
@@ -214,11 +214,13 @@ export function TicketTabs({
 
       {/* Admin: Show All toggle */}
       {canShowAll && mainTab === 'open' && (
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-1.5">
-            <Users className="w-3 h-3 text-muted-foreground" />
-            <Label htmlFor="show-all" className="text-[10px] text-muted-foreground cursor-pointer">
-              Mostrar Todos
+        <div className="flex items-center gap-2 bg-muted/20 px-2 py-1.5 rounded-lg border border-border/10">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="w-3 h-3 text-primary" />
+            </div>
+            <Label htmlFor="show-all" className="text-[11px] font-semibold text-muted-foreground cursor-pointer uppercase tracking-tight">
+              Todos Atendentes
             </Label>
           </div>
           <Switch
