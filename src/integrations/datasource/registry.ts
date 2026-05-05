@@ -36,7 +36,10 @@ export type LogicalEntity =
   | 'profiles'
   | 'user_roles'
   | 'queues'
-  | 'whatsapp_connections';
+  | 'whatsapp_connections'
+  | 'team_conversations'
+  | 'routing_rules'
+  | 'routing_queues';
 
 export type DatasourceClient = 'lovable' | 'external';
 
@@ -60,6 +63,9 @@ export const ENTITY_MAP = {
   user_roles:           { client: 'lovable', table: 'user_roles' },
   queues:               { client: 'lovable', table: 'queues' },
   whatsapp_connections: { client: 'lovable', table: 'whatsapp_connections' },
+  team_conversations:   { client: 'lovable', table: 'team_conversations' },
+  routing_rules:        { client: 'lovable', table: 'routing_rules' },
+  routing_queues:       { client: 'lovable', table: 'routing_queues' },
 } as const satisfies Record<LogicalEntity, EntityMapping>;
 
 export function getEntityMapping(entity: LogicalEntity): EntityMapping {
