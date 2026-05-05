@@ -309,15 +309,22 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
 
     // 9. Sorting
     return [...result].sort((a, b) => {
-      if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
-      if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+      if (sortBy === 'unread') {
+        if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount;
+      }
+      
+      if (sortBy === 'name') {
+        return (a.contact.name || '').localeCompare(b.contact.name || '');
+      }
+
+      // Default: lastMessage date (descending)
       const aTime = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : new Date(a.contact.updated_at).getTime();
       const bTime = b.lastMessage ? new Date(b.lastMessage.created_at).getTime() : new Date(b.contact.updated_at).getTime();
       return bTime - aTime;
     });
   }, [
     conversations, 
-    search, 
+    search, externalSearch,
     filters, 
     mainTab, 
     subTab, 
@@ -329,7 +336,9 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     failureCategoryById, 
     profileId, 
     contactTagsMap, 
-    ticketStates
+    ticketStates,
+    sortBy,
+    statusFilter
   ]);
 
   const retryingCount = useMemo(
