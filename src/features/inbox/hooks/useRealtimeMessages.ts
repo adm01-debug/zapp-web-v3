@@ -87,6 +87,10 @@ export function useRealtimeMessages() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sendStateTick, setSendStateTick] = useState(0);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'closed' | 'unread'>('all');
+  const [sortBy, setSortBy] = useState<'lastMessage' | 'name' | 'unread'>('lastMessage');
+
   const conversationsRef = useRef<ConversationWithMessages[]>([]);
 
   const {
