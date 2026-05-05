@@ -86,6 +86,21 @@ export function useOptimisticMessages() {
     return result;
   }, []);
 
+  const cleanup = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setPending(prev => {
+      const next = { ...prev };
+      let changed = false;
+      ids.forEach(id => {
+        if (next[id]) {
+          delete next[id];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, []);
+
   const mergeWithReal = useCallback(
     (realMessages: Message[]): (Message | OptimisticMessage)[] => {
       const pendingList = Object.values(pending);
@@ -136,21 +151,6 @@ export function useOptimisticMessages() {
     },
     [pending, cleanup],
   );
-
-  const cleanup = useCallback((ids: string[]) => {
-    if (ids.length === 0) return;
-    setPending(prev => {
-      const next = { ...prev };
-      let changed = false;
-      ids.forEach(id => {
-        if (next[id]) {
-          delete next[id];
-          changed = true;
-        }
-      });
-      return changed ? next : prev;
-    });
-  }, []);
 
   return {
     createOptimistic,
