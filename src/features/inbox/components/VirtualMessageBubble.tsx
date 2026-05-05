@@ -41,11 +41,11 @@ interface MessageBubbleProps {
   contactAvatar?: string;
 }
 
-export function MessageBubble({
+export const MessageBubble = memo(({
   message, onReply, onForward, onCopy, onInteractiveButtonClick,
   ttsLoading, ttsPlaying, ttsMessageId, onSpeak, onStopSpeak, scrollToMessage,
   instanceName, contactJid, contactAvatar,
-}: MessageBubbleProps) {
+}: MessageBubbleProps) => {
   const isSent = message.sender === 'agent';
   const { avatarUrl } = useContactAvatar(message.conversationId, message.contactAvatar || contactAvatar);
   
