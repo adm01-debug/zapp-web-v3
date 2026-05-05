@@ -126,6 +126,8 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     setIsPlaying(!isPlaying);
   };
 
+  const handleSendAction = () => handleSend(0);
+  
   const handleSend = async (retryCount = 0) => {
     if (!audioBlob) return;
     
