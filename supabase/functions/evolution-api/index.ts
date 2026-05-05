@@ -298,6 +298,29 @@ serve(async (req) => {
     if (action === 'send-template') return await proxy(`/message/sendTemplate/${instance}`, 'POST', { number: body.number, template: body.template });
     if (action === 'mark-read') return await proxy(`/chat/markMessageAsRead/${instance}`, 'POST', { readMessages: body.readMessages || [body.key] });
     if (action === 'mark-unread') return await proxy(`/chat/markMessageAsUnread/${instance}`, 'POST', { readMessages: body.readMessages || [body.key] });
+    // Alias: marca todas as mensagens de um chat como lidas ao abrir a conversa.
+    // Aceita apenas remoteJid (sem key específica). Tenta /chat/markChatRead;
+    // se upstream não suportar, retorna 200 graceful para não quebrar UX.
+    if (action === 'read-messages') {
+      const remoteJid = body.remoteJid || body.chat;
+      if (!remoteJid) {
+        return new Response(JSON.stringify({ ok: false, skipped: true, reason: 'missing remoteJid' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      try {
+        const response = await proxy(`/chat/markChatRead/${instance}`, 'POST', { chat: remoteJid });
+        if (response.ok) return response;
+        const text = await response.text().catch(() => '');
+        return new Response(JSON.stringify({ ok: false, skipped: true, upstream_status: response.status, details: text }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, skipped: true, error: err instanceof Error ? err.message : 'proxy failed' }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
     if (action === 'archive-chat') return await proxy(`/message/archiveChat/${instance}`, 'POST', { lastMessage: body.lastMessage, chat: body.chat, archive: body.archive ?? true });
     if (action === 'delete-message') return await proxy(`/message/delete/${instance}`, 'DELETE', { id: body.id, remoteJid: body.remoteJid, fromMe: body.fromMe });
     if (action === 'update-message') return await proxy(`/message/update/${instance}`, 'PUT', { number: body.number, key: body.key, text: body.text });
