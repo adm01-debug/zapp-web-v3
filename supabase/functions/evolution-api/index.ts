@@ -338,6 +338,8 @@ serve(async (req) => {
       // Padroniza retorno em array (primário e fallback). Ver _shared/evolution-response-normalizers.ts
       return new Response(JSON.stringify(normalizeChatList(data)), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+    if (action === 'read-messages') return await proxy(`/chat/fetchMessages/${instance}`, 'POST', { number: body.number, limit: body.limit || 50 });
+    if (action === 'find-chats') return await proxy(`/chat/findChats/${instance}`, 'GET');
     if (action === 'find-messages') return await proxy(`/chat/findMessages/${instance}`, 'POST', { where: body.where || {}, page: body.page, offset: body.offset });
 
     if (action === 'find-status-messages') {
