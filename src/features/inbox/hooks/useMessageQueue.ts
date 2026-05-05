@@ -9,6 +9,7 @@ export interface QueueItem {
   id: string;
   contactId: string;
   content: string;
+  type: 'text' | 'attachment' | 'audio';
   attachments?: File[];
   onProgress?: (p: number) => void;
   status: 'pending' | 'sending' | 'failed' | 'confirmed';
@@ -17,11 +18,21 @@ export interface QueueItem {
   progress?: number;
   externalId?: string;
   createdAt: number;
+  completedAt?: number;
   attempts: Array<{
     timestamp: number;
     error?: string;
     duration?: number;
   }>;
+}
+
+export interface QueueMetrics {
+  totalSent: number;
+  totalFailed: number;
+  totalRetries: number;
+  averageLatency: number;
+  byType: Record<string, { sent: number; failed: number; latency: number[] }>;
+  byConversation: Record<string, { sent: number; failed: number; latency: number[] }>;
 }
 
 export function useMessageQueue(processMessage: (item: QueueItem) => Promise<void>) {
