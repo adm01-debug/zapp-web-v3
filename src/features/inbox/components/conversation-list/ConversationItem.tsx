@@ -130,24 +130,37 @@ export function ConversationItem({
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense' || forceCompact;
 
-  const StatusIcon = statusIcons[conversation.status] || AlertCircle;
+  // Normalização de dados entre os tipos Conversation (legado) e ConversationWithMessages (realtime)
+  const contact = conversation.contact;
+  const contactId = contact?.id || conversation.id;
+  const status = conversation.status || 'open';
+  const priority = conversation.priority || 'medium';
+  const unreadCount = conversation.unreadCount || 0;
+  const lastMessage = conversation.lastMessage;
+  const tags = contact?.tags ?? [];
+  const company = contact?.company;
+  const avatarUrl = contact?.avatar || contact?.avatar_url;
+  
+  // Datas
+  const displayDate = conversation.updatedAt || 
+                     (lastMessage?.created_at ? new Date(lastMessage.created_at) : null) || 
+                     (contact?.updated_at ? new Date(contact.updated_at) : new Date());
+
+  const StatusIcon = statusIcons[status as keyof typeof statusIcons] || AlertCircle;
   const sentiment: SentimentLevel | null = conversation.sentiment ||
-    (conversation.sentimentScore !== undefined ? getSentimentFromScore(conversation.sentimentScore) : null);
+    (conversation.sentimentScore !== undefined ? getSentimentFromScore(conversation.sentimentScore) : 
+     (contact?.ai_sentiment ? contact.ai_sentiment : null));
 
   const rootRef = useRef<HTMLDivElement>(null);
   const inView = useInViewport(rootRef, { rootMargin: '200px', keepVisibleMs: 1500 });
-  const isTyping = useContactTyping(conversation.contact.id, inView);
+  const isTyping = useContactTyping(contactId, inView);
 
   const primaryLabel = buildPrimaryLabel(conversation);
-  const tags = conversation.contact.tags ?? [];
   const hasTags = tags.length > 0;
-  const previewText = conversation.lastMessage?.content?.trim() || 'Sem mensagens ainda';
+  const previewText = lastMessage?.content?.trim() || 'Sem mensagens ainda';
   const visibleTags = tags.slice(0, 2);
   const hiddenTagsCount = Math.max(0, tags.length - visibleTags.length);
   const hiddenTagsLabel = tags.slice(2).join(', ');
-  
-  const avatarUrl = conversation.contact.avatar || conversation.contact.avatar_url;
-  const displayDate = conversation.updatedAt || (conversation.lastMessage?.created_at ? new Date(conversation.lastMessage.created_at) : new Date());
 
   if (isCompactMode) {
     return (
