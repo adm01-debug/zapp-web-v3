@@ -261,9 +261,21 @@ export function VirtualizedRealtimeList({
     return conversations.filter(c => c?.contact?.id);
   }, [conversations]);
 
-  // Sort: pinned first, then by last message date
+  // Sort: pinned first, then by last message date. 
+  // Safety: dedupe by contact id to prevent "Duplicate Key" errors.
   const sortedConversations = useMemo(() => {
-    return [...safeConversations].sort((a, b) => {
+    const deduped: ConversationWithMessages[] = [];
+    const seen = new Set<string>();
+    
+    // Process safeConversations and keep only first occurrence of each ID
+    for (const c of safeConversations) {
+      if (!seen.has(c.contact.id)) {
+        deduped.push(c);
+        seen.add(c.contact.id);
+      }
+    }
+
+    return deduped.sort((a, b) => {
       const aPin = pinnedIds.has(a.contact.id);
       const bPin = pinnedIds.has(b.contact.id);
       if (aPin && !bPin) return -1;
