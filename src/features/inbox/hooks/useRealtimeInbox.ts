@@ -420,42 +420,15 @@ export function useRealtimeInbox() {
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
 
-    // Auto-assign on audio reply if pending
-    try {
-      const { data: conv } = await dbFrom('team_conversations')
-        .select('id, routing_status')
-        .eq('id', selectedContactId)
-        .maybeSingle();
-        
-      if (conv && conv.routing_status === 'pending') {
-        await dbFrom('team_conversations')
-          .update({ routing_status: 'assigned' })
-          .eq('id', selectedContactId);
-      }
-    } catch (err) {
-      log.error('Error auto-assigning on audio reply:', err);
-    }
-
     const validation = await validatePttBlob(blob);
     if (!validation.ok) {
       toast.error(validation.message ?? 'Áudio inválido.');
-      throw new Error(validation.message ?? 'Áudio inválido.');
+      return;
     }
 
-    if (USE_EXTERNAL_DB) {
-      // External path (FATOR X): upload + envio via evolution-api + bolha
-      // otimista. O webhook reconcilia o status/ID definitivos em segundos.
-      //
-      // ATENÇÃO: erros (upload OU envio) são PROPAGADOS para que o
-      // `SendErrorBanner` possa oferecer "Reenviar" mantendo o blob original
-      // — repete o upload + envio + cria uma NOVA bolha otimista.
-      const { sendExternalAudio } = await import('..');
-      const currentAvatar = resolvedSelectedConversation?.contact.avatar_url;
-      try {
-        const { optimistic } = await sendExternalAudio(selectedContactId, blob, { contactAvatar: currentAvatar });
-        try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
-        setTimeout(() => { void externalMsgs.refetch(); void externalData.refetch(); }, 1500);
-      } catch (err) {
+    const file = new File([blob], `audio_${Date.now()}.ogg`, { type: 'audio/ogg' });
+    messageQueue.addToQueue(selectedContactId, "Mensagem de áudio", [file], 'audio');
+  }, [selectedContactId, messageQueue]);
         log.error('Error sending external audio:', err);
         // Re-throw para o SendErrorBanner via useChatPanelHandlers.
         throw err;
