@@ -135,6 +135,23 @@ export const ChatHeader = memo(function ChatHeader({
       </div>
 
       <div className="flex items-center gap-1">
+        {onOpenValidation && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 px-2 text-primary hover:bg-primary/5"
+                onClick={onOpenValidation}
+              >
+                <ClipboardCheck className="w-4 h-4" />
+                <span className="text-[10px] font-bold uppercase tracking-tight hidden sm:inline">Checklist</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Validação Visual 10/10</TooltipContent>
+          </Tooltip>
+        )}
+
         {failuresCount != null && failuresCount > 0 && (
           <Tooltip>
             <TooltipTrigger asChild>
