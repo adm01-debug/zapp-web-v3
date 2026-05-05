@@ -51,9 +51,13 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
 
   const {
     isRecording,
+    isPaused,
     duration,
     audioUrl,
+    audioLevel,
     startRecording,
+    pauseRecording,
+    resumeRecording,
     stopRecording,
     cancelRecording,
     formatDuration,
@@ -180,35 +184,45 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
 
       {/* Recording indicator or playback */}
       <div className="flex-1 flex items-center gap-3">
-        {isRecording ? (
+        {isRecording || isPaused ? (
           <>
             <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              className="w-3 h-3 rounded-full bg-destructive shrink-0"
+              animate={isPaused ? { scale: 1 } : { scale: [1, 1.2, 1] }}
+              transition={{ duration: 1, repeat: isPaused ? 0 : Infinity }}
+              className={cn("w-3 h-3 rounded-full shrink-0 shadow-lg", isPaused ? "bg-amber-500" : "bg-rose-500")}
             />
-            <div className="flex-1 flex items-center gap-2">
-              {/* Waveform visualization */}
-              <div className="h-8 flex-1 flex items-center gap-0.5">
-                {Array.from({ length: 30 }).map((_, i) => (
+            <div className="flex-1 flex items-center gap-3">
+              {/* Level Meter / Waveform */}
+              <div className="h-10 flex-1 flex items-center gap-[2px] bg-muted/20 rounded-lg px-2 border border-border/50">
+                {Array.from({ length: isMobile ? 20 : 40 }).map((_, i) => (
                   <motion.div
                     key={i}
                     animate={{
-                      height: [4, Math.random() * 24 + 4, 4],
+                      height: isPaused ? 4 : [4, (audioLevel * (30 + Math.random() * 10)) + 4, 4],
+                      opacity: isPaused ? 0.3 : 1
                     }}
                     transition={{
-                      duration: 0.5,
-                      repeat: Infinity,
-                      delay: i * 0.02,
+                      duration: 0.2,
+                      repeat: isPaused ? 0 : Infinity,
+                      delay: i * 0.01,
                     }}
-                    className="w-1 bg-primary rounded-full"
+                    className={cn("w-1 rounded-full", isPaused ? "bg-amber-500/50" : "bg-rose-500")}
                   />
                 ))}
               </div>
-              {/* Timer */}
-              <span className="text-sm font-mono text-destructive font-medium w-14 text-right tabular-nums">
-                {formatDuration(duration)}
-              </span>
+              
+              {/* Timer & Status */}
+              <div className="flex flex-col items-end min-w-[70px]">
+                <span className={cn(
+                  "text-sm font-mono font-bold tabular-nums",
+                  isPaused ? "text-amber-600" : "text-rose-600"
+                )}>
+                  {formatDuration(duration)}
+                </span>
+                <span className="text-[8px] uppercase font-black tracking-tighter opacity-60">
+                  {isPaused ? 'Pausado' : 'Gravando'}
+                </span>
+              </div>
             </div>
           </>
         ) : audioUrl ? (
@@ -268,29 +282,34 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
       </div>
 
       {/* Stop/Send controls */}
-      {isRecording ? (
+      {isRecording || isPaused ? (
         <div className="flex items-center gap-2">
-          {!isLocked && isMobile && (
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} whileTap={{ scale: 0.9 }}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-primary"
-                onClick={handleLock}
-                aria-label="Travar gravação"
-              >
-                <Lock className="w-4 h-4" />
-              </Button>
-            </motion.div>
-          )}
+          {/* Pause/Resume Toggle */}
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <Button
+              variant="outline"
+              size="icon"
+              className={cn(
+                "h-9 w-9 border-2",
+                isPaused 
+                  ? "border-amber-500 text-amber-500 hover:bg-amber-50" 
+                  : "border-rose-500 text-rose-500 hover:bg-rose-50"
+              )}
+              onClick={isPaused ? resumeRecording : pauseRecording}
+              aria-label={isPaused ? "Retomar gravação" : "Pausar gravação"}
+            >
+              {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
+            </Button>
+          </motion.div>
+
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
               size="icon"
-              className="bg-destructive hover:bg-destructive/90 shadow-sm"
+              className="bg-rose-600 hover:bg-rose-700 shadow-md h-9 w-9"
               onClick={stopRecording}
-              aria-label="Parar gravação"
+              aria-label="Concluir gravação"
             >
-              <Square className="w-4 h-4" />
+              <Square className="w-4 h-4 fill-white" />
             </Button>
           </motion.div>
         </div>

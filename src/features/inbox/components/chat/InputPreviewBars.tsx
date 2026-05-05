@@ -28,20 +28,22 @@ export function InputPreviewBars({ replyToMessage, editingMessage, onCancelReply
             exit={{ opacity: 0, height: 0 }}
             className="mx-4 mt-2"
           >
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20">
-              <Pencil className="w-4 h-4 text-primary shrink-0" />
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-primary/10 border-2 border-primary/20 shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                <Pencil className="w-4 h-4 text-primary" />
+              </div>
               <div className="flex-1 min-w-0">
-                <span className="text-xs font-medium text-primary">Editando mensagem</span>
-                <p className="text-xs text-muted-foreground truncate">{editingMessage.content}</p>
+                <span className="text-[10px] uppercase font-black tracking-widest text-primary">Modo de Edição</span>
+                <p className="text-sm text-muted-foreground/80 truncate font-medium">{editingMessage.content}</p>
               </div>
               <Button
                 variant="ghost"
-                size="icon"
-                className="w-6 h-6 text-muted-foreground hover:text-destructive shrink-0"
+                size="sm"
+                className="h-8 px-3 text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 border border-rose-500/20 rounded-full transition-all shrink-0"
                 onClick={onCancelEdit}
-                aria-label="Cancelar edição"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5 mr-1" />
+                Cancelar Edição
               </Button>
             </div>
           </motion.div>

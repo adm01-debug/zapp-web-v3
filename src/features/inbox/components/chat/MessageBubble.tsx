@@ -258,7 +258,12 @@ export function MessageBubble({
                   : 'text-[hsl(var(--muted-foreground))]'
               )}>
                 {message.isEdited && <span className="text-[9px] italic mr-0.5">editada</span>}
-                <span className="text-[11px] font-normal leading-none">{formatMessageTime(message.timestamp)}</span>
+                <div className="flex items-center gap-1">
+                  {(message.status === 'sending' || message.status === 'retrying' || message._optimistic) && (
+                    <RefreshCw className="w-2.5 h-2.5 animate-spin text-muted-foreground/60" />
+                  )}
+                  <span className="text-[11px] font-normal leading-none">{formatMessageTime(message.timestamp)}</span>
+                </div>
                 <div className="flex items-center min-w-[15px]">
                   {isSent ? <MessageStatusInline message={message} className="scale-90 origin-right" /> : <MessageReadStatus message={message} />}
                 </div>

@@ -395,7 +395,16 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           </div>
 
             {/* Send + Mic (third and fourth) — always glowing in primary/blue */}
-            <div className="flex items-center gap-1.5 shrink-0 self-end mb-[1px]">
+            <div className="flex items-center gap-2 shrink-0 self-end mb-[1px]">
+              {isSending && !logic.isMobile && (
+                <motion.span
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-[10px] font-black uppercase tracking-tighter text-primary/60"
+                >
+                  Enviando...
+                </motion.span>
+              )}
               {/* SEND */}
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -429,8 +438,14 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     </AnimatePresence>
                   </motion.button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">
-                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
+                <TooltipContent side="top" className="text-[10px] font-medium max-w-[200px] bg-primary text-primary-foreground border-none px-3 py-1.5 rounded-lg shadow-xl">
+                  {isSending 
+                    ? "🚀 Mensagem sendo processada..." 
+                    : logic.isOverLimit 
+                    ? "⚠️ Limite de caracteres excedido"
+                    : (!logic.hasText && logic.attachments.length === 0 && !editingMessage)
+                    ? "✨ Digite algo para enviar"
+                    : editingMessage ? "✅ Confirmar alterações" : "🚀 Enviar mensagem (Enter)"}
                 </TooltipContent>
               </Tooltip>
 
@@ -445,9 +460,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     className={cn(
                       "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
                       isRecordingAudio
-                        ? "bg-rose-500 text-white hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-125 z-10 ring-2 ring-rose-400/60"
+                        ? "bg-rose-500 text-white hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-110 z-10 ring-2 ring-rose-400/60"
                         : "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.55),0_0_36px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.7),0_0_48px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40",
-                      !isRecordingAudio && (isSending || logic.hasText || logic.attachments.length > 0) && "opacity-70 cursor-not-allowed",
+                      !isRecordingAudio && (isSending || logic.hasText || logic.attachments.length > 0) && "opacity-50 grayscale cursor-not-allowed",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
                     )}
                     aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
@@ -456,24 +471,41 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
                   </motion.button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">
-                  {isRecordingAudio ? "Parar Gravação" : (logic.hasText || logic.attachments.length > 0) ? "Apague o texto para gravar" : "Gravar Áudio"}
+                <TooltipContent side="top" className="text-[10px] font-medium max-w-[200px] bg-rose-500 text-white border-none px-3 py-1.5 rounded-lg shadow-xl">
+                  {isRecordingAudio 
+                    ? "🔴 Gravando... Clique para parar" 
+                    : (logic.hasText || logic.attachments.length > 0)
+                    ? "🚫 Limpe o texto para gravar áudio"
+                    : isSending
+                    ? "⏳ Aguarde o envio para gravar"
+                    : "🎤 Gravar áudio (Segure ou clique)"}
                 </TooltipContent>
               </Tooltip>
             </div>
 
             {/* Secondary toolbar (last) */}
             <div className={cn("flex items-center shrink-0 self-end mb-[3px]", logic.isMobile && "mb-0")}>
-              <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
-                showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
-                isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
-                onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
-                fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
-                contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
-                onFileSelect={logic.handleFileSelect}
-                isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
-                disabled={isSending || !!editingMessage || isRecordingAudio}
-              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn(isSending || !!editingMessage || isRecordingAudio ? "cursor-not-allowed" : "")}>
+                    <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
+                      showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
+                      isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
+                      onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
+                      fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
+                      contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
+                      onFileSelect={logic.handleFileSelect}
+                      isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
+                      disabled={isSending || !!editingMessage || isRecordingAudio}
+                    />
+                  </div>
+                </TooltipTrigger>
+                {(isSending || !!editingMessage || isRecordingAudio) && (
+                  <TooltipContent side="top" className="text-[10px] font-medium bg-muted text-muted-foreground border-border shadow-md">
+                    {isSending ? "Aguarde o envio concluir" : !!editingMessage ? "Finalize a edição para usar ferramentas" : "Finalize a gravação para usar ferramentas"}
+                  </TooltipContent>
+                )}
+              </Tooltip>
             </div>
           </div>
         </div>
