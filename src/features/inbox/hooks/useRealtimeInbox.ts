@@ -312,19 +312,15 @@ export function useRealtimeInbox() {
     await Promise.all([refetch(), refetchSelectedMessages()]);
   }, [refetch, refetchSelectedMessages]);
 
-  // Função interna que processa cada item da fila
-  const processQueuedMessage = useCallback(async (item: QueueItem) => {
+  const messageQueue = useMessageQueue(async (item: QueueItem) => {
     const { contactId, content, attachments } = item;
 
     // Webhook reconciliation - remove if already delivered/confirmed externally
-    const checkReconcile = () => {
-      const messagesToCheck = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
-      const lastMsg = messagesToCheck[messagesToCheck.length - 1];
-      if (lastMsg?.external_id && lastMsg.sender === 'agent') {
-        messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id);
-      }
-    };
-    checkReconcile();
+    const messagesToCheck = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
+    const lastMsg = messagesToCheck[messagesToCheck.length - 1];
+    if (lastMsg?.external_id && lastMsg.sender === 'agent') {
+      messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id);
+    }
 
     // Auto-assign on first reply if pending
     try {
@@ -401,9 +397,7 @@ export function useRealtimeInbox() {
     } finally {
       await refreshActiveConversation();
     }
-  }, [sendMessage, refreshActiveConversation, externalMsgs, externalData, resolvedSelectedConversation, localMsgs.messages, messageQueue]);
-
-  const messageQueue = useMessageQueue(processQueuedMessage);
+  });
 
   const handleSendMessage = useCallback(async (content: string, attachments?: File[]) => {
     if (!selectedContactId) return;
