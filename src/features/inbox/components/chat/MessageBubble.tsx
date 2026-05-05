@@ -122,7 +122,7 @@ export function MessageBubble({
         className={cn(
           'flex group gap-2 transition-all duration-300 focus-visible:outline-none font-sans',
           isSent ? 'justify-end' : 'justify-start',
-          density === 'comfortable' ? 'mb-1.5' : density === 'compact' ? 'mb-1' : 'mb-0.5',
+          density === 'comfortable' ? 'mb-2' : density === 'compact' ? 'mb-1.5' : 'mb-1',
           highlightedMessageIds?.has(message.id) && 'relative',
           activeHighlightId === message.id && 'ring-2 ring-primary ring-offset-0 rounded-lg animate-[pulse_1.5s_ease-in-out_1]',
           highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-primary/10 rounded-lg',
@@ -131,7 +131,7 @@ export function MessageBubble({
         {!isSent && (
           <div className="w-[36px] shrink-0">
             {isLastInGroup && (
-              <Avatar className="w-[36px] h-[36px] ring-2 ring-background shadow-sm border border-border/50">
+              <Avatar className="w-[36px] h-[36px] ring-2 ring-background shadow-sm border border-border/10">
                 <AvatarImage src={avatarUrl || undefined} referrerPolicy="no-referrer" onError={(e) => (e.target as HTMLImageElement).removeAttribute('src')} />
                 <AvatarFallback className="bg-gradient-to-br from-muted to-muted/60 text-muted-foreground text-[10px] font-bold uppercase">{senderName.slice(0, 2)}</AvatarFallback>
               </Avatar>
@@ -140,7 +140,7 @@ export function MessageBubble({
         )}
 
         <div className={cn('max-w-[85%] sm:max-w-[70%] space-y-0.5 relative', isSent && 'items-end')}>
-          {!isSent && isFirstInGroup && <span className="text-[15px] font-semibold text-primary/80 ml-1.5 block tracking-tight">{senderName}</span>}
+          {!isSent && isFirstInGroup && <span className="text-[13px] font-bold text-primary/70 ml-1 block tracking-tight mb-0.5">{senderName}</span>}
           {message.isWhisper && (
             <div className="flex items-center gap-1.5 mb-1 ml-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-full w-fit border border-amber-500/20 shadow-xs">
               <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400 animate-pulse" />
@@ -202,7 +202,7 @@ export function MessageBubble({
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={cn(
                 'relative transition-all overflow-visible border border-transparent shadow-sm',
-                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-3 py-2.5' : 'px-2.5 py-2',
+                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-4 py-3' : 'px-3 py-2.5',
                 isSent
                   ? cn('bg-chat-sent text-chat-sent-foreground font-normal', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
                   : cn('bg-chat-received text-chat-received-foreground font-normal', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
@@ -244,7 +244,7 @@ export function MessageBubble({
                 <TextWithLinks 
                   text={message.content} 
                   className={cn(
-                    "text-[15px] whitespace-pre-wrap leading-[1.5] tracking-[-0.01em]",
+                    "text-[15px] whitespace-pre-wrap leading-[1.6] tracking-tight",
                     searchQuery && highlightedMessageIds?.has(message.id) ? "" : ""
                   )}
                   showPreviews={!message.isWhisper}

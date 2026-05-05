@@ -475,7 +475,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <Lock className="w-6 h-6 text-primary" />
           </div>
-          <h3 className="text-[13px] font-semibold mb-1">Criptografia de Ponta a Ponta</h3>
+          <h3 className="text-[14px] font-bold mb-1">Criptografia de Ponta a Ponta</h3>
           <p className="text-[12px] text-muted-foreground leading-relaxed">
             As mensagens e chamadas são protegidas com criptografia. Ninguém fora desta conversa pode lê-las.
           </p>
