@@ -155,7 +155,7 @@ export function EmailThreadList({
   return (
     <div className={cn('flex flex-col h-full', className)}>
       {/* Header */}
-      <div className="px-4 py-3 border-b flex items-center justify-between gap-2 bg-background/60 backdrop-blur-xl sticky top-0 z-20">
+      <div className="px-4 py-3 border-b flex items-center justify-between gap-2 bg-background/80 backdrop-blur-xl sticky top-0 z-20 shadow-sm/50">
         <div className="flex items-center gap-2 min-w-0">
           <Inbox className="h-4 w-4 text-primary shrink-0" />
           <span className="font-bold text-sm tracking-tight font-display">Inbox</span>
