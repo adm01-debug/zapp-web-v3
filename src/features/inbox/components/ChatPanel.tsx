@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, lazy, Suspense, useCallback, useMemo } fro
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { Conversation, Message } from '@/types/chat';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 import { FileUploaderRef } from './FileUploader';
 import { useTypingPresence } from '@/hooks/useTypingPresence';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
@@ -17,6 +19,7 @@ import { useAmbientColor } from '@/hooks/useAmbientColor';
 import { ChatToolPanels } from './chat/ChatToolPanels';
 import { ChatDialogs } from './chat/ChatDialogs';
 import { ChatPanelHeader } from './chat/ChatPanelHeader';
+import { TemplatesWithVariables } from './TemplatesWithVariables';
 import { ChatAssignedBar } from './chat/ChatAssignedBar';
 import { TicketActionsBar } from './chat/TicketActionsBar';
 import { TicketHistorySheet } from './TicketHistorySheet';
@@ -30,7 +33,7 @@ import { ChatDragOverlay } from './chat/ChatDragOverlay';
 import { ChatQuickRepliesPopover } from './chat/ChatQuickRepliesPopover';
 import { ChatSearchBar } from './chat/ChatSearchBar';
 import { useChatPanelHandlers } from './chat/useChatPanelHandlers';
-import { ActiveTool } from './chat/ChatHeaderToolbar';
+import type { ActiveTool } from './chat/ChatHeaderToolbar';
 import { FailureFilterBar } from './chat/FailureFilterBar';
 import { useChatFilters } from './chat/hooks/useChatFilters';
 import { useSLADelivery } from './chat/hooks/useSLADelivery';
@@ -391,6 +394,32 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
             activeTool={activeTool}
             onSetActiveTool={handleSetActiveTool}
           />
+        )}
+
+        {activeTool === 'templates' && (
+          <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm p-4 overflow-auto flex items-center justify-center">
+            <div className="w-full max-w-2xl relative">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute -right-2 -top-2 z-[60] bg-background border border-border rounded-full hover:bg-muted" 
+                onClick={() => setActiveTool(null)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+              <TemplatesWithVariables 
+                onUseTemplate={(content) => {
+                  handlers.setInputValue(content);
+                  setActiveTool(null);
+                  setTimeout(() => handlers.inputRef.current?.focus(), 10);
+                }}
+                contactData={{
+                  name: conversation.contact.name,
+                  company: conversation.contact.company,
+                }}
+              />
+            </div>
+          </div>
         )}
 
         <ChatSearchBar messages={messages} isOpen={(activeTool as string) === 'chatSearch'}

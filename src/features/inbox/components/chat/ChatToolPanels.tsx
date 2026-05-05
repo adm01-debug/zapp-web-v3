@@ -3,6 +3,7 @@ import { Radar, GraduationCap, FileText, Share2 } from 'lucide-react';
 import { ToolPanel } from '@/features/inbox/components/ai-tools/ToolPanel';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 import { Message } from '@/types/chat';
+import type { ActiveTool } from './ChatHeaderToolbar';
 
 const ConversationSummary = lazy(() => import('../ConversationSummary').then(m => ({ default: m.ConversationSummary })));
 const ObjectionDetector = lazy(() => import('../ObjectionDetector').then(m => ({ default: m.ObjectionDetector })));
@@ -10,7 +11,7 @@ const UniversityHelp = lazy(() => import('../UniversityHelp').then(m => ({ defau
 const AIConversationAssistant = lazy(() => import('../AIConversationAssistant').then(m => ({ default: m.AIConversationAssistant })));
 const TeamFiles = lazy(() => import('../TeamFiles').then(m => ({ default: m.TeamFiles })));
 
-type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | null;
+
 
 interface ChatToolPanelsProps {
   activeTool: ActiveTool;
