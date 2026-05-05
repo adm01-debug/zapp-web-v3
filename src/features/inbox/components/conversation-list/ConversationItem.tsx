@@ -110,7 +110,9 @@ interface ConversationItemProps {
 function buildPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || '').trim();
   const company = conversation.contact?.company?.trim();
-  const firstName = name?.split(/\s+/)[0] || name;
+  // Ensure we don't use "Você" as name
+  const safeName = name === 'Você' ? '' : name;
+  const firstName = safeName?.split(/\s+/)[0] || safeName;
   
   if (firstName && company) return `${firstName} · ${company}`;
   if (firstName) return `${firstName} · Sem empresa`;
