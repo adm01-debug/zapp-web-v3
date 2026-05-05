@@ -27,6 +27,13 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [lastCancelledAudio, setLastCancelledAudio] = useState<{blob: Blob, url: string} | null>(null);
+  const [volume, setVolumeState] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('audio-player:volume');
+      const n = saved !== null ? parseFloat(saved) : 1;
+      return isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
+    } catch { return 1; }
+  });
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isMobile = useIsMobile();
