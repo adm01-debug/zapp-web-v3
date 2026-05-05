@@ -65,11 +65,13 @@ import type { NavItemConfig } from './SidebarNavItem';
 // ── Primary (always visible, ≤8 items) ────────────────────
 export const primaryNav: readonly NavItemConfig[] = [
   { id: 'inbox', icon: MessageSquare, label: 'Chat' },
-  { id: 'contacts', icon: User, label: 'Contatos' },
   { id: 'team-chat', icon: UsersRound, label: 'Teams' },
-  { id: 'dashboard', icon: BarChart3, label: 'Painel' },
-  { id: 'automations', icon: RefreshCw, label: 'Robôs' },
-  { id: 'settings', icon: Settings, label: 'Ajustes' },
+  { id: 'email-chat', icon: Mail, label: 'Email' },
+  { id: 'contacts', icon: User, label: 'Contatos' },
+  { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
+  { id: 'pipeline', icon: Kanban, label: 'Pipeline' },
+  { id: 'campaigns', icon: Megaphone, label: 'Campanhas' },
+  { id: 'settings', icon: Settings, label: 'Configurações' },
 ] as const;
 
 // ── Sales & CRM ───────────────────────────────────────────
