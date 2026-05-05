@@ -27,7 +27,7 @@ export const messageService = {
 
     try {
       // Fetch normal messages
-      let allData: any[] = [];
+      let allData: (Partial<RealtimeMessage> & { isWhisper?: boolean; sender_id?: string })[] = [];
       let from = 0;
       const PAGE_SIZE = 1000;
       let hasMore = true;
