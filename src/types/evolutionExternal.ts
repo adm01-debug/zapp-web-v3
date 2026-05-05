@@ -168,4 +168,6 @@ export interface DerivedContact {
   lastMessageDirection: string;
   instanceName: string;
   profilePictureUrl?: string | null;
+  tags?: string[] | null;
+  company?: string | null;
 }
