@@ -25,6 +25,9 @@ export function FeatureFlagsAdmin() {
   const [flags, setFlags] = useState<Flag[]>([]);
   const [loading, setLoading] = useState(true);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [healthResults, setHealthResults] = useState<HealthStatus[]>([]);
+  const [checkingHealth, setCheckingHealth] = useState(false);
+  const [metrics, setMetrics] = useState({ pendingRetries: 0, failedTotal: 0 });
 
   const fetchFlags = useCallback(async () => {
     const { data, error } = await supabase
