@@ -150,19 +150,19 @@ export function EmailChatThread({
         </div>
       </ScrollArea>
 
-      <Separator />
-
-      {/* Reply bar */}
-      <EmailChatReplyBar
-        accountId={accountId}
-        threadId={thread.id}
-        threadGmailId={thread.thread_id}
-        toEmails={replyTo}
-        subject={thread.subject ?? ''}
-        onSent={() => {
-          markReplied(thread.thread_id);
-        }}
-      />
+      <div className="bg-background/80 backdrop-blur-xl border-t border-border/10">
+        <EmailChatReplyBar
+          accountId={accountId}
+          threadId={thread.id}
+          threadGmailId={thread.thread_id}
+          toEmails={replyTo}
+          subject={thread.subject ?? ''}
+          onSent={() => {
+            markReplied(thread.thread_id);
+          }}
+          className="border-none"
+        />
+      </div>
     </div>
   );
 }
