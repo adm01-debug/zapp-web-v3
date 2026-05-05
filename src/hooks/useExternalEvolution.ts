@@ -332,6 +332,10 @@ async function fetchMessagesAfter(
   return result.data;
 }
 
+const USE_MOCKS =
+  typeof window !== 'undefined' &&
+  window.localStorage?.getItem('mockConversations') === '1';
+
 // ─── Hook: External Conversations (list for sidebar) ──────────
 export function useExternalConversations(enabled = true) {
   const query = useQuery({
