@@ -373,7 +373,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
               <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                    <Type className="w-3 h-3" /> Transcrição
+                    <Type className="w-3 h-3" /> Transcrição Editável
                   </div>
                   <Button 
                     variant="ghost" 
@@ -381,7 +381,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                     className="h-6 text-[10px] uppercase font-black px-2 hover:bg-primary/5"
                     onClick={() => setShowTranscription(!showTranscription)}
                   >
-                    {showTranscription ? 'Recolher' : 'Visualizar'}
+                    {showTranscription ? 'Recolher' : 'Editar'}
                   </Button>
                 </div>
                 <AnimatePresence>
@@ -390,9 +390,13 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="text-sm text-foreground/80 italic leading-relaxed font-medium border-t border-border/30 pt-2"
                     >
-                      {transcription}
+                      <textarea
+                        value={transcription}
+                        onChange={(e) => setTranscription(e.target.value)}
+                        className="w-full bg-transparent text-sm text-foreground/80 italic leading-relaxed font-medium border-t border-border/30 pt-2 outline-none resize-none min-h-[60px]"
+                        placeholder="Edite a transcrição aqui..."
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
