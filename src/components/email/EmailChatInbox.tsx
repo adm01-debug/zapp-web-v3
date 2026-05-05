@@ -136,11 +136,20 @@ export function EmailChatInbox({ className }: EmailChatInboxProps) {
             onBack={() => selectThread(null)}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
-            <Mail className="h-12 w-12 opacity-20" />
-            <div className="text-center">
-              <p className="text-sm font-medium">Selecione um email</p>
-              <p className="text-xs mt-1">Escolha uma conversa na lista ao lado</p>
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-6 animate-in fade-in zoom-in-95 duration-700 bg-background/30 backdrop-blur-sm">
+            <div className="relative">
+              <div className="h-24 w-24 rounded-3xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                <Mail className="h-10 w-10 text-primary/30" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-2xl bg-background border border-border shadow-lg flex items-center justify-center">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              </div>
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-base font-bold tracking-tight font-display text-foreground/80">Selecione uma conversa</p>
+              <p className="text-xs text-muted-foreground/60 max-w-[240px] leading-relaxed">
+                Clique em um e-mail na lista lateral para visualizar o conteúdo e responder.
+              </p>
             </div>
           </div>
         )}
