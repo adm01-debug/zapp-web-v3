@@ -152,6 +152,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       mediaRecorderRef.current.pause();
       setIsPaused(true);
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (recognitionRef.current) recognitionRef.current.stop();
     }
   }, []);
 
@@ -162,6 +163,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       intervalRef.current = setInterval(() => {
         setDuration(prev => prev + 1);
       }, 1000);
+      if (recognitionRef.current) recognitionRef.current.start();
     }
   }, []);
 
