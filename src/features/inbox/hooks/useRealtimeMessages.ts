@@ -214,12 +214,31 @@ export function useRealtimeMessages() {
   }, [fetchConversations, handleNewMessage, handleMessageUpdate]);
 
   const sendMessage = async (contactId: string, content: string, messageType: string = 'text', mediaUrl?: string, mediaPayload?: string) => {
-    return sendMessageToContact(contactId, content, messageType, mediaUrl, mediaPayload);
+    const response = await sendMessageToContact(contactId, content, messageType, mediaUrl, mediaPayload);
+    
+    // Check if conversation needs routing status update
+    try {
+      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', contactId).maybeSingle();
+      if (conv && conv.routing_status === 'pending') {
+        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', contactId);
+      }
+    } catch (err) {
+      log.error('Error checking routing status on send:', err);
+    }
+    
+    return response;
   };
 
   const markAsRead = async (contactId: string) => {
     const { error } = await dbFrom('messages').update({ is_read: true }).eq('contact_id', contactId).eq('sender', 'contact').eq('is_read', false);
     if (error) log.error('Error marking messages as read:', error);
+    
+    // Auto-update load: if conversation is assigned, marking read might imply activity
+    // But better to update last_seen for routing load calculations
+    const { data: profile } = await supabase.auth.getUser();
+    if (profile?.user) {
+      await (dbFrom('profiles') as any).update({ last_seen: new Date().toISOString() }).eq('id', profile.user.id);
+    }
     commitConversations((prev) =>
       prev.map((c) => c.contact.id === contactId
         ? buildConversation(c.contact, c.messages.map((m) => ({ ...m, is_read: true })))

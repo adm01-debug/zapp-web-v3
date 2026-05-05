@@ -43,7 +43,8 @@ export function useRealtimeInbox() {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [selectedContactFallback, setSelectedContactFallback] = useState<ConversationContact | null>(null);
   const [showDetails, setShowDetails] = useState(true);
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
+  const [onlineStatus, setOnlineStatus] = useState<string>('offline');
   const [pipContact, setPipContact] = useState<{ name: string; avatar?: string; lastMessage?: string; contactId: string } | null>(null);
   const [pendingContactId, setPendingContactId] = useState<string | null>(null);
   // Mensagem que o ChatPanel deve scrollar e destacar assim que abrir a
@@ -211,14 +212,54 @@ export function useRealtimeInbox() {
     return { contact: selectedContactFallback, messages: [], unreadCount: 0, lastMessage: null };
   }, [selectedConversation, selectedContactFallback]);
 
-  // Online status
+  // Online status & Routing Heartbeat
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    if (!profile?.id) return;
+
+    const updateStatus = async (status: string) => {
+      setOnlineStatus(status);
+      setIsOnline(status === 'online');
+      await (dbFrom('profiles') as any)
+        .update({ 
+          online_status: status as any,
+          last_seen: new Date().toISOString()
+        } as any)
+        .eq('id', profile.id);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updateStatus('online');
+      } else {
+        updateStatus('offline');
+      }
+    };
+
+    const handleOnline = () => updateStatus('online');
+    const handleOffline = () => updateStatus('offline');
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); };
-  }, []);
+
+    // Initial status
+    updateStatus('online');
+
+    // Heartbeat to keep load/status fresh
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        updateStatus('online');
+      }
+    }, 60000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
+      updateStatus('offline');
+    };
+  }, [profile?.id]);
 
   // Handlers
   const handleSelectConversation = useCallback((contactId: string) => {
@@ -251,6 +292,16 @@ export function useRealtimeInbox() {
   // Função interna que processa cada item da fila
   const processQueuedMessage = useCallback(async (item: any) => {
     const { contactId, content, attachments, onProgress } = item;
+
+    // Auto-assign on first reply if pending
+    try {
+      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', contactId).maybeSingle();
+      if (conv && conv.routing_status === 'pending') {
+        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', contactId);
+      }
+    } catch (err) {
+      log.error('Error auto-assigning on reply:', err);
+    }
     
     if (USE_EXTERNAL_DB) {
       const { sendExternalText, sendExternalMedia } = await import('..');
@@ -313,9 +364,16 @@ export function useRealtimeInbox() {
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
 
-    // Valida tamanho/duração ANTES de qualquer upload (storage ou external).
-    // Aborta cedo com mensagem amigável; lança erro para o SendErrorBanner
-    // exibir o motivo e oferecer "Reenviar" caso o usuário ajuste o áudio.
+    // Auto-assign on audio reply if pending
+    try {
+      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', selectedContactId).maybeSingle();
+      if (conv && conv.routing_status === 'pending') {
+        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', selectedContactId);
+      }
+    } catch (err) {
+      log.error('Error auto-assigning on audio reply:', err);
+    }
+
     const validation = await validatePttBlob(blob);
     if (!validation.ok) {
       toast.error(validation.message ?? 'Áudio inválido.');
