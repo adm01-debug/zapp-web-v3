@@ -239,7 +239,7 @@ const ConversationItem = memo(({
       </button>
     </div>
   );
-}
+});
 
 export function VirtualizedRealtimeList({
   conversations,
