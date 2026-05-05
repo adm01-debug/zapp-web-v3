@@ -121,7 +121,9 @@ function buildPrimaryLabel(conversation: any): string {
 function buildFullPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || 'Contato').trim();
   const company = conversation.contact?.company?.trim() || 'Sem empresa';
-  return `${name} · ${company}`;
+  // Ensure we don't return "Você"
+  const safeName = name === 'Você' ? 'Contato' : name;
+  return `${safeName} · ${company}`;
 }
 
 
