@@ -228,6 +228,12 @@ export function useRealtimeInbox() {
     const updateStatus = async (status: string) => {
       setOnlineStatus(status);
       setIsOnline(status === 'online');
+      
+      const now = Date.now();
+      const lastUpdate = (window as any).__lastStatusUpdate || 0;
+      if (now - lastUpdate < 30000 && status !== 'offline') return;
+      (window as any).__lastStatusUpdate = now;
+
       await supabase.from('profiles')
         .update({ 
           online_status: status as 'online' | 'offline' | 'busy',
