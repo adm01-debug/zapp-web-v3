@@ -50,7 +50,7 @@ export function ThemeCustomizer() {
             <Save className="w-4 h-4 mr-1" /> Salvar
           </Button>
           <Button variant="outline" size="sm" onClick={resetTheme}>
-            <RotateCcw className="w-4 h-4 mr-1" /> Original
+            <RotateCcw className="w-4 h-4 mr-1" /> Resetar tema
           </Button>
         </div>
       </div>
