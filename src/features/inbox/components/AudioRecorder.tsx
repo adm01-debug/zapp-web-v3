@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, X, Send, Pause, Play, Lock, Trash2 } from 'lucide-react';
+import { Mic, Square, X, Send, Pause, Play, Lock, Trash2, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { VoiceChanger } from './VoiceChanger';
@@ -15,6 +15,7 @@ interface AudioRecorderProps {
 
 export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [voiceChanged, setVoiceChanged] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
@@ -56,7 +57,10 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     cancelRecording,
     formatDuration,
   } = useAudioRecorder({
-    onRecordingComplete: (blob) => setAudioBlob(blob),
+    onRecordingComplete: (blob) => {
+      setAudioBlob(blob);
+      setIsConfirming(true);
+    },
   });
 
   useEffect(() => {
@@ -289,22 +293,29 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
             </Button>
           </motion.div>
         </div>
-      ) : audioBlob ? (
+      ) : isConfirming && audioBlob ? (
         <div className="flex items-center gap-2">
           <VoiceChanger
             audioBlob={audioBlob}
             onVoiceChanged={handleVoiceChanged}
           />
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-            <Button
-              size="icon"
-              className="bg-primary hover:bg-primary/90 shadow-md"
-              onClick={handleSend}
-              aria-label="Enviar áudio"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </motion.div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button
+                    size="icon"
+                    className="bg-primary hover:bg-primary/90 shadow-md h-9 w-9 md:h-10 md:w-10"
+                    onClick={handleSend}
+                    aria-label="Confirmar e enviar áudio"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                  </Button>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent side="top">Enviar Áudio</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       ) : null}
     </motion.div>
