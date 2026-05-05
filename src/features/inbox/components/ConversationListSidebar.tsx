@@ -144,9 +144,23 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               >
                 <MessageSquarePlus className="w-3.5 h-3.5" />
               </Button>
+              
+              <div className="h-4 w-px bg-border/40 mx-1" />
+              
+              <Select value={inbox.sortBy} onValueChange={inbox.setSortBy}>
+                <SelectTrigger className="w-auto h-7 text-[10px] font-bold border-none bg-transparent hover:bg-muted/60 rounded-lg px-2 gap-1.5 focus:ring-0">
+                  <SelectValue placeholder="Ordenar" />
+                </SelectTrigger>
+                <SelectContent align="end" className="w-[140px]">
+                  <SelectItem value="lastMessage" className="text-xs font-semibold tracking-tight">Recentes</SelectItem>
+                  <SelectItem value="unread" className="text-xs font-semibold tracking-tight">Não lidas</SelectItem>
+                  <SelectItem value="name" className="text-xs font-semibold tracking-tight">Nome (A-Z)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         )}
+
 
         <div className="flex items-center gap-1.5">
           <div className="relative flex-1 group">
