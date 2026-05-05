@@ -93,6 +93,13 @@ export function TicketTabs({
       activeColor: 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]',
     },
     { 
+      id: 'unread' as MainTab, 
+      label: 'Não lidas', 
+      icon: MessageCircle, 
+      count: conversations.filter(c => c.unreadCount > 0).length,
+      activeColor: 'bg-orange-500 text-white',
+    },
+    { 
       id: 'search' as MainTab, 
       label: 'Busca', 
       icon: Search, 
@@ -100,6 +107,7 @@ export function TicketTabs({
       activeColor: 'bg-muted-foreground text-background',
     },
   ];
+
 
   const subTabs = [
     {
