@@ -203,8 +203,8 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-4 py-[9px] bg-background border-t border-white/10 relative flex flex-col gap-2 shrink-0", 
-        isWhisper && "bg-amber-950/10 border-t border-amber-200/30",
+        "px-4 py-3 bg-background border-t border-border/40 relative flex flex-col gap-2 shrink-0 font-sans transition-colors duration-300", 
+        isWhisper && "bg-amber-500/[0.03] dark:bg-amber-500/[0.05] border-t border-amber-500/20",
         logic.isMobile && "px-2 py-2 safe-area-bottom"
       )}>
         <AnimatePresence>
@@ -276,14 +276,14 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               onChange={(e) => { onInputChange(e); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
               onKeyDown={onKeyDown} onBlur={onBlur} onPaste={logic.handlePaste}
               onClick={(e) => { const t = e.target as HTMLTextAreaElement; checkForMention(t.value, t.selectionStart ?? 0); }}
-              placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Mensagem... (/ para comandos, @ para mencionar)"}
+              placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Escreva sua mensagem..."}
               rows={1}
               className={cn(
-                "w-full bg-accent border-none rounded-lg outline-none text-[14px] font-normal tracking-tight text-[hsl(var(--foreground))] shadow-none",
-                "placeholder:text-[hsl(var(--muted-foreground))] dark:placeholder:text-[hsl(var(--muted-foreground))] placeholder:font-normal resize-none transition-none",
-                "focus:bg-white dark:focus:bg-accent focus:ring-0",
-                logic.isMobile ? "px-3 py-2 text-[15px] min-h-[40px] max-h-[160px]" : "px-3 py-[11px] min-h-[42px] max-h-[200px]",
-                isWhisper && "bg-amber-500/10",
+                "w-full bg-accent/50 hover:bg-accent focus:bg-white dark:focus:bg-accent/80 border-none rounded-2xl outline-none font-sans text-[14px] font-medium tracking-tight text-[hsl(var(--foreground))] shadow-none",
+                "placeholder:text-[hsl(var(--muted-foreground))/60 placeholder:font-normal resize-none transition-all duration-200",
+                "focus:ring-2 focus:ring-primary/20",
+                logic.isMobile ? "px-4 py-2.5 text-[15px] min-h-[44px] max-h-[160px]" : "px-4 py-[11px] min-h-[44px] max-h-[200px]",
+                isWhisper && "bg-amber-500/10 focus:bg-amber-500/15",
                 logic.isOverLimit && "text-destructive",
                 isSending && "opacity-60 pointer-events-none"
               )}

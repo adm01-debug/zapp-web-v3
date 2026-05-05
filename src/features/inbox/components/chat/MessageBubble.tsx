@@ -120,7 +120,7 @@ export function MessageBubble({
         data-testid={`message-bubble-${message.id}`}
         data-message-id={message.id}
         className={cn(
-          'flex group gap-2 transition-all duration-300 focus-visible:outline-none',
+          'flex group gap-2 transition-all duration-300 focus-visible:outline-none font-sans',
           isSent ? 'justify-end' : 'justify-start',
           density === 'comfortable' ? 'mb-1.5' : density === 'compact' ? 'mb-1' : 'mb-0.5',
           highlightedMessageIds?.has(message.id) && 'relative',
@@ -129,20 +129,20 @@ export function MessageBubble({
         )}
       >
         {!isSent && (
-          <div className="w-[40px] shrink-0">
+          <div className="w-[36px] shrink-0">
             {isLastInGroup && (
-              <Avatar className="w-[40px] h-[40px] ring-2 ring-background shadow-sm">
+              <Avatar className="w-[36px] h-[36px] ring-2 ring-background shadow-sm border border-border/50">
                 <AvatarImage src={avatarUrl || undefined} referrerPolicy="no-referrer" onError={(e) => (e.target as HTMLImageElement).removeAttribute('src')} />
-                <AvatarFallback className="bg-gradient-to-br from-accent to-accent/60 text-accent-foreground text-[10px] font-bold">{senderName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="bg-gradient-to-br from-muted to-muted/60 text-muted-foreground text-[10px] font-bold uppercase">{senderName.slice(0, 2)}</AvatarFallback>
               </Avatar>
             )}
           </div>
         )}
 
         <div className={cn('max-w-[85%] sm:max-w-[70%] space-y-0.5 relative', isSent && 'items-end')}>
-          {!isSent && isFirstInGroup && <span className="text-[11px] font-semibold text-primary/80 ml-1 block">{senderName}</span>}
+          {!isSent && isFirstInGroup && <span className="text-[11px] font-semibold text-primary/80 ml-1.5 block tracking-tight">{senderName}</span>}
           {message.isWhisper && (
-            <div className="flex items-center gap-1.5 mb-1 ml-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-full w-fit border border-amber-500/20">
+            <div className="flex items-center gap-1.5 mb-1 ml-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-full w-fit border border-amber-500/20 shadow-xs">
               <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400 animate-pulse" />
               <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Equipe — Sussurro Interno</span>
             </div>
@@ -201,11 +201,11 @@ export function MessageBubble({
               whileHover={{ scale: 1.002 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={cn(
-                'relative transition-all overflow-visible border border-transparent',
-                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-2.5 py-2' : 'px-2 py-1.5',
+                'relative transition-all overflow-visible border border-transparent shadow-sm',
+                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-3 py-2.5' : 'px-2.5 py-2',
                 isSent
-                  ? cn('bg-chat-sent text-chat-sent-foreground font-medium', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
-                  : cn('bg-chat-received text-chat-received-foreground font-medium', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
+                  ? cn('bg-chat-sent text-chat-sent-foreground font-normal', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
+                  : cn('bg-chat-received text-chat-received-foreground font-normal', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
                 message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 ring-1 ring-amber-500/30 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
@@ -244,7 +244,7 @@ export function MessageBubble({
                 <TextWithLinks 
                   text={message.content} 
                   className={cn(
-                    "text-[13.5px] whitespace-pre-wrap leading-[1.4] tracking-tight",
+                    "text-[14px] whitespace-pre-wrap leading-[1.5] tracking-[-0.01em]",
                     searchQuery && highlightedMessageIds?.has(message.id) ? "" : ""
                   )}
                   showPreviews={!message.isWhisper}

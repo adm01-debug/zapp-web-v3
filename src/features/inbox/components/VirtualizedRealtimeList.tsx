@@ -95,18 +95,22 @@ function ConversationItem({
         height: `${virtualRow.size}px`,
         transform: `translateY(${virtualRow.start}px)`,
       }}
-      className="px-2"
+      className="px-2 py-0.5"
     >
       <button
         onClick={(e) => handleClick(contactId, e)}
         className={cn(
-          'w-full px-3 py-3 flex items-center gap-3 transition-all text-left border-b border-border/50',
-          'hover:bg-muted/50',
-          selectedContactId === contactId && 'bg-primary/10 border-l-2 border-l-primary',
+          'w-full px-3 py-3 flex items-center gap-3 transition-all text-left rounded-xl relative group',
+          'hover:bg-muted/40',
+          selectedContactId === contactId && 'bg-primary/10 shadow-sm',
+          !selectedContactId && 'border-b border-border/30 rounded-none last:border-0',
           isSelected && 'bg-primary/15',
-          isPinned && selectedContactId !== contactId && 'bg-muted/30'
+          isPinned && selectedContactId !== contactId && 'bg-muted/20'
         )}
       >
+        {selectedContactId === contactId && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full" />
+        )}
         {selectionMode && (
           <div
             className="flex-shrink-0 flex items-center"
