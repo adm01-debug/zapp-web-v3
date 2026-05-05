@@ -352,7 +352,7 @@ export function ConversationItem({
               className="flex-shrink-0 flex items-center pt-3"
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleSelection?.(conversation.contact.id);
+                onToggleSelection?.(contactId);
               }}
             >
               <input 
@@ -366,7 +366,7 @@ export function ConversationItem({
 
           <div className="flex items-start gap-3.5 relative z-10 flex-1 min-w-0">
             <div className="relative flex-shrink-0">
-              <ChannelBadge type={conversation.contact.contact_type} />
+              <ChannelBadge type={contact?.contact_type} />
               <Avatar className={cn(
                 'w-[49px] h-[49px] ring-0 transition-transform duration-300',
                 isSelected ? 'scale-105' : 'group-hover:scale-105'
@@ -376,7 +376,7 @@ export function ConversationItem({
                   'text-sm font-semibold tracking-tighter transition-colors duration-200',
                   isSelected ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
                 )}>
-                  {(conversation.contact.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  {(contact?.name || 'C').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {conversation.assignedTo ? (
@@ -387,7 +387,7 @@ export function ConversationItem({
               ) : (
                 <span className={cn(
                   'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background shadow-sm',
-                  statusColors[conversation.status as keyof typeof statusColors] || 'bg-muted'
+                  statusColors[status as keyof typeof statusColors] || 'bg-muted'
                 )}>
                   <StatusIcon className="w-2 h-2 text-white" />
                 </span>
