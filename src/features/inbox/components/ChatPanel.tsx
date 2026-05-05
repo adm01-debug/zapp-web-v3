@@ -169,6 +169,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     onArchive: () => {}, // Handled in Sidebar
     onTransfer: () => handlers.handleSlashCommand({ id: 'transfer' } as any),
     onRefresh: () => {}, // Handled in Sidebar
+    onSearchFocusChat: () => handleSetActiveTool('chatSearch'),
   });
 
   useEffect(() => {
