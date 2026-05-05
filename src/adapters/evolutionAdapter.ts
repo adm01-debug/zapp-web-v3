@@ -168,10 +168,17 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
     const existing = contactMap.get(msg.remote_jid);
     const isUnread = !msg.from_me && msg.status !== 'read';
 
+    // ⚠️ FIX (sidebar bug): só usar push_name de mensagens INBOUND.
+    // Em mensagens outbound (from_me=true), `push_name` é o nome do agente
+    // que enviou (ex: "Você", "Lucas"), NÃO o nome do contato remoto.
+    // Antes esse valor sobrescrevia o nome do contato, fazendo a sidebar
+    // exibir "Você" em vez do nome real do cliente.
+    const safePushName = !msg.from_me ? msg.push_name : undefined;
+
     if (!existing) {
       contactMap.set(msg.remote_jid, {
         remoteJid: msg.remote_jid,
-        pushName: msg.push_name,
+        pushName: safePushName,
         phone: jidToPhone(msg.remote_jid),
         lastMessageAt: msg.created_at,
         messageCount: 1,
@@ -183,7 +190,8 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
     } else {
       existing.messageCount++;
       if (isUnread) existing.unreadCount++;
-      if (!existing.pushName && msg.push_name) existing.pushName = msg.push_name;
+      // Só atualiza pushName se ainda não tiver um, e a mensagem for inbound.
+      if (!existing.pushName && safePushName) existing.pushName = safePushName;
       if (new Date(msg.created_at) > new Date(existing.lastMessageAt)) {
         existing.lastMessageAt = msg.created_at;
         existing.lastMessageContent = msg.content || msg.caption;
