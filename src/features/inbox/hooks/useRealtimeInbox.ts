@@ -175,9 +175,9 @@ export function useRealtimeInbox() {
     window.addEventListener('open-contact-chat', handler);
 
     const deliveryHandler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { contactId: string; status: 'warning' | 'breached'; delay: number; message?: string };
-      if (detail.contactId === selectedContactId) {
-        setDeliveryAlert({ status: detail.status, delay: detail.delay, message: detail.message } as any);
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.contactId === selectedContactId) {
+        setDeliveryAlert({ status: detail.status, delay: detail.delay, message: detail.message });
       }
     };
     window.addEventListener('sla-delivery-alert', deliveryHandler);
