@@ -457,7 +457,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           loadingOlder={failuresOnly ? false : loadingOlder}
           hasMoreOlder={failuresOnly ? false : hasMoreOlder} />
 
-        <ChatQuickRepliesPopover show={dialogs.quickReplies} replies={filteredQuickReplies} onSelect={handleQuickReply} onClose={() => closeDialog('quickReplies')} />
+        <ChatQuickRepliesPopover show={dialogs.quickReplies} replies={filteredQuickReplies} onSelect={handleQuickReply} onClose={() => closeDialog('quickReplies')} selectedIndex={selectedQuickReplyIndex} />
 
         {dialogs.whisper && (
           <Suspense fallback={null}>
