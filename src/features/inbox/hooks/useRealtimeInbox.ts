@@ -43,7 +43,8 @@ export function useRealtimeInbox() {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [selectedContactFallback, setSelectedContactFallback] = useState<ConversationContact | null>(null);
   const [showDetails, setShowDetails] = useState(true);
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(profile?.online_status === 'online');
+  const [onlineStatus, setOnlineStatus] = useState<string>(profile?.online_status || 'offline');
   const [pipContact, setPipContact] = useState<{ name: string; avatar?: string; lastMessage?: string; contactId: string } | null>(null);
   const [pendingContactId, setPendingContactId] = useState<string | null>(null);
   // Mensagem que o ChatPanel deve scrollar e destacar assim que abrir a
@@ -211,14 +212,55 @@ export function useRealtimeInbox() {
     return { contact: selectedContactFallback, messages: [], unreadCount: 0, lastMessage: null };
   }, [selectedConversation, selectedContactFallback]);
 
-  // Online status
+  // Online status & Routing Heartbeat
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    if (!profile?.id) return;
+
+    const updateStatus = async (status: string) => {
+      setOnlineStatus(status);
+      setIsOnline(status === 'online');
+      await supabase
+        .from('profiles')
+        .update({ 
+          online_status: status as any,
+          last_seen: new Date().toISOString()
+        })
+        .eq('id', profile.id);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updateStatus('online');
+      } else {
+        updateStatus('offline');
+      }
+    };
+
+    const handleOnline = () => updateStatus('online');
+    const handleOffline = () => updateStatus('offline');
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); };
-  }, []);
+
+    // Initial status
+    updateStatus('online');
+
+    // Heartbeat to keep load/status fresh
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        updateStatus('online');
+      }
+    }, 60000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
+      updateStatus('offline');
+    };
+  }, [profile?.id]);
 
   // Handlers
   const handleSelectConversation = useCallback((contactId: string) => {
