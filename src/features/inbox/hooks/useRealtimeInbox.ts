@@ -364,9 +364,16 @@ export function useRealtimeInbox() {
   const handleSendAudio = useCallback(async (blob: Blob) => {
     if (!selectedContactId) { toast.error('Selecione uma conversa primeiro'); return; }
 
-    // Valida tamanho/duração ANTES de qualquer upload (storage ou external).
-    // Aborta cedo com mensagem amigável; lança erro para o SendErrorBanner
-    // exibir o motivo e oferecer "Reenviar" caso o usuário ajuste o áudio.
+    // Auto-assign on audio reply if pending
+    try {
+      const { data: conv } = await (dbFrom('team_conversations') as any).select('id, routing_status').eq('id', selectedContactId).maybeSingle();
+      if (conv && conv.routing_status === 'pending') {
+        await (dbFrom('team_conversations') as any).update({ routing_status: 'assigned' }).eq('id', selectedContactId);
+      }
+    } catch (err) {
+      log.error('Error auto-assigning on audio reply:', err);
+    }
+
     const validation = await validatePttBlob(blob);
     if (!validation.ok) {
       toast.error(validation.message ?? 'Áudio inválido.');
