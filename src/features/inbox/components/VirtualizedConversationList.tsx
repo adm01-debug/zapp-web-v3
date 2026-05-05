@@ -122,7 +122,7 @@ export function VirtualizedConversationList({ conversations, selectedId, onSelec
 
       <div ref={parentRef} className="flex-1 overflow-auto scrollbar-thin" role="listbox" aria-label="Lista de conversas virtualizada">
         {filteredConversations.length === 0 ? (
-          <EmptyState icon={Search} title="Nenhuma conversa encontrada" description="Ajuste os filtros ou aguarde novas mensagens chegarem" illustration="inbox" size="sm" />
+          <EmptyState icon={Search} title="Nenhuma conversa encontrada" description="Ajuste os filtros" illustration="inbox" size={isCompactMode ? "xs" : "sm"} />
         ) : (
           <div style={{ height: `${virtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
             {virtualizer.getVirtualItems().map((virtualRow) => {
