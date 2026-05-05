@@ -318,11 +318,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     }
   }, [handlers.handleInputChange, dialogs.quickReplies, openDialog, closeDialog]);
 
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key === 'f') { e.preventDefault(); handleSetActiveTool('chatSearch'); } };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  }, []);
+  // Global search shortcut removed in favor of useInboxShortcuts (react-hotkeys-hook)
+  // which handles cleanup and focus checks automatically.
 
   // Stable refs for ChatMessagesArea to prevent re-renders on input change
   const contactJid = useMemo(() => conversation.contact.phone ? `${conversation.contact.phone}@s.whatsapp.net` : '', [conversation.contact.phone]);
