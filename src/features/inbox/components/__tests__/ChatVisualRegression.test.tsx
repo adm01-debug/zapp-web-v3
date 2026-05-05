@@ -4,6 +4,7 @@ import { MessageBubble } from '../chat/MessageBubble';
 import { Message } from '@/types/chat';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock dependencies
 vi.mock('@/hooks/use-mobile', () => ({ useIsMobile: () => false }));
@@ -11,12 +12,22 @@ vi.mock('@/hooks/useContactAvatar', () => ({ useContactAvatar: () => ({ avatarUr
 vi.mock('@/hooks/useAmbientColor', () => ({ useAmbientColor: () => ({ ambientColor: 'transparent' }) }));
 vi.mock('@/features/auth', () => ({ useAuth: () => ({ profile: { name: 'Agent' } }) }));
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
-  <MemoryRouter>
-    <TooltipProvider>
-      {children}
-    </TooltipProvider>
-  </MemoryRouter>
+  <QueryClientProvider client={queryClient}>
+    <MemoryRouter>
+      <TooltipProvider>
+        {children}
+      </TooltipProvider>
+    </MemoryRouter>
+  </QueryClientProvider>
 );
 
 const mockMessage: Message = {
