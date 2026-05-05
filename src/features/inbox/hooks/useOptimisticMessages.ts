@@ -123,7 +123,7 @@ export function useOptimisticMessages() {
           confirmed = true;
         } 
         // 2. Content match (fallback for before ID is known or missing ID in real event)
-        else if (realContentSet.has(opt.content)) {
+        else if (realContentSet.has(opt.content?.trim()) && (opt.type === 'text' || realTypeSet.has(opt.type))) {
           confirmed = true;
         }
         
