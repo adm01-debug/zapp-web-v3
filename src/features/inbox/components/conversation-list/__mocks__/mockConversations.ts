@@ -1,4 +1,14 @@
-import type { Conversation } from '@/types/chat';
+import type { Conversation, ConversationContact, RealtimeMessage } from '@/types/chat';
+import { ConversationWithMessages } from '@/features/inbox/hooks/useRealtimeMessages';
+
+// Extensão do tipo para compatibilidade com useRealtimeMessages
+export interface MockConversationWithMessages extends ConversationWithMessages {
+  // Adiciona campos do tipo legado se necessário para ConversationItem
+  id: string;
+  status: 'open' | 'pending' | 'resolved' | 'waiting';
+  priority: 'high' | 'medium' | 'low';
+}
+
 
 /**
  * Mock data set for visualizing the ConversationItem sidebar layout.
