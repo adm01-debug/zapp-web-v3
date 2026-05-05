@@ -79,6 +79,8 @@ interface ChatInputAreaProps {
   fileUploaderRef: React.RefObject<FileUploaderRef | null>;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   onOpenTeamFiles?: () => void;
+  queue?: any[];
+  onRetry?: (id: string) => void;
 }
 
 export function ChatInputArea(props: ChatInputAreaProps) {
