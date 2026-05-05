@@ -1,52 +1,47 @@
 import { useEffect } from 'react';
+import { useTheme } from '@/hooks/useTheme';
+import { STORAGE_KEY, DEFAULT_PRESET_ID, PRESETS } from '@/components/settings/theme/presets';
 
 /**
- * Hook para detecção automática de inconsistências visuais (cores fixas hardcoded)
- * que violam o padrão "Preto OLED puro" (HSL 0 0% 0%).
+ * Validates that ThemeInitializer is behaving correctly regarding fonts.
+ * Logs warnings to console if fonts are being forced inline when they shouldn't be.
  */
-export const useThemeAudit = () => {
+export function useThemeAudit() {
+  const { resolvedTheme } = useTheme();
+
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      const audit = () => {
-        const elements = document.querySelectorAll('*');
-        const violations: string[] = [];
-        
-        elements.forEach((el) => {
-          const style = window.getComputedStyle(el);
-          const bg = style.backgroundColor;
-          
-          // Detecta "quase preto" ou cores cinzas que deveriam ser OLED Black (0, 0, 0)
-          // ou herdar das variáveis CSS.
-          if (bg === 'rgb(31, 41, 55)' || bg === 'rgb(17, 24, 39)' || bg === 'rgb(9, 9, 11)') {
-            const path = getElementPath(el);
-            violations.push(`[OLED Audit] Background inconsistente (${bg}) em: ${path}`);
-          }
-        });
+    // Wait for ThemeInitializer to finish its work
+    const timeout = setTimeout(() => {
+      const root = document.documentElement;
+      const inlineSans = root.style.getPropertyValue('--font-sans');
+      const inlineDisplay = root.style.getPropertyValue('--font-display');
+      
+      const saved = localStorage.getItem(STORAGE_KEY);
+      let presetId = DEFAULT_PRESET_ID;
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          presetId = parsed.preset || DEFAULT_PRESET_ID;
+        } catch (e) {}
+      }
+      
+      const preset = PRESETS.find(p => p.id === presetId);
+      const shouldHaveInlineFont = !!preset?.font;
 
-        if (violations.length > 0) {
-          console.group('🔍 Relatório de Inconsistências OLED');
-          console.warn(`${violations.length} elementos encontrados com cores de fundo não-OLED.`);
-          violations.forEach(v => console.log(v));
-          console.groupEnd();
-        }
-      };
+      if (!shouldHaveInlineFont && (inlineSans || inlineDisplay)) {
+        console.warn(
+          `[ThemeAudit] ⚠️ Font leak detected! Inline fonts found (${inlineSans}) but preset "${presetId}" does not define one. This might override tokens.css.`
+        );
+      }
 
-      // Aguarda o carregamento completo para auditar
-      const timer = setTimeout(audit, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-};
+      const computedFont = getComputedStyle(root).getPropertyValue('--font-sans').trim();
+      if (!computedFont.includes('Outfit') && !shouldHaveInlineFont) {
+        console.warn(
+          `[ThemeAudit] ⚠️ Typography mismatch: --font-sans does not contain "Outfit". Current value: ${computedFont}`
+        );
+      }
+    }, 1000);
 
-function getElementPath(el: Element): string {
-  const path = [];
-  let current: Element | null = el;
-  while (current && current !== document.body) {
-    let name = current.tagName.toLowerCase();
-    if (current.id) name += `#${current.id}`;
-    if (current.className) name += `.${Array.from(current.classList).join('.')}`;
-    path.unshift(name);
-    current = current.parentElement;
-  }
-  return path.join(' > ');
+    return () => clearTimeout(timeout);
+  }, [resolvedTheme]);
 }
