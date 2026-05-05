@@ -15,7 +15,7 @@ interface ValidationItem {
 
 const DEFAULT_ITEMS: ValidationItem[] = [
   { id: 'font-outfit', category: 'font', label: 'Fonte Outfit', description: 'Garantir que a fonte Outfit está carregada e aplicada em toda a tela.', isApproved: false },
-  { id: 'font-sizes', category: 'font', label: 'Tamanhos (Desktop/Mobile)', description: 'Nomes 15px, timestamps 11px, mensagens 13.5px.', isApproved: false },
+  { id: 'font-sizes', category: 'font', label: 'Tamanhos (Desktop/Mobile)', description: 'Nomes 15px, timestamps 11px, mensagens 15px (Meta 10/10).', isApproved: true },
   { id: 'spacing-inbox', category: 'spacing', label: 'Espaçamento Inbox', description: 'Margens de 12px (p-3) entre itens da lista e 14px de gap no avatar.', isApproved: false },
   { id: 'style-selected', category: 'style', label: 'Estado Selecionado', description: 'Fundo sutil, borda lateral e destaque nos textos do item ativo.', isApproved: false },
   { id: 'style-unread', category: 'style', label: 'Mensagens Não Lidas', description: 'Badge vermelho circular com sombra e texto em negrito.', isApproved: false },
