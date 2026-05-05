@@ -447,31 +447,19 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             </div>
 
             {/* Secondary toolbar (last) */}
-            {!logic.isMobile && (
-              <div className="flex items-center shrink-0 self-end mb-[3px]">
-                <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
-                  showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
-                  isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
-                  onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
-                  fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
-                  contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
-                  onFileSelect={logic.handleFileSelect}
-                  isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
-                />
-              </div>
-            )}
-          </div>
-
-          {logic.isMobile && (
-            <div className="flex items-center gap-0.5 shrink-0">
-              <FileUploader ref={fileUploaderRef} instanceName={instanceName || ''} recipientNumber={contactPhone}
-                contactId={contactId} connectionId={undefined}
+            <div className={cn("flex items-center shrink-0 self-end mb-[3px]", logic.isMobile && "mb-0")}>
+              <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
+                showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
+                isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
+                onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
+                fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
+                contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
                 onFileSelect={logic.handleFileSelect}
-                onFileSent={() => toast({ title: 'Arquivo enviado!', description: 'O arquivo foi enviado com sucesso.' })}
-                showDialog={false}
+                isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
+                disabled={isSending || !!editingMessage || isRecordingAudio}
               />
             </div>
-          )}
+          </div>
         </div>
 
         {logic.isMobile && logic.hasText && (
