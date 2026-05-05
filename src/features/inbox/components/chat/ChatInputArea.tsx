@@ -299,8 +299,28 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
 
         <div className="flex flex-col gap-2" role="toolbar" aria-label="Barra de mensagem">
-          {/* ROW 1: Textarea (campo de digitar mensagem em cima) */}
-          <div className="min-w-0 relative w-full">
+          {/* SINGLE ROW: [+] [textarea] [secondary tools] [mic] [send] */}
+          <div className="flex items-end gap-1.5 w-full">
+            {/* "+" Button (first) */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  className={cn(
+                    "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] hover:bg-transparent shrink-0 transition-all rounded-full outline-none self-end",
+                    logic.isMobile ? "w-10 h-10 mb-1" : "w-[42px] h-[42px] mb-[3px]"
+                  )}
+                  aria-label="Mais opções de mensagem"
+                >
+                  <Plus className="w-6 h-6" />
+                </motion.button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-300" align="start" side="top">{tertiaryTools}</PopoverContent>
+            </Popover>
+
+            {/* Textarea (second) */}
+            <div className="min-w-0 relative flex-1">
             <MentionAutocomplete inputValue={inputValue} cursorPosition={mentionCursorPos} onSelect={handleMentionSelect} onClose={closeMention} isOpen={mentionOpen} />
 
             <AnimatePresence>
@@ -349,105 +369,88 @@ export function ChatInputArea(props: ChatInputAreaProps) {
             )}
           </div>
 
-          {/* ROW 2: Toolbar (botões/ferramentas embaixo) + botão Enviar à direita */}
-          <div className="flex items-center gap-[5px] w-full">
-            <div className="flex items-center flex-1 min-w-0">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <motion.button
-                    whileHover={{ scale: 1.1, rotate: 90 }}
-                    whileTap={{ scale: 0.9 }}
-                    className={cn(
-                      "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))] hover:bg-transparent shrink-0 transition-all rounded-full outline-none",
-                      logic.isMobile ? "w-10 h-10" : "w-[42px] h-[42px]"
-                    )}
-                    aria-label="Mais opções de mensagem"
-                  >
-                    <Plus className="w-6 h-6" />
-                  </motion.button>
-                </PopoverTrigger>
-                <PopoverContent className="w-60 p-2 bg-popover/95 backdrop-blur-md border-border/40 shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-300" align="start" side="top">{tertiaryTools}</PopoverContent>
-              </Popover>
-
-              {!logic.isMobile && (
-                <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
-                  showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
-                  isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
-                  onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
-                  fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
-                  contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
-                  onFileSelect={logic.handleFileSelect}
-                  isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
-                />
-              )}
+          {/* Secondary toolbar (third) - inline next to textarea */}
+          {!logic.isMobile && (
+            <div className="flex items-center shrink-0 self-end mb-[3px]">
+              <SecondaryToolbar inputRef={inputRef} inputValue={inputValue}
+                showRichToolbar={logic.showRichToolbar} onToggleRichToolbar={() => logic.setShowRichToolbar(!logic.showRichToolbar)}
+                isRecordingAudio={isRecordingAudio} onSendSticker={onSendSticker} onSendAudioMeme={onSendAudioMeme}
+                onSendCustomEmoji={onSendCustomEmoji} onOpenCatalog={onOpenCatalog} onAudioSend={onAudioSend}
+                fileUploaderRef={fileUploaderRef} instanceName={instanceName} contactPhone={contactPhone}
+                contactId={contactId} contactName={contactName} onVoiceDictation={logic.handleVoiceDictation}
+                onFileSelect={logic.handleFileSelect}
+                isWhisper={isWhisper} onToggleWhisper={onToggleWhisper}
+              />
             </div>
+          )}
 
-            <div className="flex items-center gap-1.5 shrink-0 ml-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    onClick={onRecordToggle}
-                    disabled={isSending || logic.hasText || logic.attachments.length > 0}
-                    whileHover={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 1.1 } : {}}
-                    whileTap={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 0.9 } : {}}
-                    className={cn(
-                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
-                      isRecordingAudio
-                        ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10"
-                        : (logic.hasText || logic.attachments.length > 0)
-                          ? "text-muted-foreground/20 cursor-not-allowed opacity-50"
-                          : "text-muted-foreground/60 hover:text-primary hover:bg-primary/5",
-                      logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
-                    )}
-                    aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
-                    aria-pressed={isRecordingAudio}
-                  >
-                    <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">
-                  {isRecordingAudio ? "Parar Gravação" : (logic.hasText || logic.attachments.length > 0) ? "Apague o texto para gravar" : "Gravar Áudio"}
-                </TooltipContent>
-              </Tooltip>
+          {/* Mic + Send (last) */}
+          <div className="flex items-center gap-1.5 shrink-0 self-end mb-[1px]">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button
+                  onClick={onRecordToggle}
+                  disabled={isSending || logic.hasText || logic.attachments.length > 0}
+                  whileHover={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 1.1 } : {}}
+                  whileTap={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 0.9 } : {}}
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
+                    isRecordingAudio
+                      ? "bg-rose-500 text-white hover:bg-rose-600 shadow-xl shadow-rose-500/30 scale-125 z-10"
+                      : (logic.hasText || logic.attachments.length > 0)
+                        ? "text-muted-foreground/20 cursor-not-allowed opacity-50"
+                        : "text-muted-foreground/60 hover:text-primary hover:bg-primary/5",
+                    logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
+                  )}
+                  aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
+                  aria-pressed={isRecordingAudio}
+                >
+                  <Mic className={cn("w-6 h-6", isRecordingAudio && "animate-pulse")} />
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px] font-medium">
+                {isRecordingAudio ? "Parar Gravação" : (logic.hasText || logic.attachments.length > 0) ? "Apague o texto para gravar" : "Gravar Áudio"}
+              </TooltipContent>
+            </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    onClick={() => logic.handleSendWithAnimation()}
-                    disabled={isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)}
-                    whileHover={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 1.1 } : {}}
-                    whileTap={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 0.9 } : {}}
-                    className={cn(
-                      "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
-                      (logic.hasText || logic.attachments.length > 0 || editingMessage)
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                        : "text-muted-foreground/20 cursor-not-allowed opacity-50",
-                      logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button
+                  onClick={() => logic.handleSendWithAnimation()}
+                  disabled={isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)}
+                  whileHover={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 1.1 } : {}}
+                  whileTap={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 0.9 } : {}}
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
+                    (logic.hasText || logic.attachments.length > 0 || editingMessage)
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "text-muted-foreground/20 cursor-not-allowed opacity-50",
+                    logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
+                  )}
+                  aria-label="Enviar mensagem"
+                >
+                  <AnimatePresence mode="wait">
+                    {isSending ? (
+                      <motion.div key="loading" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                      </motion.div>
+                    ) : editingMessage ? (
+                      <motion.div key="edit" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                        <Check className="w-6 h-6" />
+                      </motion.div>
+                    ) : (
+                      <motion.div key="send" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                        <Send className="w-6 h-6" />
+                      </motion.div>
                     )}
-                    aria-label="Enviar mensagem"
-                  >
-                    <AnimatePresence mode="wait">
-                      {isSending ? (
-                        <motion.div key="loading" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Loader2 className="w-6 h-6 animate-spin" />
-                        </motion.div>
-                      ) : editingMessage ? (
-                        <motion.div key="edit" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Check className="w-6 h-6" />
-                        </motion.div>
-                      ) : (
-                        <motion.div key="send" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
-                          <Send className="w-6 h-6" />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium">
-                  {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
-                </TooltipContent>
-              </Tooltip>
-            </div>
+                  </AnimatePresence>
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-[10px] font-medium">
+                {isSending ? "Enviando..." : editingMessage ? "Confirmar Edição" : "Enviar Mensagem"}
+              </TooltipContent>
+            </Tooltip>
+          </div>
           </div>
 
           {logic.isMobile && (
