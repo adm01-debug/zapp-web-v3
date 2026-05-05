@@ -160,7 +160,7 @@ const ConversationItemContent = memo(({
             {conversation.contact.contact_type === 'sicoob_gifts' && (
               <Gift className="w-3.5 h-3.5 text-info flex-shrink-0" />
             )}
-            <span className={cn("font-semibold text-foreground truncate leading-tight tracking-normal transition-all duration-300", isCompact ? "text-[12.5px]" : "text-[15px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
+            <span className={cn("font-semibold text-foreground truncate leading-tight tracking-normal transition-all duration-300", isCompact ? "text-[14px]" : "text-[15px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
               {(() => {
                 const firstName = (conversation.contact.name || 'Sem nome').split(' ')[0];
                 const company = conversation.contact.company;
@@ -180,7 +180,7 @@ const ConversationItemContent = memo(({
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {conversation.lastMessage && (
-                <span className={cn("font-semibold text-muted-foreground/60 tabular-nums uppercase tracking-wider transition-all duration-300", isCompact ? "text-[10px]" : "text-[11px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
+                <span className={cn("font-semibold text-muted-foreground/60 tabular-nums uppercase tracking-wider transition-all duration-300", isCompact ? "text-[11px]" : "text-[11px]")} style={{ fontFamily: 'Outfit, sans-serif' }}>
                   {formatDistanceToNow(new Date(conversation.lastMessage.created_at), {
                     addSuffix: false,
                     locale: ptBR,
