@@ -100,16 +100,16 @@ function ConversationItem({
       <button
         onClick={(e) => handleClick(contactId, e)}
         className={cn(
-          'w-full px-3 py-3 flex items-center gap-3 transition-all text-left rounded-xl relative group',
-          'hover:bg-muted/40',
-          selectedContactId === contactId && 'bg-primary/10 shadow-sm',
-          !selectedContactId && 'border-b border-border/30 rounded-none last:border-0',
+          'w-full px-3 py-3.5 flex items-center gap-3 transition-all text-left rounded-2xl relative group overflow-hidden',
+          'hover:bg-muted/40 hover:shadow-sm active:scale-[0.98]',
+          selectedContactId === contactId && 'bg-primary/10 shadow-md ring-1 ring-primary/20',
+          !selectedContactId && 'border-b border-border/10 rounded-none last:border-0',
           isSelected && 'bg-primary/15',
-          isPinned && selectedContactId !== contactId && 'bg-muted/20'
+          isPinned && selectedContactId !== contactId && 'bg-muted/30 shadow-inner'
         )}
       >
         {selectedContactId === contactId && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-10 bg-primary rounded-r-full shadow-[2px_0_8px_rgba(var(--primary),0.3)]" />
         )}
         {selectionMode && (
           <div
@@ -124,17 +124,17 @@ function ConversationItem({
         )}
 
         <div className="relative flex-shrink-0">
-          <Avatar className="w-10 h-10">
+          <Avatar className="w-11 h-11 shadow-sm ring-2 ring-background ring-offset-1 transition-transform group-hover:scale-105 duration-300">
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
+              className="object-cover"
               onError={(e) => {
-                // Se falhar (404/403), remove o src para forçar o fallback
                 (e.target as HTMLImageElement).removeAttribute('src');
               }}
             />
             <AvatarFallback className={cn(
-              'text-xs font-semibold',
+              'text-[13px] font-black tracking-tighter',
               getAvatarColor(conversation.contact.name || '?').bg,
               getAvatarColor(conversation.contact.name || '?').text
             )}>
@@ -161,7 +161,7 @@ function ConversationItem({
               {conversation.contact.contact_type === 'sicoob_gifts' && (
                 <Gift className="w-3.5 h-3.5 text-info flex-shrink-0" />
               )}
-              <span className="font-semibold text-foreground truncate text-[14px] leading-tight tracking-[-0.01em]">
+              <span className="font-bold text-foreground truncate text-[14.5px] leading-tight tracking-tight group-hover:text-primary transition-colors">
                 {(() => {
                   const firstName = (conversation.contact.name || 'Sem nome').split(' ')[0];
                   const company = conversation.contact.company;
@@ -181,15 +181,15 @@ function ConversationItem({
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {conversation.lastMessage && (
-                <span className="text-[11px] font-normal text-muted-foreground tabular-nums lowercase">
-                  {formatDistanceToNow(new Date(conversation.lastMessage.created_at), {
-                    addSuffix: true,
-                    locale: ptBR,
-                  })}
-                </span>
+                  <span className="text-[10px] font-bold text-muted-foreground/50 tabular-nums uppercase tracking-widest group-hover:text-muted-foreground transition-colors">
+                    {formatDistanceToNow(new Date(conversation.lastMessage.created_at), {
+                      addSuffix: false,
+                      locale: ptBR,
+                    })}
+                  </span>
               )}
               {conversation.unreadCount > 0 && (
-                <span className="min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] rounded-full flex items-center justify-center font-bold tabular-nums">
+                <span className="min-w-[20px] h-[20px] px-1 bg-rose-500 text-white text-[10px] rounded-full flex items-center justify-center font-black shadow-lg shadow-rose-500/20 ring-2 ring-background">
                   {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
                 </span>
               )}
