@@ -138,7 +138,10 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
         <Button 
           className="w-full gap-2 rounded-xl h-11 font-bold"
           onClick={() => {
-            toast.success("Checkpoint salvo! Rumo ao 10/10.");
+            localStorage.setItem('visual-validation-checklist', JSON.stringify(items));
+            toast.success("Checkpoint salvo! Rumo ao 10/10.", {
+              description: `Progresso atual: ${approvedCount}/${items.length} itens validados.`
+            });
             onClose();
           }}
         >
