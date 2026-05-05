@@ -126,7 +126,7 @@ export function FeatureFlagsAdmin() {
               <div key={i} className="text-[11px] font-mono p-2 border-b border-primary/5 last:border-none">
                 <span className="text-primary font-bold">[{new Date(log.created_at).toLocaleTimeString()}]</span>{' '}
                 <span className="text-muted-foreground">{log.action}:</span>{' '}
-                <span className="font-bold">{log.new_data?.key || 'N/A'}</span> -> {JSON.stringify(log.new_data?.value)}
+                <span className="font-bold">{log.new_data?.key || 'N/A'}</span> {'->'} {JSON.stringify(log.new_data?.value)}
               </div>
             ))}
             {auditLogs.length === 0 && <p className="text-center text-muted-foreground text-xs py-8">Nenhuma mudança auditada.</p>}
