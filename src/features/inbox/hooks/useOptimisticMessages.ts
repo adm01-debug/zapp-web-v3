@@ -109,7 +109,8 @@ export function useOptimisticMessages() {
       const realExternalIds = new Set(realMessages.map(m => m.external_id).filter(Boolean));
       // Fingerprint match criteria: agent messages, recently sent, match content
       const recentAgentSends = realMessages.filter(m => m.sender === 'agent').slice(-15);
-      const realContentSet = new Set(recentAgentSends.map((m) => m.content));
+      const realContentSet = new Set(recentAgentSends.map((m) => m.content?.trim()));
+      const realTypeSet = new Set(recentAgentSends.map((m) => m.type));
 
       const stillPending: OptimisticMessage[] = [];
       const toRemove: string[] = [];
