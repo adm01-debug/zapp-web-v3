@@ -71,9 +71,10 @@ interface ChatPanelProps extends LoadOlderProps {
   onHighlightConsumed?: () => void;
   whisperCount?: number;
   isLoading?: boolean;
+  messageQueue?: any;
 }
 
-export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0, isLoading = false }: ChatPanelProps) {
+export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, showDetails = false, onToggleDetails, onBack, hideHeader = false, onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false, initialHighlightMessageId, onHighlightConsumed, whisperCount = 0, isLoading = false, messageQueue }: ChatPanelProps) {
   const { templates: quickReplyTemplates } = useQuickReplies();
   // Ferramentas de desenvolvimento (Checklist 10/10) só para devs reais.
   const { roles: userRoles } = useUserRole();
@@ -514,7 +515,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           onContactSent={async (contactName) => { await dbFrom('messages').insert({ contact_id: conversation.contact.id, whatsapp_connection_id: whatsappConnectionId, content: `📇 Cartão de contato: ${contactName}`, message_type: 'text', sender: 'agent', status: 'sending' }); }}
           onOpenCatalog={() => openDialog('catalogDirect')} onSelectSuggestion={(text) => handlers.setInputValue(text)} onSelectTemplate={(text) => handlers.setInputValue(text)}
           onOpenTeamFiles={() => handleSetActiveTool('teamFiles')}
-          fileUploaderRef={fileUploaderRef} inputRef={handlers.inputRef} />
+          fileUploaderRef={fileUploaderRef} inputRef={handlers.inputRef} 
+          queue={messageQueue?.queue} onRetry={messageQueue?.retryMessage} />
 
         <ChatDialogs
           dialogs={dialogs} openDialog={openDialog} closeDialog={closeDialog}

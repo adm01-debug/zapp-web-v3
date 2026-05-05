@@ -79,6 +79,8 @@ interface ChatInputAreaProps {
   fileUploaderRef: React.RefObject<FileUploaderRef | null>;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   onOpenTeamFiles?: () => void;
+  queue?: any[];
+  onRetry?: (id: string) => void;
 }
 
 export function ChatInputArea(props: ChatInputAreaProps) {
@@ -94,6 +96,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
     onPasteFiles, signatureEnabled, signatureName, onToggleSignature,
     isWhisper, onToggleWhisper,
     fileUploaderRef, inputRef, onOpenTeamFiles,
+    queue, onRetry,
   } = props;
 
   const logic = useChatInputLogic({
@@ -179,25 +182,68 @@ export function ChatInputArea(props: ChatInputAreaProps) {
       </AnimatePresence>
 
       <AnimatePresence>
-        {isSending && (
+        {(isSending || props.queue?.length > 0) && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="px-4 py-1.5 bg-primary/5 border-t border-primary/10"
           >
-            <div className="flex items-center justify-between gap-3 mb-1">
-              <span className="text-[10px] font-medium text-primary uppercase tracking-wider">Enviando...</span>
-              <span className="text-[10px] font-bold text-primary">{Math.round(sendProgress)}%</span>
-            </div>
-            <div className="h-1 w-full bg-primary/10 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-primary"
-                initial={{ width: 0 }}
-                animate={{ width: `${sendProgress}%` }}
-                transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-              />
-            </div>
+            {props.queue?.map((item: any) => (
+              <div key={item.id} className="mb-2 last:mb-0">
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <div className="flex items-center gap-2">
+                    {item.status === 'sending' ? (
+                      <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                    ) : item.status === 'failed' ? (
+                      <X className="w-3 h-3 text-destructive" />
+                    ) : (
+                      <div className="w-3 h-3 rounded-full bg-primary/20" />
+                    )}
+                    <span className="text-[10px] font-medium text-primary uppercase tracking-wider">
+                      {item.status === 'failed' ? 'Erro no envio' : 'Enviando...'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {item.status === 'failed' && (
+                      <button 
+                        onClick={() => props.onRetry?.(item.id)}
+                        className="text-[10px] font-bold text-primary hover:underline"
+                      >
+                        Tentar novamente
+                      </button>
+                    )}
+                    <span className="text-[10px] font-bold text-primary">
+                      {item.status === 'failed' ? '!' : `${Math.round(sendProgress || 0)}%`}
+                    </span>
+                  </div>
+                </div>
+                <div className="h-1 w-full bg-primary/10 rounded-full overflow-hidden">
+                  <motion.div 
+                    className={cn("h-full", item.status === 'failed' ? "bg-destructive" : "bg-primary")}
+                    initial={{ width: 0 }}
+                    animate={{ width: item.status === 'failed' ? '100%' : `${sendProgress || 0}%` }}
+                    transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                  />
+                </div>
+              </div>
+            ))}
+            {isSending && !props.queue?.length && (
+              <>
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <span className="text-[10px] font-medium text-primary uppercase tracking-wider">Enviando...</span>
+                  <span className="text-[10px] font-bold text-primary">{Math.round(sendProgress)}%</span>
+                </div>
+                <div className="h-1 w-full bg-primary/10 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-primary"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${sendProgress}%` }}
+                    transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                  />
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

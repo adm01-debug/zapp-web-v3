@@ -177,7 +177,8 @@ export function RealtimeInboxView() {
                       showDetails={isMobile ? false : inbox.showDetails}
                       onToggleDetails={() => inbox.setShowDetails(!inbox.showDetails)}
                       initialHighlightMessageId={inbox.pendingMessageId}
-                      isLoading={inbox.selectedMessagesLoading}
+                       isLoading={inbox.selectedMessagesLoading}
+                       messageQueue={inbox.messageQueue}
                       onHighlightConsumed={() => {
                         inbox.setPendingMessageId(null);
                         // Strip the one-shot ?message= param so refresh

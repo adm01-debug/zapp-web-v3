@@ -337,19 +337,30 @@ export function useRealtimeInbox() {
       
       try {
         if (attachments && attachments.length > 0) {
+          const CHUNK_SIZE = 1; // Process one at a time for order
           for (let i = 0; i < attachments.length; i++) {
             const file = attachments[i];
-            const { optimistic } = await sendExternalMedia(contactId, file, { 
-              contactAvatar: currentAvatar,
-              caption: file === attachments[0] ? content : undefined,
-              onProgress: (p) => {
-                if (onProgress) {
-                  const total = ((i / attachments.length) * 100) + (p / attachments.length);
-                  onProgress(total);
+            const isLarge = file.size > 10 * 1024 * 1024; // > 10MB
+            
+            try {
+              const { optimistic } = await sendExternalMedia(contactId, file, { 
+                contactAvatar: currentAvatar,
+                caption: i === 0 ? content : undefined,
+                onProgress: (p) => {
+                  if (onProgress) {
+                    const total = ((i / attachments.length) * 100) + (p / attachments.length);
+                    onProgress(total);
+                  }
                 }
+              });
+              try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+            } catch (mediaErr) {
+              if (isLarge) {
+                log.error('Erro em arquivo grande:', mediaErr);
+                throw new Error("Arquivo muito grande ou falha na rede. Tente novamente.");
               }
-            });
-            try { externalMsgs.addMessage(optimistic); } catch { /* noop */ }
+              throw mediaErr;
+            }
           }
         } else {
           const { optimistic } = await sendExternalText(contactId, content, { 
@@ -386,7 +397,11 @@ export function useRealtimeInbox() {
 
   const handleSendMessage = useCallback(async (content: string, attachments?: File[], onProgress?: (p: number) => void) => {
     if (!selectedContactId) return;
-    messageQueue.addToQueue(selectedContactId, content, attachments, onProgress);
+    
+    // Se o conteúdo for vazio e houver anexos, podemos dar um nome genérico
+    const effectiveContent = content || (attachments?.length ? `Enviando ${attachments.length} anexo(s)` : "");
+    
+    messageQueue.addToQueue(selectedContactId, effectiveContent, attachments, onProgress);
   }, [selectedContactId, messageQueue]);
 
   const handleSendAudio = useCallback(async (blob: Blob) => {
@@ -559,5 +574,6 @@ export function useRealtimeInbox() {
     // Realtime batching diagnostics (only meaningful in local mode)
     batcherStatus: USE_EXTERNAL_DB ? null : localRealtime.batcherStatus,
     deliveryAlert,
+    messageQueue,
   };
 }
