@@ -102,10 +102,11 @@ function ConversationItem({
         className={cn(
           'w-full px-3 py-3.5 flex items-center gap-3 transition-all text-left rounded-2xl relative group overflow-hidden',
           'hover:bg-muted/40 hover:shadow-sm active:scale-[0.98]',
-          selectedContactId === contactId && 'bg-primary/10 shadow-md ring-1 ring-primary/20',
+          selectedContactId === contactId ? 'bg-primary/10 shadow-md ring-1 ring-primary/20' : 'bg-transparent',
           !selectedContactId && 'border-b border-border/10 rounded-none last:border-0',
           isSelected && 'bg-primary/15',
-          isPinned && selectedContactId !== contactId && 'bg-muted/30 shadow-inner'
+          isPinned && selectedContactId !== contactId && 'bg-muted/30 shadow-inner',
+          conversation.unreadCount > 0 && 'bg-primary/[0.03]'
         )}
       >
         {selectedContactId === contactId && (
