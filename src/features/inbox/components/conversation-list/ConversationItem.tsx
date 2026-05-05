@@ -135,7 +135,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
         className={cn(
           'relative p-3 cursor-pointer transition-colors duration-200 min-h-[78px] mx-0 border-b border-[hsl(var(--border))]', 
           isSelected 
-            ? 'bg-accent' 
+            ? 'bg-[hsl(var(--primary)/0.08)]' 
             : 'hover:bg-card bg-background'
         )}>
         <div className="flex items-start gap-3.5 relative z-10">
@@ -197,7 +197,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 <p className={cn(
                   "font-sans text-[13.5px] leading-[1.35] truncate pr-2 transition-colors duration-300",
                   conversation.unreadCount > 0
-                    ? "text-[hsl(var(--foreground))] font-medium"
+                    ? "text-[hsl(var(--foreground))] font-semibold"
                     : "text-[hsl(var(--muted-foreground))] font-normal"
                 )}>
                   {conversation.lastMessage?.content || 'Sem mensagens'}
