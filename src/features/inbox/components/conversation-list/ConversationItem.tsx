@@ -164,7 +164,10 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1 gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="font-sans font-semibold text-[15px] leading-[1.2] tracking-[-0.01em] truncate text-[hsl(var(--foreground))]">
+                <span className={cn(
+                  "font-sans font-semibold text-[15px] leading-[1.2] tracking-[-0.01em] truncate transition-colors duration-200",
+                  isSelected ? "text-primary" : "text-foreground"
+                )}>
                   {(() => {
                     const firstName = conversation.contact.name?.trim().split(/\s+/)[0] || conversation.contact.name;
                     const company = conversation.contact.company?.trim();
