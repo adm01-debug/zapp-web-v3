@@ -99,6 +99,9 @@ const ConversationItem = memo(({
     >
       <button
         onClick={(e) => handleClick(contactId, e)}
+        aria-selected={selectedContactId === contactId}
+        aria-label={`Conversa com ${conversation.contact.name || 'Contato'}${conversation.unreadCount > 0 ? `, ${conversation.unreadCount} mensagens não lidas` : ''}`}
+        role="option"
         className={cn(
           'w-full px-3 py-3.5 flex items-center gap-3 transition-all text-left rounded-2xl relative group overflow-hidden',
           'hover:bg-muted/40 hover:shadow-sm active:scale-[0.98]',
