@@ -53,16 +53,19 @@ describe('useMessageQueue', () => {
   });
 
   it('should reset progress on retry', async () => {
-    const processMessage = vi.fn().mockRejectedValue(new Error('Fail'));
+    const processMessage = vi.fn().mockImplementation(() => new Promise((_, reject) => setTimeout(() => reject(new Error('Fail')), 50)));
     const { result } = renderHook(() => useMessageQueue(processMessage));
 
     act(() => {
       result.current.addToQueue('contact-1', 'Retry me');
     });
 
-    // Run processing (including 2 auto-retries)
+    // Run processing (including MAX_AUTO_RETRIES = 2)
+    // 1st attempt: 50ms (fail) + 100ms (debounce)
+    // 2nd attempt: 50ms (fail) + 100ms (debounce)
+    // 3rd attempt: 50ms (fail)
     await act(async () => {
-      vi.runAllTimers();
+      vi.advanceTimersByTime(500);
     });
 
     expect(result.current.queue[0].status).toBe('failed');
@@ -72,6 +75,7 @@ describe('useMessageQueue', () => {
     });
     expect(result.current.queue[0].progress).toBe(50);
 
+    // Stop timers before retry to catch 'pending' state
     act(() => {
       result.current.retryMessage(result.current.queue[0].id);
     });
