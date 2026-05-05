@@ -85,6 +85,7 @@ function AppContent() {
   return (
     <BrowserRouter>
       <ThemeInitializer />
+      <ThemeDebugger />
       <SkipLinks />
       <LiveRegion />
       <GlobalKeyboardProvider>
@@ -105,6 +106,3 @@ const App = () => (
 );
 
 export default App;
-
-
-
