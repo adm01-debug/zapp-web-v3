@@ -175,7 +175,8 @@ export function useRealtimeInbox() {
     window.addEventListener('open-contact-chat', handler);
 
     const deliveryHandler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
+      const customEvent = e as CustomEvent<{ contactId: string; status: 'warning' | 'breached'; delay: number; message?: string }>;
+      const detail = customEvent.detail;
       if (detail && detail.contactId === selectedContactId) {
         setDeliveryAlert({ status: detail.status, delay: detail.delay, message: detail.message });
       }
