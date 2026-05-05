@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
+import { useDensity } from '@/hooks/useDensity';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { motion } from '@/components/ui/motion';
@@ -55,7 +56,10 @@ interface ConversationItemProps {
   compact?: boolean;
 }
 
-export function ConversationItem({ conversation, isSelected, onSelect, compact = false }: ConversationItemProps) {
+export function ConversationItem({ conversation, isSelected, onSelect, compact: forceCompact = false }: ConversationItemProps) {
+  const { density } = useDensity();
+  const isCompactMode = density === 'compact' || density === 'dense' || forceCompact;
+  
   const StatusIcon = statusIcons[conversation.status];
   const sentiment: SentimentLevel | null = conversation.sentiment || 
     (conversation.sentimentScore !== undefined ? getSentimentFromScore(conversation.sentimentScore) : null);
@@ -68,7 +72,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
   const inView = useInViewport(rootRef, { rootMargin: '200px', keepVisibleMs: 1500 });
   const isTyping = useContactTyping(conversation.contact.id, inView);
 
-  if (compact) {
+  if (isCompactMode) {
     return (
       <motion.div ref={rootRef} onClick={() => onSelect(conversation)} whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.15 }}
         className={cn('relative p-[var(--density-padding-x)] rounded-lg cursor-pointer transition-all duration-200 h-full mx-2', isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent')}>
@@ -107,7 +111,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             )}
             {conversation.lastMessage && (
               <div className="mt-1 flex flex-col gap-1">
-                <SLAIndicatorForContact conversation={conversation} compact className="w-full justify-start" />
+                <SLAIndicatorForContact conversation={conversation} compact={isCompactMode} className="w-full justify-start" />
                 <RetryFailureBadge message={conversation.lastMessage} compact />
               </div>
             )}
@@ -133,7 +137,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
     <QuickPeek preview={quickPeekPreview} enabled={!isSelected} delay={500}>
       <div ref={rootRef} onClick={() => onSelect(conversation)} 
         className={cn(
-          'relative p-2.5 cursor-pointer transition-all duration-300 min-h-[64px] mx-0 border-b border-border/40 group', 
+          'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group', 
           isSelected 
             ? 'bg-primary/10 shadow-[inset_0_0_20px_rgba(var(--primary),0.03)]' 
             : 'hover:bg-muted/30 bg-background'
@@ -145,16 +149,16 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           />
         )}
-        <div className="flex items-start gap-2.5 relative z-10">
+        <div className="flex items-start gap-3.5 relative z-10">
           <div className="relative flex-shrink-0">
             <ChannelBadge type={conversation.contact.contact_type} />
             <Avatar className={cn(
-              "w-[38px] h-[38px] ring-0 transition-transform duration-300",
+              "w-[49px] h-[49px] ring-0 transition-transform duration-300",
               isSelected ? "scale-105" : "group-hover:scale-105"
             )}>
               <AvatarImage src={conversation.contact.avatar} className="object-cover" />
               <AvatarFallback className={cn(
-                "text-xs font-semibold tracking-tighter transition-colors duration-200",
+                "text-sm font-semibold tracking-tighter transition-colors duration-200",
                 isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
               )}>
                 {conversation.contact.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -178,7 +182,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
             <div className="flex items-center justify-between mb-1 gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className={cn(
-                  "font-sans font-semibold text-[12.5px] leading-[1.2] tracking-[-0.01em] truncate transition-colors duration-200",
+                  "font-sans font-semibold text-[15px] leading-[1.2] tracking-[-0.01em] truncate transition-colors duration-200",
                   isSelected ? "text-primary" : "text-foreground"
                 )}>
                   {(() => {
@@ -190,7 +194,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                <span className="font-sans text-[10px] font-semibold uppercase text-[hsl(var(--muted-foreground))] tabular-nums tracking-[0.04em]">
+                <span className="font-sans text-[11px] font-semibold uppercase text-[hsl(var(--muted-foreground))] tabular-nums tracking-[0.04em]">
                   {formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}
                 </span>
                 <TooltipProvider delayDuration={200}>
@@ -211,7 +215,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 <TypingIndicatorCompact isVisible={true} />
               ) : (
                 <p className={cn(
-                  "font-sans text-[11.5px] leading-[1.35] truncate pr-2 transition-colors duration-300",
+                  "font-sans text-[13.5px] leading-[1.35] truncate pr-2 transition-colors duration-300",
                   conversation.unreadCount > 0
                     ? isSelected ? "text-primary/90 font-bold" : "text-foreground font-bold"
                     : isSelected ? "text-primary/70 font-medium" : "text-muted-foreground font-normal"
