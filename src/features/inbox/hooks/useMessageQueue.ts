@@ -177,7 +177,7 @@ export function useMessageQueue(
                 setQueue(q => q.filter(i => i.id !== itemToProcess.id));
               }, 5000);
 
-              log.info(`Message ${itemToProcess.id} processed successfully`);
+              log.info(`[INBOX_METRIC] action=send_success contact=${contactId} duration=${duration}ms attempt=${itemToProcess.retryCount}`);
             } catch (err) {
               const duration = Date.now() - startTime;
               const errorMsg = err instanceof Error ? err.message : String(err);
