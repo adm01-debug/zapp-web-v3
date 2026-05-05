@@ -16,13 +16,27 @@ export function jidToPhone(jid: string): string {
  * Convert an EvolutionMessage into the frontend's RealtimeMessage shape
  */
 export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessage {
+  const msgType = extractMessageType(evo.message_type);
+  
+  // Se não houver conteúdo ou legenda, e for mídia, usamos o label do tipo (ex: [Imagem])
+  let content = evo.content || evo.caption || '';
+  if (!content && msgType.category === 'media') {
+    content = `[${msgType.label}]`;
+  } else if (!content && msgType.category === 'location') {
+    content = '[Localização]';
+  } else if (!content && msgType.category === 'poll') {
+    content = '[Enquete]';
+  } else if (!content && msgType.category === 'interactive') {
+    content = '[Mensagem Interativa]';
+  }
+
   return {
     id: evo.id,
-    contact_id: evo.contact_id || evo.remote_jid, // use remote_jid as fallback ID
+    contact_id: evo.contact_id || evo.remote_jid,
     agent_id: evo.from_me ? 'system' : null,
-    content: evo.content || evo.caption || '',
+    content,
     sender: evo.from_me || evo.direction === 'outbound' ? 'agent' : 'contact',
-    message_type: mapMessageType(evo.message_type),
+    message_type: msgType.internalType,
     media_url: evo.media_url,
     is_read: evo.status === 'read',
     status: mapStatus(evo.status),
@@ -34,7 +48,7 @@ export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessa
     transcription: null,
     transcription_status: null,
     is_deleted: evo.deleted_at != null,
-    contactAvatar: null, // Será preenchido pelo hook useExternalMessages durante a hidratação
+    contactAvatar: null,
   };
 }
 
@@ -184,10 +198,12 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
         lastMessageAt: msg.created_at,
         messageCount: 1,
         unreadCount: isUnread ? 1 : 0,
-        lastMessageContent: msg.content || msg.caption,
+        lastMessageContent: msg.content || msg.caption || (extractMessageType(msg.message_type).category !== 'text' ? `[${extractMessageType(msg.message_type).label}]` : ''),
         lastMessageDirection: msg.direction,
         instanceName: msg.instance_name,
         tags: msg.tags,
+        company: null, // Mensagens não costumam ter company, vem via RPC
+        ai_sentiment: msg.sentiment,
       });
     } else {
       existing.messageCount++;
@@ -196,9 +212,22 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
       if (!existing.pushName && safePushName) {
         existing.pushName = safePushName;
       }
+      
+      // Atualiza sentiment se a mensagem for mais recente e tiver um
+      if (msg.sentiment && new Date(msg.created_at) >= new Date(existing.lastMessageAt)) {
+        existing.ai_sentiment = msg.sentiment;
+      }
+
+      // Merge tags (union)
+      if (msg.tags && Array.isArray(msg.tags)) {
+        const currentTags = new Set(existing.tags || []);
+        msg.tags.forEach(t => currentTags.add(t));
+        existing.tags = Array.from(currentTags);
+      }
+
       if (new Date(msg.created_at) > new Date(existing.lastMessageAt)) {
         existing.lastMessageAt = msg.created_at;
-        existing.lastMessageContent = msg.content || msg.caption;
+        existing.lastMessageContent = msg.content || msg.caption || (extractMessageType(msg.message_type).category !== 'text' ? `[${extractMessageType(msg.message_type).label}]` : '');
         existing.lastMessageDirection = msg.direction;
       }
     }
