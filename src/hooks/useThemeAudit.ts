@@ -1,41 +1,74 @@
 import { useEffect } from 'react';
+import { useTheme } from '@/hooks/useTheme';
+import { STORAGE_KEY, DEFAULT_PRESET_ID, PRESETS } from '@/components/settings/theme/presets';
 
 /**
  * Hook para detecção automática de inconsistências visuais (cores fixas hardcoded)
  * que violam o padrão "Preto OLED puro" (HSL 0 0% 0%).
+ * Agora também valida a integridade das fontes (Theme Safeguard).
  */
 export const useThemeAudit = () => {
+  const { resolvedTheme } = useTheme();
+
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      const audit = () => {
-        const elements = document.querySelectorAll('*');
-        const violations: string[] = [];
+    // Audit logic
+    const runAudit = () => {
+      // 1. OLED Audit
+      const elements = document.querySelectorAll('*');
+      const oledViolations: string[] = [];
+      
+      elements.forEach((el) => {
+        const style = window.getComputedStyle(el);
+        const bg = style.backgroundColor;
         
-        elements.forEach((el) => {
-          const style = window.getComputedStyle(el);
-          const bg = style.backgroundColor;
-          
-          // Detecta "quase preto" ou cores cinzas que deveriam ser OLED Black (0, 0, 0)
-          // ou herdar das variáveis CSS.
-          if (bg === 'rgb(31, 41, 55)' || bg === 'rgb(17, 24, 39)' || bg === 'rgb(9, 9, 11)') {
-            const path = getElementPath(el);
-            violations.push(`[OLED Audit] Background inconsistente (${bg}) em: ${path}`);
-          }
-        });
-
-        if (violations.length > 0) {
-          console.group('🔍 Relatório de Inconsistências OLED');
-          console.warn(`${violations.length} elementos encontrados com cores de fundo não-OLED.`);
-          violations.forEach(v => console.log(v));
-          console.groupEnd();
+        if (bg === 'rgb(31, 41, 55)' || bg === 'rgb(17, 24, 39)' || bg === 'rgb(9, 9, 11)') {
+          const path = getElementPath(el);
+          oledViolations.push(`[OLED Audit] Background inconsistente (${bg}) em: ${path}`);
         }
-      };
+      });
 
-      // Aguarda o carregamento completo para auditar
-      const timer = setTimeout(audit, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+      if (oledViolations.length > 0) {
+        console.group('🔍 Relatório de Inconsistências OLED');
+        console.warn(`${oledViolations.length} elementos encontrados com cores de fundo não-OLED.`);
+        oledViolations.forEach(v => console.log(v));
+        console.groupEnd();
+      }
+
+      // 2. Font Safeguard Audit
+      const root = document.documentElement;
+      const inlineSans = root.style.getPropertyValue('--font-sans');
+      const inlineDisplay = root.style.getPropertyValue('--font-display');
+      
+      const saved = localStorage.getItem(STORAGE_KEY);
+      let presetId = DEFAULT_PRESET_ID;
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          presetId = parsed.preset || DEFAULT_PRESET_ID;
+        } catch (e) {}
+      }
+      
+      const preset = PRESETS.find(p => p.id === presetId);
+      const shouldHaveInlineFont = !!preset?.font;
+
+      if (!shouldHaveInlineFont && (inlineSans || inlineDisplay)) {
+        console.warn(
+          `[ThemeAudit] ⚠️ Font leak detected! Inline fonts found ("${inlineSans}") but preset "${presetId}" does not define one. This might override tokens.css.`
+        );
+      }
+
+      const computedFont = getComputedStyle(root).getPropertyValue('--font-sans').trim();
+      if (!computedFont.includes('Outfit') && !shouldHaveInlineFont) {
+        console.warn(
+          `[ThemeAudit] ⚠️ Typography mismatch: --font-sans does not contain "Outfit". Current value: ${computedFont}`
+        );
+      }
+    };
+
+    // Delay audit to allow all initializers to run
+    const timer = setTimeout(runAudit, 2500);
+    return () => clearTimeout(timer);
+  }, [resolvedTheme]);
 };
 
 function getElementPath(el: Element): string {
