@@ -312,6 +312,22 @@ export function useRealtimeInbox() {
     await Promise.all([refetch(), refetchSelectedMessages()]);
   }, [refetch, refetchSelectedMessages]);
 
+  // Reconciliação automática da fila com base nas mensagens carregadas
+  useEffect(() => {
+    if (!selectedMessages || selectedMessages.length === 0 || !selectedContactId) return;
+    
+    // Pegar as últimas 10 mensagens para reconciliar (caso algum webhook tenha chegado)
+    const recent = selectedMessages.slice(-10);
+    recent.forEach(msg => {
+      if (msg.external_id && msg.sender === 'agent') {
+        const status = (msg.status === 'failed' || msg.status === 'failed_auth' || msg.status === 'failed_retries') 
+          ? 'failed' 
+          : 'confirmed';
+        messageQueue.reconcileWithDelivery(selectedContactId, msg.external_id, status);
+      }
+    });
+  }, [selectedMessages, selectedContactId]);
+
   const messageQueue = useMessageQueue(async (item: QueueItem) => {
     const { contactId, content, attachments } = item;
 
