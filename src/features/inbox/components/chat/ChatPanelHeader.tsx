@@ -99,12 +99,15 @@ export function ChatPanelHeader({
           </div>
           <div className="h-4 flex items-center">
             {isContactTyping ? (
-              <TypingIndicatorCompact isVisible={true} className="text-success" />
+              <div className="flex items-center gap-1.5">
+                <TypingIndicatorCompact isVisible={true} className="text-success" />
+                <span className="text-[11px] font-semibold text-success animate-pulse">digitando…</span>
+              </div>
             ) : (
               <div className="flex items-center gap-1.5 group cursor-default">
-                <span className="relative flex h-2 w-2">
+                <span className="relative flex h-1.5 w-1.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
                 </span>
                 <span className="text-[11px] font-medium text-muted-foreground/80 group-hover:text-foreground transition-colors">Online</span>
               </div>
