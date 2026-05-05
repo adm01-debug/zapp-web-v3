@@ -18,6 +18,8 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   const [duration, setDuration] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcription, setTranscription] = useState('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -26,6 +28,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   const startRecording = useCallback(async () => {
     try {
@@ -87,12 +90,38 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
         analyserRef.current = null;
         audioContextRef.current = null;
         setAudioLevel(0);
+
+        // Stop transcription
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
       };
       
       mediaRecorder.start(100);
       setIsRecording(true);
       setIsPaused(false);
       setDuration(0);
+      setTranscription('');
+
+      // Web Speech API for real-time transcription
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'pt-BR';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event: any) => {
+          let currentTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            currentTranscript += event.results[i][0].transcript;
+          }
+          setTranscription(prev => prev + ' ' + currentTranscript);
+        };
+        
+        recognition.start();
+        recognitionRef.current = recognition;
+      }
       
       intervalRef.current = setInterval(() => {
         setDuration((prev) => {
@@ -123,6 +152,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       mediaRecorderRef.current.pause();
       setIsPaused(true);
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (recognitionRef.current) recognitionRef.current.stop();
     }
   }, []);
 
@@ -133,6 +163,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       intervalRef.current = setInterval(() => {
         setDuration(prev => prev + 1);
       }, 1000);
+      if (recognitionRef.current) recognitionRef.current.start();
     }
   }, []);
 
@@ -203,6 +234,8 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     duration,
     audioUrl,
     audioLevel,
+    transcription,
+    isTranscribing,
     startRecording,
     pauseRecording,
     resumeRecording,

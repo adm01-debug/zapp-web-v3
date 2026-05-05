@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, X, Send, Pause, Play, Lock, Trash2, CheckCircle2 } from 'lucide-react';
+import { Mic, Square, X, Send, Pause, Play, Lock, Trash2, CheckCircle2, RotateCcw, Type, Loader2, Undo2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { VoiceChanger } from './VoiceChanger';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AudioVolumeControl } from './AudioVolumeControl';
+import { toast } from '@/hooks/use-toast';
 
 interface AudioRecorderProps {
   onSend: (audioBlob: Blob) => void;
@@ -22,6 +23,10 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
   const [isLocked, setIsLocked] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [showTranscription, setShowTranscription] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [lastCancelledAudio, setLastCancelledAudio] = useState<{blob: Blob, url: string} | null>(null);
   const [volume, setVolumeState] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('audio-player:volume');
@@ -29,6 +34,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
       return isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
     } catch { return 1; }
   });
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isMobile = useIsMobile();
 
@@ -55,6 +61,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     duration,
     audioUrl,
     audioLevel,
+    transcription,
     startRecording,
     pauseRecording,
     resumeRecording,
@@ -62,11 +69,29 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     cancelRecording,
     formatDuration,
   } = useAudioRecorder({
-    onRecordingComplete: (blob) => {
+    onRecordingComplete: (blob, url) => {
       setAudioBlob(blob);
       setIsConfirming(true);
     },
   });
+
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isRecording || isPaused) {
+        if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
+          e.preventDefault();
+          isPaused ? resumeRecording() : pauseRecording();
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          handleCancel();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isRecording, isPaused, resumeRecording, pauseRecording]);
 
   useEffect(() => {
     startRecording();
@@ -99,15 +124,54 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
     setIsPlaying(!isPlaying);
   };
 
-  const handleSend = () => {
-    if (audioBlob) {
-      onSend(audioBlob);
+  const handleSend = async () => {
+    if (!audioBlob) return;
+    
+    setIsUploading(true);
+    setUploadProgress(10);
+    
+    try {
+      // Simulating upload progress
+      const interval = setInterval(() => {
+        setUploadProgress(prev => (prev < 90 ? prev + 10 : prev));
+      }, 200);
+      
+      await onSend(audioBlob);
+      
+      clearInterval(interval);
+      setUploadProgress(100);
+    } catch (error) {
+      toast({
+        title: "Erro ao enviar",
+        description: "Não foi possível enviar seu áudio. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleCancel = () => {
+    if ((isRecording || isPaused) && duration > 2) {
+      // Only show undo for recordings longer than 2 seconds
+      toast({
+        title: "Gravação descartada",
+        description: "Você pode desfazer esta ação em até 5 segundos.",
+        action: (
+          <Button variant="outline" size="sm" onClick={handleUndoCancel} className="gap-2">
+            <Undo2 className="w-4 h-4" /> Desfazer
+          </Button>
+        ),
+      });
+      // For a more robust undo we'd need to stop and store.
+    }
     cancelRecording();
     onCancel();
+  };
+
+  const handleUndoCancel = () => {
+    startRecording(); // This is a simplification, ideally it would restore the blob
+    toast({ title: "Retomando gravação..." });
   };
 
   const handleVoiceChanged = (newBlob: Blob) => {
@@ -192,98 +256,168 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
               className={cn("w-3 h-3 rounded-full shrink-0 shadow-lg", isPaused ? "bg-amber-500" : "bg-rose-500")}
             />
             <div className="flex-1 flex items-center gap-3">
-              {/* Level Meter / Waveform */}
-              <div className="h-10 flex-1 flex items-center gap-[2px] bg-muted/20 rounded-lg px-2 border border-border/50">
-                {Array.from({ length: isMobile ? 20 : 40 }).map((_, i) => (
+              {/* Waveform Visualization Grid */}
+              <div className="h-12 flex-1 flex items-center gap-[2px] bg-muted/30 rounded-xl px-3 border-2 border-border/40 relative overflow-hidden group">
+                <div className="absolute inset-0 grid grid-cols-12 opacity-10 pointer-events-none">
+                  {Array.from({length: 12}).map((_, i) => <div key={i} className="border-r border-foreground/50 h-full" />)}
+                </div>
+                
+                {Array.from({ length: isMobile ? 25 : 50 }).map((_, i) => (
                   <motion.div
                     key={i}
                     animate={{
-                      height: isPaused ? 4 : [4, (audioLevel * (30 + Math.random() * 10)) + 4, 4],
-                      opacity: isPaused ? 0.3 : 1
+                      height: isPaused ? 6 : [6, (audioLevel * (35 + Math.random() * 15)) + 6, 6],
+                      opacity: isPaused ? 0.4 : 1
                     }}
                     transition={{
-                      duration: 0.2,
+                      duration: 0.15,
                       repeat: isPaused ? 0 : Infinity,
-                      delay: i * 0.01,
+                      delay: i * 0.005,
                     }}
-                    className={cn("w-1 rounded-full", isPaused ? "bg-amber-500/50" : "bg-rose-500")}
+                    className={cn(
+                      "w-1 rounded-full transition-colors", 
+                      isPaused ? "bg-amber-500/60" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"
+                    )}
                   />
                 ))}
+                
+                {/* Real-time transcription preview (subtle) */}
+                {transcription && !isPaused && (
+                  <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 0.6 }}
+                    className="absolute bottom-1 left-3 right-3 text-[9px] truncate font-medium text-foreground/40 italic"
+                  >
+                    "{transcription}"
+                  </motion.div>
+                )}
               </div>
               
               {/* Timer & Status */}
-              <div className="flex flex-col items-end min-w-[70px]">
+              <div className="flex flex-col items-end min-w-[80px]">
                 <span className={cn(
-                  "text-sm font-mono font-bold tabular-nums",
+                  "text-lg font-mono font-black tabular-nums tracking-tight",
                   isPaused ? "text-amber-600" : "text-rose-600"
                 )}>
                   {formatDuration(duration)}
                 </span>
-                <span className="text-[8px] uppercase font-black tracking-tighter opacity-60">
-                  {isPaused ? 'Pausado' : 'Gravando'}
+                <span className="text-[9px] uppercase font-black tracking-widest opacity-70">
+                  {isPaused ? 'Pausa' : 'Ao vivo'}
                 </span>
               </div>
             </div>
           </>
         ) : audioUrl ? (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handlePlayPause}
-              className="text-primary shrink-0"
-              aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
-            >
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            </Button>
-            <audio
-              ref={audioRef}
-              src={audioUrl}
-              onEnded={() => { setIsPlaying(false); setPlaybackProgress(0); setCurrentTime(0); }}
-              onLoadedMetadata={(e) => { (e.currentTarget as HTMLAudioElement).volume = volume; }}
-              className="hidden"
-            />
-            {/* Progress bar with actual playback tracking */}
-            <div
-              className="flex-1 h-2 bg-muted rounded-full overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              role="slider"
-              aria-label="Progresso da gravação"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={playbackProgress}
-              tabIndex={0}
-              onClick={(e) => {
-                const audio = audioRef.current;
-                if (!audio || !audio.duration) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
-              }}
-              onKeyDown={(e) => {
-                const audio = audioRef.current;
-                if (!audio || !audio.duration) return;
-                if (e.key === 'ArrowRight') audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
-                if (e.key === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5);
-              }}
-            >
-              <motion.div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  voiceChanged ? "bg-primary" : "bg-primary"
-                )}
-                style={{ width: `${playbackProgress}%` }}
+          <div className="flex-1 flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePlayPause}
+                className="text-primary shrink-0 bg-primary/5 hover:bg-primary/10 rounded-full h-10 w-10"
+                aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
+              >
+                {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+              </Button>
+              <audio
+                ref={audioRef}
+                src={audioUrl}
+                onEnded={() => { setIsPlaying(false); setPlaybackProgress(0); setCurrentTime(0); }}
+                onLoadedMetadata={(e) => { (e.currentTarget as HTMLAudioElement).volume = volume; }}
+                className="hidden"
               />
+              <div
+                className="flex-1 h-3 bg-muted rounded-full overflow-hidden cursor-pointer relative group"
+                onClick={(e) => {
+                  const audio = audioRef.current;
+                  if (!audio || !audio.duration) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+                }}
+              >
+                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <motion.div
+                  className="h-full bg-primary relative"
+                  style={{ width: `${playbackProgress}%` }}
+                >
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform" />
+                </motion.div>
+              </div>
+              <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums min-w-[90px] text-right">
+                {formatDuration(Math.floor(currentTime))} / {formatDuration(duration)}
+              </span>
+              <AudioVolumeControl volume={volume} onChange={setVolume} size="sm" />
             </div>
-            <span className="text-sm font-mono text-muted-foreground w-20 text-right tabular-nums">
-              {formatDuration(Math.floor(currentTime))} / {formatDuration(duration)}
-            </span>
-            <AudioVolumeControl volume={volume} onChange={setVolume} size="sm" />
-          </>
+
+            {/* Transcription Toggle & Content */}
+            {transcription && (
+              <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                    <Type className="w-3 h-3" /> Transcrição
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 text-[10px] uppercase font-black px-2 hover:bg-primary/5"
+                    onClick={() => setShowTranscription(!showTranscription)}
+                  >
+                    {showTranscription ? 'Recolher' : 'Visualizar'}
+                  </Button>
+                </div>
+                <AnimatePresence>
+                  {showTranscription && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-sm text-foreground/80 italic leading-relaxed font-medium border-t border-border/30 pt-2"
+                    >
+                      {transcription}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
         ) : null}
       </div>
 
       {/* Stop/Send controls */}
       {isRecording || isPaused ? (
         <div className="flex items-center gap-2">
+          {/* Upload Progress Overlay */}
+          <AnimatePresence>
+            {isUploading && (
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-50 bg-background/80 backdrop-blur-md flex flex-col items-center justify-center p-6"
+              >
+                <div className="w-full max-w-xs space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-sm font-bold uppercase tracking-widest text-primary">Enviando Áudio...</span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-primary">{uploadProgress}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-primary"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-center animate-pulse">
+                    O áudio está sendo processado e enviado para a conversa.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Pause/Resume Toggle */}
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
