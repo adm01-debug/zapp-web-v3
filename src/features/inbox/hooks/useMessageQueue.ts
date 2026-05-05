@@ -120,17 +120,14 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
           variant: "destructive"
         });
       }
-    } finally {
-      isProcessingRef.current[contactId] = false;
-      setTimeout(() => processQueueForContact(contactId), 100);
-    }
-  }, [queue, processMessage]);
+  }, [processMessage]); // Removido 'queue' para evitar loops infinitos
 
   // Trigger processing for all active contacts in queue
   useEffect(() => {
     const contactIds = Array.from(new Set(queue.filter(i => i.status === 'pending').map(i => i.contactId)));
     contactIds.forEach(id => processQueueForContact(id));
   }, [queue, processQueueForContact]);
+
 
   const addToQueue = useCallback((contactId: string, content: string, attachments?: File[]) => {
     const newItem: QueueItem = {
