@@ -67,8 +67,8 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   );
 
   const handleMessageUpdate = useCallback(
-    (payload: RealtimePostgresChangesPayload<any>) => {
-      const updatedMessage = messageService.mapMessage(payload.new);
+    (payload: RealtimePostgresChangesPayload<RealtimeMessage>) => {
+      const updatedMessage = messageService.mapMessage(payload.new as Record<string, any>);
 
       if (updatedMessage.conversationId === contactId) {
         setMessages((prev) =>
