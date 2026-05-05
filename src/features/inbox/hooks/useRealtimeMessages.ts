@@ -220,6 +220,13 @@ export function useRealtimeMessages() {
   const markAsRead = async (contactId: string) => {
     const { error } = await dbFrom('messages').update({ is_read: true }).eq('contact_id', contactId).eq('sender', 'contact').eq('is_read', false);
     if (error) log.error('Error marking messages as read:', error);
+    
+    // Auto-update load: if conversation is assigned, marking read might imply activity
+    // But better to update last_seen for routing load calculations
+    const { data: profile } = await supabase.auth.getUser();
+    if (profile?.user) {
+      await supabase.from('profiles').update({ last_seen: new Date().toISOString() } as any).eq('id', profile.user.id);
+    }
     commitConversations((prev) =>
       prev.map((c) => c.contact.id === contactId
         ? buildConversation(c.contact, c.messages.map((m) => ({ ...m, is_read: true })))
