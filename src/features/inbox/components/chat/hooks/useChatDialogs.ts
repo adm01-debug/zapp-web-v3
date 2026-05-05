@@ -3,7 +3,7 @@ import { useReducer, useCallback } from 'react';
 export type DialogKey = 'quickReplies' | 'slashCommands' | 'transferDialog' | 'scheduleDialog' | 
   'callDialog' | 'globalSearch' | 'chatSearch' | 'interactiveBuilder' | 'forwardDialog' | 
   'locationPicker' | 'aiAssistant' | 'catalogDirect' | 'whisper' | 'templatesWithVars' | 
-  'realtimeTranscription' | 'closeDialog';
+  'realtimeTranscription' | 'closeDialog' | 'visualValidation';
 
 export type DialogState = Record<DialogKey, boolean>;
 
