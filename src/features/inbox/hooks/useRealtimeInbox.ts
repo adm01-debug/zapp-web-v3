@@ -319,7 +319,7 @@ export function useRealtimeInbox() {
     const messagesToCheck = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
     const lastMsg = messagesToCheck[messagesToCheck.length - 1];
     if (lastMsg?.external_id && lastMsg.sender === 'agent') {
-      messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id);
+      messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id, lastMsg.status === 'failed' ? 'failed' : 'confirmed');
     }
 
     // Auto-assign on first reply if pending
@@ -404,8 +404,9 @@ export function useRealtimeInbox() {
     
     // Se o conteúdo for vazio e houver anexos, podemos dar um nome genérico
     const effectiveContent = content || (attachments?.length ? `Enviando ${attachments.length} anexo(s)` : "");
+    const type = attachments?.length ? 'attachment' : 'text';
     
-    messageQueue.addToQueue(selectedContactId, effectiveContent, attachments);
+    messageQueue.addToQueue(selectedContactId, effectiveContent, attachments, type);
   }, [selectedContactId, messageQueue]);
 
   const handleSendAudio = useCallback(async (blob: Blob) => {
