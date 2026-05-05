@@ -438,7 +438,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     whileTap={!(isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) ? { scale: 0.9 } : {}}
                     className={cn(
                       "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
-                      "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.55),0_0_36px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.7),0_0_48px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40",
+                      (logic.hasText || logic.attachments.length > 0 || editingMessage)
+                        ? "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.55),0_0_36px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.7),0_0_48px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80",
                       (isSending || (!logic.hasText && logic.attachments.length === 0 && !editingMessage)) && "opacity-70 cursor-not-allowed",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
                     )}
@@ -482,10 +484,10 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     whileTap={!(isSending || logic.hasText || logic.attachments.length > 0) ? { scale: 0.9 } : {}}
                     className={cn(
                       "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none",
-                      isRecordingAudio && isV2AudioEnabled
+                      isRecordingAudio
                         ? "bg-rose-500 text-white hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-110 z-10 ring-2 ring-rose-400/60"
-                        : "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.55),0_0_36px_hsl(var(--primary)/0.35)] hover:shadow-[0_0_24px_hsl(var(--primary)/0.7),0_0_48px_hsl(var(--primary)/0.45)] ring-2 ring-primary/40",
-                      !isRecordingAudio && (isSending || logic.hasText || logic.attachments.length > 0) && "opacity-50 grayscale cursor-not-allowed",
+                        : "bg-muted text-muted-foreground hover:bg-muted/80",
+                      !isRecordingAudio && (isSending || logic.hasText || logic.attachments.length > 0) && "opacity-50 cursor-not-allowed",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
                     )}
                     aria-label={isRecordingAudio ? "Parar gravação" : "Gravar áudio"}
