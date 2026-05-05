@@ -8,6 +8,16 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConversationItem } from './conversation-list/ConversationItem';
 import { ConversationContextMenu } from './ConversationContextMenu';
 import { useDensity } from '@/hooks/useDensity';
+import { MOCK_CONVERSATIONS } from './conversation-list/__mocks__/mockConversations';
+
+/**
+ * DEV ONLY: Quando `localStorage.setItem('mockConversations', '1')` está ativo,
+ * a sidebar exibe um conjunto rico de dados mockados para análise visual do layout.
+ * Para desligar: `localStorage.removeItem('mockConversations')` e recarregar.
+ */
+const USE_MOCKS =
+  typeof window !== 'undefined' &&
+  window.localStorage?.getItem('mockConversations') === '1';
 import {
   Search,
   Filter,
