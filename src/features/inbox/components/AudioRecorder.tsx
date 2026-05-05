@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, X, Send, Pause, Play, Lock, Trash2, CheckCircle2 } from 'lucide-react';
+import { Mic, Square, X, Send, Pause, Play, Lock, Trash2, CheckCircle2, RotateCcw, Type, Loader2, Undo2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { VoiceChanger } from './VoiceChanger';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AudioVolumeControl } from './AudioVolumeControl';
+import { toast } from '@/hooks/use-toast';
 
 interface AudioRecorderProps {
   onSend: (audioBlob: Blob) => void;
