@@ -80,8 +80,8 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   );
 
   const handleMessageDelete = useCallback(
-    (payload: RealtimePostgresChangesPayload<any>) => {
-      const deletedMessage = payload.old as any;
+    (payload: RealtimePostgresChangesPayload<RealtimeMessage>) => {
+      const deletedMessage = payload.old as RealtimeMessage;
 
       if (deletedMessage && (deletedMessage.contact_id === contactId || deletedMessage.id)) {
         setMessages((prev) => prev.filter((m) => m.id !== deletedMessage.id));
