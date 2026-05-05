@@ -112,12 +112,14 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
           
           await processMessage(itemToProcess);
           
-          const duration = Date.now() - startTime;
+          const completedAt = Date.now();
+          const duration = completedAt - startTime;
           setQueue(q => q.map(i => 
             i.id === itemToProcess.id ? { 
               ...i, 
               status: 'confirmed', 
               progress: 100,
+              completedAt,
               attempts: [...(i.attempts || []), { timestamp: Date.now(), duration }]
             } : i
           ));
@@ -174,11 +176,12 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
     });
   }, [queue, processNextInQueue]);
 
-  const addToQueue = useCallback((contactId: string, content: string, attachments?: File[]) => {
+  const addToQueue = useCallback((contactId: string, content: string, attachments?: File[], type: 'text' | 'attachment' | 'audio' = 'text') => {
     const newItem: QueueItem = {
       id: `queue:${uuidv4()}`,
       contactId,
       content,
+      type,
       attachments,
       status: 'pending',
       retryCount: 0,
@@ -188,7 +191,7 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
     };
     
     setQueue(prev => [...prev, newItem]);
-    log.info(`Added message to queue: ${newItem.id}`);
+    log.info(`Added message to queue: ${newItem.id} (type: ${type})`);
   }, []);
 
   const updateProgress = useCallback((id: string, progress: number) => {
@@ -209,11 +212,70 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
     ));
   }, []);
 
-  const reconcileWithDelivery = useCallback((contactId: string, externalId: string) => {
-    setQueue(prev => prev.filter(item => 
-      !(item.contactId === contactId && item.externalId === externalId)
-    ));
+  const reconcileWithDelivery = useCallback((contactId: string, externalId: string, status: 'confirmed' | 'failed') => {
+    setQueue(prev => {
+      const item = prev.find(i => i.contactId === contactId && i.externalId === externalId);
+      if (!item) return prev;
+
+      if (status === 'confirmed') {
+        return prev.filter(i => i.id !== item.id);
+      } else {
+        // Apenas marca como falha se não houver mais tentativas automáticas
+        return prev.map(i => i.id === item.id ? { ...i, status: 'failed' } : i);
+      }
+    });
   }, []);
+
+  // Compute metrics from the queue items (including those just processed)
+  const getMetrics = useCallback((): QueueMetrics => {
+    const metrics: QueueMetrics = {
+      totalSent: 0,
+      totalFailed: 0,
+      totalRetries: 0,
+      averageLatency: 0,
+      byType: {},
+      byConversation: {}
+    };
+
+    const confirmedItems = queue.filter(i => i.status === 'confirmed');
+    const failedItems = queue.filter(i => i.status === 'failed');
+    
+    metrics.totalSent = confirmedItems.length;
+    metrics.totalFailed = failedItems.length;
+    
+    const allItems = [...confirmedItems, ...failedItems];
+    let totalLatency = 0;
+    let latencyCount = 0;
+
+    allItems.forEach(item => {
+      const type = item.type;
+      const conv = item.contactId;
+      const latency = item.completedAt ? item.completedAt - item.createdAt : 0;
+
+      if (!metrics.byType[type]) metrics.byType[type] = { sent: 0, failed: 0, latency: [] };
+      if (!metrics.byConversation[conv]) metrics.byConversation[conv] = { sent: 0, failed: 0, latency: [] };
+
+      if (item.status === 'confirmed') {
+        metrics.byType[type].sent++;
+        metrics.byConversation[conv].sent++;
+        if (latency > 0) {
+          metrics.byType[type].latency.push(latency);
+          metrics.byConversation[conv].latency.push(latency);
+          totalLatency += latency;
+          latencyCount++;
+        }
+      } else {
+        metrics.byType[type].failed++;
+        metrics.byConversation[conv].failed++;
+      }
+
+      metrics.totalRetries += item.retryCount;
+    });
+
+    metrics.averageLatency = latencyCount > 0 ? totalLatency / latencyCount : 0;
+
+    return metrics;
+  }, [queue]);
 
   return {
     queue,
@@ -221,6 +283,7 @@ export function useMessageQueue(processMessage: (item: QueueItem) => Promise<voi
     retryMessage,
     updateProgress,
     reconcileWithDelivery,
+    getMetrics,
     removeFromQueue: (id: string) => {
       setQueue(prev => prev.filter(item => item.id !== id));
     }
