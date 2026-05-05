@@ -102,8 +102,10 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       mediaRecorder.start(100);
       setIsRecording(true);
       setIsPaused(false);
-      setDuration(0);
-      setTranscription('');
+      if (!isRecovery) {
+        setDuration(0);
+        setTranscription('');
+      }
 
       // Web Speech API for real-time transcription
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
