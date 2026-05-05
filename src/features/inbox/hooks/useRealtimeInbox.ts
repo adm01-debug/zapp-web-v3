@@ -282,9 +282,15 @@ export function useRealtimeInbox() {
     setSelectedContactId(contactId);
     setSelectedContact(contactId);
     setDeliveryAlert(null); // Reset alert when changing conversation
-    // No modo externo, ids são remote_jid (string) — markAsRead local
-    // espera UUID e dispararia erro 22P02. Pulamos.
-    if (!USE_EXTERNAL_DB) markAsRead(contactId);
+    
+    // Marcar como lido agora funciona tanto em modo local quanto externo
+    if (USE_EXTERNAL_DB) {
+      void supabase.functions.invoke('evolution-api', {
+        body: { action: 'read-messages', instanceName: 'wpp2', remoteJid: contactId }
+      });
+    } else {
+      markAsRead(contactId);
+    }
   }, [setSelectedContact, markAsRead]);
 
   const handleNotificationView = useCallback(() => {
