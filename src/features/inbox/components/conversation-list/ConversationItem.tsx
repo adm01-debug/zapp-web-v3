@@ -305,9 +305,7 @@ export function ConversationItem({
                       </Tooltip>
                     )}
                   </>
-                ) : (
-                  <span className="text-[10px] text-muted-foreground/60 font-medium">Sem tags</span>
-                )}
+                ) : null}
               </div>
               {conversation.lastMessage && (
                 <div className="mt-1 flex flex-col gap-1">
