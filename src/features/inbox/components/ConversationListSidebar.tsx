@@ -111,14 +111,14 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
         {!isMobile && (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-[18px] font-bold text-foreground tracking-tight font-sans">Inbox</h2>
+              <h2 className="text-[18px] font-extrabold text-foreground tracking-tight font-sans bg-clip-text">Inbox</h2>
               <span
                 title={inbox.isOnline ? 'Mensagens: tempo real ativo' : 'Mensagens: desconectado'}
-                className={cn('w-1.5 h-1.5 rounded-full ring-2 ring-background', inbox.isOnline ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.4)]')}
+                className={cn('w-2 h-2 rounded-full ring-2 ring-background', inbox.isOnline ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]')}
                 aria-label={inbox.isOnline ? 'Mensagens: online' : 'Mensagens: offline'}
               />
               <RealtimeContactsIndicator />
-              <div className="h-3 w-px bg-border/40 mx-0.5" />
+              <div className="h-4 w-px bg-border/40 mx-1" />
               <WhatsAppConnectionStatus />
             </div>
 
@@ -151,29 +151,31 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
         <div className="flex items-center gap-1.5">
           <div className="relative flex-1 group">
             <SearchIcon className={cn(
-              "absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60 transition-colors",
-              "group-focus-within:text-primary"
+              "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 transition-all duration-300",
+              "group-focus-within:text-primary group-focus-within:scale-110"
             )} />
             <Input
               ref={contactSearchRef}
-              placeholder={isMobile ? "Buscar..." : "Buscar (Alt+K para focar)..."}
+              placeholder={isMobile ? "Buscar..." : "Buscar conversas..."}
               value={contactSearch}
               onChange={(e) => handleContactSearch(e.target.value)}
               className={cn(
-                "pl-8 pr-7 bg-accent/40 hover:bg-accent/60 focus:bg-background border border-transparent focus:border-primary/20 rounded-xl font-sans text-xs placeholder:text-muted-foreground/40 transition-all duration-300 shadow-none",
-                isMobile ? "h-[44px] text-[16px]" : "h-[36px] text-[13px]"
+                "pl-9 pr-8 bg-muted/40 hover:bg-muted/60 focus:bg-background border border-border/10 focus:border-primary/30 rounded-2xl font-sans text-xs placeholder:text-muted-foreground/30 transition-all duration-500 shadow-sm focus:shadow-md",
+                isMobile ? "h-[46px] text-[16px]" : "h-[40px] text-[13px]"
               )}
               aria-label="Buscar conversa"
             />
             {contactSearch && (
               <Button variant="ghost" size="icon" onClick={clearContactSearch}
-                className="absolute right-0.5 top-1/2 -translate-y-1/2 w-8 h-8 md:w-6 md:h-6 hover:bg-transparent" aria-label="Limpar busca">
-                <X className="w-4 h-4 md:w-3 md:h-3 text-muted-foreground" />
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 md:w-7 md:h-7 hover:bg-transparent text-muted-foreground/40 hover:text-foreground transition-colors" aria-label="Limpar busca">
+                <X className="w-4 h-4 md:w-3.5 md:h-3.5" />
               </Button>
             )}
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:block pointer-events-none">
-              <kbd className="h-4 px-1 rounded bg-white/5 text-[8px] font-mono flex items-center border border-white/10 text-muted-foreground/50">K</kbd>
-            </div>
+            {!contactSearch && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 opacity-40 group-focus-within:opacity-0 transition-opacity duration-300">
+                <kbd className="h-4 px-1 rounded bg-muted text-[9px] font-mono flex items-center border border-border/50 text-muted-foreground">K</kbd>
+              </div>
+            )}
           </div>
 
           <div className={cn("shrink-0", isMobile ? "w-[130px]" : "w-[130px]")}>

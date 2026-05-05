@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -117,7 +118,7 @@ export function TicketTabs({
   return (
     <div className="space-y-2">
       {/* Main Tabs */}
-      <div className="flex items-center gap-1 bg-accent/20 rounded-xl p-1.5 border border-border/10 shadow-none font-sans">
+      <div className="flex items-center gap-1 bg-muted/30 dark:bg-muted/10 rounded-2xl p-1 border border-border/20 shadow-sm font-sans">
         {mainTabs.map(tab => {
           const Icon = tab.icon;
           const isActive = mainTab === tab.id;
@@ -126,26 +127,35 @@ export function TicketTabs({
               key={tab.id}
               onClick={() => onMainTabChange(tab.id)}
               className={cn(
-                'flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-bold transition-all duration-300',
+                'flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-500 ease-out relative overflow-hidden',
                 isActive
-                  ? tab.activeColor + ' shadow-md scale-[1.02]'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  ? tab.activeColor + ' shadow-lg scale-[1.02] ring-1 ring-white/10'
+                  : 'text-muted-foreground/70 hover:text-foreground hover:bg-muted/60'
               )}
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
+              <Icon className={cn("w-4 h-4 transition-transform duration-500", isActive && "scale-110")} />
+              <span className="tracking-tight">{tab.label}</span>
               {tab.count !== null && (
                 <Badge 
                   variant="outline"
                   className={cn(
-                    'h-4 min-w-[16px] px-1 text-[9px] font-bold leading-none border transition-colors',
+                    'h-4.5 min-w-[18px] px-1.5 text-[9px] font-black leading-none border-0 transition-all duration-500 shadow-sm',
                     isActive 
-                      ? 'bg-primary-foreground/20 text-inherit border-primary-foreground/30' 
-                      : 'bg-transparent text-muted-foreground border-border/40'
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-muted/60 text-muted-foreground/60'
                   )}
                 >
                   {tab.count}
                 </Badge>
+              )}
+              {isActive && (
+                <motion.div
+                  layoutId="activeTabGlow"
+                  className="absolute inset-0 bg-white/5 pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6 }}
+                />
               )}
             </button>
           );
@@ -154,7 +164,7 @@ export function TicketTabs({
 
       {/* Sub-tabs for "Abertos" — separated visually */}
       {mainTab === 'open' && (
-        <div className="flex items-center gap-0.5 px-0.5 flex-wrap border-t border-border/40 pt-2 mt-0.5">
+        <div className="flex items-center gap-1 px-0.5 flex-wrap border-t border-border/10 pt-3 mt-1 animate-in fade-in slide-in-from-top-1 duration-500">
           {subTabs.map(tab => {
             const Icon = tab.icon;
             const isActive = subTab === tab.id;
@@ -163,17 +173,17 @@ export function TicketTabs({
                 key={tab.id}
                 onClick={() => onSubTabChange(tab.id)}
                 className={cn(
-                  'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 border shadow-none font-sans',
+                  'flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300 border shadow-sm font-sans relative overflow-hidden',
                   isActive
-                    ? 'bg-primary/10 text-primary border-primary/40'
-                    : 'bg-muted/10 text-muted-foreground hover:text-foreground hover:bg-muted/30 border-transparent'
+                    ? 'bg-primary/5 text-primary border-primary/20 shadow-primary/5'
+                    : 'bg-muted/20 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 border-transparent'
                 )}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className={cn("w-3.5 h-3.5 transition-transform", isActive && "rotate-[10deg]")} />
                 {tab.label}
                 <span className={cn(
-                  'text-[10px] font-bold tabular-nums',
-                  isActive ? 'text-primary' : 'text-muted-foreground/70'
+                  'text-[10px] font-black tabular-nums bg-muted/40 px-1.5 py-0.5 rounded-md ml-1',
+                  isActive ? 'text-primary' : 'text-muted-foreground/40'
                 )}>
                   {tab.count}
                 </span>
