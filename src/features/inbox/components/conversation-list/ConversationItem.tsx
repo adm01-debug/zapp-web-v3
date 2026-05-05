@@ -200,8 +200,8 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact =
                 <p className={cn(
                   "font-sans text-[13.5px] leading-[1.35] truncate pr-2 transition-colors duration-300",
                   conversation.unreadCount > 0
-                    ? "text-[hsl(var(--foreground))] font-semibold"
-                    : "text-[hsl(var(--muted-foreground))] font-normal"
+                    ? isSelected ? "text-primary/90 font-bold" : "text-foreground font-bold"
+                    : isSelected ? "text-primary/70 font-medium" : "text-muted-foreground font-normal"
                 )}>
                   {conversation.lastMessage?.content || 'Sem mensagens'}
                 </p>
