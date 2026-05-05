@@ -97,4 +97,36 @@ describe('Visual Regression: MessageBubble', () => {
     const bubble = container.querySelector('.bg-chat-received');
     expect(bubble).toBeTruthy();
   });
+
+  it('should render ChatPanel without hardcoded black background', () => {
+    // We mock the most complex parts of ChatPanel to avoid large test setup
+    vi.mock('../chat/ChatMessagesArea', () => ({ ChatMessagesArea: () => <div data-testid="messages-area" /> }));
+    vi.mock('../chat/ChatInputArea', () => ({ ChatInputArea: () => <div data-testid="input-area" /> }));
+    vi.mock('../chat/ChatPanelHeader', () => ({ ChatPanelHeader: () => <div data-testid="panel-header" /> }));
+    vi.mock('../CRMAutoSync', () => ({ CRMAutoSync: () => null }));
+    
+    const { ChatPanel } = require('../ChatPanel');
+    const { container } = render(
+      <ChatPanel 
+        conversation={{
+          id: 'conv-1',
+          contact: { id: 'contact-1', name: 'John Doe', phone: '123456789', avatar: '', tags: [], createdAt: new Date() },
+          status: 'open',
+          updatedAt: new Date(),
+          createdAt: new Date(),
+          unreadCount: 0,
+          priority: 'medium',
+          tags: [],
+        }} 
+        messages={[]} 
+        onSendMessage={vi.fn()} 
+      />,
+      { wrapper: Wrapper }
+    );
+    
+    // Check for [hsl(var(--background))] instead of bg-black
+    const mainContainer = container.querySelector('.bg-\\[hsl\\(var\\(--background\\)\\)\\]');
+    expect(mainContainer).toBeTruthy();
+    expect(container.querySelector('.bg-black')).toBeFalsy();
+  });
 });
