@@ -451,8 +451,8 @@ export function ConversationItem({
                     data-testid="conversation-preview"
                     className={cn(
                       'font-sans text-[13.5px] leading-[1.35] truncate pr-2 min-w-0 transition-colors duration-300',
-                      conversation.lastMessage
-                        ? conversation.unreadCount > 0
+                      lastMessage
+                        ? unreadCount > 0
                           ? isSelected ? 'text-primary/90 font-bold' : 'text-foreground font-bold'
                           : isSelected ? 'text-primary/70 font-medium' : 'text-muted-foreground font-normal'
                         : 'text-muted-foreground/60 font-normal italic'
