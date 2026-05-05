@@ -172,7 +172,7 @@ export function useSLAAlerts(params: SLAAlertParams) {
           kind === 'first_response' ? '1ª resposta' : 
           kind === 'delivery_delay' ? 'Atraso na leitura' : 'Resolução';
         
-        const customMsg = (params as any).customMessage;
+        const customMsg = params.customMessage;
         const title = kind === 'delivery_delay' 
           ? `Mensagem não lida — ${params.contactName}`
           : `SLA ${isBreach ? 'violado' : 'em risco'} — ${params.contactName}`;
