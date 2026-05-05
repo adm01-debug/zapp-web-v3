@@ -111,7 +111,7 @@ export function ConversationItem({ conversation, isSelected, onSelect, compact: 
             )}
             {conversation.lastMessage && (
               <div className="mt-1 flex flex-col gap-1">
-                <SLAIndicatorForContact conversation={conversation} compact className="w-full justify-start" />
+                <SLAIndicatorForContact conversation={conversation} compact={isCompactMode} className="w-full justify-start" />
                 <RetryFailureBadge message={conversation.lastMessage} compact />
               </div>
             )}
