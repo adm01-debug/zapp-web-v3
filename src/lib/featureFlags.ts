@@ -43,6 +43,9 @@ const DEFAULTS: Record<FeatureFlag, boolean> = {
   auto_retry_failed: true,
   whisper_mode: true,
   dark_mode: true,
+  v2_audio_recorder: false, // Início desligado para rollout seguro
+  advanced_transcription: false,
+  message_queue_retry: true,
 };
 
 let flagCache: Record<string, boolean> | null = null;
