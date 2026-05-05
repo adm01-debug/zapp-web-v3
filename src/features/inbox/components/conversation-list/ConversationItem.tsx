@@ -383,6 +383,7 @@ export function ConversationItem({
               {/* Linha 1: Nome + Empresa */}
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  {isPinned && <Pin className="w-3 h-3 text-primary flex-shrink-0" />}
                   <TruncatedTooltip fullText={primaryLabel}>
                     {(ref) => (
                       <span
@@ -401,7 +402,7 @@ export function ConversationItem({
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <span className="font-sans text-[11px] font-semibold uppercase text-[hsl(var(--muted-foreground))] tabular-nums tracking-[0.04em]">
-                    {formatDistanceToNow(conversation.updatedAt, { addSuffix: false, locale: ptBR })}
+                    {formatDistanceToNow(displayDate, { addSuffix: false, locale: ptBR })}
                   </span>
                   <Tooltip>
                     <TooltipTrigger asChild>
