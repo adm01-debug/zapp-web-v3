@@ -183,8 +183,14 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
     }
   }, [isRecording]);
 
-  const cancelRecording = useCallback(() => {
+  const cancelRecording = useCallback((saveForUndo = false) => {
     if (mediaRecorderRef.current && (isRecording || isPaused)) {
+      if (saveForUndo) {
+        // We'll grab the chunks before clearing
+        lastBlobRef.current = new Blob(chunksRef.current, { type: 'audio/webm' });
+        lastTranscriptionRef.current = transcription;
+      }
+
       mediaRecorderRef.current.stop();
       streamRef.current?.getTracks().forEach(track => track.stop());
       
@@ -198,7 +204,20 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       setDuration(0);
       setAudioUrl(null);
     }
-  }, [isRecording, isPaused]);
+  }, [isRecording, isPaused, transcription]);
+
+  const restoreRecording = useCallback(() => {
+    if (lastBlobRef.current) {
+      const url = URL.createObjectURL(lastBlobRef.current);
+      setAudioUrl(url);
+      setTranscription(lastTranscriptionRef.current);
+      // We can't really "resume" a hardware stream after it's been stopped and discarded by the browser
+      // but we can present the user with the recovered state.
+      onRecordingComplete?.(lastBlobRef.current, url);
+      return true;
+    }
+    return false;
+  }, [onRecordingComplete]);
 
   const uploadAudio = useCallback(async (blob: Blob, conversationId: string) => {
     const fileName = `${conversationId}/${Date.now()}.webm`;
