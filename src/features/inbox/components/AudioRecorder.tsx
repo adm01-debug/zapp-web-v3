@@ -256,35 +256,53 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
               className={cn("w-3 h-3 rounded-full shrink-0 shadow-lg", isPaused ? "bg-amber-500" : "bg-rose-500")}
             />
             <div className="flex-1 flex items-center gap-3">
-              {/* Level Meter / Waveform */}
-              <div className="h-10 flex-1 flex items-center gap-[2px] bg-muted/20 rounded-lg px-2 border border-border/50">
-                {Array.from({ length: isMobile ? 20 : 40 }).map((_, i) => (
+              {/* Waveform Visualization Grid */}
+              <div className="h-12 flex-1 flex items-center gap-[2px] bg-muted/30 rounded-xl px-3 border-2 border-border/40 relative overflow-hidden group">
+                <div className="absolute inset-0 grid grid-cols-12 opacity-10 pointer-events-none">
+                  {Array.from({length: 12}).map((_, i) => <div key={i} className="border-r border-foreground/50 h-full" />)}
+                </div>
+                
+                {Array.from({ length: isMobile ? 25 : 50 }).map((_, i) => (
                   <motion.div
                     key={i}
                     animate={{
-                      height: isPaused ? 4 : [4, (audioLevel * (30 + Math.random() * 10)) + 4, 4],
-                      opacity: isPaused ? 0.3 : 1
+                      height: isPaused ? 6 : [6, (audioLevel * (35 + Math.random() * 15)) + 6, 6],
+                      opacity: isPaused ? 0.4 : 1
                     }}
                     transition={{
-                      duration: 0.2,
+                      duration: 0.15,
                       repeat: isPaused ? 0 : Infinity,
-                      delay: i * 0.01,
+                      delay: i * 0.005,
                     }}
-                    className={cn("w-1 rounded-full", isPaused ? "bg-amber-500/50" : "bg-rose-500")}
+                    className={cn(
+                      "w-1 rounded-full transition-colors", 
+                      isPaused ? "bg-amber-500/60" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"
+                    )}
                   />
                 ))}
+                
+                {/* Real-time transcription preview (subtle) */}
+                {transcription && !isPaused && (
+                  <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 0.6 }}
+                    className="absolute bottom-1 left-3 right-3 text-[9px] truncate font-medium text-foreground/40 italic"
+                  >
+                    "{transcription}"
+                  </motion.div>
+                )}
               </div>
               
               {/* Timer & Status */}
-              <div className="flex flex-col items-end min-w-[70px]">
+              <div className="flex flex-col items-end min-w-[80px]">
                 <span className={cn(
-                  "text-sm font-mono font-bold tabular-nums",
+                  "text-lg font-mono font-black tabular-nums tracking-tight",
                   isPaused ? "text-amber-600" : "text-rose-600"
                 )}>
                   {formatDuration(duration)}
                 </span>
-                <span className="text-[8px] uppercase font-black tracking-tighter opacity-60">
-                  {isPaused ? 'Pausado' : 'Gravando'}
+                <span className="text-[9px] uppercase font-black tracking-widest opacity-70">
+                  {isPaused ? 'Pausa' : 'Ao vivo'}
                 </span>
               </div>
             </div>
