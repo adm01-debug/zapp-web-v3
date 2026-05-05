@@ -534,7 +534,15 @@ export function useRealtimeInbox() {
     handleSendAudio,
     refetch,
     setSelectedContact,
-    markAsRead: USE_EXTERNAL_DB ? (() => { /* noop em modo externo */ }) : markAsRead,
+    markAsRead: USE_EXTERNAL_DB ? (async (contactId: string) => {
+      try {
+        await supabase.functions.invoke('evolution-api', {
+          body: { action: 'read-messages', instanceName: 'wpp2', remoteJid: contactId }
+        });
+      } catch (err) {
+        log.error('Failed to mark external messages as read:', err);
+      }
+    }) : markAsRead,
     // Pagination
     loadOlderMessages,
     cancelLoadOlderMessages,
