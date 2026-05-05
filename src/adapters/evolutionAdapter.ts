@@ -198,7 +198,7 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
         lastMessageAt: msg.created_at,
         messageCount: 1,
         unreadCount: isUnread ? 1 : 0,
-        lastMessageContent: msg.content || msg.caption,
+        lastMessageContent: msg.content || msg.caption || (extractMessageType(msg.message_type).category !== 'text' ? `[${extractMessageType(msg.message_type).label}]` : ''),
         lastMessageDirection: msg.direction,
         instanceName: msg.instance_name,
         tags: msg.tags,
