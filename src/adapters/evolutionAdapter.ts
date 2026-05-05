@@ -16,13 +16,27 @@ export function jidToPhone(jid: string): string {
  * Convert an EvolutionMessage into the frontend's RealtimeMessage shape
  */
 export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessage {
+  const msgType = extractMessageType(evo.message_type);
+  
+  // Se não houver conteúdo ou legenda, e for mídia, usamos o label do tipo (ex: [Imagem])
+  let content = evo.content || evo.caption || '';
+  if (!content && msgType.category === 'media') {
+    content = `[${msgType.label}]`;
+  } else if (!content && msgType.category === 'location') {
+    content = '[Localização]';
+  } else if (!content && msgType.category === 'poll') {
+    content = '[Enquete]';
+  } else if (!content && msgType.category === 'interactive') {
+    content = '[Mensagem Interativa]';
+  }
+
   return {
     id: evo.id,
-    contact_id: evo.contact_id || evo.remote_jid, // use remote_jid as fallback ID
+    contact_id: evo.contact_id || evo.remote_jid,
     agent_id: evo.from_me ? 'system' : null,
-    content: evo.content || evo.caption || '',
+    content,
     sender: evo.from_me || evo.direction === 'outbound' ? 'agent' : 'contact',
-    message_type: mapMessageType(evo.message_type),
+    message_type: msgType.internalType,
     media_url: evo.media_url,
     is_read: evo.status === 'read',
     status: mapStatus(evo.status),
@@ -34,7 +48,7 @@ export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessa
     transcription: null,
     transcription_status: null,
     is_deleted: evo.deleted_at != null,
-    contactAvatar: null, // Será preenchido pelo hook useExternalMessages durante a hidratação
+    contactAvatar: null,
   };
 }
 
