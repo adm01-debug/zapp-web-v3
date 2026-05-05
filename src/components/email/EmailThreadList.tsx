@@ -149,10 +149,10 @@ export function EmailThreadList({
   return (
     <div className={cn('flex flex-col h-full', className)}>
       {/* Header */}
-      <div className="px-4 py-3 border-b flex items-center justify-between gap-2">
+      <div className="px-4 py-3 border-b flex items-center justify-between gap-2 bg-muted/20 backdrop-blur-sm">
         <div className="flex items-center gap-2 min-w-0">
-          <Inbox className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="font-medium text-sm">Inbox</span>
+          <Inbox className="h-4 w-4 text-primary shrink-0" />
+          <span className="font-bold text-sm tracking-tight font-display">Inbox</span>
           {unreadTotal > 0 && (
             <Badge className="h-4 text-[10px] px-1.5">{unreadTotal}</Badge>
           )}
