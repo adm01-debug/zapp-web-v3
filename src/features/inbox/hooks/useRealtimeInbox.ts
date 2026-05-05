@@ -230,9 +230,10 @@ export function useRealtimeInbox() {
       setIsOnline(status === 'online');
       
       const now = Date.now();
-      const lastUpdate = (window as any).__lastStatusUpdate || 0;
+      const appWindow = window as Window & { __lastStatusUpdate?: number };
+      const lastUpdate = appWindow.__lastStatusUpdate || 0;
       if (now - lastUpdate < 30000 && status !== 'offline') return;
-      (window as any).__lastStatusUpdate = now;
+      appWindow.__lastStatusUpdate = now;
 
       await supabase.from('profiles')
         .update({ 
