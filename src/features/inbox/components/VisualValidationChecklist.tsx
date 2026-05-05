@@ -34,7 +34,7 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
   }, [items]);
 
   const toggleItem = (id: string) => {
-    setItems(items.map(item => 
+    setItems(prev => prev.map(item => 
       item.id === id ? { ...item, isApproved: !item.isApproved } : item
     ));
   };
