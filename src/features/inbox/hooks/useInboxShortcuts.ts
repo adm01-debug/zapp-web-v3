@@ -8,6 +8,7 @@ interface UseInboxShortcutsProps {
   onArchive: () => void;
   onTransfer: () => void;
   onRefresh: () => void;
+  onSearchFocusChat?: () => void;
   enabled?: boolean;
 }
 
@@ -18,6 +19,7 @@ export function useInboxShortcuts({
   onArchive,
   onTransfer,
   onRefresh,
+  onSearchFocusChat,
   enabled = true,
 }: UseInboxShortcutsProps) {
   // Focus search: Cmd+K or Ctrl+K
@@ -51,5 +53,13 @@ export function useInboxShortcuts({
   useHotkeys('mod+r', (e) => {
     e.preventDefault();
     onRefresh();
+  }, { enabled });
+
+  // Chat Search: Cmd+F or Ctrl+F
+  useHotkeys('mod+f', (e) => {
+    if (onSearchFocusChat) {
+      e.preventDefault();
+      onSearchFocusChat();
+    }
   }, { enabled });
 }

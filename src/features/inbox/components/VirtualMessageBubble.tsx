@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, memo } from 'react';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('VirtualMessageBubble');
@@ -41,11 +41,11 @@ interface MessageBubbleProps {
   contactAvatar?: string;
 }
 
-export function MessageBubble({
+export const MessageBubble = memo(({
   message, onReply, onForward, onCopy, onInteractiveButtonClick,
   ttsLoading, ttsPlaying, ttsMessageId, onSpeak, onStopSpeak, scrollToMessage,
   instanceName, contactJid, contactAvatar,
-}: MessageBubbleProps) {
+}: MessageBubbleProps) => {
   const isSent = message.sender === 'agent';
   const { avatarUrl } = useContactAvatar(message.conversationId, message.contactAvatar || contactAvatar);
   
@@ -141,7 +141,7 @@ export function MessageBubble({
       </div>
     </motion.div>
   );
-}
+});
 
 function ActionButton({ icon, title, onClick }: { icon: React.ReactNode; title: string; onClick: () => void }) {
   return (

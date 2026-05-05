@@ -56,7 +56,7 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
       initial={{ opacity: 0, x: 300 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 300 }}
-      className="fixed right-0 top-0 bottom-0 w-[380px] bg-background/95 backdrop-blur-xl border-l border-border z-[100] shadow-2xl flex flex-col font-sans"
+      className="fixed right-0 top-0 bottom-0 w-[380px] bg-background/95 backdrop-blur-xl border-l border-border z-[45] shadow-2xl flex flex-col font-sans"
     >
       <div className="p-6 border-b border-border/50 bg-muted/20">
         <div className="flex items-center justify-between mb-4">
