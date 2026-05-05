@@ -65,6 +65,7 @@ export function ChatHeaderToolbar({
   activeTool, showAIAssistant, showDetails, showSummaryPanel, isSummaryLoading,
   onOpenSearch, onSetActiveTool, onToggleAIAssistant, onToggleDetails, onGenerateSummary,
   failuresOnly, onToggleFailuresOnly, failuresCount = 0,
+  onOpenValidation,
 }: ChatHeaderToolbarProps) {
   return (
     <>
