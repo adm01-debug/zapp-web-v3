@@ -3,23 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  History as HistoryIcon, User, Activity, Clock, Shield, 
-  ExternalLink, Search, Filter, ChevronLeft, ChevronRight
+  History as HistoryIcon, User, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface AuditLog {
-  id: string;
-  status: string;
-  requested_at: string;
-  completed_at: string | null;
-  requested_by: string | null;
-  result: any;
-}
+import { emailApi, type EmailRevalidationJob } from '@/services/email/emailApi';
 
 export default function AdminEmailAuditPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logs, setLogs] = useState<EmailRevalidationJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -31,14 +21,10 @@ export default function AdminEmailAuditPage() {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      const { data, count, error } = await (supabase as any)
-        .from('email_revalidation_jobs')
-        .select('*', { count: 'exact' })
-        .order('requested_at', { ascending: false })
-        .range(from, to);
+      const { data, count, error } = await emailApi.getAuditLogs(from, to);
 
       if (error) throw error;
-      setLogs((data as AuditLog[]) || []);
+      setLogs((data as EmailRevalidationJob[]) || []);
       setTotal(count || 0);
     } catch (error) {
       console.error('Erro ao carregar auditoria:', error);
