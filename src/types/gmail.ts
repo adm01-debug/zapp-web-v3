@@ -56,7 +56,7 @@ export interface EmailThread {
   tags?:           string[];
 }
 
-export type EmailThread = EmailThread;
+// Duplicate identifier 'EmailThread' removed
 
 export interface EmailDraft {
   id:             string;
