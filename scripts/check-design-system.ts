@@ -26,7 +26,7 @@ interface Violation {
   priority: 'High' | 'Medium' | 'Low';
 }
 
-const variantPrefixRegex = new RegExp(`^(?:${VARIANTS.join('|')}):+`, 'g');
+const variantPrefixRegex = new RegExp(`^(?:(?:${VARIANTS.join('|')}):)+`, 'g');
 
 function getSuggestion(label: string, match: string): { suggestion: string, priority: Violation['priority'], replacement?: string, cleanMatch: string, prefix: string } {
   const prefixMatch = match.match(variantPrefixRegex);
@@ -34,12 +34,15 @@ function getSuggestion(label: string, match: string): { suggestion: string, prio
   const cleanMatch = match.replace(variantPrefixRegex, '').trim();
 
   if (label === 'Raw Hex' || label === 'Arbitrary Color') {
-    if (cleanMatch.includes('white') || cleanMatch.includes('#ffffff') || cleanMatch.includes('#FFF')) {
-       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-background' : (cleanMatch.startsWith('text-') ? 'text-foreground' : undefined);
+    const isWhite = cleanMatch.includes('white') || cleanMatch.toLowerCase().includes('#ffffff') || cleanMatch.toLowerCase().includes('#fff');
+    const isBlack = cleanMatch.includes('black') || cleanMatch.toLowerCase().includes('#000000') || cleanMatch.toLowerCase().includes('#000');
+    
+    if (isWhite) {
+       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-background' : (cleanMatch.startsWith('text-') ? 'text-foreground' : (cleanMatch.startsWith('border-') ? 'border-border' : undefined));
        const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
        return { cleanMatch, prefix, suggestion: `${prefix}bg-background or ${prefix}text-foreground`, priority: 'High', replacement };
     }
-    if (cleanMatch.includes('black') || cleanMatch.includes('#000000') || cleanMatch.includes('#000')) {
+    if (isBlack) {
        const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-foreground' : (cleanMatch.startsWith('text-') ? 'text-background' : undefined);
        const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
        return { cleanMatch, prefix, suggestion: `${prefix}bg-foreground or ${prefix}text-background`, priority: 'High', replacement };
@@ -90,8 +93,9 @@ function scanDir(dir: string, results: Violation[]) {
       if (line.includes('@ds-ignore')) return;
 
       FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
-        // Build a regex that includes variants
-        const fullPattern = new RegExp(`(?:${VARIANTS.join('|')}:)*${pattern.source}`, 'g');
+        // Build a regex that includes multiple variants
+        const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
+        const fullPattern = new RegExp(`${variantsPart}${pattern.source}`, 'g');
         const matches = line.matchAll(fullPattern);
         
         for (const match of matches) {
