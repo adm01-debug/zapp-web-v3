@@ -14,11 +14,12 @@ export interface Violation {
   suggestion?: string;
   replacement?: string;
   priority: 'High' | 'Medium' | 'Low';
+  context?: string;
 }
 
 const variantPrefixRegex = new RegExp(`^(?:(?:${VARIANTS.join('|')}):)+`, 'g');
 
-export function getSuggestion(label: string, match: string, fileName?: string): { suggestion: string, priority: Violation['priority'], replacement?: string, cleanMatch: string, prefix: string } {
+export function getSuggestion(label: string, match: string, fileName?: string, context?: string): { suggestion: string, priority: Violation['priority'], replacement?: string, cleanMatch: string, prefix: string } {
   const prefixMatch = match.match(variantPrefixRegex);
   const prefix = prefixMatch ? prefixMatch[0] : '';
   const cleanMatch = match.replace(variantPrefixRegex, '').trim();
@@ -159,12 +160,30 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
   }
 
   if (label === 'Literal Font') {
-    if (cleanMatch === 'font-sans') {
-      return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
-    }
+    const isTechnicalContext = context && (
+      /\b(ids?|uuid|timestamp|date|created_at|updated_at|logs?|metrics?|counts?|phone|cnpj|cpf|values?|prices?|amounts?|charts?|graphs?|axis|ticks?|tokens?|hex|hash|sha|vers?|versions?|v\d+|métrica|valor|preço|gráfico|eixo|versão)\b|%/i.test(context) ||
+      /<(code|pre|samp|kbd)\b/i.test(context) ||
+      /\/\/\s*@technical/i.test(context)
+    );
+    // Only trust file name for very specific technical files
+    const isTechnicalFile = fileName && /chart\.tsx|graph\.tsx|metrics?\.tsx|log\.tsx/i.test(fileName);
+    
     if (cleanMatch === 'font-mono') {
+      if (isTechnicalContext || isTechnicalFile) {
+        return { cleanMatch, prefix, suggestion: 'VALID: Technical data (ID/Metric/Log)', priority: 'Low' };
+      }
       return { cleanMatch, prefix, suggestion: 'Ensure font-mono is only for technical data (IDs, logs, metrics)', priority: 'Medium' };
     }
+
+    if (cleanMatch === 'font-sans') {
+      // Check if it's an intentional override (e.g., parent is mono on same line or commented)
+      const isOverride = context && (/(font-mono|font-serif|font-display|mono|serif|display)/i.test(context) || /@override/i.test(context));
+      if (isOverride) {
+        return { cleanMatch, prefix, suggestion: 'VALID: Intentional font reset', priority: 'Low' };
+      }
+      return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
+    }
+    
     return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low', replacement: '' };
   }
 
@@ -182,11 +201,13 @@ export function scanContent(content: string, fileName: string, results: Violatio
       const fullPattern = new RegExp(`${variantsPart}${pattern.source}`, 'g');
       
       let match;
+      const seenOnLine = new Set<string>();
       while ((match = fullPattern.exec(line)) !== null) {
         const rawMatch = match[0].trim();
-        if (!rawMatch) continue;
+        if (!rawMatch || seenOnLine.has(rawMatch)) continue;
+        seenOnLine.add(rawMatch);
 
-        const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch, fileName);
+        const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch, fileName, line);
         
         const matchStart = match.index;
         if (matchStart > 1 && line.substring(matchStart - 2, matchStart) === '--') continue;
@@ -203,7 +224,8 @@ export function scanContent(content: string, fileName: string, results: Violatio
             label,
             suggestion,
             replacement,
-            priority
+            priority,
+            context: line.trim()
           });
         }
       }
