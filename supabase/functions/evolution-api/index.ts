@@ -83,8 +83,10 @@ serve(async (req) => {
     proxyToEvolution(evolutionApiUrl, evolutionApiKey, corsHeaders, path, method, body, undefined, idemKey);
 
   try {
-    const body = await json();
-    const instance = body.instanceName || body.instance;
+    const { isMultipart, data: body } = await getParsedBody();
+    const instance = isMultipart 
+      ? ((body as FormData).get('instanceName') || (body as FormData).get('instance'))
+      : ((body as Record<string, unknown>).instanceName || (body as Record<string, unknown>).instance);
 
     // Pause guard: bloqueia operações que usam instância quando ela está pausada.
     // Permite ações de gestão da instância em si para o admin poder ver status.
