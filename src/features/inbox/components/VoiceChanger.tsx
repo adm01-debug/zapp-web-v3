@@ -118,7 +118,7 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
       formData.append('audio', activeBlob, 'audio.webm');
       formData.append('voice_preset', voice.id); 
       formData.append('task_id', taskId!);
-      if (showCloneWarning) formData.append('authorized', 'true');
+      formData.append('authorized', isCloned ? 'true' : 'false');
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-changer`,
