@@ -1,5 +1,5 @@
 # Design System Violations Report
-Generated on: 5/6/2026, 5:06:21 PM
+Generated on: 5/6/2026, 5:09:28 PM
 Total Violations: 898
 
 | File | Line | Violation Type | Value |
@@ -454,7 +454,7 @@ Total Violations: 898
 | `src/components/ui/skip-link.tsx` | 91 | Literal Font | `font-mono` |
 | `src/components/ui/tooltip.tsx` | 78 | Literal Font | `font-mono` |
 | `src/components/voice/ElevenLabsDialogue.tsx` | 111 | Literal Font | `font-mono` |
-| `src/components/voice/VoiceSearchOverlay.tsx` | 132 | Literal Font | `font-mono` |
+| `src/components/voice/VoiceSearchOverlay.tsx` | 131 | Literal Font | `font-mono` |
 | `src/features/admin/components/AIUsageDashboard.tsx` | 86 | Hex Color | `#666` |
 | `src/features/admin/components/AIUsageDashboard.tsx` | 91 | Hex Color | `#666` |
 | `src/features/admin/components/AIUsageLogsTab.tsx` | 53 | Hex Color | `#666` |
