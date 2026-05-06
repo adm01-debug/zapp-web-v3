@@ -1,5 +1,5 @@
 import { DS_CONFIG } from './ds-config';
-import { readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'fs';
 import { execSync } from 'child_process';
 
 const testFile = 'src/DS_TEST_FILE.tsx';
@@ -31,13 +31,17 @@ console.log('Running Design System Auditor Tests...');
 try {
   writeFileSync(testFile, testContent);
   
-  // Run audit and capture results
+  // Run audit
   execSync('bun run scripts/check-design-system.ts', { stdio: 'inherit' });
   
   const report = readFileSync('design-system-audit.md', 'utf-8');
-  console.log('DEBUG: Report Content length:', report.length);
-  console.log('DEBUG: Found bg-[#ffffff] in report:', report.includes('bg-[#ffffff]'));
   
+  // Check if test file is in report
+  if (!report.includes('src/DS_TEST_FILE.tsx')) {
+    console.log('DEBUG: Full Report Contents:\n', report);
+    throw new Error('Test Failed: src/DS_TEST_FILE.tsx not found in report.');
+  }
+
   const expectedMatches = [
     'bg-[#ffffff]',
     'text-black',
@@ -51,7 +55,6 @@ try {
 
   expectedMatches.forEach(match => {
     if (!report.includes(match)) {
-      console.error(`Missing match: ${match}`);
       throw new Error(`Test Failed: Expected match "${match}" not found in report.`);
     }
   });
@@ -79,5 +82,5 @@ try {
   console.error('❌ Tests Failed:', error.message);
   process.exit(1);
 } finally {
-  if (require('fs').existsSync(testFile)) unlinkSync(testFile);
+  if (existsSync(testFile)) unlinkSync(testFile);
 }
