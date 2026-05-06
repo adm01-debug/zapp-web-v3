@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { RetryFailureBadge } from './RetryFailureBadge';
+import { toValidDate } from '@/utils/date/normalize';
 
 export function ChannelBadge({ type }: { type?: string | null }) {
   const iconClass = 'w-2.5 h-2.5 text-primary-foreground';
