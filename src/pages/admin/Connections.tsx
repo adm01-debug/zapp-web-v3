@@ -147,7 +147,6 @@ export default function AdminConnectionsPage() {
 
     try {
       const existing: any = connections.find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
-
       const insertPayload = currentUserId ? { ...payload, created_by: currentUserId } : payload;
 
       const { data, error, status } = existing
@@ -155,38 +154,37 @@ export default function AdminConnectionsPage() {
         : await supabase.from('system_connections' as any).insert(insertPayload).select();
 
       if (error) {
-        const msg = `${error.message}${error.code ? ` (código: ${error.code})` : ''}${error.details ? ` — ${error.details}` : ''}${error.hint ? ` | hint: ${error.hint}` : ''}`;
+        const msg = `[${payload.provider}] ${error.message}${error.code ? ` (código: ${error.code})` : ''}${error.details ? ` — ${error.details}` : ''}${status ? ` | Status: ${status}` : ''}`;
         setSaveError(msg);
         toast({ title: 'Erro ao salvar', description: msg, variant: 'destructive' });
         return;
       }
 
-      if (!data || data.length === 0) {
-        // Verifica se realmente persistiu via SELECT (pode ser RLS bloqueando o RETURNING)
-        const { data: verify } = await supabase
-          .from('system_connections' as any)
-          .select('id')
-          .eq('provider', 'supabase_external')
-          .limit(1);
+      // Validação Pós-Save (SELECT para confirmar persistência no Self-Hosted)
+      const { data: verify, error: verifyError } = await supabase
+        .from('system_connections' as any)
+        .select('id, updated_at')
+        .eq('provider', 'supabase_external')
+        .eq('name', 'FATOR X')
+        .maybeSingle();
 
-        if (!verify || verify.length === 0) {
-          const msg = `A requisição retornou ${status} mas nenhum registro foi persistido. Provavelmente as políticas de RLS estão bloqueando a escrita. Verifique se você está autenticado como admin.`;
-          setSaveError(msg);
-          toast({ title: 'Não foi salvo', description: msg, variant: 'destructive' });
-          return;
-        }
+      if (verifyError || !verify) {
+        const msg = `A requisição retornou ${status}, mas o registro não pôde ser validado no banco após o save. Verifique as políticas de RLS ou a latência do banco. ${verifyError?.message ?? ''}`;
+        setSaveError(msg);
+        toast({ title: 'Confirmação falhou', description: msg, variant: 'destructive' });
+        return;
       }
 
       setExternalUrl(draftUrl);
       setExternalKey(draftKey);
       setEditOpen(false);
       toast({
-        title: 'Credenciais salvas',
-        description: 'Para o cliente em runtime usar a nova chave, atualize também os secrets VITE_EXTERNAL_SUPABASE_URL/KEY e republique.',
+        title: 'Credenciais salvas e validadas',
+        description: `Registro confirmado em ${new Date(verify.updated_at).toLocaleTimeString()}. Atualize os secrets VITE_EXTERNAL_SUPABASE_URL/KEY.`,
       });
       await fetchConnections();
     } catch (e: any) {
-      const msg = e?.message ?? 'Falha desconhecida ao processar a requisição.';
+      const msg = `[Exceção] ${e?.message ?? 'Falha desconhecida ao processar a requisição.'}`;
       setSaveError(msg);
       toast({ title: 'Erro inesperado', description: msg, variant: 'destructive' });
     } finally {
