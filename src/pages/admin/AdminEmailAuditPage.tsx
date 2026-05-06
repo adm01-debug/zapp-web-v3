@@ -18,7 +18,7 @@ interface AuditLog {
   result: any;
 }
 
-export default function AdminGmailAuditPage() {
+export default function AdminEmailAuditPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

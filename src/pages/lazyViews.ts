@@ -74,8 +74,8 @@ export const AdminRealtimeMonitorPage = lazyWithRetry(() => import('@/pages/Admi
 export const AdminDispatchErrorsHistoryPage = lazyWithRetry(() => import('@/pages/AdminDispatchErrorsHistoryPage'));
 export const AdminInboxSyncStatusPage = lazyWithRetry(() => import('@/pages/admin/AdminInboxSyncStatusPage'));
 export const AdminEvoApiHealthPage = lazyWithRetry(() => import('@/pages/admin/AdminEvoApiHealthPage'));
-export const AdminGmailStatusPage = lazyWithRetry(() => import('@/pages/admin/AdminGmailStatusPage'));
-export const AdminGmailAuditPage = lazyWithRetry(() => import('@/pages/admin/AdminGmailAuditPage'));
+export const AdminEmailStatusPage = lazyWithRetry(() => import('@/pages/admin/AdminEmailStatusPage'));
+export const AdminEmailAuditPage = lazyWithRetry(() => import('@/pages/admin/AdminEmailAuditPage'));
 
 export const InboxPage = lazyWithRetry(() => import('@/pages/inbox/InboxPage'));
 export const SLAHistory = lazyWithRetry(() => import('@/pages/SLAHistory'));
