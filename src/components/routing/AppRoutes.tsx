@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/features/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
