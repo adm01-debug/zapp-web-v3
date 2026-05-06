@@ -110,12 +110,12 @@ export default function AdminStressTestPage() {
         result = await evo.sendAudioMessage(instance, phone, sample.url!, { 
           encoding: true,
           idempotencyKey: `stress_${idx}_${Date.now()}`
-        } as any);
+        });
         break;
       case 'sticker':
         result = await evo.sendStickerMessage(instance, phone, sample.url!, {
           idempotencyKey: `stress_${idx}_${Date.now()}`
-        } as any);
+        });
         break;
       case 'location':
         result = await evo.sendLocationMessage({
