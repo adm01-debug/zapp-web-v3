@@ -110,8 +110,7 @@ export const analyticsNav: readonly NavItemConfig[] = [
 
 // ── Connections & Integrations ────────────────────────────
 export const connectionsNav: readonly NavItemConfig[] = [
-  { id: 'connections', icon: Link2, label: 'Conexões' },
-  { id: 'integrations', icon: Plug, label: 'Integrações' },
+  { id: 'connections', icon: Plug, label: 'Conexões & Integrações' },
   { id: 'omni-inbox', icon: Inbox, label: 'Omnichannel' },
   { id: 'voip', icon: PhoneCall, label: 'VoIP' },
   { id: 'meta-capi', icon: Activity, label: 'Meta CAPI' },
