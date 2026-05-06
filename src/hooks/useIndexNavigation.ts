@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 import { useGlobalKeyboard } from '@/components/keyboard/GlobalKeyboardProvider';
 import { User } from '@supabase/supabase-js';
@@ -13,6 +14,7 @@ export function useIndexNavigation(user: User | null, loading: boolean) {
     canGoForward, 
     breadcrumbTrail 
   } = useNavigationHistory('inbox');
+  const [searchParams] = useSearchParams();
   
   const navDirectionRef = useRef<'forward' | 'back'>('forward');
   const deepLinkViewHandledRef = useRef(false);
@@ -52,12 +54,19 @@ export function useIndexNavigation(user: User | null, loading: boolean) {
   // Deep-link: ?view=<viewId>
   useEffect(() => {
     if (deepLinkViewHandledRef.current || loading || !user) return;
-    const params = new URLSearchParams(window.location.search);
-    const targetView = params.get('view');
-    if (targetView && targetView !== currentView) {
+    const targetView = searchParams.get('view');
+    
+    // Se o targetView for uma rota que agora é interna (como connections ou integrations)
+    // mapeamos para o novo hub unificado.
+    let resolvedView = targetView;
+    if (targetView === 'connections' || targetView === 'integrations' || targetView === 'bridge') {
+      resolvedView = 'connections'; // 'connections' é o ID do Hub unificado
+    }
+
+    if (resolvedView && resolvedView !== currentView) {
       deepLinkViewHandledRef.current = true;
-      setCurrentView(targetView);
-    } else if (targetView) {
+      setCurrentView(resolvedView);
+    } else if (resolvedView) {
       deepLinkViewHandledRef.current = true;
     }
   }, [loading, user, currentView, setCurrentView]);

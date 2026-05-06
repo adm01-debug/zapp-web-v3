@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/features/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
@@ -136,6 +136,8 @@ export function AppRoutes() {
         <Route path="/admin/email-audit" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminEmailAuditPage /></ProtectedRoute>} />
         <Route path="/admin/audit-evidence" element={<ProtectedRoute requiredRoles={['admin']}><AuditEvidenceDashboard /></ProtectedRoute>} />
         <Route path="/admin/dev-diagnostics" element={<ProtectedRoute requiredRoles={['dev']}><AdminDevDiagnosticsPage /></ProtectedRoute>} />
+        <Route path="/connections" element={<Navigate to="/?view=connections&tab=connections" replace />} />
+        <Route path="/integrations" element={<Navigate to="/?view=connections&tab=integrations" replace />} />
         <Route path="*" element={<NotFound />} />
 
       </Routes>
