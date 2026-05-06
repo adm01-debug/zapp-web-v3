@@ -28,9 +28,47 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
 
   // Logic to determine base semantic tokens based on intent
   if (label === 'Raw Hex' || label === 'Arbitrary Color' || label === 'Literal Color') {
-    const isBg = cleanMatch.startsWith('bg-');
-    const isText = cleanMatch.startsWith('text-');
-    const isBorder = cleanMatch.startsWith('border-');
+    const isBg = cleanMatch.startsWith('bg-') || cleanMatch.startsWith('hover:bg-');
+    const isText = cleanMatch.startsWith('text-') || cleanMatch.startsWith('hover:text-');
+    const isBorder = cleanMatch.startsWith('border-') || cleanMatch.startsWith('hover:border-');
+
+    // Handle Hex values by mapping them to closest tokens
+    if (label === 'Raw Hex' || (label === 'Arbitrary Color' && cleanMatch.includes('#'))) {
+      const hex = (cleanMatch.match(/#[0-9a-fA-F]{3,6}/) || [])[0]?.toLowerCase();
+      if (hex) {
+        // Special case for white/black hex
+        if (['#fff', '#ffffff'].includes(hex)) {
+           const baseReplacement = isBg ? 'bg-background' : (isText ? 'text-foreground' : (isBorder ? 'border-border' : undefined));
+           if (baseReplacement) return { cleanMatch, prefix, suggestion: baseReplacement, priority: 'High', replacement: `${prefix}${baseReplacement}` };
+        }
+        if (['#000', '#000000'].includes(hex)) {
+           const baseReplacement = isBg ? 'bg-foreground' : (isText ? 'text-background' : (isBorder ? 'border-border' : undefined));
+           if (baseReplacement) return { cleanMatch, prefix, suggestion: baseReplacement, priority: 'High', replacement: `${prefix}${baseReplacement}` };
+        }
+
+        // Generic hex to semantic color mapping
+        const hexMap: Record<string, string> = {
+          '#ef4444': 'destructive', '#dc2626': 'destructive', '#f87171': 'destructive', '#fecaca': 'destructive', '#fef2f2': 'destructive',
+          '#f59e0b': 'warning', '#eab308': 'warning', '#facc15': 'warning', '#fde047': 'warning', '#fef9c3': 'warning',
+          '#3b82f6': 'primary', '#2563eb': 'primary', '#60a5fa': 'primary',
+          '#10b981': 'success', '#059669': 'success', '#34d399': 'success', '#22c55e': 'success',
+          '#8b5cf6': 'accent', '#7c3aed': 'accent',
+          '#6b7280': 'muted', '#9ca3af': 'muted', '#d1d5db': 'muted', '#f3f4f6': 'muted'
+        };
+
+        if (hexMap[hex]) {
+          const semantic = hexMap[hex];
+          let baseReplacement = '';
+          if (isBg) baseReplacement = `bg-${semantic}`;
+          else if (isText) baseReplacement = `text-${semantic}`;
+          else if (isBorder) baseReplacement = `border-${semantic}`;
+
+          if (baseReplacement) {
+            return { cleanMatch, prefix, suggestion: baseReplacement, priority: 'Medium', replacement: `${prefix}${baseReplacement}` };
+          }
+        }
+      }
+    }
 
     if (isWhite) {
        const baseReplacement = isBg ? 'bg-background' : (isText ? 'text-foreground' : (isBorder ? 'border-border' : undefined));
@@ -45,45 +83,20 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
 
     // Mapping logic for standard literal colors to semantic tokens
     const semanticMap: Record<string, string> = {
-      'red': 'destructive',
-      'rose': 'destructive',
-      'pink': 'destructive', // Pink/Rose usually map to destructive/accent; user specifically asked for destructive mapping
-      'amber': 'warning',
-      'yellow': 'warning',
-      'orange': 'warning',
-      'blue': 'info',
-      'sky': 'info',
-      'cyan': 'info',
-      'teal': 'success',
-      'emerald': 'success',
-      'green': 'success',
-      'lime': 'success',
-      'slate': 'muted',
-      'gray': 'muted',
-      'zinc': 'muted',
-      'neutral': 'muted',
-      'stone': 'muted',
-      'purple': 'primary',
-      'violet': 'primary',
-      'indigo': 'primary'
+      'red': 'destructive', 'rose': 'destructive', 'pink': 'destructive',
+      'amber': 'warning', 'yellow': 'warning', 'orange': 'warning',
+      'blue': 'primary', 'sky': 'info', 'cyan': 'info',
+      'teal': 'success', 'emerald': 'success', 'green': 'success', 'lime': 'success',
+      'slate': 'muted', 'gray': 'muted', 'zinc': 'muted', 'neutral': 'muted', 'stone': 'muted',
+      'purple': 'accent', 'violet': 'accent', 'indigo': 'primary'
     };
 
     for (const [literal, semantic] of Object.entries(semanticMap)) {
       if (cleanMatch.includes(literal)) {
         let baseReplacement = '';
-        if (isBg) {
-          baseReplacement = `bg-${semantic}`;
-        } else if (isText) {
-          // Check if we should use -foreground for semantic tokens
-          const useForeground = ['primary', 'secondary', 'destructive', 'accent', 'success', 'warning', 'info'].includes(semantic);
-          baseReplacement = useForeground ? `text-${semantic}-foreground` : `text-${semantic}`;
-          // Fallback: simple text-semantic is often better if we don't want high contrast
-          // But usually semantic tokens come with a foreground.
-          // Let's stick to simple text-semantic unless it's a known pair.
-          baseReplacement = `text-${semantic}`;
-        } else if (isBorder) {
-          baseReplacement = `border-${semantic}`;
-        }
+        if (isBg) baseReplacement = `bg-${semantic}`;
+        else if (isText) baseReplacement = `text-${semantic}`;
+        else if (isBorder) baseReplacement = `border-${semantic}`;
 
         if (baseReplacement) {
           const replacement = `${prefix}${baseReplacement}`;
@@ -103,8 +116,6 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
       return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
     }
     if (cleanMatch === 'font-mono') {
-      // User asked to remove it where there is divergence. 
-      // Often used in tags or small labels that should probably be standard.
       return { cleanMatch, prefix, suggestion: 'Remove literal font; inherit from global typography', priority: 'Medium', replacement: '' };
     }
     return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low', replacement: '' };
@@ -265,28 +276,40 @@ if (require.main === module) {
 
     Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
       const originalContent = readFileSync(file, 'utf-8');
-      const lines = originalContent.split('\n');
+      let currentContent = originalContent;
       let hasChanges = false;
       let fileSubstitutions = 0;
       
-      // Sort violations by line descending to avoid offset issues if we were adding lines, 
-      // but here we just replace content within same line.
-      fileViolations.forEach(v => {
-        if (v.replacement !== undefined && lines[v.line-1].includes(v.match)) {
-          const oldLine = lines[v.line-1];
-          lines[v.line-1] = oldLine.replace(v.match, v.replacement);
+      // Sort violations by match length descending to replace longer matches first (more specific)
+      const sortedViolations = [...fileViolations].sort((a, b) => b.match.length - a.match.length);
+
+      sortedViolations.forEach(v => {
+        if (v.replacement !== undefined && currentContent.includes(v.match)) {
+          // Use global replacement for each match in the file to catch duplicates
+          const escapedMatch = v.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`(?<!-)${escapedMatch}(?!-)`, 'g');
           
-          if (oldLine !== lines[v.line-1]) {
+          const newContent = currentContent.replace(regex, v.replacement);
+          
+          if (currentContent !== newContent) {
             if (dryRun) {
-              console.log(`\nDIFF in ${file}:${v.line}`);
-              console.log(`- ${oldLine.trim()}`);
-              console.log(`+ ${lines[v.line-1].trim()}`);
+              console.log(`\nDIFF in ${file} for match "${v.match}" -> "${v.replacement}"`);
             }
+            currentContent = newContent;
             hasChanges = true;
             fileSubstitutions++;
           }
         }
       });
+      
+      if (hasChanges) {
+        totalFilesChanged++;
+        totalSubstitutions += fileSubstitutions;
+        if (!dryRun) {
+          writeFileSync(file, currentContent);
+          console.log(`✅ Updated ${file} (${fileSubstitutions} unique patterns replaced)`);
+        }
+      }
       
       if (hasChanges) {
         totalFilesChanged++;
