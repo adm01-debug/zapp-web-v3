@@ -211,8 +211,35 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
         {isSent && onVoiceChange && (
           <VoiceChanger 
             audioUrl={resolvedUrl}
+            messageId={messageId}
+            conversationId={conversationId}
             onVoiceChanged={(blob) => onVoiceChange(messageId, blob)}
           />
+        )}
+
+        {voiceStatus && voiceStatus !== 'completed' && (
+          <div className="flex items-center gap-2 ml-1">
+            {voiceStatus === 'processing' ? (
+              <Badge variant="outline" className="animate-pulse bg-primary/10 text-primary border-primary/20 text-[9px] h-5">
+                <Wand2 className="w-2.5 h-2.5 mr-1" /> Alterando voz...
+              </Badge>
+            ) : voiceStatus === 'pending' ? (
+              <Badge variant="outline" className="bg-muted text-muted-foreground text-[9px] h-5">
+                Na fila...
+              </Badge>
+            ) : voiceStatus === 'failed' ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="destructive" className="text-[9px] h-5 cursor-pointer">
+                    <AlertCircle className="w-2.5 h-2.5 mr-1" /> Falhou
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{voiceError || 'Erro na conversão'}</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
+          </div>
         )}
 
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
