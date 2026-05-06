@@ -349,6 +349,14 @@ export function ConnectionCard({
           instanceId={connection.instance_id}
         />
       )}
+      {connection.instance_id && (
+        <ConnectionAuditDialog
+          open={auditDialogOpen}
+          onOpenChange={setAuditDialogOpen}
+          instanceId={connection.instance_id}
+          connectionName={connection.name}
+        />
+      )}
     </motion.div>
   );
 }
