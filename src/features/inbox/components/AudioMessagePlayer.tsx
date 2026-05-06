@@ -11,6 +11,7 @@ import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogg
 import { AudioVolumeControl } from './AudioVolumeControl';
 import { dbFrom, dbTable } from '@/integrations/datasource/db';
 import { VoiceChanger } from './VoiceChanger';
+import { Badge } from '@/components/ui/badge';
 
 interface AudioMessagePlayerProps {
   audioUrl: string;
