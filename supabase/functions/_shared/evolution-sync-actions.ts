@@ -19,6 +19,12 @@ export async function syncContacts(
       entity_type: 'whatsapp_connection',
       details: { instance_id: instanceName, status: contactsResponse.status, error: errText }
     });
+    await supabase.from('warroom_alerts').insert({
+      alert_type: 'warning',
+      title: `Falha na sincronização: ${instanceName}`,
+      message: `Erro ao buscar contatos da Evolution API: ${errText.slice(0, 100)}`,
+      source: 'evolution_sync'
+    });
     throw new Error(`Evolution API error [${contactsResponse.status}]: ${errText}`);
   }
 
