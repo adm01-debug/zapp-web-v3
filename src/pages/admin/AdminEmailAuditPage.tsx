@@ -27,11 +27,7 @@ export default function AdminEmailAuditPage() {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      const { data, count, error } = await supabase
-        .from('email_revalidation_jobs')
-        .select('*', { count: 'exact' })
-        .order('requested_at', { ascending: false })
-        .range(from, to);
+      const { data, count, error } = await emailApi.getAuditLogs(from, to);
 
       if (error) throw error;
       setLogs((data as EmailRevalidationJob[]) || []);
