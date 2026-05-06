@@ -122,7 +122,7 @@ function scan(): Hit[] {
     SUB_RE.lastIndex = 0;
     while ((m = SUB_RE.exec(src)) !== null) {
       const binding = m[1];
-      if (!new RegExp(`table:\\s*['"]${TARGET_TABLE}['"]`).test(binding)) continue;
+      if (!new RegExp(`table:\\s*(['"]${TARGET_TABLE}['"]|dbTable\\(['"]${TARGET_TABLE}['"]\\))`).test(binding)) continue;
       const evMatch = binding.match(/event:\s*['"]([^'"]+)['"]/);
       evs.push(evMatch ? evMatch[1] : "*");
     }
