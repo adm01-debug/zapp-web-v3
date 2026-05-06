@@ -220,7 +220,8 @@ export function scanContent(content: string, fileName: string, results: Violatio
             label,
             suggestion,
             replacement,
-            priority
+            priority,
+            context: line.trim()
           });
         }
       }
