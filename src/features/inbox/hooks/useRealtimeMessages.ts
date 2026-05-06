@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { getLogger } from '@/lib/logger';
 import { sendMessageToContact } from './realtime/messageSender';
@@ -222,9 +223,19 @@ export function useRealtimeMessages() {
     logMessagesSubscribe('useRealtimeMessages', { event: 'INSERT', table: dbTable('messages') });
     logMessagesSubscribe('useRealtimeMessages', { event: 'UPDATE', table: dbTable('messages') });
     const channel = supabase.channel('messages-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: dbTable('messages') },
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: dbTable('messages'),
+        filter: `instance_name=eq.${DEFAULT_WHATSAPP_INSTANCE}` 
+      },
         wrapMessagesHandler('useRealtimeMessages', handleNewMessage))
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: dbTable('messages') },
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: dbTable('messages'),
+        filter: `instance_name=eq.${DEFAULT_WHATSAPP_INSTANCE}`
+      },
         wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate))
       .subscribe((status) => { log.debug('Subscription status', { status }); });
     return () => { supabase.removeChannel(channel); };
