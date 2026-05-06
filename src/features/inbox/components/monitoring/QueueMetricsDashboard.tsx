@@ -141,7 +141,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               <XAxis dataKey="name" fontSize={10} />
               <YAxis fontSize={10} />
               <RechartsTooltip />
-              <Line type="monotone" dataKey="latency" name="Latência" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="latency" name="Latência" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
