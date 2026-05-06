@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useInboxFilters } from '../useInboxFilters';
 import { MemoryRouter } from 'react-router-dom';
@@ -8,6 +8,7 @@ import React from 'react';
 // Mocking dependencies
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
+    rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
@@ -57,6 +58,30 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 describe('useInboxFilters - Scope Logic', () => {
+  beforeEach(() => {
+    vi.stubGlobal('location', { search: '', hash: '' });
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn()
+    });
+  });
+
+  it('reads scope from URL correctly and overrides localStorage', () => {
+    vi.stubGlobal('location', { search: '?scope=department', hash: '' });
+    const localStorageMock = {
+      getItem: vi.fn((key) => key === 'inbox_scope' ? 'mine' : null),
+      setItem: vi.fn()
+    };
+    vi.stubGlobal('localStorage', localStorageMock);
+
+    const { result } = renderHook(() => useInboxFilters({ 
+      conversations: mockConversations as any, 
+      profileId: 'agent-1' 
+    }), { wrapper });
+    
+    expect(result.current.scope).toBe('department');
+  });
+
   it('filters by "mine" scope correctly', () => {
     const { result } = renderHook(() => useInboxFilters({ 
       conversations: mockConversations as any, 
@@ -97,6 +122,6 @@ describe('useInboxFilters - Scope Logic', () => {
     });
     
     const filtered = result.current.filteredConversations;
-    expect(filtered.length).toBe(3); // Mostra tudo (mine, dept, waiting) na aba abertos em scope='all'
+    expect(filtered.length).toBe(3);
   });
 });

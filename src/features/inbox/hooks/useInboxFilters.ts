@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
@@ -10,6 +10,7 @@ import { MainTab, SubTab } from '@/features/inbox';
 import { useFailureMetricsBatch, type FailureCategory } from '@/features/inbox';
 import { useAllTicketStates } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
+import { logAudit } from '@/lib/audit';
 
 const log = getLogger('useInboxFilters');
 
@@ -41,6 +42,18 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
   const [failureCategoryFilter, setFailureCategoryFilter] = useState<FailureCategory | 'all'>('all');
 
   const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
+  const prevScopeRef = useRef(scope);
+
+  useEffect(() => {
+    if (prevScopeRef.current !== scope) {
+      log.info('Scope changed', { from: prevScopeRef.current, to: scope });
+      logAudit({
+        action: 'scope_change',
+        details: { from: prevScopeRef.current, to: scope, module: 'inbox' }
+      });
+      prevScopeRef.current = scope;
+    }
+  }, [scope]);
 
   // Carrega categorias de falha em lote quando o filtro de retry está ativo
   const { data: failureCategoryById = {} } = useFailureMetricsBatch(
