@@ -14,12 +14,13 @@ import { ELEVENLABS_VOICES, type ElevenLabsVoice } from './VoiceSelector';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceChangerProps {
-  audioBlob: Blob;
+  audioBlob?: Blob;
+  audioUrl?: string;
   onVoiceChanged: (newBlob: Blob) => void;
   disabled?: boolean;
 }
 
-export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChangerProps) {
+export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: VoiceChangerProps) {
   const [open, setOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<ElevenLabsVoice | null>(null);
   const [isConverting, setIsConverting] = useState(false);
@@ -68,6 +69,15 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
     setConversionProgress(5);
 
     try {
+      let activeBlob = audioBlob;
+      if (!activeBlob && audioUrl) {
+        setConversionProgress(10);
+        const fetched = await fetch(audioUrl).then(r => r.blob());
+        activeBlob = fetched;
+      }
+      
+      if (!activeBlob) throw new Error('Áudio base não encontrado');
+
       // 1. Create task in queue
       const { data: task, error: queueError } = await supabase
         .from('voice_conversion_queue')
@@ -93,7 +103,7 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
       }, 1000);
 
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'audio.webm');
+      formData.append('audio', activeBlob, 'audio.webm');
       formData.append('voice_preset', voice.id); 
       formData.append('task_id', task.id);
       if (showCloneWarning) formData.append('authorized', 'true');

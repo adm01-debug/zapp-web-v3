@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Loader2, FileText, Volume2, RefreshCw, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Play, Pause, Loader2, FileText, Volume2, RefreshCw, Sparkles, CheckCircle2, AlertCircle, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -10,6 +10,7 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { AudioVolumeControl } from './AudioVolumeControl';
 import { dbFrom, dbTable } from '@/integrations/datasource/db';
+import { VoiceChanger } from './VoiceChanger';
 
 interface AudioMessagePlayerProps {
   audioUrl: string;
@@ -19,9 +20,10 @@ interface AudioMessagePlayerProps {
   transcriptionStatus?: string | null;
   /** When provided, enables Evolution `getMediaBase64` fallback for expired URLs (410/403). */
   refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
+  onVoiceChange?: (messageId: string, newBlob: Blob) => void;
 }
 
-export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey }: AudioMessagePlayerProps) {
+export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey, onVoiceChange }: AudioMessagePlayerProps) {
   const [transcription, setTranscription] = useState<string | null>(existingTranscription || null);
   const [transcriptionStatus, setTranscriptionStatus] = useState<string>(initialStatus || 'pending');
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -158,6 +160,14 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
           <button onClick={cycleSpeed} className={cn('h-6 px-1.5 rounded-full text-[10px] font-semibold transition-colors', playbackRate < 1 ? 'bg-destructive/20 hover:bg-destructive/30 text-destructive' : isSent ? 'bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground' : 'bg-primary/10 hover:bg-primary/20 text-primary')} title="Velocidade">{playbackRate}x</button>
         </motion.div>
         <AudioVolumeControl volume={volume} onChange={setVolume} isSent={isSent} size="sm" />
+        
+        {isSent && onVoiceChange && (
+          <VoiceChanger 
+            audioUrl={resolvedUrl}
+            onVoiceChanged={(blob) => onVoiceChange(messageId, blob)}
+          />
+        )}
+
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
           <Button variant="ghost" size="icon" className={cn('w-8 h-8 relative', showTranscription && transcription ? (isSent ? 'text-primary-foreground' : 'text-primary') : (isSent ? 'text-primary-foreground/50' : 'text-muted-foreground'))}
             onClick={() => { if (!transcription && !isProcessing) handleTranscribe(); else setShowTranscription(!showTranscription); }} disabled={isProcessing} title={transcription ? 'Mostrar/ocultar transcrição' : 'Transcrever áudio'}>

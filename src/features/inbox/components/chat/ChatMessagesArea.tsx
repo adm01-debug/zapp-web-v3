@@ -48,6 +48,7 @@ interface ChatMessagesAreaProps extends LoadOlderProps {
   onEditStart?: (message: Message) => void;
   highlightedMessageIds?: Set<string>;
   activeHighlightId?: string | null;
+  onAudioVoiceChange?: (messageId: string, newBlob: Blob) => void;
   searchQuery?: string;
   isLoading?: boolean;
   /**
@@ -78,6 +79,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   onLoadOlder, onCancelLoadOlder, loadingOlder = false, hasMoreOlder = false,
   loadOlderCancelBadgeMs = 2500,
   isLoading = false,
+  onAudioVoiceChange,
 }, ref) => {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -569,6 +571,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
                     onMessageDeleted={handleMessageDeleted}
                     registerRef={(el) => { messageRefs.current[message.id] = el; }}
                     density={density}
+                    onAudioVoiceChange={onAudioVoiceChange}
                   />
                 </StaggeredItem>
               );
