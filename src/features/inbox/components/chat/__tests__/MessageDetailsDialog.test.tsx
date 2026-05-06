@@ -32,7 +32,8 @@ vi.mock('@/features/inbox', () => ({
     }, [id, options.enabled]);
 
     return { data, isLoading, error: null };
-  }
+  },
+  useMessageSendStatus: () => ({ isSending: false, progress: 0 })
 }));
 
 vi.mock('./MessageAttemptsTimeline', () => ({ MessageAttemptsTimeline: () => null }));
