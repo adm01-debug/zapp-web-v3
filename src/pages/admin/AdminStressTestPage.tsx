@@ -77,13 +77,16 @@ export default function AdminStressTestPage() {
 
     switch (type) {
       case 'text':
-        result = await evo.sendTextMessage(instance, phone, sample.text!);
+        result = await evo.sendTextMessage(instance, phone, sample.text!, {
+          idempotencyKey: `stress_${idx}_${Date.now()}`
+        });
         break;
       case 'image':
         result = await evo.sendMediaMessage({
           instanceName: instance, number: phone,
           mediatype: 'image', mimetype: 'image/jpeg', media: sample.url!,
           fileName: sample.fileName, caption: sample.caption,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
         } as any);
         break;
       case 'video':
@@ -91,6 +94,7 @@ export default function AdminStressTestPage() {
           instanceName: instance, number: phone,
           mediatype: 'video', mimetype: 'video/mp4', media: sample.url!,
           fileName: sample.fileName, caption: sample.caption,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
         } as any);
         break;
       case 'document':
@@ -98,19 +102,26 @@ export default function AdminStressTestPage() {
           instanceName: instance, number: phone,
           mediatype: 'document', mimetype: 'application/pdf', media: sample.url!,
           fileName: sample.fileName, caption: sample.caption,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
         } as any);
         break;
       case 'audio_voice':
       case 'audio_meme':
-        result = await evo.sendAudioMessage(instance, phone, sample.url!, { encoding: true });
+        result = await evo.sendAudioMessage(instance, phone, sample.url!, { 
+          encoding: true,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
+        } as any);
         break;
       case 'sticker':
-        result = await evo.sendStickerMessage(instance, phone, sample.url!);
+        result = await evo.sendStickerMessage(instance, phone, sample.url!, {
+          idempotencyKey: `stress_${idx}_${Date.now()}`
+        } as any);
         break;
       case 'location':
         result = await evo.sendLocationMessage({
           instanceName: instance, number: phone,
           latitude: sample.latitude, longitude: sample.longitude, name: sample.name,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
         } as any);
         break;
     }
