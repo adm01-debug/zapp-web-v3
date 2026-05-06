@@ -43,11 +43,11 @@ interface ConsumerDef {
 }
 
 const CONSUMERS: ConsumerDef[] = [
-  { id: "URM", label: "useRealtimeMessages",       path: "src/hooks/useRealtimeMessages.ts",
+  { id: "URM", label: "useRealtimeMessages",       path: "src/features/inbox/hooks/useRealtimeMessages.ts",
     description: "feed global do inbox (INSERT/UPDATE/DELETE)" },
-  { id: "UM",  label: "useMessages",               path: "src/hooks/useMessages.ts",
+  { id: "UM",  label: "useMessages",               path: "src/features/inbox/hooks/useMessages.ts",
     description: "lista por contato aberto (INSERT/UPDATE/DELETE)" },
-  { id: "UMS", label: "useMessageStatus",          path: "src/hooks/useMessageStatus.ts",
+  { id: "UMS", label: "useMessageStatus",          path: "src/features/inbox/hooks/useMessageStatus.ts",
     description: "status sent/delivered/read por mensagem (UPDATE)" },
   { id: "UTN", label: "useTranscriptionNotifications", path: "src/hooks/useTranscriptionNotifications.ts",
     description: "alerta quando transcricao conclui (UPDATE)" },
@@ -55,14 +55,18 @@ const CONSUMERS: ConsumerDef[] = [
     description: "KPIs em tempo real (INSERT)" },
   { id: "UEM", label: "useEvolutionMonitoring",    path: "src/components/monitoring/hooks/useEvolutionMonitoring.ts",
     description: "saude do webhook/instancia (INSERT)" },
-  { id: "AMP", label: "AudioMessagePlayer",        path: "src/components/inbox/AudioMessagePlayer.tsx",
+  { id: "AMP", label: "AudioMessagePlayer",        path: "src/features/inbox/components/AudioMessagePlayer.tsx",
     description: "refresh de media_url assinada (UPDATE)" },
+  { id: "URRA", label: "useRetryResolutionAlerts", path: "src/features/inbox/hooks/realtime/useRetryResolutionAlerts.ts",
+    description: "toast quando retrying -> sent/failed (UPDATE)" },
+  { id: "CMA", label: "ChatMessagesArea",          path: "src/features/inbox/components/chat/ChatMessagesArea.tsx",
+    description: "refetch/scroll no realtime (INSERT/UPDATE)" },
 ];
 
 // Outros nós (não consumem 'messages' mas têm click links)
 const EXTRA_CLICKS: { id: string; path: string }[] = [
-  { id: "CIL",    path: "src/components/inbox/chat/useChatInputLogic.ts" },
-  { id: "MS",     path: "src/hooks/realtime/messageSender.ts" },
+  { id: "CIL",    path: "src/features/inbox/components/chat/useChatInputLogic.ts" },
+  { id: "MS",     path: "src/features/inbox/hooks/realtime/messageSender.ts" },
   { id: "IDK",    path: "src/lib/sendIdempotency.ts" },
   { id: "FP",     path: "src/lib/sendIdempotency.ts" },
   { id: "NORM",   path: "src/lib/sendIdempotency.ts" },
@@ -75,16 +79,16 @@ const EXTRA_CLICKS: { id: string; path: string }[] = [
   { id: "RCFG",   path: "src/lib/retryConfig.ts" },
   { id: "DLQENQ", path: "src/lib/failedMessagesEnqueue.ts" },
   { id: "DLQRP",  path: "supabase/functions/reprocess-failed-messages/index.ts" },
-  { id: "EMIT",   path: "src/hooks/realtime/sendStatusBus.ts" },
-  { id: "SUBALL", path: "src/hooks/realtime/sendStatusBus.ts" },
-  { id: "GETST",  path: "src/hooks/realtime/sendStatusBus.ts" },
-  { id: "UMSS",   path: "src/hooks/realtime/useMessageSendStatus.ts" },
-  { id: "BATCH",  path: "src/hooks/realtime/useMessageUpdateBatcher.ts" },
-  { id: "RUTL",   path: "src/hooks/realtime/realtimeUtils.ts" },
-  { id: "URN",    path: "src/hooks/realtime/useRealtimeNotifications.ts" },
-  { id: "MSI",    path: "src/components/inbox/chat/MessageStatusInline.tsx" },
-  { id: "VML",    path: "src/components/inbox/VirtualizedMessageList.tsx" },
-  { id: "MB",     path: "src/components/inbox/chat/MessageBubble.tsx" },
+  { id: "EMIT",   path: "src/features/inbox/hooks/realtime/sendStatusBus.ts" },
+  { id: "SUBALL", path: "src/features/inbox/hooks/realtime/sendStatusBus.ts" },
+  { id: "GETST",  path: "src/features/inbox/hooks/realtime/sendStatusBus.ts" },
+  { id: "UMSS",   path: "src/features/inbox/hooks/realtime/useMessageSendStatus.ts" },
+  { id: "BATCH",  path: "src/features/inbox/hooks/realtime/useMessageUpdateBatcher.ts" },
+  { id: "RUTL",   path: "src/features/inbox/hooks/realtime/realtimeUtils.ts" },
+  { id: "URN",    path: "src/features/inbox/hooks/realtime/useRealtimeNotifications.ts" },
+  { id: "MSI",    path: "src/features/inbox/components/chat/MessageStatusInline.tsx" },
+  { id: "VML",    path: "src/features/inbox/components/VirtualizedMessageList.tsx" },
+  { id: "MB",     path: "src/features/inbox/components/chat/MessageBubble.tsx" },
 ];
 
 // ----------------------------------------------------------------------------
