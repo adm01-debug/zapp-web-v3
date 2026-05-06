@@ -7,7 +7,7 @@ import { motion } from '@/components/ui/motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MessageReactions } from '@/features/inbox/components/MessageReactions';
 import { MessageImage } from '@/features/inbox/components/ImagePreview';
-import { DocumentPreview, VideoPreview } from '@/features/inbox/components/MediaPreview';
+import { DocumentPreview, VideoPreview, StickerPreview } from '@/features/inbox/components/MediaPreview';
 import { AudioMessagePlayer } from '@/features/inbox/components/AudioMessagePlayer';
 import { InteractiveMessageDisplay, ButtonResponseBadge } from '@/features/inbox/components/InteractiveMessage';
 import { QuotedMessage } from '@/features/inbox/components/ReplyQuote';
@@ -254,17 +254,17 @@ export function ChatMessageBubble({
           )}
 
           {/* Image message */}
-          {message.type === 'image' && message.mediaUrl && (
+          {message.type === 'image' && (
             <div className="mb-2 rounded-lg overflow-hidden">
-              <MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} />
+              <MessageImage src={message.mediaUrl ?? null} refreshKey={mediaRefreshKey} />
             </div>
           )}
 
           {/* Video message */}
-          {message.type === 'video' && message.mediaUrl && (
+          {message.type === 'video' && (
             <div className="mb-2">
               <VideoPreview
-                url={message.mediaUrl}
+                url={message.mediaUrl ?? null}
                 caption={message.content}
                 isSent={isSent}
                 refreshKey={mediaRefreshKey}
@@ -287,10 +287,10 @@ export function ChatMessageBubble({
           )}
 
           {/* Document message */}
-          {message.type === 'document' && message.mediaUrl && (
+          {message.type === 'document' && (
             <div className="mb-2">
               <DocumentPreview
-                url={message.mediaUrl}
+                url={message.mediaUrl ?? ''}
                 fileName={message.content || 'documento'}
                 isSent={isSent}
               />
@@ -308,13 +308,11 @@ export function ChatMessageBubble({
           )}
 
           {/* Sticker message */}
-          {message.type === 'sticker' && message.mediaUrl && (
+          {message.type === 'sticker' && (
             <div className="mb-1">
-              <img
-                src={message.mediaUrl}
-                alt="Sticker"
-                className="max-w-[180px] max-h-[180px] object-contain"
-                loading="lazy"
+              <StickerPreview
+                url={message.mediaUrl ?? ''}
+                isSent={isSent}
               />
             </div>
           )}

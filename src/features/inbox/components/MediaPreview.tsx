@@ -78,7 +78,7 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
 
 // Video Preview Component
 interface VideoPreviewProps {
-  url: string;
+  url: string | null;
   caption?: string;
   isSent: boolean;
   /** When provided, allows auto-refreshing the video src on 410/403 errors. */
@@ -93,6 +93,20 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
     const [isLoaded, setIsLoaded] = useState(false);
     const refresh = useMediaRefresh(url, refreshKey);
     const effectiveUrl = refresh.url ?? url;
+
+    // Handle missing URL (likely still downloading)
+    if (!effectiveUrl && !refresh.isRefreshing && !refresh.failed) {
+      return (
+        <div
+          ref={ref}
+          className="max-w-[300px] rounded-lg border border-border bg-muted/20 p-4 flex flex-col items-center gap-2 text-center"
+        >
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" aria-hidden="true" />
+          <p className="text-sm font-medium text-foreground">Baixando vídeo...</p>
+          <p className="text-xs text-muted-foreground">Aguarde enquanto processamos a mídia.</p>
+        </div>
+      );
+    }
 
     if (refresh.failed) {
       return (
@@ -134,14 +148,16 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
             )}
-            <video
-              key={effectiveUrl}
-              src={effectiveUrl} className="w-full max-h-[400px] object-cover rounded-md" muted={isMuted} loop playsInline
-              onLoadedData={() => setIsLoaded(true)}
-              onError={refresh.onError}
-              onMouseEnter={(e) => { e.currentTarget.play(); setIsPlaying(true); }}
-              onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; setIsPlaying(false); }}
-            />
+            {effectiveUrl && (
+              <video
+                key={effectiveUrl}
+                src={effectiveUrl} className="w-full max-h-[400px] object-cover rounded-md" muted={isMuted} loop playsInline
+                onLoadedData={() => setIsLoaded(true)}
+                onError={refresh.onError}
+                onMouseEnter={(e) => { e.currentTarget.play(); setIsPlaying(true); }}
+                onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; setIsPlaying(false); }}
+              />
+            )}
             <AnimatePresence>
               {!isPlaying && isLoaded && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-background/30 flex items-center justify-center">
@@ -158,7 +174,7 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
           {caption && <p className={cn("text-sm", isSent ? "text-primary-foreground" : "text-foreground")}>{caption}</p>}
         </div>
         <AnimatePresence>
-          {showFullscreen && <VideoFullscreen url={effectiveUrl} onClose={() => setShowFullscreen(false)} />}
+          {showFullscreen && effectiveUrl && <VideoFullscreen url={effectiveUrl} onClose={() => setShowFullscreen(false)} />}
         </AnimatePresence>
       </div>
     );
@@ -179,13 +195,25 @@ export function StickerPreview({ url, isSent }: StickerPreviewProps) {
 }
 
 // Combined Media Message Component
-interface MediaMessageProps { type: 'video' | 'document' | 'sticker'; url: string; fileName?: string; fileSize?: number; caption?: string; isSent: boolean; }
+interface MediaMessageProps {
+  type: 'video' | 'document' | 'sticker';
+  url: string | null;
+  fileName?: string;
+  fileSize?: number;
+  caption?: string;
+  isSent: boolean;
+  refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
+}
 
-export function MediaMessage({ type, url, fileName, fileSize, caption, isSent }: MediaMessageProps) {
+export function MediaMessage({ type, url, fileName, fileSize, caption, isSent, refreshKey }: MediaMessageProps) {
   switch (type) {
-    case 'video': return <VideoPreview url={url} caption={caption} isSent={isSent} />;
-    case 'document': return <DocumentPreview url={url} fileName={fileName || 'document'} fileSize={fileSize} isSent={isSent} />;
-    case 'sticker': return <StickerPreview url={url} isSent={isSent} />;
-    default: return null;
+    case 'video':
+      return <VideoPreview url={url} caption={caption} isSent={isSent} refreshKey={refreshKey} />;
+    case 'document':
+      return <DocumentPreview url={url || ''} fileName={fileName || 'document'} fileSize={fileSize} isSent={isSent} />;
+    case 'sticker':
+      return url ? <StickerPreview url={url} isSent={isSent} /> : <div className="w-[120px] h-[120px] bg-card animate-pulse rounded-md" />;
+    default:
+      return null;
   }
 }
