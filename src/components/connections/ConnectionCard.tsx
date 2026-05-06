@@ -303,6 +303,9 @@ export function ConnectionCard({
 
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Avançado</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setAuditDialogOpen(true)}>
+                    <ListChecks className="w-4 h-4 mr-2" />Log de Auditoria
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onCopyId(connection.id)}>
                     <Copy className="w-4 h-4 mr-2" />Copiar ID
                   </DropdownMenuItem>
