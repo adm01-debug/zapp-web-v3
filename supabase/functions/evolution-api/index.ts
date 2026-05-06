@@ -239,7 +239,7 @@ serve(async (req) => {
     }
 
     if (action === 'instance-info') return await proxy(`/instance/info/${instance}`, 'GET');
-    if (action === 'restart-instance') return await proxy(`/instance/restart/${instance}`, 'PUT');
+    if (action === 'restart-instance') return await proxy(`/instance/restart/${instance}`, 'POST');
 
     if (action === 'disconnect') {
       const response = await fetch(`${evolutionApiUrl}/instance/logout/${instance}`, { method: 'DELETE', headers: { 'apikey': evolutionApiKey } });

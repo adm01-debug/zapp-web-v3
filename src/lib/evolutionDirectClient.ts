@@ -27,7 +27,7 @@ function mapActionToEndpoint(action: string, instanceName?: string): { path: str
     "status": [`/instance/connectionState/${i}`, "GET"],
     "instance-info": [`/instance/info/${i}`, "GET"],
     "create-instance": [`/instance/create`, "POST"],
-    "restart-instance": [`/instance/restart/${i}`, "PUT"],
+    "restart-instance": [`/instance/restart/${i}`, "POST"],
     "disconnect": [`/instance/logout/${i}`, "DELETE"],
     "delete-instance": [`/instance/delete/${i}`, "DELETE"],
     "set-presence": [`/instance/setPresence/${i}`, "POST"],
