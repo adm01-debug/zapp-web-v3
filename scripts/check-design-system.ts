@@ -161,10 +161,12 @@ export function getSuggestion(label: string, match: string, fileName?: string, c
 
   if (label === 'Literal Font') {
     const isTechnicalContext = context && (
-      /id|uuid|timestamp|date|created_at|updated_at|log|metric|count|phone|cnpj|cpf|value|price|amount|chart|graph|axis|tick|token|hex|hash|sha/i.test(context) ||
-      /code|pre|samp|kbd/i.test(context)
+      /\b(id|uuid|timestamp|date|created_at|updated_at|log|metric|count|phone|cnpj|cpf|value|price|amount|chart|graph|axis|tick|token|hex|hash|sha)\b/i.test(context) ||
+      /<(code|pre|samp|kbd)\b/i.test(context) ||
+      /\/\/\s*@technical/i.test(context)
     );
-    const isTechnicalFile = fileName && /chart|graph|report|log|metric|debug|system|auth/i.test(fileName);
+    // Only trust file name for very specific technical files
+    const isTechnicalFile = fileName && /chart\.tsx|graph\.tsx|metrics?\.tsx|log\.tsx/i.test(fileName);
     
     if (cleanMatch === 'font-mono') {
       if (isTechnicalContext || isTechnicalFile) {
@@ -174,8 +176,8 @@ export function getSuggestion(label: string, match: string, fileName?: string, c
     }
 
     if (cleanMatch === 'font-sans') {
-      // Check if it's an intentional override (e.g., parent is mono)
-      const isOverride = context && /font-mono/.test(context);
+      // Check if it's an intentional override (e.g., parent is mono on same line or commented)
+      const isOverride = context && (/(font-mono|font-serif)/.test(context) || /@override/i.test(context));
       if (isOverride) {
         return { cleanMatch, prefix, suggestion: 'VALID: Intentional font reset', priority: 'Low' };
       }
