@@ -31,18 +31,21 @@ interface TicketHistorySheetProps {
 interface RemoteEvent {
   id: string;
   event_type: string;
-  from_agent_id: string | null;
-  to_agent_id: string | null;
-  from_queue_id: string | null;
-  to_queue_id: string | null;
-  performed_by: string | null;
-  metadata: Record<string, unknown> | null;
+  from_agent_id?: string | null;
+  to_agent_id?: string | null;
+  from_queue_id?: string | null;
+  to_queue_id?: string | null;
+  performed_by?: string | null;
+  metadata?: Record<string, unknown> | null;
   created_at: string;
+  // Fator X audit logs
+  status?: string;
+  error_message?: string;
 }
 
 interface UnifiedEvent {
   id: string;
-  source: 'local' | 'remote';
+  source: 'local' | 'remote' | 'audit';
   type: string;
   at: string;
   label: string;
@@ -96,6 +99,31 @@ function describeRemote(e: RemoteEvent, nameMap: Record<string, string>): Unifie
   return { id: e.id, source: 'remote', type: e.event_type, at: e.created_at, label, detail };
 }
 
+function describeAudit(e: any): UnifiedEvent {
+  let label = 'Evento de Outbound';
+  let detail = e.status;
+  
+  if (e.event_type === 'send_attempt') {
+    label = 'Tentativa de Envio';
+    detail = `Tentativa #${e.attempt_number || 1}`;
+  } else if (e.event_type === 'delivered') {
+    label = 'Entregue com Sucesso';
+    detail = 'Mensagem recebida pelo WhatsApp';
+  } else if (e.event_type === 'failed') {
+    label = 'Falha no Envio';
+    detail = e.error_message || 'Erro desconhecido';
+  }
+
+  return { 
+    id: e.id, 
+    source: 'audit', 
+    type: e.event_type, 
+    at: e.created_at, 
+    label, 
+    detail 
+  };
+}
+
 export function TicketHistorySheet({ contactId, open, onOpenChange }: TicketHistorySheetProps) {
   const { events: localEvents } = useTicketStatus(contactId);
 
@@ -111,6 +139,21 @@ export function TicketHistorySheet({ contactId, open, onOpenChange }: TicketHist
         .limit(100);
       if (error) throw error;
       return (data ?? []) as RemoteEvent[];
+    },
+  });
+
+  const { data: auditLogs = [] } = useQuery({
+    queryKey: ['conversation-audit-logs', contactId],
+    enabled: open && !!contactId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('conversation_audit_logs' as any)
+        .select('*')
+        .eq('conversation_id', contactId!)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) return [];
+      return data ?? [];
     },
   });
 
@@ -134,9 +177,10 @@ export function TicketHistorySheet({ contactId, open, onOpenChange }: TicketHist
     const all = [
       ...localEvents.map((e) => describeLocal(e, nameMap)),
       ...remote.map((e) => describeRemote(e, nameMap)),
+      ...auditLogs.map((e) => describeAudit(e)),
     ];
     return all.sort((a, b) => +new Date(b.at) - +new Date(a.at));
-  }, [localEvents, remote, nameMap]);
+  }, [localEvents, remote, auditLogs, nameMap]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -167,7 +211,7 @@ export function TicketHistorySheet({ contactId, open, onOpenChange }: TicketHist
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-medium">{e.label}</span>
                       <Badge variant="outline" className="text-[9px] uppercase">
-                        {e.source === 'local' ? 'sessão' : 'persistido'}
+                        {e.source === 'local' ? 'sessão' : e.source === 'remote' ? 'persistido' : 'auditoria'}
                       </Badge>
                     </div>
                     {e.detail && <p className="text-xs text-muted-foreground">{e.detail}</p>}

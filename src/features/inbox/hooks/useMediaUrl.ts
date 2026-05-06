@@ -20,6 +20,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
+import { buildFileHash } from '@/lib/crypto';
 
 const log = getLogger('useMediaUrl');
 
@@ -151,6 +152,28 @@ export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
       return;
     }
 
+    // Otimização: Cache persistente via Storage Hash
+    if (originalUrl) {
+      try {
+        const hash = await buildFileHash(originalUrl);
+        const { data: cacheRow } = await supabase
+          .from('media_cache')
+          .select('storage_path')
+          .eq('file_hash', hash)
+          .maybeSingle();
+        
+        if (cacheRow?.storage_path) {
+          log.info(`Media cache hit for ${key}`);
+          setUrl(cacheRow.storage_path);
+          setError(null);
+          setFailed(false);
+          return;
+        }
+      } catch (e) {
+        log.warn('Cache hash check failed, proceeding with API refresh', e);
+      }
+    }
+
     setIsRefreshing(true);
     setError(null);
     const job = (async () => {
@@ -165,6 +188,20 @@ export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
         const mime = payload.mimetype || 'application/octet-stream';
         const dataUrl = `data:${mime};base64,${payload.base64}`;
         refreshCache.set(key, dataUrl);
+
+        // Audit & Cache Persistence
+        try {
+          const hash = await buildFileHash(dataUrl);
+          await supabase.from('media_cache').upsert({
+            file_hash: hash,
+            storage_path: dataUrl, // Em cenários reais, enviaríamos para o storage e salvaríamos a URL
+            mime_type: mime,
+            size: Math.round(payload.base64.length * 0.75)
+          }, { onConflict: 'file_hash' });
+        } catch (e) {
+          log.warn('Failed to persist media cache', e);
+        }
+
         setUrl(dataUrl);
         setError(null);
         setFailed(false);
