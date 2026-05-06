@@ -197,14 +197,13 @@ export function useRealtimeMessages() {
       setError(null);
       const { data: seededContacts, error: contactsError } = await dbFrom('contacts')
         .select('*')
-        .eq('instance_name', DEFAULT_WHATSAPP_INSTANCE)
         .order('updated_at', { ascending: false })
         .limit(SEEDED_CONTACT_LIMIT);
       if (contactsError) throw contactsError;
       
       const { data: recentMessages, error: messagesError } = await dbFrom('messages')
         .select('*')
-        .eq('instance_name', DEFAULT_WHATSAPP_INSTANCE)
+        
         .order('created_at', { ascending: false })
         .limit(RECENT_MESSAGES_LIMIT);
       if (messagesError) throw messagesError;
