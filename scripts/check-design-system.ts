@@ -96,12 +96,12 @@ function scanDir(dir: string, results: Violation[]) {
 
       FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
         const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
-        // Removed lookbehinds for broader compatibility, use capturing groups properly
-        const fullPattern = new RegExp(`(^|['"\`\\s])(${variantsPart}${pattern.source})(?=['"\`\\s]|$)`, 'g');
+        // Match word-like chunks without lookbehind
+        const fullPattern = new RegExp(`${variantsPart}${pattern.source}`, 'g');
         const matches = line.matchAll(fullPattern);
         
         for (const match of matches) {
-          const rawMatch = match[2].trim();
+          const rawMatch = match[0].trim();
           if (!rawMatch) continue;
 
           const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
@@ -168,14 +168,13 @@ const htmlReport = `
     <div class="card">
       <h3>${file}</h3>
       <table>
-        <thead><tr><th>Priority</th><th>Line</th><th>Match</th><th>Clean</th><th>Suggestion</th></tr></thead>
+        <thead><tr><th>Priority</th><th>Line</th><th>Match</th><th>Suggestion</th></tr></thead>
         <tbody>
           ${fileViolations.map(v => `
             <tr>
               <td class="${v.priority.toLowerCase()}">${v.priority}</td>
               <td>${v.line}</td>
               <td><code>${v.match}</code></td>
-              <td><code>${v.cleanMatch}</code></td>
               <td>${v.suggestion}</td>
             </tr>
           `).join('')}
