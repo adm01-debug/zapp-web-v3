@@ -119,7 +119,7 @@ ConvItem.displayName = 'ConvItem';
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export const ConversationList: React.FC<ConversationListProps> = ({
-  instanceName = 'wpp2', selectedId, onSelect,
+  instanceName = DEFAULT_WHATSAPP_INSTANCE, selectedId, onSelect,
 }) => {
   const {
     conversations, loading, loadingMore, hasMore, total, filters,
