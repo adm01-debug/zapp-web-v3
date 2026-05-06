@@ -38,18 +38,11 @@ vi.mock('@/adapters/evolutionAdapter', () => ({
   jidToPhone: vi.fn((jid) => jid.split('@')[0]),
 }));
 
-vi.mock('../../index', () => ({
+vi.mock('@/features/inbox', () => ({
   parseEvolutionError: vi.fn((err) => ({
     reason: err.message || 'Error',
     detail: err.detail || null,
     status: err.status || 500
-  })),
-  makeOptimisticBubble: vi.fn((jid, content, opts) => ({
-    id: 'opt-123',
-    remote_jid: jid,
-    content,
-    ...opts,
-    status: 'sending'
   }))
 }));
 
@@ -88,7 +81,7 @@ describe('Audio Meme Journey — 10/10 Excellence Validation', () => {
     // Verify optimistic result
     expect(result.externalId).toBe('wa-msg-123');
     expect(result.optimistic.media_meta.ptt).toBe(true);
-    expect(result.optimistic.mediaUrl).toBe('blob:local-audio');
+    expect(result.optimistic.media_url).toBe('blob:local-audio');
   });
 
   it('2. Mapping: should correctly normalize ptvMessage (Video-note)', () => {
@@ -97,12 +90,10 @@ describe('Audio Meme Journey — 10/10 Excellence Validation', () => {
   });
 
   it('3. Telemetry: should distinguish audio types based on media_meta', () => {
-    // This logic is verified in useExternalEvolution but we can check the mapper here
     const pttMeta = { ptt: true };
     const recordedMeta = { ptt: false };
     const memeMeta = { ptt: true, audio_meme_id: 'meme-123' };
 
-    // Simulating useExternalEvolution logic
     const getLabel = (m: any) => {
        const isPtt = m.media_meta?.ptt === true;
        const isMeme = !!m.audio_meme_id || !!m.media_meta?.audio_meme_id;
