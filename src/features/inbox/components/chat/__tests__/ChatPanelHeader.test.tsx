@@ -19,7 +19,9 @@ vi.mock('../..', () => ({
   VoiceSelector: () => null,
   SpeedSelector: () => null,
   TypingIndicatorCompact: () => null,
-  TypingIndicatorInline: () => null
+  TypingIndicatorInline: () => null,
+  RealtimeCollaboration: () => null,
+  KeyboardShortcutsHelp: () => null,
 }));
 
 const mockConversation = {
