@@ -170,7 +170,7 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   useEffect(() => {
     if (messageIds.length === 0) return;
 
-    // Listen for both reactions and status updates
+    // Listen for reactions, status updates, and voice conversion status
     const channel = supabase
       .channel(`chat-updates:${messageIds[0] ?? 'empty'}`)
       .on('postgres_changes', {
@@ -191,8 +191,19 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
       }, (payload) => {
         const updatedMsg = payload.new as { id: string, status?: string };
         if (updatedMsg.id && messageIdsSet.has(updatedMsg.id)) {
-          // Invalidate messages query to refresh statuses
           queryClient.invalidateQueries({ queryKey: ['messages'] });
+        }
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'voice_conversion_queue',
+      }, (payload) => {
+        const newData = (payload.new || payload.old) as { message_id?: string };
+        if (newData.message_id && messageIdsSet.has(newData.message_id)) {
+          // We don't invalidate everything, just let components like AudioMessagePlayer handle their own sub
+          // but if we want to refresh the message object if the status was stored there:
+          // queryClient.invalidateQueries({ queryKey: ['messages'] });
         }
       })
       .subscribe();
