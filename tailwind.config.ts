@@ -61,6 +61,8 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+          soft: "hsl(var(--destructive-soft))",
+          border: "hsl(var(--destructive-border))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -86,6 +88,8 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+          soft: "hsl(var(--warning-soft))",
+          border: "hsl(var(--warning-border))",
         },
         info: {
           DEFAULT: "hsl(var(--info))",

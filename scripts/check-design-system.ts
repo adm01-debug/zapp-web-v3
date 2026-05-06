@@ -47,11 +47,10 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
     const semanticMap: Record<string, string> = {
       'red': 'destructive',
       'rose': 'destructive',
-      'pink': 'accent',
-      'fuchsia': 'accent',
-      'purple': 'primary',
-      'violet': 'primary',
-      'indigo': 'primary',
+      'pink': 'destructive', // Pink/Rose usually map to destructive/accent; user specifically asked for destructive mapping
+      'amber': 'warning',
+      'yellow': 'warning',
+      'orange': 'warning',
       'blue': 'info',
       'sky': 'info',
       'cyan': 'info',
@@ -59,14 +58,14 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
       'emerald': 'success',
       'green': 'success',
       'lime': 'success',
-      'amber': 'warning',
-      'yellow': 'warning',
-      'orange': 'warning',
       'slate': 'muted',
       'gray': 'muted',
       'zinc': 'muted',
       'neutral': 'muted',
-      'stone': 'muted'
+      'stone': 'muted',
+      'purple': 'primary',
+      'violet': 'primary',
+      'indigo': 'primary'
     };
 
     for (const [literal, semantic] of Object.entries(semanticMap)) {

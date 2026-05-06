@@ -82,6 +82,8 @@
     /* ===== DESTRUCTIVE ===== */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 0 84% 96%;
+    --destructive-border: 0 84% 90%;
 
     /* ===== BORDAS E INPUTS ===== */
     --border: 221 15% 90%;
@@ -94,6 +96,8 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 100% 50%;
     --warning-foreground: 0 0% 100%;
+    --warning-soft: 38 100% 96%;
+    --warning-border: 38 100% 90%;
     --info: 214 100% 50%;
     --info-foreground: 0 0% 100%;
 
@@ -229,6 +233,8 @@
     --accent-foreground: 221 100% 95%;
     --destructive: 0 95% 62%;
     --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 0 95% 10%;
+    --destructive-border: 0 95% 20%;
     --border: 0 0% 10%; /* Borda sutil no OLED */
     --input: 0 0% 6%;
     --ring: 221 95% 60%;
@@ -236,6 +242,8 @@
     --success-foreground: 0 0% 100%;
     --warning: 42 100% 55%;
     --warning-foreground: 0 0% 5%;
+    --warning-soft: 42 100% 10%;
+    --warning-border: 42 100% 20%;
     --info: 210 100% 60%;
     --info-foreground: 0 0% 100%;
     --xp: 221 95% 60%;
