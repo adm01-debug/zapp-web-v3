@@ -280,6 +280,7 @@ serve(async (req) => {
       const audioPayload: Record<string, unknown> = { number: body.number, audio: audioSource };
       if (body.delay) audioPayload.delay = body.delay;
       if (body.encoding !== undefined) audioPayload.encoding = body.encoding;
+      if (body.isPtt !== undefined) audioPayload.ptt = body.isPtt; // Ensure ptt boolean is propagated for proper WhatsApp flags
       return await proxy(`/message/sendWhatsAppAudio/${instance}`, 'POST', audioPayload);
     }
 
