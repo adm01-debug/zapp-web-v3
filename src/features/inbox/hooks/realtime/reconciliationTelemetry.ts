@@ -4,6 +4,9 @@
  * Conta matches por estratégia (external_id, fallback de texto, fallback de mídia)
  * e por tipo de mensagem (text/audio/image/video/sticker/document/...).
  *
+ * NOTA: Para áudio, a telemetria agora diferencia PTT vs Gravado lendo os
+ * metadados da bolha otimista (media_meta.ptt).
+ *
  * Uso:
  *   - `reconcileOptimistic` emite eventos via `recordMatch`.
  *   - Painéis admin/devtools leem via `getReconciliationStats()`.
