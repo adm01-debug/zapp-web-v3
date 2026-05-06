@@ -10,9 +10,11 @@ import { Switch } from '@/components/ui/switch';
 import {
   Database, Globe, Webhook, Cpu, Plus, Settings, Save, Trash2,
   RefreshCw, AlertCircle, ExternalLink, ShieldCheck, Link, Loader2,
+  Activity
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { runConnectionDiagnostics } from '@/lib/diagnostics';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const APP_ENV = (import.meta.env.VITE_APP_ENV || 'production') as 'development' | 'staging' | 'production';
