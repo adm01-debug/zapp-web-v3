@@ -282,7 +282,7 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
                     {voice.description}
                   </span>
                 </div>
-              </motion.button>
+              </button>
             );
           })}
         </div>
