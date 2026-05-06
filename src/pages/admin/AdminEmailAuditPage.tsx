@@ -31,14 +31,14 @@ export default function AdminEmailAuditPage() {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      const { data, count, error } = await supabase
+      const { data, count, error } = await (supabase as any)
         .from('email_revalidation_jobs')
         .select('*', { count: 'exact' })
         .order('requested_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
-      setLogs(data || []);
+      setLogs((data as AuditLog[]) || []);
       setTotal(count || 0);
     } catch (error) {
       console.error('Erro ao carregar auditoria:', error);
