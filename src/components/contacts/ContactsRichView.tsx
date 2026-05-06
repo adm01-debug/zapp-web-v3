@@ -27,6 +27,7 @@ import { ContactBirthdayPanel } from './ContactBirthdayPanel';
 import { ContactToolbar } from './ContactToolbar';
 import { ContactContentArea } from './ContactContentArea';
 import { ContactDialogs } from './ContactDialogs';
+import { ContactImportDialog } from './ContactImportDialog';
 import { ContactQuickView } from './ContactQuickView';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
 import type { Contact } from './types';
