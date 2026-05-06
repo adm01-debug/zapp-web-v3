@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from '@/components/ui/motion';
-import { CheckCircle2, Circle, Layout, Type, Move, Palette, Save, RefreshCw, X } from 'lucide-react';
+import { CheckCircle2, Circle, Layout, Type, Move, Palette, Save, RefreshCw, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useThemeAudit } from '@/hooks/useThemeAudit';
 
 interface ValidationItem {
   id: string;
@@ -11,23 +12,33 @@ interface ValidationItem {
   label: string;
   description: string;
   isApproved: boolean;
+  autoValidate?: boolean;
 }
 
 const DEFAULT_ITEMS: ValidationItem[] = [
-  { id: 'font-inter', category: 'font', label: 'Fonte Inter', description: 'Garantir que a fonte Inter está carregada e aplicada em toda a tela.', isApproved: true },
-  { id: 'font-sizes', category: 'font', label: 'Tamanhos (Desktop/Mobile)', description: 'Nomes 15px, timestamps 11px, mensagens 15px (Meta 10/10).', isApproved: true },
+  { id: 'font-inter', category: 'font', label: 'Fonte Inter', description: 'Garantir que a fonte Inter está carregada e aplicada em toda a tela.', isApproved: false, autoValidate: true },
+  { id: 'color-primary', category: 'style', label: 'Cor Primária', description: 'Variáveis HSL da cor primária devem estar carregadas e válidas.', isApproved: false, autoValidate: true },
+  { id: 'oled-pure-black', category: 'style', label: 'Preto OLED Puro', description: 'Background deve ser 0 0% 0% no modo dark.', isApproved: false, autoValidate: true },
+  { id: 'font-sizes', category: 'font', label: 'Tamanhos de Fonte', description: 'Nomes 15px, timestamps 11px, mensagens 15px.', isApproved: true },
   { id: 'spacing-inbox', category: 'spacing', label: 'Espaçamento Inbox', description: 'Margens de 12px (p-3) entre itens da lista e 14px de gap no avatar.', isApproved: false },
-  { id: 'style-selected', category: 'style', label: 'Estado Selecionado', description: 'Fundo sutil, borda lateral e destaque nos textos do item ativo.', isApproved: false },
-  { id: 'style-unread', category: 'style', label: 'Mensagens Não Lidas', description: 'Badge vermelho circular com sombra e texto em negrito.', isApproved: false },
-  { id: 'alignment-chat', category: 'alignment', label: 'Alinhamento Chat', description: 'Banners, balões e input perfeitamente alinhados à grade.', isApproved: false },
-  { id: 'style-loading', category: 'style', label: 'Skeletons de Loading', description: 'Animações de pulsação consistentes durante o carregamento.', isApproved: false },
+  { id: 'style-selected', category: 'style', label: 'Estado Selecionado', description: 'Fundo sutil e borda lateral no item ativo.', isApproved: false },
 ];
 
 export function VisualValidationChecklist({ onClose }: { onClose: () => void }) {
+  const audit = useThemeAudit();
   const [items, setItems] = useState<ValidationItem[]>(() => {
     const saved = localStorage.getItem('visual-validation-checklist');
     return saved ? JSON.parse(saved) : DEFAULT_ITEMS;
   });
+
+  useEffect(() => {
+    setItems(prev => prev.map(item => {
+      if (item.id === 'font-inter') return { ...item, isApproved: audit.fontPass };
+      if (item.id === 'oled-pure-black') return { ...item, isApproved: audit.oledPass };
+      if (item.id === 'color-primary') return { ...item, isApproved: audit.colorPass };
+      return item;
+    }));
+  }, [audit.fontPass, audit.oledPass, audit.colorPass]);
 
   useEffect(() => {
     localStorage.setItem('visual-validation-checklist', JSON.stringify(items));
@@ -88,6 +99,20 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {audit.violations.length > 0 && (
+          <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 mb-4 animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-2 text-destructive mb-2">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Erros Detectados</span>
+            </div>
+            <ul className="space-y-1">
+              {audit.violations.map((v, i) => (
+                <li key={i} className="text-[11px] text-destructive/80 leading-tight">• {v}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {items.map((item, idx) => (
           <motion.div
             key={item.id}

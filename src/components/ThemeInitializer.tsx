@@ -53,28 +53,28 @@ export function ThemeInitializer() {
       const root = document.documentElement;
       const cssVarsCache: Record<string, string> = {};
 
+      // If we are on the DEFAULT preset, we skip forcing core colors that should come from tokens.css
+      // unless we are in dark mode (where we need to ensure the OLED black wins).
+      const isDefaultPreset = presetId === DEFAULT_PRESET_ID;
+
       for (const key of CSS_VARS_TO_APPLY) {
         const value = colors[key];
-        root.style.setProperty(`--${key}`, value);
+        
+        // Only apply inline if it's not the default preset OR if we are in dark mode
+        // This allows tokens.css to be the source of truth for the default Light theme.
+        if (!isDefaultPreset || resolvedTheme === 'dark') {
+          root.style.setProperty(`--${key}`, value);
+        } else {
+          // Clean up any previously set inline styles when returning to default light theme
+          root.style.removeProperty(`--${key}`);
+        }
         cssVarsCache[key] = value;
       }
 
-      // Safeguard: Only touch fonts if the preset EXPLICITLY defines one.
-      // If we are on "corporate" (default) or any other preset without font,
-      // we remove the high-specificity inline style to let tokens.css take over.
-      if (preset.font) {
-        root.style.setProperty('--font-sans', preset.font);
-        root.style.setProperty('--font-display', preset.font);
-      } else {
-        // If the preset has no font, we remove the inline style ONLY IF it exists.
-        // This ensures tokens.css wins.
-        if (root.style.getPropertyValue('--font-sans')) {
-          root.style.removeProperty('--font-sans');
-        }
-        if (root.style.getPropertyValue('--font-display')) {
-          root.style.removeProperty('--font-display');
-        }
-      }
+      // Font Handling: Standardize on "Inter" if no specific font is provided by the preset
+      const targetFont = preset.font || '"Inter", sans-serif';
+      root.style.setProperty('--font-sans', targetFont);
+      root.style.setProperty('--font-display', targetFont);
 
       // Debug registry for the ThemeDebugTooltip
       (window as any).__THEME_DEBUG__ = {
