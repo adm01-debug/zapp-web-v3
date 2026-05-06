@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        sans: ["Inter", "var(--font-sans)", "system-ui", "sans-serif"],
+        display: ["Inter", "var(--font-display)", "system-ui", "sans-serif"],
       },
       fontSize: {
         // Fluid responsive sizes (CSS custom properties)
