@@ -239,7 +239,22 @@ serve(async (req) => {
     }
 
     if (action === 'instance-info') return await proxy(`/instance/info/${instance}`, 'GET');
-    if (action === 'restart-instance') return await proxy(`/instance/restart/${instance}`, 'POST');
+    if (action === 'restart-instance') {
+      await supabase.from('audit_logs').insert({
+        action: 'instance_restart_attempt',
+        entity_type: 'whatsapp_connection',
+        details: { instance_id: instance, source: 'evolution-api' }
+      });
+      const response = await proxy(`/instance/restart/${instance}`, 'POST');
+      if (response.ok) {
+        await supabase.from('audit_logs').insert({
+          action: 'instance_restart_success',
+          entity_type: 'whatsapp_connection',
+          details: { instance_id: instance, source: 'evolution-api' }
+        });
+      }
+      return response;
+    }
 
     if (action === 'disconnect') {
       const response = await fetch(`${evolutionApiUrl}/instance/logout/${instance}`, { method: 'DELETE', headers: { 'apikey': evolutionApiKey } });
