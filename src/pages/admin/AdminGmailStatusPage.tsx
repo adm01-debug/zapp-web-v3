@@ -67,8 +67,8 @@ export default function AdminGmailStatusPage() {
       });
       setFailuresData(dataFull.failuresResult || { items: [], total: 0 });
     } catch (error) {
-      console.error('Erro ao carregar saúde do Gmail:', error);
-      toast.error('O serviço de telemetria do Gmail está indisponível.');
+      console.error('Erro ao carregar saúde do Email:', error);
+      toast.error('O serviço de telemetria do Email está indisponível.');
       
       try {
         const { data: summary } = await supabase
@@ -183,8 +183,8 @@ export default function AdminGmailStatusPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Status do Gmail</h1>
-          <p className="text-muted-foreground">Monitoramento de integridade do schema e conexões Gmail.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Status do Email</h1>
+          <p className="text-muted-foreground">Monitoramento de integridade do schema e conexões Email.</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => window.location.hash = '#admin/gmail-audit'} variant="outline" className="gap-2">
@@ -201,7 +201,7 @@ export default function AdminGmailStatusPage() {
       {health?.status && health.status !== 'healthy' && (
         <Alert variant={health.status === 'error' ? 'destructive' : 'default'} className={health.status === 'degraded' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : ''}>
           {health.status === 'error' ? <AlertCircle className="h-4 h-4" /> : <AlertTriangle className="h-4 h-4" />}
-          <AlertTitle>Status do Gmail: {getStatusLabel(health.status)}</AlertTitle>
+          <AlertTitle>Status do Email: {getStatusLabel(health.status)}</AlertTitle>
           <AlertDescription>
             Foram detectadas {health.recentFailures.length} falhas recentes. 
             Verifique os logs abaixo usando o Request ID para depuração.

@@ -87,14 +87,14 @@ export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
       <div className="flex flex-col items-center justify-center h-full gap-4 p-6">
         <Mail className="h-12 w-12 text-muted-foreground/30" />
         <div className="text-center">
-          <p className="font-semibold text-base">Nenhuma conta Gmail conectada</p>
+          <p className="font-semibold text-base">Nenhuma conta de Email conectada</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Conecte sua conta Gmail para usar o Email Chat
+            Conecte sua conta de Email para usar o Email Chat
           </p>
         </div>
         <Button onClick={startOAuth} className="gap-2">
           <Mail className="h-4 w-4" />
-          Conectar Gmail
+          Conectar Email
         </Button>
       </div>
     );
