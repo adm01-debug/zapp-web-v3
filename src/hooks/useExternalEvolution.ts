@@ -354,7 +354,7 @@ export function useExternalConversations(enabled = true) {
       }
       
       const messages = await dedupedFetch(
-        `inbox:sidebar:${SIDEBAR_DAYS_BACK}:${SIDEBAR_LIMIT}`,
+        `inbox:sidebar:${SIDEBAR_DAYS_BACK}:${SIDEBAR_LIMIT}:${DEFAULT_INSTANCE}`,
         () => fetchRecentMessagesWindow(),
         { lockTtl: 8_000, resultTtl: POLL_INTERVAL - 500, waitTimeout: 6_000 },
       );
