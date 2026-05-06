@@ -96,12 +96,12 @@ function scanDir(dir: string, results: Violation[]) {
 
       FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
         const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
-        // Pattern inside quotes or delimiters
-        const fullPattern = new RegExp(`(?:^|['"\`\\s])(${variantsPart}${pattern.source})(?=['"\`\\s]|$)`, 'g');
+        // Removed lookbehinds for broader compatibility, use capturing groups properly
+        const fullPattern = new RegExp(`(^|['"\`\\s])(${variantsPart}${pattern.source})(?=['"\`\\s]|$)`, 'g');
         const matches = line.matchAll(fullPattern);
         
         for (const match of matches) {
-          const rawMatch = match[1].trim(); // Get the captured group
+          const rawMatch = match[2].trim();
           if (!rawMatch) continue;
 
           const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
