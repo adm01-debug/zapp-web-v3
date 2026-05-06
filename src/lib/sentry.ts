@@ -60,12 +60,12 @@ export function initSentry(): boolean {
         }
         return event;
       },
-      // Domínios pra distributed tracing (Supabase backend self-hosted)
+      // Domínios pra distributed tracing
       tracePropagationTargets: [
         /^\//,
-        /^https:\/\/zapp\.atomicabr\.com\.br/,
-        /^https:\/\/supabase\.atomicabr\.com\.br/,
-        /^https:\/\/.*\.atomicabr\.com\.br/,
+        /^https:\/\/.*\.supabase\.co/,
+        /^https:\/\/allrjhkpuscmgbsnmjlv\.supabase\.co/,
+        /^https:\/\/tdprnylgyrogbbhgdoik\.supabase\.co/,
       ],
     });
 
