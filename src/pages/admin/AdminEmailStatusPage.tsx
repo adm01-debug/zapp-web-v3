@@ -14,6 +14,9 @@ import { emailHealthService } from '@/services/email/emailHealthService';
 import type { EmailHealthInfo, EmailFailure } from '@/services/email/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
+
+type EmailHealthSummary = Database['public']['Tables']['email_health_summary']['Row'];
 
 export default function AdminEmailStatusPage() {
   const { accounts, schemaStatus, lastRequestId } = useEmail();
@@ -71,7 +74,7 @@ export default function AdminEmailStatusPage() {
       toast.error('O serviço de telemetria do Email está indisponível.');
       
       try {
-        const { data: summary } = await (supabase as any)
+        const { data: summary } = await supabase
           .from('email_health_summary')
           .select('*')
           .eq('id', 'current')
@@ -142,14 +145,14 @@ export default function AdminEmailStatusPage() {
     setIsRetrying(prev => ({ ...prev, [id]: true }));
     try {
       if (action === 'markRead') {
-        const { error } = await (supabase as any).rpc('rpc_email_mark_thread_read', {
+        const { error } = await supabase.rpc('rpc_email_mark_thread_read', {
           p_thread_id: id,
           p_read: true
         });
         if (error) throw error;
         toast.success('Thread marcada como lida no servidor.');
       } else if (action === 'rpc_test') {
-        const { error } = await (supabase as any).rpc('rpc_email_token_status');
+        const { error } = await supabase.rpc('rpc_email_token_status');
         if (error) throw error;
         toast.success('RPC de status de token validada com sucesso.');
       }
