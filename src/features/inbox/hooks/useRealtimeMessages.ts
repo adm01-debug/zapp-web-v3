@@ -122,7 +122,9 @@ export function useRealtimeMessages() {
     if (uniqueIds.length === 0) return [] as ConversationContact[];
     const fetchedContacts: ConversationContact[] = [];
     for (const idsChunk of chunkArray(uniqueIds, CONTACT_FETCH_CHUNK_SIZE)) {
-      const { data, error: contactsError } = await dbFrom('contacts')
+      const client = externalSupabase || supabase;
+      const { data, error: contactsError } = await client
+        .from('contacts')
         .select('*')
         .in('id', idsChunk);
       if (contactsError) throw contactsError;
