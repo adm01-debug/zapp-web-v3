@@ -16,6 +16,24 @@ interface QueueMetricsDashboardProps {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ metrics }) => {
+  const [stsMetrics, setStsMetrics] = useState<any[]>([]);
+  const [loadingSts, setLoadingSts] = useState(true);
+
+  useEffect(() => {
+    const fetchSTS = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('sts_performance_metrics' as any)
+          .select('*');
+        if (!error && data) setStsMetrics(data);
+      } catch (err) {
+        console.error('Failed to fetch STS metrics:', err);
+      } finally {
+        setLoadingSts(false);
+      }
+    };
+    fetchSTS();
+  }, []);
   const typeData = useMemo(() => {
     return Object.entries(metrics.byType).map(([type, data]) => ({
       name: type.charAt(0).toUpperCase() + type.slice(1),
