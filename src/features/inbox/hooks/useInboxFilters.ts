@@ -42,6 +42,19 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
   const [failureCategoryFilter, setFailureCategoryFilter] = useState<FailureCategory | 'all'>('all');
 
   const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
+  const { logAction } = useLoginAudit();
+  const prevScopeRef = useRef(scope);
+
+  useEffect(() => {
+    if (prevScopeRef.current !== scope) {
+      log.info('Scope changed', { from: prevScopeRef.current, to: scope });
+      logAction({
+        action: 'scope_change',
+        details: { from: prevScopeRef.current, to: scope, module: 'inbox' }
+      });
+      prevScopeRef.current = scope;
+    }
+  }, [scope, logAction]);
 
   // Carrega categorias de falha em lote quando o filtro de retry está ativo
   const { data: failureCategoryById = {} } = useFailureMetricsBatch(
