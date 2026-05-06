@@ -24,6 +24,8 @@ export interface RunOptions {
   phone: string;
   instance: string;
   intervalMs: number;
+  /** Simulates multiple agents working in parallel. */
+  concurrency?: number;
   /** Política: 'stop_first' | 'continue' | 'stop_after_n'. */
   failurePolicy: 'stop_first' | 'continue' | 'stop_after_n';
   failureThreshold?: number;
