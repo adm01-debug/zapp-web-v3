@@ -12,6 +12,7 @@
  */
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { Contact } from '@/hooks/useContacts';
 
@@ -31,7 +32,7 @@ interface UseContactsRealtimeOptions {
 }
 
 export function useContactsRealtime({
-  instanceName = 'wpp2',
+  instanceName = DEFAULT_WHATSAPP_INSTANCE,
   onInsert,
   onUpdate,
   onDelete,
