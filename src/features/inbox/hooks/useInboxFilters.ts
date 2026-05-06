@@ -10,6 +10,7 @@ import { MainTab, SubTab } from '@/features/inbox';
 import { useFailureMetricsBatch, type FailureCategory } from '@/features/inbox';
 import { useAllTicketStates } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
+import { useLoginAudit } from '@/features/auth';
 
 const log = getLogger('useInboxFilters');
 
