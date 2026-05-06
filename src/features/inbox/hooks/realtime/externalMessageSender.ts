@@ -47,15 +47,15 @@ export interface SendExternalOptions {
 }
 
 export interface SendExternalResult {
-  optimistic: RealtimeMessage;
+  optimistic: any;
   externalId: string | null;
 }
 
 function makeOptimisticBubble(
   remoteJid: string,
   content: string,
-  opts: { messageType?: string; mediaUrl?: string | null; contactAvatar?: string | null } = {},
-): RealtimeMessage {
+  opts: { messageType?: string; mediaUrl?: string | null; contactAvatar?: string | null; media_meta?: any } = {},
+): any {
   const now = new Date().toISOString();
   // ID local começa com `optimistic:` pra reconciliação. O webhook insere
   // a mensagem real com outro id e o cursor/poll a substitui no merge.
@@ -79,6 +79,7 @@ function makeOptimisticBubble(
     transcription_status: null,
     is_deleted: false,
     contactAvatar: opts.contactAvatar ?? null,
+    media_meta: opts.media_meta ?? null,
   };
 }
 
@@ -168,11 +169,16 @@ export async function sendExternalText(
 export async function sendExternalAudio(
   remoteJid: string,
   blob: Blob,
-  opts: SendExternalOptions = {},
+  opts: SendExternalOptions & { isPtt?: boolean; conversationInstance?: string } = {},
 ): Promise<SendExternalResult> {
   const phone = jidToPhone(remoteJid);
   if (!phone) throw new Error('Contato sem JID válido para envio.');
-  const instance = opts.instanceName || DEFAULT_INSTANCE;
+  
+  // Security check: Ensure we are sending through the correct instance for this conversation
+  const instance = opts.instanceName || opts.conversationInstance || DEFAULT_INSTANCE;
+  if (opts.conversationInstance && opts.instanceName && opts.instanceName !== opts.conversationInstance) {
+    log.warn('Instance mismatch detected, forcing conversation instance', { target: opts.conversationInstance, requested: opts.instanceName });
+  }
 
   // Sanitiza o JID para uso como pasta no bucket (sem `@`/`:` etc).
   const safeKey = remoteJid.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -205,6 +211,7 @@ export async function sendExternalAudio(
     messageType: 'audio',
     mediaUrl: localAudioUrl,
     contactAvatar: opts.contactAvatar,
+    media_meta: { ptt: opts.isPtt ?? true } // Store PTT intent in optimistic bubble for telemetry
   });
 
   const { data, error } = await supabase.functions.invoke('evolution-api', {

@@ -20,6 +20,8 @@ export interface Message {
   transcription: string | null;
   transcription_status: string | null;
   is_deleted: boolean | null;
+  media_meta: any | null;
+  contactAvatar: string | null;
 }
 
 export const messageRepository = {
