@@ -150,7 +150,7 @@ export function ConnectionsView() {
       <Dialog open={qrCodeDialog.open} onOpenChange={(open) => !open && closeQrDialog()}>
         <DialogContent className="sm:max-w-md text-center">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-center gap-2">
+            <DialogTitle className="flex items-center justify-center gap-2" data-testid="qr-dialog-title">
               {qrCodeDialog.status === 'connected' ? <><CheckCircle2 className="w-5 h-5 text-status-online" />Conectado!</> :
                qrCodeDialog.status === 'error' ? <><XCircle className="w-5 h-5 text-destructive" />Erro</> :
                <><QrCode className="w-5 h-5" />Escanear QR Code - {qrCodeDialog.connectionName}</>}
@@ -161,8 +161,8 @@ export function ConnectionsView() {
               <div className="w-64 h-64 mx-auto bg-muted rounded-xl flex flex-col items-center justify-center p-6 gap-4 text-center">
                 <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
                 <div className="space-y-1.5">
-                  <p className="text-sm font-medium animate-pulse">Iniciando sessão...</p>
-                  <p className="text-[10px] text-muted-foreground">Etapa 1 de 3: Autenticando com a Evolution API</p>
+                  <p className="text-sm font-medium animate-pulse" data-testid="reconnect-step-loading">Iniciando sessão...</p>
+                  <p className="text-[10px] text-muted-foreground" data-testid="reconnect-step-label">Etapa 1 de 3: Autenticando com a Evolution API</p>
                 </div>
               </div>
             )}
@@ -192,7 +192,7 @@ export function ConnectionsView() {
                     <Loader2 className="w-3 h-3 animate-spin" />
                     <span className="font-medium">Aguardando leitura do QR Code...</span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Etapa 2 de 3: Conectando dispositivo via WhatsApp Web</p>
+                  <p className="text-[10px] text-muted-foreground" data-testid="reconnect-step-label">Etapa 2 de 3: Conectando dispositivo via WhatsApp Web</p>
                   <p className="text-[10px] text-muted-foreground italic">Mantenha o celular próximo e conectado à internet</p>
                 </div>
                 {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}

@@ -30,10 +30,8 @@ fi
 
 echo "📦 Archiving artifacts to /mnt/documents/ci-reports/..."
 mkdir -p /mnt/documents/ci-reports/
-# Simulate artifact publishing
-echo "Playwright HTML Report" > /mnt/documents/ci-reports/playwright.txt
-echo "Coverage Report: 85%" > /mnt/documents/ci-reports/coverage.txt
-
-echo "✅ Coverage target met ($CURRENT_COVERAGE%). Artifacts published to /mnt/documents/ci-reports/"
+cp -r playwright-report /mnt/documents/ci-reports/ 2>/dev/null || true
+cp -r test-results /mnt/documents/ci-reports/ 2>/dev/null || true
+echo "✅ Artifacts (HTML report, screenshots, videos) published to /mnt/documents/ci-reports/"
 
 echo "✅ Pipeline finished successfully."
