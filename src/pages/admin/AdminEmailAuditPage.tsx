@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
-  History as HistoryIcon, User, ChevronLeft, ChevronRight
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+} from '@/components/ui/select';
+import { 
+  History as HistoryIcon, User, ChevronLeft, ChevronRight, Filter, RefreshCcw, Search, X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { emailApi, type EmailRevalidationJob } from '@/services/email/emailApi';
@@ -15,16 +19,25 @@ export default function AdminEmailAuditPage() {
   const [total, setTotal] = useState(0);
   const pageSize = 10;
 
+  // Filters
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
   const loadAuditLogs = async () => {
     setLoading(true);
     try {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      const { data, count, error } = await emailApi.getAuditLogs(from, to);
+      const { data, count, error } = await emailApi.getAuditLogs(from, to, {
+        status: statusFilter,
+        dateFrom,
+        dateTo
+      });
 
       if (error) throw error;
-      setLogs((data as EmailRevalidationJob[]) || []);
+      setLogs(data || []);
       setTotal(count || 0);
     } catch (error) {
       console.error('Erro ao carregar auditoria:', error);
@@ -36,16 +49,35 @@ export default function AdminEmailAuditPage() {
 
   useEffect(() => {
     loadAuditLogs();
-  }, [page]);
+  }, [page, statusFilter, dateFrom, dateTo]);
+
+  const handleRetry = async (jobId: string) => {
+    try {
+      const { error } = await emailApi.retryJob(jobId);
+      if (error) throw error;
+      toast.success('Novo job de revalidação agendado');
+      loadAuditLogs();
+    } catch (error) {
+      console.error('Erro ao repetir job:', error);
+      toast.error('Erro ao agendar nova tentativa');
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed': return <Badge variant="default" className="bg-primary">Concluído</Badge>;
+      case 'completed': return <Badge variant="default" className="bg-primary text-primary-foreground">Concluído</Badge>;
       case 'pending': return <Badge variant="secondary">Pendente</Badge>;
-      case 'processing': return <Badge variant="secondary" className="bg-primary">Processando</Badge>;
+      case 'processing': return <Badge variant="secondary" className="bg-blue-500 text-white hover:bg-blue-600">Processando</Badge>;
       case 'failed': return <Badge variant="destructive">Falhou</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  const resetFilters = () => {
+    setStatusFilter('all');
+    setDateFrom('');
+    setDateTo('');
+    setPage(1);
   };
 
   return (
@@ -56,61 +88,129 @@ export default function AdminEmailAuditPage() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <HistoryIcon className="w-5 h-5" />
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <CardTitle className="text-lg flex items-center gap-2 font-semibold">
+            <HistoryIcon className="w-5 h-5 text-primary" />
             Logs de Revalidação
           </CardTitle>
-          <Badge variant="outline">Total: {total}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="font-mono">Total: {total}</Badge>
+            {(statusFilter !== 'all' || dateFrom || dateTo) && (
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 px-2">
+                <X className="w-4 h-4 mr-1" />
+                Limpar
+              </Button>
+            )}
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium">Job ID</th>
-                  <th className="px-4 py-3 text-left font-medium">Status</th>
-                  <th className="px-4 py-3 text-left font-medium">Solicitado em</th>
-                  <th className="px-4 py-3 text-left font-medium">Concluído em</th>
-                  <th className="px-4 py-3 text-left font-medium">Usuário</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td>
-                  </tr>
-                ) : logs.length > 0 ? logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <code className="text-[10px] bg-muted px-1 rounded">{log.id}</code>
-                    </td>
-                    <td className="px-4 py-3">{getStatusBadge(log.status)}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(log.requested_at).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {log.completed_at ? new Date(log.completed_at).toLocaleString() : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <User className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-xs">{log.requested_by ? 'Sistema/Admin' : 'Automático'}</span>
-                      </div>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhum log encontrado.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <CardContent className="space-y-4">
+          {/* Filters Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-muted/30 p-3 rounded-lg border">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground ml-1">Status</label>
+              <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setPage(1); }}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="processing">Processando</SelectItem>
+                  <SelectItem value="completed">Concluído</SelectItem>
+                  <SelectItem value="failed">Falhou</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground ml-1">De (Data)</label>
+              <Input 
+                type="date" 
+                value={dateFrom} 
+                onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+                className="bg-background"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground ml-1">Até (Data)</label>
+              <Input 
+                type="date" 
+                value={dateTo} 
+                onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+                className="bg-background"
+              />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between mt-4">
+          <div className="rounded-md border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">Job ID</th>
+                    <th className="px-4 py-3 text-left font-medium">Status</th>
+                    <th className="px-4 py-3 text-left font-medium">Solicitado em</th>
+                    <th className="px-4 py-3 text-left font-medium">Usuário</th>
+                    <th className="px-4 py-3 text-right font-medium">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                          <RefreshCcw className="w-6 h-6 animate-spin" />
+                          <span>Carregando logs...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : logs.length > 0 ? logs.map((log) => (
+                    <tr key={log.id} className="hover:bg-muted/30 transition-colors group">
+                      <td className="px-4 py-3">
+                        <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono text-muted-foreground">{log.id.split('-')[0]}...</code>
+                      </td>
+                      <td className="px-4 py-3">{getStatusBadge(log.status)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span>{new Date(log.requested_at).toLocaleDateString()}</span>
+                          <span className="text-[10px] text-muted-foreground">{new Date(log.requested_at).toLocaleTimeString()}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <User className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-xs">{log.requested_by ? 'Admin' : 'Sistema'}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleRetry(log.id)}
+                          title="Repetir Job"
+                        >
+                          <RefreshCcw className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                        <div className="flex flex-col items-center gap-2">
+                          <Search className="w-6 h-6 opacity-20" />
+                          <p>Nenhum log encontrado para os filtros selecionados.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
             <p className="text-xs text-muted-foreground">
-              Página {page} de {Math.ceil(total / pageSize) || 1}
+              Mostrando página <span className="font-semibold">{page}</span> de <span className="font-semibold">{Math.ceil(total / pageSize) || 1}</span>
             </p>
             <div className="flex items-center gap-2">
               <Button 
@@ -118,16 +218,18 @@ export default function AdminEmailAuditPage() {
                 size="sm" 
                 disabled={page === 1}
                 onClick={() => setPage(p => p - 1)}
+                className="h-8"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 disabled={page * pageSize >= total}
                 onClick={() => setPage(p => p + 1)}
+                className="h-8"
               >
-                <ChevronRight className="h-4 w-4" />
+                Próxima <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>
