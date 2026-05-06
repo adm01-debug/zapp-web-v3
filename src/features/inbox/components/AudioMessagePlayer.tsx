@@ -30,6 +30,7 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
   const [transcription, setTranscription] = useState<string | null>(existingTranscription || null);
   const [transcriptionStatus, setTranscriptionStatus] = useState<string>(initialStatus || 'pending');
   const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
+  const [voiceTaskId, setVoiceTaskId] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [showTranscription, setShowTranscription] = useState(!!existingTranscription);
@@ -70,20 +71,22 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
         const newData = payload.new as any;
         if (newData.status) setVoiceStatus(newData.status);
         if (newData.error_message) setVoiceError(newData.error_message);
+        if (newData.id) setVoiceTaskId(newData.id);
         
         if (newData.status === 'completed' && newData.output_audio_url && onVoiceChange) {
-          // If it's a new audio, we might want to refresh?
-          // For now just show it's done
           toast({ title: 'Conversão concluída', description: 'A voz do áudio foi alterada com sucesso.' });
+          // Fetch the new audio and trigger update
+          fetch(newData.output_audio_url)
+            .then(r => r.blob())
+            .then(blob => onVoiceChange(messageId, blob));
         }
       })
       .subscribe();
       
-    // Initial fetch for current status
     const fetchStatus = async () => {
       const { data } = await supabase
         .from('voice_conversion_queue')
-        .select('status, error_message')
+        .select('id, status, error_message')
         .eq('message_id', messageId)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -92,6 +95,7 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
       if (data) {
         setVoiceStatus(data.status);
         setVoiceError(data.error_message);
+        setVoiceTaskId(data.id);
       }
     };
     
@@ -215,6 +219,7 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
             messageId={messageId}
             conversationId={conversationId}
             onVoiceChanged={(blob) => onVoiceChange(messageId, blob)}
+            initialTaskId={voiceTaskId}
           />
         )}
 
