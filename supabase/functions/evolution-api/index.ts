@@ -279,7 +279,19 @@ serve(async (req) => {
       if (typeof audioSource === 'string') audioSource = await resolvePrivateBucketUrl(supabase, audioSource);
       const audioPayload: Record<string, unknown> = { number: body.number, audio: audioSource };
       if (body.delay) audioPayload.delay = body.delay;
+      if (body.encoding !== undefined) audioPayload.encoding = body.encoding;
       return await proxy(`/message/sendWhatsAppAudio/${instance}`, 'POST', audioPayload);
+    }
+
+    if (action === 'send-ptv') {
+      const rawVideo = body.video ?? body.videoUrl ?? body.mediaUrl;
+      let videoSource: unknown = typeof rawVideo === 'string'
+        ? rawVideo.trim().replace(/^"+|"+$/g, '').replace(/\.supabase\.co"\//, '.supabase.co/')
+        : rawVideo;
+      if (typeof videoSource === 'string') videoSource = await resolvePrivateBucketUrl(supabase, videoSource, ['whatsapp-media']);
+      const ptvPayload: Record<string, unknown> = { number: body.number, video: videoSource };
+      if (body.delay) ptvPayload.delay = body.delay;
+      return await proxy(`/message/sendPtv/${instance}`, 'POST', ptvPayload);
     }
 
     if (action === 'send-sticker') {
