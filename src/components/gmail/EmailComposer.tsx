@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { emailSendMessage } from '@/hooks/email/emailApi';
+import { emailSendMessage } from '@/hooks/gmail/gmailApi';
 import { useEmailSignature } from '@/hooks/useEmailSignature';
 import { useEmailDraft } from '@/hooks/useEmailDraft';
 

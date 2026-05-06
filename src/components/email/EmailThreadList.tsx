@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { type EmailThread } from '@/hooks/email/emailTypes';
+import { type EmailThread } from '@/hooks/gmail/gmailTypes';
 import { SLADot } from './EmailSLABadge';
 import { useEmailSLA } from '@/hooks/useEmailSLA';
 import { formatDistanceToNow } from 'date-fns';

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { type EmailAttachment } from '@/hooks/email/emailTypes';
+import { type EmailAttachment } from '@/hooks/gmail/gmailTypes';
 
 interface EmailAttachmentPreviewProps {
   attachments: EmailAttachment[];

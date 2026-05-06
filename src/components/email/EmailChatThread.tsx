@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { type EmailThread, type EmailMessage } from '@/hooks/email/emailTypes';
+import { type EmailThread, type EmailMessage } from '@/hooks/gmail/gmailTypes';
 import { EmailChatBubble } from './EmailChatBubble';
 import { EmailChatReplyBar } from './EmailChatReplyBar';
 import { EmailSLABadge, SLAProgressBar } from './EmailSLABadge';

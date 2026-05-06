@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { emailSendMessage } from '@/hooks/email/emailApi';
+import { emailSendMessage } from '@/hooks/gmail/gmailApi';
 import { MessageTemplates } from '@/features/inbox/components/MessageTemplates';
 import { useEmailSignature } from '@/hooks/useEmailSignature';
 import { useEmailDraft } from '@/hooks/useEmailDraft';

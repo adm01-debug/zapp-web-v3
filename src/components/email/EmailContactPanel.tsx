@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { type EmailThread, type EmailMessage } from '@/hooks/email/emailTypes';
+import { type EmailThread, type EmailMessage } from '@/hooks/gmail/gmailTypes';
 import { EmailSLABadge, SLAProgressBar } from './EmailSLABadge';
 import { useEmailSLA } from '@/hooks/useEmailSLA';
 import { formatDistanceToNow, format } from 'date-fns';

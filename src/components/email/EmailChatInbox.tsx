@@ -9,7 +9,7 @@ import { EmailThreadList } from './EmailThreadList';
 import { EmailChatThread } from './EmailChatThread';
 import { EmailSearchBar } from './EmailSearchBar';
 import { EmailAccountSelector } from '../email/EmailAccountSelector';
-import { type EmailThread } from '@/hooks/email/emailTypes';
+import { type EmailThread } from '@/hooks/gmail/gmailTypes';
 import { type EmailSearchResult } from '@/hooks/useEmailSearch';
 
 interface EmailChatInboxProps {

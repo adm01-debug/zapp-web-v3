@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { type EmailAccount } from '@/hooks/email/emailTypes';
+import { type EmailAccount } from '@/hooks/gmail/gmailTypes';
 import { type TokenStatus } from '@/hooks/useEmailOAuthFlow';
 
 interface EmailAccountSelectorProps {
