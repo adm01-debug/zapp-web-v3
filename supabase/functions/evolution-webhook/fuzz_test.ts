@@ -56,7 +56,7 @@ Deno.test("Fuzz - Thousands of Payload Variants (Simulated)", () => {
     
     // Test normalization and record extraction with these random combinations
     const norm = normalizeEventName(payload.event as string);
-    const records = toEventRecords(norm, payload.data);
+    const records = toEventRecords(norm, payload.data as any);
     assert(Array.isArray(records));
   }
 });
