@@ -288,15 +288,21 @@ serve(async (req) => {
     if (action === 'send-media') return await proxy(`/message/sendMedia/${instance}`, 'POST', { number: body.number, mediatype: body.mediaType || body.mediatype, mimetype: body.mimetype, caption: body.caption, media: body.mediaUrl || body.media, fileName: body.fileName, delay: body.delay });
 
     if (action === 'send-audio') {
-      const rawAudio = body.audio ?? body.audioUrl ?? body.mediaUrl;
+      if (isMultipart) {
+        // Direct proxy for multipart - Evolution API expects 'audio' as a file
+        return await proxy(`/message/sendWhatsAppAudio/${instance}`, 'POST', body);
+      }
+      
+      const jsonBody = body as Record<string, unknown>;
+      const rawAudio = jsonBody.audio ?? jsonBody.audioUrl ?? jsonBody.mediaUrl;
       let audioSource: unknown = typeof rawAudio === 'string'
         ? rawAudio.trim().replace(/^"+|"+$/g, '').replace(/\.supabase\.co"\//, '.supabase.co/')
         : rawAudio;
       if (typeof audioSource === 'string') audioSource = await resolvePrivateBucketUrl(supabase, audioSource);
-      const audioPayload: Record<string, unknown> = { number: body.number, audio: audioSource };
-      if (body.delay) audioPayload.delay = body.delay;
-      if (body.encoding !== undefined) audioPayload.encoding = body.encoding;
-      if (body.isPtt !== undefined) audioPayload.ptt = body.isPtt; // Ensure ptt boolean is propagated for proper WhatsApp flags
+      const audioPayload: Record<string, unknown> = { number: jsonBody.number, audio: audioSource };
+      if (jsonBody.delay) audioPayload.delay = jsonBody.delay;
+      if (jsonBody.encoding !== undefined) audioPayload.encoding = jsonBody.encoding;
+      if (jsonBody.isPtt !== undefined) audioPayload.ptt = jsonBody.isPtt; 
       return await proxy(`/message/sendWhatsAppAudio/${instance}`, 'POST', audioPayload);
     }
 
