@@ -1,4 +1,5 @@
 export * from './useAuth';
+export * from './useDepartmentAgents';
 export * from './useAuthForm';
 export * from './useLoginAudit';
 export * from './useMFA';
