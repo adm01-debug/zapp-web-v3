@@ -22,8 +22,14 @@ jobs:
       - name: Build
         run: bun run build
         
-      - name: Vitest (Unit & Integration)
+      - name: Vitest (Unit & Fuzz)
         run: bunx vitest run --coverage
+        
+      - name: Edge Functions Tests (Deno)
+        run: |
+          curl -fsSL https://deno.land/x/install/install.sh | sh
+          export PATH="/home/runner/.deno/bin:$PATH"
+          deno test --allow-read --allow-env supabase/functions/
         
       - name: Install Playwright Browsers
         run: bunx playwright install --with-deps
