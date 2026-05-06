@@ -26,31 +26,29 @@ export const useThemeAudit = () => {
   useEffect(() => {
     // Audit logic
     const runAudit = () => {
-      // 1. OLED Audit
-      const elements = document.querySelectorAll('*');
-      const oledViolations: string[] = [];
-      
-      elements.forEach((el) => {
-        const style = window.getComputedStyle(el);
-        const bg = style.backgroundColor;
-        
-        if (bg === 'rgb(31, 41, 55)' || bg === 'rgb(17, 24, 39)' || bg === 'rgb(9, 9, 11)') {
-          const path = getElementPath(el);
-          oledViolations.push(`[OLED Audit] Background inconsistente (${bg}) em: ${path}`);
-        }
-      });
+      const violations: string[] = [];
+      let oledPass = true;
+      let fontPass = true;
+      let colorPass = true;
 
-      if (oledViolations.length > 0) {
-        console.group('🔍 Relatório de Inconsistências OLED');
-        console.warn(`${oledViolations.length} elementos encontrados com cores de fundo não-OLED.`);
-        oledViolations.forEach(v => console.log(v));
-        console.groupEnd();
+      // 1. OLED Audit (only in dark mode)
+      if (resolvedTheme === 'dark') {
+        const elements = document.querySelectorAll('*');
+        elements.forEach((el) => {
+          const style = window.getComputedStyle(el);
+          const bg = style.backgroundColor;
+          
+          // Detect common non-OLED dark grays that should be pure black (0,0,0) or vary close
+          if (bg === 'rgb(31, 41, 55)' || bg === 'rgb(17, 24, 39)' || bg === 'rgb(9, 9, 11)') {
+            oledPass = false;
+            violations.push(`[OLED] Background inconsistente (${bg}) em: ${getElementPath(el)}`);
+          }
+        });
       }
 
       // 2. Font Safeguard Audit
       const root = document.documentElement;
-      const inlineSans = root.style.getPropertyValue('--font-sans');
-      const inlineDisplay = root.style.getPropertyValue('--font-display');
+      const computedFont = getComputedStyle(root).getPropertyValue('--font-sans').trim();
       
       const saved = localStorage.getItem(STORAGE_KEY);
       let presetId = DEFAULT_PRESET_ID;
@@ -64,17 +62,24 @@ export const useThemeAudit = () => {
       const preset = PRESETS.find(p => p.id === presetId);
       const shouldHaveInlineFont = !!preset?.font;
 
-      if (!shouldHaveInlineFont && (inlineSans || inlineDisplay)) {
-        console.warn(
-          `[ThemeAudit] ⚠️ Font leak detected! Inline fonts found ("${inlineSans}") but preset "${presetId}" does not define one. This might override tokens.css.`
-        );
+      if (!computedFont.includes('Inter') && !shouldHaveInlineFont) {
+        fontPass = false;
+        violations.push(`[Font] Tipografia desalinhada: --font-sans="${computedFont}" (Esperado: Inter)`);
       }
 
-      const computedFont = getComputedStyle(root).getPropertyValue('--font-sans').trim();
-      if (!computedFont.includes('Inter') && !shouldHaveInlineFont) {
-        console.warn(
-          `[ThemeAudit] ⚠️ Typography mismatch: --font-sans does not contain "Inter". Current value: ${computedFont}`
-        );
+      // 3. Primary Color Alignment
+      const computedPrimary = getComputedStyle(root).getPropertyValue('--primary').trim();
+      if (computedPrimary.includes('undefined')) {
+        colorPass = false;
+        violations.push(`[Color] Variável --primary está indefinida ou quebrada.`);
+      }
+
+      setResult({ oledPass, fontPass, colorPass, violations });
+
+      if (violations.length > 0) {
+        console.group('🔍 Relatório de Auditoria Visual');
+        violations.forEach(v => console.warn(v));
+        console.groupEnd();
       }
     };
 
