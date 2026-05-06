@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -30,7 +31,7 @@ async function invoke<T>(action: string, payload: Record<string, unknown> = {}):
 
 export default function AdminInstancePausesPage() {
   const qc = useQueryClient();
-  const [instance, setInstance] = useState('wpp2');
+  const [instance, setInstance] = useState(DEFAULT_WHATSAPP_INSTANCE);
   const [minutes, setMinutes] = useState(15);
   const [reason, setReason] = useState('');
   const [selected, setSelected] = useState<PauseRow | null>(null);
