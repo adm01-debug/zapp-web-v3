@@ -160,7 +160,7 @@ supabase/
 │   ├── evolution-*/    # Integração WhatsApp
 │   ├── elevenlabs-*/   # Integração de áudio
 │   └── ...
-├── migrations/         # 55 Migrations SQL versionadas
+├── migrations/         # 453 Migrations SQL versionadas
 └── config.toml         # Configuração do projeto
 
 docs/
