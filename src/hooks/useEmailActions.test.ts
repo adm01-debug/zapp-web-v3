@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useEmail } from './useEmail';
@@ -33,7 +32,6 @@ vi.mock('@/integrations/supabase/safeClient', () => ({
 describe('useEmail - Labels and RPC Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset rpc mock to default success
     vi.mocked(safeClient.rpc).mockResolvedValue({ data: null, error: null });
   });
 
@@ -115,4 +113,3 @@ describe('useEmail - Labels and RPC Actions', () => {
     });
   });
 });
-

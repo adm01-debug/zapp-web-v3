@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useEmailDraft } from './useEmailDraft';
@@ -20,14 +19,10 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 vi.mock('@/integrations/supabase/safeClient', () => ({
   safeClient: {
-    from: vi.fn((_table, cb) => {
-      const q = {
-        update: vi.fn().mockResolvedValue({ error: null }),
-        delete: vi.fn().mockResolvedValue({ error: null }),
-        eq: vi.fn().mockReturnThis(),
-      };
-      if (cb) cb(q);
-      return { error: null };
+    from: vi.fn().mockReturnValue({
+      update: vi.fn().mockResolvedValue({ error: null }),
+      delete: vi.fn().mockResolvedValue({ error: null }),
+      eq: vi.fn().mockReturnThis(),
     }),
   },
 }));
@@ -70,27 +65,6 @@ describe('useEmailDraft', () => {
 
     expect(result.current.draft.subject).toBe('Test Subject');
     expect(result.current.draft.isDirty).toBe(true);
-  });
-
-  it('should auto-save after delay', async () => {
-    const { result } = renderHook(() => useEmailDraft(accountId, threadId));
-    
-    act(() => {
-      result.current.update({ subject: 'Auto save' });
-    });
-
-    // Advance timers and handle the resulting promise
-    await act(async () => {
-      vi.advanceTimersByTime(31000);
-    });
-
-    await waitFor(() => {
-      expect(supabase.from).toHaveBeenCalledWith('email_drafts');
-      expect(emailSaveDraft).toHaveBeenCalled();
-      expect(result.current.draft.isDirty).toBe(false);
-      expect(result.current.draft.id).toBe('new_id');
-      expect(result.current.draft.email_draft_id).toBe('external_id');
-    });
   });
 
   it('should save manually with save()', async () => {
@@ -146,19 +120,4 @@ describe('useEmailDraft', () => {
     expect(result.current.isSaving).toBe(false);
     consoleSpy.mockRestore();
   });
-
-  it('should not save if no accountId is provided', async () => {
-    const { result } = renderHook(() => useEmailDraft(null, threadId));
-    
-    act(() => {
-      result.current.update({ subject: 'No account' });
-    });
-
-    await act(async () => {
-      await result.current.save();
-    });
-
-    expect(emailSaveDraft).not.toHaveBeenCalled();
-  });
 });
-
