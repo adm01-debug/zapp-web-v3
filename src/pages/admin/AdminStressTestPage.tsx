@@ -253,6 +253,21 @@ export default function AdminStressTestPage() {
       onResult: (r) => {
         collected.push(r);
         setResults((prev) => [r, ...prev].slice(0, 250));
+        
+        // Update throughput data for chart
+        const elapsed = (performance.now() - startTimeManual) / 1000;
+        if (elapsed > 0) {
+          setThroughputData(prev => {
+            const last = prev[prev.length - 1];
+            const currentMsgSec = Number((collected.length / elapsed).toFixed(2));
+            // Only add data every ~1 second
+            if (!last || (Date.now() - new Date(`2026-05-06T${last.time}`).getTime() > 1000)) {
+               return [...prev, { time: new Date().toLocaleTimeString('pt-BR'), msgSec: currentMsgSec }].slice(-30);
+            }
+            return prev;
+          });
+        }
+
         // Persiste a cada 5 envios pra reduzir tráfego
         if (collected.length - lastPersist >= 5) {
           lastPersist = collected.length;
