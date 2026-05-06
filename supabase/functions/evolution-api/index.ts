@@ -90,9 +90,12 @@ serve(async (req) => {
 
   try {
     const { isMultipart, data: body } = await getParsedBody();
-    const instance = isMultipart 
-      ? ((body as FormData).get('instanceName') || (body as FormData).get('instance'))
-      : ((body as Record<string, unknown>).instanceName || (body as Record<string, unknown>).instance);
+    let instance: string | null = null;
+    if (isMultipart) {
+      instance = (body as FormData).get('instanceName') as string || (body as FormData).get('instance') as string;
+    } else {
+      instance = (body as Record<string, unknown>).instanceName as string || (body as Record<string, unknown>).instance as string;
+    }
 
     // Pause guard: bloqueia operações que usam instância quando ela está pausada.
     // Permite ações de gestão da instância em si para o admin poder ver status.
