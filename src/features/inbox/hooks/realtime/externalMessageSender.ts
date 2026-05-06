@@ -267,10 +267,6 @@ export async function sendExternalMedia(
   }
 
   if (opts.onProgress) opts.onProgress(50); // Simulation midpoint
-  if (uploadError) {
-    log.error('media upload failed', uploadError);
-    throw new Error(uploadError.message || 'Falha no upload do arquivo');
-  }
 
   const { data: signed, error: signError } = await supabase.storage
     .from('whatsapp-media')
