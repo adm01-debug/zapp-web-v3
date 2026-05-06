@@ -11979,6 +11979,74 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_reprocess_queue: {
+        Row: {
+          attempts: number | null
+          connection_id: string | null
+          created_at: string | null
+          id: string
+          last_error: string | null
+          max_attempts: number | null
+          next_retry_at: string | null
+          payload: Json
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          connection_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_error?: string | null
+          max_attempts?: number | null
+          next_retry_at?: string | null
+          payload: Json
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          connection_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_error?: string | null
+          max_attempts?: number | null
+          next_retry_at?: string | null
+          payload?: Json
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_reprocess_queue_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_reprocess_queue_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_agent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_reprocess_queue_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_reprocess_queue_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_cloud_webhook_pings: {
         Row: {
           created_at: string
@@ -12065,6 +12133,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           degraded_at: string | null
+          event_history: Json | null
           farewell_enabled: boolean | null
           farewell_message: string | null
           health_reason: string | null
@@ -12089,6 +12158,7 @@ export type Database = {
           routing_mode: string
           status: string | null
           updated_at: string
+          webhook_events: string[] | null
           webhook_url: string | null
           whatsapp_instance_id: string | null
         }
@@ -12099,6 +12169,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           degraded_at?: string | null
+          event_history?: Json | null
           farewell_enabled?: boolean | null
           farewell_message?: string | null
           health_reason?: string | null
@@ -12123,6 +12194,7 @@ export type Database = {
           routing_mode?: string
           status?: string | null
           updated_at?: string
+          webhook_events?: string[] | null
           webhook_url?: string | null
           whatsapp_instance_id?: string | null
         }
@@ -12133,6 +12205,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           degraded_at?: string | null
+          event_history?: Json | null
           farewell_enabled?: boolean | null
           farewell_message?: string | null
           health_reason?: string | null
@@ -12157,6 +12230,7 @@ export type Database = {
           routing_mode?: string
           status?: string | null
           updated_at?: string
+          webhook_events?: string[] | null
           webhook_url?: string | null
           whatsapp_instance_id?: string | null
         }
