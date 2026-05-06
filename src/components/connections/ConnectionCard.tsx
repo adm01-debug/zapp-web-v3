@@ -51,7 +51,7 @@ interface ConnectionCardProps {
   syncingHistory: string | null;
   onShowQrCode: (c: WhatsAppConnection) => void;
   onCopyId: (id: string) => void;
-  onDisconnect: (c: WhatsAppConnection) => void;
+  onDisconnect: (c: WhatsAppConnection) => Promise<void>;
   onSetDefault: (id: string) => void;
   onSetApiType?: (c: WhatsAppConnection, api_type: 'evolution' | 'official') => void;
   onDelete: (c: WhatsAppConnection) => void;
@@ -74,6 +74,7 @@ export function ConnectionCard({
   const [recheckingHealth, setRecheckingHealth] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const { restartInstance, connectInstance } = useEvolutionApi();
   const isConnected = connection.status === 'connected';
 
@@ -396,12 +397,29 @@ export function ConnectionCard({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDisconnecting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => onDisconnect(connection)}
+              onClick={async (e) => {
+                e.preventDefault();
+                setIsDisconnecting(true);
+                try {
+                  await onDisconnect(connection);
+                  setConfirmDisconnect(false);
+                } finally {
+                  setIsDisconnecting(false);
+                }
+              }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDisconnecting}
             >
-              Sim, desconectar
+              {isDisconnecting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Desconectando...
+                </>
+              ) : (
+                'Sim, desconectar'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
