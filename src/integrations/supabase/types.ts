@@ -5560,6 +5560,7 @@ export type Database = {
           config: Json | null
           created_at: string | null
           department: string | null
+          department_id: string | null
           display_name: string | null
           id: string
           instance_name: string
@@ -5588,6 +5589,7 @@ export type Database = {
           config?: Json | null
           created_at?: string | null
           department?: string | null
+          department_id?: string | null
           display_name?: string | null
           id?: string
           instance_name: string
@@ -5616,6 +5618,7 @@ export type Database = {
           config?: Json | null
           created_at?: string | null
           department?: string | null
+          department_id?: string | null
           display_name?: string | null
           id?: string
           instance_name?: string
@@ -5636,7 +5639,15 @@ export type Database = {
           webhook_enabled?: boolean | null
           webhook_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "instance_registry_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       integration_health_log: {
         Row: {
@@ -10783,6 +10794,8 @@ export type Database = {
           author_name: string
           content: string
           created_at: string | null
+          deleted_at: string | null
+          edited_at: string | null
           id: string
           mentioned_users: string[] | null
           transfer_id: string
@@ -10793,6 +10806,8 @@ export type Database = {
           author_name: string
           content: string
           created_at?: string | null
+          deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           mentioned_users?: string[] | null
           transfer_id: string
@@ -10803,6 +10818,8 @@ export type Database = {
           author_name?: string
           content?: string
           created_at?: string | null
+          deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           mentioned_users?: string[] | null
           transfer_id?: string
@@ -12481,6 +12498,30 @@ export type Database = {
           },
         ]
       }
+      v_user_unread: {
+        Row: {
+          instance_name: string | null
+          unread_count: number | null
+          unread_urgent_count: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instance_members_instance_name_fkey"
+            columns: ["instance_name"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "instance_members_instance_name_fkey"
+            columns: ["instance_name"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
       whatsapp_connections_agent: {
         Row: {
           id: string | null
@@ -12923,6 +12964,8 @@ export type Database = {
           author_name: string
           content: string
           created_at: string | null
+          deleted_at: string | null
+          edited_at: string | null
           id: string
           mentioned_users: string[] | null
           transfer_id: string
