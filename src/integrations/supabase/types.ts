@@ -12986,6 +12986,14 @@ export type Database = {
         }
         Returns: string
       }
+      fn_reopen_transfer: {
+        Args: {
+          p_parent_transfer_id: string
+          p_reason: string
+          p_target_instance?: string
+        }
+        Returns: Json
+      }
       fn_resolve_agent_for_routing: {
         Args: {
           p_channel_connection_id?: string
