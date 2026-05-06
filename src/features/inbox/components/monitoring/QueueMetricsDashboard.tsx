@@ -123,8 +123,8 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               <YAxis fontSize={10} />
               <RechartsTooltip />
               <Legend wrapperStyle={{ fontSize: '10px' }} />
-              <Bar dataKey="sent" name="Sucesso" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="failed" name="Falha" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="sent" name="Sucesso" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="failed" name="Falha" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
