@@ -25,7 +25,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { AlertTriangle, Play, Square, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Play, Square, CheckCircle2, XCircle, Loader2, Download, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
