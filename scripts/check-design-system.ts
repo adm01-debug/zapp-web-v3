@@ -34,8 +34,8 @@ function getSuggestion(label: string, match: string): { suggestion: string, prio
   const cleanMatch = match.replace(variantPrefixRegex, '').trim();
 
   if (label === 'Raw Hex' || label === 'Arbitrary Color') {
-    const isWhite = cleanMatch.includes('white') || cleanMatch.toLowerCase().includes('#ffffff') || cleanMatch.toLowerCase().includes('#fff');
-    const isBlack = cleanMatch.includes('black') || cleanMatch.toLowerCase().includes('#000000') || cleanMatch.toLowerCase().includes('#000');
+    const isWhite = cleanMatch.toLowerCase().includes('white') || cleanMatch.toLowerCase().includes('#ffffff') || cleanMatch.toLowerCase().includes('#fff');
+    const isBlack = cleanMatch.toLowerCase().includes('black') || cleanMatch.toLowerCase().includes('#000000') || cleanMatch.toLowerCase().includes('#000');
     
     if (isWhite) {
        const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-background' : (cleanMatch.startsWith('text-') ? 'text-foreground' : (cleanMatch.startsWith('border-') ? 'border-border' : undefined));
@@ -95,6 +95,7 @@ function scanDir(dir: string, results: Violation[]) {
       FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
         // Build a regex that includes multiple variants
         const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
+        // Ensure word boundaries or quote boundaries
         const fullPattern = new RegExp(`${variantsPart}${pattern.source}`, 'g');
         const matches = line.matchAll(fullPattern);
         
