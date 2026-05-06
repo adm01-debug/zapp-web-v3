@@ -10,7 +10,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { useEmailOAuthFlow } from '../useEmailOAuthFlow';
+import { useEmailOAuthFlow } from '../useGmailOAuthFlow';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 const mockInvoke = vi.fn();
