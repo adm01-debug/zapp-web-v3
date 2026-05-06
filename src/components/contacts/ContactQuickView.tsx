@@ -133,7 +133,7 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
               )}
               {!contact.company && (
                 <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-background/50 p-2 rounded-lg border border-border/30">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1 shrink-0" />
                   <p>Sem <strong>Empresa</strong>: Vincular a uma empresa ajuda a agrupar faturamentos no Analytics.</p>
                 </div>
               )}

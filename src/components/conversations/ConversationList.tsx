@@ -72,7 +72,7 @@ const ConvItem = memo(({
           <AvatarFallback className="text-sm font-medium bg-muted text-muted-foreground">{initials || '?'}</AvatarFallback>
         </Avatar>
         {conv.is_bot_active && (
-          <div className="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-blue-500 border-2 border-background flex items-center justify-center shadow-sm">
+          <div className="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-primary border-2 border-background flex items-center justify-center shadow-sm">
             <Bot className="h-2.5 w-2.5 text-white" />
           </div>
         )}

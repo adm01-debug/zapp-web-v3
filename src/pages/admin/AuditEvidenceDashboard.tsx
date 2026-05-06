@@ -55,11 +55,11 @@ const AuditEvidenceDashboard = () => {
                     <FileText className="w-4 h-4" />
                     <span>Path:</span>
                   </div>
-                  <code className="bg-slate-100 p-1 rounded text-xs block truncate">
+                  <code className="bg-muted p-1 rounded text-xs block truncate">
                     {ev.path}
                   </code>
                 </div>
-                <div className="text-xs font-mono bg-slate-900 text-slate-100 p-3 rounded">
+                <div className="text-xs font-mono bg-muted text-muted-foreground p-3 rounded">
                   {ev.snippet}
                 </div>
                 <button className="w-full flex items-center justify-center gap-2 text-xs text-primary hover:underline">

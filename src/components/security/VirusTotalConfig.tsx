@@ -93,10 +93,10 @@ export const VirusTotalConfig = () => {
           </div>
         )}
 
-        <div className="text-xs text-muted-foreground bg-slate-50 p-3 rounded border">
+        <div className="text-xs text-muted-foreground bg-muted p-3 rounded border">
           <p className="font-semibold mb-1">Dica para o Desenvolvedor:</p>
           <p>Após validar que a chave funciona, salve-a nos segredos do projeto usando o comando:</p>
-          <code className="block mt-1 p-1 bg-slate-200 rounded">supabase secrets set VIRUSTOTAL_API_KEY=sua_chave</code>
+          <code className="block mt-1 p-1 bg-muted rounded">supabase secrets set VIRUSTOTAL_API_KEY=sua_chave</code>
         </div>
       </CardContent>
     </Card>

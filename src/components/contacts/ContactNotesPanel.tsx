@@ -26,7 +26,7 @@ interface Note {
 }
 
 const NOTE_TYPES = [
-  { value: 'general',  label: '📝 Geral',     color: 'bg-gray-100 text-gray-700' },
+  { value: 'general',  label: '📝 Geral',     color: 'bg-muted text-muted-foreground' },
   { value: 'call',     label: '📞 Ligação',   color: 'bg-blue-100 text-blue-700' },
   { value: 'meeting',  label: '🤝 Reunião',   color: 'bg-purple-100 text-purple-700' },
   { value: 'email',    label: '📧 E-mail',    color: 'bg-primary text-primary' },
@@ -148,7 +148,7 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
             className={`rounded-lg border p-2.5 text-xs space-y-1.5 ${note.is_pinned ? 'bg-amber-50 border-amber-200' : 'bg-muted/20'}`}
           >
             <div className="flex items-center gap-2">
-              <Badge className={`text-xs px-1.5 py-0 h-4 ${TYPE_COLOR[note.note_type] ?? 'bg-gray-100'}`}>
+              <Badge className={`text-xs px-1.5 py-0 h-4 ${TYPE_COLOR[note.note_type] ?? 'bg-muted'}`}>
                 {TYPE_LABEL[note.note_type] ?? note.note_type}
               </Badge>
               {note.is_pinned && <span title="Nota fixada" className="inline-flex"><Pin className="h-3 w-3 text-amber-600" /></span>}

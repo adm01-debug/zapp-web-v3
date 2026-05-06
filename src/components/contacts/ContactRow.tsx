@@ -18,7 +18,7 @@ import { formatPhoneForDisplay } from '@/lib/phoneUtils';
 import { type Contact } from '@/hooks/useContacts';
 
 const LEAD_STATUS_COLORS: Record<string, string> = {
-  novo:        'bg-gray-100 text-gray-700',
+  novo:        'bg-muted text-muted-foreground',
   em_contato:  'bg-blue-100 text-blue-700',
   qualificado: 'bg-primary text-primary',
   proposta:    'bg-purple-100 text-purple-700',

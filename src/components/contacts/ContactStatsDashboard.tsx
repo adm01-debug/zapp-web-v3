@@ -156,7 +156,7 @@ export const ContactStatsDashboard: React.FC<Props> = ({
             {Object.entries(stats.by_lead_status ?? {})
               .sort(([, a], [, b]) => (b as number) - (a as number))
               .map(([status, count]) => (
-                <div key={status} className={`flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 ${LEAD_STATUS_COLORS[status] ?? 'bg-gray-100'}`}>
+                <div key={status} className={`flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 ${LEAD_STATUS_COLORS[status] ?? 'bg-muted'}`}>
                   <span>{LEAD_STATUS_EMOJIS[status] ?? ''}</span>
                   <span className="font-medium">{count as number}</span>
                   <span className="opacity-70">{status}</span>

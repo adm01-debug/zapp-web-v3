@@ -150,7 +150,7 @@ export default function WhatsAppProviderConfig() {
             <ul className="text-sm space-y-2 text-muted-foreground">
               <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> Alta performance</li>
               <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> API REST robusta</li>
-              <li className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-blue-500" /> Requer servidor próprio</li>
+              <li className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-primary" /> Requer servidor próprio</li>
             </ul>
           </CardContent>
         </Card>

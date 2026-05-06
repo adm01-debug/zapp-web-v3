@@ -103,7 +103,7 @@ function EmailTrackingDetail({
       {/* Stats do email */}
       <div className="grid grid-cols-3 gap-3">
         <div className="text-center p-2 bg-muted/30 rounded-lg">
-          <Eye className="h-4 w-4 mx-auto text-blue-500 mb-1" />
+          <Eye className="h-4 w-4 mx-auto text-primary mb-1" />
           <p className="text-lg font-bold">{email.open_count}</p>
           <p className="text-xs text-muted-foreground">Aberturas</p>
         </div>
@@ -169,7 +169,7 @@ function EmailTrackingDetail({
               <div className="space-y-2 pr-2">
                 {links.map(link => (
                   <div key={link.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/20 text-xs">
-                    <ExternalLink className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                    <ExternalLink className="h-3.5 w-3.5 text-primary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="truncate font-medium">{link.display_text ?? link.original_url}</p>
                       <p className="text-muted-foreground truncate">{link.original_url}</p>
@@ -264,7 +264,7 @@ export function EmailTrackingDashboard() {
                     </p>
                     <p className="text-xs text-muted-foreground">{stats.total_clicks} total</p>
                   </div>
-                  <MousePointerClick className="h-8 w-8 text-blue-500 opacity-20" />
+                  <MousePointerClick className="h-8 w-8 text-primary opacity-20" />
                 </div>
               </CardContent>
             </Card>
