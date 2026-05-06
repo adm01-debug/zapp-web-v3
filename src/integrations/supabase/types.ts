@@ -12206,6 +12206,25 @@ export type Database = {
           },
         ]
       }
+      v_pending_transfers_secure: {
+        Row: {
+          alta: number | null
+          mais_antiga: string | null
+          pending: number | null
+          sla_estourado: number | null
+          target_instance: string | null
+          urgente: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
       v_top_searches_7d: {
         Row: {
           any_vector: boolean | null
@@ -12641,6 +12660,31 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "sticky_assignments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      fn_transfer_comment: {
+        Args: {
+          p_attachments?: Json
+          p_author: string
+          p_content: string
+          p_instance: string
+          p_transfer_id: string
+        }
+        Returns: {
+          attachments: Json | null
+          author_instance: string
+          author_name: string
+          content: string
+          created_at: string | null
+          id: string
+          mentioned_users: string[] | null
+          transfer_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transfer_comments"
           isOneToOne: true
           isSetofReturn: false
         }
