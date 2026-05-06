@@ -1,268 +1,557 @@
-import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import {
   Wifi, Save, Eye, EyeOff, RefreshCw, CheckCircle2, XCircle,
-  Loader2, ShieldCheck, Server, Key,
+  Loader2, ShieldCheck, Server, Key, Activity, History, Settings2,
+  Trash2, Plus, Search, AlertCircle, Clock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-interface EvolutionConfig {
-  evolution_api_url: string;
-  evolution_api_key: string;
+interface EvolutionInstanceCredential {
+  id: string;
+  instance_name: string;
+  api_url: string;
+  api_key: string;
+  is_active: boolean;
+  health_status: 'healthy' | 'unhealthy' | 'error' | 'unknown';
+  last_health_check: string | null;
+  created_at: string;
+}
+
+interface HealthLog {
+  id: string;
+  instance_name: string;
+  status: 'success' | 'failure';
+  error_message: string | null;
+  response_time_ms: number;
+  online_instances: number;
+  total_instances: number;
+  performed_at: string;
 }
 
 const DEFAULT_URL = 'https://evolution.atomicabr.com.br';
-const SETTINGS_KEY = 'evolution_api_config';
-const LS_KEY = 'zapp_evolution_config';
-
-/** Try to read from system_settings table, fallback to localStorage */
-async function loadConfig(): Promise<EvolutionConfig | null> {
-  try {
-    const { data, error } = await (supabase as any)
-      .from('system_settings')
-      .select('value')
-      .eq('key', SETTINGS_KEY)
-      .maybeSingle();
-    if (!error && data?.value) {
-      const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
-      return {
-        evolution_api_url: parsed.evolution_api_url || DEFAULT_URL,
-        evolution_api_key: parsed.evolution_api_key || '',
-      };
-    }
-  } catch {}
-  // Fallback: localStorage
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return null;
-}
-
-/** Save to system_settings if available, always save to localStorage as backup */
-async function saveConfig(config: EvolutionConfig): Promise<void> {
-  // Always persist to localStorage (instant, no table dependency)
-  localStorage.setItem(LS_KEY, JSON.stringify(config));
-
-  // Try DB upsert (may fail if table doesn't exist yet)
-  try {
-    await (supabase as any)
-      .from('system_settings')
-      .upsert(
-        { key: SETTINGS_KEY, value: JSON.stringify(config), updated_at: new Date().toISOString() },
-        { onConflict: 'key' }
-      );
-  } catch {
-    // Table may not exist yet — localStorage is the fallback
-  }
-}
 
 export function EvolutionApiIntegrationView() {
-  const [config, setConfig] = useState<EvolutionConfig>({
-    evolution_api_url: DEFAULT_URL,
-    evolution_api_key: '',
+  const [credentials, setCredentials] = useState<EvolutionInstanceCredential[]>([]);
+  const [healthLogs, setHealthLogs] = useState<HealthLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [testing, setTesting] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('instances');
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    instance_name: '',
+    api_url: DEFAULT_URL,
+    api_key: '',
+    show_key: false,
+    is_editing: null as string | null
   });
-  const [showKey, setShowKey] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
-  const [testMessage, setTestMessage] = useState('');
-  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    loadConfig().then((saved) => {
-      if (saved) setConfig(saved);
-      setLoaded(true);
-    });
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [credsRes, logsRes] = await Promise.all([
+        supabase.from('evolution_instance_credentials').select('*').order('instance_name'),
+        supabase.from('evolution_health_logs').select('*').order('performed_at', { ascending: false }).limit(20)
+      ]);
+
+      if (credsRes.error) throw credsRes.error;
+      if (logsRes.error) throw logsRes.error;
+
+      setCredentials(credsRes.data as EvolutionInstanceCredential[]);
+      setHealthLogs(logsRes.data as HealthLog[]);
+    } catch (err: any) {
+      toast.error('Erro ao carregar dados: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleSave = useCallback(async () => {
-    if (!config.evolution_api_url.trim() || !config.evolution_api_key.trim()) {
-      toast.error('Preencha a URL e a Chave de API');
-      return;
-    }
-    setSaving(true);
-    try {
-      await saveConfig(config);
-      toast.success('Configurações da Evolution API salvas!');
-    } catch (err: any) {
-      toast.error('Erro ao salvar: ' + (err?.message || 'Erro desconhecido'));
-    } finally {
-      setSaving(false);
-    }
-  }, [config]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const handleTest = useCallback(async () => {
-    if (!config.evolution_api_url.trim() || !config.evolution_api_key.trim()) {
-      toast.error('Preencha a URL e a Chave de API antes de testar');
-      return;
+  const normalizeUrl = (url: string) => {
+    let normalized = url.trim().replace(/\/+$/, '');
+    if (!normalized.startsWith('http')) {
+      normalized = 'https://' + normalized;
     }
-    setTesting(true);
-    setTestResult(null);
-    setTestMessage('');
+    return normalized;
+  };
+
+  const handleTestConnection = async (creds: Partial<EvolutionInstanceCredential>) => {
+    if (!creds.api_url || !creds.api_key) {
+      toast.error('URL e Chave de API são obrigatórias para o teste');
+      return false;
+    }
+
+    const testId = creds.id || 'new';
+    setTesting(testId);
+    const startTime = Date.now();
+    
     try {
-      const url = config.evolution_api_url.replace(/\/+$/, '');
+      const url = normalizeUrl(creds.api_url);
       const response = await fetch(`${url}/instance/fetchInstances`, {
         method: 'GET',
-        headers: { apikey: config.evolution_api_key },
+        headers: { apikey: creds.api_key },
       });
-      if (response.ok) {
+
+      const responseTime = Date.now() - startTime;
+      const isSuccess = response.ok;
+      let errorMsg = null;
+      let onlineCount = 0;
+      let totalCount = 0;
+
+      if (isSuccess) {
         const data = await response.json();
         const instances = Array.isArray(data) ? data : [];
-        const connected = instances.filter((i: any) => i.connectionStatus === 'open').length;
-        setTestResult('success');
-        setTestMessage(`Conexão OK! ${instances.length} instância(s) encontrada(s), ${connected} online.`);
-        toast.success('Conexão com a Evolution API estabelecida!');
-      } else if (response.status === 401) {
-        setTestResult('error');
-        setTestMessage('Chave de API inválida. Verifique e tente novamente.');
-        toast.error('Chave de API inválida');
+        totalCount = instances.length;
+        onlineCount = instances.filter((i: any) => i.connectionStatus === 'open').length;
+        toast.success(`Teste bem-sucedido para ${creds.instance_name || 'nova config'}`);
       } else {
-        setTestResult('error');
-        setTestMessage(`Erro HTTP ${response.status}: ${response.statusText}`);
-        toast.error(`Erro: HTTP ${response.status}`);
+        errorMsg = response.status === 401 ? 'Chave de API inválida' : `Erro HTTP ${response.status}`;
+        toast.error(`Falha no teste: ${errorMsg}`);
       }
-    } catch (err: any) {
-      setTestResult('error');
-      setTestMessage(err?.message?.includes('fetch')
-        ? 'Não foi possível conectar. Verifique se a URL está correta e acessível.'
-        : err?.message || 'Erro desconhecido');
-      toast.error('Falha na conexão');
-    } finally {
-      setTesting(false);
-    }
-  }, [config]);
 
-  if (!loaded) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
+      // Log the health check in the database
+      if (creds.instance_name) {
+        await supabase.from('evolution_health_logs').insert({
+          instance_name: creds.instance_name,
+          status: isSuccess ? 'success' : 'failure',
+          error_message: errorMsg,
+          response_time_ms: responseTime,
+          online_instances: onlineCount,
+          total_instances: totalCount
+        });
+        
+        // Update credential status
+        await supabase.from('evolution_instance_credentials').update({
+          health_status: isSuccess ? 'healthy' : 'unhealthy',
+          last_health_check: new Date().toISOString()
+        }).eq('id', creds.id);
+        
+        fetchData();
+      }
+
+      return isSuccess;
+    } catch (err: any) {
+      const errorMsg = err.message.includes('fetch') ? 'Erro de rede/URL inacessível' : err.message;
+      toast.error(`Erro de conexão: ${errorMsg}`);
+      
+      if (creds.instance_name) {
+        await supabase.from('evolution_health_logs').insert({
+          instance_name: creds.instance_name,
+          status: 'failure',
+          error_message: errorMsg,
+          response_time_ms: Date.now() - startTime
+        });
+        fetchData();
+      }
+      return false;
+    } finally {
+      setTesting(null);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!formData.instance_name || !formData.api_url || !formData.api_key) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    const normalizedUrl = normalizeUrl(formData.api_url);
+    
+    // Auto-test before saving
+    const isTestOk = await handleTestConnection({
+      api_url: normalizedUrl,
+      api_key: formData.api_key,
+      instance_name: formData.instance_name
+    });
+
+    if (!isTestOk) {
+      toast.warning('Atenção: O teste de conexão falhou, mas as credenciais serão salvas.');
+    }
+
+    const payload = {
+      instance_name: formData.instance_name,
+      api_url: normalizedUrl,
+      api_key: formData.api_key,
+      health_status: isTestOk ? 'healthy' : 'unhealthy',
+      last_health_check: new Date().toISOString()
+    };
+
+    try {
+      if (formData.is_editing) {
+        const { error } = await supabase
+          .from('evolution_instance_credentials')
+          .update(payload)
+          .eq('id', formData.is_editing);
+        if (error) throw error;
+        toast.success('Configurações atualizadas');
+      } else {
+        const { error } = await supabase
+          .from('evolution_instance_credentials')
+          .insert(payload);
+        if (error) throw error;
+        toast.success('Novas credenciais salvas');
+      }
+
+      setFormData({
+        instance_name: '',
+        api_url: DEFAULT_URL,
+        api_key: '',
+        show_key: false,
+        is_editing: null
+      });
+      fetchData();
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + err.message);
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Tem certeza que deseja excluir as credenciais da instância "${name}"?`)) return;
+
+    try {
+      const { error } = await supabase.from('evolution_instance_credentials').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Credenciais excluídas');
+      fetchData();
+    } catch (err: any) {
+      toast.error('Erro ao excluir: ' + err.message);
+    }
+  };
+
+  const filteredCredentials = useMemo(() => {
+    return credentials.filter(c => 
+      c.instance_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.api_url.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }
+  }, [credentials, searchTerm]);
 
   return (
-    <div className="space-y-6 p-6 max-w-3xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+    <div className="space-y-6 p-6 max-w-6xl mx-auto min-h-[80vh]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-whatsapp/20 flex items-center justify-center">
-            <Wifi className="w-5 h-5 text-whatsapp" />
+          <div className="w-12 h-12 rounded-xl bg-whatsapp/10 flex items-center justify-center border border-whatsapp/20">
+            <Wifi className="w-6 h-6 text-whatsapp" />
           </div>
           <div>
-            <h2 className="font-display text-xl font-bold">Evolution API</h2>
-            <p className="text-sm text-muted-foreground">Configure a conexão com sua instância Evolution API</p>
+            <h2 className="font-display text-2xl font-bold">Gestão Evolution API</h2>
+            <p className="text-sm text-muted-foreground">Monitoramento e credenciais por instância</p>
           </div>
         </div>
-      </motion.div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+            Sincronizar
+          </Button>
+        </div>
+      </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Server className="w-4 h-4" />
-              Configuração do Servidor
-            </CardTitle>
-            <CardDescription>
-              Informe a URL e a chave de API da sua instância Evolution API.
-              Essas credenciais são usadas para conectar WhatsApp, gerar QR Codes e enviar mensagens.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="evo-url" className="flex items-center gap-1.5">
-                <Server className="w-3.5 h-3.5" />
-                URL da Evolution API
-              </Label>
-              <Input
-                id="evo-url"
-                type="url"
-                placeholder="https://evolution.seudominio.com.br"
-                value={config.evolution_api_url}
-                onChange={(e) => setConfig(prev => ({ ...prev, evolution_api_url: e.target.value }))}
-                className=" text-sm"
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="instances" className="gap-2">
+            <Server className="w-4 h-4" />
+            Instâncias
+          </TabsTrigger>
+          <TabsTrigger value="config" className="gap-2">
+            <Settings2 className="w-4 h-4" />
+            Configurar
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="gap-2">
+            <History className="w-4 h-4" />
+            Logs de Saúde
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="instances" className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Buscar por nome ou URL..." 
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <p className="text-[11px] text-muted-foreground">Exemplo: https://evolution.atomicabr.com.br</p>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="evo-key" className="flex items-center gap-1.5">
-                <Key className="w-3.5 h-3.5" />
-                Chave de API (API Key)
-              </Label>
-              <div className="relative">
-                <Input
-                  id="evo-key"
-                  type={showKey ? 'text' : 'password'}
-                  placeholder="429683C4C977415CAAFCCE10F7D57E11"
-                  value={config.evolution_api_key}
-                  onChange={(e) => setConfig(prev => ({ ...prev, evolution_api_key: e.target.value }))}
-                  className=" text-sm pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                  onClick={() => setShowKey(!showKey)}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <AnimatePresence mode="popLayout">
+              {filteredCredentials.map((creds) => (
+                <motion.div
+                  key={creds.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
                 >
-                  {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  <Card className="h-full border-primary/5 hover:border-primary/20 transition-all group">
+                    <CardHeader className="p-4 pb-2">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <CardTitle className="text-base font-bold flex items-center gap-2">
+                            {creds.instance_name}
+                            <Badge 
+                              variant={creds.health_status === 'healthy' ? 'default' : 'destructive'}
+                              className="text-[10px] h-4 px-1"
+                            >
+                              {creds.health_status === 'healthy' ? 'ONLINE' : 'OFFLINE'}
+                            </Badge>
+                          </CardTitle>
+                          <CardDescription className="text-xs truncate max-w-[180px]">
+                            {creds.api_url}
+                          </CardDescription>
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7" 
+                            onClick={() => setFormData({
+                              instance_name: creds.instance_name,
+                              api_url: creds.api_url,
+                              api_key: creds.api_key,
+                              show_key: false,
+                              is_editing: creds.id
+                            }) || setActiveTab('config')}
+                          >
+                            <Settings2 className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 text-destructive" 
+                            onClick={() => handleDelete(creds.id, creds.instance_name)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-2">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            Último check:
+                          </span>
+                          <span>
+                            {creds.last_health_check 
+                              ? format(new Date(creds.last_health_check), "HH:mm, dd/MM", { locale: ptBR })
+                              : 'Nunca'}
+                          </span>
+                        </div>
+                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                          <motion.div 
+                            className={`h-full ${creds.health_status === 'healthy' ? 'bg-whatsapp' : 'bg-destructive'}`}
+                            initial={{ width: 0 }}
+                            animate={{ width: '100%' }}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="p-4 pt-0">
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="w-full text-xs h-8"
+                        onClick={() => handleTestConnection(creds)}
+                        disabled={testing === creds.id}
+                      >
+                        {testing === creds.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin mr-2" />
+                        ) : (
+                          <Activity className="w-3 h-3 mr-2" />
+                        )}
+                        Health Check Agora
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+              
+              {filteredCredentials.length === 0 && !loading && (
+                <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl bg-muted/50">
+                  <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-20" />
+                  <p className="text-muted-foreground">Nenhuma credencial encontrada para "{searchTerm}"</p>
+                  <Button variant="link" onClick={() => setSearchTerm('')}>Limpar busca</Button>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="config">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {formData.is_editing ? <Settings2 className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                {formData.is_editing ? 'Editar Instância' : 'Nova Conexão Evolution'}
+              </CardTitle>
+              <CardDescription>
+                Configure as credenciais específicas para uma instância da Evolution API.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label>Nome da Instância (ID)</Label>
+                  <Input 
+                    placeholder="ex: wpp2" 
+                    value={formData.instance_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instance_name: e.target.value }))}
+                    disabled={!!formData.is_editing}
+                  />
+                  <p className="text-[10px] text-muted-foreground">O nome deve ser idêntico ao cadastrado na Evolution API.</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>URL do Servidor</Label>
+                  <Input 
+                    placeholder="https://evolution.dominio.com" 
+                    value={formData.api_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, api_url: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Chave de API (AUTHENTICATION_API_KEY)</Label>
+                  <div className="relative">
+                    <Input 
+                      type={formData.show_key ? 'text' : 'password'}
+                      value={formData.api_key}
+                      onChange={(e) => setFormData(prev => ({ ...prev, api_key: e.target.value }))}
+                      placeholder="Sua chave secreta..."
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                      onClick={() => setFormData(prev => ({ ...prev, show_key: !prev.show_key }))}
+                    >
+                      {formData.show_key ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between border-t p-6 mt-4">
+              <Button variant="ghost" onClick={() => setFormData({
+                instance_name: '',
+                api_url: DEFAULT_URL,
+                api_key: '',
+                show_key: false,
+                is_editing: null
+              })}>
+                Cancelar
+              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleTestConnection({ 
+                    api_url: formData.api_url, 
+                    api_key: formData.api_key,
+                    instance_name: formData.instance_name
+                  })}
+                  disabled={testing === 'new'}
+                >
+                  {testing === 'new' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Activity className="w-4 h-4 mr-2" />}
+                  Testar
+                </Button>
+                <Button onClick={handleSave} disabled={loading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvar Alterações
                 </Button>
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                Encontre no arquivo .env da Evolution API: AUTHENTICATION_API_KEY
-              </p>
-            </div>
+            </CardFooter>
+          </Card>
+        </TabsContent>
 
-            <div className="flex items-center gap-3 pt-2">
-              <Button onClick={handleTest} variant="outline" disabled={testing || !config.evolution_api_key}>
-                {testing ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
-                Testar Conexão
-              </Button>
-              <Button onClick={handleSave} disabled={saving || !config.evolution_api_key}>
-                {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
-                Salvar
-              </Button>
-            </div>
+        <TabsContent value="logs">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <History className="w-4 h-4" />
+                Histórico Recente de Conexões
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[400px]">
+                <div className="divide-y">
+                  {healthLogs.map((log) => (
+                    <div key={log.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-full ${log.status === 'success' ? 'bg-whatsapp/10' : 'bg-destructive/10'}`}>
+                          {log.status === 'success' 
+                            ? <CheckCircle2 className="w-4 h-4 text-whatsapp" /> 
+                            : <XCircle className="w-4 h-4 text-destructive" />
+                          }
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{log.instance_name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {format(new Date(log.performed_at), "HH:mm:ss - dd/MM/yyyy", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <div className="flex items-center gap-2 justify-end">
+                          <Badge variant="outline" className="text-[9px] h-4 font-normal">
+                            {log.response_time_ms}ms
+                          </Badge>
+                          {log.status === 'success' && (
+                            <Badge variant="secondary" className="text-[9px] h-4 font-normal bg-whatsapp/5 text-whatsapp border-whatsapp/20">
+                              {log.online_instances}/{log.total_instances} online
+                            </Badge>
+                          )}
+                        </div>
+                        {log.error_message && (
+                          <p className="text-[10px] text-destructive truncate max-w-[200px]">
+                            {log.error_message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {healthLogs.length === 0 && (
+                    <div className="p-8 text-center text-muted-foreground italic">
+                      Nenhum log registrado ainda. Realize um teste para começar.
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-            {testResult && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex items-start gap-2 p-3 rounded-lg border ${
-                  testResult === 'success'
-                    ? 'bg-primary/5 border-primary/20'
-                    : 'bg-destructive/5 border-destructive/20'
-                }`}
-              >
-                {testResult === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                ) : (
-                  <XCircle className="w-4 h-4 text-destructive-foreground mt-0.5 shrink-0" />
-                )}
-                <span className={`text-xs ${testResult === 'success' ? 'text-primary' : 'text-destructive-foreground'}`}>
-                  {testMessage}
-                </span>
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <Card className="border-primary/10 bg-primary/5">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               <div className="space-y-1">
-                <p className="text-sm font-medium">Segurança</p>
-                <p className="text-xs text-muted-foreground">
-                  A chave de API é armazenada de forma segura e nunca é exposta no código-fonte.
-                  Apenas usuários autenticados podem visualizar ou alterar essas configurações.
+                <p className="text-sm font-medium">Observabilidade e Governança</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Este painel centraliza a saúde operacional das suas APIs. O sistema agora normaliza automaticamente URLs 
+                  (garantindo HTTPS e removendo barras extras) e realiza um teste de pré-validação antes de salvar qualquer 
+                  credencial, prevenindo falhas de configuração em cascata.
                 </p>
               </div>
             </div>
