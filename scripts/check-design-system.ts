@@ -38,27 +38,33 @@ interface Violation {
 }
 
 function getSuggestion(label: string, match: string): { suggestion: string, priority: Violation['priority'], replacement?: string } {
-  if (label === 'Hex Color' || label.includes('Arbitrary')) {
-    if (match.includes('white') || match.includes('#ffffff') || match.includes('#FFF')) {
-       const replacement = match.startsWith('bg-') ? 'bg-background' : (match.startsWith('text-') ? 'text-foreground' : undefined);
-       return { suggestion: 'bg-background or text-foreground', priority: 'High', replacement };
+  const cleanMatch = match.replace(/^(?:dark:|hover:|focus:|active:|disabled:|peer-.*:|group-.*:)+/, '').trim();
+  const prefix = match.match(/^(?:dark:|hover:|focus:|active:|disabled:|peer-.*:|group-.*:)+/)?.[0] || '';
+
+  if (label === 'Raw Hex' || label === 'Arbitrary Color') {
+    if (cleanMatch.includes('white') || cleanMatch.includes('#ffffff') || cleanMatch.includes('#FFF')) {
+       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-background' : (cleanMatch.startsWith('text-') ? 'text-foreground' : undefined);
+       const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
+       return { suggestion: `${prefix}bg-background or ${prefix}text-foreground`, priority: 'High', replacement };
     }
-    if (match.includes('black') || match.includes('#000000') || match.includes('#000')) {
-       const replacement = match.startsWith('bg-') ? 'bg-foreground' : (match.startsWith('text-') ? 'text-background' : undefined);
-       return { suggestion: 'bg-foreground or text-background', priority: 'High', replacement };
+    if (cleanMatch.includes('black') || cleanMatch.includes('#000000') || cleanMatch.includes('#000')) {
+       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-foreground' : (cleanMatch.startsWith('text-') ? 'text-background' : undefined);
+       const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
+       return { suggestion: `${prefix}bg-foreground or ${prefix}text-background`, priority: 'High', replacement };
     }
     return { suggestion: 'Use theme tokens (primary, secondary, accent, etc.)', priority: 'High' };
   }
   if (label === 'Literal Color') {
-    const isAllowed = WHITELIST.colors.some(c => match.includes(c));
+    const isAllowed = WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`));
     if (isAllowed) return { suggestion: '', priority: 'Low' };
 
-    if (match.includes('blue-600') || match.includes('blue-500')) {
-      const replacement = match.replace(/blue-(500|600)/, 'primary');
+    if (cleanMatch.includes('blue-600') || cleanMatch.includes('blue-500')) {
+      const replacement = `${prefix}${cleanMatch.replace(/blue-(500|600)/, 'primary')}`;
       return { suggestion: replacement, priority: 'Medium', replacement };
     }
-    if (match.includes('slate-') || match.includes('gray-')) {
-       const replacement = match.includes('bg-') ? 'bg-muted' : (match.includes('text-') ? 'text-muted-foreground' : (match.includes('border-') ? 'border-border' : undefined));
+    if (cleanMatch.includes('slate-') || cleanMatch.includes('gray-')) {
+       const baseReplacement = cleanMatch.includes('bg-') ? 'bg-muted' : (cleanMatch.includes('text-') ? 'text-muted-foreground' : (cleanMatch.includes('border-') ? 'border-border' : undefined));
+       const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
        return { suggestion: 'muted, muted-foreground or border', priority: 'Medium', replacement };
     }
     return { suggestion: 'Use semantic tokens (destructive, muted, popover, etc.)', priority: 'Medium' };
