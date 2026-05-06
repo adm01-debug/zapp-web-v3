@@ -14345,24 +14345,7 @@ export type Database = {
           p_performed_by?: string
           p_remote_jid?: string
         }
-        Returns: {
-          event_type: string
-          id: string
-          instance_name: string
-          level: string | null
-          message: string | null
-          metadata: Json | null
-          payload: Json | null
-          performed_by: string | null
-          remote_jid: string | null
-          ts: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "service_logs"
-          isOneToOne: true
-          isSetofReturn: false
-        }
+        Returns: undefined
       }
       rpc_migrate_whatsapp_integration: { Args: never; Returns: Json }
       rpc_ops_metrics: { Args: { p_window_hours?: number }; Returns: Json }
