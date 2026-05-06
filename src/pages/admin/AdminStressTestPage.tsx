@@ -149,6 +149,7 @@ export default function AdminStressTestPage() {
     setStatus('running');
     const start = performance.now();
     setStartTime(start);
+    const startTimeManual = start; // local for closure
 
     try {
       // Falha cedo se a biblioteca não tem stickers/áudios memes.
@@ -260,7 +261,7 @@ export default function AdminStressTestPage() {
     const latencies = metrics?.map(m => m.latency_ms).sort((a, b) => a - b) || [];
     const avgLatency = latencies.length > 0 ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0;
     const p95Latency = latencies[Math.floor(latencies.length * 0.95)] || 0;
-    const throughput = latencies.length > 0 ? Number((latencies.length / ((performance.now() - start) / 1000)).toFixed(2)) : 0;
+    const throughput = latencies.length > 0 ? Number((latencies.length / ((performance.now() - startTimeManual) / 1000)).toFixed(2)) : 0;
 
     await persistRun(id, {
       status: summary.status,
