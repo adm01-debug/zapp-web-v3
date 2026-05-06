@@ -24,8 +24,16 @@ interface UseInboxFiltersProps {
 export function useInboxFilters({ conversations, profileId, search: externalSearch, sortBy, statusFilter }: UseInboxFiltersProps) {
   const [mainTab, setMainTab] = useState<MainTab>('open');
   const [subTab, setSubTab] = useState<SubTab>('attending');
-  const [showAll, setShowAll] = useState(false);
-  const [scope, setScope] = useState<'mine' | 'department' | 'all'>('mine');
+  const [showAll, setShowAll] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('showAll') === 'true' || localStorage.getItem('inbox_show_all') === 'true';
+  });
+  const [scope, setScope] = useState<'mine' | 'department' | 'all'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const scopeParam = params.get('scope');
+    if (scopeParam === 'mine' || scopeParam === 'department' || scopeParam === 'all') return scopeParam;
+    return (localStorage.getItem('inbox_scope') as any) || 'mine';
+  });
   const [departmentAgentIds, setDepartmentAgentIds] = useState<string[]>([]);
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
@@ -107,6 +115,36 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
       window.history.replaceState(null, '', `?${params.toString()}${window.location.hash}`);
     }
   }, [showOnlyRetrying, failureCategoryFilter]);
+
+  // Sync scope/showAll with URL and localStorage
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    let changed = false;
+
+    if (showAll) {
+      if (params.get('showAll') !== 'true') {
+        params.set('showAll', 'true');
+        changed = true;
+      }
+      localStorage.setItem('inbox_show_all', 'true');
+    } else {
+      if (params.has('showAll')) {
+        params.delete('showAll');
+        changed = true;
+      }
+      localStorage.setItem('inbox_show_all', 'false');
+    }
+
+    if (params.get('scope') !== scope) {
+      params.set('scope', scope);
+      changed = true;
+    }
+    localStorage.setItem('inbox_scope', scope);
+
+    if (changed) {
+      window.history.replaceState(null, '', `?${params.toString()}${window.location.hash}`);
+    }
+  }, [showAll, scope]);
 
   // Load contact_tags mapping
   const { data: contactTagsMap = {} } = useQuery({
