@@ -117,9 +117,9 @@ export function ParticipantStatsGraph({ conversationId }: ParticipantStatsGraphP
                 cursor={{ fill: 'rgba(0,0,0,0.05)' }}
               />
               <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-              <Bar dataKey="sent" name="Enviadas" fill="#8884d8" radius={[4, 4, 0, 0]} barSize={20} />
-              <Bar dataKey="delivered" name="Entregues" fill="#82ca9d" radius={[4, 4, 0, 0]} barSize={20} />
-              <Bar dataKey="read" name="Lidas" fill="#ffc658" radius={[4, 4, 0, 0]} barSize={20} />
+              <Bar dataKey="sent" name="Enviadas" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={20} />
+              <Bar dataKey="delivered" name="Entregues" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} barSize={20} />
+              <Bar dataKey="read" name="Lidas" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} barSize={20} />
             </BarChart>
           </ResponsiveContainer>
         </div>
