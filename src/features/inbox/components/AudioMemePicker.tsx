@@ -90,7 +90,7 @@ export function AudioMemePicker({ onSendAudioMeme, disabled }: AudioMemePickerPr
   const [showFavorites, setShowFavorites] = useState(false);
 
   const {
-    memes, loading, uploading, playingId, pendingUpload, fileInputRef,
+    memes, loading, syncing, syncError, uploading, playingId, pendingUpload, fileInputRef,
     handlePreview, handleFileSelect, handleConfirmUpload, handleCancelUpload,
     handleSend, toggleFavorite, handleCategoryChange, handleDelete, cleanup,
   } = useAudioMemes(open);
@@ -112,7 +112,12 @@ export function AudioMemePicker({ onSendAudioMeme, disabled }: AudioMemePickerPr
       </PopoverTrigger>
       <PopoverContent className="w-[360px] p-0 bg-popover border-border" align="end" side="top" sideOffset={8}>
         <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
-          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2"><Music className="w-4 h-4 text-primary" />Áudios Meme</h4>
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Music className="w-4 h-4 text-primary" />
+            Áudios Meme
+            {syncing && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground ml-1" />}
+            {syncError && <span className="text-[10px] text-destructive bg-destructive/10 px-1.5 py-0.5 rounded ml-1 animate-pulse">{syncError}</span>}
+          </h4>
           <div className="flex items-center gap-1">
             <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleFileSelect} />
             <Button variant="ghost" size="icon" className="w-7 h-7 text-muted-foreground hover:text-primary" onClick={() => fileInputRef.current?.click()} disabled={uploading || !!pendingUpload} title="Adicionar áudio meme">

@@ -28,6 +28,8 @@ export interface PendingUpload {
 export function useAudioMemes(open: boolean) {
   const [memes, setMemes] = useState<AudioMemeItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null);
@@ -58,6 +60,8 @@ export function useAudioMemes(open: boolean) {
   useEffect(() => {
     if (open) {
       fetchMemes();
+      setSyncing(true);
+      setSyncError(null);
 
       // Realtime subscription for catalog updates and use_count increment
       const catalogChannel = supabase
@@ -65,9 +69,19 @@ export function useAudioMemes(open: boolean) {
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'audio_memes' },
-          () => fetchMemes()
+          () => {
+            log.info('Catalog update received');
+            fetchMemes();
+          }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            setSyncing(false);
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            setSyncError('Erro na sincronização do catálogo');
+            setSyncing(false);
+          }
+        });
 
       // Realtime subscription for individual favorites
       const favoritesChannel = supabase
@@ -75,9 +89,16 @@ export function useAudioMemes(open: boolean) {
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'audio_meme_favorites' },
-          () => fetchMemes()
+          () => {
+            log.info('Favorites update received');
+            fetchMemes();
+          }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            setSyncError('Erro na sincronização de favoritos');
+          }
+        });
 
       return () => {
         supabase.removeChannel(catalogChannel);
@@ -208,6 +229,7 @@ export function useAudioMemes(open: boolean) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error('Efetue login para favoritar'); return; }
 
+    // OPTIMISTIC UPDATE
     const newVal = !meme.is_favorite;
     setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, is_favorite: newVal } : m));
 
@@ -219,8 +241,9 @@ export function useAudioMemes(open: boolean) {
 
     if (error) {
       log.error('toggleFavorite error', error);
-      // Rollback UI if failed
+      // ROLLBACK UI if failed
       setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, is_favorite: !newVal } : m));
+      toast.error('Erro ao atualizar favorito');
     }
   }, []);
 
@@ -245,7 +268,7 @@ export function useAudioMemes(open: boolean) {
   }, []);
 
   return {
-    memes, loading, uploading, playingId, pendingUpload,
+    memes, loading, syncing, syncError, uploading, playingId, pendingUpload,
     audioRef, fileInputRef,
     handlePreview, handleFileSelect, handleConfirmUpload,
     handleCancelUpload, handleSend, toggleFavorite,
