@@ -1,6 +1,6 @@
 import { handleCors, errorResponse, getCorsHeaders, Logger, requireEnv } from "../_shared/validation.ts";
 
-const VOICE_PRESETS: Record<string, { voiceId: string; label: string }> = {
+const VOICE_PRESETS: Record<string, { voiceId: string; label: string; isCloned?: boolean }> = {
   // Masculinas
   'grave':      { voiceId: 'JBFqnCBsd6RMkjVDRZzb', label: 'George (Grave)' },
   'roger':      { voiceId: 'CwhRBWXzGAHq8TQ4Fs17', label: 'Roger (Narrador)' },
@@ -34,6 +34,8 @@ const VOICE_PRESETS: Record<string, { voiceId: string; label: string }> = {
   // Idosos
   'idoso':      { voiceId: 'N2lVS1w4EtoT3dr4eOWO', label: 'Idoso (Vovô)' },
   'idosa':      { voiceId: 'XrExE9yKIg1WjnnlVkGX', label: 'Idosa (Vovó)' },
+  // Cloned Placeholder (Exemplo para bloqueio)
+  'cloned_sample': { voiceId: 'cloned_id_123', label: 'Celebridade X', isCloned: true },
 };
 
 Deno.serve(async (req) => {
