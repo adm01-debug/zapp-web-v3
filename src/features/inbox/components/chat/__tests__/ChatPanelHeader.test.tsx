@@ -4,15 +4,18 @@ import { ChatPanelHeader } from '@/features/inbox/components/chat/ChatPanelHeade
 import { Conversation } from '@/types/chat';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
 // Optimized mocks
 vi.mock('@/hooks/use-mobile', () => ({ useIsMobile: () => false }));
 vi.mock('@/lib/popupManager', () => ({ openChatPopup: vi.fn() }));
-vi.mock('@/features/inbox', () => ({ useContactAvatar: () => ({ avatarUrl: null }) }));
+vi.mock('@/features/inbox', () => ({ 
+  useContactAvatar: () => ({ avatarUrl: null }),
+  SLAIndicatorForContact: () => <div data-testid="sla-indicator">SLA</div>
+}));
 vi.mock('../..', () => ({ 
   SLAIndicator: () => null,
-  SLAIndicatorForContact: () => null,
   VoiceSelector: () => null,
   SpeedSelector: () => null,
   TypingIndicatorCompact: () => null,
