@@ -466,6 +466,23 @@ export default function AdminStressTestPage() {
             <p className="text-xs text-muted-foreground">Se selecionada, o teste simula a carga sendo processada por agentes dessa fila.</p>
           </div>
 
+          <div className="md:col-span-2 flex items-center space-x-2 p-2 rounded-lg border bg-muted/20">
+            <input 
+              type="checkbox" 
+              id="token-sim" 
+              checked={simulateTokenExpiration} 
+              onChange={(e) => setSimulateTokenExpiration(e.target.checked)}
+              disabled={isRunning}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <Label htmlFor="token-sim" className="cursor-pointer">
+              Simular Expiração de Tokens (Mídias Privadas)
+            </Label>
+            <p className="text-[10px] text-muted-foreground ml-auto">
+              Injeta tokens aleatoriamente expirados para testar resiliência de leitura.
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="total">Total de envios</Label>
             <Input id="total" type="number" min={8} max={500} value={total}
