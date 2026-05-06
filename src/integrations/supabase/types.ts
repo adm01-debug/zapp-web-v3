@@ -1444,32 +1444,35 @@ export type Database = {
       }
       business_hours: {
         Row: {
-          close_time: string | null
           created_at: string
           day_of_week: number
+          end_time: string | null
           id: string
-          is_open: boolean | null
-          open_time: string | null
+          instance_name: string | null
+          is_enabled: boolean | null
+          start_time: string | null
           updated_at: string
           whatsapp_connection_id: string
         }
         Insert: {
-          close_time?: string | null
           created_at?: string
           day_of_week: number
+          end_time?: string | null
           id?: string
-          is_open?: boolean | null
-          open_time?: string | null
+          instance_name?: string | null
+          is_enabled?: boolean | null
+          start_time?: string | null
           updated_at?: string
           whatsapp_connection_id: string
         }
         Update: {
-          close_time?: string | null
           created_at?: string
           day_of_week?: number
+          end_time?: string | null
           id?: string
-          is_open?: boolean | null
-          open_time?: string | null
+          instance_name?: string | null
+          is_enabled?: boolean | null
+          start_time?: string | null
           updated_at?: string
           whatsapp_connection_id?: string
         }
