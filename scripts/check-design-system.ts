@@ -161,7 +161,7 @@ export function getSuggestion(label: string, match: string, fileName?: string, c
 
   if (label === 'Literal Font') {
     const isTechnicalContext = context && (
-      /\b(id|uuid|timestamp|date|created_at|updated_at|log|metric|count|phone|cnpj|cpf|value|price|amount|chart|graph|axis|tick|token|hex|hash|sha)\b/i.test(context) ||
+      /\b(ids?|uuid|timestamp|date|created_at|updated_at|logs?|metrics?|counts?|phone|cnpj|cpf|values?|prices?|amounts?|charts?|graphs?|axis|ticks?|tokens?|hex|hash|sha|vers?|versions?|v\d+)\b/i.test(context) ||
       /<(code|pre|samp|kbd)\b/i.test(context) ||
       /\/\/\s*@technical/i.test(context)
     );
