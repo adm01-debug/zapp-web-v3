@@ -38,7 +38,6 @@ export const ELEVENLABS_VOICES: ElevenLabsVoice[] = [
   { id: '21m00Tcm4TlvDq8ikWAM', name: 'Nina', description: 'Criança doce e gentil', gender: 'female', accent: 'Português', sampleText: 'Oi! Eu sou a Nina, tudo bem?' },
   { id: 'AZnzlk1XhkKW9D2mID8L', name: 'Tom', description: 'Menino alegre', gender: 'male', accent: 'Português', sampleText: 'E aí! Eu sou o Tom, vamos brincar?' },
   { id: 'N2lVS1w4EtoT3dr4eOWO', name: 'Sr. Silva', description: 'Idoso experiente', gender: 'male', accent: 'Português', sampleText: 'Olá meu jovem, em que posso ajudar?' },
-  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Dona Maria', description: 'Idosa carinhosa', gender: 'female', accent: 'Português', sampleText: 'Olá meu querido, como você está hoje?' },
 ];
 
 interface VoiceSelectorProps {
