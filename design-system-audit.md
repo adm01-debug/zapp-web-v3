@@ -130,12 +130,12 @@
 ## src/hooks/useGmailLabels.ts
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Low | 13 | `#1a73e8` | `#1a73e8` | Check design system tokens | - |
-| Low | 14 | `#f29900` | `#f29900` | Check design system tokens | - |
-| Low | 15 | `#e37400` | `#e37400` | Check design system tokens | - |
-| Low | 16 | `#34a853` | `#34a853` | Check design system tokens | - |
+| Low | 13 | `#1a73e8` | `#1a73e8` | VALID: Google UI Blue | - |
+| Low | 14 | `#f29900` | `#f29900` | VALID: Google UI Warning | - |
+| Low | 15 | `#e37400` | `#e37400` | VALID: Google UI Orange | - |
+| Low | 16 | `#34a853` | `#34a853` | VALID: Google Green | - |
 | Low | 17 | `#9e9e9e` | `#9e9e9e` | Check design system tokens | - |
-| Low | 18 | `#d93025` | `#d93025` | Check design system tokens | - |
+| Low | 18 | `#d93025` | `#d93025` | VALID: Google UI Error | - |
 | Low | 19 | `#777777` | `#777777` | Check design system tokens | - |
 ## src/lib/devRealtimeLogger.ts
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
@@ -149,10 +149,10 @@
 ## src/pages/Auth.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Low | 162 | `#4285F4` | `#4285F4` | Check design system tokens | - |
-| Low | 163 | `#34A853` | `#34A853` | Check design system tokens | - |
-| Low | 164 | `#FBBC05` | `#FBBC05` | Check design system tokens | - |
-| Low | 165 | `#EA4335` | `#EA4335` | Check design system tokens | - |
+| Low | 162 | `#4285F4` | `#4285F4` | VALID: Google Blue | - |
+| Low | 163 | `#34A853` | `#34A853` | VALID: Google Green | - |
+| Low | 164 | `#FBBC05` | `#FBBC05` | VALID: Google Yellow | - |
+| Low | 165 | `#EA4335` | `#EA4335` | VALID: Google Red | - |
 ## src/pages/admin/AdminChannelsPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
