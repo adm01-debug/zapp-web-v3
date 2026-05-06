@@ -69,6 +69,15 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: 
     setConversionProgress(5);
 
     try {
+      let activeBlob = audioBlob;
+      if (!activeBlob && audioUrl) {
+        setConversionProgress(10);
+        const fetched = await fetch(audioUrl).then(r => r.blob());
+        activeBlob = fetched;
+      }
+      
+      if (!activeBlob) throw new Error('Áudio base não encontrado');
+
       // 1. Create task in queue
       const { data: task, error: queueError } = await supabase
         .from('voice_conversion_queue')
