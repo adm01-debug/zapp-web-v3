@@ -20,6 +20,10 @@ import { BusinessHoursIndicator } from './BusinessHoursIndicator';
 import { OfficialApiConfigDialog } from './OfficialApiConfigDialog';
 import { ConnectionAuditDialog } from './ConnectionAuditDialog';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { WhatsAppConnection } from '@/features/connections';
 
 /** Human-friendly status — no jargon. */
@@ -69,6 +73,7 @@ export function ConnectionCard({
   const [auditDialogOpen, setAuditDialogOpen] = useState(false);
   const [recheckingHealth, setRecheckingHealth] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const { restartInstance, connectInstance } = useEvolutionApi();
   const isConnected = connection.status === 'connected';
 
@@ -381,5 +386,26 @@ export function ConnectionCard({
         />
       )}
     </motion.div>
+  );
+      <AlertDialog open={confirmDisconnect} onOpenChange={setConfirmDisconnect}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desconectar "{connection.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação encerrará a sessão do WhatsApp. Você precisará escanear o QR Code novamente para reconectar e poderá perder o recebimento de novas mensagens até lá.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onDisconnect(connection)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, desconectar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
