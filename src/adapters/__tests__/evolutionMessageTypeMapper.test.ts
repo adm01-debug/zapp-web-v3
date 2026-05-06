@@ -26,6 +26,7 @@ describe('evolutionMessageTypeMapper', () => {
     it('maps video types', () => {
       expect(normalizeMessageType('videoMessage')).toBe('video');
       expect(normalizeMessageType('video')).toBe('video');
+      expect(normalizeMessageType('ptvMessage')).toBe('video');
     });
 
     it('maps document types', () => {
