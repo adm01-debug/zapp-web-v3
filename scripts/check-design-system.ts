@@ -187,6 +187,16 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
     return { cleanMatch, prefix, suggestion: `VALID: ${justification}`, priority: 'Low' };
   }
 
+  // Chart specific whitelist for Recharts selectors that use hex colors as keys
+  if (fileName.includes('chart.tsx') && (cleanMatch === '#ccc' || cleanMatch === '#fff')) {
+    return { cleanMatch, prefix, suggestion: 'VALID: Chart selector constant', priority: 'Low' };
+  }
+
+  // OLED Black intent justification
+  if (cleanMatch === '#000000' && fileName.endsWith('.css')) {
+     return { cleanMatch, prefix, suggestion: 'VALID: OLED Black (Intentional)', priority: 'Low' };
+  }
+
   return { cleanMatch, prefix, suggestion: 'Check design system tokens', priority: 'Low' };
 }
 
