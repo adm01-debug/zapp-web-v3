@@ -28,6 +28,12 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
   const [conversionProgress, setConversionProgress] = useState(0);
   const [showCloneWarning, setShowCloneWarning] = useState(false);
 
+  useEffect(() => {
+    return () => {
+      if (convertedAudioUrl) URL.revokeObjectURL(convertedAudioUrl);
+    };
+  }, [convertedAudioUrl]);
+
   const stopPlayback = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
