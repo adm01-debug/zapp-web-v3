@@ -175,12 +175,14 @@ export default function AdminConnectionsPage() {
         return;
       }
 
+      const verifyData = verify as any;
+
       setExternalUrl(draftUrl);
       setExternalKey(draftKey);
       setEditOpen(false);
       toast({
         title: 'Credenciais salvas e validadas',
-        description: `Registro confirmado em ${new Date(verify.updated_at).toLocaleTimeString()}. Atualize os secrets VITE_EXTERNAL_SUPABASE_URL/KEY.`,
+        description: `Registro confirmado em ${new Date(verifyData.updated_at).toLocaleTimeString()}. Atualize os secrets VITE_EXTERNAL_SUPABASE_URL/KEY.`,
       });
       await fetchConnections();
     } catch (e: any) {
