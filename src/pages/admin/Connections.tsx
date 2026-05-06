@@ -158,19 +158,49 @@ export default function AdminConnectionsPage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label>URL da Instância</Label>
-                      <Input value={externalUrl} readOnly className="font-mono text-xs" />
+                      <Input
+                        value={editOpen ? draftUrl : externalUrl}
+                        onChange={(e) => setDraftUrl(e.target.value)}
+                        readOnly={!editOpen}
+                        className="font-mono text-xs"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Chave Anon (Public)</Label>
-                      <Input type="password" value={externalKey ? '•'.repeat(Math.min(externalKey.length, 32)) : ''} readOnly className="font-mono text-xs" />
+                      <Input
+                        type={editOpen ? 'text' : 'password'}
+                        value={editOpen ? draftKey : (externalKey ? '•'.repeat(Math.min(externalKey.length, 32)) : '')}
+                        onChange={(e) => setDraftKey(e.target.value)}
+                        readOnly={!editOpen}
+                        placeholder={editOpen ? 'eyJhbGciOi...' : ''}
+                        className="font-mono text-xs"
+                      />
                     </div>
+                    {editOpen && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Editando inline. Após salvar, atualize também os secrets <code>VITE_EXTERNAL_SUPABASE_URL/KEY</code> e republique para o runtime usar.
+                      </p>
+                    )}
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => testConnection(externalUrl, externalKey)} disabled={testing}>
+                      <Button variant="outline" size="sm" className="flex-1 gap-2"
+                        onClick={() => testConnection(editOpen ? draftUrl : externalUrl, editOpen ? draftKey : externalKey)}
+                        disabled={testing}>
                         {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Testar Conexão
                       </Button>
-                      <Button size="sm" className="flex-1 gap-2" onClick={openEditor}>
-                        <Settings className="w-4 h-4" /> Editar Credenciais
-                      </Button>
+                      {!editOpen ? (
+                        <Button size="sm" className="flex-1 gap-2" onClick={openEditor}>
+                          <Settings className="w-4 h-4" /> Editar Credenciais
+                        </Button>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="sm" className="gap-2" onClick={() => { setEditOpen(false); setDraftUrl(externalUrl); setDraftKey(externalKey); }} disabled={saving}>
+                            Cancelar
+                          </Button>
+                          <Button size="sm" className="flex-1 gap-2" onClick={saveCredentials} disabled={saving}>
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
