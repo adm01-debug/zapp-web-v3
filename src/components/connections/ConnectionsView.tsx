@@ -155,7 +155,12 @@ export function ConnectionsView() {
             </DialogTitle>
           </DialogHeader>
           <div className="py-6 space-y-4">
-            {qrCodeDialog.status === 'loading' && <div className="w-64 h-64 mx-auto bg-muted rounded-xl flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-muted-foreground" /></div>}
+            {qrCodeDialog.status === 'loading' && (
+              <div className="w-64 h-64 mx-auto bg-muted rounded-xl flex flex-col items-center justify-center p-6 gap-4 text-center">
+                <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
+                <p className="text-xs text-muted-foreground font-medium animate-pulse">Iniciando sessão na Evolution API...</p>
+              </div>
+            )}
             {qrCodeDialog.status === 'pending' && qrCodeDialog.qrCode && (
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-64 h-64 mx-auto bg-background rounded-xl p-2 flex items-center justify-center">
                 <img src={qrCodeDialog.qrCode.startsWith('data:') ? qrCodeDialog.qrCode : `data:image/png;base64,${qrCodeDialog.qrCode}`} alt="QR Code" className="w-full h-full object-contain" />
