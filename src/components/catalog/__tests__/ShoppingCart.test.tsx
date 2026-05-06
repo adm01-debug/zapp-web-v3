@@ -26,7 +26,7 @@ const defaultProps = {
 };
 
 describe('ShoppingCart Component', () => {
-  it('renders cart items correctly', () => {
+  it('renders cart items correctly', async () => {
     render(<ShoppingCart {...defaultProps} />);
     
     // Open the sheet
