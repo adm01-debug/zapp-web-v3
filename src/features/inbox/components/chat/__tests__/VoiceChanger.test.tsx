@@ -87,8 +87,7 @@ describe('VoiceChanger Component - End-to-End Integration', () => {
     // 4. Wait for completion
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith(
-        expect.stringMatching(/Voz convertida para Grave/i),
-        expect.anything()
+        expect.stringMatching(/Voz convertida para Grave/i)
       );
     }, { timeout: 10000 });
   });
