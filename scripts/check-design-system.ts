@@ -160,12 +160,28 @@ export function getSuggestion(label: string, match: string, fileName?: string, c
   }
 
   if (label === 'Literal Font') {
-    if (cleanMatch === 'font-sans') {
-      return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
-    }
+    const isTechnicalContext = context && (
+      /id|uuid|timestamp|date|created_at|updated_at|log|metric|count|phone|cnpj|cpf|value|price|amount|chart|graph|axis|tick|token|hex|hash|sha/i.test(context) ||
+      /code|pre|samp|kbd/i.test(context)
+    );
+    const isTechnicalFile = fileName && /chart|graph|report|log|metric|debug|system|auth/i.test(fileName);
+    
     if (cleanMatch === 'font-mono') {
+      if (isTechnicalContext || isTechnicalFile) {
+        return { cleanMatch, prefix, suggestion: 'VALID: Technical data (ID/Metric/Log)', priority: 'Low' };
+      }
       return { cleanMatch, prefix, suggestion: 'Ensure font-mono is only for technical data (IDs, logs, metrics)', priority: 'Medium' };
     }
+
+    if (cleanMatch === 'font-sans') {
+      // Check if it's an intentional override (e.g., parent is mono)
+      const isOverride = context && /font-mono/.test(context);
+      if (isOverride) {
+        return { cleanMatch, prefix, suggestion: 'VALID: Intentional font reset', priority: 'Low' };
+      }
+      return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
+    }
+    
     return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low', replacement: '' };
   }
 
