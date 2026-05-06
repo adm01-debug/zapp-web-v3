@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OpsMetricsTab } from "./operations/OpsMetricsTab";
 import { OpsLogsTab } from "./operations/OpsLogsTab";
+import { OpsTransfersTab } from "./operations/OpsTransfersTab";
 
 const AdminChannelsPage = lazy(() => import("./AdminChannelsPage"));
 const AdminQueuesPage = lazy(() => import("./AdminQueuesPage"));
@@ -22,6 +23,7 @@ export default function AdminOperationsPage() {
           <TabsTrigger value="metrics">Métricas</TabsTrigger>
           <TabsTrigger value="channels">Canais</TabsTrigger>
           <TabsTrigger value="queues">Filas</TabsTrigger>
+          <TabsTrigger value="transfers">Transferências</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
 
@@ -39,6 +41,10 @@ export default function AdminOperationsPage() {
           <Suspense fallback={<Skeleton className="h-96" />}>
             <AdminQueuesPage />
           </Suspense>
+        </TabsContent>
+
+        <TabsContent value="transfers" className="mt-4">
+          <OpsTransfersTab />
         </TabsContent>
 
         <TabsContent value="logs" className="mt-4">
