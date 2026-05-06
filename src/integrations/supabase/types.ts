@@ -13682,17 +13682,25 @@ export type Database = {
       get_own_gmail_accounts: {
         Args: never
         Returns: {
+          access_token_encrypted: string | null
           created_at: string
           email_address: string
           id: string
           is_active: boolean
-          last_error: string
-          last_sync_at: string
+          last_error: string | null
+          last_sync_at: string | null
+          refresh_token_encrypted: string | null
           sync_status: string
-          token_expires_at: string
+          token_expires_at: string | null
           updated_at: string
           user_id: string
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "gmail_accounts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_own_lockout_status: {
         Args: { p_email: string }
@@ -14205,24 +14213,35 @@ export type Database = {
               p_to?: string
             }
             Returns: {
-              abandon_reason: string
-              abandoned_at: string
               created_at: string
-              error_code: string
-              error_message: string
-              http_status: number
+              delivered_at: string | null
+              delivery_status: string
+              direction: string
+              error_code: string | null
+              error_message: string | null
+              external_contact_id: string | null
+              external_message_id: string | null
+              http_status: number | null
               id: string
+              idempotency_key: string
               instance_name: string
-              max_retries: number
-              next_attempt_at: string
+              metadata: Json
               payload: Json
+              payload_hash: string
+              persisted_at: string | null
+              provider: string
+              received_at: string
               remote_jid: string
-              retry_count: number
-              status: string
-              succeeded_at: string
-              total_count: number
-              updated_at: string
+              routed_at: string | null
+              thread_id: string | null
+              trace_id: string | null
             }[]
+            SetofOptions: {
+              from: "*"
+              to: "provider_message_log"
+              isOneToOne: false
+              isSetofReturn: true
+            }
           }
         | {
             Args: {
@@ -14345,24 +14364,7 @@ export type Database = {
           p_performed_by?: string
           p_remote_jid?: string
         }
-        Returns: {
-          event_type: string
-          id: string
-          instance_name: string
-          level: string | null
-          message: string | null
-          metadata: Json | null
-          payload: Json | null
-          performed_by: string | null
-          remote_jid: string | null
-          ts: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "service_logs"
-          isOneToOne: true
-          isSetofReturn: false
-        }
+        Returns: undefined
       }
       rpc_migrate_whatsapp_integration: { Args: never; Returns: Json }
       rpc_ops_metrics: { Args: { p_window_hours?: number }; Returns: Json }
@@ -14486,7 +14488,7 @@ export type Database = {
         }
         Returns: string
       }
-      rpc_purge_channel_sticky: { Args: { p_id: string }; Returns: number }
+      rpc_purge_channel_sticky: { Args: { p_id: string }; Returns: undefined }
       rpc_queue_rebalance_candidates: {
         Args: { p_limit?: number }
         Returns: {
@@ -14782,7 +14784,39 @@ export type Database = {
           p_phone?: string
           p_signature?: string
         }
-        Returns: boolean
+        Returns: {
+          access_level: string | null
+          avatar_url: string | null
+          birthday: string | null
+          can_download: boolean
+          created_at: string
+          current_load: number | null
+          department: string | null
+          department_id: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          job_title: string | null
+          last_seen: string | null
+          max_chats: number | null
+          name: string
+          nickname: string | null
+          online_status: string | null
+          permissions: Json | null
+          phone: string | null
+          role: string | null
+          session_invalidated_at: string | null
+          signature: string | null
+          theme_config: Json | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       upsert_department: {
         Args: {

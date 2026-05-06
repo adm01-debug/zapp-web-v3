@@ -1,0 +1,11 @@
+ALTER FUNCTION public.fn_add_business_minutes(text, timestamp with time zone, integer) SET search_path = public;
+ALTER FUNCTION public.fn_add_business_minutes(timestamp with time zone, integer, text) SET search_path = public;
+ALTER FUNCTION public.fn_test_concurrency_accept(uuid, integer) SET search_path = public;
+ALTER FUNCTION public.handle_updated_at() SET search_path = public;
+ALTER FUNCTION public.is_admin_or_supervisor() SET search_path = public;
+ALTER FUNCTION public.log_storage_upload_error() SET search_path = public;
+ALTER FUNCTION public.trg_fn_set_transfer_sla() SET search_path = public;
+ALTER FUNCTION public.trg_transfer_auto_sla() SET search_path = public;
+ALTER FUNCTION public.trg_transfer_notify() SET search_path = public;
+ALTER FUNCTION public.update_media_cache_access() SET search_path = public;
+ALTER FUNCTION public.update_updated_at_column() SET search_path = public;
