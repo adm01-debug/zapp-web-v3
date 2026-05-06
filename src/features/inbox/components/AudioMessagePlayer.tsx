@@ -156,6 +156,7 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
   };
 
   if (!audioUrl && !isLoading) {
+    const isProcessing = transcriptionStatus === 'processing' || isTranscribing;
     return (
       <div className={cn('flex items-center gap-3 p-3 rounded-lg border border-dashed animate-pulse', isSent ? 'bg-primary-foreground/5 border-primary-foreground/20' : 'bg-muted/20 border-border')}>
         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
