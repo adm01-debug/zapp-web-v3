@@ -229,6 +229,7 @@ export function useAudioMemes(open: boolean) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error('Efetue login para favoritar'); return; }
 
+    // OPTIMISTIC UPDATE
     const newVal = !meme.is_favorite;
     setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, is_favorite: newVal } : m));
 
@@ -240,8 +241,9 @@ export function useAudioMemes(open: boolean) {
 
     if (error) {
       log.error('toggleFavorite error', error);
-      // Rollback UI if failed
+      // ROLLBACK UI if failed
       setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, is_favorite: !newVal } : m));
+      toast.error('Erro ao atualizar favorito');
     }
   }, []);
 
