@@ -321,13 +321,16 @@ export function EvolutionApiIntegrationView() {
                             variant="ghost" 
                             size="icon" 
                             className="h-7 w-7" 
-                            onClick={() => setFormData({
-                              instance_name: creds.instance_name,
-                              api_url: creds.api_url,
-                              api_key: creds.api_key,
-                              show_key: false,
-                              is_editing: creds.id
-                            }) || setActiveTab('config')}
+                            onClick={() => {
+                              setFormData({
+                                instance_name: creds.instance_name,
+                                api_url: creds.api_url,
+                                api_key: creds.api_key,
+                                show_key: false,
+                                is_editing: creds.id
+                              });
+                              setActiveTab('config');
+                            }}
                           >
                             <Settings2 className="w-3.5 h-3.5" />
                           </Button>
