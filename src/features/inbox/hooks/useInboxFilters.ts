@@ -187,9 +187,17 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
           if (statusFilter === 'unread' && c.unreadCount === 0) return false;
 
           if (subTab === 'attending') {
-            if (showAll) return true;
-            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
-          } 
+            // Backwards-compat: showAll === true equivale a scope='all'
+            const effectiveScope = showAll ? 'all' : scope;
+            if (effectiveScope === 'all') return true;
+            const assignee = assignedOf(c.contact.id, c.contact.assigned_to);
+            if (effectiveScope === 'department') {
+              if (!assignee) return false;
+              return departmentAgentIds.includes(assignee);
+            }
+            // 'mine'
+            return assignee === profileId;
+          }
           
           if (subTab === 'waiting') {
             return !assignedOf(c.contact.id, c.contact.assigned_to);
