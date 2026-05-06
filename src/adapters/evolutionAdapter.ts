@@ -126,6 +126,7 @@ const SHORT_ALIASES: Record<string, keyof typeof MESSAGE_TYPE_BLUEPRINT> = {
   image: 'imageMessage',
   video: 'videoMessage',
   audio: 'audioMessage',
+  ptv: 'ptvMessage',
   document: 'documentMessage',
   sticker: 'stickerMessage',
   location: 'locationMessage',
