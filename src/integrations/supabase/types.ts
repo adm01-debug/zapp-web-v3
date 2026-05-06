@@ -10863,7 +10863,7 @@ export type Database = {
           instance_name: string | null
           metadata: Json | null
           transfer_id: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           action: string
@@ -10872,7 +10872,7 @@ export type Database = {
           instance_name?: string | null
           metadata?: Json | null
           transfer_id: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           action?: string
@@ -10881,7 +10881,7 @@ export type Database = {
           instance_name?: string | null
           metadata?: Json | null
           transfer_id?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
