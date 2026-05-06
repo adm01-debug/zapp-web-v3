@@ -4,12 +4,26 @@ import { ChatPanelHeader } from '@/features/inbox/components/chat/ChatPanelHeade
 import { Conversation } from '@/types/chat';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
 
+// Optimized mocks
 vi.mock('@/hooks/use-mobile', () => ({ useIsMobile: () => false }));
 vi.mock('@/lib/popupManager', () => ({ openChatPopup: vi.fn() }));
-vi.mock('../..', () => ({ SLAIndicator: () => null }));
-vi.mock('../..', () => ({ VoiceSelector: () => null }));
-vi.mock('../..', () => ({ SpeedSelector: () => null }));
+vi.mock('@/features/inbox', () => ({ 
+  useContactAvatar: () => ({ avatarUrl: null }),
+  SLAIndicatorForContact: () => <div data-testid="sla-indicator">SLA</div>
+}));
+vi.mock('../..', () => ({ 
+  SLAIndicator: () => null,
+  VoiceSelector: () => null,
+  SpeedSelector: () => null,
+  TypingIndicatorCompact: () => null,
+  TypingIndicatorInline: () => null,
+  RealtimeCollaboration: () => null,
+  KeyboardShortcutsHelp: () => null,
+  SLAIndicatorForContact: () => <div data-testid="sla-indicator">SLA</div>
+}));
 
 const mockConversation = {
   id: 'conv-1',
@@ -46,10 +60,14 @@ const baseProps = {
   onSpeedChange: vi.fn(),
 };
 
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
-  <BrowserRouter>
-    <TooltipProvider>{children}</TooltipProvider>
-  </BrowserRouter>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <TooltipProvider>{children}</TooltipProvider>
+    </BrowserRouter>
+  </QueryClientProvider>
 );
 
 describe('ChatPanelHeader', () => {
@@ -128,14 +146,14 @@ describe('ChatPanelHeader', () => {
   });
 
   it('calls onOpenSearch when search button is clicked', () => {
+    const onSearch = vi.fn();
     render(
       <Wrapper>
-        <ChatPanelHeader {...baseProps} />
+        <ChatPanelHeader {...baseProps} onOpenSearch={onSearch} />
       </Wrapper>
     );
-    const buttons = screen.getAllByRole('button');
-    const searchBtn = buttons.find(b => b.querySelector('.lucide-search'));
-    fireEvent.click(searchBtn!);
-    expect(baseProps.onOpenSearch).toHaveBeenCalledTimes(1);
+    const searchBtn = screen.getByLabelText(/buscar/i);
+    fireEvent.click(searchBtn);
+    expect(onSearch).toHaveBeenCalledTimes(1);
   });
 });

@@ -90,6 +90,8 @@ describe('ChatInputArea Interaction Transitions', () => {
     (useChatInputLogic as any).mockReturnValue({
       attachments: [],
       hasText: true,
+      canSend: true,
+      isMicActive: false,
       isMobile: false,
       isOverLimit: false,
       charCount: 10,
@@ -107,6 +109,8 @@ describe('ChatInputArea Interaction Transitions', () => {
     (useChatInputLogic as any).mockReturnValue({
       attachments: [],
       hasText: false,
+      canSend: false,
+      isMicActive: false,
       isMobile: false,
       isOverLimit: false,
       charCount: 0,
@@ -115,14 +119,17 @@ describe('ChatInputArea Interaction Transitions', () => {
 
     renderWithProvider(<ChatInputArea {...defaultProps} />);
     
+    // Send button remains highlightable to trigger file picker if empty, but here it matches canSend
     const sendButton = screen.getByLabelText(/Enviar mensagem/i);
-    expect(sendButton).toBeDisabled();
+    expect(sendButton.getAttribute('aria-disabled')).toBe('true');
   });
 
   it('deve permitir envio quando há anexos mesmo sem texto', () => {
     (useChatInputLogic as any).mockReturnValue({
       attachments: [{ id: '1', file: new File([], 'test.jpg') }],
       hasText: false,
+      canSend: true,
+      isMicActive: false,
       isMobile: false,
       isOverLimit: false,
       charCount: 0,
@@ -132,16 +139,18 @@ describe('ChatInputArea Interaction Transitions', () => {
     renderWithProvider(<ChatInputArea {...defaultProps} />);
     
     const sendButton = screen.getByLabelText(/Enviar mensagem/i);
-    expect(sendButton).not.toBeDisabled();
+    expect(sendButton.getAttribute('aria-disabled')).toBe('false');
     
     const micButton = screen.getByLabelText(/Gravar áudio/i);
     expect(micButton).toBeDisabled();
   });
 
-  it('deve exibir estado de carregando durante o envio', () => {
+  it('deve exibir estado de carregando durante o envio', async () => {
     (useChatInputLogic as any).mockReturnValue({
       attachments: [],
       hasText: true,
+      canSend: true,
+      isMicActive: false,
       isMobile: false,
       isOverLimit: false,
       charCount: 5,
@@ -150,7 +159,9 @@ describe('ChatInputArea Interaction Transitions', () => {
 
     renderWithProvider(<ChatInputArea {...defaultProps} isSending={true} />);
     
-    expect(screen.getByLabelText(/Enviar mensagem/i)).toBeDisabled();
+    // Send button should be disabled via props.isSending
+    const sendButton = screen.getByLabelText(/Enviando mensagem/i);
+    expect(sendButton).toBeDisabled();
     expect(screen.getByText(/Enviando/i)).toBeDefined();
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
@@ -16,6 +16,29 @@ vi.mock('@/features/auth', () => ({
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
+
+vi.mock('@/features/inbox', () => ({
+  useMessageDetails: (id: string, options: any) => {
+    const [data, setData] = React.useState<any>(null);
+    const [isLoading, setIsLoading] = React.useState(true);
+    
+    React.useEffect(() => {
+      if (options.enabled) {
+        timedRpcMock(id).then((res: any) => {
+          setData(res.data);
+          setIsLoading(false);
+        });
+      }
+    }, [id, options.enabled]);
+
+    return { data, isLoading, error: null };
+  },
+  useMessageSendStatus: () => ({ isSending: false, progress: 0 }),
+  useMessageStatusEvents: () => ({ data: [], isLoading: false }),
+}));
+
+vi.mock('./MessageAttemptsTimeline', () => ({ MessageAttemptsTimeline: () => <div data-testid="attempts-timeline" /> }));
+vi.mock('./MessageStatusTimeline', () => ({ MessageStatusTimeline: () => <div data-testid="status-timeline" /> }));
 
 import { MessageDetailsDialog } from '@/features/inbox/components/chat/MessageDetailsDialog';
 
@@ -48,9 +71,15 @@ describe('MessageDetailsDialog', () => {
   it('renders payload and raw_data tabs with JSON content for admin', async () => {
     timedRpcMock.mockResolvedValueOnce({ data: FULL, error: null });
     wrap(<MessageDetailsDialog messageId="m1" open onOpenChange={() => {}} />);
+    
     await waitFor(() => expect(screen.getByText(/wamid\.x/)).toBeInTheDocument());
-    // Admin sees the copy buttons
+    
+    // Switch to Payload tab
+    fireEvent.click(screen.getByRole('tab', { name: /payload/i }));
     expect(screen.getByTestId('copy-payload')).toBeInTheDocument();
+    
+    // Switch to Raw tab
+    fireEvent.click(screen.getByRole('tab', { name: /raw data/i }));
     expect(screen.getByTestId('copy-raw')).toBeInTheDocument();
   });
 
@@ -58,8 +87,13 @@ describe('MessageDetailsDialog', () => {
     profileRef.current = { role: 'agent' };
     timedRpcMock.mockResolvedValueOnce({ data: FULL, error: null });
     wrap(<MessageDetailsDialog messageId="m1" open onOpenChange={() => {}} />);
+    
     await waitFor(() => expect(screen.getByText(/wamid\.x/)).toBeInTheDocument());
+    
+    fireEvent.click(screen.getByRole('tab', { name: /payload/i }));
     expect(screen.queryByTestId('copy-payload')).toBeNull();
+    
+    fireEvent.click(screen.getByRole('tab', { name: /raw data/i }));
     expect(screen.queryByTestId('copy-raw')).toBeNull();
   });
 
@@ -67,7 +101,10 @@ describe('MessageDetailsDialog', () => {
     profileRef.current = { role: 'supervisor' };
     timedRpcMock.mockResolvedValueOnce({ data: FULL, error: null });
     wrap(<MessageDetailsDialog messageId="m1" open onOpenChange={() => {}} />);
+    
     await waitFor(() => expect(screen.getByText(/wamid\.x/)).toBeInTheDocument());
+    
+    fireEvent.click(screen.getByRole('tab', { name: /payload/i }));
     expect(screen.getByTestId('copy-payload')).toBeInTheDocument();
   });
 });
