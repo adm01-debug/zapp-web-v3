@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { getLogger } from '@/lib/logger';
 import { sendMessageToContact } from './realtime/messageSender';
@@ -195,12 +196,14 @@ export function useRealtimeMessages() {
       setError(null);
       const { data: seededContacts, error: contactsError } = await dbFrom('contacts')
         .select('*')
+        .eq('instance_name', DEFAULT_WHATSAPP_INSTANCE)
         .order('updated_at', { ascending: false })
         .limit(SEEDED_CONTACT_LIMIT);
       if (contactsError) throw contactsError;
       
       const { data: recentMessages, error: messagesError } = await dbFrom('messages')
         .select('*')
+        .eq('instance_name', DEFAULT_WHATSAPP_INSTANCE)
         .order('created_at', { ascending: false })
         .limit(RECENT_MESSAGES_LIMIT);
       if (messagesError) throw messagesError;
@@ -222,9 +225,19 @@ export function useRealtimeMessages() {
     logMessagesSubscribe('useRealtimeMessages', { event: 'INSERT', table: dbTable('messages') });
     logMessagesSubscribe('useRealtimeMessages', { event: 'UPDATE', table: dbTable('messages') });
     const channel = supabase.channel('messages-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: dbTable('messages') },
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: dbTable('messages'),
+        filter: `instance_name=eq.${DEFAULT_WHATSAPP_INSTANCE}` 
+      },
         wrapMessagesHandler('useRealtimeMessages', handleNewMessage))
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: dbTable('messages') },
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: dbTable('messages'),
+        filter: `instance_name=eq.${DEFAULT_WHATSAPP_INSTANCE}`
+      },
         wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate))
       .subscribe((status) => { log.debug('Subscription status', { status }); });
     return () => { supabase.removeChannel(channel); };

@@ -200,95 +200,95 @@ export const RPC = {
   // ── Reads ────────────────────────────────────────────────────────────────
   listContacts: def<ListContactsParams, EvolutionContact[]>({
     name: 'rpc_list_contacts',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   getContact: def<GetContactParams, EvolutionContact>({
     name: 'rpc_get_contact',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   listMessages: def<ListMessagesParams, EvolutionMessage[]>({
     name: 'rpc_list_messages',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   listMessagesLite: def<ListMessagesLiteParams, EvolutionMessage[]>({
     name: 'rpc_list_messages_lite',
-    client: 'lovable',
+    client: 'external',
   }),
   listConversations: def<ListConversationsParams, EvolutionConversation[]>({
     name: 'rpc_list_conversations',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   listCalls: def<ListCallsParams, unknown[]>({
     name: 'rpc_list_calls',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   listAuditLog: def<ListAuditLogParams, unknown[]>({
     name: 'rpc_list_audit_log',
-    client: 'lovable',
+    client: 'external',
   }),
 
   // ── Writes ───────────────────────────────────────────────────────────────
   insertMessage: def<InsertMessageParams, EvolutionMessage>({
     name: 'rpc_insert_message',
-    client: 'lovable',
+    client: 'external',
   }),
   upsertContact: def<UpsertContactParams, EvolutionContact>({
     name: 'rpc_upsert_contact',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   deleteContact: def<DeleteContactParams, boolean>({
     name: 'rpc_delete_contact',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
 
   // ── Analytics / Search ───────────────────────────────────────────────────
   dashboardHome: def<DashboardHomeParams, unknown>({
     name: 'rpc_dashboard_home',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   globalSearch: def<GlobalSearchParams, unknown>({
     name: 'rpc_global_search',
-    client: 'lovable',
+    client: 'external',
   }),
 
   // ── CRM 360 / Search avançado ────────────────────────────────────────────
   searchContactsAdvanced: def<SearchContactsAdvancedParams, unknown>({
     name: 'search_contacts_advanced',
-    client: 'lovable',
+    client: 'external',
   }),
   getContact360ByPhone: def<GetContact360Params, unknown>({
     name: 'get_contact_360_by_phone',
-    client: 'lovable',
+    client: 'external',
   }),
   getContactIntelligenceByPhone: def<GetContactIntelligenceParams, unknown>({
     name: 'get_contact_intelligence_by_phone',
-    client: 'lovable',
+    client: 'external',
   }),
   getCompaniesByPhonesBatch: def<GetCompaniesByPhonesBatchParams, unknown>({
     name: 'get_companies_by_phones_batch',
-    client: 'lovable',
+    client: 'external',
   }),
   syncInteractionFromZapp: def<SyncInteractionParams, unknown>({
     name: 'sync_interaction_from_zapp',
-    client: 'lovable',
+    client: 'external',
   }),
 
   // ── Contacts module: notes, audit, dashboards, bulk ops ─────────────────
   getContactConversations: def<{ p_contact_id: string; p_limit?: number }, Record<string, unknown>[]>({
     name: 'get_contact_conversations',
-    client: 'lovable',
+    client: 'external',
   }),
   getContactNotes: def<{ p_contact_id: string; p_limit?: number }, Record<string, unknown>[]>({
     name: 'get_contact_notes',
-    client: 'lovable',
+    client: 'external',
   }),
   addContactNote: def<{
     p_contact_id: string;
@@ -297,15 +297,15 @@ export const RPC = {
     p_is_pinned?: boolean;
   }, Record<string, unknown>>({
     name: 'add_contact_note',
-    client: 'lovable',
+    client: 'external',
   }),
   bulkUpdateLeadStatus: def<{ p_contact_ids: string[]; p_status: string }, unknown>({
     name: 'bulk_update_lead_status',
-    client: 'lovable',
+    client: 'external',
   }),
   bulkAddTag: def<{ p_contact_ids: string[]; p_tag: string }, unknown>({
     name: 'bulk_add_tag',
-    client: 'lovable',
+    client: 'external',
   }),
   findDuplicateContacts: def<FindDuplicateContactsParams, Array<{
     phone_normalized: string;
@@ -314,15 +314,15 @@ export const RPC = {
     contact_count?:   number;
   }>>({
     name: 'find_duplicate_contacts',
-    client: 'lovable',
+    client: 'external',
   }),
   mergeContacts: def<MergeContactsParams, Record<string, unknown>>({
     name: 'merge_contacts',
-    client: 'lovable',
+    client: 'external',
   }),
   bulkAutoMergeDuplicates: def<BulkAutoMergeDuplicatesParams, Record<string, unknown>>({
     name: 'bulk_auto_merge_duplicates',
-    client: 'lovable',
+    client: 'external',
   }),
   updateContactVersioned: def<{
     p_contact_id:       string;
@@ -330,31 +330,31 @@ export const RPC = {
     p_updates:          Record<string, unknown>;
   }, Record<string, unknown>>({
     name: 'update_contact_versioned',
-    client: 'lovable',
+    client: 'external',
   }),
   restoreContact: def<{ p_contact_id: string }, Record<string, unknown>>({
     name: 'restore_contact',
-    client: 'lovable',
+    client: 'external',
   }),
   getContactStats: def<{ p_instance_name: string }, Record<string, unknown>>({
     name: 'get_contact_stats',
-    client: 'lovable',
+    client: 'external',
   }),
   getLgpdComplianceStats: def<{ p_instance_name: string } | { p_workspace_id: string }, Record<string, unknown>>({
     name: 'get_lgpd_compliance_stats',
-    client: 'lovable',
+    client: 'external',
   }),
   grantLgpdConsent: def<GrantLgpdConsentParams, Record<string, unknown> | boolean>({
     name: 'grant_lgpd_consent',
-    client: 'lovable',
+    client: 'external',
   }),
   revokeLgpdConsent: def<RevokeLgpdConsentParams, Record<string, unknown> | boolean>({
     name: 'revoke_lgpd_consent',
-    client: 'lovable',
+    client: 'external',
   }),
   getDuplicateReport: def<{ p_instance_name: string }, Record<string, unknown>>({
     name: 'get_duplicate_report',
-    client: 'lovable',
+    client: 'external',
   }),
   rpc_log_service_event: def<{
     p_instance: TEXT;
@@ -367,7 +367,7 @@ export const RPC = {
     p_performed_by?: TEXT;
   }, Record<string, unknown>>({
     name: 'rpc_log_service_event',
-    client: 'lovable',
+    client: 'external',
   }),
   send_message_v2: def<{
     p_remote_jid: string;
@@ -377,7 +377,7 @@ export const RPC = {
     p_media_mimetype?: string;
   }, { success: boolean; message: string }>({
     name: 'send_message_v2',
-    client: 'lovable',
+    client: 'external',
   }),
 } as const;
 

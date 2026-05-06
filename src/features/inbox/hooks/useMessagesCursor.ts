@@ -240,7 +240,7 @@ export function useMessagesCursor({
           event: 'INSERT',
           schema: 'public',
           table: 'evolution_messages',
-          filter: `remote_jid=eq.${remoteJid}`,
+          filter: `remote_jid=eq.${remoteJid},instance_name=eq.${DEFAULT_INSTANCE}`,
         },
         (payload) => {
           const raw = payload.new;
@@ -263,7 +263,7 @@ export function useMessagesCursor({
           event: 'UPDATE',
           schema: 'public',
           table: 'evolution_messages',
-          filter: `remote_jid=eq.${remoteJid}`,
+          filter: `remote_jid=eq.${remoteJid},instance_name=eq.${DEFAULT_INSTANCE}`,
         },
         (payload) => {
           const raw = payload.new;
@@ -280,7 +280,7 @@ export function useMessagesCursor({
           event: 'DELETE',
           schema: 'public',
           table: 'evolution_messages',
-          filter: `remote_jid=eq.${remoteJid}`,
+          filter: `remote_jid=eq.${remoteJid},instance_name=eq.${DEFAULT_INSTANCE}`,
         },
         (payload) => {
           const id = payload.old?.id;
