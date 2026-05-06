@@ -4541,6 +4541,33 @@ export type Database = {
           },
         ]
       }
+      email_health_summary: {
+        Row: {
+          failure_count_60m: number | null
+          id: string
+          last_validation: string | null
+          metadata: Json | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          failure_count_60m?: number | null
+          id?: string
+          last_validation?: string | null
+          metadata?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          failure_count_60m?: number | null
+          id?: string
+          last_validation?: string | null
+          metadata?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       email_labels: {
         Row: {
           color: string | null
@@ -4705,6 +4732,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_revalidation_jobs: {
+        Row: {
+          completed_at: string | null
+          id: string
+          requested_at: string | null
+          requested_by: string | null
+          result: Json | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          result?: Json | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          result?: Json | null
+          status?: string
+        }
+        Relationships: []
       }
       email_threads: {
         Row: {
@@ -5484,60 +5538,6 @@ export type Database = {
           resource?: string | null
           status?: string
           timestamp?: string | null
-        }
-        Relationships: []
-      }
-      gmail_health_summary: {
-        Row: {
-          failure_count_60m: number | null
-          id: string
-          last_validation: string | null
-          metadata: Json | null
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          failure_count_60m?: number | null
-          id?: string
-          last_validation?: string | null
-          metadata?: Json | null
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          failure_count_60m?: number | null
-          id?: string
-          last_validation?: string | null
-          metadata?: Json | null
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      gmail_revalidation_jobs: {
-        Row: {
-          completed_at: string | null
-          id: string
-          requested_at: string | null
-          requested_by: string | null
-          result: Json | null
-          status: string
-        }
-        Insert: {
-          completed_at?: string | null
-          id?: string
-          requested_at?: string | null
-          requested_by?: string | null
-          result?: Json | null
-          status?: string
-        }
-        Update: {
-          completed_at?: string | null
-          id?: string
-          requested_at?: string | null
-          requested_by?: string | null
-          result?: Json | null
-          status?: string
         }
         Relationships: []
       }
@@ -13826,6 +13826,11 @@ export type Database = {
       }
       rpc_dlq_retry_now: { Args: { p_id: string }; Returns: boolean }
       rpc_dlq_stats: { Args: never; Returns: Json }
+      rpc_email_mark_thread_read: {
+        Args: { p_read: boolean; p_thread_id: string }
+        Returns: Json
+      }
+      rpc_email_token_status: { Args: never; Returns: Json }
       rpc_enqueue_reprocess: {
         Args: {
           p_action: string
