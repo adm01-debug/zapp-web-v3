@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { sanitizeContactFields } from '@/lib/sanitize';
 import { dbFrom } from '@/integrations/datasource/db';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ const DEFAULT_FILTERS: ContactFilters = {
   assigned_to:  null,
   sort_field:   'last_message_at',
   sort_order:   'desc',
-  instance_name:'wpp2',
+  instance_name: DEFAULT_WHATSAPP_INSTANCE,
 };
 
 const PAGE_SIZE = 50;
@@ -92,7 +93,7 @@ function mapRow(raw: Record<string, unknown>): Contact {
     lead_score:           Number(raw.lead_score ?? 0),
     tags:                 Array.isArray(raw.tags) ? (raw.tags as string[]).map(String) : [],
     notes:                sanitized.notes as string | null,
-    instance_name:        String(raw.instance_name ?? 'wpp2'),
+    instance_name:        String(raw.instance_name ?? DEFAULT_WHATSAPP_INSTANCE),
     assigned_to:          raw.assigned_to as string | null,
     profile_picture_url:  raw.profile_picture_url as string | null,
     deleted_at:           raw.deleted_at as string | null,
