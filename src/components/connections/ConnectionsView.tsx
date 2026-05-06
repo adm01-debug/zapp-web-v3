@@ -150,7 +150,7 @@ export function ConnectionsView() {
       <Dialog open={qrCodeDialog.open} onOpenChange={(open) => !open && closeQrDialog()}>
         <DialogContent className="sm:max-w-md text-center">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-center gap-2">
+            <DialogTitle className="flex items-center justify-center gap-2" data-testid="qr-dialog-title">
               {qrCodeDialog.status === 'connected' ? <><CheckCircle2 className="w-5 h-5 text-status-online" />Conectado!</> :
                qrCodeDialog.status === 'error' ? <><XCircle className="w-5 h-5 text-destructive" />Erro</> :
                <><QrCode className="w-5 h-5" />Escanear QR Code - {qrCodeDialog.connectionName}</>}
