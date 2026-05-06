@@ -84,11 +84,12 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
       const { data: task, error: queueError } = await supabase
         .from('voice_conversion_queue')
         .insert({
-          input_audio_url: 'blob-input', 
+          input_audio_url: audioUrl || 'blob-input', 
           voice_preset: voice.id,
           status: 'pending',
           user_id: (await supabase.auth.getUser()).data.user?.id,
-          // If we have a message context, add it here (passed via props)
+          message_id: messageId,
+          conversation_id: conversationId
         })
         .select()
         .single();
