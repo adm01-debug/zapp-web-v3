@@ -34,27 +34,42 @@ export default function AdminConnectionsPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    fetchConnections();
-    (async () => {
+  const checkAdminStatus = async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id ?? null);
       if (user?.id) {
-        try {
-          const { data: roles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id);
-          setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
-        } catch (e) {
-          console.error("Erro ao verificar roles:", e);
-          setIsAdmin(false);
-        }
+        const { data: roles, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+        setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
       } else {
         setIsAdmin(false);
       }
-    })();
+    } catch (e) {
+      console.error("Erro ao verificar roles:", e);
+      setIsAdmin(false);
+      toast({ 
+        title: 'Erro de Autenticação', 
+        description: 'Não foi possível validar seu nível de acesso. Verifique sua conexão.', 
+        variant: 'destructive' 
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchConnections();
+    checkAdminStatus();
   }, []);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    checkAdminStatus();
+    fetchConnections();
+  };
 
   async function fetchConnections() {
     setLoading(true);
