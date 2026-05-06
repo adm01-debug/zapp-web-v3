@@ -251,44 +251,44 @@ export const RPC = {
   // ── Analytics / Search ───────────────────────────────────────────────────
   dashboardHome: def<DashboardHomeParams, unknown>({
     name: 'rpc_dashboard_home',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   globalSearch: def<GlobalSearchParams, unknown>({
     name: 'rpc_global_search',
-    client: 'lovable',
+    client: 'external',
   }),
 
   // ── CRM 360 / Search avançado ────────────────────────────────────────────
   searchContactsAdvanced: def<SearchContactsAdvancedParams, unknown>({
     name: 'search_contacts_advanced',
-    client: 'lovable',
+    client: 'external',
   }),
   getContact360ByPhone: def<GetContact360Params, unknown>({
     name: 'get_contact_360_by_phone',
-    client: 'lovable',
+    client: 'external',
   }),
   getContactIntelligenceByPhone: def<GetContactIntelligenceParams, unknown>({
     name: 'get_contact_intelligence_by_phone',
-    client: 'lovable',
+    client: 'external',
   }),
   getCompaniesByPhonesBatch: def<GetCompaniesByPhonesBatchParams, unknown>({
     name: 'get_companies_by_phones_batch',
-    client: 'lovable',
+    client: 'external',
   }),
   syncInteractionFromZapp: def<SyncInteractionParams, unknown>({
     name: 'sync_interaction_from_zapp',
-    client: 'lovable',
+    client: 'external',
   }),
 
   // ── Contacts module: notes, audit, dashboards, bulk ops ─────────────────
   getContactConversations: def<{ p_contact_id: string; p_limit?: number }, Record<string, unknown>[]>({
     name: 'get_contact_conversations',
-    client: 'lovable',
+    client: 'external',
   }),
   getContactNotes: def<{ p_contact_id: string; p_limit?: number }, Record<string, unknown>[]>({
     name: 'get_contact_notes',
-    client: 'lovable',
+    client: 'external',
   }),
   addContactNote: def<{
     p_contact_id: string;
@@ -297,7 +297,7 @@ export const RPC = {
     p_is_pinned?: boolean;
   }, Record<string, unknown>>({
     name: 'add_contact_note',
-    client: 'lovable',
+    client: 'external',
   }),
   bulkUpdateLeadStatus: def<{ p_contact_ids: string[]; p_status: string }, unknown>({
     name: 'bulk_update_lead_status',
