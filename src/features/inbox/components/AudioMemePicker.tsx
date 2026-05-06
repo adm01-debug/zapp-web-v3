@@ -83,7 +83,7 @@ function UploadPreview({ pending, onConfirm, onCancel }: { pending: PendingUploa
   );
 }
 
-export function AudioMemePicker({ onSendAudio, disabled }: AudioMemePickerProps) {
+export function AudioMemePicker({ onSendAudioMeme, disabled }: AudioMemePickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
