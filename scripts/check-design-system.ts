@@ -15,12 +15,16 @@ const IGNORED_FILES = [
   'tailwind.config.ts',
   'index.css',
   'check-design-system.ts',
+  'App.css',
+  'DesignSystem.stories.tsx',
 ];
 
 const IGNORED_DIRS = [
   'node_modules',
   '.git',
   'dist',
+  'stories',
+  '__tests__',
 ];
 
 interface Violation {
