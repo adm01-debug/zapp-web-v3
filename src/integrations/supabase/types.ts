@@ -9469,6 +9469,30 @@ export type Database = {
         }
         Relationships: []
       }
+      sts_alert_config: {
+        Row: {
+          created_at: string
+          id: string
+          metric_name: string
+          threshold_value: number
+          window_minutes: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric_name: string
+          threshold_value: number
+          window_minutes?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric_name?: string
+          threshold_value?: number
+          window_minutes?: number | null
+        }
+        Relationships: []
+      }
       sts_telemetry: {
         Row: {
           created_at: string
@@ -11683,6 +11707,17 @@ export type Database = {
           job_title?: string | null
           name?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      sts_troubleshooting_report: {
+        Row: {
+          avg_latency_ms: number | null
+          error_rate: number | null
+          failed_requests: number | null
+          latest_error: string | null
+          total_requests: number | null
+          voice_preset: string | null
         }
         Relationships: []
       }
