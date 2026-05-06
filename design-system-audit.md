@@ -54,12 +54,6 @@
 |---|---|---|---|---|---|
 | Low | 70 | `#f59e0b` | `#f59e0b` | Check design system tokens | - |
 | Low | 71 | `#6366f1` | `#6366f1` | Check design system tokens | - |
-## src/components/team-chat/ParticipantStatsGraph.tsx
-| Priority | Line | Raw Match | Clean | Suggestion | Patch |
-|---|---|---|---|---|---|
-| Low | 120 | `#8884d8` | `#8884d8` | Check design system tokens | - |
-| Low | 121 | `#82ca9d` | `#82ca9d` | Check design system tokens | - |
-| Low | 122 | `#ffc658` | `#ffc658` | Check design system tokens | - |
 ## src/components/ui/chart.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -115,14 +109,6 @@
 | Low | 16 | `#00C49F` | `#00C49F` | Check design system tokens | - |
 | Low | 16 | `#FFBB28` | `#FFBB28` | Check design system tokens | - |
 | Low | 16 | `#FF8042` | `#FF8042` | Check design system tokens | - |
-| Low | 126 | `#10b981` | `#10b981` | Check design system tokens | - |
-| Low | 127 | `#ef4444` | `#ef4444` | Check design system tokens | - |
-| Low | 144 | `#3b82f6` | `#3b82f6` | Check design system tokens | - |
-| Low | 168 | `#10b981` | `#10b981` | Check design system tokens | - |
-| Low | 168 | `#ef4444` | `#ef4444` | Check design system tokens | - |
-| Low | 192 | `#8b5cf6` | `#8b5cf6` | Check design system tokens | - |
-| Low | 238 | `#3b82f6` | `#3b82f6` | Check design system tokens | - |
-| Low | 239 | `#ef4444` | `#ef4444` | Check design system tokens | - |
 ## src/hooks/useQueues.ts
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
