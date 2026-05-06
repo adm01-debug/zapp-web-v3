@@ -1,0 +1,1 @@
+ALTER TABLE public.business_hours ALTER COLUMN whatsapp_connection_id DROP NOT NULL;
