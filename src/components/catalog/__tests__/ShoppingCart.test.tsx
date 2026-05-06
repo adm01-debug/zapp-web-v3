@@ -35,7 +35,7 @@ describe('ShoppingCart Component', () => {
     
     await waitFor(() => expect(screen.getByText('Test Product')).toBeInTheDocument(), { timeout: 2000 });
     expect(screen.getAllByText(/R\$ 200,00/)[0]).toBeInTheDocument(); // Item total or Subtotal or Grand total
-    expect(screen.getByText('2')).toBeInTheDocument(); // Quantity
+    expect(screen.getAllByText('2').length).toBeGreaterThan(0); // Quantity badge or quantity count
   });
 
   it('calls onUpdateQuantity when incrementing', async () => {
