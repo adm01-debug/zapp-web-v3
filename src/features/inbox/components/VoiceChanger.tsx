@@ -71,6 +71,7 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
     setSelectedVoice(voice);
     setIsConverting(true);
     setConversionProgress(5);
+    const conversionStartTime = Date.now();
 
     try {
       let activeBlob = audioBlob;
