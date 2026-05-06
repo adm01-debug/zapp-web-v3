@@ -3839,6 +3839,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "conversation_transfers_parent_transfer_id_fkey"
+            columns: ["parent_transfer_id"]
+            isOneToOne: false
+            referencedRelation: "v_sla_breach_alerts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "conversation_transfers_source_instance_fkey"
             columns: ["source_instance"]
             isOneToOne: false
@@ -10667,6 +10674,51 @@ export type Database = {
           },
         ]
       }
+      transfer_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          instance_name: string | null
+          metadata: Json | null
+          transfer_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          instance_name?: string | null
+          metadata?: Json | null
+          transfer_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          instance_name?: string | null
+          metadata?: Json | null
+          transfer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_audit_log_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_audit_log_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "v_sla_breach_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transfer_comments: {
         Row: {
           attachments: Json | null
@@ -10704,6 +10756,13 @@ export type Database = {
             columns: ["transfer_id"]
             isOneToOne: false
             referencedRelation: "conversation_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_comments_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "v_sla_breach_alerts"
             referencedColumns: ["id"]
           },
         ]
@@ -12225,6 +12284,44 @@ export type Database = {
           },
         ]
       }
+      v_sla_breach_alerts: {
+        Row: {
+          expires_at: string | null
+          id: string | null
+          overdue_minutes: number | null
+          priority: number | null
+          status: string | null
+          target_instance: string | null
+          ticket_number: number | null
+        }
+        Insert: {
+          expires_at?: string | null
+          id?: string | null
+          overdue_minutes?: never
+          priority?: number | null
+          status?: string | null
+          target_instance?: string | null
+          ticket_number?: number | null
+        }
+        Update: {
+          expires_at?: string | null
+          id?: string | null
+          overdue_minutes?: never
+          priority?: number | null
+          status?: string | null
+          target_instance?: string | null
+          ticket_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
       v_top_searches_7d: {
         Row: {
           any_vector: boolean | null
@@ -12568,6 +12665,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      fn_escalate_overdue_transfers: { Args: never; Returns: number }
       fn_get_my_unread_summary: {
         Args: never
         Returns: {
@@ -12663,6 +12761,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      fn_test_concurrency_accept: {
+        Args: { p_iterations: number; p_transfer_id: string }
+        Returns: {
+          failure_count: number
+          success_count: number
+        }[]
       }
       fn_transfer_comment: {
         Args: {
