@@ -261,7 +261,14 @@ export function ConnectionsView() {
         <EmptyState icon={Smartphone} title="Conecte seu WhatsApp" description="Em poucos passos você estará recebendo e respondendo mensagens dos seus clientes." illustration="inbox" actionLabel="Conectar WhatsApp" onAction={() => setIsAddDialogOpen(true)} />
       ) : (
         <StaggeredList className="space-y-4">
-          {connections.map((connection) => (
+          {connections
+            .filter(c => {
+              const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || 
+                                   (c.instance_id || '').toLowerCase().includes(search.toLowerCase());
+              const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
+              return matchesSearch && matchesStatus;
+            })
+            .map((connection) => (
             <StaggeredItem key={connection.id}>
               <ConnectionCard
                 connection={connection} syncingHistory={syncingHistory}
