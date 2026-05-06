@@ -11,6 +11,7 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 import { ELEVENLABS_VOICES, type ElevenLabsVoice } from './VoiceSelector';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceChangerProps {
   audioBlob: Blob;
@@ -67,18 +68,34 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
     setConversionProgress(5);
 
     try {
-      const progressSteps = [15, 30, 45, 60, 75, 85];
+      // 1. Create task in queue
+      const { data: task, error: queueError } = await supabase
+        .from('voice_conversion_queue')
+        .insert({
+          input_audio_url: 'blob-input', // Placeholder as it's binary in this flow
+          voice_preset: voice.id,
+          status: 'pending',
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+
+      if (queueError) throw queueError;
+
+      // 2. Start STS via Edge Function
+      const progressSteps = [15, 40, 65, 85];
       let currentStep = 0;
       const progressInterval = setInterval(() => {
         if (currentStep < progressSteps.length) {
           setConversionProgress(progressSteps[currentStep]);
           currentStep++;
         }
-      }, 800);
+      }, 1000);
 
       const formData = new FormData();
       formData.append('audio', audioBlob, 'audio.webm');
       formData.append('voice_preset', voice.id); 
+      formData.append('task_id', task.id);
       if (showCloneWarning) formData.append('authorized', 'true');
 
       const response = await fetch(
@@ -105,22 +122,17 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
       const url = URL.createObjectURL(blob);
       setConvertedAudioUrl(url);
 
-      // Auto-play preview
       const audio = new Audio(url);
       audioRef.current = audio;
       audio.onended = () => setIsPlaying(false);
-      audio.onerror = () => {
-        setIsPlaying(false);
-        toast.error('Erro ao reproduzir áudio convertido');
-      };
       await audio.play();
       setIsPlaying(true);
 
       toast.success(`Voz convertida para ${voice.name}!`);
       setShowCloneWarning(false);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast.error(`Conversão falhou: ${msg}`, {
+    } catch (error: any) {
+      const msg = error.message || 'Erro desconhecido';
+      toast.error(`Falha técnica: ${msg}`, {
         action: {
           label: 'Tentar novamente',
           onClick: () => handleConvert(voice)
@@ -225,9 +237,9 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
             const isLoading = isConverting && isSelected;
 
             return (
-              <motion.button
+              <button
                 key={voice.id}
-                whileTap={{ scale: 0.98 }}
+                data-testid={`voice-btn-${voice.id}`}
                 onClick={() => !isConverting && handleConvert(voice)}
                 disabled={isConverting}
                 className={cn(
@@ -269,7 +281,7 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
                     {voice.description}
                   </span>
                 </div>
-              </motion.button>
+              </button>
             );
           })}
         </div>

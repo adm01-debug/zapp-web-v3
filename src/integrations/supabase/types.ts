@@ -9469,6 +9469,50 @@ export type Database = {
         }
         Relationships: []
       }
+      sts_telemetry: {
+        Row: {
+          created_at: string
+          error_type: string | null
+          id: string
+          input_size_bytes: number | null
+          metadata: Json | null
+          provider: string
+          response_time_ms: number | null
+          status_code: number | null
+          task_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_type?: string | null
+          id?: string
+          input_size_bytes?: number | null
+          metadata?: Json | null
+          provider?: string
+          response_time_ms?: number | null
+          status_code?: number | null
+          task_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_type?: string | null
+          id?: string
+          input_size_bytes?: number | null
+          metadata?: Json | null
+          provider?: string
+          response_time_ms?: number | null
+          status_code?: number | null
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sts_telemetry_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "voice_conversion_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_event_keys: {
         Row: {
           created_at: string
@@ -10613,6 +10657,42 @@ export type Database = {
           success?: boolean | null
           transcript?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      voice_conversion_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          input_audio_url: string
+          output_audio_url: string | null
+          status: Database["public"]["Enums"]["conversion_status"]
+          updated_at: string
+          user_id: string
+          voice_preset: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input_audio_url: string
+          output_audio_url?: string | null
+          status?: Database["public"]["Enums"]["conversion_status"]
+          updated_at?: string
+          user_id: string
+          voice_preset: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input_audio_url?: string
+          output_audio_url?: string | null
+          status?: Database["public"]["Enums"]["conversion_status"]
+          updated_at?: string
+          user_id?: string
+          voice_preset?: string
         }
         Relationships: []
       }
@@ -13042,6 +13122,7 @@ export type Database = {
         | "messenger"
         | "webchat"
         | "email"
+      conversion_status: "pending" | "processing" | "completed" | "failed"
       provider_type: "evolution" | "wppconnect" | "baileys" | "custom"
       scan_verdict: "clean" | "infected" | "suspicious" | "pending" | "error"
       service_account_type:
@@ -13222,6 +13303,7 @@ export const Constants = {
         "webchat",
         "email",
       ],
+      conversion_status: ["pending", "processing", "completed", "failed"],
       provider_type: ["evolution", "wppconnect", "baileys", "custom"],
       scan_verdict: ["clean", "infected", "suspicious", "pending", "error"],
       service_account_type: [

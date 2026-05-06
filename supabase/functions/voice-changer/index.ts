@@ -1,4 +1,5 @@
 import { handleCors, errorResponse, getCorsHeaders, Logger, requireEnv } from "../_shared/validation.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const VOICE_PRESETS: Record<string, { voiceId: string; label: string; isCloned?: boolean }> = {
   // Masculinas
@@ -45,18 +46,18 @@ Deno.serve(async (req) => {
   const log = new Logger("voice-changer");
 
   try {
-    const elevenlabsKey = requireEnv('ELEVENLABS_API_KEY');
-    
+    const supabaseClient = createClient(
+      requireEnv('SUPABASE_URL'),
+      requireEnv('SUPABASE_SERVICE_ROLE_KEY')
+    );
+
     const formData = await req.formData();
     const audioFile = formData.get('audio') as File | null;
     const voicePreset = formData.get('voice_preset') as string || 'grave';
+    const taskId = formData.get('task_id') as string;
 
     if (!audioFile) {
       return errorResponse('Audio file is required', 400, req);
-    }
-
-    if (audioFile.size > 10 * 1024 * 1024) {
-      return errorResponse('Audio file exceeds 10MB limit', 400, req);
     }
 
     const preset = VOICE_PRESETS[voicePreset];
@@ -64,59 +65,94 @@ Deno.serve(async (req) => {
       return errorResponse(`Invalid voice preset: ${voicePreset}`, 400, req);
     }
 
-    if (preset.isCloned) {
-      const authorized = formData.get('authorized') === 'true';
-      if (!authorized) {
-        return errorResponse('Voz clonada requer autorização explícita', 403, req);
+    // Initialize telemetry
+    const startTime = Date.now();
+    const telemetryData: any = {
+      task_id: taskId,
+      input_size_bytes: audioFile.size,
+      metadata: { preset: voicePreset }
+    };
+
+    try {
+      if (taskId) {
+        await supabaseClient
+          .from('voice_conversion_queue')
+          .update({ status: 'processing' })
+          .eq('id', taskId);
       }
-    }
 
-    log.info('Processing voice change', { preset: voicePreset, size: audioFile.size });
+      const elevenlabsKey = requireEnv('ELEVENLABS_API_KEY');
+      const apiFormData = new FormData();
+      apiFormData.append('audio', audioFile);
+      apiFormData.append('model_id', 'eleven_multilingual_sts_v2');
+      apiFormData.append('voice_settings', JSON.stringify({
+        stability: 0.5,
+        similarity_boost: 0.75,
+        style: 0.0,
+        use_speaker_boost: true,
+      }));
 
-    const apiFormData = new FormData();
-    apiFormData.append('audio', audioFile);
-    apiFormData.append('model_id', 'eleven_multilingual_sts_v2');
-    apiFormData.append('voice_settings', JSON.stringify({
-      stability: 0.5,
-      similarity_boost: 0.75,
-      style: 0.0,
-      use_speaker_boost: true,
-    }));
+      const stsResponse = await fetch(
+        `https://api.elevenlabs.io/v1/speech-to-speech/${preset.voiceId}?output_format=mp3_44100_128`,
+        {
+          method: 'POST',
+          headers: { 'xi-api-key': elevenlabsKey },
+          body: apiFormData,
+        }
+      );
 
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/speech-to-speech/${preset.voiceId}?output_format=mp3_44100_128`,
-      {
-        method: 'POST',
+      telemetryData.status_code = stsResponse.status;
+      telemetryData.response_time_ms = Date.now() - startTime;
+
+      if (!stsResponse.ok) {
+        const errText = await stsResponse.text();
+        telemetryData.error_type = stsResponse.status.toString();
+        
+        if (taskId) {
+          await supabaseClient
+            .from('voice_conversion_queue')
+            .update({ status: 'failed', error_message: `ElevenLabs Error: ${stsResponse.status}` })
+            .eq('id', taskId);
+        }
+        
+        return errorResponse(`STS Failed: ${stsResponse.status}`, 502, req);
+      }
+
+      const audioBuffer = await stsResponse.arrayBuffer();
+
+      if (taskId) {
+        await supabaseClient
+          .from('voice_conversion_queue')
+          .update({ status: 'completed' })
+          .eq('id', taskId);
+      }
+
+      // Record successful telemetry
+      await supabaseClient.from('sts_telemetry').insert(telemetryData);
+
+      return new Response(audioBuffer, {
+        status: 200,
         headers: {
-          'xi-api-key': elevenlabsKey,
+          ...getCorsHeaders(req),
+          'Content-Type': 'audio/mpeg',
         },
-        body: apiFormData,
-        signal: AbortSignal.timeout(30000),
+      });
+
+    } catch (innerErr: any) {
+      telemetryData.error_type = 'EXCEPTION';
+      telemetryData.metadata.error = innerErr.message;
+      await supabaseClient.from('sts_telemetry').insert(telemetryData);
+      
+      if (taskId) {
+        await supabaseClient
+          .from('voice_conversion_queue')
+          .update({ status: 'failed', error_message: innerErr.message })
+          .eq('id', taskId);
       }
-    );
-
-    if (!response.ok) {
-      const errText = await response.text();
-      log.error(`ElevenLabs STS error ${response.status}`, { detail: errText.substring(0, 300) });
-      return errorResponse(`Voice transformation failed: ${response.status}`, 502, req);
+      throw innerErr;
     }
-
-    const audioBuffer = await response.arrayBuffer();
-    log.done(200, { outputSize: audioBuffer.byteLength });
-
-    // Stream encoding (Simulated progressive chunks for real feel if needed, but arrayBuffer is standard)
-    return new Response(audioBuffer, {
-      status: 200,
-      headers: {
-        ...getCorsHeaders(req),
-        'Content-Type': 'audio/mpeg',
-        'X-Conversion-Status': 'completed',
-        'X-Conversion-Progress': '100',
-        'Content-Length': audioBuffer.byteLength.toString(),
-      },
-    });
-  } catch (err: unknown) {
-    log.error("Voice changer error", { error: err instanceof Error ? err.message : String(err) });
-    return errorResponse('Internal error processing voice change', 500, req);
+  } catch (err: any) {
+    log.error("Global Voice Changer Error", { error: err.message });
+    return errorResponse(err.message || 'Internal Error', 500, req);
   }
 });

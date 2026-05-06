@@ -24,21 +24,21 @@ export interface ElevenLabsVoice {
 
 // Top ElevenLabs voices with sample texts
 export const ELEVENLABS_VOICES: ElevenLabsVoice[] = [
-  { id: 'TY3h8ANhQUsJaa0Bga5F', name: 'Voz Principal', description: 'Voz padrão do sistema', gender: 'female', accent: 'Personalizada', sampleText: 'Olá! Eu sou a voz principal do sistema.' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Suave e natural', gender: 'female', accent: 'Americano', sampleText: 'Olá! Eu sou a Sarah, uma voz suave e natural.' },
-  { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger', description: 'Profissional e claro', gender: 'male', accent: 'Americano', sampleText: 'Olá! Eu sou o Roger, uma voz profissional e clara.' },
-  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Amigável e calorosa', gender: 'female', accent: 'Americano', sampleText: 'Olá! Eu sou a Laura, uma voz amigável e calorosa.' },
-  { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie', description: 'Casual e jovem', gender: 'male', accent: 'Australiano', sampleText: 'Olá! Eu sou o Charlie, uma voz casual e jovem.' },
-  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', description: 'Autoritário e confiante', gender: 'male', accent: 'Britânico', sampleText: 'Olá! Eu sou o George, uma voz autoritária e confiante.' },
-  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda', description: 'Acolhedora e gentil', gender: 'female', accent: 'Americano', sampleText: 'Olá! Eu sou a Matilda, uma voz acolhedora e gentil.' },
-  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', description: 'Elegante e sofisticada', gender: 'female', accent: 'Britânico', sampleText: 'Olá! Eu sou a Lily, uma voz elegante e sofisticada.' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', description: 'Narrando e envolvente', gender: 'male', accent: 'Britânico', sampleText: 'Olá! Eu sou o Daniel, uma voz envolvente para narração.' },
-  { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', description: 'Profundo e cativante', gender: 'male', accent: 'Americano', sampleText: 'Olá! Eu sou o Brian, uma voz profunda e cativante.' },
-  { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', description: 'Expressiva e dinâmica', gender: 'female', accent: 'Americano', sampleText: 'Olá! Eu sou a Jessica, uma voz expressiva e dinâmica.' },
-  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Nina', description: 'Criança doce e gentil', gender: 'female', accent: 'Português', sampleText: 'Oi! Eu sou a Nina, tudo bem?' },
-  { id: 'AZnzlk1XhkKW9D2mID8L', name: 'Tom', description: 'Menino alegre', gender: 'male', accent: 'Português', sampleText: 'E aí! Eu sou o Tom, vamos brincar?' },
-  { id: 'N2lVS1w4EtoT3dr4eOWO', name: 'Sr. Silva', description: 'Idoso experiente', gender: 'male', accent: 'Português', sampleText: 'Olá meu jovem, em que posso ajudar?' },
-  { id: 'cloned_sample', name: 'Celebridade', description: 'Voz clonada de celebridade', gender: 'female', accent: 'Português', sampleText: 'Voz de celebridade clonada.' },
+  { id: 'grave', name: 'Grave', description: 'Voz grave', gender: 'male', accent: 'Português' },
+  { id: 'Sarah', name: 'Sarah', description: 'Suave e natural', gender: 'female', accent: 'Americano' },
+  { id: 'Roger', name: 'Roger', description: 'Profissional e claro', gender: 'male', accent: 'Americano' },
+  { id: 'Laura', name: 'Laura', description: 'Amigável e calorosa', gender: 'female', accent: 'Americano' },
+  { id: 'Charlie', name: 'Charlie', description: 'Casual e jovem', gender: 'male', accent: 'Australiano' },
+  { id: 'George', name: 'George', description: 'Autoritário e confiante', gender: 'male', accent: 'Britânico' },
+  { id: 'Matilda', name: 'Matilda', description: 'Acolhedora e gentil', gender: 'female', accent: 'Americano' },
+  { id: 'Lily', name: 'Lily', description: 'Elegante e sofisticada', gender: 'female', accent: 'Britânico' },
+  { id: 'Daniel', name: 'Daniel', description: 'Narrando e envolvente', gender: 'male', accent: 'Britânico' },
+  { id: 'Brian', name: 'Brian', description: 'Profundo e cativante', gender: 'male', accent: 'Americano' },
+  { id: 'Jessica', name: 'Jessica', description: 'Expressiva e dinâmica', gender: 'female', accent: 'Americano' },
+  { id: 'Nina', name: 'Nina', description: 'Criança doce e gentil', gender: 'female', accent: 'Português' },
+  { id: 'Tom', name: 'Tom', description: 'Menino alegre', gender: 'male', accent: 'Português' },
+  { id: 'Sr. Silva', name: 'Sr. Silva', description: 'Idoso experiente', gender: 'male', accent: 'Português' },
+  { id: 'cloned_sample', name: 'Celebridade', description: 'Voz clonada de celebridade', gender: 'female', accent: 'Português' },
 ];
 
 interface VoiceSelectorProps {
