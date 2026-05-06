@@ -32,6 +32,25 @@ interface Violation {
   line: number;
   match: string;
   label: string;
+  suggestion?: string;
+  priority: 'High' | 'Medium' | 'Low';
+}
+
+function getSuggestion(label: string, match: string): { suggestion: string, priority: Violation['priority'] } {
+  if (label === 'Hex Color' || label.includes('Arbitrary')) {
+    if (match.includes('white') || match.includes('#ffffff') || match.includes('#FFF')) return { suggestion: 'bg-background or text-foreground', priority: 'High' };
+    if (match.includes('black') || match.includes('#000000') || match.includes('#000')) return { suggestion: 'bg-foreground or text-background', priority: 'High' };
+    return { suggestion: 'Use theme tokens (primary, secondary, accent, etc.)', priority: 'High' };
+  }
+  if (label === 'Literal Color') {
+    if (match.includes('blue-600') || match.includes('blue-500')) return { suggestion: match.replace(/blue-(500|600)/, 'primary'), priority: 'Medium' };
+    if (match.includes('slate-') || match.includes('gray-')) return { suggestion: 'muted-foreground or border', priority: 'Medium' };
+    return { suggestion: 'Use semantic tokens (destructive, muted, popover, etc.)', priority: 'Medium' };
+  }
+  if (label === 'Literal Font') {
+    return { suggestion: 'Remove literal font class; use global typography', priority: 'Low' };
+  }
+  return { suggestion: 'Check design system tokens', priority: 'Low' };
 }
 
 function scanDir(dir: string, results: Violation[]) {
