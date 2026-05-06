@@ -6812,6 +6812,51 @@ export type Database = {
           },
         ]
       }
+      outbound_delivery_audit: {
+        Row: {
+          agent_id: string | null
+          conversation_id: string
+          created_at: string | null
+          error_code: string | null
+          id: string
+          instance_name: string
+          is_multipart: boolean | null
+          latency_ms: number | null
+          message_type: string
+          metadata: Json | null
+          payload_size_kb: number | null
+          status: string
+        }
+        Insert: {
+          agent_id?: string | null
+          conversation_id: string
+          created_at?: string | null
+          error_code?: string | null
+          id?: string
+          instance_name: string
+          is_multipart?: boolean | null
+          latency_ms?: number | null
+          message_type: string
+          metadata?: Json | null
+          payload_size_kb?: number | null
+          status: string
+        }
+        Update: {
+          agent_id?: string | null
+          conversation_id?: string
+          created_at?: string | null
+          error_code?: string | null
+          id?: string
+          instance_name?: string
+          is_multipart?: boolean | null
+          latency_ms?: number | null
+          message_type?: string
+          metadata?: Json | null
+          payload_size_kb?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
       outbox_events: {
         Row: {
           aggregate_id: string
@@ -12491,6 +12536,17 @@ export type Database = {
           },
         ]
       }
+      v_outbound_health_monitor: {
+        Row: {
+          avg_latency_ms: number | null
+          failed_count: number | null
+          instance_name: string | null
+          message_type: string | null
+          success_rate: number | null
+          total_attempts: number | null
+        }
+        Relationships: []
+      }
       v_pending_transfers: {
         Row: {
           alta: number | null
@@ -13788,6 +13844,18 @@ export type Database = {
           p_operation?: string
           p_request_id?: string
           p_resource?: string
+          p_status: string
+        }
+        Returns: string
+      }
+      rpc_log_outbound_event: {
+        Args: {
+          p_conversation_id: string
+          p_error_code?: string
+          p_instance_name: string
+          p_latency_ms?: number
+          p_message_type: string
+          p_metadata?: Json
           p_status: string
         }
         Returns: string

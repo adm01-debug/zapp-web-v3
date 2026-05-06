@@ -20,6 +20,7 @@ import { getLogger } from '@/lib/logger';
 import { parseEvolutionError } from '@/features/inbox';
 import { dbInsert } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
+import { calculateFileHash } from '@/lib/utils/fileHash';
 
 const log = getLogger('externalMessageSender');
 const DEFAULT_INSTANCE = 'wpp2';
@@ -171,56 +172,88 @@ export async function sendExternalAudio(
   blob: Blob,
   opts: SendExternalOptions & { isPtt?: boolean; conversationInstance?: string; conversationId?: string } = {},
 ): Promise<SendExternalResult> {
+  const startTime = Date.now();
   const phone = jidToPhone(remoteJid);
   if (!phone) throw new Error('Contato sem JID válido para envio.');
   
-  // Security check: Ensure we are sending through the correct instance for this conversation
   const instance = opts.instanceName || opts.conversationInstance || DEFAULT_INSTANCE;
-  if (opts.conversationInstance && opts.instanceName && opts.instanceName !== opts.conversationInstance) {
-    log.warn('Instance mismatch detected, forcing conversation instance', { target: opts.conversationInstance, requested: opts.instanceName });
-  }
-
-  // Use URL.createObjectURL for the optimistic bubble to avoid relying on a 1h signed URL
-  // that might expire before reconciliation or if the message is revisited.
   const localAudioUrl = URL.createObjectURL(blob);
 
   const optimistic = makeOptimisticBubble(remoteJid, '[Áudio]', {
     messageType: 'audio',
     mediaUrl: localAudioUrl,
     contactAvatar: opts.contactAvatar,
-    media_meta: { ptt: opts.isPtt ?? true, conversation_id: opts.conversationId }, // Store PTT intent and conversation context for telemetry
+    media_meta: { ptt: opts.isPtt ?? true, conversation_id: opts.conversationId },
   });
 
-  // DOC ARCHITECTURE PERFECTION: Use multipart/form-data to send blob directly
-  // to the Edge Function, which proxies it to Evolution API. This eliminates the 
-  // intermediate Supabase Storage bucket for outgoing audio.
   const formData = new FormData();
   formData.append('action', 'send-audio');
   formData.append('instanceName', instance);
   formData.append('number', phone);
   formData.append('encoding', 'true');
   formData.append('isPtt', String(opts.isPtt ?? true));
-  
-  // Note: Evolution API expects the field name to be 'audio' for multipart files
   formData.append('audio', blob, 'audio.webm');
+
+  // Adiciona hash para cache de mídia se disponível
+  try {
+    const hash = await calculateFileHash(blob);
+    formData.append('mediaHash', hash);
+  } catch (e) {
+    log.debug('Hash calculation skipped', e);
+  }
 
   const { data, error } = await supabase.functions.invoke('evolution-api', {
     body: formData,
   });
 
+  const latency = Date.now() - startTime;
+
   if (error) {
     log.error('evolution-api send-audio failed', error);
     const info = parseEvolutionError(error);
+    
+    void supabase.rpc('rpc_log_outbound_event', {
+      p_conversation_id: remoteJid,
+      p_message_type: 'audio',
+      p_instance_name: instance,
+      p_status: 'failed',
+      p_latency_ms: latency,
+      p_error_code: String(info.status),
+      p_metadata: JSON.parse(JSON.stringify({ error: info, is_ptt: opts.isPtt ?? true }))
+    });
+
     throw new SendError(info.reason, info.detail, info.status);
   }
+
   const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
   if (envelope?.error) {
     log.error('evolution-api send-audio error envelope', envelope);
     const info = parseEvolutionError(envelope);
+
+    void supabase.rpc('rpc_log_outbound_event', {
+      p_conversation_id: remoteJid,
+      p_message_type: 'audio',
+      p_instance_name: instance,
+      p_status: 'failed',
+      p_latency_ms: latency,
+      p_error_code: String(info.status),
+      p_metadata: JSON.parse(JSON.stringify({ envelope, is_ptt: opts.isPtt ?? true }))
+    });
+
     throw new SendError(info.reason, info.detail, info.status);
   }
 
   const externalId = envelope?.key?.id ?? null;
+  
+  void supabase.rpc('rpc_log_outbound_event', {
+    p_conversation_id: remoteJid,
+    p_message_type: 'audio',
+    p_instance_name: instance,
+    p_status: 'sent',
+    p_latency_ms: latency,
+    p_metadata: { external_id: externalId, is_ptt: opts.isPtt ?? true }
+  });
+
   optimistic.external_id = externalId;
   optimistic.status = 'sent';
   return { optimistic, externalId };
@@ -305,6 +338,7 @@ export async function sendExternalPtv(
   blob: Blob,
   opts: SendExternalOptions & { conversationInstance?: string } = {},
 ): Promise<SendExternalResult> {
+  const startTime = Date.now();
   const phone = jidToPhone(remoteJid);
   if (!phone) throw new Error('Contato sem JID válido para envio.');
   const instance = opts.instanceName || opts.conversationInstance || DEFAULT_INSTANCE;
@@ -318,21 +352,39 @@ export async function sendExternalPtv(
 
   if (opts.onProgress) opts.onProgress(50);
 
-  // DOC ARCHITECTURE PERFECTION: Use multipart/form-data to send blob directly
-  // to the Edge Function, which proxies it to Evolution API.
   const formData = new FormData();
   formData.append('action', 'send-ptv');
   formData.append('instanceName', instance);
   formData.append('number', phone);
   formData.append('video', blob, 'video.mp4');
 
+  try {
+    const hash = await calculateFileHash(blob);
+    formData.append('mediaHash', hash);
+  } catch (e) {
+    log.debug('Hash calculation skipped', e);
+  }
+
   const { data, error } = await supabase.functions.invoke('evolution-api', {
     body: formData,
   });
 
+  const latency = Date.now() - startTime;
+
   if (error) {
     log.error('evolution-api send-ptv failed', error);
     const info = parseEvolutionError(error);
+
+    void supabase.rpc('rpc_log_outbound_event', {
+      p_conversation_id: remoteJid,
+      p_message_type: 'video_ptv',
+      p_instance_name: instance,
+      p_status: 'failed',
+      p_latency_ms: latency,
+      p_error_code: String(info.status),
+      p_metadata: JSON.parse(JSON.stringify({ error: info }))
+    });
+
     throw new SendError(info.reason, info.detail, info.status);
   }
 
@@ -340,10 +392,31 @@ export async function sendExternalPtv(
   if (envelope?.error) {
     log.error('evolution-api send-ptv error envelope', envelope);
     const info = parseEvolutionError(envelope);
+
+    void supabase.rpc('rpc_log_outbound_event', {
+      p_conversation_id: remoteJid,
+      p_message_type: 'video_ptv',
+      p_instance_name: instance,
+      p_status: 'failed',
+      p_latency_ms: latency,
+      p_error_code: String(info.status),
+      p_metadata: JSON.parse(JSON.stringify({ envelope }))
+    });
+
     throw new SendError(info.reason, info.detail, info.status);
   }
 
   const externalId = envelope?.key?.id ?? null;
+
+  void supabase.rpc('rpc_log_outbound_event', {
+    p_conversation_id: remoteJid,
+    p_message_type: 'video_ptv',
+    p_instance_name: instance,
+    p_status: 'sent',
+    p_latency_ms: latency,
+    p_metadata: { external_id: externalId }
+  });
+
   optimistic.external_id = externalId;
   optimistic.status = 'sent';
   return { optimistic, externalId };
