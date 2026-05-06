@@ -240,7 +240,6 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
               <button
                 key={voice.id}
                 data-testid={`voice-btn-${voice.id}`}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => !isConverting && handleConvert(voice)}
                 disabled={isConverting}
                 className={cn(
