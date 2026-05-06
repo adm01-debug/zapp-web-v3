@@ -36,8 +36,11 @@ interface SidebarNavItemProps {
 
 export const SidebarNavItem = React.memo(function SidebarNavItem({ item, currentView, onViewChange, badge, badgeVariant = 'destructive', badgeTitle, collapsed = true, onToggleFavorite, isFavorite }: SidebarNavItemProps) {
   const { hasRole } = useUserRole();
+  const { prefetch } = usePrefetchOnHover();
   
-  if (item.requiredRoles && !item.requiredRoles.some(role => hasRole(role))) {
+  const hasAccess = !item.requiredRoles || item.requiredRoles.some(role => hasRole(role));
+
+  if (!hasAccess) {
     return null;
   }
 
@@ -45,7 +48,6 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({ item, current
   const isActive = currentView === item.id;
   const shortcut = item.shortcut || SHORTCUT_MAP[item.id];
   const badgeCount = badge ?? item.badge;
-  const { prefetch } = usePrefetchOnHover();
 
   const handleMouseEnter = useCallback(() => {
     if (!isActive) prefetch(item.id);
