@@ -77,6 +77,17 @@ export default function AdminStressTestPage() {
     const sample = await sampleFor(type, idx);
     let messageId: string | undefined;
     let result: any;
+    let accessibility: StressResult['accessibility'] | undefined;
+
+    // Check media accessibility if URL exists
+    if (sample.url) {
+      const acc = await checkUrlAccessibility(sample.url);
+      accessibility = {
+        reachable: acc.reachable,
+        latencyMs: acc.latencyMs,
+        error: acc.error
+      };
+    }
 
     switch (type) {
       case 'text':
@@ -129,7 +140,7 @@ export default function AdminStressTestPage() {
         break;
     }
     messageId = result?.key?.id ?? result?.messageId ?? result?.id;
-    return { messageId, detail: sample.detail };
+    return { messageId, detail: sample.detail, accessibility };
   }, [evo]);
 
   // ── Persist incremental updates to stress_test_runs ───────
