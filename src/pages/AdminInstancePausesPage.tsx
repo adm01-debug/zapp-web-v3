@@ -15,6 +15,7 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { AuthEventTrendChart } from '@/features/admin/components/instance-pauses/AuthEventTrendChart';
 import { IncidentDetailDialog, type IncidentPause } from '@/features/admin/components/instance-pauses/IncidentDetailDialog';
+import { type WhatsAppInstance } from '@/lib/constants/whatsappInstances';
 
 type PauseRow = IncidentPause;
 
@@ -31,7 +32,7 @@ async function invoke<T>(action: string, payload: Record<string, unknown> = {}):
 
 export default function AdminInstancePausesPage() {
   const qc = useQueryClient();
-  const [instance, setInstance] = useState(DEFAULT_WHATSAPP_INSTANCE);
+  const [instance, setInstance] = useState<WhatsAppInstance>(DEFAULT_WHATSAPP_INSTANCE);
   const [minutes, setMinutes] = useState(15);
   const [reason, setReason] = useState('');
   const [selected, setSelected] = useState<PauseRow | null>(null);
@@ -140,7 +141,7 @@ export default function AdminInstancePausesPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
             <div>
               <Label htmlFor="instance">Instância</Label>
-              <Input id="instance" value={instance} onChange={(e) => setInstance(e.target.value)} placeholder="wpp2" />
+              <Input id="instance" value={instance} onChange={(e) => setInstance(e.target.value as WhatsAppInstance)} placeholder="wpp2" />
             </div>
             <div>
               <Label htmlFor="minutes">Minutos</Label>
