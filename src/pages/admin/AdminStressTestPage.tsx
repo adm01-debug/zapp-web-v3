@@ -527,6 +527,11 @@ export default function AdminStressTestPage() {
                     <span className="tabular-nums shrink-0">#{String(r.idx + 1).padStart(3, '0')}</span>
                     <span className="shrink-0 w-24">{STRESS_TYPE_LABEL[r.type]}</span>
                     <span className="tabular-nums text-muted-foreground shrink-0">{r.ms}ms</span>
+                    {r.accessibility && (
+                      <span className="shrink-0" title={r.accessibility.reachable ? 'URL acessível' : `Erro de acesso: ${r.accessibility.error}`}>
+                        {r.accessibility.reachable ? <ShieldCheck className="h-3 w-3 text-blue-500" /> : <ShieldAlert className="h-3 w-3 text-destructive" />}
+                      </span>
+                    )}
                     <span className="truncate">{r.error ?? r.detail ?? ''}</span>
                   </li>
                 ))}
