@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { QueueMetrics } from '@/features/inbox/hooks/useMessageQueue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Send, AlertCircle, RefreshCcw } from 'lucide-react';
+import { Clock, Send, AlertCircle, RefreshCcw, Sparkles, Loader2 } from 'lucide-react';
 
 interface QueueMetricsDashboardProps {
   metrics: QueueMetrics;
