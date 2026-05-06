@@ -50,7 +50,7 @@ export const ConnectionStatusBanner = memo(function ConnectionStatusBanner({
     return (
       <div
         role="alert"
-        className="flex items-center gap-2 px-4 py-2 text-xs font-medium bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-b border-yellow-500/20"
+        className="flex items-center gap-2 px-4 py-2 text-xs font-medium bg-warning/15 text-warning border-b border-warning/20"
       >
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
         <span>Reconectando ao servidor...</span>
@@ -63,7 +63,7 @@ export const ConnectionStatusBanner = memo(function ConnectionStatusBanner({
     return (
       <div
         role="status"
-        className="flex items-center gap-2 px-4 py-1.5 text-xs text-yellow-700 dark:text-yellow-400 bg-yellow-500/5 border-b border-yellow-500/10"
+        className="flex items-center gap-2 px-4 py-2 text-xs font-medium bg-warning/5 text-warning border-b border-warning/10"
       >
         <span>Latência alta: {Math.round(latency)}ms</span>
       </div>
@@ -75,7 +75,7 @@ export const ConnectionStatusBanner = memo(function ConnectionStatusBanner({
     return (
       <div
         role="status"
-        className="flex items-center gap-2 px-4 py-1.5 text-xs text-blue-700 dark:text-blue-400 bg-blue-500/5 border-b border-blue-500/10"
+        className="flex items-center gap-2 px-4 py-2 text-xs font-medium bg-info/5 text-info border-b border-info/10"
       >
         <Loader2 className="h-3 w-3 animate-spin" />
         <span>Enviando {queueLength} {queueLength === 1 ? 'ação' : 'ações'} pendentes...</span>
