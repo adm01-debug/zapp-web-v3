@@ -16,6 +16,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { emailApi, type EmailHealthSummary, type EmailRevalidationJob } from '@/services/email/emailApi';
 
+const castStatus = (status: any): EmailHealthInfo['status'] => {
+  if (['healthy', 'degraded', 'error'].includes(status)) {
+    return status as EmailHealthInfo['status'];
+  }
+  return 'error';
+};
+
 export default function AdminEmailStatusPage() {
   const { accounts, schemaStatus, lastRequestId } = useEmail();
   const [health, setHealth] = useState<EmailHealthInfo | null>(null);
@@ -45,7 +52,7 @@ export default function AdminEmailStatusPage() {
       if (!fetchResponse.ok) throw new Error(dataFull.error || 'Erro na Edge Function');
       
       setHealth({
-        status: dataFull.status as EmailHealthSummary['status'],
+        status: castStatus(dataFull.status),
         lastValidation: dataFull.last_validation ? new Date(dataFull.last_validation) : null,
         cacheExpiration: null,
         recentFailures: dataFull.failuresResult?.items || [],
@@ -66,11 +73,11 @@ export default function AdminEmailStatusPage() {
           
         if (summary) {
           setHealth({
-            status: summary.status as EmailHealthSummary['status'],
+            status: castStatus(summary.status),
             lastValidation: summary.last_validation ? new Date(summary.last_validation) : null,
             cacheExpiration: null,
             recentFailures: [],
-            stats: { totalCalls: 0, failedCalls: summary.failure_count_60m, cacheHits: 0 }
+            stats: { totalCalls: 0, failedCalls: summary.failure_count_60m || 0, cacheHits: 0 }
           });
         }
       } catch (fallbackErr) {
@@ -84,22 +91,20 @@ export default function AdminEmailStatusPage() {
   useEffect(() => {
     loadHealth();
 
-    // Configurar Realtime
     const channel = supabase
       .channel('email-admin-status')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'email_health_summary' },
         (payload) => {
-          console.log('Update de saúde em tempo real:', payload);
           const newSummary = payload.new as EmailHealthSummary;
           setHealth(prev => prev ? {
             ...prev,
-            status: newSummary.status as EmailHealthSummary['status'],
+            status: castStatus(newSummary.status),
             lastValidation: newSummary.last_validation ? new Date(newSummary.last_validation) : prev.lastValidation,
             stats: {
               ...prev.stats,
-              failedCalls: newSummary.failure_count_60m
+              failedCalls: newSummary.failure_count_60m || 0
             }
           } : null);
         }
@@ -110,7 +115,6 @@ export default function AdminEmailStatusPage() {
         (payload) => {
           const newJob = payload.new as EmailRevalidationJob;
           toast.info(`Nova solicitação de revalidação: ${newJob.status}`);
-          // Recarregar saúde após um pequeno delay para o worker processar
           setTimeout(loadHealth, 3000);
         }
       )
@@ -204,8 +208,8 @@ export default function AdminEmailStatusPage() {
       </div>
 
       {health?.status && health.status !== 'healthy' && (
-        <Alert variant={health.status === 'error' ? 'destructive' : 'default'} className={health.status === 'degraded' ? 'bg-warning border-warning text-warning' : ''}>
-          {health.status === 'error' ? <AlertCircle className="h-4 h-4" /> : <AlertTriangle className="h-4 h-4" />}
+        <Alert variant={health.status === 'error' ? 'destructive' : 'default'} className={health.status === 'degraded' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : ''}>
+          {health.status === 'error' ? <AlertCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
           <AlertTitle>Status do Email: {getStatusLabel(health.status)}</AlertTitle>
           <AlertDescription>
             Foram detectadas {health.recentFailures.length} falhas recentes. 
@@ -263,7 +267,7 @@ export default function AdminEmailStatusPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Contas Ativas</CardTitle>
-            <Database className="w-5 h-5 text-muted-foreground" />
+            <DatabaseIcon className="w-5 h-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{accounts.length}</div>
@@ -306,7 +310,7 @@ export default function AdminEmailStatusPage() {
                 />
               </div>
               <div className="relative">
-                <Database className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <DatabaseIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input 
                   placeholder="Operação (from/rpc)" 
                   className="pl-9"
@@ -372,7 +376,7 @@ export default function AdminEmailStatusPage() {
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground italic">
+                      <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground italic">
                         Nenhuma falha encontrada com os filtros atuais.
                       </td>
                     </tr>
