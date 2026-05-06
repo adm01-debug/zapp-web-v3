@@ -80,18 +80,29 @@ export function ConnectionCard({
     if (!connection.instance_id) return;
     setReconnecting(true);
     try {
-      // 1. Tentar reiniciar a instância na Evolution API
+      // 1. Tentar reiniciar a instância na Evolution API (POST /instance/restart)
       await restartInstance(connection.instance_id);
       
       // 2. Aguardar um pouco para o restart processar
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, 3000));
       
-      // 3. Forçar um health check no Supabase para atualizar o status no painel
-      await supabase.functions.invoke('connection-health-check', {
+      // 3. Forçar um health check para atualizar o status no painel
+      const { data, error } = await supabase.functions.invoke('connection-health-check', {
         body: { instanceName: connection.instance_id },
       });
       
-      toast({ title: 'Comando enviado', description: 'A instância está sendo reiniciada.' });
+      if (error) throw error;
+      
+      const isStillClosed = data?.connections?.[0]?.socket_state === 'close';
+      if (isStillClosed) {
+        toast({ 
+          title: 'Instância Reiniciada', 
+          description: 'A instância foi reiniciada, mas ainda aparece como desconectada. Você pode precisar gerar um novo QR Code.',
+          variant: 'default'
+        });
+      } else {
+        toast({ title: 'Sucesso', description: 'Instância reconectada e operacional.' });
+      }
     } catch (e: unknown) {
       toast({ title: 'Erro ao reconectar', description: e instanceof Error ? e.message : 'Erro desconhecido', variant: 'destructive' });
     } finally {
