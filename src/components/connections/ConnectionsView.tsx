@@ -155,7 +155,12 @@ export function ConnectionsView() {
             </DialogTitle>
           </DialogHeader>
           <div className="py-6 space-y-4">
-            {qrCodeDialog.status === 'loading' && <div className="w-64 h-64 mx-auto bg-muted rounded-xl flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-muted-foreground" /></div>}
+            {qrCodeDialog.status === 'loading' && (
+              <div className="w-64 h-64 mx-auto bg-muted rounded-xl flex flex-col items-center justify-center p-6 gap-4 text-center">
+                <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
+                <p className="text-xs text-muted-foreground font-medium animate-pulse">Iniciando sessão na Evolution API...</p>
+              </div>
+            )}
             {qrCodeDialog.status === 'pending' && qrCodeDialog.qrCode && (
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-64 h-64 mx-auto bg-background rounded-xl p-2 flex items-center justify-center">
                 <img src={qrCodeDialog.qrCode.startsWith('data:') ? qrCodeDialog.qrCode : `data:image/png;base64,${qrCodeDialog.qrCode}`} alt="QR Code" className="w-full h-full object-contain" />
@@ -177,7 +182,10 @@ export function ConnectionsView() {
                   <p>1. Abra o <strong>WhatsApp</strong> no celular deste número</p><p>2. Toque em <strong>Configurações</strong> (⚙️)</p>
                   <p>3. Toque em <strong>Aparelhos conectados</strong></p><p>4. Toque em <strong>Conectar aparelho</strong></p><p>5. Aponte a câmera para o QR Code acima</p>
                 </div>
-                <div className="flex items-center justify-center gap-2 text-xs text-primary/80"><Loader2 className="w-3 h-3 animate-spin" />Aguardando leitura do QR Code...</div>
+                <div className="flex flex-col items-center justify-center gap-2 text-xs text-primary/80">
+                  <div className="flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Aguardando leitura do QR Code...</div>
+                  <p className="text-[10px] text-muted-foreground italic">Mantenha o celular próximo e conectado à internet</p>
+                </div>
                 {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
                 {qrCodeDialog.ttlSeconds != null && qrCodeDialog.ttlSource && (
                   <QrTtlBadge ttlSeconds={qrCodeDialog.ttlSeconds} source={qrCodeDialog.ttlSource} />
