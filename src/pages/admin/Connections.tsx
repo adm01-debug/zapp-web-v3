@@ -354,6 +354,37 @@ export default function AdminConnectionsPage() {
           </TabsContent>
         </AnimatePresence>
       </Tabs>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar credenciais — FATOR X</DialogTitle>
+            <DialogDescription>
+              Altera URL e chave anon do Supabase externo. As mudanças são gravadas em <code>system_connections</code>.
+              Para que o app passe a usar essas credenciais em runtime, atualize também os secrets
+              <code> VITE_EXTERNAL_SUPABASE_URL</code> e <code>VITE_EXTERNAL_SUPABASE_ANON_KEY</code> e republique.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="ext-url">URL</Label>
+              <Input id="ext-url" value={draftUrl} onChange={(e) => setDraftUrl(e.target.value)} placeholder="https://xxxx.supabase.co" className="font-mono text-xs" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ext-key">Chave Anon</Label>
+              <Input id="ext-key" value={draftKey} onChange={(e) => setDraftKey(e.target.value)} placeholder="eyJhbGciOi..." className="font-mono text-xs" />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => testConnection(draftUrl, draftKey)} disabled={testing}>
+              {testing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />} Testar
+            </Button>
+            <Button onClick={saveCredentials} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
