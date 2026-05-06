@@ -8634,6 +8634,71 @@ export type Database = {
         }
         Relationships: []
       }
+      reconnection_logs: {
+        Row: {
+          action_taken: string | null
+          attempt_number: number
+          connection_id: string | null
+          created_at: string | null
+          error_message: string | null
+          health_reason_before: string | null
+          id: string
+          result: string | null
+          status_before: string | null
+        }
+        Insert: {
+          action_taken?: string | null
+          attempt_number: number
+          connection_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          health_reason_before?: string | null
+          id?: string
+          result?: string | null
+          status_before?: string | null
+        }
+        Update: {
+          action_taken?: string | null
+          attempt_number?: number
+          connection_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          health_reason_before?: string | null
+          id?: string
+          result?: string | null
+          status_before?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconnection_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconnection_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_agent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconnection_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconnection_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reminders: {
         Row: {
           contact_id: string | null
@@ -11926,6 +11991,7 @@ export type Database = {
       whatsapp_connections: {
         Row: {
           api_type: string
+          auto_reconnect_enabled: boolean | null
           battery_level: number | null
           created_at: string
           created_by: string | null
@@ -11940,12 +12006,15 @@ export type Database = {
           is_default: boolean | null
           is_plugged: boolean | null
           last_health_check: string | null
+          loop_protection_active: boolean | null
+          max_reconnect_attempts: number | null
           max_retries: number | null
           metadata: Json
           name: string
           owner_jid: string | null
           phone_number: string
           qr_code: string | null
+          reconnect_interval_seconds: number | null
           retry_count: number | null
           routing_mode: string
           status: string | null
@@ -11954,6 +12023,7 @@ export type Database = {
         }
         Insert: {
           api_type?: string
+          auto_reconnect_enabled?: boolean | null
           battery_level?: number | null
           created_at?: string
           created_by?: string | null
@@ -11968,12 +12038,15 @@ export type Database = {
           is_default?: boolean | null
           is_plugged?: boolean | null
           last_health_check?: string | null
+          loop_protection_active?: boolean | null
+          max_reconnect_attempts?: number | null
           max_retries?: number | null
           metadata?: Json
           name: string
           owner_jid?: string | null
           phone_number: string
           qr_code?: string | null
+          reconnect_interval_seconds?: number | null
           retry_count?: number | null
           routing_mode?: string
           status?: string | null
@@ -11982,6 +12055,7 @@ export type Database = {
         }
         Update: {
           api_type?: string
+          auto_reconnect_enabled?: boolean | null
           battery_level?: number | null
           created_at?: string
           created_by?: string | null
@@ -11996,12 +12070,15 @@ export type Database = {
           is_default?: boolean | null
           is_plugged?: boolean | null
           last_health_check?: string | null
+          loop_protection_active?: boolean | null
+          max_reconnect_attempts?: number | null
           max_retries?: number | null
           metadata?: Json
           name?: string
           owner_jid?: string | null
           phone_number?: string
           qr_code?: string | null
+          reconnect_interval_seconds?: number | null
           retry_count?: number | null
           routing_mode?: string
           status?: string | null
@@ -13355,6 +13432,17 @@ export type Database = {
       fn_is_instance_member: {
         Args: { p_instance_name: string }
         Returns: boolean
+      }
+      fn_log_reconnection_attempt: {
+        Args: {
+          p_attempt: number
+          p_connection_id: string
+          p_error?: string
+          p_reason_before: string
+          p_result: string
+          p_status_before: string
+        }
+        Returns: undefined
       }
       fn_mark_conversation_as_read: {
         Args: { p_conversation_id: string; p_last_message_id: string }
