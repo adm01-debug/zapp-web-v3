@@ -10,7 +10,7 @@ import {
   Smartphone, MoreVertical, Trash2, Copy, QrCode, Wifi, WifiOff,
   Star, Clock, Loader2, RefreshCw, History, Link2, Settings, Boxes,
   BatteryCharging, BatteryLow, BatteryMedium, BatteryFull, ShieldCheck, Zap,
-  AlertTriangle, Activity,
+  AlertTriangle, Activity, ListChecks
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { BusinessHoursIndicator } from './BusinessHoursIndicator';
 import { OfficialApiConfigDialog } from './OfficialApiConfigDialog';
+import { ConnectionAuditDialog } from './ConnectionAuditDialog';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import type { WhatsAppConnection } from '@/features/connections';
 
