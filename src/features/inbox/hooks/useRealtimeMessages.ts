@@ -194,18 +194,20 @@ export function useRealtimeMessages() {
   );
 
   const fetchConversations = useCallback(async () => {
+    const client = externalSupabase || supabase;
     try {
       setLoading(true);
       setError(null);
-      const { data: seededContacts, error: contactsError } = await dbFrom('contacts')
+      const { data: seededContacts, error: contactsError } = await client
+        .from('contacts')
         .select('*')
         .order('updated_at', { ascending: false })
         .limit(SEEDED_CONTACT_LIMIT);
       if (contactsError) throw contactsError;
       
-      const { data: recentMessages, error: messagesError } = await dbFrom('messages')
+      const { data: recentMessages, error: messagesError } = await client
+        .from('messages')
         .select('*')
-        
         .order('created_at', { ascending: false })
         .limit(RECENT_MESSAGES_LIMIT);
       if (messagesError) throw messagesError;
