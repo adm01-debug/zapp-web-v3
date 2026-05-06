@@ -152,7 +152,7 @@ export function TeamPerformancePanel({ conversationId }: Props) {
             <FileJson className="w-3 h-3" /> Logs Estruturados de Performance
           </h4>
         </div>
-        <div className="bg-black/20 rounded-lg p-3 font-mono text-[10px] space-y-1 max-h-32 overflow-y-auto">
+        <div className="bg-foreground/20 rounded-lg p-3 font-mono text-[10px] space-y-1 max-h-32 overflow-y-auto">
           <p className="text-blue-400">[INFO] {format(new Date(), 'HH:mm:ss.SSS')} - TeamChatPanel: LCP detected at 1240ms</p>
           <p className="text-green-400">[SUCCESS] {format(new Date(), 'HH:mm:ss.SSS')} - useTeamMessages: Cache hit for page 1</p>
           <p className="text-yellow-400">[WARN] {format(new Date(), 'HH:mm:ss.SSS')} - TeamChatPanel: Slow render detected (32.4ms)</p>

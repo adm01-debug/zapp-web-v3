@@ -65,7 +65,7 @@ export function SecondaryToolbar({
 
   return (
     <div className={cn(
-      "flex items-center gap-0.5 shrink-0 bg-card p-1 rounded-full border border-white/5 ml-1 transition-opacity",
+      "flex items-center gap-0.5 shrink-0 bg-card p-1 rounded-full border border-border/5 ml-1 transition-opacity",
       disabled && "opacity-50 pointer-events-none"
     )}>
       {onToggleWhisper && (

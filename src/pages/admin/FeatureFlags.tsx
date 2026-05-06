@@ -156,7 +156,7 @@ export function FeatureFlagsAdmin() {
                   <div className="space-y-1">
                     <CardTitle className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
                       {flag.key.replace('feature_', '')}
-                      {flag.value.killSwitch && <span className="text-[10px] bg-destructive text-white px-2 py-0.5 rounded-full">LOCKED</span>}
+                      {flag.value.killSwitch && <span className="text-[10px] bg-destructive text-foreground px-2 py-0.5 rounded-full">LOCKED</span>}
                     </CardTitle>
                     <CardDescription className="text-sm">{flag.description || 'Controle esta funcionalidade.'}</CardDescription>
                   </div>

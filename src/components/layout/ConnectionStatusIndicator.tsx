@@ -311,7 +311,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
           {triggerLabel}
         </TooltipContent>
       </Tooltip>
-      <PopoverContent side="right" align="start" className="w-72 p-0 bg-black border-border shadow-none">
+      <PopoverContent side="right" align="start" className="w-72 p-0 bg-foreground border-border shadow-none">
         <div className="px-3 py-2 border-b border-border flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-xs font-semibold text-foreground">WhatsApp — Conexões</p>

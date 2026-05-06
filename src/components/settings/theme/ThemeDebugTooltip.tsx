@@ -21,15 +21,15 @@ export function ThemeDebugTooltip() {
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="w-64 p-3 font-mono text-[10px] space-y-2">
-          <div className="flex justify-between border-b border-white/10 pb-1">
+          <div className="flex justify-between border-b border-border/10 pb-1">
             <span className="text-muted-foreground">Preset:</span>
             <span className="text-foreground">{debug.presetId}</span>
           </div>
-          <div className="flex justify-between border-b border-white/10 pb-1">
+          <div className="flex justify-between border-b border-border/10 pb-1">
             <span className="text-muted-foreground">Modo:</span>
             <span className="text-foreground uppercase">{debug.mode}</span>
           </div>
-          <div className="flex justify-between border-b border-white/10 pb-1">
+          <div className="flex justify-between border-b border-border/10 pb-1">
             <span className="text-muted-foreground">Origem Fonte:</span>
             <span className={debug.hasPresetFont ? "text-amber-500" : "text-emerald-500"}>
               {debug.fontOrigin}

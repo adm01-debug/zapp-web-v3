@@ -17,7 +17,7 @@ export function ChatAssignedBar({ conversation, onOpenTransfer }: ChatAssignedBa
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="flex items-center justify-between px-4 py-1.5 bg-background border-b border-white/5"
+          className="flex items-center justify-between px-4 py-1.5 bg-background border-b border-border/5"
         >
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Atribuído a:</span>

@@ -100,7 +100,7 @@ export function TicketTabs({
       label: 'Não lidas', 
       icon: MessageCircle, 
       count: conversations.filter(c => c.unreadCount > 0).length,
-      activeColor: 'bg-orange-500 text-white',
+      activeColor: 'bg-orange-500 text-foreground',
     },
     { 
       id: 'search' as MainTab, 
@@ -157,7 +157,7 @@ export function TicketTabs({
                   className={cn(
                     'h-4 min-w-[16px] px-1 text-[10px] font-medium leading-none border-0 transition-all duration-500 shadow-sm',
                     isActive 
-                      ? 'bg-white/20 text-white' 
+                      ? 'bg-background/20 text-foreground' 
                       : 'bg-muted/60 text-muted-foreground/60'
                   )}
                 >
@@ -167,7 +167,7 @@ export function TicketTabs({
               {isActive && (
                 <motion.div
                   layoutId="activeTabGlow"
-                  className="absolute inset-0 bg-white/5 pointer-events-none"
+                  className="absolute inset-0 bg-background/5 pointer-events-none"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6 }}

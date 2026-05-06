@@ -120,8 +120,8 @@ export function StoryViewer({ messages, initialIndex, open, onClose, pushName }:
       <DialogContent className="max-w-2xl w-[95vw] p-0 gap-0 bg-background/95 border-border/20 overflow-hidden [&>button]:hidden">
         <div className="flex gap-0.5 px-3 pt-3">
           {messages.map((_, i) => (
-            <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
-              <div className={cn('h-full rounded-full transition-all duration-300', i < index ? 'bg-white w-full' : i === index ? 'bg-primary w-full' : 'w-0')} />
+            <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-background/20">
+              <div className={cn('h-full rounded-full transition-all duration-300', i < index ? 'bg-background w-full' : i === index ? 'bg-primary w-full' : 'w-0')} />
             </div>
           ))}
         </div>
@@ -132,13 +132,13 @@ export function StoryViewer({ messages, initialIndex, open, onClose, pushName }:
               {(pushName || '?')[0]?.toUpperCase()}
             </div>
             <div>
-              <p className="text-xs font-medium text-white/90">{pushName || 'Contato'}</p>
-              {time && <p className="text-[10px] text-white/50">{time}</p>}
+              <p className="text-xs font-medium text-foreground/90">{pushName || 'Contato'}</p>
+              {time && <p className="text-[10px] text-foreground/50">{time}</p>}
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[10px] text-white/40 mr-2">{index + 1}/{messages.length}</span>
-            <Button variant="ghost" size="icon" onClick={onClose} className="w-8 h-8 text-white/70 hover:text-white hover:bg-white/10"><X className="w-4 h-4" /></Button>
+            <span className="text-[10px] text-foreground/40 mr-2">{index + 1}/{messages.length}</span>
+            <Button variant="ghost" size="icon" onClick={onClose} className="w-8 h-8 text-foreground/70 hover:text-foreground hover:bg-background/10"><X className="w-4 h-4" /></Button>
           </div>
         </div>
 
@@ -158,23 +158,23 @@ export function StoryViewer({ messages, initialIndex, open, onClose, pushName }:
             <motion.div key={index} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }} className="w-full h-full flex items-center justify-center px-14">
               {mediaType === 'image' ? (
                 mediaLoading ? (
-                  <div className="flex flex-col items-center gap-3 text-white/70"><Loader2 className="w-6 h-6 animate-spin" /><p className="text-sm">Carregando imagem...</p></div>
+                  <div className="flex flex-col items-center gap-3 text-foreground/70"><Loader2 className="w-6 h-6 animate-spin" /><p className="text-sm">Carregando imagem...</p></div>
                 ) : resolvedMedia.src ? (
                   <img src={resolvedMedia.src} alt="Status" className="max-w-full max-h-[65vh] object-contain rounded-lg" loading="eager" />
                 ) : (
-                  <div className="text-center text-white/70 space-y-2"><ImageIcon className="w-8 h-8 mx-auto" /><p className="text-sm">{mediaError || 'Imagem indisponível'}</p></div>
+                  <div className="text-center text-foreground/70 space-y-2"><ImageIcon className="w-8 h-8 mx-auto" /><p className="text-sm">{mediaError || 'Imagem indisponível'}</p></div>
                 )
               ) : mediaType === 'video' ? (
                 mediaLoading ? (
-                  <div className="flex flex-col items-center gap-3 text-white/70"><Loader2 className="w-6 h-6 animate-spin" /><p className="text-sm">Carregando vídeo...</p></div>
+                  <div className="flex flex-col items-center gap-3 text-foreground/70"><Loader2 className="w-6 h-6 animate-spin" /><p className="text-sm">Carregando vídeo...</p></div>
                 ) : resolvedMedia.src ? (
                   <video src={resolvedMedia.src} controls autoPlay className="max-w-full max-h-[65vh] object-contain rounded-lg" />
                 ) : (
-                  <div className="text-center text-white/70 space-y-2"><Video className="w-8 h-8 mx-auto" /><p className="text-sm">{mediaError || 'Vídeo indisponível'}</p></div>
+                  <div className="text-center text-foreground/70 space-y-2"><Video className="w-8 h-8 mx-auto" /><p className="text-sm">{mediaError || 'Vídeo indisponível'}</p></div>
                 )
               ) : (
                 <div className="w-full max-w-md p-8 rounded-2xl flex items-center justify-center text-center" style={{ backgroundColor: bgColor || 'hsl(var(--primary) / 0.15)' }}>
-                  <p className="text-lg font-medium text-white leading-relaxed whitespace-pre-wrap break-words">{textContent || 'Status'}</p>
+                  <p className="text-lg font-medium text-foreground leading-relaxed whitespace-pre-wrap break-words">{textContent || 'Status'}</p>
                 </div>
               )}
             </motion.div>
@@ -183,7 +183,7 @@ export function StoryViewer({ messages, initialIndex, open, onClose, pushName }:
 
         {mediaType !== 'text' && textContent && (
           <div className="px-6 py-4 bg-gradient-to-t from-black/80 to-transparent">
-            <p className="text-sm text-white/90 whitespace-pre-wrap break-words text-center">{textContent}</p>
+            <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words text-center">{textContent}</p>
           </div>
         )}
         {(mediaType === 'text' || !textContent) && <div className="h-4" />}

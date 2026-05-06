@@ -284,7 +284,7 @@ export default function AdminChannelsPage() {
                 <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-3">
                     <span
-                      className="w-9 h-9 rounded-full grid place-items-center text-white"
+                      className="w-9 h-9 rounded-full grid place-items-center text-foreground"
                       style={{ backgroundColor: ch.color }}
                       aria-hidden
                     >

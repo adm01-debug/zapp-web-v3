@@ -223,7 +223,7 @@ export const MessageList: React.FC<MessageListProps> = ({ remoteJid, searchTerm 
         >
           <ChevronDown className="h-6 w-6" />
           {newMessagesCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold h-5 min-w-[20px] px-1.5 rounded-full border-2 border-background flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 bg-primary text-foreground text-[10px] font-bold h-5 min-w-[20px] px-1.5 rounded-full border-2 border-background flex items-center justify-center">
               {newMessagesCount > 9 ? '9+' : newMessagesCount}
             </span>
           )}

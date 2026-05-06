@@ -212,7 +212,7 @@ export function EmailInboxView({ onSelectThread }: EmailInboxViewProps) {
                       onKeyDown={e => e.key === 'Enter' && handleSelectThread(thread)}
                     >
                       {/* Avatar letra */}
-                      <div className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white
+                      <div className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-foreground
                         ${thread.unread_count > 0 ? 'bg-primary' : 'bg-muted-foreground/30'}`}
                       >
                         {(thread.from_name ?? thread.from_email ?? '?')[0].toUpperCase()}

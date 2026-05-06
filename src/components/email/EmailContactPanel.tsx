@@ -62,7 +62,7 @@ export function EmailContactPanel({ thread, messages, accountId, className }: Em
       {/* Contact header */}
       <div className="p-4 text-center border-b">
         <Avatar className="h-14 w-14 mx-auto mb-3">
-          <AvatarFallback className={cn('text-white text-lg font-semibold', getAvatarColor(fromEmail))}>
+          <AvatarFallback className={cn('text-foreground text-lg font-semibold', getAvatarColor(fromEmail))}>
             {getInitials(fromName, fromEmail)}
           </AvatarFallback>
         </Avatar>
@@ -169,7 +169,7 @@ export function EmailContactPanel({ thread, messages, accountId, className }: Em
             {(thread.participant_emails ?? []).map(email => (
               <div key={email} className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">
-                  <AvatarFallback className={cn('text-white text-[10px]', getAvatarColor(email))}>
+                  <AvatarFallback className={cn('text-foreground text-[10px]', getAvatarColor(email))}>
                     {email[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>

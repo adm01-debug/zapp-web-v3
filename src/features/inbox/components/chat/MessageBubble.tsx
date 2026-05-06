@@ -256,7 +256,7 @@ export function MessageBubble({
               <div className={cn(
                 'flex items-center justify-end gap-1 mt-1 -mb-0.5', 
                 (message.type === 'image' || message.type === 'video') && !message.content 
-                  ? 'absolute bottom-2 right-2 text-white drop-shadow-md bg-black/30 px-1.5 py-0.5 rounded-full backdrop-blur-xs' 
+                  ? 'absolute bottom-2 right-2 text-foreground drop-shadow-md bg-foreground/30 px-1.5 py-0.5 rounded-full backdrop-blur-xs' 
                   : 'text-[hsl(var(--muted-foreground))]'
               )}>
                 {message.isEdited && <span className="text-[9px] italic mr-0.5">editada</span>}

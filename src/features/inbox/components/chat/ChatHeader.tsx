@@ -92,7 +92,7 @@ export const ChatHeader = memo(function ChatHeader({
           whileHover={{ scale: 1.05 }}
           className="relative group cursor-pointer"
         >
-          <Avatar className="w-[44px] h-[44px] ring-2 ring-background shadow-xl border border-white/10 transition-shadow group-hover:shadow-primary/20">
+          <Avatar className="w-[44px] h-[44px] ring-2 ring-background shadow-xl border border-border/10 transition-shadow group-hover:shadow-primary/20">
             <AvatarImage 
               src={avatarUrl || undefined} 
               referrerPolicy="no-referrer" 
@@ -186,7 +186,7 @@ export const ChatHeader = memo(function ChatHeader({
                 <div className="relative">
                   <EyeOff className="w-4 h-4" />
                   {whisperCount !== undefined && whisperCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 h-3.5 min-w-[14px] px-0.5 rounded-full bg-amber-500 text-[8px] font-bold text-white flex items-center justify-center ring-1 ring-white">
+                    <span className="absolute -top-1.5 -right-1.5 h-3.5 min-w-[14px] px-0.5 rounded-full bg-amber-500 text-[8px] font-bold text-foreground flex items-center justify-center ring-1 ring-white">
                       {whisperCount}
                     </span>
                   )}

@@ -78,7 +78,7 @@ export const MessageBubble = memo(({
       className={cn('flex group px-4 py-1 gap-2', isSent ? 'justify-end' : 'justify-start')}
     >
       {!isSent && (
-        <Avatar className="w-9 h-9 shrink-0 self-end mb-1 ring-2 ring-background shadow-md border border-white/5 transition-transform group-hover:scale-105">
+        <Avatar className="w-9 h-9 shrink-0 self-end mb-1 ring-2 ring-background shadow-md border border-border/5 transition-transform group-hover:scale-105">
           <AvatarImage 
             src={avatarUrl || undefined} 
             referrerPolicy="no-referrer" 

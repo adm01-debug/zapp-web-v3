@@ -139,7 +139,7 @@ export function SLAIndicatorForContact({ conversation, compact, className }: SLA
           />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="bottom" className="max-w-xs bg-black border-border shadow-none">
+      <TooltipContent side="bottom" className="max-w-xs bg-foreground border-border shadow-none">
         <SLATooltipContent
           applicable={applicable}
           isLoading={isLoading}

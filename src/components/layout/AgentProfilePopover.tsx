@@ -39,7 +39,7 @@ export function AgentProfilePopover({ agent, collapsed, statusOpen, onStatusOpen
             </AvatarFallback>
           </Avatar>
           <span className={cn(
-            'absolute w-2.5 h-2.5 rounded-full border-2 border-black',
+            'absolute w-2.5 h-2.5 rounded-full border-2 border-border',
             collapsed ? '-bottom-0.5 -right-0.5' : 'bottom-1 left-[30px]',
             agent.status === 'online' && 'bg-[hsl(var(--online))]',
             agent.status === 'away' && 'bg-[hsl(var(--away))]',
@@ -60,7 +60,7 @@ export function AgentProfilePopover({ agent, collapsed, statusOpen, onStatusOpen
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent side="right" sideOffset={12} align="end" className="w-48 p-2 bg-black border-border shadow-none">
+      <PopoverContent side="right" sideOffset={12} align="end" className="w-48 p-2 bg-foreground border-border shadow-none">
         <div className="px-2 py-1.5 mb-1">
           <p className="text-xs font-semibold text-foreground truncate">{agent.name}</p>
         </div>

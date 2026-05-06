@@ -412,7 +412,7 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
         )}
 
         {activeTool === 'templates' && (
-          <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm p-4 overflow-auto flex items-center justify-center">
+          <div className="absolute inset-0 z-50 bg-foreground/80 backdrop-blur-sm p-4 overflow-auto flex items-center justify-center">
             <div className="w-full max-w-2xl relative">
               <Button 
                 variant="ghost" 

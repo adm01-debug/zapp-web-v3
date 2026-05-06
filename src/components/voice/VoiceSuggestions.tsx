@@ -24,7 +24,7 @@ export function VoiceSuggestions({ visible }: VoiceSuggestionsProps) {
           transition={{ duration: 0.3 }}
           className="w-full space-y-2"
         >
-          <p className="text-[10px] text-white/25 text-center uppercase tracking-widest font-semibold">
+          <p className="text-[10px] text-foreground/25 text-center uppercase tracking-widest font-semibold">
             Experimente dizer
           </p>
           <div className="flex flex-col items-center gap-1.5">
@@ -34,7 +34,7 @@ export function VoiceSuggestions({ visible }: VoiceSuggestionsProps) {
                 initial={{ opacity: 0, y: prefersReduced ? 0 : 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: prefersReduced ? 0 : i * 0.06 }}
-                className="text-xs text-white/35 px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:text-white/50 transition-colors cursor-default select-none"
+                className="text-xs text-foreground/35 px-4 py-1.5 rounded-full border border-border/[0.08] bg-background/[0.03] hover:bg-background/[0.06] hover:text-foreground/50 transition-colors cursor-default select-none"
               >
                 {cmd}
               </motion.div>
