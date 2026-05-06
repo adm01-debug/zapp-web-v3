@@ -62,6 +62,7 @@ interface MessageBubbleProps {
   onMessageDeleted: (messageId: string) => void;
   registerRef: (el: HTMLDivElement | null) => void;
   density?: 'comfortable' | 'compact' | 'dense';
+  onAudioVoiceChange?: (messageId: string, newBlob: Blob) => void;
 }
 
 export function MessageBubble({
@@ -69,6 +70,7 @@ export function MessageBubble({
   ttsLoading, ttsPlaying, ttsMessageId, highlightedMessageIds, activeHighlightId, searchQuery,
   onSpeak, onStop, onReply, onForward, onCopy, onScrollToMessage, onInteractiveButtonClick,
   onEditStart, onMessageDeleted, registerRef, density = 'comfortable',
+  onAudioVoiceChange,
 }: MessageBubbleProps) {
   const { toast } = useToast();
   const { profile } = useAuth();
