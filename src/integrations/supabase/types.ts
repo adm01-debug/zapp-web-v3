@@ -10686,10 +10686,12 @@ export type Database = {
       }
       voice_conversion_queue: {
         Row: {
+          attempts: number
           created_at: string
           error_message: string | null
           id: string
           input_audio_url: string
+          last_attempt_at: string | null
           output_audio_url: string | null
           status: Database["public"]["Enums"]["conversion_status"]
           updated_at: string
@@ -10697,10 +10699,12 @@ export type Database = {
           voice_preset: string
         }
         Insert: {
+          attempts?: number
           created_at?: string
           error_message?: string | null
           id?: string
           input_audio_url: string
+          last_attempt_at?: string | null
           output_audio_url?: string | null
           status?: Database["public"]["Enums"]["conversion_status"]
           updated_at?: string
@@ -10708,10 +10712,12 @@ export type Database = {
           voice_preset: string
         }
         Update: {
+          attempts?: number
           created_at?: string
           error_message?: string | null
           id?: string
           input_audio_url?: string
+          last_attempt_at?: string | null
           output_audio_url?: string | null
           status?: Database["public"]["Enums"]["conversion_status"]
           updated_at?: string
@@ -11707,6 +11713,19 @@ export type Database = {
           job_title?: string | null
           name?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      sts_performance_metrics: {
+        Row: {
+          avg_latency_ms: number | null
+          error_rate: number | null
+          failed_requests: number | null
+          latest_error: string | null
+          p95_latency: number | null
+          p99_latency: number | null
+          total_requests: number | null
+          voice_preset: string | null
         }
         Relationships: []
       }
