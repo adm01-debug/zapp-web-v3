@@ -34,27 +34,42 @@ export default function AdminConnectionsPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    fetchConnections();
-    (async () => {
+  const checkAdminStatus = async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id ?? null);
       if (user?.id) {
-        try {
-          const { data: roles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id);
-          setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
-        } catch (e) {
-          console.error("Erro ao verificar roles:", e);
-          setIsAdmin(false);
-        }
+        const { data: roles, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+        setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
       } else {
         setIsAdmin(false);
       }
-    })();
+    } catch (e) {
+      console.error("Erro ao verificar roles:", e);
+      setIsAdmin(false);
+      toast({ 
+        title: 'Erro de Autenticação', 
+        description: 'Não foi possível validar seu nível de acesso. Verifique sua conexão.', 
+        variant: 'destructive' 
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchConnections();
+    checkAdminStatus();
   }, []);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    checkAdminStatus();
+    fetchConnections();
+  };
 
   async function fetchConnections() {
     setLoading(true);
@@ -132,7 +147,6 @@ export default function AdminConnectionsPage() {
 
     try {
       const existing: any = connections.find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
-
       const insertPayload = currentUserId ? { ...payload, created_by: currentUserId } : payload;
 
       const { data, error, status } = existing
@@ -140,38 +154,39 @@ export default function AdminConnectionsPage() {
         : await supabase.from('system_connections' as any).insert(insertPayload).select();
 
       if (error) {
-        const msg = `${error.message}${error.code ? ` (código: ${error.code})` : ''}${error.details ? ` — ${error.details}` : ''}${error.hint ? ` | hint: ${error.hint}` : ''}`;
+        const msg = `[${payload.provider}] ${error.message}${error.code ? ` (código: ${error.code})` : ''}${error.details ? ` — ${error.details}` : ''}${status ? ` | Status: ${status}` : ''}`;
         setSaveError(msg);
         toast({ title: 'Erro ao salvar', description: msg, variant: 'destructive' });
         return;
       }
 
-      if (!data || data.length === 0) {
-        // Verifica se realmente persistiu via SELECT (pode ser RLS bloqueando o RETURNING)
-        const { data: verify } = await supabase
-          .from('system_connections' as any)
-          .select('id')
-          .eq('provider', 'supabase_external')
-          .limit(1);
+      // Validação Pós-Save (SELECT para confirmar persistência no Self-Hosted)
+      const { data: verify, error: verifyError } = await supabase
+        .from('system_connections' as any)
+        .select('id, updated_at')
+        .eq('provider', 'supabase_external')
+        .eq('name', 'FATOR X')
+        .maybeSingle();
 
-        if (!verify || verify.length === 0) {
-          const msg = `A requisição retornou ${status} mas nenhum registro foi persistido. Provavelmente as políticas de RLS estão bloqueando a escrita. Verifique se você está autenticado como admin.`;
-          setSaveError(msg);
-          toast({ title: 'Não foi salvo', description: msg, variant: 'destructive' });
-          return;
-        }
+      if (verifyError || !verify) {
+        const msg = `A requisição retornou ${status}, mas o registro não pôde ser validado no banco após o save. Verifique as políticas de RLS ou a latência do banco. ${verifyError?.message ?? ''}`;
+        setSaveError(msg);
+        toast({ title: 'Confirmação falhou', description: msg, variant: 'destructive' });
+        return;
       }
+
+      const verifyData = verify as any;
 
       setExternalUrl(draftUrl);
       setExternalKey(draftKey);
       setEditOpen(false);
       toast({
-        title: 'Credenciais salvas',
-        description: 'Para o cliente em runtime usar a nova chave, atualize também os secrets VITE_EXTERNAL_SUPABASE_URL/KEY e republique.',
+        title: 'Credenciais salvas e validadas',
+        description: `Registro confirmado em ${new Date(verifyData.updated_at).toLocaleTimeString()}. Atualize os secrets VITE_EXTERNAL_SUPABASE_URL/KEY.`,
       });
       await fetchConnections();
     } catch (e: any) {
-      const msg = e?.message ?? 'Falha desconhecida ao processar a requisição.';
+      const msg = `[Exceção] ${e?.message ?? 'Falha desconhecida ao processar a requisição.'}`;
       setSaveError(msg);
       toast({ title: 'Erro inesperado', description: msg, variant: 'destructive' });
     } finally {
@@ -192,7 +207,7 @@ export default function AdminConnectionsPage() {
         }
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid grid-cols-4 w-full md:w-[600px] mb-8">
           <TabsTrigger value="external-db" className="gap-2">
             <Database className="w-4 h-4" /> Banco Externo
