@@ -161,8 +161,8 @@ export function ConnectionsView() {
               <div className="w-64 h-64 mx-auto bg-muted rounded-xl flex flex-col items-center justify-center p-6 gap-4 text-center">
                 <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
                 <div className="space-y-1.5">
-                  <p className="text-sm font-medium animate-pulse">Iniciando sessão...</p>
-                  <p className="text-[10px] text-muted-foreground">Etapa 1 de 3: Autenticando com a Evolution API</p>
+                  <p className="text-sm font-medium animate-pulse" data-testid="reconnect-step-loading">Iniciando sessão...</p>
+                  <p className="text-[10px] text-muted-foreground" data-testid="reconnect-step-label">Etapa 1 de 3: Autenticando com a Evolution API</p>
                 </div>
               </div>
             )}
