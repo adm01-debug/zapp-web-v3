@@ -7,6 +7,12 @@ vi.mock('@/integrations/supabase/client', () => ({
     functions: {
       invoke: vi.fn(),
     },
+    storage: {
+      from: vi.fn(() => ({
+        upload: vi.fn(),
+        createSignedUrl: vi.fn(),
+      }))
+    }
   },
 }));
 
@@ -26,13 +32,13 @@ vi.mock('@/features/inbox', () => ({
 global.URL.createObjectURL = vi.fn(() => 'blob:test');
 
 describe('Performance Metric: Multipart vs Legacy Storage', () => {
-  it('Architecture Verification: should NOT call supabase.storage.upload', async () => {
-    const storageSpy = vi.spyOn(supabase as any, 'from');
+  it('Architecture Verification: should NOT call storage.from(audio-messages).upload', async () => {
+    const storageSpy = vi.spyOn(supabase.storage, 'from');
     (supabase.functions.invoke as any).mockResolvedValue({ data: { key: { id: '123' } }, error: null });
 
     await sendExternalAudio('5511999999999@s.whatsapp.net', new Blob(['test']), { isPtt: true });
 
-    // Ensure we are skipping the storage upload step entirely
+    // Verify that storage is NEVER touched for outgoing audio anymore
     const storageCalls = storageSpy.mock.calls.filter(call => call[0] === 'audio-messages');
     expect(storageCalls.length).toBe(0);
   });
