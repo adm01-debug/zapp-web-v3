@@ -99,9 +99,9 @@ export function BusinessHoursDialog({
     setLocalHours((prev) =>
       prev.map((h) => ({
         ...h,
-        is_open: h.day_of_week >= 1 && h.day_of_week <= 5,
-        open_time: '08:00',
-        close_time: '18:00',
+        is_enabled: h.day_of_week >= 1 && h.day_of_week <= 5,
+        start_time: '08:00',
+        end_time: '18:00',
       }))
     );
     toast({ title: 'Template de dias úteis aplicado' });
