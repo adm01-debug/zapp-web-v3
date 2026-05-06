@@ -96,15 +96,16 @@ export async function proxyToEvolution(
     });
   }
 
+  const isFormData = body instanceof FormData;
   const opts: RequestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       'apikey': evolutionApiKey,
     },
   };
   if (body && method !== 'GET') {
-    opts.body = JSON.stringify(body);
+    opts.body = isFormData ? body : JSON.stringify(body);
   }
 
   let lastError: Error | null = null;
