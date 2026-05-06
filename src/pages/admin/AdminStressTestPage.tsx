@@ -467,24 +467,36 @@ export default function AdminStressTestPage() {
               </span>
             </div>
             <Progress value={progress.total > 0 ? (progress.done / progress.total) * 100 : 0} />
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm pt-1">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm pt-1">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-success" /> Sucesso: <strong className="tabular-nums">{sent}</strong>
               </span>
               <span className="flex items-center gap-1.5">
                 <XCircle className="h-4 w-4 text-destructive" /> Falhas: <strong className="tabular-nums">{failed}</strong>
               </span>
-              {status === 'completed' && results.length > 0 && (
+              {results.some(r => r.accessibility) && (
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4 text-blue-500" /> Acesso OK: <strong className="tabular-nums">{results.filter(r => r.accessibility?.reachable).length}</strong>
+                </span>
+              )}
+              {results.length > 0 && (
                 <>
                   <span className="text-muted-foreground border-l pl-4">
-                    Avg: <strong>{Math.round(results.reduce((acc, r) => acc + r.ms, 0) / results.length)}ms</strong>
+                    Latência Avg: <strong>{Math.round(results.reduce((acc, r) => acc + r.ms, 0) / results.length)}ms</strong>
                   </span>
-                  <span className="text-muted-foreground">
-                    Throughput: <strong>{(results.length / ((performance.now() - startTime) / 1000)).toFixed(2)} msg/s</strong>
+                  <span className="text-muted-foreground border-l pl-4">
+                    Throughput: <strong>{(progress.done / ((performance.now() - startTime) / 1000)).toFixed(2)} msg/s</strong>
                   </span>
                 </>
               )}
             </div>
+            {status !== 'idle' && !isRunning && (
+              <div className="pt-4">
+                <Button variant="outline" size="sm" onClick={downloadReport}>
+                  <Download className="h-4 w-4 mr-2" /> Baixar Relatório Completo (.csv)
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
