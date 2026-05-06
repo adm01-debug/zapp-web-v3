@@ -265,8 +265,8 @@ describe('Passo E — tipografia geométrica (Rajdhani)', () => {
     const p = PRESETS.find((x) => x.id === id)!;
     expect(p.font).toBeDefined();
     expect(p.font).toMatch(/Rajdhani/);
-    // Mantém Outfit como fallback antes de system-ui
-    expect(p.font).toMatch(/Outfit/);
+    // Mantém Inter como fallback antes de system-ui
+    expect(p.font).toMatch(/Inter/);
     expect(p.font).toMatch(/system-ui/);
   });
 

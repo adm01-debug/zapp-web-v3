@@ -86,7 +86,7 @@ export function ChatPanelHeader({
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground text-[15px] tracking-normal leading-none" style={{ fontFamily: 'Outfit, sans-serif' }}>{conversation.contact.name}</h3>
+            <h3 className="font-semibold text-foreground text-[15px] tracking-normal leading-none">{conversation.contact.name}</h3>
             {conversation.sentiment === 'critical' && <span className="text-destructive animate-pulse" title="Sentimento Crítico">🔥</span>}
             {conversation.sentiment === 'negative' && <span className="text-destructive/80" title="Sentimento Negativo">😡</span>}
             {conversation.sentiment === 'positive' && <span className="text-success" title="Sentimento Positivo">🌟</span>}
