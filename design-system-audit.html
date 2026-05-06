@@ -10,6 +10,7 @@
       .high { color: #ef4444; font-weight: bold; }
       .medium { color: #f59e0b; font-weight: bold; }
       code { background: #f1f1f1; padding: 2px 4px; border-radius: 4px; }
+      .patch { color: #10b981; font-weight: bold; }
     </style>
   </head>
   <body>
@@ -22,39 +23,58 @@
             <tr>
               <th>Priority</th>
               <th>Line</th>
+              <th>Type</th>
               <th>Raw Match</th>
               <th>Variant</th>
               <th>Clean Match</th>
               <th>Suggestion</th>
+              <th>Patch</th>
             </tr>
           </thead>
           <tbody>
             
               <tr>
-                <td class="high">High</td>
+                <td class="low">Low</td>
                 <td>2</td>
+                <td>Arbitrary Color</td>
                 <td><code>bg-[#ff0000]</code></td>
                 <td><code>(none)</code></td>
                 <td><code>bg-[#ff0000]</code></td>
-                <td>Use theme tokens (primary, secondary, etc.)</td>
+                <td>Check design system tokens</td>
+                <td class="patch">-</td>
               </tr>
             
               <tr>
                 <td class="medium">Medium</td>
                 <td>2</td>
+                <td>Literal Color</td>
                 <td><code>text-blue-500</code></td>
                 <td><code>(none)</code></td>
                 <td><code>text-blue-500</code></td>
                 <td>text-primary</td>
+                <td class="patch"><code>text-primary</code></td>
               </tr>
             
               <tr>
-                <td class="medium">Medium</td>
+                <td class="low">Low</td>
+                <td>2</td>
+                <td>Literal Font</td>
+                <td><code>font-sans</code></td>
+                <td><code>(none)</code></td>
+                <td><code>font-sans</code></td>
+                <td>Remove literal font; use global typography</td>
+                <td class="patch">-</td>
+              </tr>
+            
+              <tr>
+                <td class="high">High</td>
                 <td>3</td>
+                <td>Literal Color</td>
                 <td><code>dark:text-white</code></td>
                 <td><code>dark:</code></td>
                 <td><code>text-white</code></td>
-                <td>Use semantic tokens (destructive, muted, etc.)</td>
+                <td>dark:text-foreground</td>
+                <td class="patch"><code>dark:text-foreground</code></td>
               </tr>
             
           </tbody>
