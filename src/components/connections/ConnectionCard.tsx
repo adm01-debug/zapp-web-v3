@@ -245,7 +245,13 @@ export function ConnectionCard({
                       size="sm" 
                       variant="outline"
                       disabled={reconnecting}
-                      onClick={handleReconnect}
+                      onClick={async () => {
+                        if (connection.status === 'disconnecting') {
+                          toast({ title: 'Aguarde', description: 'A sessão está sendo encerrada. Tente reconectar em instantes.' });
+                          return;
+                        }
+                        handleReconnect();
+                      }}
                       className="border-whatsapp text-whatsapp hover:bg-whatsapp/5"
                     >
                       {reconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
