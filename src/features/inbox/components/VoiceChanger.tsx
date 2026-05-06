@@ -3,8 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { Wand2, Loader2, Play, Square, Check, Volume2 } from 'lucide-react';
+import { Wand2, Loader2, Play, Square, Check, Volume2, ShieldAlert, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import { ELEVENLABS_VOICES, type ElevenLabsVoice } from './VoiceSelector';
 
 interface VoiceChangerProps {
@@ -20,6 +25,8 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
   const [convertedAudioUrl, setConvertedAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [conversionProgress, setConversionProgress] = useState(0);
+  const [showCloneWarning, setShowCloneWarning] = useState(false);
 
   const stopPlayback = useCallback(() => {
     if (audioRef.current) {
@@ -38,11 +45,25 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
   }, [convertedAudioUrl, stopPlayback]);
 
   const handleConvert = async (voice: ElevenLabsVoice) => {
+    // Check if it's a "cloned" voice (placeholder logic - usually based on ID prefix or metadata)
+    const isCloned = voice.id.startsWith('cloned_') || voice.description.toLowerCase().includes('celebridade') || voice.description.toLowerCase().includes('dublagem');
+    
+    if (isCloned) {
+      setShowCloneWarning(true);
+      setSelectedVoice(voice);
+      return;
+    }
+
     cleanup();
     setSelectedVoice(voice);
     setIsConverting(true);
+    setConversionProgress(10);
 
     try {
+      const progressInterval = setInterval(() => {
+        setConversionProgress(prev => (prev < 90 ? prev + 5 : prev));
+      }, 500);
+
       const formData = new FormData();
       formData.append('audio', audioBlob, 'audio.webm');
       formData.append('voiceId', voice.id);
@@ -86,7 +107,13 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
       setSelectedVoice(null);
     } finally {
       setIsConverting(false);
+      setConversionProgress(0);
     }
+  };
+
+  const proceedWithClonedVoice = () => {
+    setShowCloneWarning(false);
+    if (selectedVoice) handleConvert(selectedVoice);
   };
 
   const handleConfirm = () => {
@@ -137,11 +164,40 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
         <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border">
           <Wand2 className="w-4 h-4 text-primary" />
           <h4 className="text-sm font-semibold text-foreground">Alterar Voz</h4>
-          <span className="text-[10px] text-muted-foreground ml-auto">ElevenLabs</span>
+          {isConverting && (
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-[10px] font-mono text-primary">{conversionProgress}%</span>
+              <Loader2 className="w-3 h-3 text-primary animate-spin" />
+            </div>
+          )}
         </div>
 
+        {/* Clone Warning */}
+        <AnimatePresence>
+          {showCloneWarning && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="p-3 bg-amber-500/10 border-b border-amber-500/20"
+            >
+              <Alert variant="default" className="bg-transparent border-none p-0">
+                <ShieldAlert className="h-4 w-4 text-amber-600" />
+                <AlertTitle className="text-xs font-bold text-amber-700">Aviso de Voz Clonada</AlertTitle>
+                <AlertDescription className="text-[10px] leading-relaxed text-amber-800">
+                  Esta voz parece ser uma voz clonada ou celebridade. Certifique-se de ter autorização legal para uso comercial ou pessoal desta imagem/voz.
+                </AlertDescription>
+              </Alert>
+              <div className="flex gap-2 mt-2">
+                <Button size="sm" variant="outline" className="h-6 text-[9px] flex-1" onClick={() => setShowCloneWarning(false)}>Cancelar</Button>
+                <Button size="sm" className="h-6 text-[9px] flex-1 bg-amber-600 hover:bg-amber-700" onClick={proceedWithClonedVoice}>Eu tenho autorização</Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Voice list */}
-        <div className="max-h-[280px] overflow-y-auto p-1.5">
+        <div className="max-h-[280px] overflow-y-auto p-1.5 scrollbar-thin scrollbar-thumb-muted">
           {ELEVENLABS_VOICES.map((voice) => {
             const isSelected = selectedVoice?.id === voice.id;
             const isLoading = isConverting && isSelected;
