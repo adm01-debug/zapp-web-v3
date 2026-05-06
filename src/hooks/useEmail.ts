@@ -37,7 +37,6 @@ export type {
   EmailLabel,
   SLAStatus
 };
-};
 
 export type EmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
 export type EmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
