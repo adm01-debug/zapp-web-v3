@@ -12170,7 +12170,43 @@ export type Database = {
         }
         Relationships: []
       }
+      v_operator_unread_summary: {
+        Row: {
+          instance_name: string | null
+          unread_transfers: number | null
+          unread_urgent: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instance_members_instance_name_fkey"
+            columns: ["instance_name"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
       v_pending_transfers: {
+        Row: {
+          alta: number | null
+          mais_antiga: string | null
+          pending: number | null
+          sla_estourado: number | null
+          target_instance: string | null
+          urgente: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
+      v_pending_transfers_secure: {
         Row: {
           alta: number | null
           mais_antiga: string | null
@@ -12432,6 +12468,10 @@ export type Database = {
         Args: { p_operator_name: string; p_transfer_id: string }
         Returns: Json
       }
+      fn_add_business_minutes: {
+        Args: { p_instance_name: string; p_minutes: number; p_start: string }
+        Returns: string
+      }
       fn_complete_transfer: {
         Args: { p_notes: string; p_transfer_id: string; p_type?: string }
         Returns: {
@@ -12528,6 +12568,18 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      fn_get_my_unread_summary: {
+        Args: never
+        Returns: {
+          instance_name: string
+          unread_transfers: number
+          unread_urgent: number
+        }[]
+      }
+      fn_mark_transfer_as_read: {
+        Args: { p_transfer_id: string }
+        Returns: undefined
+      }
       fn_register_sticky_assignment: {
         Args: {
           p_agent_profile_id: string
@@ -12608,6 +12660,31 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "sticky_assignments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      fn_transfer_comment: {
+        Args: {
+          p_attachments?: Json
+          p_author: string
+          p_content: string
+          p_instance: string
+          p_transfer_id: string
+        }
+        Returns: {
+          attachments: Json | null
+          author_instance: string
+          author_name: string
+          content: string
+          created_at: string | null
+          id: string
+          mentioned_users: string[] | null
+          transfer_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transfer_comments"
           isOneToOne: true
           isSetofReturn: false
         }
