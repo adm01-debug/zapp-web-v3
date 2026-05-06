@@ -35,7 +35,7 @@ Deno.test("Fuzz - Record Extraction", () => {
   ];
 
   for (const s of scenarios) {
-    const records = toEventRecords(s.event, s.data);
+    const records = toEventRecords(s.event, s.data as any);
     assert(Array.isArray(records), `toEventRecords should always return array for: ${JSON.stringify(s)}`);
     if (s.expectedCount !== undefined) {
       // Just check it doesn't crash and returns an array
