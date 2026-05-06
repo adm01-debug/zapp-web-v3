@@ -69,8 +69,7 @@ export type EvolutionMessageLite = Pick<EvolutionMessage,
   | 'created_at'
   | 'status_at'
   | 'deleted_at'
-  | 'reactions'
->;
+> & { reactions?: any[] | null };
 
 /**
  * Project a full EvolutionMessage (e.g. from a realtime payload) into the
