@@ -37,7 +37,7 @@ Marque o status de cada item e indique o que precisa ser criado/corrigido.
 |---|---------|-------|---------------------|--------|
 | 7 | `campaigns` | Campanhas | `CampaignsView` | |
 | 8 | `wa-templates` | Templates WA | `WhatsAppTemplatesManager` | |
-| 9 | `gmail` | Gmail | `GmailInboxView` → `EmailThreadView` + `EmailComposer` | |
+| 9 | `email` | Email | `EmailInboxView` → `EmailThreadView` + `EmailComposer` | |
 | 10 | `omnichannel` | Omnichannel | `OmnichannelManager` → `ChannelRoutingRules` | |
 | 11 | `omni-inbox` | Inbox Omni | `OmnichannelInbox` | |
 | 12 | `voip` | VoIP | `VoIPPanel` → `CallDialog` + `DialPad` + `IncomingCallAlert` | |
@@ -67,7 +67,7 @@ Marque o status de cada item e indique o que precisa ser criado/corrigido.
 | # | View ID | Label | Componente Principal | Status |
 |---|---------|-------|---------------------|--------|
 | 26 | `connections` | Conexões WhatsApp | `ConnectionsView` → `InstanceSettingsDialog` + `BusinessHoursDialog` + `ConnectionQueuesDialog` + `FarewellMessageConfig` | |
-| 27 | `integrations` | Integrações | `IntegrationsHub` → `GmailIntegration` + `GoogleCalendarIntegration` + `GoogleSheetsIntegrationView` + `N8nIntegrationView` + `SentryIntegrationView` | |
+| 27 | `integrations` | Integrações | `IntegrationsHub` → `EmailIntegration` + `GoogleCalendarIntegration` + `GoogleSheetsIntegrationView` + `N8nIntegrationView` + `SentryIntegrationView` | |
 | 28 | `meta-capi` | Meta CAPI | `MetaCAPIView` | |
 | 29 | `google-calendar` | Calendário | `GoogleCalendarIntegration` | |
 
@@ -244,13 +244,13 @@ Marque o status de cada item e indique o que precisa ser criado/corrigido.
 | 20 | `evolution-webhook` | Webhook de mensagens recebidas | Webhook (sem UI) | |
 | 21 | `whatsapp-webhook` | Webhook WhatsApp Business | Webhook (sem UI) | |
 
-### 3.4 Gmail
+### 3.4 Email
 | # | Edge Function | Descrição | Componente Frontend | Status |
 |---|--------------|-----------|-------------------|--------|
-| 22 | `gmail-oauth` | Autenticação OAuth Gmail | `GmailIntegration` | |
-| 23 | `gmail-send` | Envio de emails | `EmailComposer` | |
-| 24 | `gmail-sync` | Sincronização de emails | `GmailInboxView` | |
-| 25 | `gmail-webhook` | Webhook de novos emails | Webhook (sem UI) | |
+| 22 | `email-oauth` | Autenticação OAuth Email | `EmailIntegration` | |
+| 23 | `email-send` | Envio de emails | `EmailComposer` | |
+| 24 | `email-sync` | Sincronização de emails | `EmailInboxView` | |
+| 25 | `email-webhook` | Webhook de novos emails | Webhook (sem UI) | |
 
 ### 3.5 Segurança & Auth
 | # | Edge Function | Descrição | Componente Frontend | Status |
@@ -399,7 +399,7 @@ Marque o status de cada item e indique o que precisa ser criado/corrigido.
 | 71 | `useCampaigns` | Gestão de campanhas | `CampaignsView` | |
 | 72 | `useCSAT` | Pesquisa de satisfação | `CSATDashboard` | |
 | 73 | `useNPSSurveys` | Pesquisa NPS | `NPSDashboard` | |
-| 74 | `useGmail` | Integração Gmail | `GmailInboxView` | |
+| 74 | `useEmail` | Integração Email | `EmailInboxView` | |
 | 75 | `useTeamChat` | Chat interno de equipe | `TeamChatView` | |
 | 76 | `useExternalCatalog` | Catálogo externo | `ExternalProductCatalog` | |
 | 77 | `useShoppingCart` | Carrinho de compras | `ShoppingCart` | |
@@ -478,13 +478,13 @@ Marque o status de cada item e indique o que precisa ser criado/corrigido.
 | 44 | `payment_links` | Links de pagamento | | |
 | 45 | `client_wallet_rules` | Regras da carteira de clientes | | |
 
-### 5.7 Gmail
+### 5.7 Email
 | # | Tabela | Descrição | CRUD no Frontend? | Status |
 |---|--------|-----------|-------------------|--------|
-| 46 | `gmail_accounts` | Contas Gmail conectadas | | |
+| 46 | `email_accounts` | Contas Email conectadas | | |
 | 47 | `email_threads` | Threads de email | | |
 | 48 | `email_messages` | Mensagens de email | | |
-| 49 | `email_labels` | Labels do Gmail | | |
+| 49 | `email_labels` | Labels do Email | | |
 
 ### 5.8 Gamificação
 | # | Tabela | Descrição | CRUD no Frontend? | Status |

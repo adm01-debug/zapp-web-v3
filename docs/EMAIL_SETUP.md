@@ -1,7 +1,7 @@
 # Email Chat — Guia de Configuração
 
 Este documento descreve como configurar o módulo de Email Chat do ZAPP WEB,
-que usa a Gmail API via OAuth2 e Google Pub/Sub para recebimento em tempo real.
+que usa a Email API via OAuth2 e Google Pub/Sub para recebimento em tempo real.
 
 ---
 
@@ -27,7 +27,7 @@ Configure as seguintes variáveis no painel **Supabase → Edge Functions → Se
 3. Application type: **Web application**
 4. Authorized redirect URIs: `https://<projeto>.supabase.co/functions/v1/gmail-oauth`
 
-### 2.2 Habilitar Gmail API
+### 2.2 Habilitar Email API
 APIs & Services → Library → **Gmail API** → Enable
 
 ### 2.3 Criar tópico Pub/Sub para emails em tempo real
@@ -73,11 +73,11 @@ supabase functions deploy send-email
 ```
 frontend/
   hooks/
-    useGmail.ts            — orquestrador principal
+    useEmail.ts            — orquestrador principal
     useGmailOAuthFlow.ts   — OAuth + token refresh automático (a cada 60s)
     useEmailSignature.ts   — CRUD de assinaturas por conta
-    useEmailDraft.ts       — auto-save a cada 30s + sync Gmail API
-    useEmailSearch.ts      — busca dual: FTS local + Gmail API remota
+    useEmailDraft.ts       — auto-save a cada 30s + sync Email API
+    useEmailSearch.ts      — busca dual: FTS local + Email API remota
     useEmailSLA.ts         — SLA FRT por thread, status ok/warning/breached
     gmail/
       gmailApi.ts          — todas as chamadas à API via Edge Functions
@@ -95,7 +95,7 @@ frontend/
       EmailSignatureEditor — editor WYSIWYG de assinaturas
       EmailAttachmentPreview — preview e download de anexos
       EmailSLADashboard    — métricas SLA por conta com avg FRT
-    gmail/                 — tela Gmail completa
+    gmail/                 — tela Email completa
       GmailInboxView       — 3-colunas com labels, busca e painel contato
       EmailComposer        — rich text, CC/BCC, assinaturas, rascunho
       EmailThreadView      — thread com realtime e reply integrado
@@ -128,5 +128,11 @@ edge-functions/
 | UI/UX dos componentes | 4/10 | 9/10 |
 | TypeScript seguro | 3/10 | 9/10 |
 | **TOTAL** | **4.4/10** | **9.4/10** |
+
+---
+
+## 7. Informações Adicionais
+
+Este módulo foi renomeado de Gmail para Email para refletir sua versatilidade e preparação para múltiplos provedores.
 
 > Limitação restante para 10/10: suporte a IMAP/SMTP para provedores não-Gmail (Outlook, Yahoo).
