@@ -31,12 +31,14 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
 
 /** Human-friendly health reason labels. */
 const HEALTH_REASON_LABEL: Record<string, { short: string; long: string; severe: boolean }> = {
-  phantom_session: { short: 'Precisa reconectar', long: 'A sessão perdeu vínculo com o WhatsApp. Escaneie o QR Code novamente.', severe: true },
-  webhook_silent: { short: 'Sem atividade recente', long: 'Nenhuma mensagem recebida nos últimos 30 minutos.', severe: false },
-  stale_session: { short: 'Sessão expirada', long: 'Sem mensagens há mais de 6 horas — reconecte.', severe: true },
-  socket_closed: { short: 'Precisa reconectar', long: 'A conexão com o WhatsApp foi perdida.', severe: true },
-  http_error: { short: 'Erro na conexão', long: 'O servidor não está respondendo corretamente.', severe: true },
-  timeout: { short: 'Sem resposta', long: 'O servidor não respondeu a tempo.', severe: true },
+  phantom_session: { short: 'Sessão Fantasma', long: 'O servidor Evolution diz que está "open", mas o WhatsApp não reconhece a sessão. Reconecte.', severe: true },
+  webhook_silent: { short: 'Instância Silenciosa', long: 'Nenhuma mensagem recebida nos últimos 30 minutos. Verifique o celular.', severe: false },
+  stale_session: { short: 'Sessão Obsoleta', long: 'Sem mensagens há mais de 6 horas. A conexão pode estar "dormindo".', severe: true },
+  socket_closed: { short: 'Socket Fechado', long: 'A conexão com o servidor de mensagens foi encerrada.', severe: true },
+  http_error: { short: 'Erro de API', long: 'Falha ao comunicar com a Evolution API. Verifique as credenciais.', severe: true },
+  timeout: { short: 'Timeout', long: 'O servidor demorou demais para responder o health-check.', severe: true },
+  auth_failure: { short: 'Falha de Auth', long: 'A API Key da Evolution parece inválida ou expirou.', severe: true },
+  rate_limit: { short: 'Rate Limit', long: 'Muitas requisições em pouco tempo. Aguarde um momento.', severe: false },
 };
 
 interface ConnectionCardProps {
