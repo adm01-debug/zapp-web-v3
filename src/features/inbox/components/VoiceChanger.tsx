@@ -18,9 +18,11 @@ interface VoiceChangerProps {
   audioUrl?: string;
   onVoiceChanged: (newBlob: Blob) => void;
   disabled?: boolean;
+  messageId?: string;
+  conversationId?: string;
 }
 
-export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: VoiceChangerProps) {
+export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, messageId, conversationId }: VoiceChangerProps) {
   const [open, setOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<ElevenLabsVoice | null>(null);
   const [isConverting, setIsConverting] = useState(false);
