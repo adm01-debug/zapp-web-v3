@@ -93,5 +93,23 @@ describe('useEmail - Labels and RPC Actions', () => {
         p_agent_id: 'agent_456',
       });
     });
+
+    it('should handle RPC errors', async () => {
+      vi.mocked(safeClient.rpc).mockResolvedValueOnce({ 
+        data: null, 
+        error: { message: 'RPC Error' } as any,
+        requestId: 'req_123'
+      });
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      
+      const { result } = renderHook(() => useEmail());
+      
+      await act(async () => {
+        await result.current.assignThread('t1', 'agent_456');
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Falha ao atribuir thread'), 'RPC Error');
+      consoleSpy.mockRestore();
+    });
   });
 });
