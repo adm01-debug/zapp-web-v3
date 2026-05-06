@@ -41,7 +41,7 @@ describe('Email Navigation', () => {
       </BrowserRouter>
     );
     
-    expect(screen.getByTestId('email-view')).toBeInTheDocument();
+    expect(screen.getByTestId('emailchatview-view')).toBeInTheDocument();
   });
 
   it('should render the Email Status view when currentView is email-status', () => {
@@ -51,7 +51,7 @@ describe('Email Navigation', () => {
       </BrowserRouter>
     );
     
-    expect(screen.getByTestId('email-status-view')).toBeInTheDocument();
+    expect(screen.getByTestId('adminemailstatuspage-view')).toBeInTheDocument();
   });
 
   it('should render the Email Audit view when currentView is email-audit', () => {
@@ -61,6 +61,6 @@ describe('Email Navigation', () => {
       </BrowserRouter>
     );
     
-    expect(screen.getByTestId('email-audit-view')).toBeInTheDocument();
+    expect(screen.getByTestId('adminemailauditpage-view')).toBeInTheDocument();
   });
 });
