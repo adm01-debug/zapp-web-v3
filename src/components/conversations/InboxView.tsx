@@ -19,10 +19,10 @@ import { sanitizeText } from '@/lib/sanitize';
 import { formatPhoneForDisplay } from '@/lib/phoneUtils';
 
 const PRIORITY_COLORS: Record<string, string> = {
-  urgent: 'text-red-600 bg-red-50 border-red-200',
-  high:   'text-orange-600 bg-orange-50 border-orange-200',
-  normal: 'text-blue-600 bg-blue-50 border-blue-200',
-  low:    'text-gray-600 bg-gray-50 border-gray-200',
+  urgent: 'text-destructive bg-destructive/10 border-destructive/20',
+  high:   'text-warning bg-warning/10 border-warning/20',
+  normal: 'text-primary bg-primary/10 border-primary/20',
+  low:    'text-muted-foreground bg-muted border-border',
 };
 
 export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 'wpp2' }) => {
