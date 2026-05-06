@@ -3,17 +3,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Settings, Shield, User, Tag } from 'lucide-react';
+import { Loader2, Settings, Shield, User, Tag, History, RotateCcw } from 'lucide-react';
 import { getLogger } from '@/lib/logger';
 import { SettingsTabContent, PrivacyTabContent, LabelsTabContent } from './InstanceSettingsTabContent';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const log = getLogger('InstanceSettingsDialog');
 
 interface InstanceSettingsDialogProps {
-  open: boolean; onOpenChange: (open: boolean) => void; instanceName: string; connectionName: string;
+  open: boolean; 
+  onOpenChange: (open: boolean) => void; 
+  instanceName: string; 
+  connectionName: string;
+  connectionId?: string;
 }
 
 const SETTINGS_ITEMS = [
@@ -36,16 +46,94 @@ const PRIVACY_OPTIONS = [
   { value: 'contact_blacklist', label: 'Contatos exceto...' }, { value: 'none', label: 'Ninguém' },
 ];
 
-export function InstanceSettingsDialog({ open, onOpenChange, instanceName, connectionName }: InstanceSettingsDialogProps) {
+export function InstanceSettingsDialog({ open, onOpenChange, instanceName, connectionName, connectionId }: InstanceSettingsDialogProps) {
   const { getSettings, setSettings, fetchProfile, updateProfileName, updateProfileStatus, updateProfilePicture, removeProfilePicture, updatePrivacySettings, findLabels, isLoading } = useEvolutionApi();
 
   const [settingsData, setSettingsData] = useState<Record<string, boolean | string>>({ rejectCall: false, msgCall: '', groupsIgnore: false, alwaysOnline: false, readMessages: false, readStatus: false, syncFullHistory: false });
   const [profile, setProfile] = useState({ name: '', status: '', pictureUrl: '' });
   const [privacy, setPrivacy] = useState<Record<string, string>>({ readreceipts: 'all', profile: 'all', status: 'contacts', online: 'all', last: 'contacts', groupadd: 'contacts' });
   const [labels, setLabels] = useState<{ id: string; name: string; color: string }[]>([]);
+  
+  // Reconnection & Audit state
+  const [reconnectConfig, setReconnectConfig] = useState({ 
+    enabled: true, 
+    interval: 30, 
+    maxAttempts: 5,
+    loopProtection: false 
+  });
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loadingTab, setLoadingTab] = useState('');
 
-  useEffect(() => { if (open && instanceName) { loadSettings(); loadProfile(); } }, [open, instanceName]);
+  useEffect(() => { 
+    if (open && instanceName) { 
+      loadSettings(); 
+      loadProfile();
+      if (connectionId) {
+        loadReconnectConfig();
+      }
+    } 
+  }, [open, instanceName, connectionId]);
+
+  const loadReconnectConfig = async () => {
+    if (!connectionId) return;
+    try {
+      const { data, error } = await supabase
+        .from('whatsapp_connections')
+        .select('auto_reconnect_enabled, reconnect_interval_seconds, max_reconnect_attempts, loop_protection_active')
+        .eq('id', connectionId)
+        .single();
+      
+      if (!error && data) {
+        setReconnectConfig({
+          enabled: data.auto_reconnect_enabled ?? true,
+          interval: data.reconnect_interval_seconds ?? 30,
+          maxAttempts: data.max_reconnect_attempts ?? 5,
+          loopProtection: data.loop_protection_active ?? false
+        });
+      }
+    } catch (err) {
+      log.error('Error loading reconnect config:', err);
+    }
+  };
+
+  const saveReconnectConfig = async () => {
+    if (!connectionId) return;
+    try {
+      const { error } = await supabase
+        .from('whatsapp_connections')
+        .update({
+          auto_reconnect_enabled: reconnectConfig.enabled,
+          reconnect_interval_seconds: reconnectConfig.interval,
+          max_reconnect_attempts: reconnectConfig.maxAttempts,
+          loop_protection_active: reconnectConfig.loopProtection
+        })
+        .eq('id', connectionId);
+      
+      if (error) throw error;
+      toast.success('Política de reconexão salva!');
+    } catch (err) {
+      log.error('Error saving reconnect config:', err);
+      toast.error('Falha ao salvar política');
+    }
+  };
+
+  const loadAuditLogs = async () => {
+    if (!connectionId) return;
+    setLoadingTab('audit');
+    try {
+      const { data, error } = await supabase
+        .from('reconnection_logs')
+        .select('*')
+        .eq('connection_id', connectionId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (!error && data) setAuditLogs(data);
+    } catch (err) {
+      log.error('Error loading audit logs:', err);
+    }
+    setLoadingTab('');
+  };
 
   const loadSettings = async () => {
     setLoadingTab('settings');
@@ -74,12 +162,78 @@ export function InstanceSettingsDialog({ open, onOpenChange, instanceName, conne
           <DialogDescription>Gerencie configurações, perfil, privacidade e etiquetas da instância</DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="settings" onValueChange={(v) => { if (v === 'labels') loadLabels(); }}>
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="settings"><Settings className="w-4 h-4 mr-1" /> Config</TabsTrigger>
             <TabsTrigger value="profile"><User className="w-4 h-4 mr-1" /> Perfil</TabsTrigger>
-            <TabsTrigger value="privacy"><Shield className="w-4 h-4 mr-1" /> Privacidade</TabsTrigger>
-            <TabsTrigger value="labels"><Tag className="w-4 h-4 mr-1" /> Etiquetas</TabsTrigger>
+            <TabsTrigger value="privacy"><Shield className="w-4 h-4 mr-1" /> Privacid.</TabsTrigger>
+            <TabsTrigger value="audit" onClick={loadAuditLogs}><History className="w-4 h-4 mr-1" /> Auditoria</TabsTrigger>
+            <TabsTrigger value="labels"><Tag className="w-4 h-4 mr-1" /> Tags</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="audit" className="space-y-4 mt-4">
+            <div className="rounded-xl border border-border/20 p-4 bg-muted/5">
+              <h4 className="text-sm font-semibold flex items-center gap-2 mb-4">
+                <RotateCcw className="w-4 h-4 text-primary" /> Política de Reconexão
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Intervalo (segundos)</Label>
+                  <Input 
+                    type="number" 
+                    value={reconnectConfig.interval} 
+                    onChange={(e) => setReconnectConfig(p => ({...p, interval: parseInt(e.target.value)}))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Máximo de Tentativas</Label>
+                  <Input 
+                    type="number" 
+                    value={reconnectConfig.maxAttempts} 
+                    onChange={(e) => setReconnectConfig(p => ({...p, maxAttempts: parseInt(e.target.value)}))}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-4 p-2 bg-background/50 rounded-lg">
+                <div className="space-y-0.5">
+                  <Label>Proteção contra Loop</Label>
+                  <p className="text-[10px] text-muted-foreground">Pausa automática se houver muitas quedas seguidas</p>
+                </div>
+                <Switch 
+                  checked={reconnectConfig.loopProtection} 
+                  onCheckedChange={(v) => setReconnectConfig(p => ({...p, loopProtection: v}))}
+                />
+              </div>
+              <Button onClick={saveReconnectConfig} size="sm" className="w-full mt-4 h-8 text-xs">Salvar Política</Button>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold">Histórico de Tentativas</h4>
+              <ScrollArea className="h-[200px] w-full rounded-md border border-border/20 p-2 bg-muted/5">
+                {loadingTab === 'audit' ? (
+                  <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+                ) : auditLogs.length === 0 ? (
+                  <p className="text-center py-8 text-xs text-muted-foreground">Nenhuma tentativa registrada.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {auditLogs.map((log) => (
+                      <div key={log.id} className="p-2 rounded-lg border border-border/10 bg-background text-[11px] flex flex-col gap-1">
+                        <div className="flex justify-between items-center">
+                          <Badge variant={log.result === 'success' ? 'default' : 'destructive'} className="text-[9px] h-4">
+                            {log.result === 'success' ? 'Sucesso' : 'Falha'}
+                          </Badge>
+                          <span className="text-muted-foreground">
+                            {format(new Date(log.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground">Tentativa #{log.attempt_number}</p>
+                        {log.error_message && <p className="text-destructive font-mono truncate">{log.error_message}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          </TabsContent>
 
           <TabsContent value="settings">
             <SettingsTabContent settingsData={settingsData} settingsItems={SETTINGS_ITEMS} onChange={(k, v) => setSettingsData(p => ({ ...p, [k]: v }))}
