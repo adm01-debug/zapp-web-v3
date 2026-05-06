@@ -40,6 +40,7 @@ const EVOLUTION_TYPE_MAP: Record<string, FrontendMessageType> = {
 
   // Video
   videoMessage: 'video',
+  ptvMessage: 'video', // Circular video-note
   video: 'video',
 
   // Document
