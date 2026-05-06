@@ -119,7 +119,7 @@ export default function AdminStressTestPage() {
 
   // ── Persist incremental updates to stress_test_runs ───────
   const persistRun = useCallback(async (
-    id: string, partial: Partial<{ status: string; ended_at: string; total_sent: number; total_failed: number; results: StressResult[]; abort_reason: string }>
+    id: string, partial: Partial<{ status: string; ended_at: string; total_sent: number; total_failed: number; results: StressResult[]; abort_reason: string; metrics_summary: any }>
   ) => {
     try {
       await supabase.from('stress_test_runs').update(partial as any).eq('id', id);
@@ -135,6 +135,7 @@ export default function AdminStressTestPage() {
     setResults([]);
     setProgress({ done: 0, total });
     setStatus('running');
+    const startTime = performance.now();
 
     try {
       // Falha cedo se a biblioteca não tem stickers/áudios memes.
