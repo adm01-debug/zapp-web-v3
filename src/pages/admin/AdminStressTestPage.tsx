@@ -58,6 +58,7 @@ export default function AdminStressTestPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [runId, setRunId] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState<number>(0);
   const abortRef = useRef<AbortController | null>(null);
 
   const evo = useEvolutionApi();
@@ -135,7 +136,8 @@ export default function AdminStressTestPage() {
     setResults([]);
     setProgress({ done: 0, total });
     setStatus('running');
-    const startTime = performance.now();
+    const start = performance.now();
+    setStartTime(start);
 
     try {
       // Falha cedo se a biblioteca não tem stickers/áudios memes.
@@ -247,7 +249,7 @@ export default function AdminStressTestPage() {
     const latencies = metrics?.map(m => m.latency_ms).sort((a, b) => a - b) || [];
     const avgLatency = latencies.length > 0 ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0;
     const p95Latency = latencies[Math.floor(latencies.length * 0.95)] || 0;
-    const throughput = latencies.length > 0 ? Number((latencies.length / ((performance.now() - startTime) / 1000)).toFixed(2)) : 0;
+          const throughput = latencies.length > 0 ? Number((latencies.length / ((performance.now() - start) / 1000)).toFixed(2)) : 0;
 
     await persistRun(id, {
       status: summary.status,
@@ -379,13 +381,23 @@ export default function AdminStressTestPage() {
               </span>
             </div>
             <Progress value={progress.total > 0 ? (progress.done / progress.total) * 100 : 0} />
-            <div className="flex gap-3 text-sm pt-1">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm pt-1">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-success" /> Sucesso: <strong className="tabular-nums">{sent}</strong>
               </span>
               <span className="flex items-center gap-1.5">
                 <XCircle className="h-4 w-4 text-destructive" /> Falhas: <strong className="tabular-nums">{failed}</strong>
               </span>
+              {status === 'completed' && results.length > 0 && (
+                <>
+                  <span className="text-muted-foreground border-l pl-4">
+                    Avg: <strong>{Math.round(results.reduce((acc, r) => acc + r.ms, 0) / results.length)}ms</strong>
+                  </span>
+                  <span className="text-muted-foreground">
+                    Throughput: <strong>{(results.length / ((performance.now() - startTime) / 1000)).toFixed(2)} msg/s</strong>
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </CardContent>
