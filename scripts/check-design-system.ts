@@ -177,7 +177,7 @@ export function getSuggestion(label: string, match: string, fileName?: string, c
 
     if (cleanMatch === 'font-sans') {
       // Check if it's an intentional override (e.g., parent is mono on same line or commented)
-      const isOverride = context && (/(font-mono|font-serif)/.test(context) || /@override/i.test(context));
+      const isOverride = context && (/(font-mono|font-serif|font-display|mono|serif|display)/i.test(context) || /@override/i.test(context));
       if (isOverride) {
         return { cleanMatch, prefix, suggestion: 'VALID: Intentional font reset', priority: 'Low' };
       }
