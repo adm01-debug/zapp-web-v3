@@ -4927,6 +4927,39 @@ export type Database = {
         }
         Relationships: []
       }
+      evolution_health_logs: {
+        Row: {
+          error_message: string | null
+          id: string
+          instance_name: string
+          online_instances: number | null
+          performed_at: string | null
+          response_time_ms: number | null
+          status: string
+          total_instances: number | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          instance_name: string
+          online_instances?: number | null
+          performed_at?: string | null
+          response_time_ms?: number | null
+          status: string
+          total_instances?: number | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          instance_name?: string
+          online_instances?: number | null
+          performed_at?: string | null
+          response_time_ms?: number | null
+          status?: string
+          total_instances?: number | null
+        }
+        Relationships: []
+      }
       evolution_incidents: {
         Row: {
           created_at: string
@@ -4954,6 +4987,42 @@ export type Database = {
           incident_type?: string
           instance_name?: string
           source?: string
+        }
+        Relationships: []
+      }
+      evolution_instance_credentials: {
+        Row: {
+          api_key: string
+          api_url: string
+          created_at: string | null
+          health_status: string | null
+          id: string
+          instance_name: string
+          is_active: boolean | null
+          last_health_check: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key: string
+          api_url: string
+          created_at?: string | null
+          health_status?: string | null
+          id?: string
+          instance_name: string
+          is_active?: boolean | null
+          last_health_check?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string
+          api_url?: string
+          created_at?: string | null
+          health_status?: string | null
+          id?: string
+          instance_name?: string
+          is_active?: boolean | null
+          last_health_check?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
