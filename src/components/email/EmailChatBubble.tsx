@@ -144,7 +144,7 @@ export function EmailChatBubble({
         {/* Avatar com Animação */}
         <motion.div whileHover={{ scale: 1.1 }} className="relative shrink-0">
           <Avatar className="h-[38px] w-[44px] ring-2 ring-background shadow-lg border border-border">
-            <AvatarFallback className={cn('text-primary-foreground text-[11px] font-black uppercase tracking-wider', getAvatarColor(message.from_email))}>
+            <AvatarFallback className={cn('text-primary-foreground text-[11px] font-bold uppercase tracking-wider', getAvatarColor(message.from_email))}>
               {getInitials(message.from_name, message.from_email)}
             </AvatarFallback>
           </Avatar>
@@ -156,7 +156,7 @@ export function EmailChatBubble({
               <span className={cn('font-sans text-[16px] truncate tracking-tight transition-colors', !isRead ? 'font-bold text-foreground' : 'font-semibold text-muted-foreground group-hover/header:text-foreground/80')}>
                 {message.from_name || message.from_email || '?'}
               </span>
-              {!isRead && <Badge className="text-[9px] h-4.5 px-2 font-black uppercase tracking-widest border-0 bg-primary text-primary-foreground shadow-sm">Novo</Badge>}
+              {!isRead && <Badge className="text-[9px] h-4.5 px-2 font-bold uppercase tracking-widest border-0 bg-primary text-primary-foreground shadow-sm">Novo</Badge>}
               {isStarred && <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />}
               {slaStatus && <EmailSLABadge status={slaStatus} compact />}
             </div>
