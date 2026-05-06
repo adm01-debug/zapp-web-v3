@@ -7,8 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useEmail, type EmailThread } from '@/hooks/useEmail';
-import { EmailLabelSidebar } from './EmailLabelSidebar';
-import { EmailAccountSelector } from './EmailAccountSelector';
+import { EmailLabelSidebar } from './GmailLabelSidebar';
+import { EmailAccountSelector } from './GmailAccountSelector';
 
 interface EmailInboxViewProps {
   onSelectThread?: (thread: EmailThread) => void;

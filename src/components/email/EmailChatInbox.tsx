@@ -8,7 +8,7 @@ import { useEmail } from '@/hooks/useEmail';
 import { EmailThreadList } from './EmailThreadList';
 import { EmailChatThread } from './EmailChatThread';
 import { EmailSearchBar } from './EmailSearchBar';
-import { EmailAccountSelector } from '../email/EmailAccountSelector';
+import { EmailAccountSelector } from '../gmail/GmailAccountSelector';
 import { type EmailThread } from '@/hooks/gmail/gmailTypes';
 import { type EmailSearchResult } from '@/hooks/useEmailSearch';
 

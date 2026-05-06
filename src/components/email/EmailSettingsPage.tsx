@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { EmailAccountSelector } from '@/components/email/EmailAccountSelector';
+import { EmailAccountSelector } from '@/components/emai./GmailAccountSelector';
 import { EmailSignatureEditor } from '@/components/email/EmailSignatureEditor';
 import { EmailSLADashboard } from '@/components/email/EmailSLADashboard';
 import { useEmail } from '@/hooks/useEmail';
