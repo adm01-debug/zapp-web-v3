@@ -37,12 +37,21 @@ export function useAudioMemes(open: boolean) {
 
   const fetchMemes = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('audio_memes')
-      .select('*')
-      .order('use_count', { ascending: false })
-      .limit(1000);
-    if (!error && data) setMemes(data as AudioMemeItem[]);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // DOC ARCHITECTURE COMPLIANCE: Use RPC to get per-user favorites and sorted catalog
+    const { data, error } = await supabase.rpc('fn_list_audio_memes_for_user', {
+      p_user_id: user?.id || null
+    });
+    
+    if (!error && data) {
+      setMemes(data as AudioMemeItem[]);
+    } else if (error) {
+      log.error('fetchMemes error', error);
+      // Fallback to basic list if RPC fails (e.g. not migrated yet)
+      const { data: basicData } = await supabase.from('audio_memes').select('*').order('use_count', { ascending: false });
+      if (basicData) setMemes(basicData as AudioMemeItem[]);
+    }
     setLoading(false);
   }, []);
 
