@@ -52,8 +52,13 @@ serve(async (req) => {
     const contentType = req.headers.get("content-type") || "";
     if (contentType.includes("multipart/form-data")) {
       if (_formDataCache) return { isMultipart: true, data: _formDataCache };
-      _formDataCache = await req.formData();
-      return { isMultipart: true, data: _formDataCache };
+      try {
+        _formDataCache = await req.formData();
+        return { isMultipart: true, data: _formDataCache };
+      } catch (e) {
+        console.error("[Evolution API] Error parsing FormData:", e);
+        return { isMultipart: false, data: {} };
+      }
     }
     if (_bodyCache !== null) return { isMultipart: false, data: _bodyCache };
     try { _bodyCache = await req.json(); } catch { _bodyCache = {}; }
@@ -61,16 +66,15 @@ serve(async (req) => {
   };
 
   const { isMultipart, data: bodyForAction } = await getParsedBody();
-  let action = pathAction;
-  if (pathAction === 'evolution-api') {
-    if (isMultipart) {
-      action = String((bodyForAction as FormData).get('action') || '');
-      console.log(`[Evolution API] Multipart action detected: ${action}`);
-    } else {
-      action = String((bodyForAction as Record<string, unknown>).action || '');
-    }
+  let action = bodyForAction instanceof FormData 
+    ? (bodyForAction.get('action') as string)
+    : (bodyForAction as Record<string, unknown>).action as string;
+  
+  if (!action || action === 'evolution-api') {
+    action = pathAction;
   }
-  console.log(`[Evolution API] Final action: ${action}, pathAction: ${pathAction}`);
+  
+  console.log(`[Evolution API] Action resolved: ${action} (isMultipart: ${isMultipart})`);
 
   // Idempotency key for `/message/*` sends. Accepts (in priority):
   //  1. `Idempotency-Key` HTTP header (frontend → invokeEvolutionWithRetry)
