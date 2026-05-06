@@ -21,8 +21,8 @@ vi.mock('sonner', () => ({
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: React.forwardRef(({ children, ...props }: any, ref) => <div {...props} ref={ref as any}>{children}</div>),
-    button: React.forwardRef(({ children, ...props }: any, ref) => <button {...props} ref={ref as any}>{children}</button>),
+    div: (props: any) => <div {...props} />,
+    button: (props: any) => <button {...props} />,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
