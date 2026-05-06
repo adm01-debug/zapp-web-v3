@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { MessageCircle, Check, CheckCheck, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Check, CheckCheck, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DropdownMenu,
@@ -16,8 +16,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { type Message } from '@/hooks/useMessages';
 
 interface MessageItemProps {
   msg: any;
@@ -126,8 +124,8 @@ const MessageItem = memo(({
             </>
           ) : (
             <>
-              {msg.is_important && <AlertCircle className="h-3 w-3 text-orange-400" />}
-              {msg.is_starred && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
+              {msg.is_important && <AlertCircle className="h-3 w-3 text-warning" />}
+              {msg.is_starred && <Star className="h-3 w-3 fill-warning text-warning" />}
               <span className="text-[10px] font-medium uppercase">{formatTime(msg.created_at)}</span>
               {isMe && (
                 <TooltipProvider>
@@ -182,11 +180,11 @@ const MessageItem = memo(({
               </DropdownMenuTrigger>
               <DropdownMenuContent align={isMe ? "end" : "start"} className="w-40">
                 <DropdownMenuItem onClick={() => toggleStar(msg.id, msg.is_starred)} className="gap-2">
-                  <Star className={cn("h-4 w-4", msg.is_starred && "fill-yellow-400 text-yellow-400")} />
+                  <Star className={cn("h-4 w-4", msg.is_starred && "fill-warning text-warning")} />
                   {msg.is_starred ? 'Remover estrela' : 'Marcar com estrela'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => toggleImportant(msg.id, msg.is_important)} className="gap-2">
-                  <AlertCircle className={cn("h-4 w-4", msg.is_important && "text-orange-400")} />
+                  <AlertCircle className={cn("h-4 w-4", msg.is_important && "text-warning")} />
                   {msg.is_important ? 'Remover importante' : 'Marcar importante'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onReply?.(msg)} className="gap-2">
