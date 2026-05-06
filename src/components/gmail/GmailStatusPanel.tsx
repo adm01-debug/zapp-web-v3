@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useEmailHealth } from '@/hooks/useEmailHealth';
+import { useEmailHealth } from '@/hooks/useGmailHealth';
 import { cn } from '@/lib/utils';
 
 export function EmailStatusPanel() {

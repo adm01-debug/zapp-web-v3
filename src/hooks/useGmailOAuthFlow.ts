@@ -14,7 +14,7 @@ import { supabase as _supabase } from '@/integrations/supabase/client';
 import { emailMappers } from '@/utils/emailMappers';
 import { EmailAccount } from '@/types/gmail';
 const supabase = _supabase as any;
-import { emailRefreshToken, emailRevokeAccount, emailRegisterWatch } from './email/emailApi';
+import { emailRefreshToken, emailRevokeAccount, emailRegisterWatch } from './gmailApi';
 import { toast } from 'sonner';
 import { getLogger } from '@/lib/logger';
 

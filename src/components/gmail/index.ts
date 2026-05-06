@@ -5,11 +5,11 @@
  */
 
 // ── Componentes Email ────────────────────────────────────────────────────
-export { EmailInboxView }          from './EmailInboxView';
-export { EmailAccountSelector }    from './EmailAccountSelector';
+export { EmailInboxView }          from './GmailInboxView';
+export { EmailAccountSelector }    from './GmailAccountSelector';
 export { EmailThreadView }         from './EmailThreadView';
-export { EmailReplyBar }           from './EmailReplyBar';
-export { EmailLabelSidebar }       from './EmailLabelSidebar';
-export { EmailMetricsDashboard }   from './EmailMetricsDashboard';
-export { EmailOAuthCallback }      from './EmailOAuthCallback';
+export { EmailReplyBar }           from './GmailReplyBar';
+export { EmailLabelSidebar }       from './GmailLabelSidebar';
+export { EmailMetricsDashboard }   from './GmailMetricsDashboard';
+export { EmailOAuthCallback }      from './GmailOAuthCallback';
 export { ThreadListItem }          from './ThreadListItem';

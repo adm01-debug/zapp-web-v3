@@ -8,7 +8,7 @@ import { useWebhookHealthAlerts } from '@/hooks/useWebhookHealthAlerts';
 import { useUserRole } from '@/features/auth';
 import { useTour, DEFAULT_ONBOARDING_STEPS } from '@/components/onboarding/OnboardingTour';
 import { useIndexNavigation } from '@/hooks/useIndexNavigation';
-import { useEmailOAuthFlow } from '@/hooks/useEmailOAuthFlow';
+import { useEmailOAuthFlow } from '@/hooks/useGmailOAuthFlow';
 import { useIndexKeyboardShortcuts } from '@/hooks/useIndexKeyboardShortcuts';
 
 import { AppShell } from '@/components/layout/AppShell';

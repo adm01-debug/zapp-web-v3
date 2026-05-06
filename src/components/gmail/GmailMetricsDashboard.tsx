@@ -1,7 +1,7 @@
 import { Mail, Clock, CheckCircle, AlertTriangle, TrendingUp, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useEmailMetrics } from '@/hooks/useEmailMetrics';
+import { useEmailMetrics } from '@/hooks/useGmailMetrics';
 
 interface EmailMetricsDashboardProps {
   accountId: string | null;
