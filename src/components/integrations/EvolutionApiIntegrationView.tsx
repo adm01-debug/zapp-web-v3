@@ -16,7 +16,7 @@ interface EvolutionConfig {
   evolution_api_key: string;
 }
 
-const DEFAULT_URL = 'https://evolution.atomicabr.com.br';
+const DEFAULT_URL = 'https://evo.atomicabr.com.br';
 const SETTINGS_KEY = 'evolution_api_config';
 const LS_KEY = 'zapp_evolution_config';
 
@@ -186,7 +186,7 @@ export function EvolutionApiIntegrationView() {
                 onChange={(e) => setConfig(prev => ({ ...prev, evolution_api_url: e.target.value }))}
                 className=" text-sm"
               />
-              <p className="text-[11px] text-muted-foreground">Exemplo: https://evolution.atomicabr.com.br</p>
+              <p className="text-[11px] text-muted-foreground">Exemplo: https://evo.atomicabr.com.br</p>
             </div>
 
             <div className="space-y-2">
