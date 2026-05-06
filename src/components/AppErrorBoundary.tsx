@@ -1,6 +1,8 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { log } from '@/lib/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -55,9 +57,6 @@ export class AppErrorBoundary extends Component<Props, State> {
   }
 
   private async reportError(error: Error, errorInfo: ErrorInfo, errorId: string | null) {
-    // Persistent error logging table (`app_error_logs`) is not provisioned in
-    // Lovable Cloud. Keep structured logging via the shared logger so that the
-    // boundary still surfaces the failure without crashing on a missing table.
     try {
       log.error('[AppErrorBoundary] render failure', {
         errorId,
@@ -85,33 +84,36 @@ export class AppErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px] bg-background border rounded-lg m-4">
-          <div className="text-4xl mb-4">⚠️</div>
-          <h2 className="text-lg font-semibold text-foreground mb-2">
-            Algo deu errado
-          </h2>
-          <p className="text-sm text-muted-foreground mb-4 max-w-md">
-            Ocorreu um erro inesperado neste módulo. Tente recarregar ou entre em contato com o suporte.
-          </p>
-          {this.state.errorId && (
-            <p className="text-xs text-muted-foreground mb-4 font-mono">
-              ID: {this.state.errorId}
-            </p>
-          )}
-          <div className="flex gap-2">
-            <button
-              onClick={this.handleRetry}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              Tentar novamente
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover:bg-secondary/90 transition-colors"
-            >
-              Recarregar página
-            </button>
-          </div>
+        <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px] w-full">
+          <Alert variant="destructive" className="max-w-2xl border-2 shadow-lg">
+            <ShieldAlert className="h-5 w-5" />
+            <AlertTitle className="text-xl font-bold mb-2">Algo deu errado</AlertTitle>
+            <AlertDescription className="text-base opacity-90 leading-relaxed mb-6">
+              Ocorreu um erro inesperado neste módulo. Nossa equipe foi notificada automaticamente.
+              {this.state.errorId && (
+                <div className="mt-4 p-2 bg-destructive/10 rounded font-mono text-xs border border-destructive/20 select-all">
+                  ID do Erro: {this.state.errorId}
+                </div>
+              )}
+            </AlertDescription>
+            <div className="flex flex-wrap gap-3 justify-center mt-6">
+              <Button
+                variant="default"
+                onClick={this.handleRetry}
+                className="gap-2 font-semibold"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Tentar novamente
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="gap-2"
+              >
+                Recarregar página
+              </Button>
+            </div>
+          </Alert>
         </div>
       );
     }

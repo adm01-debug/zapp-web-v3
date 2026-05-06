@@ -120,7 +120,7 @@ export function VoiceSearchOverlay({
               <motion.h2 className="text-lg font-bold text-foreground/90" key={meta.title} initial={{ opacity: 0, y: prefersReduced ? 0 : -5 }} animate={{ opacity: 1, y: 0 }}>{meta.title}</motion.h2>
               <motion.p className="text-xs text-muted-foreground mt-1" key={meta.subtitle} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>{meta.subtitle}</motion.p>
             </div>
-            <button onClick={handleOrbClick} className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-full"
+            <button onClick={handleOrbClick} className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-full"
               aria-label={phase === 'listening' ? 'Parar de ouvir' : phase === 'speaking' ? 'Interromper resposta' : 'Começar a ouvir'}>
               <VoiceOrb phase={phase} size={180} />
             </button>
