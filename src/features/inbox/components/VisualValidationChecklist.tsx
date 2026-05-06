@@ -99,6 +99,20 @@ export function VisualValidationChecklist({ onClose }: { onClose: () => void }) 
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {audit.violations.length > 0 && (
+          <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 mb-4 animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-2 text-destructive mb-2">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Erros Detectados</span>
+            </div>
+            <ul className="space-y-1">
+              {audit.violations.map((v, i) => (
+                <li key={i} className="text-[11px] text-destructive/80 leading-tight">• {v}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {items.map((item, idx) => (
           <motion.div
             key={item.id}
