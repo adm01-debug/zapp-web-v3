@@ -212,6 +212,48 @@ serve(async (req) => {
       return new Response(JSON.stringify(data), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    if (action === 'reprocess-failed-webhooks') {
+      const { data: failed, error } = await supabase
+        .from('webhook_reprocess_queue')
+        .select('*')
+        .eq('status', 'pending')
+        .lt('next_retry_at', new Date().toISOString())
+        .limit(10);
+      
+      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
+      
+      const results = [];
+      for (const item of failed) {
+        try {
+          await supabase.from('webhook_reprocess_queue').update({ status: 'processing', attempts: item.attempts + 1 }).eq('id', item.id);
+          
+          // Re-trigger the webhook logic (this is a simplified mock for the task)
+          const webhookUrl = `${supabaseUrl}/functions/v1/evolution-webhook`;
+          const resp = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseServiceKey}` },
+            body: JSON.stringify(item.payload)
+          });
+          
+          if (resp.ok) {
+            await supabase.from('webhook_reprocess_queue').update({ status: 'completed' }).eq('id', item.id);
+            results.push({ id: item.id, status: 'completed' });
+          } else {
+            const nextRetry = new Date(Date.now() + Math.pow(2, item.attempts + 1) * 60000).toISOString();
+            await supabase.from('webhook_reprocess_queue').update({ 
+              status: item.attempts + 1 >= item.max_attempts ? 'failed' : 'pending',
+              next_retry_at: nextRetry,
+              last_error: `HTTP ${resp.status}`
+            }).eq('id', item.id);
+            results.push({ id: item.id, status: 'retry_scheduled', nextRetry });
+          }
+        } catch (e) {
+          results.push({ id: item.id, status: 'error', message: (e as Error).message });
+        }
+      }
+      return new Response(JSON.stringify({ success: true, processed: results.length, details: results }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'status') {
       const response = await fetch(`${evolutionApiUrl}/instance/connectionState/${instance}`, { method: 'GET', headers: { 'apikey': evolutionApiKey } });
       const text = await response.text();

@@ -156,11 +156,14 @@ export function ConnectionsView() {
                <><QrCode className="w-5 h-5" />Escanear QR Code - {qrCodeDialog.connectionName}</>}
             </DialogTitle>
           </DialogHeader>
-          <div className="py-6 space-y-4">
+          <div className="py-6 space-y-6">
             {qrCodeDialog.status === 'loading' && (
               <div className="w-64 h-64 mx-auto bg-muted rounded-xl flex flex-col items-center justify-center p-6 gap-4 text-center">
                 <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
-                <p className="text-xs text-muted-foreground font-medium animate-pulse">Iniciando sessão na Evolution API...</p>
+                <div className="space-y-1.5">
+                  <p className="text-sm font-medium animate-pulse">Iniciando sessão...</p>
+                  <p className="text-[10px] text-muted-foreground">Etapa 1 de 3: Autenticando com a Evolution API</p>
+                </div>
               </div>
             )}
             {qrCodeDialog.status === 'pending' && qrCodeDialog.qrCode && (
@@ -185,7 +188,11 @@ export function ConnectionsView() {
                   <p>3. Toque em <strong>Aparelhos conectados</strong></p><p>4. Toque em <strong>Conectar aparelho</strong></p><p>5. Aponte a câmera para o QR Code acima</p>
                 </div>
                 <div className="flex flex-col items-center justify-center gap-2 text-xs text-primary/80">
-                  <div className="flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" />Aguardando leitura do QR Code...</div>
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span className="font-medium">Aguardando leitura do QR Code...</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Etapa 2 de 3: Conectando dispositivo via WhatsApp Web</p>
                   <p className="text-[10px] text-muted-foreground italic">Mantenha o celular próximo e conectado à internet</p>
                 </div>
                 {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
