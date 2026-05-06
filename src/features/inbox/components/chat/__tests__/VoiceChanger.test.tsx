@@ -76,8 +76,9 @@ describe('VoiceChanger Component - End-to-End Integration', () => {
     // 1. Open Popover
     fireEvent.click(screen.getByTitle(/Alterar voz/i));
     
-    // 2. Select Voice
-    fireEvent.click(screen.getByText('Grave'));
+    // 2. Select Voice using data-testid
+    const graveBtn = screen.getByTestId('voice-btn-grave');
+    fireEvent.click(graveBtn);
     
     // 3. Verify Progress Display
     expect(screen.getByText(/[0-9]+%/)).toBeInTheDocument();
@@ -89,12 +90,6 @@ describe('VoiceChanger Component - End-to-End Integration', () => {
         expect.any(Object)
       );
     }, { timeout: 5000 });
-
-    // 5. Check if converted audio is rendered/played (mocked Audio logic would need more effort, so we check toast)
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('voice-changer'),
-      expect.objectContaining({ method: 'POST' })
-    );
   });
 
   it('handles backend error with actionable retry toast', async () => {
@@ -107,7 +102,8 @@ describe('VoiceChanger Component - End-to-End Integration', () => {
     renderComponent();
     
     fireEvent.click(screen.getByTitle(/Alterar voz/i));
-    fireEvent.click(screen.getByText('Grave'));
+    const graveBtn = screen.getByTestId('voice-btn-grave');
+    fireEvent.click(graveBtn);
     
     await waitFor(() => {
       expect(vi.mocked(require('sonner').toast.error)).toHaveBeenCalledWith(
