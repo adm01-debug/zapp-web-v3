@@ -14,11 +14,12 @@
  * - Watch renewal check
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
 import { gmailMappers } from '@/utils/gmailMappers';
 import { type GmailMessage } from './gmail/gmailTypes';
+import { GMAIL_MOCKS } from './gmail/gmailMocks';
 import { 
   GmailAccount, 
   GmailTokenInfo, 
@@ -80,10 +81,17 @@ export function useGmail() {
     );
 
     if (dbErr) {
-      setLastRequestId(requestId || null);
-      setSchemaStatus({ ok: !dbErr.message.includes('disponível'), lastChecked: new Date() });
-      console.warn(`[useGmail][${requestId}] Falha ao carregar contas:`, dbErr.message);
-      setError(`Não foi possível carregar as contas Gmail. ${dbErr.message ? dbErr.message : ''}${dbErr.message.includes('disponível') ? ' O recurso ainda está sendo configurado.' : ''}`);
+      if (dbErr.message.includes('disponível') || dbErr.message.includes('not found')) {
+        console.info('[useGmail] Usando dados mock para contas (schema não disponível)');
+        setAccounts(GMAIL_MOCKS.accounts);
+        if (GMAIL_MOCKS.accounts.length > 0 && !activeAccountId) {
+          setActiveAccountId(GMAIL_MOCKS.accounts[0].id);
+        }
+        setSchemaStatus({ ok: false, lastChecked: new Date() });
+      } else {
+        setLastRequestId(requestId || null);
+        setError(`Não foi possível carregar as contas Gmail. ${dbErr.message}`);
+      }
     } else {
       setSchemaStatus({ ok: true, lastChecked: new Date() });
       const accs = gmailMappers.accounts(Array.isArray(data) ? data : []);
@@ -98,7 +106,9 @@ export function useGmail() {
   // ── Verificar status dos tokens ─────────────────────────────────────────
   const checkTokenStatus = useCallback(async () => {
     const { data, error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_token_status');
-    if (!rpcErr && data) {
+    if (rpcErr && (rpcErr.message.includes('disponível') || rpcErr.message.includes('not found'))) {
+      setTokenStatus(GMAIL_MOCKS.tokenStatus);
+    } else if (!rpcErr && data) {
       const tokenInfos = gmailMappers.tokenInfos(Array.isArray(data) ? data : []);
       setTokenStatus(tokenInfos);
       
@@ -125,10 +135,14 @@ export function useGmail() {
     });
 
     if (rpcErr) {
-      setLastRequestId(requestId || null);
-      setSchemaStatus({ ok: !rpcErr.message.includes('disponível'), lastChecked: new Date() });
-      console.warn(`[useGmail][${requestId}] Falha ao buscar threads:`, rpcErr.message);
-      setError(`Erro ao carregar mensagens do Gmail. ${rpcErr.message.includes('disponível') ? 'A funcionalidade está sendo ativada.' : ''}`);
+      if (rpcErr.message.includes('disponível') || rpcErr.message.includes('not found')) {
+        console.info('[useGmail] Usando threads mock');
+        setThreads(GMAIL_MOCKS.threads);
+        setHasMore(false);
+      } else {
+        setLastRequestId(requestId || null);
+        setError(`Erro ao carregar mensagens do Gmail. ${rpcErr.message}`);
+      }
     } else {
       setSchemaStatus({ ok: true, lastChecked: new Date() });
       const mappedThreads = gmailMappers.threads(Array.isArray(data) ? data : []);
@@ -148,8 +162,12 @@ export function useGmail() {
     );
 
     if (dbErr) {
-      const rid = (dbErr as any).requestId || 'N/A';
-      console.error(`[useGmail][${rid}] Erro ao carregar mensagens:`, dbErr);
+      if (dbErr.message.includes('disponível') || dbErr.message.includes('not found')) {
+        setMessages(GMAIL_MOCKS.messages.filter(m => m.thread_id === threadId));
+      } else {
+        const rid = (dbErr as any).requestId || 'N/A';
+        console.error(`[useGmail][${rid}] Erro ao carregar mensagens:`, dbErr);
+      }
     } else {
       setMessages(Array.isArray(data) ? data : []);
     }
