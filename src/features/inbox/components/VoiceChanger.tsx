@@ -237,8 +237,9 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
             const isLoading = isConverting && isSelected;
 
             return (
-              <motion.button
+              <button
                 key={voice.id}
+                data-testid={`voice-btn-${voice.id}`}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => !isConverting && handleConvert(voice)}
                 disabled={isConverting}
