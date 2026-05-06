@@ -49,6 +49,7 @@ export function ConnectionsView() {
 
   // Auto-sync Evolution instances not yet in whatsapp_connections
   useEvolutionAutoSync();
+  useEvolutionAutoReconnect();
 
   const [businessHoursDialog, setBusinessHoursDialog] = useState({ open: false, connectionId: '', connectionName: '' });
   const [queuesDialog, setQueuesDialog] = useState({ open: false, connectionId: '', connectionName: '' });
