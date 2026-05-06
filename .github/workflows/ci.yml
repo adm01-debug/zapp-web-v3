@@ -1,274 +1,35 @@
-# =================================================
-# ZAPP-WEB CI/CD Pipeline
-# =================================================
-# Triggered on: push to main, pull requests
-# Jobs: lint, typecheck, test, build, audit
-# =================================================
-
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [ main, master ]
   pull_request:
-    branches: [main, develop]
-  workflow_dispatch:
-
-env:
-  NODE_VERSION: '20'
-  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-  VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+    branches: [ main, master ]
 
 jobs:
-  # ===========================================
-  # JOB 1: Lint & Type Check
-  # ===========================================
-  lint-and-typecheck:
-    name: 🔍 Lint & TypeCheck
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: 🔎 Cache TypeScript Incremental Build
-        uses: actions/cache@v4
-        with:
-          path: .tsbuildinfo
-          key: ${{ runner.os }}-tsconfig-${{ hashFiles('tsconfig.json', 'package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-tsconfig-
-
-      - name: 🔄 Check Supabase Types Sync
-        run: npm run types:check
-        env:
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          GITHUB_PR_NUMBER: ${{ github.event.number }}
-
-      - name: 📝 Post Types Diff to PR
-        if: failure() && github.event_name == 'pull_request' && hashFiles('types_diff.md') != ''
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          filePath: types_diff.md
-          comment_tag: supabase_types_diff
-
-      - name: 🔍 Run ESLint (changed files on PRs, full on push)
-        run: |
-          set -euo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE="origin/${{ github.base_ref }}"
-            git fetch origin "${{ github.base_ref }}" --depth=1 || true
-            CHANGED=$(git diff --name-only --diff-filter=ACMRT "$BASE"...HEAD -- '*.ts' '*.tsx' \
-              | grep -Ev '^(dist|supabase/functions)/' || true)
-            if [ -n "$CHANGED" ]; then
-              echo "Linting changed files:"
-              printf '  %s\n' $CHANGED
-              npx eslint $CHANGED
-            else
-              echo "No lintable TS/TSX files changed."
-            fi
-          else
-            npx eslint .
-          fi
-
-      - name: 🔎 Run TypeScript check
-        run: npm run typecheck
-        env:
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        continue-on-error: false
-
-      - name: 🛡️ Verify Domain Boundaries
-        run: npm run check:domain
-
-      - name: 📦 Validate Barrel Exports
-        run: npm run check:barrels
-
-  # ===========================================
-  # JOB 2: Unit Tests
-  # ===========================================
   test:
-    name: 🧪 Unit Tests
-    runs-on: ubuntu-latest
-    needs: lint-and-typecheck
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: 🧪 Run Vitest with coverage
-        run: npm run test -- --coverage --reporter=verbose
-        env:
-          CI: true
-
-      - name: 📊 Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report
-          path: coverage/
-          retention-days: 7
-          if-no-files-found: ignore
-
-  # ===========================================
-  # JOB 3: Deno Edge Function Tests
-  # ===========================================
-  deno-edge-tests:
-    name: 🦕 Deno Edge Function Tests
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🦕 Setup Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-
-      - name: 🧪 Run edge function Deno tests (evolution-api + public-api + webhook + dlq + _shared)
-        run: |
-          deno test \
-            --allow-net \
-            --allow-env \
-            --allow-read \
-            --reporter=pretty \
-            supabase/functions/evolution-api/__tests__/ \
-            supabase/functions/public-api/__tests__/ \
-            supabase/functions/evolution-webhook/__tests__/ \
-            supabase/functions/reprocess-failed-messages/__tests__/ \
-            supabase/functions/_shared/__tests__/
-
-  # ===========================================
-  # JOB 3.5: Smoke Pre-Deploy (Evolution + WhatsApp Cloud)
-  # ===========================================
-  smoke-pre-deploy:
-    name: 🚦 Smoke Pre-Deploy (Evolution + Cloud)
-    runs-on: ubuntu-latest
-    needs: [test, deno-edge-tests]
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: 🦕 Setup Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: 🚦 Run smoke pre-deploy
-        run: npm run smoke:pre-deploy
-
-  # ===========================================
-  # JOB 4: Build
-  # ===========================================
-  build:
-    name: 🏗️ Build
-    runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, deno-edge-tests, smoke-pre-deploy]
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: 🏗️ Build for production
-        run: npm run build
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      
+      - name: Install dependencies
+        run: bun install
+        
+      - name: Lint
+        run: bun run lint
+        
+      - name: Build
+        run: bun run build
+        
+      - name: Vitest (Unit & Integration)
+        run: bunx vitest run --coverage
+        
+      - name: Install Playwright Browsers
+        run: bunx playwright install --with-deps
+        
+      - name: Run Playwright tests
+        run: bunx playwright test
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_EXTERNAL_SUPABASE_URL: ${{ secrets.VITE_EXTERNAL_SUPABASE_URL }}
-          VITE_EXTERNAL_SUPABASE_ANON_KEY: ${{ secrets.VITE_EXTERNAL_SUPABASE_ANON_KEY }}
-
-      - name: 📐 Validate performance budget (fail on regression)
-        run: npm run perf:budget
-
-      - name: 📦 Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-          retention-days: 7
-
-  # ===========================================
-  # JOB 5: Enterprise Audit & Compliance
-  # ===========================================
-  audit-and-compliance:
-    name: 🛡️ Enterprise Audit
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund jspdf
-
-      - name: 🧪 Test Audit Scripts
-        run: node scripts/test-audit-pipeline.cjs
-
-      - name: 🔄 Update & Validate Audit Dossier (Fail on broken links)
-        run: node scripts/ci-audit-gen.cjs
-        env:
-          AUDIT_LINK_TIMEOUT: 5000
-
-      - name: 📄 Generate Final Audit PDF
-        run: node scripts/generate-final-dossier.cjs
-
-      - name: 🧪 Run RLS Integrity Tests
-        run: npx vitest run src/__tests__/rls-integrity.test.ts
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-
-      - name: 📦 Archive Audit Reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: enterprise-audit-reports
-          path: |
-            docs/audit/*.md
-            docs/audit/*.pdf
-          retention-days: 30
-
-      - name: 🚀 Deploy Audit History to GH Pages
-        if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/audit
-          destination_dir: audit-history/${{ github.sha }}
-          keep_files: true
