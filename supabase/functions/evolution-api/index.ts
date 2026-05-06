@@ -65,10 +65,12 @@ serve(async (req) => {
   if (pathAction === 'evolution-api') {
     if (isMultipart) {
       action = String((bodyForAction as FormData).get('action') || '');
+      console.log(`[Evolution API] Multipart action detected: ${action}`);
     } else {
       action = String((bodyForAction as Record<string, unknown>).action || '');
     }
   }
+  console.log(`[Evolution API] Final action: ${action}, pathAction: ${pathAction}`);
 
   // Idempotency key for `/message/*` sends. Accepts (in priority):
   //  1. `Idempotency-Key` HTTP header (frontend → invokeEvolutionWithRetry)
