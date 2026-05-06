@@ -154,7 +154,7 @@ src/
 └── i18n/               # Internacionalização
 
 supabase/
-├── functions/          # 20 Edge Functions
+├── functions/          # 106 Edge Functions
 │   ├── _shared/        # Utilitários compartilhados (validação, CORS, logger)
 │   ├── ai-*/           # Funções de IA (suggest-reply, summary, analysis, etc.)
 │   ├── evolution-*/    # Integração WhatsApp
