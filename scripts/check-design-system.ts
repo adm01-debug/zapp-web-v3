@@ -197,10 +197,11 @@ if (require.main === module) {
     Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
       console.log(`\n📄 ${file}:`);
       fileViolations.forEach(v => {
-        const status = v.replacement ? '🔧 [Fixable]' : '⚠️ [Manual]';
-        console.log(`  Line ${v.line.toString().padEnd(4)} | ${status.padEnd(11)} | Match: ${v.match.padEnd(20)} | Suggestion: ${v.replacement || v.suggestion}`);
-        if (v.replacement) {
-          console.log(`               | Clean: ${v.cleanMatch.padEnd(20)} | Patch: ${v.replacement}`);
+        const isFixable = v.replacement !== undefined;
+        const status = isFixable ? '🔧 [Fixable]' : '⚠️ [Manual]';
+        console.log(`  Line ${v.line.toString().padEnd(4)} | ${status.padEnd(11)} | Match: ${v.match.padEnd(20)} | Suggestion: ${v.replacement !== undefined ? v.replacement : v.suggestion}`);
+        if (isFixable) {
+          console.log(`               | Clean: ${v.cleanMatch.padEnd(20)} | Patch: ${v.replacement === '' ? '(remove)' : v.replacement}`);
         }
       });
     });
