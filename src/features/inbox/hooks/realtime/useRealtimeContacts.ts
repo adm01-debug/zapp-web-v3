@@ -4,6 +4,7 @@ import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import type { EvolutionContact } from '@/types/evolutionExternal';
 import { getLogger } from '@/lib/logger';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { setRealtimeContactsStatus } from './realtimeContactsStatusStore';
 
 const log = getLogger('RealtimeContacts');
