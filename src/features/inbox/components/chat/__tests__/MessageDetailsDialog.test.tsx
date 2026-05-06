@@ -51,7 +51,9 @@ const FULL = {
   created_at: '2026-04-23T10:00:00Z', direction: 'inbound', status: 'read',
   sent_by_bot: false, instance_name: 'wpp2',
   payload: { kind: 'message', text: 'hello' },
-  raw_data: { event: 'messages.upsert', data: { id: 1 } },
+    raw_data: { event: 'messages.upsert', data: { id: 1 } },
+  },
+  useMessageSendStatus: () => ({ isSending: false, progress: 0 }),
 };
 
 describe('MessageDetailsDialog', () => {
