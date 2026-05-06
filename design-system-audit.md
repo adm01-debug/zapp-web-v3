@@ -22,14 +22,6 @@
 | Low | 80 | `#f87171` | `#f87171` | Check design system tokens | - |
 | Low | 80 | `#ef4444` | `#ef4444` | Check design system tokens | - |
 | Low | 80 | `#dc2626` | `#dc2626` | Check design system tokens | - |
-## src/components/docs/TypographyGuide.tsx
-| Priority | Line | Raw Match | Clean | Suggestion | Patch |
-|---|---|---|---|---|---|
-| Medium | 21 | `text-blue-500` | `text-blue-500` | text-info | `text-info` |
-| High | 28 | `font-sans` | `font-sans` | Remove redundant font-sans; inherits from global | - |
-| Medium | 41 | `text-amber-500` | `text-amber-500` | text-warning | `text-warning` |
-| Medium | 42 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
-| Medium | 52 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/queues/CreateQueueDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -68,12 +60,6 @@
 | Low | 120 | `#8884d8` | `#8884d8` | Check design system tokens | - |
 | Low | 121 | `#82ca9d` | `#82ca9d` | Check design system tokens | - |
 | Low | 122 | `#ffc658` | `#ffc658` | Check design system tokens | - |
-## src/components/theme/TypographyInheritance.test.tsx
-| Priority | Line | Raw Match | Clean | Suggestion | Patch |
-|---|---|---|---|---|---|
-| High | 57 | `font-sans` | `font-sans` | Remove redundant font-sans; inherits from global | - |
-| High | 61 | `font-sans` | `font-sans` | Remove redundant font-sans; inherits from global | - |
-| High | 64 | `font-sans` | `font-sans` | Remove redundant font-sans; inherits from global | - |
 ## src/components/ui/micro-interactions/buttons.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -84,8 +70,8 @@
 |---|---|---|---|---|---|
 | Low | 19 | `bg-[#25D366]` | `bg-[#25D366]` | Check design system tokens | - |
 | Low | 19 | `hover:bg-[#25D366]` | `bg-[#25D366]` | Check design system tokens | - |
-| Low | 20 | `bg-[#8B5CF6]` | `bg-[#8B5CF6]` | Check design system tokens | - |
-| Low | 20 | `hover:bg-[#7C3AED]` | `bg-[#7C3AED]` | Check design system tokens | - |
+| Medium | 20 | `bg-[#8B5CF6]` | `bg-[#8B5CF6]` | bg-accent | `bg-accent` |
+| Medium | 20 | `hover:bg-[#7C3AED]` | `bg-[#7C3AED]` | bg-accent | `hover:bg-accent` |
 ## src/components/ui/chart.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
