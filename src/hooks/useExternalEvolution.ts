@@ -135,6 +135,7 @@ export function reconcileOptimistic(
         patch.status = promoted.status;
         patch.status_updated_at = promoted.status_updated_at;
         if (!can.media_url && m.media_url) patch.media_url = m.media_url;
+        if (can.reactions && can.reactions.length > 0) patch.reactions = can.reactions;
         recordMatch({
           strategy: 'external_id',
           messageType: m.message_type,
@@ -164,6 +165,7 @@ export function reconcileOptimistic(
         patch.status = promoted.status;
         patch.status_updated_at = promoted.status_updated_at;
         if (!match.media_url && m.media_url) patch.media_url = m.media_url;
+        if (match.reactions && match.reactions.length > 0) patch.reactions = match.reactions;
         recordMatch({
           strategy: 'media_fallback',
           messageType: m.message_type,
@@ -264,7 +266,7 @@ const SLIM_MESSAGE_COLUMNS = [
   'sentiment', 'tags', 'notes', 'follow_up_at', 'follow_up_done',
   'created_at', 'contact_id', 'conversation_id', 'direction', 'status',
   'status_at', 'sent_by_bot', 'template_name', 'instance_name', 'push_name',
-  'deleted_at',
+  'deleted_at', 'reactions',
 ].join(',');
 
 // ─── Sidebar: recent window across all conversations ──────────

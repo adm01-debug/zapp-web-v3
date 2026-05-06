@@ -38,6 +38,7 @@ export interface EvolutionMessage {
   instance_name: string;
   push_name: string | null;
   deleted_at: string | null;
+  reactions?: any[] | null;
 }
 
 // ─── evolution_messages (lite) ────────────────────────────────
@@ -68,6 +69,7 @@ export type EvolutionMessageLite = Pick<EvolutionMessage,
   | 'created_at'
   | 'status_at'
   | 'deleted_at'
+  | 'reactions'
 >;
 
 /**
@@ -98,6 +100,7 @@ export function toEvolutionMessageLite(m: Partial<EvolutionMessage> & { id: stri
     created_at: m.created_at ?? new Date().toISOString(),
     status_at: m.status_at ?? null,
     deleted_at: m.deleted_at ?? null,
+    reactions: Array.isArray(m.reactions) ? m.reactions : [],
   };
 }
 
