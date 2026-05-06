@@ -392,6 +392,8 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     mainTab, setMainTab,
     subTab, setSubTab,
     showAll, setShowAll,
+    scope, setScope,
+    departmentAgentIds, setDepartmentAgentIds,
     selectedQueueId, setSelectedQueueId,
     selectedContactType, handleContactTypeChange,
     showOnlyRetrying, setShowOnlyRetrying,
