@@ -475,9 +475,9 @@ serve(async (req) => {
     if (action === 'find-templates') return await proxy(`/template/find/${instance}`, 'GET');
     if (action === 'delete-template') return await proxy(`/template/delete/${instance}`, 'DELETE', body);
     if (action === 'update-block-status') return await proxy(`/chat/updateBlockStatus/${instance}`, 'POST', { number: (body as any).number, status: (body as any).status });
-    if (action === 'send-ptv') return await proxy(`/message/sendPtv/${instance}`, 'POST', { number: (body as any).number, video: (body as any).video || (body as any).mediaUrl, delay: (body as any).delay });
     if (action === 'offer-call') return await proxy(`/call/offerCall/${instance}`, 'POST', { number: (body as any).number, isVideo: (body as any).isVideo ?? false, callDuration: (body as any).callDuration ?? 5 });
     if (action === 'send-chat-presence') return await proxy(`/chat/sendPresence/${instance}`, 'POST', { number: (body as any).number, presence: (body as any).presence, delay: (body as any).delay ?? 1200 });
+
     if (action === 'get-catalog') return await proxy(`/business/getCatalog/${instance}`, 'POST', { number: (body as any).number, limit: (body as any).limit, cursor: (body as any).cursor });
     if (action === 'get-collections') return await proxy(`/business/getCollections/${instance}`, 'POST', { number: (body as any).number, limit: (body as any).limit, cursor: (body as any).cursor });
     if (action === 'set-proxy') return await proxy(`/proxy/set/${instance}`, 'POST', { enabled: (body as any).enabled ?? true, host: (body as any).host, port: (body as any).port, protocol: (body as any).protocol, username: (body as any).username, password: (body as any).password });
