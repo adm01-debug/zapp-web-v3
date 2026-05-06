@@ -25,6 +25,8 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
   const [mainTab, setMainTab] = useState<MainTab>('open');
   const [subTab, setSubTab] = useState<SubTab>('attending');
   const [showAll, setShowAll] = useState(false);
+  const [scope, setScope] = useState<'mine' | 'department' | 'all'>('mine');
+  const [departmentAgentIds, setDepartmentAgentIds] = useState<string[]>([]);
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
   const [showOnlyRetrying, setShowOnlyRetrying] = useState(false);
