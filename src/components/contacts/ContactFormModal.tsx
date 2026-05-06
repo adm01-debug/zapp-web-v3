@@ -165,9 +165,9 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
     <div className="space-y-4" role="form" aria-label="Formulário de contato">
       {/* Duplicate warning */}
       {hasDuplicates && (
-        <Alert className="border-amber-200 bg-amber-50">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-sm text-amber-800">
+        <Alert className="border-warning bg-warning">
+          <AlertTriangle className="h-4 w-4 text-warning-foreground" />
+          <AlertDescription className="text-sm text-warning-foreground">
             Possível duplicata: <strong>{duplicates.map((d) => sanitizeText(d.name)).join(', ')}</strong>
           </AlertDescription>
         </Alert>

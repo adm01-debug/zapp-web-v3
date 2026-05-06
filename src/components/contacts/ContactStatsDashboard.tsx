@@ -39,10 +39,10 @@ const LEAD_STATUS_EMOJIS: Record<string, string> = {
 };
 
 const LEAD_STATUS_COLORS: Record<string, string> = {
-  novo: 'bg-blue-100 text-blue-700', em_contato: 'bg-cyan-100 text-cyan-700',
+  novo: 'bg-primary text-primary-foreground', em_contato: 'bg-cyan-100 text-cyan-700',
   qualificado: 'bg-primary text-primary', proposta: 'bg-purple-100 text-purple-700',
-  negociacao: 'bg-amber-100 text-amber-700', fechado: 'bg-primary text-primary',
-  perdido: 'bg-red-100 text-red-700',
+  negociacao: 'bg-warning text-warning-foreground', fechado: 'bg-primary text-primary',
+  perdido: 'bg-destructive text-destructive-foreground',
 };
 
 interface Props { instanceName?: string; compact?: boolean; }
@@ -94,8 +94,8 @@ export const ContactStatsDashboard: React.FC<Props> = ({
           {stats.total_active.toLocaleString('pt-BR')} contatos
         </span>
         <span className="text-primary">+{stats.new_today} hoje</span>
-        {dupes > 0 && <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">{dupes} duplicatas</Badge>}
-        <span className={`flex items-center gap-1 text-xs ${consentRate >= 50 ? 'text-primary' : 'text-red-600'}`}>
+        {dupes > 0 && <Badge variant="outline" className="text-xs text-warning-foreground border-warning">{dupes} duplicatas</Badge>}
+        <span className={`flex items-center gap-1 text-xs ${consentRate >= 50 ? 'text-primary' : 'text-destructive-foreground'}`}>
           <Shield className="h-3.5 w-3.5" />LGPD {consentRate}%
         </span>
       </div>
@@ -133,7 +133,7 @@ export const ContactStatsDashboard: React.FC<Props> = ({
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className={`text-2xl font-bold ${consentRate >= 50 ? 'text-primary' : 'text-red-600'}`}>
+            <p className={`text-2xl font-bold ${consentRate >= 50 ? 'text-primary' : 'text-destructive-foreground'}`}>
               {consentRate}%
             </p>
             <p className="text-xs text-muted-foreground">LGPD</p>
@@ -141,7 +141,7 @@ export const ContactStatsDashboard: React.FC<Props> = ({
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className={`text-2xl font-bold ${dupes > 0 ? 'text-amber-600' : 'text-primary'}`}>{dupes}</p>
+            <p className={`text-2xl font-bold ${dupes > 0 ? 'text-warning-foreground' : 'text-primary'}`}>{dupes}</p>
             <p className="text-xs text-muted-foreground">Duplicatas</p>
             {dupes === 0 && <CheckCircle2 className="h-3.5 w-3.5 text-primary mx-auto mt-0.5" />}
           </CardContent>
@@ -168,7 +168,7 @@ export const ContactStatsDashboard: React.FC<Props> = ({
 
       {/* LGPD alert */}
       {consentRate < 50 && (
-        <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 rounded-lg p-2 border border-amber-200">
+        <div className="flex items-center gap-2 text-xs text-warning-foreground bg-warning rounded-lg p-2 border border-warning">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
           <span>
             Apenas {consentRate}% dos contatos têm consentimento LGPD.

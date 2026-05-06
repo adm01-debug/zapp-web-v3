@@ -147,7 +147,7 @@ export function OutlookInboxView({ onSelectMessage }: OutlookInboxViewProps) {
                   onClick={() => handleSelect(msg)}
                   className={`w-full text-left p-4 hover:bg-muted/50 transition-colors ${
                     selectedId === msg.id ? 'bg-muted' : ''
-                  } ${!msg.isRead ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}
+                  } ${!msg.isRead ? 'bg-primary/50 dark:bg-primary/20' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">

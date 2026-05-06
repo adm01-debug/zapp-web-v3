@@ -57,7 +57,7 @@ export function ContactContentArea({
 }: ContactContentAreaProps) {
   if (activeTab === 'duplicates') {
     return (
-      <Card className="border-orange-500/20">
+      <Card className="border-warning/20">
         <CardContent className="p-6">
           <DuplicateContactsPanel 
             workspaceId={workspaceId || 'wpp2'} 

@@ -104,9 +104,9 @@ export const ContactRecycleBin: React.FC<ContactRecycleBinProps> = ({ workspaceI
         </Button>
       </div>
 
-      <Alert className="border-amber-200 bg-amber-50">
-        <Clock className="h-4 w-4 text-amber-600" />
-        <AlertDescription className="text-xs text-amber-700">
+      <Alert className="border-warning bg-warning">
+        <Clock className="h-4 w-4 text-warning-foreground" />
+        <AlertDescription className="text-xs text-warning-foreground">
           Contatos excluídos são mantidos por <strong>30 dias</strong> e removidos permanentemente após esse período.
         </AlertDescription>
       </Alert>
@@ -131,7 +131,7 @@ export const ContactRecycleBin: React.FC<ContactRecycleBinProps> = ({ workspaceI
           <div
             key={contact.id}
             className={`rounded-lg border p-3 flex items-start justify-between gap-2 ${
-              contact.days_remaining <= 3 ? 'border-red-200 bg-red-50' : 'bg-muted/20'
+              contact.days_remaining <= 3 ? 'border-destructive bg-destructive' : 'bg-muted/20'
             }`}
           >
             <div className="min-w-0 flex-1 space-y-1">

@@ -56,7 +56,7 @@ export function StsCommercialDashboard() {
               {stats.length > 0 ? (100 - stats.reduce((acc, s) => acc + (s.error_rate || 0), 0) / stats.length).toFixed(1) : '100'}%
             </div>
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3 text-emerald-500" />
+              <TrendingUp className="h-3 w-3 text-success-foreground" />
               Estável em relação à última hora
             </p>
           </CardContent>
@@ -80,7 +80,7 @@ export function StsCommercialDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Falhas Críticas</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertTriangle className="h-4 w-4 text-warning-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -115,7 +115,7 @@ export function StsCommercialDashboard() {
                   <TableCell className="font-medium capitalize">{row.voice_preset}</TableCell>
                   <TableCell>{row.total_requests}</TableCell>
                   <TableCell>
-                    <span className={row.error_rate > 15 ? 'text-destructive font-bold' : row.error_rate > 5 ? 'text-amber-500 font-medium' : 'text-emerald-500'}>
+                    <span className={row.error_rate > 15 ? 'text-destructive font-bold' : row.error_rate > 5 ? 'text-warning-foreground font-medium' : 'text-success-foreground'}>
                       {row.error_rate.toFixed(1)}%
                     </span>
                   </TableCell>

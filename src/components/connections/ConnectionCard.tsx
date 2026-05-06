@@ -23,9 +23,9 @@ import type { WhatsAppConnection } from '@/features/connections';
 /** Human-friendly status — no jargon. */
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Wifi; bgClass: string }> = {
   connected: { label: 'Online', color: 'text-primary', icon: Wifi, bgClass: 'bg-primary/10 border-primary/20' },
-  disconnected: { label: 'Desconectado', color: 'text-red-400', icon: WifiOff, bgClass: 'bg-red-500/10 border-red-500/20' },
-  connecting: { label: 'Conectando...', color: 'text-amber-400', icon: RefreshCw, bgClass: 'bg-amber-500/10 border-amber-500/20' },
-  pending: { label: 'Aguardando QR', color: 'text-amber-400', icon: QrCode, bgClass: 'bg-amber-500/10 border-amber-500/20' },
+  disconnected: { label: 'Desconectado', color: 'text-destructive-foreground', icon: WifiOff, bgClass: 'bg-destructive/10 border-destructive/20' },
+  connecting: { label: 'Conectando...', color: 'text-warning-foreground', icon: RefreshCw, bgClass: 'bg-warning/10 border-warning/20' },
+  pending: { label: 'Aguardando QR', color: 'text-warning-foreground', icon: QrCode, bgClass: 'bg-warning/10 border-warning/20' },
 };
 
 /** Human-friendly health reason labels. */
@@ -103,7 +103,7 @@ export function ConnectionCard({
         isConnected && !isPhantomLike
           ? 'border-primary/20 bg-card shadow-emerald-500/5 shadow-lg'
           : needsAction
-            ? 'border-red-500/20 bg-card shadow-red-500/5 shadow-lg'
+            ? 'border-destructive/20 bg-card shadow-red-500/5 shadow-lg'
             : 'border-secondary/20 bg-card',
       )}>
         <CardContent className="p-4">
@@ -116,10 +116,10 @@ export function ConnectionCard({
                   transition={{ duration: 1, repeat: connection.status === 'connecting' ? Infinity : 0, ease: 'linear' }}
                   className={cn(
                     'w-11 h-11 rounded-full flex items-center justify-center',
-                    isConnected && !isPhantomLike ? 'bg-primary/15' : needsAction ? 'bg-red-500/15' : 'bg-muted',
+                    isConnected && !isPhantomLike ? 'bg-primary/15' : needsAction ? 'bg-destructive/15' : 'bg-muted',
                   )}
                 >
-                  <Smartphone className={cn('w-5 h-5', isConnected && !isPhantomLike ? 'text-primary' : needsAction ? 'text-red-400' : 'text-muted-foreground')} />
+                  <Smartphone className={cn('w-5 h-5', isConnected && !isPhantomLike ? 'text-primary' : needsAction ? 'text-destructive-foreground' : 'text-muted-foreground')} />
                 </motion.div>
                 {isConnected && !isPhantomLike && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
@@ -145,7 +145,7 @@ export function ConnectionCard({
                     <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
                       {connection.is_plugged ? <BatteryCharging className="w-3.5 h-3.5 text-primary" /> :
                        connection.battery_level <= 20 ? <BatteryLow className="w-3.5 h-3.5 text-destructive" /> :
-                       connection.battery_level <= 50 ? <BatteryMedium className="w-3.5 h-3.5 text-amber-400" /> :
+                       connection.battery_level <= 50 ? <BatteryMedium className="w-3.5 h-3.5 text-warning-foreground" /> :
                        <BatteryFull className="w-3.5 h-3.5 text-primary" />}
                       {connection.battery_level}%
                     </span>
@@ -156,7 +156,7 @@ export function ConnectionCard({
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <Badge variant="outline" className={cn('text-[11px] px-2 py-0.5 gap-1.5 font-medium', status.bgClass, status.color)}>
                     <span className={cn('w-1.5 h-1.5 rounded-full shrink-0',
-                      isConnected && !isPhantomLike ? 'bg-primary' : needsAction ? 'bg-red-400' : 'bg-amber-400'
+                      isConnected && !isPhantomLike ? 'bg-primary' : needsAction ? 'bg-destructive' : 'bg-warning'
                     )} />
                     {isPhantomLike ? (reasonInfo?.short ?? 'Precisa reconectar') : status.label}
                   </Badge>
@@ -170,7 +170,7 @@ export function ConnectionCard({
                   )}
 
                   {(connection.retry_count ?? 0) > 0 && (
-                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400">
+                    <Badge variant="outline" className="text-[10px] border-warning/30 text-warning-foreground">
                       Tentativa {connection.retry_count}/{connection.max_retries || 5}
                     </Badge>
                   )}
@@ -283,10 +283,10 @@ export function ConnectionCard({
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3 px-3 py-2 rounded-lg bg-red-500/8 border border-red-500/15 flex items-center gap-2"
+              className="mt-3 px-3 py-2 rounded-lg bg-destructive/8 border border-destructive/15 flex items-center gap-2"
             >
-              <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" />
-              <span className="text-xs text-red-300">
+              <AlertTriangle className="w-3.5 h-3.5 text-destructive-foreground shrink-0" />
+              <span className="text-xs text-destructive-foreground">
                 {reasonInfo?.long ?? 'Esta conexão está desconectada. Escaneie o QR Code para reconectar.'}
               </span>
             </motion.div>

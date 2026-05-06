@@ -25,7 +25,7 @@ export function DispatchErrorsBlock({ windowHours }: Props) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <AlertTriangle className="h-5 w-5 text-amber-500" />
+          <AlertTriangle className="h-5 w-5 text-warning-foreground" />
           Erros de dispatch
           <Badge variant="outline" className="ml-1">{rows.length} falhas</Badge>
         </CardTitle>

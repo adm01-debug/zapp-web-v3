@@ -113,7 +113,7 @@ function EmailTrackingDetail({
           <p className="text-xs text-muted-foreground">Cliques</p>
         </div>
         <div className="text-center p-2 bg-muted/30 rounded-lg">
-          <Clock className="h-4 w-4 mx-auto text-amber-500 mb-1" />
+          <Clock className="h-4 w-4 mx-auto text-warning-foreground mb-1" />
           <p className="text-lg font-bold">{email.first_opened_at ? formatDate(email.first_opened_at) : '—'}</p>
           <p className="text-xs text-muted-foreground">1ª abertura</p>
         </div>
@@ -245,7 +245,7 @@ export function EmailTrackingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Taxa de Abertura</p>
-                    <p className={`text-2xl font-bold ${stats.open_rate >= 50 ? 'text-primary' : stats.open_rate >= 25 ? 'text-amber-600' : 'text-red-600'}`}>
+                    <p className={`text-2xl font-bold ${stats.open_rate >= 50 ? 'text-primary' : stats.open_rate >= 25 ? 'text-warning-foreground' : 'text-destructive-foreground'}`}>
                       {stats.open_rate}%
                     </p>
                     <p className="text-xs text-muted-foreground">{stats.unique_opens} únicos</p>
@@ -259,7 +259,7 @@ export function EmailTrackingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Taxa de Cliques</p>
-                    <p className={`text-2xl font-bold ${stats.click_rate >= 10 ? 'text-primary' : 'text-amber-600'}`}>
+                    <p className={`text-2xl font-bold ${stats.click_rate >= 10 ? 'text-primary' : 'text-warning-foreground'}`}>
                       {stats.click_rate}%
                     </p>
                     <p className="text-xs text-muted-foreground">{stats.total_clicks} total</p>
@@ -273,12 +273,12 @@ export function EmailTrackingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Bounces</p>
-                    <p className={`text-2xl font-bold ${stats.bounce_count > 0 ? 'text-red-600' : 'text-primary'}`}>
+                    <p className={`text-2xl font-bold ${stats.bounce_count > 0 ? 'text-destructive-foreground' : 'text-primary'}`}>
                       {stats.bounce_count}
                     </p>
                     <p className="text-xs text-muted-foreground">emails retornados</p>
                   </div>
-                  <AlertTriangle className="h-8 w-8 text-red-500 opacity-20" />
+                  <AlertTriangle className="h-8 w-8 text-destructive-foreground opacity-20" />
                 </div>
               </CardContent>
             </Card>

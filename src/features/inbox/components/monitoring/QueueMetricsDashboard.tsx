@@ -100,7 +100,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
         </CardContent>
       </Card>
 
-      <Card className="bg-primary/5 border-blue-500/20">
+      <Card className="bg-primary/5 border-primary/20">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Latência Média</CardTitle>
           <Clock className="h-4 w-4 text-primary" />

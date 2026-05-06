@@ -177,14 +177,14 @@ export const ContactDuplicatesPanel: React.FC<ContactDuplicatesPanelProps> = ({ 
       {scanned && !scanning && groups.length > 0 && (
         <div className="space-y-3">
           <p className="text-sm font-medium flex items-center gap-1">
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertTriangle className="h-4 w-4 text-warning-foreground" />
             {groups.length} grupo{groups.length !== 1 ? 's' : ''} de duplicatas encontrado{groups.length !== 1 ? 's' : ''}
           </p>
 
           {groups.map((group) => (
             <div
               key={group.phone_normalized}
-              className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3"
+              className="rounded-lg border border-warning bg-warning dark:border-warning dark:bg-warning/30 p-3"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1 flex-1 min-w-0">

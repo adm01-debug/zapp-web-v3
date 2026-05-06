@@ -63,7 +63,7 @@ function ThreadListItem({
               {thread.participant_emails?.[0] ?? '—'}
             </span>
             <div className="flex items-center gap-1.5 shrink-0">
-              {isStarred && <Star className="h-3 w-3 text-amber-400 fill-amber-400" />}
+              {isStarred && <Star className="h-3 w-3 text-warning-foreground fill-amber-400" />}
               {lastActivity && (
                 <span className="text-[10px] font-bold text-muted-foreground/60 tabular-nums uppercase tracking-tighter">
                   {formatDistanceToNow(lastActivity, { locale: ptBR, addSuffix: false })}

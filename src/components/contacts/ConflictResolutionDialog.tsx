@@ -43,7 +43,7 @@ export const ConflictResolutionDialog: React.FC<ConflictResolutionDialogProps> =
     <Dialog open={open} onOpenChange={(v) => { if (!v) onCancel(); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-amber-700">
+          <DialogTitle className="flex items-center gap-2 text-warning-foreground">
             <AlertTriangle className="h-5 w-5" />
             Conflito de edição
           </DialogTitle>
@@ -53,23 +53,23 @@ export const ConflictResolutionDialog: React.FC<ConflictResolutionDialogProps> =
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2 text-sm">
+        <div className="rounded-lg border border-warning bg-warning p-4 space-y-2 text-sm">
           {conflict.last_updated_by && (
             <div className="flex items-center gap-2">
-              <span className="font-medium text-amber-800">Editado por:</span>
-              <Badge variant="outline" className="text-amber-700 border-amber-400">
+              <span className="font-medium text-warning-foreground">Editado por:</span>
+              <Badge variant="outline" className="text-warning-foreground border-warning">
                 {sanitizeText(conflict.last_updated_by)}
               </Badge>
             </div>
           )}
           {updatedAt && (
-            <div className="text-amber-700 text-xs">
+            <div className="text-warning-foreground text-xs">
               <span className="font-medium">Em:</span> {updatedAt}
             </div>
           )}
-          <div className="text-xs text-amber-700 flex gap-3">
-            <span>Versão salva: <Badge variant="outline" className="border-amber-400">{conflict.current_version}</Badge></span>
-            <span>Sua versão: <Badge variant="outline" className="border-amber-400">{conflict.your_version}</Badge></span>
+          <div className="text-xs text-warning-foreground flex gap-3">
+            <span>Versão salva: <Badge variant="outline" className="border-warning">{conflict.current_version}</Badge></span>
+            <span>Sua versão: <Badge variant="outline" className="border-warning">{conflict.your_version}</Badge></span>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ export const ConflictResolutionDialog: React.FC<ConflictResolutionDialogProps> =
           <Button
             variant="outline"
             onClick={onTakeTheirs}
-            className="gap-1 flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+            className="gap-1 flex-1 border-primary text-primary-foreground hover:bg-primary"
           >
             <RefreshCw className="h-4 w-4" />
             Usar versão mais recente

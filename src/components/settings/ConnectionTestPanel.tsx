@@ -28,7 +28,7 @@ interface TestResult {
 
 const STATUS_META: Record<Status, { icon: typeof CheckCircle2; cls: string; label: string }> = {
   pass: { icon: CheckCircle2, cls: "text-primary", label: "OK" },
-  warn: { icon: AlertTriangle, cls: "text-amber-500", label: "Atenção" },
+  warn: { icon: AlertTriangle, cls: "text-warning-foreground", label: "Atenção" },
   fail: { icon: XCircle, cls: "text-destructive", label: "Falha" },
   skip: { icon: MinusCircle, cls: "text-muted-foreground", label: "Ignorado" },
 };

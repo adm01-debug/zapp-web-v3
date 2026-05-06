@@ -120,10 +120,10 @@ export const ContactImportDialogV2: React.FC<Props> = ({ open, onOpenChange, ins
                 <p className="font-medium">Importação concluída!</p>
                 <div className="grid grid-cols-3 gap-2 text-xs text-center">
                   <div><p className="text-xl font-bold text-primary">{result.inserted}</p><p>Criados</p></div>
-                  <div><p className="text-xl font-bold text-blue-700">{result.updated}</p><p>Atualizados</p></div>
+                  <div><p className="text-xl font-bold text-primary-foreground">{result.updated}</p><p>Atualizados</p></div>
                   <div><p className="text-xl font-bold text-muted-foreground">{result.skipped}</p><p>Ignorados</p></div>
                 </div>
-                {result.errors.length > 0 && <p className="text-xs text-amber-700"><AlertTriangle className="h-3 w-3 inline mr-1" />{result.errors.length} linha{result.errors.length !== 1 ? 's' : ''} com erro</p>}
+                {result.errors.length > 0 && <p className="text-xs text-warning-foreground"><AlertTriangle className="h-3 w-3 inline mr-1" />{result.errors.length} linha{result.errors.length !== 1 ? 's' : ''} com erro</p>}
               </AlertDescription>
             </Alert>
           )}

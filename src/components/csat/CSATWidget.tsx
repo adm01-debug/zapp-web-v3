@@ -24,8 +24,8 @@ interface CSATStats {
 
 function getNPSColor(nps: number): string {
   if (nps >= 50)  return 'text-primary';
-  if (nps >= 0)   return 'text-amber-600';
-  return 'text-red-600';
+  if (nps >= 0)   return 'text-warning-foreground';
+  return 'text-destructive-foreground';
 }
 
 function renderStars(score: number): React.ReactNode {
@@ -34,7 +34,7 @@ function renderStars(score: number): React.ReactNode {
       {[1,2,3,4,5].map((i) => (
         <Star
           key={i}
-          className={`h-4 w-4 ${i <= Math.round(score / 2) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`}
+          className={`h-4 w-4 ${i <= Math.round(score / 2) ? 'fill-amber-400 text-warning-foreground' : 'text-muted-foreground'}`}
         />
       ))}
     </div>
@@ -102,7 +102,7 @@ export const CSATWidget: React.FC<Props> = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Star className="h-4 w-4 text-amber-500" />
+          <Star className="h-4 w-4 text-warning-foreground" />
           <h3 className="text-sm font-semibold">CSAT / NPS — últimos {days} dias</h3>
         </div>
         <Button variant="ghost" size="sm" onClick={load} disabled={loading} className="h-7 w-7 p-0">
@@ -126,8 +126,8 @@ export const CSATWidget: React.FC<Props> = ({
               {stats.nps_score >= 50
                 ? <TrendingUp className="h-3.5 w-3.5 text-primary" />
                 : stats.nps_score < 0
-                  ? <TrendingDown className="h-3.5 w-3.5 text-red-600" />
-                  : <Minus className="h-3.5 w-3.5 text-amber-600" />}
+                  ? <TrendingDown className="h-3.5 w-3.5 text-destructive-foreground" />
+                  : <Minus className="h-3.5 w-3.5 text-warning-foreground" />}
               <p className="text-xs text-muted-foreground">NPS Score</p>
             </div>
           </CardContent>
@@ -137,17 +137,17 @@ export const CSATWidget: React.FC<Props> = ({
             <div className="flex justify-between text-xs">
               <span className="text-primary">👍 {stats.nps_promoters}</span>
               <span className="text-muted-foreground">😐 {stats.nps_passives}</span>
-              <span className="text-red-600">👎 {stats.nps_detractors}</span>
+              <span className="text-destructive-foreground">👎 {stats.nps_detractors}</span>
             </div>
             <div className="flex gap-0.5 h-3 rounded overflow-hidden">
               {stats.nps_promoters > 0 && (
                 <div className="bg-primary" style={{ flex: stats.nps_promoters }} />
               )}
               {stats.nps_passives > 0 && (
-                <div className="bg-amber-400" style={{ flex: stats.nps_passives }} />
+                <div className="bg-warning" style={{ flex: stats.nps_passives }} />
               )}
               {stats.nps_detractors > 0 && (
-                <div className="bg-red-500" style={{ flex: stats.nps_detractors }} />
+                <div className="bg-destructive" style={{ flex: stats.nps_detractors }} />
               )}
             </div>
             <p className="text-xs text-muted-foreground">Promotores / Neutros / Detratores</p>
@@ -163,7 +163,7 @@ export const CSATWidget: React.FC<Props> = ({
             {[10,9,8,7,6,5,4,3,2,1,0].map((score) => {
               const count = stats.score_distribution[score.toString()] ?? 0;
               const pct   = maxDist > 0 ? Math.round((count / maxDist) * 100) : 0;
-              const color = score >= 9 ? 'bg-primary' : score >= 7 ? 'bg-amber-400' : 'bg-red-400';
+              const color = score >= 9 ? 'bg-primary' : score >= 7 ? 'bg-warning' : 'bg-destructive';
               return count > 0 ? (
                 <div key={score} className="flex items-center gap-2 text-xs">
                   <span className="w-4 text-right text-muted-foreground">{score}</span>

@@ -272,7 +272,7 @@ Maria Santos,(21) 99876-5432,maria@exemplo.com,XYZ Ltda,fornecedor,
                 {[
                   { label: 'Criados', value: result.inserted, color: 'text-primary' },
                   { label: 'Atualizados', value: result.updated, color: 'text-primary' },
-                  { label: 'Ignorados', value: result.skipped, color: 'text-amber-600' },
+                  { label: 'Ignorados', value: result.skipped, color: 'text-warning-foreground' },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="rounded-md border p-2">
                     <p className={`text-xl font-bold ${color}`}>{value.toLocaleString('pt-BR')}</p>
@@ -282,7 +282,7 @@ Maria Santos,(21) 99876-5432,maria@exemplo.com,XYZ Ltda,fornecedor,
               </div>
               {result.errors.length > 0 && (
                 <details className="text-xs">
-                  <summary className="cursor-pointer flex items-center gap-1 text-amber-700">
+                  <summary className="cursor-pointer flex items-center gap-1 text-warning-foreground">
                     <AlertTriangle className="h-3 w-3" />
                     {result.errors.length} erro{result.errors.length !== 1 ? 's' : ''} (clique para ver)
                   </summary>

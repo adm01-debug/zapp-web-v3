@@ -344,7 +344,7 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
                   onClick={() => setWhatsappMode('evolution')}
                 >
                   <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2", whatsappMode === 'evolution' ? "bg-primary/20" : "bg-muted")}>
-                    <Globe className="w-5 h-5 text-green-500" />
+                    <Globe className="w-5 h-5 text-success-foreground" />
                   </div>
                   <p className="text-xs font-bold">Não-Oficial</p>
                   <p className="text-[10px] text-muted-foreground text-center mt-1">Conexão via QR Code</p>

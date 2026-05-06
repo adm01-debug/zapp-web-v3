@@ -24,9 +24,9 @@ interface AuditEntry {
 
 const ACTION_COLORS: Record<string, string> = {
   INSERT:    'bg-primary text-primary-foreground border-primary',
-  UPDATE:    'bg-blue-100 text-blue-800 border-blue-300',
-  DELETE:    'bg-red-100 text-red-800 border-red-300',
-  RESTORE:   'bg-amber-100 text-amber-800 border-amber-300',
+  UPDATE:    'bg-primary text-primary-foreground border-primary',
+  DELETE:    'bg-destructive text-destructive-foreground border-destructive',
+  RESTORE:   'bg-warning text-warning-foreground border-warning',
   MERGE:     'bg-purple-100 text-purple-800 border-purple-300',
 };
 
@@ -123,7 +123,7 @@ export const AuditLogPanel: React.FC<{ contactId: string; maxEntries?: number }>
                   {e.old_value !== null && (
                     <div className="flex gap-2">
                       <span className="text-muted-foreground w-12 shrink-0">Antes:</span>
-                      <span className="text-red-600 line-through truncate">{sanitizeText(e.old_value)}</span>
+                      <span className="text-destructive-foreground line-through truncate">{sanitizeText(e.old_value)}</span>
                     </div>
                   )}
                   {e.new_value !== null && (

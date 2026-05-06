@@ -142,7 +142,7 @@ export const ContactPhoneManager: React.FC<ContactPhoneManagerProps> = ({
               disabled={readonly}
             >
               {phone.is_primary
-                ? <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                ? <Star className="h-3.5 w-3.5 fill-amber-400 text-warning-foreground" />
                 : <StarOff className="h-3.5 w-3.5 text-muted-foreground" />}
             </button>
 

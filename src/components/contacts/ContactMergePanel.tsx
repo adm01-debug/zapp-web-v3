@@ -186,11 +186,11 @@ export function ContactMergePanel({ open, onOpenChange, contacts, onMergeComplet
             })}
 
             {/* Warning */}
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-3">
-              <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-              <div className="text-xs text-amber-800 dark:text-amber-300">
+            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-warning/10 border border-warning/20 mt-3">
+              <AlertTriangle className="w-4 h-4 text-warning-foreground mt-0.5 shrink-0" />
+              <div className="text-xs text-warning-foreground dark:text-warning-foreground">
                 <p className="font-semibold">Atenção: esta ação é irreversível</p>
-                <p className="mt-0.5 text-amber-700 dark:text-amber-400">
+                <p className="mt-0.5 text-warning-foreground dark:text-warning-foreground">
                   O contato secundário será excluído e seu histórico será migrado para o contato principal.
                 </p>
               </div>

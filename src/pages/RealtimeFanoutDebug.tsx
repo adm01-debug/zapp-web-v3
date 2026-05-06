@@ -45,7 +45,7 @@ function relativeTime(ts: number | undefined | null): string {
 function eventBadgeVariant(evt: string): { className: string; label: string } {
   const upper = evt.toUpperCase();
   if (upper.startsWith("INSERT")) return { className: "bg-primary/15 text-primary dark:text-primary", label: "INSERT" };
-  if (upper.startsWith("UPDATE")) return { className: "bg-amber-500/15 text-amber-700 dark:text-amber-400", label: "UPDATE" };
+  if (upper.startsWith("UPDATE")) return { className: "bg-warning/15 text-warning-foreground dark:text-warning-foreground", label: "UPDATE" };
   if (upper.startsWith("DELETE")) return { className: "bg-destructive/15 text-destructive", label: "DELETE" };
   return { className: "bg-muted text-muted-foreground", label: upper };
 }

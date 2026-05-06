@@ -26,7 +26,7 @@ interface EmailAccountSelectorProps {
 const TOKEN_STATUS_CONFIG: Record<TokenStatus, { icon: typeof Wifi; color: string; label: string }> = {
   loading:      { icon: RefreshCw, color: 'text-muted-foreground', label: 'Verificando...' },
   valid:        { icon: Wifi, color: 'text-primary', label: 'Conectado' },
-  expiring:     { icon: AlertTriangle, color: 'text-amber-500', label: 'Token expirando' },
+  expiring:     { icon: AlertTriangle, color: 'text-warning-foreground', label: 'Token expirando' },
   expired:      { icon: WifiOff, color: 'text-destructive', label: 'Sessão expirada — reconecte' },
   disconnected: { icon: WifiOff, color: 'text-muted-foreground', label: 'Desconectado' },
 };
@@ -77,8 +77,8 @@ export function EmailAccountSelector({
               </Avatar>
               {/* Status dot */}
               <span className={cn('absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background shadow-sm',
-                activeStatus === 'valid' && 'bg-emerald-500',
-                activeStatus === 'expiring' && 'bg-amber-500',
+                activeStatus === 'valid' && 'bg-success',
+                activeStatus === 'expiring' && 'bg-warning',
                 activeStatus === 'expired' && 'bg-rose-500',
                 (activeStatus === 'loading' || activeStatus === 'disconnected') && 'bg-muted',
               )} />

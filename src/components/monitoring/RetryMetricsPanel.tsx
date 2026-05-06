@@ -390,7 +390,7 @@ function KpiCard({ label, value, subtitle, delta }: KpiCardProps) {
         {typeof delta === 'number' && (
           <span className={cn(
             'text-[10px] font-medium inline-flex items-center gap-0.5',
-            delta > 0 ? 'text-amber-500' : 'text-primary'
+            delta > 0 ? 'text-warning-foreground' : 'text-primary'
           )}>
             {delta > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             {Math.abs(delta)}%
@@ -527,7 +527,7 @@ function TopReasonsChart({ reasons, previousReasons = [], compareMode = false, w
             const { tone, pct } = deltaTone(d.current, d.previous);
             const Icon = tone === 'up' ? TrendingUp : tone === 'down' ? TrendingDown : Minus;
             const toneClass =
-              tone === 'up' ? 'text-amber-500'
+              tone === 'up' ? 'text-warning-foreground'
               : tone === 'down' ? 'text-primary'
               : 'text-muted-foreground';
             return (

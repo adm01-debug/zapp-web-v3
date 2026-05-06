@@ -21,7 +21,7 @@ interface SLAIndicatorProps {
 
 const statusStyles: Record<SLAStatus, { bg: string; text: string; border: string; icon: React.ElementType; ring: string }> = {
   ok: { bg: 'bg-primary/5', text: 'text-primary', border: 'border-primary/10', icon: CheckCircle, ring: 'stroke-emerald-500' },
-  warning: { bg: 'bg-amber-500/5', text: 'text-amber-500', border: 'border-amber-500/10', icon: Clock, ring: 'stroke-amber-500' },
+  warning: { bg: 'bg-warning/5', text: 'text-warning-foreground', border: 'border-warning/10', icon: Clock, ring: 'stroke-amber-500' },
   breached: { bg: 'bg-rose-500/5', text: 'text-rose-500', border: 'border-rose-500/10', icon: AlertTriangle, ring: 'stroke-rose-500' },
 };
 

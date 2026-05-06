@@ -109,13 +109,13 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
     <div className="space-y-4">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-bold text-amber-700 uppercase tracking-widest flex items-center gap-2">
+          <h4 className="text-xs font-bold text-warning-foreground uppercase tracking-widest flex items-center gap-2">
             <EyeOff className="w-3 h-3" />
             Documentos da Equipe
           </h4>
           <label className="cursor-pointer">
             <Input type="file" className="hidden" onChange={handleFileChange} disabled={isUploading} />
-            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1.5 border-amber-200 text-amber-700 hover:bg-amber-50" disabled={isUploading}>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1.5 border-warning text-warning-foreground hover:bg-warning" disabled={isUploading}>
               {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <UploadCloud className="w-3 h-3" />}
               Novo Arquivo
             </Button>
@@ -125,18 +125,18 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
         {/* Search and Filters */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-amber-400" />
+            <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-warning-foreground" />
             <Input 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Buscar arquivos..." 
-              className="pl-7 h-8 text-[11px] bg-amber-50/30 border-amber-100 focus-visible:ring-amber-200"
+              className="pl-7 h-8 text-[11px] bg-warning/30 border-warning focus-visible:ring-amber-200"
             />
           </div>
           <select 
             value={typeFilter}
             onChange={e => setTypeFilter(e.target.value)}
-            className="h-8 text-[10px] bg-amber-50/30 border-amber-100 rounded-md px-2 text-amber-700 outline-none focus:ring-1 focus:ring-amber-200"
+            className="h-8 text-[10px] bg-warning/30 border-warning rounded-md px-2 text-warning-foreground outline-none focus:ring-1 focus:ring-amber-200"
           >
             <option value="all">Todos</option>
             <option value="image">Imagens</option>
@@ -149,7 +149,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
 
       <div className="space-y-2 min-h-[100px]">
         {isLoading ? (
-          <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-amber-200" /></div>
+          <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-warning-foreground" /></div>
         ) : filteredFiles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center opacity-40 grayscale">
             <File className="w-8 h-8 mb-2" />
@@ -159,13 +159,13 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
           </div>
         ) : (
           filteredFiles.map((file) => (
-            <div key={file.id} className="flex items-center gap-3 p-2 rounded-xl bg-amber-50/50 border border-amber-100 hover:bg-amber-100/50 transition-colors group">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                <File className="w-4 h-4 text-amber-600" />
+            <div key={file.id} className="flex items-center gap-3 p-2 rounded-xl bg-warning/50 border border-warning hover:bg-warning/50 transition-colors group">
+              <div className="w-8 h-8 rounded-lg bg-warning flex items-center justify-center shrink-0">
+                <File className="w-4 h-4 text-warning-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-medium text-amber-900 truncate" title={file.file_name}>{file.file_name}</p>
-                <p className="text-[9px] text-amber-600/60 font-mono uppercase">
+                <p className="text-[11px] font-medium text-warning-foreground truncate" title={file.file_name}>{file.file_name}</p>
+                <p className="text-[9px] text-warning-foreground/60 font-mono uppercase">
                   {formatSize(file.file_size || 0)} • {format(new Date(file.created_at), 'dd MMM HH:mm', { locale: ptBR })}
                 </p>
               </div>
@@ -173,15 +173,15 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
                 {file.file_type?.startsWith('image/') && (
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-600 hover:bg-amber-200">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-warning-foreground hover:bg-warning">
                         <Eye className="w-3.5 h-3.5" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-3xl border-amber-100">
+                    <DialogContent className="max-w-3xl border-warning">
                       <DialogHeader>
-                        <DialogTitle className="text-sm font-bold text-amber-700">{file.file_name}</DialogTitle>
+                        <DialogTitle className="text-sm font-bold text-warning-foreground">{file.file_name}</DialogTitle>
                       </DialogHeader>
-                      <div className="flex items-center justify-center p-2 bg-amber-50/20 rounded-xl overflow-hidden min-h-[300px]">
+                      <div className="flex items-center justify-center p-2 bg-warning/20 rounded-xl overflow-hidden min-h-[300px]">
                         <img 
                           src={file.file_url} 
                           alt={file.file_name} 
@@ -189,7 +189,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
                         />
                       </div>
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" className="h-8 text-[11px] gap-2 border-amber-200 text-amber-700" asChild>
+                        <Button variant="outline" size="sm" className="h-8 text-[11px] gap-2 border-warning text-warning-foreground" asChild>
                           <a href={file.file_url} download={file.file_name} target="_blank" rel="noreferrer">
                             <Download className="w-3.5 h-3.5" />
                             Baixar Original
@@ -199,7 +199,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
                     </DialogContent>
                   </Dialog>
                 )}
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-600 hover:bg-amber-200" asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-warning-foreground hover:bg-warning" asChild>
                   <a href={file.file_url} download={file.file_name} target="_blank" rel="noreferrer">
                     <Download className="w-3.5 h-3.5" />
                   </a>

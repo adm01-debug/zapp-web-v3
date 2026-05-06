@@ -41,6 +41,6 @@ export function calculateContactHealth(contact: Contact): number {
 export function getHealthColor(score: number): string {
   if (score >= 90) return 'text-primary bg-primary/10';
   if (score >= 70) return 'text-primary bg-primary/10';
-  if (score >= 40) return 'text-orange-500 bg-orange-500/10';
+  if (score >= 40) return 'text-warning-foreground bg-warning/10';
   return 'text-destructive bg-destructive/10';
 }

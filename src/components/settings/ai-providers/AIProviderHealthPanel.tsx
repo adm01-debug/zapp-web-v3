@@ -57,19 +57,19 @@ export function AIProviderHealthPanel() {
       label: 'Taxa de Sucesso',
       value: `${successRate}%`,
       icon: successRate >= 95 ? CheckCircle : successRate >= 80 ? AlertTriangle : XCircle,
-      color: successRate >= 95 ? 'text-primary' : successRate >= 80 ? 'text-amber-500' : 'text-destructive',
+      color: successRate >= 95 ? 'text-primary' : successRate >= 80 ? 'text-warning-foreground' : 'text-destructive',
     },
     {
       label: 'Latência Média',
       value: `${stats.avgLatency}ms`,
       icon: Clock,
-      color: stats.avgLatency < 2000 ? 'text-primary' : stats.avgLatency < 5000 ? 'text-amber-500' : 'text-destructive',
+      color: stats.avgLatency < 2000 ? 'text-primary' : stats.avgLatency < 5000 ? 'text-warning-foreground' : 'text-destructive',
     },
     {
       label: 'Fallbacks',
       value: String(stats.fallback),
       icon: AlertTriangle,
-      color: stats.fallback === 0 ? 'text-primary' : 'text-amber-500',
+      color: stats.fallback === 0 ? 'text-primary' : 'text-warning-foreground',
     },
     {
       label: 'Tokens Usados',
@@ -159,7 +159,7 @@ export function AIProviderHealthPanel() {
                   {log.status === 'success' ? (
                     <CheckCircle className="w-3 h-3 text-primary shrink-0" />
                   ) : log.status === 'fallback' ? (
-                    <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                    <AlertTriangle className="w-3 h-3 text-warning-foreground shrink-0" />
                   ) : (
                     <XCircle className="w-3 h-3 text-destructive shrink-0" />
                   )}

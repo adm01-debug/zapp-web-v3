@@ -116,7 +116,7 @@ export const ChatHeader = memo(function ChatHeader({
               <SLAIndicatorForContact conversation={conversation} />
               <Badge variant="outline" className={cn(
                 "text-[9px] h-4.5 px-2 font-black uppercase tracking-widest border-0 shadow-sm",
-                conversation.status === 'open' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted/60 text-muted-foreground'
+                conversation.status === 'open' ? 'bg-success/10 text-success-foreground' : 'bg-muted/60 text-muted-foreground'
               )}>
                 {conversation.status === 'open' ? 'Aberto' : conversation.status === 'pending' ? 'Pendente' : conversation.status === 'resolved' ? 'Resolvido' : 'Aguardando'}
               </Badge>
@@ -180,13 +180,13 @@ export const ChatHeader = memo(function ChatHeader({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 gap-1.5 px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-100/50"
+                className="h-8 gap-1.5 px-2 text-warning-foreground hover:text-warning-foreground hover:bg-warning/50"
                 onClick={onOpenWhisper}
               >
                 <div className="relative">
                   <EyeOff className="w-4 h-4" />
                   {whisperCount !== undefined && whisperCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 h-3.5 min-w-[14px] px-0.5 rounded-full bg-amber-500 text-[8px] font-bold text-foreground flex items-center justify-center ring-1 ring-white">
+                    <span className="absolute -top-1.5 -right-1.5 h-3.5 min-w-[14px] px-0.5 rounded-full bg-warning text-[8px] font-bold text-foreground flex items-center justify-center ring-1 ring-white">
                       {whisperCount}
                     </span>
                   )}
@@ -280,7 +280,7 @@ export const ChatHeader = memo(function ChatHeader({
             <DropdownMenuItem><Archive className="w-4 h-4 mr-2" />Arquivar</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onGenerateSummary?.('teamFiles')}>
-              <Share2 className="w-4 h-4 mr-2 text-amber-600" />
+              <Share2 className="w-4 h-4 mr-2 text-warning-foreground" />
               Arquivos da Equipe
             </DropdownMenuItem>
             <DropdownMenuSeparator />

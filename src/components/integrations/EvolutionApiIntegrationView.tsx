@@ -236,15 +236,15 @@ export function EvolutionApiIntegrationView() {
                 className={`flex items-start gap-2 p-3 rounded-lg border ${
                   testResult === 'success'
                     ? 'bg-primary/5 border-primary/20'
-                    : 'bg-red-500/5 border-red-500/20'
+                    : 'bg-destructive/5 border-destructive/20'
                 }`}
               >
                 {testResult === 'success' ? (
                   <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 ) : (
-                  <XCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+                  <XCircle className="w-4 h-4 text-destructive-foreground mt-0.5 shrink-0" />
                 )}
-                <span className={`text-xs ${testResult === 'success' ? 'text-primary' : 'text-red-300'}`}>
+                <span className={`text-xs ${testResult === 'success' ? 'text-primary' : 'text-destructive-foreground'}`}>
                   {testMessage}
                 </span>
               </motion.div>

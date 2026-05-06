@@ -144,9 +144,9 @@ export function MessageBubble({
         <div className={cn('max-w-[85%] sm:max-w-[70%] space-y-0.5 relative', isSent && 'items-end')}>
           {!isSent && isFirstInGroup && <span className="text-[13px] font-bold text-primary/70 ml-1 block tracking-tight mb-0.5">{senderName}</span>}
           {message.isWhisper && (
-            <div className="flex items-center gap-1.5 mb-1 ml-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-full w-fit border border-amber-500/20 shadow-xs">
-              <ShieldAlert className="w-3 h-3 text-amber-600 dark:text-amber-400 animate-pulse" />
-              <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Equipe — Sussurro Interno</span>
+            <div className="flex items-center gap-1.5 mb-1 ml-1 bg-warning/10 dark:bg-warning/20 px-2 py-0.5 rounded-full w-fit border border-warning/20 shadow-xs">
+              <ShieldAlert className="w-3 h-3 text-warning-foreground dark:text-warning-foreground animate-pulse" />
+              <span className="text-[9px] font-bold text-warning-foreground dark:text-warning-foreground uppercase tracking-widest">Equipe — Sussurro Interno</span>
             </div>
           )}
 
@@ -208,7 +208,7 @@ export function MessageBubble({
                 isSent
                   ? cn('bg-chat-sent text-chat-sent-foreground font-normal', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
                   : cn('bg-chat-received text-chat-received-foreground font-normal', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
-                message.isWhisper && 'bg-amber-50 dark:bg-amber-900/20 border-amber-300/50 dark:border-amber-800/40 text-amber-900 dark:text-amber-100 ring-1 ring-amber-500/30 border-dashed',
+                message.isWhisper && 'bg-warning dark:bg-warning/20 border-warning/50 dark:border-warning/40 text-warning-foreground dark:text-warning-foreground ring-1 ring-amber-500/30 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
             >

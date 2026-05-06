@@ -147,7 +147,7 @@ export const ContactConsentManager: React.FC<ContactConsentManagerProps> = ({
             Opt-out registrado
           </Badge>
         ) : (
-          <Badge variant="outline" className="gap-1 text-amber-700 border-amber-400 bg-amber-50">
+          <Badge variant="outline" className="gap-1 text-warning-foreground border-warning bg-warning">
             <AlertTriangle className="h-3 w-3" />
             Sem consentimento
           </Badge>
@@ -168,7 +168,7 @@ export const ContactConsentManager: React.FC<ContactConsentManagerProps> = ({
             </p>
           )}
           {local.lgpd_opt_out_at && (
-            <p className="text-red-600">
+            <p className="text-destructive-foreground">
               <span className="font-medium">Revogado em:</span>{' '}
               {new Date(local.lgpd_opt_out_at).toLocaleString('pt-BR')}
             </p>

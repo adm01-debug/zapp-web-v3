@@ -74,7 +74,7 @@ export const LGPDConsentManager: React.FC<Props> = ({ contact, onUpdated, readon
         <div className="flex items-center gap-2"><Shield className="h-4 w-4 text-muted-foreground" /><span className="text-sm font-medium">Consentimento LGPD</span></div>
         {hasConsent && <Badge className="bg-primary text-primary-foreground border-primary gap-1"><CheckCircle2 className="h-3 w-3" />Ativo</Badge>}
         {hasOptedOut && <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" />Opt-out</Badge>}
-        {!hasConsent && !hasOptedOut && <Badge variant="outline" className="text-amber-700 border-amber-400 gap-1"><AlertTriangle className="h-3 w-3" />Sem consentimento</Badge>}
+        {!hasConsent && !hasOptedOut && <Badge variant="outline" className="text-warning-foreground border-warning gap-1"><AlertTriangle className="h-3 w-3" />Sem consentimento</Badge>}
       </div>
 
       {contact.lgpd_consent_at && (
@@ -111,8 +111,8 @@ export const LGPDConsentManager: React.FC<Props> = ({ contact, onUpdated, readon
       )}
 
       {!readonly && hasConsent && !hasOptedOut && (
-        <Alert className="border-amber-200 bg-amber-50">
-          <AlertDescription className="text-xs text-amber-800 space-y-2">
+        <Alert className="border-warning bg-warning">
+          <AlertDescription className="text-xs text-warning-foreground space-y-2">
             <p>Opt-out revoga todos os consentimentos e impede comunicações de marketing.</p>
             <Button variant="destructive" size="sm" className="gap-1" onClick={revoke} disabled={loading === 'revoke'}>
               {loading === 'revoke' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}

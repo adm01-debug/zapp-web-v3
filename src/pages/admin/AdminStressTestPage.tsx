@@ -473,7 +473,7 @@ export default function AdminStressTestPage() {
               checked={simulateTokenExpiration} 
               onChange={(e) => setSimulateTokenExpiration(e.target.checked)}
               disabled={isRunning}
-              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              className="h-4 w-4 rounded border-muted text-primary focus:ring-primary"
             />
             <Label htmlFor="token-sim" className="cursor-pointer">
               Simular Expiração de Tokens (Mídias Privadas)
@@ -656,7 +656,7 @@ export default function AdminStressTestPage() {
                 Você está prestes a enviar <strong>{total} mensagens reais</strong> para o número{' '}
                 <strong>{phone}</strong> via instância <strong>{instance}</strong>.
               </span>
-              <span className="block text-amber-600 dark:text-amber-400">
+              <span className="block text-warning-foreground dark:text-warning-foreground">
                 Risco: bloqueio anti-spam da Meta na instância. Tempo estimado: ~{etaMin} min.
               </span>
               <span className="block pt-2">

@@ -274,7 +274,7 @@ export default function AdminWhatsAppModePage() {
                   <div className="flex items-center gap-2">
                     {verify.handshake.status === "pass" && <CheckCircle2 className="h-4 w-4 text-primary" />}
                     {verify.handshake.status === "fail" && <XCircle className="h-4 w-4 text-destructive" />}
-                    {verify.handshake.status === "skip" && <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                    {verify.handshake.status === "skip" && <AlertTriangle className="h-4 w-4 text-warning-foreground" />}
                     <span className="text-sm font-medium">1. Handshake do Verify Token</span>
                   </div>
                   <Badge variant={verify.handshake.status === "pass" ? "default" : verify.handshake.status === "skip" ? "secondary" : "destructive"}>
@@ -302,7 +302,7 @@ export default function AdminWhatsAppModePage() {
                   <div className="flex items-center gap-2">
                     {verify.delivery.status === "pass"
                       ? <CheckCircle2 className="h-4 w-4 text-primary" />
-                      : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                      : <AlertTriangle className="h-4 w-4 text-warning-foreground" />}
                     <span className="text-sm font-medium">2. Recebimento de eventos (últimas 24h)</span>
                   </div>
                   <div className="flex gap-1.5 flex-wrap">

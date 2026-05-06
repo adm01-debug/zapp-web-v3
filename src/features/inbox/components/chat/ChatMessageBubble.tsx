@@ -209,7 +209,7 @@ export function ChatMessageBubble({
               ? 'p-0'
               : density === 'comfortable' ? 'px-3.5 py-2' : density === 'compact' ? 'px-2.5 py-1.5' : 'px-2 py-1',
             message.isWhisper
-              ? 'rounded-2xl bg-amber-500/10 border-amber-500/20 text-amber-900 dark:text-amber-100 shadow-inner'
+              ? 'rounded-2xl bg-warning/10 border-warning/20 text-warning-foreground dark:text-warning-foreground shadow-inner'
               : isSent 
                 ? 'rounded-2xl rounded-tr-none bg-primary text-primary-foreground border-primary/20 shadow-md shadow-primary/10' 
                 : 'rounded-2xl rounded-tl-none bg-muted/50 text-foreground border-border/50 hover:bg-muted/80'

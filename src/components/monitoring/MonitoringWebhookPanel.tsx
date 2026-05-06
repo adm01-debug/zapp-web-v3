@@ -226,7 +226,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                     return (
                       <div key={category} className="p-2.5 rounded-lg bg-muted/30">
                         <div className="flex items-center gap-2 mb-1.5">
-                          {allOk ? <CheckCircle2 className="w-3 h-3 text-primary" /> : <AlertTriangle className="w-3 h-3 text-amber-500" />}
+                          {allOk ? <CheckCircle2 className="w-3 h-3 text-primary" /> : <AlertTriangle className="w-3 h-3 text-warning-foreground" />}
                           <span className="text-[11px] font-medium">{category}</span>
                           <span className="text-[10px] text-muted-foreground ml-auto">{configured.length}/{events.length}</span>
                         </div>

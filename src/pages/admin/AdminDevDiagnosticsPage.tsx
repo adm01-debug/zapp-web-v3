@@ -100,7 +100,7 @@ export default function AdminDevDiagnosticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">OPERACIONAL</div>
+            <div className="text-2xl font-bold text-success-foreground">OPERACIONAL</div>
             <p className="text-xs text-muted-foreground">Todos os serviços respondendo</p>
           </CardContent>
         </Card>

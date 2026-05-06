@@ -96,7 +96,7 @@ export function ThreadSLASettingsDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="warning-threshold" className="text-xs flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3 text-amber-500" />
+                <AlertTriangle className="w-3 h-3 text-warning-foreground" />
                 Risco (min)
               </Label>
               <Input
@@ -109,7 +109,7 @@ export function ThreadSLASettingsDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="critical-threshold" className="text-xs flex items-center gap-1">
-                <ShieldAlert className="w-3 h-3 text-red-500" />
+                <ShieldAlert className="w-3 h-3 text-destructive-foreground" />
                 Violação (min)
               </Label>
               <Input

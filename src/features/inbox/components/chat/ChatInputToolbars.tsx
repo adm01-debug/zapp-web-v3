@@ -77,8 +77,8 @@ export function SecondaryToolbar({
               className={cn(
                 "w-7 h-7 rounded-full transition-all duration-300",
                 isWhisper 
-                  ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 shadow-sm" 
-                  : "text-muted-foreground/40 hover:text-amber-500 hover:bg-amber-500/5"
+                  ? "text-warning-foreground bg-warning/10 hover:bg-warning/20 shadow-sm" 
+                  : "text-muted-foreground/40 hover:text-warning-foreground hover:bg-warning/5"
               )}
               onClick={onToggleWhisper}
               aria-label={isWhisper ? "Desativar modo sussurro" : "Ativar modo sussurro (nota interna)"}
@@ -86,7 +86,7 @@ export function SecondaryToolbar({
               {isWhisper ? (
                 <div className="relative">
                   <Lock className="w-3.5 h-3.5" />
-                  <span className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="absolute -top-0.5 -right-0.5 w-1 h-1 rounded-full bg-warning animate-pulse" />
                 </div>
               ) : (
                 <Unlock className="w-3.5 h-3.5" />
@@ -203,7 +203,7 @@ export function TertiaryToolsMenu({
   return (
     <div className="flex flex-col gap-1">
       {onOpenTeamFiles && (
-        <Button variant="ghost" size="sm" className="justify-start gap-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50" onClick={onOpenTeamFiles} aria-label="Arquivos da equipe">
+        <Button variant="ghost" size="sm" className="justify-start gap-2 text-warning-foreground hover:text-warning-foreground hover:bg-warning" onClick={onOpenTeamFiles} aria-label="Arquivos da equipe">
           <Share2 className="w-4 h-4" /> Arquivos da Equipe
         </Button>
       )}

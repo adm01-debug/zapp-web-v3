@@ -22,7 +22,7 @@ const statusIcon = (status: string | null) => {
   switch (status) {
     case 'connected': case 'healthy': return <CheckCircle2 className="w-3.5 h-3.5 text-primary" />;
     case 'disconnected': case 'error': return <XCircle className="w-3.5 h-3.5 text-destructive" />;
-    case 'degraded': return <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />;
+    case 'degraded': return <AlertTriangle className="w-3.5 h-3.5 text-warning-foreground" />;
     default: return <Clock className="w-3.5 h-3.5 text-muted-foreground" />;
   }
 };
@@ -120,7 +120,7 @@ export function MonitoringConnectionsList({ connections, webhookTest, onCheckWeb
                         {conn.health_response_ms != null && (
                           <span className={cn('font-medium',
                             conn.health_response_ms < 300 ? 'text-primary' :
-                            conn.health_response_ms < 800 ? 'text-amber-500' : 'text-destructive'
+                            conn.health_response_ms < 800 ? 'text-warning-foreground' : 'text-destructive'
                           )}>
                             ⚡ {conn.health_response_ms}ms
                           </span>
@@ -138,7 +138,7 @@ export function MonitoringConnectionsList({ connections, webhookTest, onCheckWeb
                           {loadingQr[conn.instance_id] ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <QrCode className="w-3.5 h-3.5 mr-1" />}
                           QR Code
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => reconnectInstance(conn.instance_id)} disabled={reconnecting[conn.instance_id]} className="text-xs h-8 text-amber-600">
+                        <Button size="sm" variant="outline" onClick={() => reconnectInstance(conn.instance_id)} disabled={reconnecting[conn.instance_id]} className="text-xs h-8 text-warning-foreground">
                           {reconnecting[conn.instance_id] ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}
                           Reconectar
                         </Button>

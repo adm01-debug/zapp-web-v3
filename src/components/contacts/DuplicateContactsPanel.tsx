@@ -159,12 +159,12 @@ export const DuplicateContactsPanel: React.FC<Props> = ({
 
       {/* Report summary */}
       {report && report.total_redundant_contacts > 0 && (
-        <Alert className="border-amber-200 bg-amber-50">
-          <AlertOctagon className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-sm text-amber-800">
+        <Alert className="border-warning bg-warning">
+          <AlertOctagon className="h-4 w-4 text-warning-foreground" />
+          <AlertTitle className="text-sm text-warning-foreground">
             {report.total_duplicate_groups} grupos com número repetido
           </AlertTitle>
-          <AlertDescription className="text-xs text-amber-700">
+          <AlertDescription className="text-xs text-warning-foreground">
             {report.total_redundant_contacts} contato{report.total_redundant_contacts !== 1 ? 's' : ''} redundante{report.total_redundant_contacts !== 1 ? 's' : ''}.
             Use "Mesclar todos" para unificar automaticamente (mantém o mais antigo).
           </AlertDescription>
@@ -204,7 +204,7 @@ export const DuplicateContactsPanel: React.FC<Props> = ({
                 <span className="text-xs text-muted-foreground font-mono">
                   {formatPhoneForDisplay(g.phone_normalized) || 'Sem número'}
                 </span>
-                <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
+                <Badge variant="outline" className="text-xs text-warning-foreground border-warning">
                   {g.contact_count}× duplicado
                 </Badge>
               </div>

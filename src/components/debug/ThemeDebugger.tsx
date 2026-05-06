@@ -104,7 +104,7 @@ export function ThemeDebugger() {
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">{key}</span>
               <span className={`text-[8px] px-1 rounded ${
-                data.source === 'inline' ? 'bg-orange-500/20 text-orange-500' : 
+                data.source === 'inline' ? 'bg-warning/20 text-warning-foreground' : 
                 data.source === 'css' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
               }`}>
                 {data.source}

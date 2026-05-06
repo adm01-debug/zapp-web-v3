@@ -238,7 +238,7 @@ export function FeatureFlagsAdmin() {
                     <div className="flex items-center gap-2">
                       {res.latency && <span className="text-[9px] text-muted-foreground font-mono">{res.latency}ms</span>}
                       {res.status === 'ok' ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <CheckCircle2 className="w-4 h-4 text-success-foreground" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-destructive" />
                       )}

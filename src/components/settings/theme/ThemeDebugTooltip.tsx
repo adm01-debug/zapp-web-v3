@@ -31,7 +31,7 @@ export function ThemeDebugTooltip() {
           </div>
           <div className="flex justify-between border-b border-border/10 pb-1">
             <span className="text-muted-foreground">Origem Fonte:</span>
-            <span className={debug.hasPresetFont ? "text-amber-500" : "text-emerald-500"}>
+            <span className={debug.hasPresetFont ? "text-warning-foreground" : "text-success-foreground"}>
               {debug.fontOrigin}
             </span>
           </div>

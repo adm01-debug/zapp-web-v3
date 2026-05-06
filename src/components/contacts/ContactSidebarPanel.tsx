@@ -23,10 +23,10 @@ const LEAD_LABELS: Record<string, string> = {
   proposta: '📋 Proposta', negociacao: '🤝 Negociação', fechado: '🏆 Fechado', perdido: '❌ Perdido',
 };
 const LEAD_COLORS: Record<string, string> = {
-  novo: 'bg-muted text-muted-foreground', em_contato: 'bg-blue-100 text-blue-700',
+  novo: 'bg-muted text-muted-foreground', em_contato: 'bg-primary text-primary-foreground',
   qualificado: 'bg-primary text-primary', proposta: 'bg-purple-100 text-purple-700',
-  negociacao: 'bg-amber-100 text-amber-700', fechado: 'bg-primary text-primary',
-  perdido: 'bg-red-100 text-red-700',
+  negociacao: 'bg-warning text-warning-foreground', fechado: 'bg-primary text-primary',
+  perdido: 'bg-destructive text-destructive-foreground',
 };
 
 interface Props { contact: Contact; onEdit?: () => void; onOpenChat?: () => void; onUpdated?: (u: Partial<Contact>) => void; readonly?: boolean; }
@@ -67,7 +67,7 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
               {safeContact.lead_score > 0 && (
                 <Badge variant="outline" className="text-xs gap-0.5"><Star className="h-2.5 w-2.5" />{safeContact.lead_score}</Badge>
               )}
-              <Badge className={`text-xs ${hasConsent ? 'bg-primary text-primary-foreground border-primary' : 'bg-amber-50 text-amber-700 border-amber-400'}`}>
+              <Badge className={`text-xs ${hasConsent ? 'bg-primary text-primary-foreground border-primary' : 'bg-warning text-warning-foreground border-warning'}`}>
                 <Shield className="h-2.5 w-2.5 mr-0.5" />{hasConsent ? 'LGPD ✓' : 'Sem consent.'}
               </Badge>
             </div>
@@ -127,7 +127,7 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
               <span className="font-medium">Criado:</span><span>{new Date(safeContact.created_at).toLocaleDateString('pt-BR')}</span>
               <span className="font-medium">1º contato:</span><span>{safeContact.first_contact_at ? new Date(safeContact.first_contact_at).toLocaleDateString('pt-BR') : '—'}</span>
               {safeContact.assigned_to && <><span className="font-medium">Responsável:</span><span className="truncate">{sanitizeText(safeContact.assigned_to)}</span></>}
-              {safeContact.merge_source_id && <><span className="font-medium">Origem:</span><span className="font-mono truncate text-amber-600">Mesclado</span></>}
+              {safeContact.merge_source_id && <><span className="font-medium">Origem:</span><span className="font-mono truncate text-warning-foreground">Mesclado</span></>}
             </div>
             {/* Inline notes backup */}
             {contact.notes && (

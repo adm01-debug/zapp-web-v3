@@ -6,13 +6,13 @@ export const TestComponent = () => {
   return (
     <div className={cn(
       "bg-background text-background", // High priority
-      "hover:bg-blue-500",      // Medium priority
-      "dark:text-slate-200",    // Medium priority
+      "hover:bg-primary",      // Medium priority
+      "dark:text-muted-foreground",    // Medium priority
       "font-inter",             // Low priority
       "bg-primary",             // Allowed
       "dark:hover:bg-foreground" // Nested variants
     )}>
-      <p className={clsx("text-red-500", "group-hover:border-border")}>
+      <p className={clsx("text-destructive-foreground", "group-hover:border-border")}>
         // @ds-ignore
         <span className="text-[#ff0000]">Ignored</span>
       </p>

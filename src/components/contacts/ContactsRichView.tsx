@@ -313,7 +313,7 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
                 );
               })}
             <div className="w-px h-6 bg-border mx-1 my-auto hidden sm:block" />
-            <TabsTrigger value="duplicates" className="gap-2 data-[state=active]:bg-background text-orange-500 hover:text-orange-600 transition-colors">
+            <TabsTrigger value="duplicates" className="gap-2 data-[state=active]:bg-background text-warning-foreground hover:text-warning-foreground transition-colors">
               <GitMerge className="w-3.5 h-3.5" />
               Duplicados
             </TabsTrigger>

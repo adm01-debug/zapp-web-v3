@@ -150,7 +150,7 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
           title="Não lidos"
           value={totals.unread}
           icon={AlertTriangle}
-          color={totals.unread > 0 ? 'text-amber-500' : 'text-muted-foreground'}
+          color={totals.unread > 0 ? 'text-warning-foreground' : 'text-muted-foreground'}
           tooltip="Threads com mensagens não lidas"
         />
         <StatCard
@@ -165,7 +165,7 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
           value={totals.warning}
           subtitle="> 80% do prazo"
           icon={TrendingUp}
-          color={totals.warning > 0 ? 'text-amber-500' : 'text-muted-foreground'}
+          color={totals.warning > 0 ? 'text-warning-foreground' : 'text-muted-foreground'}
           tooltip="Threads próximas de violar o SLA"
         />
         <StatCard
@@ -211,13 +211,13 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
                       </Badge>
                     )}
                     {row.sla_warning > 0 && (
-                      <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-amber-500/50 text-amber-600">
+                      <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-warning/50 text-warning-foreground">
                         {row.sla_warning}
                       </Badge>
                     )}
                     <span className={cn('text-xs font-semibold tabular-nums',
                       okPct >= 95 ? 'text-primary' :
-                      okPct >= 80 ? 'text-amber-500' : 'text-destructive'
+                      okPct >= 80 ? 'text-warning-foreground' : 'text-destructive'
                     )}>
                       {okPct}% ok
                     </span>

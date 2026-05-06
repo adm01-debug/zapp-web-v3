@@ -44,7 +44,7 @@ const AuditEvidenceDashboard = () => {
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <Badge variant="secondary">{ev.module}</Badge>
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <CheckCircle2 className="w-5 h-5 text-success-foreground" />
               </div>
               <CardTitle className="text-lg mt-2">{ev.feature}</CardTitle>
             </CardHeader>

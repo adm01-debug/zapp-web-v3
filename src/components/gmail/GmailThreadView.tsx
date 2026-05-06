@@ -163,7 +163,7 @@ export function EmailThreadView({
                 </Badge>
               )}
               {thread.sla_status === 'warning' && (
-                <Badge variant="secondary" className="text-xs gap-1 text-amber-700 bg-amber-100">
+                <Badge variant="secondary" className="text-xs gap-1 text-warning-foreground bg-warning">
                   <Clock className="h-3 w-3" />Prazo Próximo
                 </Badge>
               )}

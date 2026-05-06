@@ -61,14 +61,14 @@ export function ContactDuplicateIndicator({
   if (isLoading || duplicates.length === 0) return null;
 
   return (
-    <div className="border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 rounded-lg p-2 text-sm">
+    <div className="border border-warning bg-warning dark:bg-warning/20 dark:border-warning rounded-lg p-2 text-sm">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center gap-2 w-full text-left"
         aria-expanded={isExpanded}
       >
-        <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
-        <span className="flex-1 text-amber-800 dark:text-amber-200 font-medium">
+        <AlertTriangle className="h-4 w-4 text-warning-foreground flex-shrink-0" />
+        <span className="flex-1 text-warning-foreground dark:text-warning-foreground font-medium">
           {duplicates.length} contato{duplicates.length > 1 ? 's' : ''} similar{duplicates.length > 1 ? 'es' : ''}
         </span>
         <Badge variant="secondary" className="text-xs">{duplicates.length}</Badge>

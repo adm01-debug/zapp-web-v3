@@ -302,7 +302,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
             <motion.div
               animate={isPaused ? { scale: 1 } : { scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: isPaused ? 0 : Infinity }}
-              className={cn("w-3 h-3 rounded-full shrink-0 shadow-lg", isPaused ? "bg-amber-500" : "bg-rose-500")}
+              className={cn("w-3 h-3 rounded-full shrink-0 shadow-lg", isPaused ? "bg-warning" : "bg-rose-500")}
             />
             <div className="flex-1 flex items-center gap-3">
               {/* Waveform Visualization Grid */}
@@ -325,7 +325,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                     }}
                     className={cn(
                       "w-1 rounded-full transition-colors", 
-                      isPaused ? "bg-amber-500/60" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"
+                      isPaused ? "bg-warning/60" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"
                     )}
                   />
                 ))}
@@ -346,7 +346,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
               <div className="flex flex-col items-end min-w-[80px]">
                 <span className={cn(
                   "text-lg font-mono font-black tabular-nums tracking-tight",
-                  isPaused ? "text-amber-600" : "text-rose-600"
+                  isPaused ? "text-warning-foreground" : "text-rose-600"
                 )}>
                   {formatDuration(duration)}
                 </span>
@@ -479,7 +479,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
               className={cn(
                 "h-9 w-9 border-2",
                 isPaused 
-                  ? "border-amber-500 text-amber-500 hover:bg-amber-50" 
+                  ? "border-warning text-warning-foreground hover:bg-warning" 
                   : "border-rose-500 text-rose-500 hover:bg-rose-50"
               )}
               onClick={isPaused ? resumeRecording : pauseRecording}

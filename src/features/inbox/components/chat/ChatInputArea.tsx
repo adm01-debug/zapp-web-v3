@@ -290,7 +290,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
       </AnimatePresence>
       <div className={cn(
         "px-4 py-3 md:px-6 md:py-4 bg-background/95 backdrop-blur-xl border-t border-border/10 relative flex flex-col gap-2 shrink-0  transition-all duration-500 ease-in-out", 
-        isWhisper && "bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-t-2 border-amber-500/30 shadow-[0_-8px_30px_rgba(245,158,11,0.05)]",
+        isWhisper && "bg-warning/[0.04] dark:bg-warning/[0.08] border-t-2 border-warning/30 shadow-[0_-8px_30px_rgba(245,158,11,0.05)]",
         !isWhisper && "focus-within:shadow-[0_-8px_30px_rgba(var(--primary-rgb),0.04)]",
         logic.isMobile && "px-3 py-2 safe-area-bottom"
       )}>
@@ -344,8 +344,8 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }} 
               className="absolute -top-10 left-8 flex items-center gap-2 z-50"
             >
-              <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)] animate-pulse" />
-              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.2em] bg-background/90 dark:bg-amber-950/80 backdrop-blur-md px-4 py-1.5 rounded-2xl border border-amber-500/40 shadow-xl">
+              <div className="w-2 h-2 rounded-full bg-warning shadow-[0_0_12px_rgba(245,158,11,0.8)] animate-pulse" />
+              <span className="text-[10px] font-black text-warning-foreground dark:text-warning-foreground uppercase tracking-[0.2em] bg-background/90 dark:bg-warning/80 backdrop-blur-md px-4 py-1.5 rounded-2xl border border-warning/40 shadow-xl">
                 {typingNotification}
               </span>
             </motion.div>
@@ -415,7 +415,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                 "placeholder:text-muted-foreground/30 placeholder:font-normal resize-none transition-all duration-500 ease-out",
                 "focus:ring-4 focus:ring-primary/5 focus:shadow-lg",
                 logic.isMobile ? "px-5 py-3.5 text-[16px] min-h-[48px] max-h-[160px]" : "px-5 py-[14px] min-h-[48px] max-h-[220px]",
-                isWhisper && "bg-amber-500/5 focus:bg-amber-500/10 ring-amber-500/30 border-amber-500/20",
+                isWhisper && "bg-warning/5 focus:bg-warning/10 ring-amber-500/30 border-warning/20",
                 logic.isOverLimit && "text-destructive",
                 isSending && "opacity-60 pointer-events-none"
               )}

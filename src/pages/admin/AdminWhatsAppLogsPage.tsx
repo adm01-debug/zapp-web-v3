@@ -66,7 +66,7 @@ function modeOfProvider(provider: string | null | undefined): ModeFilter {
 }
 
 function modeBadge(mode: ModeFilter) {
-  if (mode === "official") return <Badge variant="default" className="bg-primary hover:bg-blue-700">Cloud API</Badge>;
+  if (mode === "official") return <Badge variant="default" className="bg-primary hover:bg-primary">Cloud API</Badge>;
   if (mode === "unofficial") return <Badge variant="secondary">Evolution</Badge>;
   return <Badge variant="outline">—</Badge>;
 }
@@ -75,7 +75,7 @@ function statusBadge(s: string) {
   const ok = ["delivered", "read", "sent", "received"].includes(s);
   const warn = ["pending", "queued", "routing"].includes(s);
   if (ok) return <Badge variant="outline" className="border-primary text-primary">{s}</Badge>;
-  if (warn) return <Badge variant="outline" className="border-amber-500 text-amber-700">{s}</Badge>;
+  if (warn) return <Badge variant="outline" className="border-warning text-warning-foreground">{s}</Badge>;
   return <Badge variant="destructive">{s}</Badge>;
 }
 

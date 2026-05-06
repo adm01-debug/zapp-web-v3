@@ -94,8 +94,8 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
         title: 'Foco em Conversão',
         description: 'Leads representam mais de 30% da base. Priorize ações de vendas.',
         icon: Zap,
-        color: 'text-amber-500',
-        bg: 'bg-amber-500/10'
+        color: 'text-warning-foreground',
+        bg: 'bg-warning/10'
       });
     }
 
@@ -105,8 +105,8 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
         title: 'Dados Incompletos',
         description: `${missingCompany} contatos sem empresa. Enriqueça para melhor segmentação.`,
         icon: AlertCircle,
-        color: 'text-orange-500',
-        bg: 'bg-orange-500/10'
+        color: 'text-warning-foreground',
+        bg: 'bg-warning/10'
       });
     }
 
@@ -244,7 +244,7 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
       {/* Actionable Insights Section */}
       <div className="pt-4 border-t border-border/50">
         <div className="flex items-center gap-2 mb-4">
-          <Lightbulb className="w-4 h-4 text-amber-500" />
+          <Lightbulb className="w-4 h-4 text-warning-foreground" />
           <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Insights Acionáveis</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

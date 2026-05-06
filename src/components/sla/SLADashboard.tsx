@@ -28,14 +28,14 @@ interface SLAStats {
 
 function getComplianceColor(rate: number): string {
   if (rate >= 95) return 'text-primary';
-  if (rate >= 80) return 'text-amber-600';
-  return 'text-red-600';
+  if (rate >= 80) return 'text-warning-foreground';
+  return 'text-destructive-foreground';
 }
 
 function getProgressColor(rate: number): string {
   if (rate >= 95) return 'bg-primary';
-  if (rate >= 80) return 'bg-amber-500';
-  return 'bg-red-500';
+  if (rate >= 80) return 'bg-warning';
+  return 'bg-destructive';
 }
 
 interface Props {
@@ -133,9 +133,9 @@ export const SLADashboard: React.FC<Props> = ({
 
       {/* Violations alert */}
       {hasViolations && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertTriangle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-sm text-red-800">
+        <Alert className="border-destructive bg-destructive">
+          <AlertTriangle className="h-4 w-4 text-destructive-foreground" />
+          <AlertDescription className="text-sm text-destructive-foreground">
             <strong>{stats.unresolved_violations}</strong> violação{stats.unresolved_violations !== 1 ? 'ões' : ''} ativa{stats.unresolved_violations !== 1 ? 's' : ''} em{' '}
             <strong>{stats.breached_conversations}</strong> conversa{stats.breached_conversations !== 1 ? 's' : ''}.
           </AlertDescription>
@@ -146,7 +146,7 @@ export const SLADashboard: React.FC<Props> = ({
       <div className="grid grid-cols-3 gap-2 text-xs">
         <Card>
           <CardContent className="p-2.5 text-center">
-            <p className={`text-xl font-bold ${stats.first_response_violations > 0 ? 'text-red-600' : 'text-primary'}`}>
+            <p className={`text-xl font-bold ${stats.first_response_violations > 0 ? 'text-destructive-foreground' : 'text-primary'}`}>
               {stats.first_response_violations}
             </p>
             <p className="text-muted-foreground">1ª Resposta</p>
@@ -154,7 +154,7 @@ export const SLADashboard: React.FC<Props> = ({
         </Card>
         <Card>
           <CardContent className="p-2.5 text-center">
-            <p className={`text-xl font-bold ${stats.resolution_violations > 0 ? 'text-red-600' : 'text-primary'}`}>
+            <p className={`text-xl font-bold ${stats.resolution_violations > 0 ? 'text-destructive-foreground' : 'text-primary'}`}>
               {stats.resolution_violations}
             </p>
             <p className="text-muted-foreground">Resolução</p>

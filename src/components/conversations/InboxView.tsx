@@ -100,7 +100,7 @@ export const InboxView: React.FC<{ instanceName?: string }> = ({ instanceName = 
                       {sanitizeText(selectedConv.contact_name ?? selectedConv.remote_jid?.split('@')[0] ?? 'Conversa')}
                     </p>
                     {selectedConv.is_bot_active && (
-                      <Badge className="text-[10px] bg-blue-100 text-blue-700 h-4 px-1.5 border-none font-bold uppercase tracking-wider">Bot</Badge>
+                      <Badge className="text-[10px] bg-primary text-primary-foreground h-4 px-1.5 border-none font-bold uppercase tracking-wider">Bot</Badge>
                     )}
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-tight">
