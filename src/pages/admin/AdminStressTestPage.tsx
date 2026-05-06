@@ -53,7 +53,11 @@ export default function AdminStressTestPage() {
   const [intervalSec, setIntervalSec] = useState(5);
   const [failurePolicy, setFailurePolicy] = useState<'stop_first' | 'continue' | 'stop_after_n'>('stop_first');
   const [agentCount, setAgentCount] = useState(1);
+  const [targetQueue, setTargetQueue] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Data
+  const [queues, setQueues] = useState<any[]>([]);
 
   // Run state
   const [status, setStatus] = useState<StressRunStatus>('idle');
@@ -65,6 +69,14 @@ export default function AdminStressTestPage() {
   const [startTime, setStartTime] = useState<number>(0);
   const [throughputData, setThroughputData] = useState<{ time: string, msgSec: number }[]>([]);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const fetchQueues = async () => {
+      const { data } = await supabase.from('queues').select('id, name').order('name');
+      setQueues(data || []);
+    };
+    fetchQueues();
+  }, []);
 
   const evo = useEvolutionApi();
 
