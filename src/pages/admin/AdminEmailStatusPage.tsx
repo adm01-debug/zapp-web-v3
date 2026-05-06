@@ -15,7 +15,7 @@ import type { GmailHealthInfo, GmailFailure } from '@/services/gmail/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export default function AdminGmailStatusPage() {
+export default function AdminEmailStatusPage() {
   const { accounts, schemaStatus, lastRequestId } = useGmail();
   const [health, setHealth] = useState<GmailHealthInfo | null>(null);
   const [loading, setLoading] = useState(true);

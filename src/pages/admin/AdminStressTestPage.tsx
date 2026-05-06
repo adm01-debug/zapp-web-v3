@@ -53,7 +53,12 @@ export default function AdminStressTestPage() {
   const [intervalSec, setIntervalSec] = useState(5);
   const [failurePolicy, setFailurePolicy] = useState<'stop_first' | 'continue' | 'stop_after_n'>('stop_first');
   const [agentCount, setAgentCount] = useState(1);
+  const [targetQueue, setTargetQueue] = useState<string | null>(null);
+  const [simulateTokenExpiration, setSimulateTokenExpiration] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Data
+  const [queues, setQueues] = useState<any[]>([]);
 
   // Run state
   const [status, setStatus] = useState<StressRunStatus>('idle');
@@ -65,6 +70,14 @@ export default function AdminStressTestPage() {
   const [startTime, setStartTime] = useState<number>(0);
   const [throughputData, setThroughputData] = useState<{ time: string, msgSec: number }[]>([]);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const fetchQueues = async () => {
+      const { data } = await supabase.from('queues').select('id, name').order('name');
+      setQueues(data || []);
+    };
+    fetchQueues();
+  }, []);
 
   const evo = useEvolutionApi();
 
@@ -83,7 +96,15 @@ export default function AdminStressTestPage() {
 
     // Check media accessibility if URL exists
     if (sample.url) {
-      const acc = await checkUrlAccessibility(sample.url);
+      let testUrl = sample.url;
+      // Simulate private URL with tokens if enabled
+      if (simulateTokenExpiration) {
+        // Randomly expire 10% of tokens
+        const isExpired = Math.random() < 0.1;
+        testUrl += (testUrl.includes('?') ? '&' : '?') + `token=${isExpired ? 'expired_test' : 'valid_test'}&expires=${Date.now() + 3600000}`;
+      }
+
+      const acc = await checkUrlAccessibility(testUrl);
       accessibility = {
         reachable: acc.reachable,
         latencyMs: acc.latencyMs,
@@ -430,6 +451,39 @@ export default function AdminStressTestPage() {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="queue">Fila (Opcional - Simula Atendentes da Fila)</Label>
+            <Select value={targetQueue || 'none'} onValueChange={(v) => setTargetQueue(v === 'none' ? null : v)} disabled={isRunning}>
+              <SelectTrigger id="queue">
+                <SelectValue placeholder="Selecione uma fila..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhuma (Alvo Direto)</SelectItem>
+                {queues.map(q => (
+                  <SelectItem key={q.id} value={q.id}>{q.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Se selecionada, o teste simula a carga sendo processada por agentes dessa fila.</p>
+          </div>
+
+          <div className="md:col-span-2 flex items-center space-x-2 p-2 rounded-lg border bg-muted/20">
+            <input 
+              type="checkbox" 
+              id="token-sim" 
+              checked={simulateTokenExpiration} 
+              onChange={(e) => setSimulateTokenExpiration(e.target.checked)}
+              disabled={isRunning}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <Label htmlFor="token-sim" className="cursor-pointer">
+              Simular Expiração de Tokens (Mídias Privadas)
+            </Label>
+            <p className="text-[10px] text-muted-foreground ml-auto">
+              Injeta tokens aleatoriamente expirados para testar resiliência de leitura.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="total">Total de envios</Label>
             <Input id="total" type="number" min={8} max={500} value={total}
               onChange={(e) => setTotal(Math.max(8, Math.min(500, Number(e.target.value) || 8)))}
@@ -630,6 +684,66 @@ export default function AdminStressTestPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {(status === 'completed' || status === 'failed' || status === 'aborted') && results.length > 0 && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" /> Relatório para Time Comercial
+            </CardTitle>
+            <CardDescription>Análise agregada de falhas e eventos do teste.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="p-4 bg-background rounded-lg border">
+                <p className="text-xs text-muted-foreground uppercase">Custo Estimado Desperdiçado</p>
+                <p className="text-2xl font-bold text-destructive">
+                  R$ {(results.filter(r => r.status === 'fail').length * 0.15).toFixed(2)}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">Baseado em R$ 0,15 por tentativa falha (WA API + Hub)</p>
+              </div>
+              <div className="p-4 bg-background rounded-lg border">
+                <p className="text-xs text-muted-foreground uppercase">Ponto de Estrangulamento</p>
+                <p className="text-xl font-bold">
+                  {results.filter(r => r.status === 'fail').length > 0 
+                    ? results.find(r => r.status === 'fail')?.type === 'image' || results.find(r => r.status === 'fail')?.type === 'video'
+                      ? 'Processamento de Mídia'
+                      : 'Latência de Rede / Instância'
+                    : 'Nenhum Detectado'}
+                </p>
+              </div>
+              <div className="p-4 bg-background rounded-lg border">
+                <p className="text-xs text-muted-foreground uppercase">Confiabilidade Mídia</p>
+                <p className="text-2xl font-bold text-primary">
+                  {results.filter(r => r.accessibility).length > 0
+                    ? `${Math.round((results.filter(r => r.accessibility?.reachable).length / results.filter(r => r.accessibility).length) * 100)}%`
+                    : '100%'}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-background rounded-lg border">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-yellow-500" /> Recomendações Estratégicas
+              </h4>
+              <ul className="text-sm space-y-2 list-disc pl-5 text-muted-foreground">
+                {results.filter(r => r.status === 'fail').length > results.length * 0.1 ? (
+                  <li className="text-destructive font-medium">Urgente: Taxa de erro acima de 10%. Reduzir volume de outbound ou trocar instância.</li>
+                ) : (
+                  <li>Instância estável para o volume atual. Possibilidade de escalar em 20%.</li>
+                )}
+                {results.filter(r => r.accessibility && !r.accessibility.reachable).length > 0 && (
+                  <li>Detectada falha em {results.filter(r => r.accessibility && !r.accessibility.reachable).length} arquivos de mídia. Verificar permissões do bucket privado.</li>
+                )}
+                <li>Manter intervalo de {intervalSec}s para evitar flagging de spam.</li>
+              </ul>
+            </div>
+            
+            <Button onClick={downloadReport} className="w-full gap-2">
+              <Download className="h-4 w-4" /> Exportar Relatório Consolidado para Comercial
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

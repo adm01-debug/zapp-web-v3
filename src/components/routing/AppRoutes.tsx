@@ -55,8 +55,8 @@ const AdminAutomationsPage = lazyWithRetry(() => import("@/pages/admin/AdminAuto
 const AdminAutomationLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminAutomationLogsPage"));
 const AdminWhatsAppModePage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppModePage"));
 const AdminWhatsAppLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppLogsPage"));
-const AdminGmailStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailStatusPage"));
-const AdminGmailAuditPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailAuditPage"));
+const AdminEmailStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminEmailStatusPage"));
+const AdminEmailAuditPage = lazyWithRetry(() => import("@/pages/admin/AdminEmailAuditPage"));
 const AuditEvidenceDashboard = lazyWithRetry(() => import("@/pages/admin/AuditEvidenceDashboard"));
 const AdminDevDiagnosticsPage = lazyWithRetry(() => import("@/pages/admin/AdminDevDiagnosticsPage"));
 const Install = lazyWithRetry(() => import("@/pages/Install"));
@@ -126,8 +126,8 @@ export function AppRoutes() {
         <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
         <Route path="/admin/settings/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
         <Route path="/admin/whatsapp-logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppLogsPage /></ProtectedRoute>} />
-        <Route path="/admin/gmail-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailStatusPage /></ProtectedRoute>} />
-        <Route path="/admin/gmail-audit" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailAuditPage /></ProtectedRoute>} />
+        <Route path="/admin/gmail-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminEmailStatusPage /></ProtectedRoute>} />
+        <Route path="/admin/gmail-audit" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminEmailAuditPage /></ProtectedRoute>} />
         <Route path="/admin/audit-evidence" element={<ProtectedRoute requiredRoles={['admin']}><AuditEvidenceDashboard /></ProtectedRoute>} />
         <Route path="/admin/dev-diagnostics" element={<ProtectedRoute requiredRoles={['dev']}><AdminDevDiagnosticsPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
