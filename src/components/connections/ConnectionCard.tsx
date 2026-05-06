@@ -209,12 +209,26 @@ export function ConnectionCard({
             {/* Right: single primary action + menu */}
             <div className="flex items-center gap-2 shrink-0">
               {(connection.status !== 'connected' || isPhantomLike) && !isOfficial && (
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button size="sm" onClick={() => onShowQrCode(connection)}
-                    className="bg-whatsapp text-primary-foreground hover:bg-whatsapp/90 shadow-lg shadow-whatsapp/20">
-                    <QrCode className="w-4 h-4 mr-1.5" />Reconectar
-                  </Button>
-                </motion.div>
+                <div className="flex gap-2">
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      disabled={reconnecting}
+                      onClick={handleReconnect}
+                      className="border-whatsapp text-whatsapp hover:bg-whatsapp/5"
+                    >
+                      {reconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
+                      Reconectar
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                    <Button size="sm" onClick={() => onShowQrCode(connection)}
+                      className="bg-whatsapp text-primary-foreground hover:bg-whatsapp/90 shadow-lg shadow-whatsapp/20">
+                      <QrCode className="w-4 h-4 mr-1.5" />QR Code
+                    </Button>
+                  </motion.div>
+                </div>
               )}
               {connection.status !== 'connected' && isOfficial && connection.instance_id && (
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
