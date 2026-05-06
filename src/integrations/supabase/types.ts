@@ -5641,6 +5641,71 @@ export type Database = {
         }
         Relationships: []
       }
+      instance_alerts: {
+        Row: {
+          alert_type: string
+          connection_id: string | null
+          created_at: string | null
+          id: string
+          instance_name: string
+          notified_at: string | null
+          reason: string | null
+          resolved_at: string | null
+          severity: string | null
+        }
+        Insert: {
+          alert_type: string
+          connection_id?: string | null
+          created_at?: string | null
+          id?: string
+          instance_name: string
+          notified_at?: string | null
+          reason?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+        }
+        Update: {
+          alert_type?: string
+          connection_id?: string | null
+          created_at?: string | null
+          id?: string
+          instance_name?: string
+          notified_at?: string | null
+          reason?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instance_alerts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instance_alerts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_agent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instance_alerts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instance_alerts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instance_auth_events: {
         Row: {
           created_at: string
