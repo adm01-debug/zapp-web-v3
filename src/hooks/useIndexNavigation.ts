@@ -54,10 +54,18 @@ export function useIndexNavigation(user: User | null, loading: boolean) {
     if (deepLinkViewHandledRef.current || loading || !user) return;
     const params = new URLSearchParams(window.location.search);
     const targetView = params.get('view');
-    if (targetView && targetView !== currentView) {
+    
+    // Se o targetView for uma rota que agora é interna (como connections ou integrations)
+    // mapeamos para o novo hub unificado.
+    let resolvedView = targetView;
+    if (targetView === 'connections' || targetView === 'integrations') {
+      resolvedView = 'connections'; // 'connections' é o ID do Hub unificado no lazyViews/ViewRouter
+    }
+
+    if (resolvedView && resolvedView !== currentView) {
       deepLinkViewHandledRef.current = true;
-      setCurrentView(targetView);
-    } else if (targetView) {
+      setCurrentView(resolvedView);
+    } else if (resolvedView) {
       deepLinkViewHandledRef.current = true;
     }
   }, [loading, user, currentView, setCurrentView]);
