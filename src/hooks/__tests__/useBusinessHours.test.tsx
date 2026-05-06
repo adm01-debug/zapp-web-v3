@@ -68,6 +68,6 @@ describe('useBusinessHours', () => {
     const { result } = renderHook(() => useBusinessHours('wc1'), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     const sunday = result.current.businessHours?.find((h) => h.day_of_week === 0);
-    expect(sunday?.is_open).toBe(false);
+    expect(sunday?.is_enabled).toBe(false);
   });
 });
