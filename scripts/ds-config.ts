@@ -21,9 +21,20 @@ export const DS_CONFIG = {
     'focus-within', 'focus-visible'
   ],
   FORBIDDEN_PATTERNS: [
-    { pattern: /(?:bg|text|border)-(?:\[(?:#(?:[0-9a-fA-F]{3,6})|rgb|hsl|rgba|hsla)\])\b/, label: 'Arbitrary Color' },
-    { pattern: /(?:bg|text|border)-(?:white|black|red|blue|green|yellow|slate|gray|zinc|neutral|stone|orange|amber|lime|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose)-[0-9]+\b/, label: 'Literal Color' },
+    { pattern: /(?:bg|text|border)-(?:\[(?:#(?:[0-9a-fA-F]{3,6})|rgb|hsl|rgba|hsla)\])/, label: 'Arbitrary Color' },
+    { pattern: /(?:bg|text|border)-(?:white|black(?:(?!\-[0-9]))|(?:red|blue|green|yellow|slate|gray|zinc|neutral|stone|orange|amber|lime|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose)-[0-9]+)\b/, label: 'Literal Color' },
     { pattern: /font-(?:inter|sans|mono|serif)\b/, label: 'Literal Font' },
-    { pattern: /#([0-9a-fA-F]{3,6})\b/, label: 'Raw Hex' },
-  ]
+    { pattern: /(?<!\[)#([0-9a-fA-F]{3,6})\b/, label: 'Raw Hex' },
+  ],
+  IGNORE_DIRECTIVE: '@ds-ignore',
+  IGNORED_FILES: [
+    'DesignSystem.tsx',
+    'tailwind.config.ts',
+    'index.css',
+    'check-design-system.ts',
+    'ds-config.ts',
+    'test-audit.ts',
+    'check-design-system.test.ts'
+  ],
+  IGNORED_DIRS: ['node_modules', '.git', 'dist', 'stories', '__tests__', '.workspace']
 };
