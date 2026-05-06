@@ -7,10 +7,11 @@ import { log } from '@/lib/logger';
 export interface BusinessHour {
   id?: string;
   whatsapp_connection_id: string;
+  instance_name?: string;
   day_of_week: number;
-  is_open: boolean;
-  open_time: string;
-  close_time: string;
+  is_enabled: boolean;
+  start_time: string;
+  end_time: string;
 }
 
 export interface AwayMessage {
