@@ -96,4 +96,47 @@ describe("Design System Auditor", () => {
     expect(violations.some(v => v.match === "bg-black")).toBe(true);
     expect(violations.some(v => v.match === "text-white")).toBe(true);
   });
+  it("should detect classes in multiline template literals", () => {
+    const content = `
+      const styles = \`
+        bg-red-500
+        text-white
+      \`;
+    `;
+    const violations: Violation[] = [];
+    scanContent(content, "test.tsx", violations);
+    
+    expect(violations.length).toBe(2);
+    expect(violations.some(v => v.match === "bg-red-500")).toBe(true);
+    expect(violations.some(v => v.match === "text-white")).toBe(true);
+  });
+
+  it("should detect classes in objects with multiline keys", () => {
+    const content = `
+      const classes = cn({
+        "bg-[#fff]": 
+          isActive,
+        "hover:text-black": true
+      });
+    `;
+    const violations: Violation[] = [];
+    scanContent(content, "test.tsx", violations);
+    
+    expect(violations.length).toBe(2);
+    expect(violations.some(v => v.match === "bg-[#fff]")).toBe(true);
+    expect(violations.some(v => v.match === "hover:text-black")).toBe(true);
+  });
+
+  it("should respect // @ds-ignore on the specific line even in multiline contexts", () => {
+    const content = `
+      const x = "bg-red-500"; // @ds-ignore
+      const y = "bg-red-600";
+    `;
+    const violations: Violation[] = [];
+    scanContent(content, "test.tsx", violations);
+    
+    expect(violations.length).toBe(1);
+    expect(violations[0].match).toBe("bg-red-600");
+  });
 });
+
