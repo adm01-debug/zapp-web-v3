@@ -8,9 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog';
-import {
   Database, Globe, Webhook, Cpu, Plus, Settings, Save, Trash2,
   RefreshCw, AlertCircle, ExternalLink, ShieldCheck, Link, Loader2,
 } from 'lucide-react';
