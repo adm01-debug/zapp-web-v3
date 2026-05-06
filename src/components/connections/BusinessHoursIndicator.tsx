@@ -61,7 +61,7 @@ export function BusinessHoursIndicator({
         return;
       }
 
-      if (!data.is_open) {
+      if (!data.is_enabled) {
         setIsOpen(false);
         setTodayHours('Fechado hoje');
         setLoading(false);
@@ -69,8 +69,8 @@ export function BusinessHoursIndicator({
       }
 
       // Check if current time is within business hours
-      const openTime = data.open_time.slice(0, 5);
-      const closeTime = data.close_time.slice(0, 5);
+      const openTime = data.start_time.slice(0, 5);
+      const closeTime = data.end_time.slice(0, 5);
       const isWithinHours = currentTimeStr >= openTime && currentTimeStr <= closeTime;
 
       setIsOpen(isWithinHours);
