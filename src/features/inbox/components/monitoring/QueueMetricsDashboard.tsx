@@ -235,8 +235,8 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
                     <XAxis dataKey="voice_preset" fontSize={10} />
                     <YAxis fontSize={10} />
                     <RechartsTooltip />
-                    <Bar dataKey="total_requests" name="Total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="failed_requests" name="Falhas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="total_requests" name="Total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="failed_requests" name="Falhas" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
