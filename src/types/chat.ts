@@ -122,7 +122,6 @@ export interface Message {
   /** Meta-informações brutas (Evolution/WhatsApp API). */
   media_meta?: any;
 }
-}
 
 
 export interface Conversation {
