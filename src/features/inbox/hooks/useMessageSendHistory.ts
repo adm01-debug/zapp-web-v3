@@ -97,7 +97,7 @@ export function useMessageSendHistory(messageId: string | undefined, enabled: bo
           latency: e.latency_ms,
           instance: e.instance_name,
           error_code: e.error_code,
-          ...e.metadata
+          ...(typeof e.metadata === 'object' && e.metadata !== null ? e.metadata : {})
         },
       }));
 
