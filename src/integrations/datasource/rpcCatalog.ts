@@ -25,6 +25,7 @@ import type {
   EvolutionMessage,
   EvolutionConversation,
 } from '@/types/evolutionExternal';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 
 export type DatasourceClient = 'lovable' | 'external';
 
@@ -193,7 +194,7 @@ interface SyncInteractionParams {
 
 const def = <P, R>(d: RpcDefinition<P, R>) => d;
 
-const DEFAULT_INSTANCE = { p_instance: 'wpp2' } as const;
+const DEFAULT_INSTANCE = { p_instance: DEFAULT_WHATSAPP_INSTANCE } as const;
 
 export const RPC = {
   // ── Reads ────────────────────────────────────────────────────────────────
