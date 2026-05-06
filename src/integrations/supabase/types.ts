@@ -3862,10 +3862,24 @@ export type Database = {
             referencedColumns: ["instance_name"]
           },
           {
+            foreignKeyName: "conversation_transfers_source_instance_fkey"
+            columns: ["source_instance"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
+            referencedColumns: ["instance_name"]
+          },
+          {
             foreignKeyName: "conversation_transfers_target_instance_fkey"
             columns: ["target_instance"]
             isOneToOne: false
             referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
             referencedColumns: ["instance_name"]
           },
         ]
@@ -5481,6 +5495,13 @@ export type Database = {
             columns: ["instance_name"]
             isOneToOne: false
             referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "instance_members_instance_name_fkey"
+            columns: ["instance_name"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
             referencedColumns: ["instance_name"]
           },
         ]
@@ -8328,6 +8349,33 @@ export type Database = {
           target_kind?: string
           trace_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      rls_violation_log: {
+        Row: {
+          attempted_at: string | null
+          id: string
+          metadata: Json | null
+          operation: string | null
+          table_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempted_at?: string | null
+          id?: string
+          metadata?: Json | null
+          operation?: string | null
+          table_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempted_at?: string | null
+          id?: string
+          metadata?: Json | null
+          operation?: string | null
+          table_name?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -12193,6 +12241,19 @@ export type Database = {
         }
         Relationships: []
       }
+      v_admin_sla_dashboard: {
+        Row: {
+          avg_wait_min: number | null
+          department: string | null
+          display_name: string | null
+          escalated: number | null
+          expired: number | null
+          instance_name: string | null
+          pending: number | null
+          total_tickets: number | null
+        }
+        Relationships: []
+      }
       v_email_accounts_unified: {
         Row: {
           created_at: string | null
@@ -12264,6 +12325,13 @@ export type Database = {
             referencedRelation: "instance_registry"
             referencedColumns: ["instance_name"]
           },
+          {
+            foreignKeyName: "instance_members_instance_name_fkey"
+            columns: ["instance_name"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
+            referencedColumns: ["instance_name"]
+          },
         ]
       }
       v_pending_transfers: {
@@ -12283,6 +12351,13 @@ export type Database = {
             referencedRelation: "instance_registry"
             referencedColumns: ["instance_name"]
           },
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
+            referencedColumns: ["instance_name"]
+          },
         ]
       }
       v_pending_transfers_secure: {
@@ -12300,6 +12375,13 @@ export type Database = {
             columns: ["target_instance"]
             isOneToOne: false
             referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
             referencedColumns: ["instance_name"]
           },
         ]
@@ -12338,6 +12420,13 @@ export type Database = {
             columns: ["target_instance"]
             isOneToOne: false
             referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
             referencedColumns: ["instance_name"]
           },
         ]
@@ -12381,6 +12470,13 @@ export type Database = {
             columns: ["target_instance"]
             isOneToOne: false
             referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
             referencedColumns: ["instance_name"]
           },
         ]
@@ -12599,6 +12695,10 @@ export type Database = {
       fn_add_business_minutes: {
         Args: { p_instance_name: string; p_minutes: number; p_start: string }
         Returns: string
+      }
+      fn_check_transfer_access: {
+        Args: { p_transfer_id: string }
+        Returns: boolean
       }
       fn_complete_transfer: {
         Args: { p_notes: string; p_transfer_id: string; p_type?: string }
