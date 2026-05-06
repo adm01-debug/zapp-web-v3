@@ -5,8 +5,12 @@ import { ShoppingCart } from '../ShoppingCart';
 const mockProduct = {
   id: '1',
   name: 'Test Product',
+  description: 'Test Description',
   price: 100,
   currency: 'BRL',
+  image_url: null,
+  category: 'Test Category',
+  sku: 'TEST-SKU',
   stock_quantity: 10,
   is_active: true,
 };
