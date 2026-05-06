@@ -129,6 +129,7 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
     '#1d6f42': 'Microsoft Excel brand color',
     '#d24726': 'Microsoft PowerPoint brand color',
     '#f8bc34': 'Archive/Zip file color',
+    '#000000': 'OLED Black (Intentional for Dark Mode)',
     '#4285f4': 'Google Blue',
     '#34a853': 'Google Green',
     '#fbbc05': 'Google Yellow',
