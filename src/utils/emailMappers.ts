@@ -7,7 +7,7 @@ import {
   EmailLabelInfo,
   UnifiedEmailAccount,
   SLAStatus
-} from '@/types/email';
+} from '@/types/gmail';
 
 /**
  * Mapeia dados brutos do Supabase/RPC para interfaces tipadas do Email.

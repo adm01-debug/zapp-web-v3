@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { emailMappers } from '@/utils/emailMappers';
-import { EmailAccount } from '@/types/email';
+import { EmailAccount } from '@/types/gmail';
 const supabase = _supabase as any;
 import { emailRefreshToken, emailRevokeAccount, emailRegisterWatch } from './email/emailApi';
 import { toast } from 'sonner';
