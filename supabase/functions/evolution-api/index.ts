@@ -298,8 +298,18 @@ serve(async (req) => {
 
     if (action === 'send-audio') {
       if (isMultipart) {
-        // Direct proxy for multipart - Evolution API expects 'audio' as a file
-        return await proxy(`/message/sendWhatsAppAudio/${instance}`, 'POST', body);
+        const formData = body as FormData;
+        const evolutionFormData = new FormData();
+        // Propagate essential fields for Evolution API v2 multipart
+        evolutionFormData.append('number', formData.get('number') || '');
+        if (formData.get('delay')) evolutionFormData.append('delay', formData.get('delay') || '');
+        if (formData.get('encoding')) evolutionFormData.append('encoding', formData.get('encoding') || '');
+        if (formData.get('isPtt')) evolutionFormData.append('ptt', formData.get('isPtt') || 'true');
+        
+        const audioFile = formData.get('audio');
+        if (audioFile) evolutionFormData.append('audio', audioFile);
+        
+        return await proxy(`/message/sendWhatsAppAudio/${instance}`, 'POST', evolutionFormData);
       }
       
       const jsonBody = body as Record<string, unknown>;
