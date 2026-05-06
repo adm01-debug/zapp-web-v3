@@ -65,7 +65,6 @@ export { FilterPresets } from './FilterPresets';
 // Toolbar & actions
 export { ContactToolbar } from './ContactToolbar';
 export { BulkActionsBar } from './BulkActionsBar';
-export { ContactBulkActionsBar } from './ContactBulkActionsBar';
 export { ContactBulkTagDialog } from './ContactBulkTagDialog';
 
 // Merge & duplicates
