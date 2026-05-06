@@ -35,8 +35,9 @@ function getSuggestion(label: string, match: string): { suggestion: string, prio
   const cleanMatch = match.replace(variantPrefixRegex, '').trim();
 
   if (label === 'Raw Hex' || label === 'Arbitrary Color') {
-    const isWhite = cleanMatch.toLowerCase().includes('white') || cleanMatch.toLowerCase().includes('#ffffff') || cleanMatch.toLowerCase().includes('#fff');
-    const isBlack = cleanMatch.toLowerCase().includes('black') || cleanMatch.toLowerCase().includes('#000000') || cleanMatch.toLowerCase().includes('#000');
+    const lowerClean = cleanMatch.toLowerCase();
+    const isWhite = lowerClean.includes('white') || lowerClean.includes('#ffffff') || lowerClean.includes('#fff');
+    const isBlack = lowerClean.includes('black') || lowerClean.includes('#000000') || lowerClean.includes('#000');
     
     if (isWhite) {
        const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-background' : (cleanMatch.startsWith('text-') ? 'text-foreground' : (cleanMatch.startsWith('border-') ? 'border-border' : undefined));
@@ -95,12 +96,11 @@ function scanDir(dir: string, results: Violation[]) {
 
       FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
         const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
-        // Pattern inside quotes or delimiters
-        const fullPattern = new RegExp(`(?:^|['"\`\\s])${variantsPart}${pattern.source}(?=['"\`\\s]|$)`, 'g');
+        const fullPattern = new RegExp(`${variantsPart}${pattern.source}`, 'g');
         const matches = line.matchAll(fullPattern);
         
         for (const match of matches) {
-          const rawMatch = match[0].trim().replace(/^['"`]|['"`]$/g, '');
+          const rawMatch = match[0].trim();
           if (!rawMatch) continue;
 
           const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);

@@ -1,10 +1,5 @@
 # Design System Audit
-Generated on: 5/6/2026, 5:23:36 PM
-
-## src/App.css
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| High | 41 | Raw Hex | `#888` | `#888` | Use theme tokens (primary, secondary, accent, etc.) |
+Generated on: 5/6/2026, 5:23:55 PM
 
 ## src/components/AppErrorBoundary.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
@@ -61,24 +56,13 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 26 | Literal Color | `text-red-400` | `text-red-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 26 | Literal Color | `bg-red-500` | `bg-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 26 | Literal Color | `border-red-500` | `border-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 27 | Literal Color | `text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 27 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 27 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 28 | Literal Color | `text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 28 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 28 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 106 | Literal Color | `border-red-500` | `border-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 119 | Literal Color | `bg-red-500` | `bg-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 122 | Literal Color | `text-red-400` | `text-red-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 148 | Literal Color | `text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 159 | Literal Color | `bg-red-400` | `bg-red-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 159 | Literal Color | `bg-amber-400` | `bg-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 173 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 173 | Literal Color | `text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 286 | Literal Color | `bg-red-500` | `bg-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 286 | Literal Color | `border-red-500` | `border-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 288 | Literal Color | `text-red-400` | `text-red-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 289 | Literal Color | `text-red-300` | `text-red-300` | Use semantic tokens (destructive, muted, popover, etc.) |
 
@@ -169,9 +153,7 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 97 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 98 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 108 | Literal Color | `text-orange-500` | `text-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 109 | Literal Color | `bg-orange-500` | `bg-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 183 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 | Medium | 247 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
@@ -212,11 +194,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 150 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 171 | Literal Color | `text-red-600` | `text-red-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 
-## src/components/contacts/ContactContentArea.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 60 | Literal Color | `border-orange-500` | `border-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-
 ## src/components/contacts/ContactDialogs.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
@@ -227,7 +204,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 |---|---|---|---|---|---|
 | Medium | 64 | Literal Color | `border-amber-200` | `border-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 64 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 64 | Literal Color | `dark:bg-amber-950` | `bg-amber-950` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 64 | Literal Color | `dark:border-amber-800` | `border-amber-800` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 70 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 71 | Literal Color | `text-amber-800` | `text-amber-800` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -240,7 +216,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 187 | Literal Color | `border-amber-200` | `border-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 187 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 187 | Literal Color | `dark:border-amber-800` | `border-amber-800` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 187 | Literal Color | `dark:bg-amber-950` | `bg-amber-950` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 193 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 
 ## src/components/contacts/ContactErrorBoundary.tsx
@@ -300,8 +275,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Low | 139 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
-| Medium | 189 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 189 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 190 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 191 | Literal Color | `text-amber-800` | `text-amber-800` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 191 | Literal Color | `dark:text-amber-300` | `text-amber-300` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -377,12 +350,10 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 22 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 22 | Literal Color | `border-amber-300` | `border-amber-300` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 22 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 22 | Literal Color | `dark:bg-amber-950` | `bg-amber-950` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 22 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 23 | Literal Color | `text-red-700` | `text-red-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 23 | Literal Color | `border-red-300` | `border-red-300` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 23 | Literal Color | `bg-red-50` | `bg-red-50` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 23 | Literal Color | `dark:bg-red-950` | `bg-red-950` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 23 | Literal Color | `dark:text-red-400` | `text-red-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 25 | Literal Color | `border-gray-200` | `border-gray-200` | muted, muted-foreground or border |
 | Low | 51 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
@@ -447,16 +418,12 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/components/contacts/ContactsStatsBar.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 62 | Literal Color | `border-amber-400` | `border-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 62 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 62 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 62 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 62 | Literal Color | `dark:bg-amber-950` | `bg-amber-950` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 88 | Literal Color | `border-pink-400` | `border-pink-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 88 | Literal Color | `text-pink-700` | `text-pink-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 88 | Literal Color | `bg-pink-50` | `bg-pink-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 88 | Literal Color | `dark:text-pink-400` | `text-pink-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 88 | Literal Color | `dark:bg-pink-950` | `bg-pink-950` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/contacts/ContactsTable.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
@@ -491,7 +458,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 49 | Literal Color | `border-amber-300` | `border-amber-300` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 49 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 49 | Literal Color | `dark:border-amber-700` | `border-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 49 | Literal Color | `dark:bg-amber-950` | `bg-amber-950` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 53 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 53 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 57 | Literal Color | `text-amber-800` | `text-amber-800` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -502,7 +468,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 73 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 73 | Literal Color | `bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 73 | Literal Color | `dark:text-amber-300` | `text-amber-300` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 73 | Literal Color | `dark:bg-amber-900` | `bg-amber-900` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 84 | Literal Color | `border-amber-400` | `border-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 84 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 84 | Literal Color | `hover:bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -567,11 +532,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 166 | Literal Color | `bg-amber-400` | `bg-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 166 | Literal Color | `bg-red-400` | `bg-red-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 
-## src/components/dashboard/AgentPerformancePanel.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 110 | Literal Color | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-
 ## src/components/dashboard/ConversationHeatmap.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
@@ -612,17 +572,10 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 159 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 159 | Literal Color | `border-amber-400` | `border-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 
-## src/components/dashboard/metrics/AnimatedMetricCard.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 57 | Literal Color | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 57 | Literal Color | `hover:border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-
 ## src/components/debug/ThemeDebugger.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Low | 101 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
-| Medium | 107 | Literal Color | `bg-orange-500` | `bg-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 107 | Literal Color | `text-orange-500` | `text-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/effects/EasterEggs.tsx
@@ -633,7 +586,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/components/email/EmailSLABadge.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 35 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 35 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 35 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 105 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -654,18 +606,11 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 276 | Literal Color | `text-red-600` | `text-red-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 281 | Literal Color | `text-red-500` | `text-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
-## src/components/email/OutlookInboxView.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 150 | Literal Color | `bg-blue-50` | `bg-blue-50` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 150 | Literal Color | `dark:bg-blue-950` | `bg-blue-950` | Use semantic tokens (destructive, muted, popover, etc.) |
-
 ## src/components/email/EmailSLADashboard.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 153 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 168 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 214 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 214 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 220 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
@@ -718,12 +663,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 |---|---|---|---|---|---|
 | Low | 156 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 
-## src/components/gamification/AchievementsSystem.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 34 | Literal Color | `border-purple-500` | `border-purple-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 35 | Literal Color | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-
 ## src/components/gmail/GmailThreadView.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
@@ -758,11 +697,8 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 127 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 127 | Literal Color | `dark:bg-amber-950` | `bg-amber-950` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 127 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 127 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 207 | Literal Color | `bg-blue-50` | `bg-blue-50` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 207 | Literal Color | `dark:bg-blue-950` | `bg-blue-950` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 248 | Literal Color | `text-yellow-500` | `text-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/integrations/EvolutionApiIntegrationView.tsx
@@ -770,15 +706,12 @@ Generated on: 5/6/2026, 5:23:36 PM
 |---|---|---|---|---|---|
 | Low | 187 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 | Low | 204 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
-| Medium | 239 | Literal Color | `bg-red-500` | `bg-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 239 | Literal Color | `border-red-500` | `border-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 245 | Literal Color | `text-red-400` | `text-red-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 247 | Literal Color | `text-red-300` | `text-red-300` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/knowledge/KnowledgeBaseView.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 96 | Literal Color | `border-yellow-400` | `border-yellow-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 126 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 
 ## src/components/layout/AppShell.tsx
@@ -812,9 +745,7 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/components/monitoring/DLQAuditHistory.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 33 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 33 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 33 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 60 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 | Medium | 61 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 69 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
@@ -844,7 +775,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 23 | Literal Color | `bg-amber-400` | `bg-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 24 | Literal Color | `bg-orange-500` | `bg-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 81 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 81 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 136 | Literal Color | `bg-orange-500` | `bg-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 136 | Literal Color | `bg-amber-400` | `bg-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 
@@ -859,16 +789,13 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 20 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 20 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 26 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 222 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 233 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/monitoring/MonitoringHealthLogs.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 24 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 24 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 142 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/monitoring/MonitoringSLAPanel.tsx
@@ -881,9 +808,7 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 85 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 86 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 107 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 108 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 114 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/monitoring/MonitoringWebhookPanel.tsx
@@ -936,13 +861,7 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Low | 176 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
-| Medium | 179 | Literal Color | `border-yellow-400` | `border-yellow-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 197 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
-
-## src/components/pipeline/DealCard.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 28 | Literal Color | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/queues/CreateQueueDialog.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
@@ -982,22 +901,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 |---|---|---|---|---|---|
 | Low | 138 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 
-## src/components/security/SecurityNotificationsPanel.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 49 | Literal Color | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 95 | Literal Color | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-
-## src/components/security/SecurityOverview.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 103 | Literal Color | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-
-## src/components/security/SecurityPanels.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 31 | Literal Color | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-
 ## src/components/security/VirusTotalConfig.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
@@ -1028,7 +931,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 32 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 49 | Literal Color | `text-red-500` | `text-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 81 | Literal Color | `border-amber-200` | `border-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 81 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 83 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 92 | Literal Color | `border-amber-200` | `border-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
 
@@ -1122,8 +1024,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 347 | Literal Color | `text-green-500` | `text-green-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 416 | Literal Color | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 416 | Literal Color | `bg-yellow-500` | `bg-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 417 | Literal Color | `text-yellow-500` | `text-yellow-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 419 | Literal Color | `text-yellow-700` | `text-yellow-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 420 | Literal Color | `text-yellow-600` | `text-yellow-600` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -1149,12 +1049,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 158 | Literal Color | `text-yellow-400` | `text-yellow-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 159 | Literal Color | `text-blue-400` | `text-blue-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 160 | Literal Color | `text-blue-400` | `text-blue-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-
-## src/components/ui/micro-interactions/buttons.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| High | 255 | Raw Hex | `#fff` | `#fff` | bg-background or text-foreground |
-| High | 255 | Raw Hex | `#fff` | `#fff` | bg-background or text-foreground |
 
 ## src/components/ui/chart.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
@@ -1311,17 +1205,13 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/features/connections/components/WhatsAppConnectionStatus.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 36 | Literal Color | `border-red-500` | `border-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 36 | Literal Color | `bg-red-500` | `bg-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 36 | Literal Color | `text-red-500` | `text-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 36 | Literal Color | `hover:bg-red-500` | `bg-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/features/inbox/components/AudioRecorder.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 305 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 305 | Literal Color | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 328 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 328 | Literal Color | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 348 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 | Medium | 349 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -1374,10 +1264,7 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/features/inbox/components/DeletedMessagePlaceholder.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 22 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 22 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 29 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 39 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 39 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 39 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 
@@ -1415,12 +1302,8 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/features/inbox/components/SLAIndicator.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 24 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 24 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 24 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 25 | Literal Color | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 25 | Literal Color | `text-rose-500` | `text-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 25 | Literal Color | `border-rose-500` | `border-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/features/inbox/components/SlashCommands.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
@@ -1435,25 +1318,19 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 118 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 118 | Literal Color | `hover:bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 128 | Literal Color | `text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 133 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 133 | Literal Color | `border-amber-100` | `border-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 139 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 139 | Literal Color | `border-amber-100` | `border-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 139 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 152 | Literal Color | `text-amber-200` | `text-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 162 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 162 | Literal Color | `border-amber-100` | `border-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 162 | Literal Color | `hover:bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 163 | Literal Color | `bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 164 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 167 | Literal Color | `text-amber-900` | `text-amber-900` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 168 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 168 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 | Medium | 176 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 176 | Literal Color | `hover:bg-amber-200` | `bg-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 180 | Literal Color | `border-amber-100` | `border-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 182 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 184 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 192 | Literal Color | `border-amber-200` | `border-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 192 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 202 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -1489,8 +1366,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Low | 255 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
-| Medium | 268 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 268 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 271 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 272 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 273 | Literal Color | `text-amber-800` | `text-amber-800` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -1503,8 +1378,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 174 | Literal Color | `bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 174 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 174 | Literal Color | `hover:bg-amber-200` | `bg-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 199 | Literal Color | `border-amber-200` | `border-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 205 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 205 | Literal Color | `border-amber-100` | `border-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 206 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 211 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -1512,19 +1385,12 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Medium | 217 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 224 | Literal Color | `hover:bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 224 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 241 | Literal Color | `bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 241 | Literal Color | `border-amber-200` | `border-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 242 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 243 | Literal Color | `text-amber-800` | `text-amber-800` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 248 | Literal Color | `text-amber-200` | `text-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 249 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 262 | Literal Color | `border-amber-400` | `border-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 262 | Literal Color | `bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 266 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 267 | Literal Color | `bg-amber-200` | `bg-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 267 | Literal Color | `border-amber-300` | `border-amber-300` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 271 | Literal Color | `bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 271 | Literal Color | `border-amber-200` | `border-amber-200` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 271 | Literal Color | `text-amber-900` | `text-amber-900` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 274 | Literal Color | `border-amber-100` | `border-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 293 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -1544,13 +1410,11 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Low | 112 | Literal Font | `font-sans` | `font-sans` | Remove literal font class; use global typography |
-| Medium | 119 | Literal Color | `bg-emerald-500` | `bg-emerald-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 119 | Literal Color | `text-emerald-500` | `text-emerald-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 127 | Literal Font | `font-sans` | `font-sans` | Remove literal font class; use global typography |
 | Low | 131 | Literal Font | `font-sans` | `font-sans` | Remove literal font class; use global typography |
 | Medium | 183 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 183 | Literal Color | `hover:text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 183 | Literal Color | `hover:bg-amber-100` | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 189 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 283 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 
@@ -1559,26 +1423,14 @@ Generated on: 5/6/2026, 5:23:36 PM
 |---|---|---|---|---|---|
 | Low | 278 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 | Low | 292 | Literal Font | `font-sans` | `font-sans` | Remove literal font class; use global typography |
-| Medium | 293 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 293 | Literal Color | `dark:bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 293 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 303 | Literal Color | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 303 | Literal Color | `border-rose-500` | `border-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 307 | Literal Color | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 308 | Literal Color | `text-rose-500` | `text-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 310 | Literal Color | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 310 | Literal Color | `border-rose-500` | `border-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 311 | Literal Color | `text-rose-500` | `text-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 311 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 | Medium | 347 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 348 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 348 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 348 | Literal Color | `dark:bg-amber-950` | `bg-amber-950` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 348 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 414 | Literal Font | `font-sans` | `font-sans` | Remove literal font class; use global typography |
-| Medium | 418 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 418 | Literal Color | `focus:bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 418 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 427 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 | Medium | 502 | Literal Color | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 502 | Literal Color | `hover:bg-rose-600` | `bg-rose-600` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -1588,10 +1440,7 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 80 | Literal Color | `text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 80 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 80 | Literal Color | `hover:bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 81 | Literal Color | `hover:text-amber-500` | `text-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 81 | Literal Color | `hover:bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 89 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 197 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 | Medium | 206 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -1601,8 +1450,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/features/inbox/components/chat/ChatMessageBubble.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 212 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 212 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 212 | Literal Color | `text-amber-900` | `text-amber-900` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 212 | Literal Color | `dark:text-amber-100` | `text-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 330 | Literal Font | `font-sans` | `font-sans` | Remove literal font class; use global typography |
@@ -1632,8 +1479,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 |---|---|---|---|---|---|
 | Medium | 42 | Literal Color | `text-rose-500` | `text-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 42 | Literal Color | `hover:text-rose-600` | `text-rose-600` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 42 | Literal Color | `hover:bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 42 | Literal Color | `border-rose-500` | `border-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/features/inbox/components/chat/MarkdownPreview.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
@@ -1656,17 +1501,11 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Low | 125 | Literal Font | `font-sans` | `font-sans` | Remove literal font class; use global typography |
-| Medium | 147 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 147 | Literal Color | `dark:bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 147 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 148 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 148 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 149 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 149 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 211 | Literal Color | `bg-amber-50` | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 211 | Literal Color | `dark:bg-amber-900` | `bg-amber-900` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 211 | Literal Color | `border-amber-300` | `border-amber-300` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 211 | Literal Color | `dark:border-amber-800` | `border-amber-800` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 211 | Literal Color | `text-amber-900` | `text-amber-900` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 211 | Literal Color | `dark:text-amber-100` | `text-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 
@@ -1716,11 +1555,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 |---|---|---|---|---|---|
 | Low | 121 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
 
-## src/features/inbox/components/contact-details/EditContactDialog.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| High | 84 | Raw Hex | `#310` | `#310` | Use theme tokens (primary, secondary, accent, etc.) |
-
 ## src/features/inbox/components/conversation-list/ConversationItem.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
@@ -1737,11 +1571,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Low | 483 | Literal Font | `font-sans` | `font-sans` | Remove literal font class; use global typography |
 | Low | 493 | Literal Font | `font-sans` | `font-sans` | Remove literal font class; use global typography |
 
-## src/features/inbox/components/linkPreviewUtils.ts
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| High | 50 | Raw Hex | `#039` | `#039` | Use theme tokens (primary, secondary, accent, etc.) |
-
 ## src/features/inbox/components/monitoring/QueueMetricsDashboard.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
@@ -1749,7 +1578,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | High | 16 | Raw Hex | `#00C49F` | `#00C49F` | Use theme tokens (primary, secondary, accent, etc.) |
 | High | 16 | Raw Hex | `#FFBB28` | `#FFBB28` | Use theme tokens (primary, secondary, accent, etc.) |
 | High | 16 | Raw Hex | `#FF8042` | `#FF8042` | Use theme tokens (primary, secondary, accent, etc.) |
-| Medium | 103 | Literal Color | `border-blue-500` | `border-blue-500` | border-primary |
 | High | 126 | Raw Hex | `#10b981` | `#10b981` | Use theme tokens (primary, secondary, accent, etc.) |
 | High | 127 | Raw Hex | `#ef4444` | `#ef4444` | Use theme tokens (primary, secondary, accent, etc.) |
 | High | 144 | Raw Hex | `#3b82f6` | `#3b82f6` | Use theme tokens (primary, secondary, accent, etc.) |
@@ -1758,11 +1586,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | High | 192 | Raw Hex | `#8b5cf6` | `#8b5cf6` | Use theme tokens (primary, secondary, accent, etc.) |
 | High | 238 | Raw Hex | `#3b82f6` | `#3b82f6` | Use theme tokens (primary, secondary, accent, etc.) |
 | High | 239 | Raw Hex | `#ef4444` | `#ef4444` | Use theme tokens (primary, secondary, accent, etc.) |
-
-## src/features/inbox/components/quick-replies/QuickReplyCardList.tsx
-| Priority | Line | Type | Match | Clean | Suggestion |
-|---|---|---|---|---|---|
-| Medium | 75 | Literal Color | `border-yellow-400` | `border-yellow-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/features/inbox/components/slash-commands/slashCommandsData.ts
 | Priority | Line | Type | Match | Clean | Suggestion |
@@ -1785,7 +1608,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/hooks/useAgents.ts
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 58 | Literal Color | `bg-emerald-500` | `bg-emerald-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 58 | Literal Color | `text-emerald-500` | `text-emerald-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/hooks/useQueues.ts
@@ -1808,7 +1630,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
 | Medium | 44 | Literal Color | `text-orange-500` | `text-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 44 | Literal Color | `bg-orange-500` | `bg-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/main.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
@@ -1884,7 +1705,6 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/pages/RealtimeFanoutDebug.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 48 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 48 | Literal Color | `text-amber-700` | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 48 | Literal Color | `dark:text-amber-400` | `text-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Low | 142 | Literal Font | `font-mono` | `font-mono` | Remove literal font class; use global typography |
@@ -1908,9 +1728,7 @@ Generated on: 5/6/2026, 5:23:36 PM
 ## src/pages/admin-realtime-monitor/ConnectionsHealthBlock.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
 |---|---|---|---|---|---|
-| Medium | 37 | Literal Color | `bg-amber-500` | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 37 | Literal Color | `text-amber-600` | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 37 | Literal Color | `border-amber-500` | `border-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/pages/admin-realtime-monitor/DispatchErrorsBlock.tsx
 | Priority | Line | Type | Match | Clean | Suggestion |
