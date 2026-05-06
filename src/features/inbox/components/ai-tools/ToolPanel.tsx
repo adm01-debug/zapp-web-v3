@@ -27,7 +27,7 @@ export function ToolPanel({ isOpen, onClose, icon, title, subtitle, children, cl
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 z-20 bg-black/50 backdrop-blur-[2px]"
+            className="absolute inset-0 z-20 bg-foreground/50 backdrop-blur-[2px]"
             onClick={onClose}
           />
 

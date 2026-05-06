@@ -138,7 +138,7 @@ export default function AdminDevDiagnosticsPage() {
           <CardDescription>Visualização bruta de ações administrativas e erros críticos.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[500px] w-full border rounded-md p-4 bg-black/5 dark:bg-black/40">
+          <ScrollArea className="h-[500px] w-full border rounded-md p-4 bg-foreground/5 dark:bg-foreground/40">
             {loading ? (
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}

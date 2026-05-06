@@ -118,7 +118,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
 
   return (
     <div className={cn(
-      'h-full min-h-0 flex-shrink-0 relative z-10 border-r border-white/10 bg-background dark:bg-background flex flex-col overflow-hidden',
+      'h-full min-h-0 flex-shrink-0 relative z-10 border-r border-border/10 bg-background dark:bg-background flex flex-col overflow-hidden',
       isMobile ? (inbox.selectedContactId ? 'hidden' : 'w-full') : 'w-[320px] min-w-[320px] max-w-[320px]'
     )}>
       <BulkActionsToolbar
@@ -245,7 +245,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               'shrink-0 relative active:scale-90 transition-all duration-150',
               isMobile ? 'w-8 h-8 rounded-lg' : 'w-7 h-7 rounded-md',
               inbox.statusFilter === 'unread'
-                ? 'bg-orange-500 text-white hover:bg-orange-600'
+                ? 'bg-orange-500 text-foreground hover:bg-orange-600'
                 : 'hover:bg-muted/60 text-muted-foreground'
             )}
             aria-label={inbox.statusFilter === 'unread' ? 'Mostrar todas' : 'Mostrar apenas não lidas'}
@@ -254,7 +254,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             <MessageCircle className={cn(isMobile ? 'w-4 h-4' : 'w-3.5 h-3.5')} />
             {conversationsWithUnreadCount > 0 && inbox.statusFilter !== 'unread' && (
               <span
-                className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-orange-500 text-white text-[9px] font-semibold leading-none flex items-center justify-center tabular-nums shadow-sm"
+                className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-orange-500 text-foreground text-[9px] font-semibold leading-none flex items-center justify-center tabular-nums shadow-sm"
               >
                 {conversationsWithUnreadCount > 99 ? '99+' : conversationsWithUnreadCount}
               </span>

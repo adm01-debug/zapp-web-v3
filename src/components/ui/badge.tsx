@@ -16,8 +16,8 @@ const badgeVariants = cva(
         success: "border-transparent bg-success/15 text-success font-bold border border-success/30",
         warning: "border-transparent bg-warning/15 text-warning font-bold border border-warning/30",
         info: "border-transparent bg-info/15 text-info font-bold border border-info/30",
-        whatsapp: "border-transparent bg-[#25D366] text-white hover:bg-[#25D366]/90 shadow-sm shadow-[#25D366]/20",
-        glowPurple: "border-transparent bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-[0_0_12px_rgba(139,92,246,0.3)]",
+        whatsapp: "border-transparent bg-[#25D366] text-foreground hover:bg-[#25D366]/90 shadow-sm shadow-[#25D366]/20",
+        glowPurple: "border-transparent bg-[#8B5CF6] text-foreground hover:bg-[#7C3AED] shadow-[0_0_12px_rgba(139,92,246,0.3)]",
       },
     },
     defaultVariants: {

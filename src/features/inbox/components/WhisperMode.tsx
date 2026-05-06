@@ -339,7 +339,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                   />
                   <Button 
                     size="icon" 
-                    className="h-9 w-9 shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-200" 
+                    className="h-9 w-9 shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 text-foreground shadow-lg shadow-amber-200" 
                     onClick={sendWhisper} 
                     disabled={!message.trim()}
                     aria-label="Enviar sussurro"

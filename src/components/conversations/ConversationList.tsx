@@ -73,7 +73,7 @@ const ConvItem = memo(({
         </Avatar>
         {conv.is_bot_active && (
           <div className="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-primary border-2 border-background flex items-center justify-center shadow-sm">
-            <Bot className="h-2.5 w-2.5 text-white" />
+            <Bot className="h-2.5 w-2.5 text-foreground" />
           </div>
         )}
       </div>
@@ -99,7 +99,7 @@ const ConvItem = memo(({
             </p>
           )}
           {conv.unread_count > 0 && (
-            <Badge className="text-[10px] min-w-[18px] h-4.5 px-1 bg-primary hover:bg-primary text-white border-none rounded-full flex items-center justify-center font-bold">
+            <Badge className="text-[10px] min-w-[18px] h-4.5 px-1 bg-primary hover:bg-primary text-foreground border-none rounded-full flex items-center justify-center font-bold">
               {conv.unread_count > 99 ? '99+' : conv.unread_count}
             </Badge>
           )}

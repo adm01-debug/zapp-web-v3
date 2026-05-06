@@ -191,7 +191,7 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
                   )}
                   <button
                     onClick={() => removeAttachment(att.id)}
-                    className="absolute top-1 right-1 p-0.5 rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
+                    className="absolute top-1 right-1 p-0.5 rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-foreground"
                   >
                     <X className="w-3 h-3" />
                   </button>

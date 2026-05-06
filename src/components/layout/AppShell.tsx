@@ -155,7 +155,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
                   'border border-border/40 shadow-none',
                   isZen
                     ? 'px-3 bg-primary/15 border-primary/30 text-primary hover:bg-primary/25 hover:border-primary/50 shadow-primary/10'
-                    : 'px-2.5 bg-black border-border/40 text-muted-foreground/60 hover:text-foreground hover:bg-muted/10 hover:border-border/70'
+                    : 'px-2.5 bg-foreground border-border/40 text-muted-foreground/60 hover:text-foreground hover:bg-muted/10 hover:border-border/70'
                 )}
                 aria-label={isZen ? 'Sair do modo zen' : 'Modo zen'}
               >

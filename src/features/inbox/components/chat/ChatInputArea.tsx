@@ -185,7 +185,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   )}
                   <button
                     onClick={() => logic.removeAttachment(att.id)}
-                    className="absolute top-1 right-1 p-0.5 rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
+                    className="absolute top-1 right-1 p-0.5 rounded-full bg-background/80 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-foreground"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -345,7 +345,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               className="absolute -top-10 left-8 flex items-center gap-2 z-50"
             >
               <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)] animate-pulse" />
-              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.2em] bg-white/90 dark:bg-amber-950/80 backdrop-blur-md px-4 py-1.5 rounded-2xl border border-amber-500/40 shadow-xl">
+              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.2em] bg-background/90 dark:bg-amber-950/80 backdrop-blur-md px-4 py-1.5 rounded-2xl border border-amber-500/40 shadow-xl">
                 {typingNotification}
               </span>
             </motion.div>
@@ -499,7 +499,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     className={cn(
                       "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2",
                       logic.isMicActive
-                        ? "bg-rose-500 text-white hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-110 z-10 ring-2 ring-rose-400/60"
+                        ? "bg-rose-500 text-foreground hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-110 z-10 ring-2 ring-rose-400/60"
                         : "bg-muted text-muted-foreground hover:bg-muted/80",
                       !logic.isMicActive && (isSending || logic.canSend) && "opacity-50 cursor-not-allowed",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
@@ -511,7 +511,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     <Mic className={cn("w-6 h-6", logic.isMicActive && "animate-pulse")} />
                   </motion.button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium max-w-[200px] bg-rose-500 text-white border-none px-3 py-1.5 rounded-lg shadow-xl">
+                <TooltipContent side="top" className="text-[10px] font-medium max-w-[200px] bg-rose-500 text-foreground border-none px-3 py-1.5 rounded-lg shadow-xl">
                   {logic.isMicActive 
                     ? "🔴 Gravando... Clique para parar" 
                     : logic.canSend

@@ -44,7 +44,7 @@ export function PreviewPreconditionBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed top-2 left-1/2 -translate-x-1/2 z-[9999] max-w-xl w-[calc(100%-1rem)] rounded-lg border border-warning/40 bg-black shadow-none p-3 flex items-start gap-3"
+      className="fixed top-2 left-1/2 -translate-x-1/2 z-[9999] max-w-xl w-[calc(100%-1rem)] rounded-lg border border-warning/40 bg-foreground shadow-none p-3 flex items-start gap-3"
     >
       <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" aria-hidden="true" />
       <div className="flex-1 min-w-0">

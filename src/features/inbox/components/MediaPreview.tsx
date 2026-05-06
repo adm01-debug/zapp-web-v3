@@ -68,7 +68,7 @@ export function DocumentPreview({ url, fileName, fileSize, isSent }: DocumentPre
       </div>
       <button
         onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-[hsl(var(--muted-foreground))] hover:bg-white/10"
+        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors text-[hsl(var(--muted-foreground))] hover:bg-background/10"
       >
         {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
       </button>

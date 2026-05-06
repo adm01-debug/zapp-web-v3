@@ -399,7 +399,7 @@ export function ConversationItem({
                   'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-background shadow-sm',
                   statusColors[status as keyof typeof statusColors] || 'bg-muted'
                 )}>
-                  <StatusIcon className="w-2 h-2 text-white" />
+                  <StatusIcon className="w-2 h-2 text-foreground" />
                 </span>
               )}
             </div>
@@ -465,7 +465,7 @@ export function ConversationItem({
                   <motion.span
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center font-sans text-[11px] font-bold tabular-nums bg-[hsl(0,75%,55%)] text-white shadow-[0_2px_6px_hsl(0,75%,55%,0.35)]"
+                    className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center font-sans text-[11px] font-bold tabular-nums bg-[hsl(0,75%,55%)] text-foreground shadow-[0_2px_6px_hsl(0,75%,55%,0.35)]"
                   >
                     {conversation.unreadCount}
                   </motion.span>
