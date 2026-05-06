@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { VoiceChanger } from '../../VoiceChanger';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import React from 'react';
+import { toast } from 'sonner';
 
 // Mock Fetch and Supabase
 global.fetch = vi.fn();
@@ -85,7 +86,7 @@ describe('VoiceChanger Component - End-to-End Integration', () => {
     
     // 4. Wait for completion
     await waitFor(() => {
-      expect(vi.mocked(require('sonner').toast.success)).toHaveBeenCalledWith(
+      expect(toast.success).toHaveBeenCalledWith(
         expect.stringContaining('Voz convertida para Grave'),
         expect.any(Object)
       );
@@ -106,7 +107,7 @@ describe('VoiceChanger Component - End-to-End Integration', () => {
     fireEvent.click(graveBtn);
     
     await waitFor(() => {
-      expect(vi.mocked(require('sonner').toast.error)).toHaveBeenCalledWith(
+      expect(toast.error).toHaveBeenCalledWith(
         expect.stringContaining('Falha técnica: ElevenLabs rate limit'),
         expect.any(Object)
       );
