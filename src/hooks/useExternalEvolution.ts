@@ -13,6 +13,7 @@ import { queryExternalProxy } from '@/lib/externalProxy';
 import {
   buildExternalConversations,
   evolutionToRealtimeMessage,
+  jidToPhone,
 } from '@/adapters/evolutionAdapter';
 import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/features/inbox';
@@ -539,7 +540,7 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe: várias abas pollando o mesmo jid+cursor compartilham 1 fetch
       // (TTL curto = poll seguinte ainda dispara normalmente).
       const newOnes = await dedupedFetch(
-        `inbox:poll:${remoteJid}:${afterDate}:${DEFAULT_INSTANCE}`,
+        `inbox:poll:${remoteJid}:${afterDate}:${DEFAULT_INSTANCE}:${jidToPhone(remoteJid)}`,
         () => fetchMessagesAfter(remoteJid, afterDate),
         { lockTtl: 4_000, resultTtl: POLL_INTERVAL - 1_000, waitTimeout: 3_000 },
       );
