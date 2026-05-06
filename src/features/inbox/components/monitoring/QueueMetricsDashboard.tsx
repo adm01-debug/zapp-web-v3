@@ -194,6 +194,60 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      {/* STS Commercial Troubleshooting Section */}
+      <Card className="col-span-full border-primary/30 shadow-md">
+        <CardHeader className="bg-primary/5">
+          <CardTitle className="text-sm font-bold flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            Performance do Voice Changer (STS) - Time Comercial
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {loadingSts ? (
+            <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : stsMetrics.length > 0 ? (
+            <div className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-3">
+                {stsMetrics.slice(0, 3).map((m) => (
+                  <div key={m.voice_preset} className="p-3 rounded-lg border bg-muted/30">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs font-black uppercase tracking-tighter">{m.voice_preset}</span>
+                      <Badge variant={m.error_rate > 0.2 ? 'destructive' : 'outline'} className="text-[9px]">
+                        Err: {(m.error_rate * 100).toFixed(0)}%
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                      <div><span className="opacity-60">Avg:</span> <strong>{m.avg_latency_ms}ms</strong></div>
+                      <div><span className="opacity-60">p99:</span> <strong>{m.p99_latency?.toFixed(0)}ms</strong></div>
+                      <div className="col-span-2 mt-1 truncate italic text-muted-foreground">
+                        Last Err: {m.latest_error || 'Nenhum'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stsMetrics}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="voice_preset" fontSize={10} />
+                    <YAxis fontSize={10} />
+                    <RechartsTooltip />
+                    <Bar dataKey="total_requests" name="Total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="failed_requests" name="Falhas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground text-xs italic">
+              Sem dados de conversão nas últimas 24h.
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
