@@ -9903,6 +9903,33 @@ export type Database = {
           },
         ]
       }
+      storage_cleanup_logs: {
+        Row: {
+          bucket_id: string
+          created_at: string | null
+          files_deleted: number
+          id: string
+          status: string
+          total_size_bytes: number | null
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string | null
+          files_deleted: number
+          id?: string
+          status: string
+          total_size_bytes?: number | null
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string | null
+          files_deleted?: number
+          id?: string
+          status?: string
+          total_size_bytes?: number | null
+        }
+        Relationships: []
+      }
       stress_test_runs: {
         Row: {
           abort_reason: string | null
