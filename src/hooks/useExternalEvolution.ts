@@ -137,11 +137,12 @@ export function reconcileOptimistic(
         if (!can.media_url && m.media_url) patch.media_url = m.media_url;
         if (can.reactions && can.reactions.length > 0) patch.reactions = can.reactions;
 
-        // Telemetria enriquecida para áudio (PTT vs Gravado)
+        // Telemetria enriquecida para áudio (PTT vs Gravado vs Meme)
         let messageType = m.message_type;
         if (messageType === 'audio') {
           const isPtt = (m as any).media_meta?.ptt === true;
-          messageType = isPtt ? 'audio_ptt' : 'audio_recorded';
+          const isMeme = !!(m as any).audio_meme_id;
+          messageType = isMeme ? 'audio_meme' : (isPtt ? 'audio_ptt' : 'audio_recorded');
         }
 
         recordMatch({
