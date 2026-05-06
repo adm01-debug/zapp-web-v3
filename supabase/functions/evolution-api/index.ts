@@ -262,10 +262,25 @@ serve(async (req) => {
     }
 
     if (action === 'disconnect') {
-      const response = await fetch(`${evolutionApiUrl}/instance/logout/${instance}`, { method: 'DELETE', headers: { 'apikey': evolutionApiKey } });
-      const data = await response.json();
-      await supabase.from('whatsapp_connections').update({ status: 'disconnected' }).eq('instance_id', instance);
-      return new Response(JSON.stringify(data), { status: response.ok ? 200 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      let upstreamStatus = 0;
+      let data: any = null;
+      try {
+        const response = await fetch(`${evolutionApiUrl}/instance/logout/${instance}`, { method: 'DELETE', headers: { 'apikey': evolutionApiKey } });
+        upstreamStatus = response.status;
+        try { data = await response.json(); } catch { data = null; }
+      } catch (e) {
+        data = { message: (e as Error).message };
+      }
+      // Evolution often returns 500 "Connection Closed" when the socket is already down — treat as success.
+      const upstreamMsg = JSON.stringify(data ?? '').toLowerCase();
+      const alreadyClosed = upstreamStatus === 500 && upstreamMsg.includes('connection closed');
+      const ok = upstreamStatus >= 200 && upstreamStatus < 300;
+      // Always reflect desired state in DB so UI is consistent.
+      await supabase.from('whatsapp_connections').update({ status: 'disconnected', qr_code: null }).eq('instance_id', instance);
+      if (ok || alreadyClosed) {
+        return new Response(JSON.stringify({ success: true, alreadyClosed, upstream: data }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({ success: false, upstreamStatus, upstream: data }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'delete-instance') return await proxy(`/instance/delete/${instance}`, 'DELETE', body);
