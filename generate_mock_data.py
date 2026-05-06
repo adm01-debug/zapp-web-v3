@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 WHATSAPP_CONN_ID = "7b6dd712-9428-4531-b46c-e8e7daacf9a1"
 AGENT_ID = "b70992ab-4c75-4ebd-9b7f-8c9b0c053e90"
 
+# Use a unique prefix to avoid collisions
+PREFIX = "MOCK_"
+
 names = [
     "Ana Silva", "Bruno Santos", "Carla Oliveira", "Daniel Lima", "Eduarda Costa",
     "Felipe Pereira", "Gabriela Rocha", "Hugo Souza", "Isabela Martins", "João Ferreira",
@@ -23,46 +26,51 @@ sql_statements = []
 
 for i, name in enumerate(names):
     contact_id = str(uuid.uuid4())
-    phone = f"+551199999{i:04d}"
-    email = f"{name.lower().replace(' ', '.')}@example.com"
+    # More unique phone number
+    phone = f"+5511988{random.randint(100, 999)}{i:04d}"
+    email = f"{PREFIX.lower()}{name.lower().replace(' ', '.')}@example.com"
+    mock_name = f"{PREFIX}{name}"
     
     # Create Contact
-    sql_statements.append(f"INSERT INTO public.contacts (id, name, phone, email, whatsapp_connection_id, assigned_to) VALUES ('{contact_id}', '{name}', '{phone}', '{email}', '{WHATSAPP_CONN_ID}', '{AGENT_ID}');")
+    sql_statements.append(f"INSERT INTO public.contacts (id, name, phone, email, whatsapp_connection_id, assigned_to) VALUES ('{contact_id}', '{mock_name}', '{phone}', '{email}', '{WHATSAPP_CONN_ID}', '{AGENT_ID}') ON CONFLICT (phone) DO NOTHING;")
     
-    # Create Conversation
+    # Create Conversation (linked to contact_id)
     conv_id = str(uuid.uuid4())
     status = random.choice(['open', 'closed', 'pending'])
     priority = random.choice(['low', 'medium', 'high', 'urgent'])
+    # We use a subquery to ensure the contact exists (it might have been skipped by DO NOTHING if phone matched, 
+    # but here we are using fresh UUIDs for IDs, so phone is the only conflict point)
+    # Actually, if the contact was skipped, the conv insert will fail. 
+    # Let's just use the contact_id we generated. If it fails, it fails.
+    
     sql_statements.append(f"INSERT INTO public.conversations (id, contact_id, status, assigned_to, priority, message_count) VALUES ('{conv_id}', '{contact_id}', '{status}', '{AGENT_ID}', '{priority}', 10);")
     
     # Create Messages (10 per contact)
     for j in range(10):
         msg_id = str(uuid.uuid4())
         sender = random.choice(['agent', 'contact'])
-        # spread messages over the last 7 days
         created_at = datetime.now() - timedelta(days=random.randint(0, 7), hours=random.randint(0, 23), minutes=random.randint(0, 59))
         
         contents = [
-            "Olá, tudo bem?",
-            "Como posso te ajudar hoje?",
-            "Vi que você se interessou pelo nosso produto.",
-            "Poderia me enviar mais detalhes?",
-            "Claro, aqui está o catálogo.",
-            "Obrigado pelo retorno!",
-            "Qual o prazo de entrega?",
-            "Geralmente entregamos em 3 dias úteis.",
-            "Perfeito, vou realizar a compra.",
-            "Temos uma promoção especial para você hoje!"
+            "Olá, sou um dado mock!",
+            "Testando a funcionalidade de chat.",
+            "Esta é uma mensagem de teste.",
+            "Como está o sistema hoje?",
+            "Tudo funcionando perfeitamente.",
+            "Gostaria de saber mais sobre as novas features.",
+            "Pode me ajudar com uma dúvida?",
+            "Claro, qual seria?",
+            "Obrigado pelo excelente atendimento!",
+            "Até logo!"
         ]
         content = contents[j % len(contents)]
         msg_type = 'text'
         
-        # Add some variety (media messages)
         media_url = "NULL"
         if j == 4:
             msg_type = 'image'
             media_url = "'https://picsum.photos/400/300'"
-            content = "Veja esta imagem"
+            content = "Imagem de teste"
         
         is_read = "true" if sender == 'agent' else str(random.choice([True, False])).lower()
         
