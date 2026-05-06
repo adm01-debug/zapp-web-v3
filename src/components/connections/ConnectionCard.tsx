@@ -262,7 +262,12 @@ export function ConnectionCard({
               )}
               {connection.status === 'connected' && !isPhantomLike && (
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button variant="outline" size="sm" className="text-muted-foreground" onClick={() => onDisconnect(connection)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+                    onClick={() => setConfirmDisconnect(true)}
+                  >
                     <WifiOff className="w-4 h-4 mr-1.5" />Desconectar
                   </Button>
                 </motion.div>
