@@ -1,8 +1,8 @@
 
 # Design System Audit Report
-Generated on: 5/6/2026, 5:11:02 PM
+Generated on: 5/6/2026, 5:11:43 PM
 
-Total violations found: 820
+Total violations found: 818
 
 | File | Line | Type | Content |
 |------|------|------|---------|
@@ -164,8 +164,6 @@ Total violations found: 820
 | src/components/conversations/ConversationsDashboard.tsx | 197 | Literal Tailwind Color (bg-gray-100) | `<div key={priority} className={`flex items-center ...` |
 | src/components/conversations/InboxView.tsx | 103 | Literal Tailwind Color (bg-blue-100) | `<Badge className="text-[10px] bg-blue-100 text-blu...` |
 | src/components/conversations/InboxView.tsx | 103 | Literal Tailwind Color (text-blue-700) | `<Badge className="text-[10px] bg-blue-100 text-blu...` |
-| src/components/conversations/MessageItem.tsx | 130 | Literal Tailwind Color (text-yellow-400) | `{msg.is_starred && <Star className="h-3 w-3 fill-y...` |
-| src/components/conversations/MessageItem.tsx | 185 | Literal Tailwind Color (text-yellow-400) | `<Star className={cn("h-4 w-4", msg.is_starred && "...` |
 | src/components/conversations/MessageList.tsx | 226 | Literal Tailwind Color (text-white) | `<span className="absolute -top-1 -right-1 bg-prima...` |
 | src/components/csat/CSATWidget.tsx | 28 | Literal Tailwind Color (text-red-600) | `return 'text-red-600';` |
 | src/components/csat/CSATWidget.tsx | 129 | Literal Tailwind Color (text-red-600) | `? <TrendingDown className="h-3.5 w-3.5 text-red-60...` |
