@@ -25,7 +25,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { AlertTriangle, Play, Square, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Play, Square, CheckCircle2, XCircle, Loader2, Download, ShieldCheck, ShieldAlert, Activity } from 'lucide-react';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
@@ -35,6 +36,7 @@ import {
   type StressResult, type StressRunStatus, type StressTaskType,
 } from '@/lib/stressTest/types';
 import { buildBalancedPlan, preloadLibraries, sampleFor } from '@/lib/stressTest/mediaSamplers';
+import { checkUrlAccessibility } from '@/lib/stressTest/accessibilityChecker';
 import { getLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 
@@ -61,6 +63,7 @@ export default function AdminStressTestPage() {
   const [confirmText, setConfirmText] = useState('');
   const [runId, setRunId] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<number>(0);
+  const [throughputData, setThroughputData] = useState<{ time: string, msgSec: number }[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   const evo = useEvolutionApi();
@@ -76,6 +79,17 @@ export default function AdminStressTestPage() {
     const sample = await sampleFor(type, idx);
     let messageId: string | undefined;
     let result: any;
+    let accessibility: StressResult['accessibility'] | undefined;
+
+    // Check media accessibility if URL exists
+    if (sample.url) {
+      const acc = await checkUrlAccessibility(sample.url);
+      accessibility = {
+        reachable: acc.reachable,
+        latencyMs: acc.latencyMs,
+        error: acc.error
+      };
+    }
 
     switch (type) {
       case 'text':
@@ -128,7 +142,7 @@ export default function AdminStressTestPage() {
         break;
     }
     messageId = result?.key?.id ?? result?.messageId ?? result?.id;
-    return { messageId, detail: sample.detail };
+    return { messageId, detail: sample.detail, accessibility };
   }, [evo]);
 
   // ── Persist incremental updates to stress_test_runs ───────
@@ -204,7 +218,8 @@ export default function AdminStressTestPage() {
       plan,
       phone,
       instance,
-      intervalMs: (intervalSec * 1000) / agentCount,
+      intervalMs: intervalSec * 1000,
+      concurrency: agentCount,
       failurePolicy,
       failureThreshold: 5,
       signal: ctrl.signal,
@@ -238,6 +253,21 @@ export default function AdminStressTestPage() {
       onResult: (r) => {
         collected.push(r);
         setResults((prev) => [r, ...prev].slice(0, 250));
+        
+        // Update throughput data for chart
+        const elapsed = (performance.now() - startTimeManual) / 1000;
+        if (elapsed > 0) {
+          setThroughputData(prev => {
+            const last = prev[prev.length - 1];
+            const currentMsgSec = Number((collected.length / elapsed).toFixed(2));
+            // Only add data every ~1 second
+            if (!last || (Date.now() - new Date(`2026-05-06T${last.time}`).getTime() > 1000)) {
+               return [...prev, { time: new Date().toLocaleTimeString('pt-BR'), msgSec: currentMsgSec }].slice(-30);
+            }
+            return prev;
+          });
+        }
+
         // Persiste a cada 5 envios pra reduzir tráfego
         if (collected.length - lastPersist >= 5) {
           lastPersist = collected.length;
@@ -287,7 +317,38 @@ export default function AdminStressTestPage() {
     } else {
       toast.error(`Teste interrompido: ${summary.abortReason ?? 'falha'}`);
     }
-  }, [dispatch, failurePolicy, instance, intervalSec, persistRun, phone, total]);
+  }, [dispatch, failurePolicy, instance, intervalSec, persistRun, phone, total, agentCount]);
+
+  const downloadReport = useCallback(() => {
+    if (results.length === 0) return;
+    
+    const reportData = results.map(r => ({
+      Timestamp: new Date(r.ts).toISOString(),
+      Index: r.idx + 1,
+      Type: STRESS_TYPE_LABEL[r.type],
+      Status: r.status,
+      LatencyMs: r.ms,
+      MessageId: r.messageId || '',
+      Accessibility: r.accessibility?.reachable ? 'OK' : (r.accessibility ? 'FAIL' : 'N/A'),
+      AccLatencyMs: r.accessibility?.latencyMs || '',
+      Error: r.error || '',
+      Detail: r.detail || ''
+    }));
+
+    const csvRows = [
+      Object.keys(reportData[0]).join(','),
+      ...reportData.map(row => Object.values(row).map(v => `"${v}"`).join(','))
+    ];
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `stress-test-report-${new Date().toISOString()}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Relatório gerado com sucesso');
+  }, [results]);
 
   const handleStop = () => {
     abortRef.current?.abort();
@@ -315,6 +376,39 @@ export default function AdminStressTestPage() {
           Volume alto pode disparar bloqueio anti-spam da Meta na instância.
         </AlertDescription>
       </Alert>
+
+      {throughputData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Activity className="h-4 w-4" /> Vazão em tempo real (msg/s)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={throughputData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.1)" />
+                  <XAxis dataKey="time" hide />
+                  <YAxis fontSize={10} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', fontSize: '12px' }}
+                    itemStyle={{ color: 'hsl(var(--primary))' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="msgSec" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2} 
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -423,24 +517,36 @@ export default function AdminStressTestPage() {
               </span>
             </div>
             <Progress value={progress.total > 0 ? (progress.done / progress.total) * 100 : 0} />
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm pt-1">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm pt-1">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-success" /> Sucesso: <strong className="tabular-nums">{sent}</strong>
               </span>
               <span className="flex items-center gap-1.5">
                 <XCircle className="h-4 w-4 text-destructive" /> Falhas: <strong className="tabular-nums">{failed}</strong>
               </span>
-              {status === 'completed' && results.length > 0 && (
+              {results.some(r => r.accessibility) && (
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4 text-blue-500" /> Acesso OK: <strong className="tabular-nums">{results.filter(r => r.accessibility?.reachable).length}</strong>
+                </span>
+              )}
+              {results.length > 0 && (
                 <>
                   <span className="text-muted-foreground border-l pl-4">
-                    Avg: <strong>{Math.round(results.reduce((acc, r) => acc + r.ms, 0) / results.length)}ms</strong>
+                    Latência Avg: <strong>{Math.round(results.reduce((acc, r) => acc + r.ms, 0) / results.length)}ms</strong>
                   </span>
-                  <span className="text-muted-foreground">
-                    Throughput: <strong>{(results.length / ((performance.now() - startTime) / 1000)).toFixed(2)} msg/s</strong>
+                  <span className="text-muted-foreground border-l pl-4">
+                    Throughput: <strong>{(progress.done / ((performance.now() - startTime) / 1000)).toFixed(2)} msg/s</strong>
                   </span>
                 </>
               )}
             </div>
+            {status !== 'idle' && !isRunning && (
+              <div className="pt-4">
+                <Button variant="outline" size="sm" onClick={downloadReport}>
+                  <Download className="h-4 w-4 mr-2" /> Baixar Relatório Completo (.csv)
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -471,6 +577,11 @@ export default function AdminStressTestPage() {
                     <span className="tabular-nums shrink-0">#{String(r.idx + 1).padStart(3, '0')}</span>
                     <span className="shrink-0 w-24">{STRESS_TYPE_LABEL[r.type]}</span>
                     <span className="tabular-nums text-muted-foreground shrink-0">{r.ms}ms</span>
+                    {r.accessibility && (
+                      <span className="shrink-0" title={r.accessibility.reachable ? 'URL acessível' : `Erro de acesso: ${r.accessibility.error}`}>
+                        {r.accessibility.reachable ? <ShieldCheck className="h-3 w-3 text-blue-500" /> : <ShieldAlert className="h-3 w-3 text-destructive" />}
+                      </span>
+                    )}
                     <span className="truncate">{r.error ?? r.detail ?? ''}</span>
                   </li>
                 ))}
