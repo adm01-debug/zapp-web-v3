@@ -74,6 +74,7 @@ export function ConnectionCard({
   const [recheckingHealth, setRecheckingHealth] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const { restartInstance, connectInstance } = useEvolutionApi();
   const isConnected = connection.status === 'connected';
 
