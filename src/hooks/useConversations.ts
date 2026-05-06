@@ -126,7 +126,7 @@ export function useConversations() {
     resolution_seconds:   row.resolution_seconds as number | null,
     is_bot_active:        Boolean(row.is_bot_active ?? false),
     satisfaction_score:   row.satisfaction_score as number | null,
-    instance_name:        String(row.instance_name ?? 'wpp2'),
+    instance_name:        String(row.instance_name ?? DEFAULT_WHATSAPP_INSTANCE),
     created_at:           String(row.created_at ?? ''),
     updated_at:           String(row.updated_at ?? ''),
   });
