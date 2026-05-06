@@ -103,7 +103,7 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: 
       }, 1000);
 
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'audio.webm');
+      formData.append('audio', activeBlob, 'audio.webm');
       formData.append('voice_preset', voice.id); 
       formData.append('task_id', task.id);
       if (showCloneWarning) formData.append('authorized', 'true');
