@@ -191,7 +191,33 @@ export default function AdminStressTestPage() {
       failurePolicy,
       failureThreshold: 5,
       signal: ctrl.signal,
-      dispatch,
+      dispatch: async (args) => {
+        const start = performance.now();
+        try {
+          const res = await dispatch(args);
+          const latency = Math.round(performance.now() - start);
+          
+          // Log metrics to DB for throughput/latency analysis
+          void supabase.from('stress_test_metrics').insert({
+            run_id: id,
+            task_type: args.type,
+            latency_ms: latency,
+            status: 'success'
+          });
+          
+          return res;
+        } catch (err) {
+          const latency = Math.round(performance.now() - start);
+          void supabase.from('stress_test_metrics').insert({
+            run_id: id,
+            task_type: args.type,
+            latency_ms: latency,
+            status: 'failed',
+            error_message: err instanceof Error ? err.message : String(err)
+          });
+          throw err;
+        }
+      },
       onResult: (r) => {
         collected.push(r);
         setResults((prev) => [r, ...prev].slice(0, 250));
@@ -210,6 +236,18 @@ export default function AdminStressTestPage() {
 
     setStatus(summary.status);
     abortRef.current = null;
+    
+    // Aggregate metrics for final report
+    const { data: metrics } = await supabase
+      .from('stress_test_metrics')
+      .select('latency_ms, status')
+      .eq('run_id', id);
+      
+    const latencies = metrics?.map(m => m.latency_ms).sort((a, b) => a - b) || [];
+    const avgLatency = latencies.length > 0 ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0;
+    const p95Latency = latencies[Math.floor(latencies.length * 0.95)] || 0;
+    const throughput = latencies.length > 0 ? Number((latencies.length / ((performance.now() - startTime) / 1000)).toFixed(2)) : 0;
+
     await persistRun(id, {
       status: summary.status,
       ended_at: new Date().toISOString(),
@@ -217,6 +255,12 @@ export default function AdminStressTestPage() {
       total_failed: summary.totalFailed,
       results: collected,
       abort_reason: summary.abortReason,
+      metrics_summary: {
+        avg_latency: avgLatency,
+        p95_latency: p95Latency,
+        throughput_msg_sec: throughput,
+        success_rate: metrics?.length ? (metrics.filter(m => m.status === 'success').length / metrics.length) * 100 : 0
+      }
     });
 
     if (summary.status === 'completed') {
