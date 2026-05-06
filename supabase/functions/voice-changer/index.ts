@@ -64,6 +64,13 @@ Deno.serve(async (req) => {
       return errorResponse(`Invalid voice preset: ${voicePreset}`, 400, req);
     }
 
+    if (preset.isCloned) {
+      const authorized = formData.get('authorized') === 'true';
+      if (!authorized) {
+        return errorResponse('Voz clonada requer autorização explícita', 403, req);
+      }
+    }
+
     log.info('Processing voice change', { preset: voicePreset, size: audioFile.size });
 
     const apiFormData = new FormData();
