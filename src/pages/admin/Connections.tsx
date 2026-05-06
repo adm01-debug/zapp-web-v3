@@ -108,6 +108,16 @@ export default function AdminConnectionsPage() {
     }
 
     setSaving(true);
+    setSaveError(null);
+
+    if (isAdmin === false) {
+      const msg = 'Você precisa ser admin para salvar conexões do sistema. Faça login com uma conta admin.';
+      setSaveError(msg);
+      toast({ title: 'Sem permissão', description: msg, variant: 'destructive' });
+      setSaving(false);
+      return;
+    }
+
     const payload: any = {
       name: 'FATOR X',
       provider: 'supabase_external',
@@ -117,29 +127,34 @@ export default function AdminConnectionsPage() {
 
     try {
       const existing: any = connections.find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
-      
+
+      const insertPayload = currentUserId ? { ...payload, created_by: currentUserId } : payload;
+
       const { data, error, status } = existing
         ? await supabase.from('system_connections' as any).update(payload).eq('id', existing.id).select()
-        : await supabase.from('system_connections' as any).insert(payload).select();
+        : await supabase.from('system_connections' as any).insert(insertPayload).select();
 
       if (error) {
-        console.error('Erro ao salvar conexão:', error);
-        toast({ 
-          title: 'Erro ao salvar', 
-          description: `Erro: ${error.message} (Código: ${error.code}). Campo: ${error.details || 'N/A'}. Payload: ${JSON.stringify(payload)}`, 
-          variant: 'destructive' 
-        });
+        const msg = `${error.message}${error.code ? ` (código: ${error.code})` : ''}${error.details ? ` — ${error.details}` : ''}${error.hint ? ` | hint: ${error.hint}` : ''}`;
+        setSaveError(msg);
+        toast({ title: 'Erro ao salvar', description: msg, variant: 'destructive' });
         return;
       }
 
-      // Verificação de persistência (resposta 200 mas sem dados retornados)
-      if (status >= 200 && status < 300 && (!data || data.length === 0)) {
-        toast({
-          title: 'Aviso de persistência',
-          description: `Resposta ${status} recebida, mas o registro não foi retornado. Verifique as políticas de RLS. Payload: ${JSON.stringify(payload)}`,
-          variant: 'destructive'
-        });
-        return;
+      if (!data || data.length === 0) {
+        // Verifica se realmente persistiu via SELECT (pode ser RLS bloqueando o RETURNING)
+        const { data: verify } = await supabase
+          .from('system_connections' as any)
+          .select('id')
+          .eq('provider', 'supabase_external')
+          .limit(1);
+
+        if (!verify || verify.length === 0) {
+          const msg = `A requisição retornou ${status} mas nenhum registro foi persistido. Provavelmente as políticas de RLS estão bloqueando a escrita. Verifique se você está autenticado como admin.`;
+          setSaveError(msg);
+          toast({ title: 'Não foi salvo', description: msg, variant: 'destructive' });
+          return;
+        }
       }
 
       setExternalUrl(draftUrl);
@@ -151,12 +166,9 @@ export default function AdminConnectionsPage() {
       });
       await fetchConnections();
     } catch (e: any) {
-      console.error('Exceção ao salvar:', e);
-      toast({ 
-        title: 'Erro inesperado', 
-        description: e?.message ?? 'Falha desconhecida ao processar a requisição.', 
-        variant: 'destructive' 
-      });
+      const msg = e?.message ?? 'Falha desconhecida ao processar a requisição.';
+      setSaveError(msg);
+      toast({ title: 'Erro inesperado', description: msg, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
