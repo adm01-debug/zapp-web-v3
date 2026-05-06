@@ -87,9 +87,9 @@ export function BusinessHoursDialog({
     setLocalHours((prev) =>
       prev.map((h) => ({
         ...h,
-        is_open: source.is_open,
-        open_time: source.open_time,
-        close_time: source.close_time,
+        is_enabled: source.is_enabled,
+        start_time: source.start_time,
+        end_time: source.end_time,
       }))
     );
     toast({ title: 'Horário copiado para todos os dias' });
