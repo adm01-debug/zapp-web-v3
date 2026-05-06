@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useEmailDraft } from './useEmailDraft';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
@@ -19,10 +19,14 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 vi.mock('@/integrations/supabase/safeClient', () => ({
   safeClient: {
-    from: vi.fn().mockReturnValue({
-      update: vi.fn().mockResolvedValue({ error: null }),
-      delete: vi.fn().mockResolvedValue({ error: null }),
-      eq: vi.fn().mockReturnThis(),
+    from: vi.fn((_table, cb) => {
+      const q = {
+        update: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      };
+      if (cb) cb(q);
+      return { error: null };
     }),
   },
 }));
