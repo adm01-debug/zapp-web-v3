@@ -238,14 +238,20 @@ export function ConnectionCard({
 
             {/* Right: single primary action + menu */}
             <div className="flex items-center gap-2 shrink-0">
-              {(connection.status !== 'connected' || isPhantomLike) && !isOfficial && (
+              {(connection.status === 'disconnected' || connection.status === 'disconnecting' || isPhantomLike) && !isOfficial && (
                 <div className="flex gap-2">
                   <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                     <Button 
                       size="sm" 
                       variant="outline"
                       disabled={reconnecting}
-                      onClick={handleReconnect}
+                      onClick={async () => {
+                        if (connection.status === 'disconnecting') {
+                          toast({ title: 'Aguarde', description: 'A sessão está sendo encerrada. Tente reconectar em instantes.' });
+                          return;
+                        }
+                        handleReconnect();
+                      }}
                       className="border-whatsapp text-whatsapp hover:bg-whatsapp/5"
                     >
                       {reconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
