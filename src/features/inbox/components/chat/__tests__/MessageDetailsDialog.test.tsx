@@ -34,11 +34,11 @@ vi.mock('@/features/inbox', () => ({
     return { data, isLoading, error: null };
   },
   useMessageSendStatus: () => ({ isSending: false, progress: 0 }),
-  useMessageStatusEvents: () => ({ data: [] }),
+  useMessageStatusEvents: () => ({ data: [], isLoading: false }),
 }));
 
-vi.mock('./MessageAttemptsTimeline', () => ({ MessageAttemptsTimeline: () => null }));
-vi.mock('./MessageStatusTimeline', () => ({ MessageStatusTimeline: () => null }));
+vi.mock('./MessageAttemptsTimeline', () => ({ MessageAttemptsTimeline: () => <div data-testid="attempts-timeline" /> }));
+vi.mock('./MessageStatusTimeline', () => ({ MessageStatusTimeline: () => <div data-testid="status-timeline" /> }));
 
 import { MessageDetailsDialog } from '@/features/inbox/components/chat/MessageDetailsDialog';
 
