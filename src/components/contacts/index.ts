@@ -20,16 +20,13 @@ export { ContactConversationHistory } from './ContactConversationHistory';
 export { ContactBitrix24Panel } from './ContactBitrix24Panel';
 
 // Forms
-export { ContactForm } from './ContactForm';
 export { ContactFormV3 } from './ContactFormV3';
-export { ContactFormModal } from './ContactFormModal';
 export { ContactCRMDialog } from './ContactCRMDialog';
 
 // Table & views
 export { ContactsTable } from './ContactsTable';
 export { ContactsTableVirtual } from './ContactsTableVirtual';
-export { ContactsView } from './ContactsView';
-export { ContactsViewV3 } from './ContactsViewV3';
+export { ContactsRichView } from './ContactsRichView';
 export { ContactKanbanView } from './ContactKanbanView';
 export { ContactMapView } from './ContactMapView';
 export { ContactGroupedList } from './ContactGroupedList';
@@ -82,7 +79,6 @@ export { ConflictResolutionDialog } from './ConflictResolutionDialog';
 
 // Import / Export
 export { ContactImportDialog } from './ContactImportDialog';
-export { ContactImportDialogV2 } from './ContactImportDialogV2';
 export { ContactExportDialog } from './ContactExportDialog';
 
 // Stats & analytics
@@ -119,7 +115,6 @@ export { ContactPagination } from './ContactPagination';
 export { ContactResultsSummary } from './ContactResultsSummary';
 
 // Pages
-export { ContactsPageV3 } from './ContactsPageV3';
 export { ContactContentArea } from './ContactContentArea';
 export { ContactDialogs } from './ContactDialogs';
 export { ContactsRecycleBin } from './ContactsRecycleBin';
@@ -134,7 +129,6 @@ export { useContactUndo } from './useContactUndo';
 export { useContactUndoDelete } from './useContactUndoDelete';
 export { useContactsCRUD } from './useContactsCRUD';
 export { useContactsPagination } from './useContactsPagination';
-export { useContactsPaginationV2 } from './useContactsPaginationV2';
 export { useContactsStats } from './useContactsStats';
 export { useContactsViewState } from './useContactsViewState';
 export { useDuplicateDetector } from './useDuplicateDetector';
