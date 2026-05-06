@@ -12373,6 +12373,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      record_voice_telemetry: {
+        Args: {
+          p_duration_ms: number
+          p_error_detail?: string
+          p_error_type?: string
+          p_queue_id: string
+          p_status: Database["public"]["Enums"]["voice_conversion_status"]
+        }
+        Returns: undefined
+      }
       rpc_check_and_trigger_gmail_revalidation: { Args: never; Returns: Json }
       rpc_conversation_sla_panel: {
         Args: {
