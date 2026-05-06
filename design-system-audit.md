@@ -1,6 +1,6 @@
 
 # Design System Audit Report
-Generated on: 5/6/2026, 5:10:32 PM
+Generated on: 5/6/2026, 5:11:02 PM
 
 Total violations found: 820
 
@@ -9,7 +9,7 @@ Total violations found: 820
 | src/App.css | 15 | Hardcoded Hex Color | `filter: drop-shadow(0 0 2em #646cffaa);` |
 | src/App.css | 18 | Hardcoded Hex Color | `filter: drop-shadow(0 0 2em #61dafbaa);` |
 | src/App.css | 41 | Hardcoded Hex Color | `color: #888;` |
-| src/components/AppErrorBoundary.tsx | 97 | Hardcoded Font Family | `<p className="text-xs text-muted-foreground mb-4 f...` |
+| src/components/AppErrorBoundary.tsx | 94 | Hardcoded Font Family | `<div className="mt-4 p-2 bg-destructive/10 rounded...` |
 | src/components/CommandPalette.tsx | 123 | Hardcoded Font Family | `<span className="ml-auto text-[10px] text-muted-fo...` |
 | src/components/ThemeInitializer.tsx | 76 | Hardcoded Font Family | `root.style.setProperty('--font-sans', targetFont);` |
 | src/components/ThemeInitializer.tsx | 85 | Hardcoded Font Family | `activeFont: getComputedStyle(root).getPropertyValu...` |
