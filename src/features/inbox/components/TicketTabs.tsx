@@ -252,8 +252,47 @@ export function TicketTabs({
         </div>
       )}
 
-      {/* Admin: Show All toggle */}
-      {canShowAll && mainTab === 'open' && (
+      {/* Scope selector — visibilidade por papel */}
+      {(canSeeDepartment || canSeeAllDepartments) && mainTab === 'open' && subTab === 'attending' && (
+        <div className="flex items-center gap-1.5 bg-muted/20 px-2 py-1.5 rounded-lg border border-border/10">
+          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <Users className="w-3 h-3 text-primary" />
+          </div>
+          <div className="flex items-center gap-1 flex-1" role="tablist" aria-label="Escopo de visualização">
+            {([
+              { id: 'mine' as InboxScope, label: 'Meus', show: true },
+              { id: 'department' as InboxScope, label: isMobile ? 'Depto' : 'Departamento', show: canSeeDepartment || canSeeAllDepartments },
+              { id: 'all' as InboxScope, label: isMobile ? 'Todos' : 'Todos depts.', show: canSeeAllDepartments },
+            ] as const).filter(o => o.show).map(opt => {
+              const isActive = (showAll && opt.id === 'all') || (!showAll && scope === opt.id);
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => {
+                    onScopeChange?.(opt.id);
+                    // Mantém compat com showAll legado
+                    onShowAllChange(opt.id === 'all');
+                  }}
+                  className={cn(
+                    'flex-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  )}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Fallback legado: papéis sem departamento mas com permissão ampla */}
+      {canShowAll && !canSeeDepartment && !canSeeAllDepartments && mainTab === 'open' && (
         <div className="flex items-center gap-2 bg-muted/20 px-2 py-1.5 rounded-lg border border-border/10">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
