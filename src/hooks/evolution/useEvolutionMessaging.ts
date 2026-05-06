@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
-import type { HttpMethod } from './useEvolutionApiCore';
+import type { HttpMethod, CallApiOptions } from './useEvolutionApiCore';
 import type { SendMessageParams, SendTextOptions, ContactCard, PollParams, ListSection, ButtonItem } from '../evolutionApi.types';
 
 export function useEvolutionMessaging(
-  callApi: (action: string, body?: object, method?: HttpMethod) => Promise<any>,
-  withToast: (action: string, body: object | undefined, successMsg: string, errorMsg: string, method?: HttpMethod) => Promise<any>
+  callApi: (action: string, body?: object, methodOrOptions?: HttpMethod | CallApiOptions) => Promise<any>,
+  withToast: (action: string, body: object | undefined, successMsg: string, errorMsg: string, methodOrOptions?: HttpMethod | CallApiOptions) => Promise<any>
 ) {
   // ============================================================
   // SEND MESSAGES
@@ -15,19 +15,21 @@ export function useEvolutionMessaging(
     number: string,
     text: string,
     options?: SendTextOptions,
-  ) => callApi('send-text', { instanceName, number, text, ...options }), [callApi]);
+  ) => callApi('send-text', { instanceName, number, text, ...options }, { 
+    idempotencyKey: options?.idempotencyKey 
+  }), [callApi]);
 
   const sendMediaMessage = useCallback((params: SendMessageParams) =>
-    callApi('send-media', params), [callApi]);
+    callApi('send-media', params, { idempotencyKey: params.idempotencyKey }), [callApi]);
 
-  const sendAudioMessage = useCallback((instanceName: string, number: string, mediaUrl: string, options?: { encoding?: boolean; delay?: number }) =>
-    callApi('send-audio', { instanceName, number, mediaUrl, ...options }), [callApi]);
+  const sendAudioMessage = useCallback((instanceName: string, number: string, mediaUrl: string, options?: { encoding?: boolean; delay?: number; idempotencyKey?: string }) =>
+    callApi('send-audio', { instanceName, number, mediaUrl, ...options }, { idempotencyKey: options?.idempotencyKey }), [callApi]);
 
-  const sendStickerMessage = useCallback((instanceName: string, number: string, sticker: string) =>
-    callApi('send-sticker', { instanceName, number, sticker }), [callApi]);
+  const sendStickerMessage = useCallback((instanceName: string, number: string, sticker: string, options?: { idempotencyKey?: string }) =>
+    callApi('send-sticker', { instanceName, number, sticker, ...options }, { idempotencyKey: options?.idempotencyKey }), [callApi]);
 
   const sendLocationMessage = useCallback((params: SendMessageParams) =>
-    callApi('send-location', params), [callApi]);
+    callApi('send-location', params, { idempotencyKey: params.idempotencyKey }), [callApi]);
 
   const sendContactMessage = useCallback((instanceName: string, number: string, contact: ContactCard[]) =>
     callApi('send-contact', { instanceName, number, contact }), [callApi]);

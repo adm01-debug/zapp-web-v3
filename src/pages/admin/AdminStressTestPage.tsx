@@ -58,6 +58,7 @@ export default function AdminStressTestPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [runId, setRunId] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState<number>(0);
   const abortRef = useRef<AbortController | null>(null);
 
   const evo = useEvolutionApi();
@@ -76,13 +77,16 @@ export default function AdminStressTestPage() {
 
     switch (type) {
       case 'text':
-        result = await evo.sendTextMessage(instance, phone, sample.text!);
+        result = await evo.sendTextMessage(instance, phone, sample.text!, {
+          idempotencyKey: `stress_${idx}_${Date.now()}`
+        });
         break;
       case 'image':
         result = await evo.sendMediaMessage({
           instanceName: instance, number: phone,
           mediatype: 'image', mimetype: 'image/jpeg', media: sample.url!,
           fileName: sample.fileName, caption: sample.caption,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
         } as any);
         break;
       case 'video':
@@ -90,6 +94,7 @@ export default function AdminStressTestPage() {
           instanceName: instance, number: phone,
           mediatype: 'video', mimetype: 'video/mp4', media: sample.url!,
           fileName: sample.fileName, caption: sample.caption,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
         } as any);
         break;
       case 'document':
@@ -97,19 +102,26 @@ export default function AdminStressTestPage() {
           instanceName: instance, number: phone,
           mediatype: 'document', mimetype: 'application/pdf', media: sample.url!,
           fileName: sample.fileName, caption: sample.caption,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
         } as any);
         break;
       case 'audio_voice':
       case 'audio_meme':
-        result = await evo.sendAudioMessage(instance, phone, sample.url!, { encoding: true });
+        result = await evo.sendAudioMessage(instance, phone, sample.url!, { 
+          encoding: true,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
+        });
         break;
       case 'sticker':
-        result = await evo.sendStickerMessage(instance, phone, sample.url!);
+        result = await evo.sendStickerMessage(instance, phone, sample.url!, {
+          idempotencyKey: `stress_${idx}_${Date.now()}`
+        });
         break;
       case 'location':
         result = await evo.sendLocationMessage({
           instanceName: instance, number: phone,
           latitude: sample.latitude, longitude: sample.longitude, name: sample.name,
+          idempotencyKey: `stress_${idx}_${Date.now()}`
         } as any);
         break;
     }
@@ -119,7 +131,7 @@ export default function AdminStressTestPage() {
 
   // ── Persist incremental updates to stress_test_runs ───────
   const persistRun = useCallback(async (
-    id: string, partial: Partial<{ status: string; ended_at: string; total_sent: number; total_failed: number; results: StressResult[]; abort_reason: string }>
+    id: string, partial: Partial<{ status: string; ended_at: string; total_sent: number; total_failed: number; results: StressResult[]; abort_reason: string; metrics_summary: any }>
   ) => {
     try {
       await supabase.from('stress_test_runs').update(partial as any).eq('id', id);
@@ -135,6 +147,9 @@ export default function AdminStressTestPage() {
     setResults([]);
     setProgress({ done: 0, total });
     setStatus('running');
+    const start = performance.now();
+    setStartTime(start);
+    const startTimeManual = start; // local for closure
 
     try {
       // Falha cedo se a biblioteca não tem stickers/áudios memes.
@@ -191,7 +206,33 @@ export default function AdminStressTestPage() {
       failurePolicy,
       failureThreshold: 5,
       signal: ctrl.signal,
-      dispatch,
+      dispatch: async (args) => {
+        const start = performance.now();
+        try {
+          const res = await dispatch(args);
+          const latency = Math.round(performance.now() - start);
+          
+          // Log metrics to DB for throughput/latency analysis
+          void supabase.from('stress_test_metrics').insert({
+            run_id: id,
+            task_type: args.type,
+            latency_ms: latency,
+            status: 'success'
+          });
+          
+          return res;
+        } catch (err) {
+          const latency = Math.round(performance.now() - start);
+          void supabase.from('stress_test_metrics').insert({
+            run_id: id,
+            task_type: args.type,
+            latency_ms: latency,
+            status: 'failed',
+            error_message: err instanceof Error ? err.message : String(err)
+          });
+          throw err;
+        }
+      },
       onResult: (r) => {
         collected.push(r);
         setResults((prev) => [r, ...prev].slice(0, 250));
@@ -210,6 +251,18 @@ export default function AdminStressTestPage() {
 
     setStatus(summary.status);
     abortRef.current = null;
+    
+    // Aggregate metrics for final report
+    const { data: metrics } = await supabase
+      .from('stress_test_metrics')
+      .select('latency_ms, status')
+      .eq('run_id', id);
+      
+    const latencies = metrics?.map(m => m.latency_ms).sort((a, b) => a - b) || [];
+    const avgLatency = latencies.length > 0 ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0;
+    const p95Latency = latencies[Math.floor(latencies.length * 0.95)] || 0;
+    const throughput = latencies.length > 0 ? Number((latencies.length / ((performance.now() - startTimeManual) / 1000)).toFixed(2)) : 0;
+
     await persistRun(id, {
       status: summary.status,
       ended_at: new Date().toISOString(),
@@ -217,6 +270,12 @@ export default function AdminStressTestPage() {
       total_failed: summary.totalFailed,
       results: collected,
       abort_reason: summary.abortReason,
+      metrics_summary: {
+        avg_latency: avgLatency,
+        p95_latency: p95Latency,
+        throughput_msg_sec: throughput,
+        success_rate: metrics?.length ? (metrics.filter(m => m.status === 'success').length / metrics.length) * 100 : 0
+      }
     });
 
     if (summary.status === 'completed') {
@@ -334,13 +393,23 @@ export default function AdminStressTestPage() {
               </span>
             </div>
             <Progress value={progress.total > 0 ? (progress.done / progress.total) * 100 : 0} />
-            <div className="flex gap-3 text-sm pt-1">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm pt-1">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-success" /> Sucesso: <strong className="tabular-nums">{sent}</strong>
               </span>
               <span className="flex items-center gap-1.5">
                 <XCircle className="h-4 w-4 text-destructive" /> Falhas: <strong className="tabular-nums">{failed}</strong>
               </span>
+              {status === 'completed' && results.length > 0 && (
+                <>
+                  <span className="text-muted-foreground border-l pl-4">
+                    Avg: <strong>{Math.round(results.reduce((acc, r) => acc + r.ms, 0) / results.length)}ms</strong>
+                  </span>
+                  <span className="text-muted-foreground">
+                    Throughput: <strong>{(results.length / ((performance.now() - startTime) / 1000)).toFixed(2)} msg/s</strong>
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </CardContent>
