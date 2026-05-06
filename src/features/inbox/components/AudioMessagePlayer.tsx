@@ -22,11 +22,14 @@ interface AudioMessagePlayerProps {
   /** When provided, enables Evolution `getMediaBase64` fallback for expired URLs (410/403). */
   refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
   onVoiceChange?: (messageId: string, newBlob: Blob) => void;
+  conversationId?: string;
 }
 
-export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey, onVoiceChange }: AudioMessagePlayerProps) {
+export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey, onVoiceChange, conversationId }: AudioMessagePlayerProps) {
   const [transcription, setTranscription] = useState<string | null>(existingTranscription || null);
   const [transcriptionStatus, setTranscriptionStatus] = useState<string>(initialStatus || 'pending');
+  const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [showTranscription, setShowTranscription] = useState(!!existingTranscription);
 
