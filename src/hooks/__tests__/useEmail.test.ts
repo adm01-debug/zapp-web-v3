@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useGmail } from '../useGmail';
+import { useEmail } from '../useEmail';
 import { safeClient } from '@/integrations/supabase/safeClient';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,7 +27,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   }
 }));
 
-describe('useGmail', () => {
+describe('useEmail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (safeClient.rpc as any).mockResolvedValue({ data: [], error: null });
@@ -35,17 +35,17 @@ describe('useGmail', () => {
   });
 
   it('deve carregar contas com sucesso', async () => {
-    const mockAccounts = [{ id: '1', email: 'test@gmail.com', is_active: true }];
+    const mockAccounts = [{ id: '1', email: 'test@email.com', is_active: true }];
     (safeClient.from as any).mockResolvedValue({ data: mockAccounts, error: null });
 
-    const { result } = renderHook(() => useGmail());
+    const { result } = renderHook(() => useEmail());
 
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
 
     expect(result.current.accounts.length).toBe(1);
-    expect(result.current.accounts[0].email).toBe('test@gmail.com');
+    expect(result.current.accounts[0].email).toBe('test@email.com');
   });
 
   it('deve tratar erro ao carregar contas', async () => {
@@ -55,7 +55,7 @@ describe('useGmail', () => {
       requestId: 'req-123'
     });
 
-    const { result } = renderHook(() => useGmail());
+    const { result } = renderHook(() => useEmail());
 
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -68,7 +68,7 @@ describe('useGmail', () => {
   it('deve lidar com retorno de dados vazio', async () => {
     (safeClient.from as any).mockResolvedValue({ data: [], error: null });
 
-    const { result } = renderHook(() => useGmail());
+    const { result } = renderHook(() => useEmail());
 
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));

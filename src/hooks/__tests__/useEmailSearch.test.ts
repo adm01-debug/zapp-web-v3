@@ -1,9 +1,9 @@
 /**
- * useEmailSearch.test.ts — Testes para busca full-text de emails Gmail
+ * useEmailSearch.test.ts — Testes para busca full-text de emails Email
  *
  * Cobre:
  * - Busca por texto (subject, from, snippet)
- * - Busca via rpc_gmail_search_threads
+ * - Busca via rpc_email_search_threads
  * - Debounce de 300ms
  * - Busca vazia retorna inbox
  * - Paginação de resultados
@@ -74,7 +74,7 @@ describe('useEmailSearch — busca básica', () => {
     });
 
     await waitFor(() => {
-      expect(mockRpc).toHaveBeenCalledWith('rpc_gmail_search_threads', expect.objectContaining({
+      expect(mockRpc).toHaveBeenCalledWith('rpc_email_search_threads', expect.objectContaining({
         p_query: 'proposta',
       }));
     });
@@ -142,7 +142,7 @@ describe('useEmailSearch — paginação', () => {
       await (result.current as any).loadMore();
     });
 
-    expect(mockRpc).toHaveBeenCalledWith('rpc_gmail_search_threads', expect.objectContaining({
+    expect(mockRpc).toHaveBeenCalledWith('rpc_email_search_threads', expect.objectContaining({
       p_offset: 2, // Offset = resultados atuais
     }));
   });
@@ -188,7 +188,7 @@ describe('useEmailSearch — busca por label', () => {
     });
 
     await waitFor(() => {
-      expect(mockRpc).toHaveBeenCalledWith('rpc_gmail_search_threads', expect.objectContaining({
+      expect(mockRpc).toHaveBeenCalledWith('rpc_email_search_threads', expect.objectContaining({
         p_label_id: 'STARRED',
       }));
     });

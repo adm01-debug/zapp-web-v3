@@ -1,12 +1,12 @@
 
 import { 
-  GmailAccount, 
-  GmailTokenInfo, 
-  GmailThread, 
-  GmailDayMetric,
+  EmailAccount, 
+  EmailTokenInfo, 
+  EmailThread, 
+  EmailDayMetric,
   SLAStatus
-} from '@/types/gmail';
-import { GmailMessage } from './gmailTypes';
+} from '@/types/email';
+import { EmailMessage } from './emailTypes';
 
 const MOCK_ACCOUNT_ID = 'mock-account-123';
 const MOCK_USER_ID = 'user-mock-456';
@@ -23,7 +23,7 @@ export const GMAIL_MOCKS = {
       watch_expiry: new Date(Date.now() + 86400000).toISOString(),
       created_at: new Date().toISOString()
     }
-  ] as GmailAccount[],
+  ] as EmailAccount[],
 
   tokenStatus: [
     {
@@ -36,13 +36,13 @@ export const GMAIL_MOCKS = {
       watch_expiry: new Date(Date.now() + 86400000).toISOString(),
       minutes_until_expiry: 60
     }
-  ] as GmailTokenInfo[],
+  ] as EmailTokenInfo[],
 
   threads: [
     {
       id: 'thread-1',
       account_id: MOCK_ACCOUNT_ID,
-      gmail_thread_id: '18f2a3b4c5d6e7f1',
+      email_thread_id: '18f2a3b4c5d6e7f1',
       subject: 'Orçamento de Software - Projeto Lovable',
       snippet: 'Olá, gostaria de solicitar um orçamento para o desenvolvimento de um dashboard customizado...',
       from_email: 'cliente@exemplo.com',
@@ -61,7 +61,7 @@ export const GMAIL_MOCKS = {
     {
       id: 'thread-2',
       account_id: MOCK_ACCOUNT_ID,
-      gmail_thread_id: '18f2a3b4c5d6e7f2',
+      email_thread_id: '18f2a3b4c5d6e7f2',
       subject: 'Dúvida sobre integração Supabase',
       snippet: 'Estou com dificuldade em configurar o RLS para a tabela de logs de auditoria...',
       from_email: 'tech@startup.io',
@@ -80,7 +80,7 @@ export const GMAIL_MOCKS = {
     {
       id: 'thread-3',
       account_id: MOCK_ACCOUNT_ID,
-      gmail_thread_id: '18f2a3b4c5d6e7f3',
+      email_thread_id: '18f2a3b4c5d6e7f3',
       subject: 'URGENTE: Erro no Outbound',
       snippet: 'Nossas mensagens automáticas pararam de funcionar às 09:00 hoje...',
       from_email: 'cto@grande-corporacao.com',
@@ -96,13 +96,13 @@ export const GMAIL_MOCKS = {
       created_at: new Date(Date.now() - 14400000).toISOString(),
       tags: ['Crítico', 'Infra']
     }
-  ] as GmailThread[],
+  ] as EmailThread[],
 
   messages: [
     {
       id: 'msg-1',
       thread_id: 'thread-1',
-      gmail_msg_id: 'msg_abc_123',
+      email_msg_id: 'msg_abc_123',
       from_email: 'cliente@exemplo.com',
       from_name: 'João Silva',
       to_emails: ['comercial@empresa.com.br'],
@@ -115,7 +115,7 @@ export const GMAIL_MOCKS = {
       has_attachments: false,
       created_at: new Date(Date.now() - 1800000).toISOString()
     }
-  ] as GmailMessage[],
+  ] as EmailMessage[],
 
   metrics: [
     {
@@ -126,5 +126,5 @@ export const GMAIL_MOCKS = {
       sla_met_count: 40,
       sla_breached_count: 5
     }
-  ] as GmailDayMetric[]
+  ] as EmailDayMetric[]
 };

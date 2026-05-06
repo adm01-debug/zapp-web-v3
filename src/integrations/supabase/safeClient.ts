@@ -44,8 +44,8 @@ export const safeClient = {
     const requestId = Math.random().toString(36).substring(7);
     stats.totalCalls++;
     try {
-      // Validação automática para tabelas gmail_*
-      if (table.startsWith('gmail_')) {
+      // Validação automática para tabelas email_*
+      if (table.startsWith('email_')) {
         const exists = await this.validateResource(table, 'table');
         if (!exists) {
           this.log(requestId, 'warn', `Tabela ${table} não encontrada no schema.`, { table });
@@ -81,7 +81,7 @@ export const safeClient = {
     const requestId = Math.random().toString(36).substring(7);
     stats.totalCalls++;
     try {
-      if (table.startsWith('gmail_')) {
+      if (table.startsWith('email_')) {
         const exists = await this.validateResource(table, 'table');
         if (!exists) {
           this.log(requestId, 'warn', `Tabela ${table} não encontrada para single()`, { table });
@@ -116,8 +116,8 @@ export const safeClient = {
     const requestId = Math.random().toString(36).substring(7);
     stats.totalCalls++;
     try {
-      // Validação automática para RPCs rpc_gmail_*
-      if (name.startsWith('rpc_gmail_')) {
+      // Validação automática para RPCs rpc_email_*
+      if (name.startsWith('rpc_email_')) {
         const exists = await this.validateResource(name, 'function');
         if (!exists) {
           this.log(requestId, 'warn', `RPC ${name} não encontrada no schema.`, { function: name });
@@ -196,7 +196,7 @@ export const safeClient = {
 
     try {
       // Usar a flag SECURITY DEFINER via RPC para atualizar o estado sem depender de RLS complexo no insert direto
-      await supabase.rpc('rpc_update_gmail_health_state' as any, {
+      await supabase.rpc('rpc_update_email_health_state' as any, {
         p_status: status,
         p_failure_count: telemetry.recentFailures.length,
         p_metadata: {
@@ -301,7 +301,7 @@ export const safeClient = {
 
     // Persistir falha no banco para monitoramento assíncrono
     try {
-      await supabase.rpc('rpc_log_gmail_health' as any, {
+      await supabase.rpc('rpc_log_email_health' as any, {
         p_status: 'error',
         p_operation: operation,
         p_resource: resource,

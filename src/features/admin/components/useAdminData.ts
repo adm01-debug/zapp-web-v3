@@ -179,7 +179,7 @@ export function useAdminData(activeTab: 'users' | 'audit' | 'crm') {
     email: string;
     password: string;
     role: AppRole;
-    gmail_email?: string;
+    email_email?: string;
     google_services?: string[];
     dropbox_email?: string;
   }
@@ -228,7 +228,7 @@ export function useAdminData(activeTab: 'users' | 'audit' | 'crm') {
             email: payload.email,
             password: payload.password,
             role: payload.role,
-            gmail_email: payload.gmail_email || undefined,
+            email_email: payload.email_email || undefined,
             google_services: payload.google_services,
             dropbox_email: payload.dropbox_email || undefined,
           }),

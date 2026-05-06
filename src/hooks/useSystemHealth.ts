@@ -5,7 +5,7 @@
  * - Inbox (conversas abertas, sem resposta)
  * - Mensagens (total, fila)
  * - Contatos (total, LGPD pendente)
- * - Email (contas Gmail, threads SLA)
+ * - Email (contas Email, threads SLA)
  * - Webhooks (DLQ, alertas)
  * - Performance (tempo de resposta DB)
  *
@@ -37,7 +37,7 @@ export interface SystemHealthData {
     lgpd_pending: number;
   };
   email: {
-    gmail_accounts: number;
+    email_accounts: number;
     unread_threads: number;
     sla_breached: number;
   };

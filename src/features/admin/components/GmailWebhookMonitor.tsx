@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getLogger } from '@/lib/logger';
 
-const log = getLogger('GmailWebhookMonitor');
+const log = getLogger('EmailWebhookMonitor');
 import { Mail, RefreshCw, CheckCircle, AlertCircle, Clock, Wifi, WifiOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 const supabase = _supabase as any;
 
-interface GmailAccount {
+interface EmailAccount {
   id: string;
   email_address: string;
   is_active: boolean;
@@ -25,18 +25,18 @@ interface ThreadStats {
   unread: number;
 }
 
-export function GmailWebhookMonitor() {
-  const [accounts, setAccounts] = useState<GmailAccount[]>([]);
+export function EmailWebhookMonitor() {
+  const [accounts, setAccounts] = useState<EmailAccount[]>([]);
   const [stats, setStats] = useState<ThreadStats>({ total: 0, unread: 0 });
   const [loading, setLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: gmailAccounts , error } = await supabase
-        .rpc('get_own_gmail_accounts');
+      const { data: emailAccounts , error } = await supabase
+        .rpc('get_own_email_accounts');
 
-      setAccounts((gmailAccounts || []).map(a => ({ ...a, history_id: null })) as GmailAccount[]);
+      setAccounts((emailAccounts || []).map(a => ({ ...a, history_id: null })) as EmailAccount[]);
 
       // Get thread stats
       const { count: totalThreads } = await supabase
@@ -88,7 +88,7 @@ export function GmailWebhookMonitor() {
           <Mail className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h2 className="text-xl font-bold">Gmail Webhook Monitor</h2>
+          <h2 className="text-xl font-bold">Email Webhook Monitor</h2>
           <p className="text-sm text-muted-foreground">Status do webhook Pub/Sub e sincronização de emails</p>
         </div>
         <Button variant="outline" size="sm" className="ml-auto h-8 text-xs" onClick={loadData} disabled={loading}>
@@ -180,7 +180,7 @@ export function GmailWebhookMonitor() {
           <div className="bg-muted/50 rounded-lg p-4 font-mono text-xs space-y-2 border">
             <p className="text-muted-foreground">Endpoint:</p>
             <p className="pl-4 text-foreground/80 break-all">
-              {import.meta.env.VITE_SUPABASE_URL}/functions/v1/gmail-webhook
+              {import.meta.env.VITE_SUPABASE_URL}/functions/v1/email-webhook
             </p>
             <p className="text-muted-foreground mt-2">Tipo: Google Cloud Pub/Sub Push</p>
             <p className="text-muted-foreground">Eventos: messages.insert (INBOX)</p>

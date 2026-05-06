@@ -2,19 +2,19 @@ import { useState } from 'react';
 import { Mail, Building2, Layers } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { GmailInboxView } from '@/components/gmail/GmailInboxView';
+import { EmailInboxView } from '@/components/email/EmailInboxView';
 import { OutlookInboxView } from '@/components/email/OutlookInboxView';
 import { useEmailAccounts } from '@/hooks/useEmailAccounts';
 
 /**
- * EmailChatInboxUnified — Inbox unificado que integra Gmail + Outlook + IMAP
+ * EmailChatInboxUnified — Inbox unificado que integra Email + Outlook + IMAP
  *
  * Detecta automaticamente os provedores de email configurados
  * e mostra uma aba para cada um. Sem configuração manual.
  */
 export function EmailChatInboxUnified() {
   const {
-    hasGmail,
+    hasEmail,
     hasOutlook,
     totalUnread,
     totalSlaBreached,
@@ -22,9 +22,9 @@ export function EmailChatInboxUnified() {
   } = useEmailAccounts();
 
   const [defaultTab] = useState(() => {
-    if (hasGmail) return 'gmail';
+    if (hasEmail) return 'email';
     if (hasOutlook) return 'outlook';
-    return 'gmail';
+    return 'email';
   });
 
   return (
@@ -44,9 +44,9 @@ export function EmailChatInboxUnified() {
       {/* Tabs por provedor */}
       <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="px-4 py-2 h-auto justify-start border-b rounded-none bg-transparent gap-1">
-          <TabsTrigger value="gmail" className="gap-1.5 text-xs data-[state=active]:bg-muted">
+          <TabsTrigger value="email" className="gap-1.5 text-xs data-[state=active]:bg-muted">
             <Mail className="h-3.5 w-3.5" />
-            Gmail
+            Email
           </TabsTrigger>
           <TabsTrigger value="outlook" className="gap-1.5 text-xs data-[state=active]:bg-muted">
             <Building2 className="h-3.5 w-3.5" />
@@ -54,8 +54,8 @@ export function EmailChatInboxUnified() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="gmail" className="flex-1 mt-0 overflow-hidden">
-          <GmailInboxView />
+        <TabsContent value="email" className="flex-1 mt-0 overflow-hidden">
+          <EmailInboxView />
         </TabsContent>
 
         <TabsContent value="outlook" className="flex-1 mt-0 overflow-hidden">

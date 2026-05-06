@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { gmailSendMessage } from '@/hooks/gmail/gmailApi';
+import { emailSendMessage } from '@/hooks/email/emailApi';
 import { MessageTemplates } from '@/features/inbox/components/MessageTemplates';
 import { useEmailSignature } from '@/hooks/useEmailSignature';
 import { useEmailDraft } from '@/hooks/useEmailDraft';
@@ -18,7 +18,7 @@ import { useEmailSLA } from '@/hooks/useEmailSLA';
 interface EmailChatReplyBarProps {
   accountId: string;
   threadId: string;
-  threadGmailId: string;
+  threadEmailId: string;
   toEmails: string[];
   subject: string;
   onSent?: () => void;
@@ -28,7 +28,7 @@ interface EmailChatReplyBarProps {
 export function EmailChatReplyBar({
   accountId,
   threadId,
-  threadGmailId,
+  threadEmailId,
   toEmails,
   subject,
   onSent,
@@ -110,7 +110,7 @@ export function EmailChatReplyBar({
       const ccList = cc.split(',').map(s => s.trim()).filter(Boolean);
       const bccList = bcc.split(',').map(s => s.trim()).filter(Boolean);
 
-      await (gmailSendMessage as any)({
+      await (emailSendMessage as any)({
         accountId,
         to: toList,
         cc: ccList,
@@ -118,13 +118,13 @@ export function EmailChatReplyBar({
         subject: subject.startsWith('Re:') ? subject : `Re: ${subject}`,
         bodyHtml,
         bodyPlain: plainText,
-        threadId: threadGmailId,
+        threadId: threadEmailId,
         attachments: processedAttachments as any,
         signature: true
       });
 
       // Registra resposta no SLA
-      markReplied(threadGmailId);
+      markReplied(threadEmailId);
 
       // Descarta rascunho
       await discard();

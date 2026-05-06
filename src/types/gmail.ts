@@ -1,15 +1,15 @@
 
 /**
- * gmail.ts — Tipagens compartilhadas para o domínio de Gmail e Email unificado.
+ * email.ts — Tipagens compartilhadas para o domínio de Email e Email unificado.
  */
 
-export type EmailProvider = 'gmail' | 'outlook' | 'yahoo' | 'custom';
-export type GmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
-export type GmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
+export type EmailProvider = 'email' | 'outlook' | 'yahoo' | 'custom';
+export type EmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
+export type EmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
 export type SLAStatus = 'ok' | 'warning' | 'breached' | 'met';
-export type GmailLabel = 'INBOX' | 'SENT' | 'DRAFTS' | 'STARRED' | 'IMPORTANT' | 'TRASH' | 'SPAM' | string;
+export type EmailLabel = 'INBOX' | 'SENT' | 'DRAFTS' | 'STARRED' | 'IMPORTANT' | 'TRASH' | 'SPAM' | string;
 
-export interface GmailAccount {
+export interface EmailAccount {
   id:            string;
   user_id:       string;
   email:         string;
@@ -21,21 +21,21 @@ export interface GmailAccount {
   created_at?:   string;
 }
 
-export interface GmailTokenInfo {
+export interface EmailTokenInfo {
   account_id:            string;
   email:                 string;
   is_active:             boolean;
-  token_status:          GmailTokenStatus;
+  token_status:          EmailTokenStatus;
   token_expiry:          string | null;
-  watch_status:          GmailWatchStatus;
+  watch_status:          EmailWatchStatus;
   watch_expiry:          string | null;
   minutes_until_expiry:  number | null;
 }
 
-export interface GmailThread {
+export interface EmailThread {
   id:              string;
   account_id:      string;
-  gmail_thread_id: string;
+  email_thread_id: string;
   thread_id?:      string;   // Alias legado
   subject:         string | null;
   snippet:         string | null;
@@ -56,12 +56,12 @@ export interface GmailThread {
   tags?:           string[];
 }
 
-export type EmailThread = GmailThread;
+export type EmailThread = EmailThread;
 
-export interface GmailDraft {
+export interface EmailDraft {
   id:             string;
   account_id:     string;
-  gmail_draft_id: string | null;
+  email_draft_id: string | null;
   thread_id_ref:  string | null;
   to_emails:      string[];
   cc_emails:      string[];
@@ -70,7 +70,7 @@ export interface GmailDraft {
   last_saved_at:  string;
 }
 
-export interface GmailSignature {
+export interface EmailSignature {
   id:          string;
   account_id:  string;
   name:        string;
@@ -92,10 +92,10 @@ export interface UnifiedEmailAccount {
   created_at:      string;
 }
 
-export interface GmailLabelInfo {
+export interface EmailLabelInfo {
   id:             string;
   account_id:     string;
-  gmail_label_id: string;
+  email_label_id: string;
   name:           string;
   type:           'system' | 'user';
   color?:         string | null;
@@ -103,7 +103,7 @@ export interface GmailLabelInfo {
   unread_count?:  number;
 }
 
-export interface GmailDayMetric {
+export interface EmailDayMetric {
   date:                    string;
   threads_received:        number;
   threads_replied:         number;
@@ -112,7 +112,7 @@ export interface GmailDayMetric {
   sla_breached_count:      number;
 }
 
-export interface GmailMetricsSummary {
+export interface EmailMetricsSummary {
   period:              string;
   total_received:      number;
   total_replied:       number;
@@ -121,10 +121,10 @@ export interface GmailMetricsSummary {
   sla_compliance_rate: number;
   total_sla_met:       number;
   total_sla_breached:  number;
-  daily:               GmailDayMetric[];
+  daily:               EmailDayMetric[];
 }
 
-export interface GmailSLADashboard {
+export interface EmailSLADashboard {
   ok_count:       number;
   warning_count:  number;
   breached_count: number;
@@ -132,7 +132,7 @@ export interface GmailSLADashboard {
   total:          number;
 }
 
-export interface GmailSendParams {
+export interface EmailSendParams {
   to:          string | string[];
   cc?:         string | string[];
   bcc?:        string | string[];

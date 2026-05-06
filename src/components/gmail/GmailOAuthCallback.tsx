@@ -3,13 +3,13 @@ import { Mail, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * GmailOAuthCallback — Página de callback para OAuth2 do Gmail
+ * EmailOAuthCallback — Página de callback para OAuth2 do Email
  *
- * Renderizada em /auth/gmail/callback
+ * Renderizada em /auth/email/callback
  * Recebe o ?code= do redirect do Google e troca por tokens.
  * Após sucesso, envia postMessage ao window.opener e fecha.
  */
-export function GmailOAuthCallback() {
+export function EmailOAuthCallback() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Autenticando com o Google...');
   const [email, setEmail]     = useState<string | null>(null);
@@ -38,12 +38,12 @@ export function GmailOAuthCallback() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setStatus('error');
-          setMessage('Você precisa estar logado para conectar uma conta Gmail.');
+          setMessage('Você precisa estar logado para conectar uma conta Email.');
           return;
         }
 
         // Trocar code por tokens via Edge Function
-        const { data, error: fnErr } = await supabase.functions.invoke('gmail-oauth', {
+        const { data, error: fnErr } = await supabase.functions.invoke('email-oauth', {
           body: { action: 'exchangeCode', code, userId: user.id, state },
         });
 
@@ -60,7 +60,7 @@ export function GmailOAuthCallback() {
         // Enviar resultado ao popup pai
         if (window.opener) {
           window.opener.postMessage({
-            type: 'gmail_oauth_callback',
+            type: 'email_oauth_callback',
             code,
             success: true,
             email: data.email,
@@ -92,7 +92,7 @@ export function GmailOAuthCallback() {
         <div>
           <h1 className="text-xl font-bold flex items-center justify-center gap-2">
             <Mail className="h-5 w-5" />
-            Gmail OAuth
+            Email OAuth
           </h1>
           <p className="text-sm text-muted-foreground mt-2">{message}</p>
         </div>
@@ -128,4 +128,4 @@ export function GmailOAuthCallback() {
   );
 }
 
-export default GmailOAuthCallback;
+export default EmailOAuthCallback;

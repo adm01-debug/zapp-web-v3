@@ -31,10 +31,10 @@ describe('safeClient', () => {
     (safeClient as any).clearCache?.();
   });
 
-  it('deve validar e falhar se uma tabela gmail_* não existir', async () => {
-    mockSelect.mockResolvedValue({ error: { message: 'relation "gmail_test" does not exist' } });
+  it('deve validar e falhar se uma tabela email_* não existir', async () => {
+    mockSelect.mockResolvedValue({ error: { message: 'relation "email_test" does not exist' } });
 
-    const { data, error } = await safeClient.from('gmail_test_fail', (q) => q.select('*'));
+    const { data, error } = await safeClient.from('email_test_fail', (q) => q.select('*'));
 
     expect(data).toEqual([]);
     expect(error?.message).toContain('não disponível');
@@ -69,13 +69,13 @@ describe('safeClient', () => {
   });
 
   it('deve coletar telemetria de falhas', async () => {
-    mockSelect.mockResolvedValue({ error: { message: 'relation "gmail_test" does not exist' } });
+    mockSelect.mockResolvedValue({ error: { message: 'relation "email_test" does not exist' } });
     
-    await safeClient.from('gmail_test_telemetry', (q) => q.select('*'));
+    await safeClient.from('email_test_telemetry', (q) => q.select('*'));
     
     const telemetry = (safeClient as any).getTelemetry();
     expect(telemetry.recentFailures.length).toBeGreaterThan(0);
-    expect(telemetry.recentFailures[0].resource).toBe('gmail_test_telemetry');
+    expect(telemetry.recentFailures[0].resource).toBe('email_test_telemetry');
     expect(telemetry.recentFailures[0].error).toContain('não encontrada');
   });
 
@@ -83,11 +83,11 @@ describe('safeClient', () => {
     mockSelect.mockResolvedValue({ error: null });
     
     // Primeira chamada: valida
-    await safeClient.from('gmail_cache_test', (q) => q.select('*'));
+    await safeClient.from('email_cache_test', (q) => q.select('*'));
     expect(mockSelect).toHaveBeenCalledTimes(2); // 1 select normal + 1 count head para validar
     
     // Segunda chamada: usa cache
-    await safeClient.from('gmail_cache_test', (q) => q.select('*'));
+    await safeClient.from('email_cache_test', (q) => q.select('*'));
     expect(mockSelect).toHaveBeenCalledTimes(3); // +1 select normal apenas
     
     const telemetry = (safeClient as any).getTelemetry();

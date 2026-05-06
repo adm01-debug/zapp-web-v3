@@ -17,7 +17,7 @@ const HEALTHY_DATA = {
   inbox: { total_conversations: 1687, open_conversations: 100, unread_total: 50, awaiting_response: 10 },
   messages: { total: 1800000, last_24h: 500, queue_size: 0 },
   contacts: { total: 12662, recent_7d: 467, lgpd_pending: 0 },
-  email: { gmail_accounts: 2, unread_threads: 5, sla_breached: 0 },
+  email: { email_accounts: 2, unread_threads: 5, sla_breached: 0 },
   webhooks: { events_1h: 100, dlq_pending: 0, alerts_unread: 0 },
   performance: { db_response_ms: 150, mat_views_populated: 12, active_cron_jobs: 78 },
 };
@@ -26,7 +26,7 @@ const WARNING_DATA = {
   ...HEALTHY_DATA,
   health_score: 'warning',
   webhooks: { events_1h: 0, dlq_pending: 5, alerts_unread: 10 },
-  email: { gmail_accounts: 2, unread_threads: 100, sla_breached: 3 },
+  email: { email_accounts: 2, unread_threads: 100, sla_breached: 3 },
 };
 
 describe('useSystemHealth', () => {

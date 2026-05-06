@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GmailHealthService } from '../gmailHealthService';
-import { GmailHealthRepository } from '../gmailHealthRepository';
-import { GmailFailure } from '../types';
+import { EmailHealthService } from '../emailHealthService';
+import { EmailHealthRepository } from '../emailHealthRepository';
+import { EmailFailure } from '../types';
 
-describe('GmailHealthService', () => {
-  let service: GmailHealthService;
+describe('EmailHealthService', () => {
+  let service: EmailHealthService;
   let mockRepository: any;
 
   beforeEach(() => {
@@ -14,7 +14,7 @@ describe('GmailHealthService', () => {
       getLocalCacheInfo: vi.fn(),
       forceRevalidation: vi.fn(),
     };
-    service = new GmailHealthService(mockRepository as any);
+    service = new EmailHealthService(mockRepository as any);
   });
 
   describe('getHealthStatus', () => {
@@ -115,10 +115,10 @@ describe('GmailHealthService', () => {
   });
 
   describe('getFailures with filtering and pagination', () => {
-    const mockFailures: GmailFailure[] = [
+    const mockFailures: EmailFailure[] = [
       { requestId: 'req-1', operation: 'LIST', resource: 'threads', timestamp: new Date().toISOString(), error: 'Error 1' },
       { requestId: 'req-2', operation: 'GET', resource: 'messages', timestamp: new Date().toISOString(), error: 'Error 2' },
-      { requestId: 'test-req', operation: 'SEND', resource: 'gmail', timestamp: new Date().toISOString(), error: 'Error 3' },
+      { requestId: 'test-req', operation: 'SEND', resource: 'email', timestamp: new Date().toISOString(), error: 'Error 3' },
     ];
 
     beforeEach(() => {

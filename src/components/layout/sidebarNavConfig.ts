@@ -143,7 +143,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'webhook-overview', icon: BarChart3, label: 'Overview Webhook', requiredRoles: ['admin'] },
   { id: 'ai-usage', icon: BrainCircuit, label: 'Consumo IA' },
   { id: 'public-api', icon: Code2, label: 'API Pública' },
-  { id: 'gmail-webhook', icon: Webhook, label: 'Email Webhook' },
+  { id: 'email-webhook', icon: Webhook, label: 'Email Webhook' },
   { id: 'media-migration', icon: HardDrive, label: 'Migração Mídia' },
   { id: 'sicoob-bridge', icon: Landmark, label: 'Sicoob Bridge' },
   { id: 'evolution-monitor', icon: Activity, label: 'Monitor Evolution' },

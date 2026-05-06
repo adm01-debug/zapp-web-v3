@@ -2,10 +2,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { gmailMappers } from '@/utils/gmailMappers';
-import { GmailLabelInfo as GmailLabel } from '@/types/gmail';
+import { emailMappers } from '@/utils/emailMappers';
+import { EmailLabelInfo as EmailLabel } from '@/types/email';
 
-export type { GmailLabel };
+export type { EmailLabel };
 
 const supabase = _supabase as any;
 
@@ -19,8 +19,8 @@ export const SYSTEM_LABELS: Array<{ id: string; name: string; icon: string; colo
   { id: 'TRASH',     name: 'Lixeira',   icon: 'delete',    color: '#777777' },
 ];
 
-export function useGmailLabels(accountId: string | null) {
-  const [labels, setLabels]         = useState<GmailLabel[]>([]);
+export function useEmailLabels(accountId: string | null) {
+  const [labels, setLabels]         = useState<EmailLabel[]>([]);
   const [isLoading, setIsLoading]   = useState(false);
   const [error, setError]           = useState<string | null>(null);
 
@@ -29,15 +29,15 @@ export function useGmailLabels(accountId: string | null) {
 
     setIsLoading(true);
     setError(null);
-    const { data, error: dbErr, requestId } = await safeClient.from('gmail_labels', (q) =>
+    const { data, error: dbErr, requestId } = await safeClient.from('email_labels', (q) =>
       q.select('*').eq('account_id', accountId).order('name', { ascending: true })
     );
 
     if (dbErr) {
-      console.warn(`[useGmailLabels][${requestId}] Falha ao carregar labels:`, dbErr.message);
-      setError(`Não foi possível carregar as pastas do Gmail.`);
+      console.warn(`[useEmailLabels][${requestId}] Falha ao carregar labels:`, dbErr.message);
+      setError(`Não foi possível carregar as pastas do Email.`);
     } else {
-      setLabels(gmailMappers.labels(Array.isArray(data) ? data : []));
+      setLabels(emailMappers.labels(Array.isArray(data) ? data : []));
     }
     setIsLoading(false);
   }, [accountId]);
@@ -45,7 +45,7 @@ export function useGmailLabels(accountId: string | null) {
   const syncLabels = useCallback(async () => {
     if (!accountId) return;
     try {
-      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-sync', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('email-sync', {
         body: { action: 'syncLabels', accountId },
       });
       if (!fnErr && data?.success) {
@@ -60,7 +60,7 @@ export function useGmailLabels(accountId: string | null) {
     if (!accountId) return { thread_count: 0, unread_count: 0 };
 
     const { data, error } = await supabase
-      .from('gmail_threads')
+      .from('email_threads')
       .select('id, unread_count')
       .eq('account_id', accountId)
       .contains('label_ids', [labelId]);
@@ -75,7 +75,7 @@ export function useGmailLabels(accountId: string | null) {
   const systemLabels = SYSTEM_LABELS.map(sl => ({
     id:             `system-${sl.id}`,
     account_id:     accountId ?? '',
-    gmail_label_id: sl.id,
+    email_label_id: sl.id,
     name:           sl.name,
     type:           'system' as const,
     color:          sl.color,

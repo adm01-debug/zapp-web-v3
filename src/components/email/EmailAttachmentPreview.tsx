@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { type GmailAttachment } from '@/hooks/gmail/gmailTypes';
+import { type EmailAttachment } from '@/hooks/email/emailTypes';
 
 interface EmailAttachmentPreviewProps {
-  attachments: GmailAttachment[];
+  attachments: EmailAttachment[];
   className?: string;
 }
 
@@ -36,12 +36,12 @@ function getFileColor(mimeType: string | null): string {
 }
 
 export function EmailAttachmentPreview({ attachments, className }: EmailAttachmentPreviewProps) {
-  const [preview, setPreview] = useState<GmailAttachment | null>(null);
+  const [preview, setPreview] = useState<EmailAttachment | null>(null);
   const [downloading, setDownloading] = useState<Set<string>>(new Set());
 
   if (attachments.length === 0) return null;
 
-  const handleDownload = async (att: GmailAttachment) => {
+  const handleDownload = async (att: EmailAttachment) => {
     if (!att.storage_url) return;
     setDownloading(prev => new Set([...prev, att.id]));
     try {
@@ -54,7 +54,7 @@ export function EmailAttachmentPreview({ attachments, className }: EmailAttachme
     }
   };
 
-  const canPreview = (att: GmailAttachment) =>
+  const canPreview = (att: EmailAttachment) =>
     att.storage_url && (att.mime_type?.startsWith('image/') || att.mime_type?.includes('pdf'));
 
   return (

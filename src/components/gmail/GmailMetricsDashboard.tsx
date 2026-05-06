@@ -1,9 +1,9 @@
 import { Mail, Clock, CheckCircle, AlertTriangle, TrendingUp, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useGmailMetrics } from '@/hooks/useGmailMetrics';
+import { useEmailMetrics } from '@/hooks/useEmailMetrics';
 
-interface GmailMetricsDashboardProps {
+interface EmailMetricsDashboardProps {
   accountId: string | null;
   days?:     number;
 }
@@ -57,13 +57,13 @@ function SLABar({ label, value, total, color }: {
   );
 }
 
-export function GmailMetricsDashboard({ accountId, days = 7 }: GmailMetricsDashboardProps) {
-  const { summary, slaDash, chartData, isLoading } = useGmailMetrics(accountId, days);
+export function EmailMetricsDashboard({ accountId, days = 7 }: EmailMetricsDashboardProps) {
+  const { summary, slaDash, chartData, isLoading } = useEmailMetrics(accountId, days);
 
   if (!accountId) {
     return (
       <div className="text-center py-8 text-sm text-muted-foreground">
-        Selecione uma conta Gmail para ver as métricas
+        Selecione uma conta Email para ver as métricas
       </div>
     );
   }
@@ -189,4 +189,4 @@ export function GmailMetricsDashboard({ accountId, days = 7 }: GmailMetricsDashb
   );
 }
 
-export default GmailMetricsDashboard;
+export default EmailMetricsDashboard;

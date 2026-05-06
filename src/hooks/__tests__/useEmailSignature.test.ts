@@ -1,5 +1,5 @@
 /**
- * useEmailSignature.test.ts — Testes para assinaturas de email Gmail
+ * useEmailSignature.test.ts — Testes para assinaturas de email Email
  *
  * Cobre:
  * - Carregar assinaturas por conta
@@ -107,7 +107,7 @@ describe('useEmailSignature — criar assinatura', () => {
       });
     });
 
-    expect(mockFrom).toHaveBeenCalledWith('gmail_signatures');
+    expect(mockFrom).toHaveBeenCalledWith('email_signatures');
   });
 });
 

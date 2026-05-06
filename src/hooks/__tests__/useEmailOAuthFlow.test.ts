@@ -1,5 +1,5 @@
 /**
- * useGmailOAuthFlow.test.ts — Testes para o fluxo OAuth Gmail
+ * useEmailOAuthFlow.test.ts — Testes para o fluxo OAuth Email
  *
  * Cobre:
  * - Verificar configuração de credenciais
@@ -10,7 +10,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { useGmailOAuthFlow } from '../useGmailOAuthFlow';
+import { useEmailOAuthFlow } from '../useEmailOAuthFlow';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 const mockInvoke = vi.fn();
@@ -33,7 +33,7 @@ const makeQueryMock = (data: unknown[], error = null) => ({
   order:  vi.fn().mockResolvedValue({ data, error }),
 });
 
-describe('useGmailOAuthFlow — verificação de configuração', () => {
+describe('useEmailOAuthFlow — verificação de configuração', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFrom.mockReturnValue(makeQueryMock([]));
@@ -45,20 +45,20 @@ describe('useGmailOAuthFlow — verificação de configuração', () => {
       error: null,
     });
 
-    const { result } = renderHook(() => useGmailOAuthFlow());
+    const { result } = renderHook(() => useEmailOAuthFlow());
     await waitFor(() => result.current !== null);
 
     await act(async () => {
-      await mockInvoke('gmail-oauth', { body: { action: 'checkCredentials' } });
+      await mockInvoke('email-oauth', { body: { action: 'checkCredentials' } });
     });
 
-    expect(mockInvoke).toHaveBeenCalledWith('gmail-oauth', expect.objectContaining({
+    expect(mockInvoke).toHaveBeenCalledWith('email-oauth', expect.objectContaining({
       body: expect.objectContaining({ action: 'checkCredentials' }),
     }));
   });
 });
 
-describe('useGmailOAuthFlow — geração de auth URL', () => {
+describe('useEmailOAuthFlow — geração de auth URL', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFrom.mockReturnValue(makeQueryMock([]));
@@ -73,14 +73,14 @@ describe('useGmailOAuthFlow — geração de auth URL', () => {
       error: null,
     });
 
-    const result = await mockInvoke('gmail-oauth', { body: { action: 'getAuthUrl' } });
+    const result = await mockInvoke('email-oauth', { body: { action: 'getAuthUrl' } });
 
     expect(result.data.authUrl).toContain('accounts.google.com');
     expect(result.data.authUrl).toContain('scope=');
     expect(result.data.state).toBeDefined();
   });
 
-  it('URL deve conter escopo Gmail correto', async () => {
+  it('URL deve conter escopo Email correto', async () => {
     mockInvoke.mockResolvedValue({
       data: {
         authUrl: 'https://accounts.google.com/o/oauth2/auth?scope=https://mail.google.com/+offline_access',
@@ -89,12 +89,12 @@ describe('useGmailOAuthFlow — geração de auth URL', () => {
       error: null,
     });
 
-    const result = await mockInvoke('gmail-oauth', { body: { action: 'getAuthUrl' } });
+    const result = await mockInvoke('email-oauth', { body: { action: 'getAuthUrl' } });
     expect(result.data.authUrl).toContain('mail.google.com');
   });
 });
 
-describe('useGmailOAuthFlow — exchange de code', () => {
+describe('useEmailOAuthFlow — exchange de code', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFrom.mockReturnValue(makeQueryMock([]));
@@ -105,18 +105,18 @@ describe('useGmailOAuthFlow — exchange de code', () => {
       data: {
         success: true,
         accountId: 'acc-new-1',
-        email: 'novo@gmail.com',
+        email: 'novo@email.com',
         displayName: 'Novo Usuário',
       },
       error: null,
     });
 
-    const result = await mockInvoke('gmail-oauth', {
+    const result = await mockInvoke('email-oauth', {
       body: { action: 'exchangeCode', code: 'auth-code-xyz', userId: 'user-1' },
     });
 
     expect(result.data.success).toBe(true);
-    expect(result.data.email).toBe('novo@gmail.com');
+    expect(result.data.email).toBe('novo@email.com');
     expect(result.data.accountId).toBeDefined();
   });
 
@@ -126,7 +126,7 @@ describe('useGmailOAuthFlow — exchange de code', () => {
       error: { message: 'Token exchange failed: invalid_grant' },
     });
 
-    const result = await mockInvoke('gmail-oauth', {
+    const result = await mockInvoke('email-oauth', {
       body: { action: 'exchangeCode', code: 'invalid-code', userId: 'user-1' },
     });
 
@@ -137,7 +137,7 @@ describe('useGmailOAuthFlow — exchange de code', () => {
   it('deve configurar Pub/Sub watch após exchange bem-sucedido', async () => {
     // Primeiro: exchange
     mockInvoke.mockResolvedValueOnce({
-      data: { success: true, accountId: 'acc-1', email: 'test@gmail.com' },
+      data: { success: true, accountId: 'acc-1', email: 'test@email.com' },
       error: null,
     });
     // Segundo: setupWatch
@@ -146,16 +146,16 @@ describe('useGmailOAuthFlow — exchange de code', () => {
       error: null,
     });
 
-    const exchange = await mockInvoke('gmail-oauth', { body: { action: 'exchangeCode', code: 'code', userId: 'user-1' } });
+    const exchange = await mockInvoke('email-oauth', { body: { action: 'exchangeCode', code: 'code', userId: 'user-1' } });
     expect(exchange.data.success).toBe(true);
 
-    const watch = await mockInvoke('gmail-webhook', { body: { action: 'setupWatch', accountId: 'acc-1' } });
+    const watch = await mockInvoke('email-webhook', { body: { action: 'setupWatch', accountId: 'acc-1' } });
     expect(watch.data.success).toBe(true);
     expect(watch.data.watchExpiry).toBeDefined();
   });
 });
 
-describe('useGmailOAuthFlow — renovação de token', () => {
+describe('useEmailOAuthFlow — renovação de token', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFrom.mockReturnValue(makeQueryMock([]));
@@ -170,7 +170,7 @@ describe('useGmailOAuthFlow — renovação de token', () => {
       error: null,
     });
 
-    const result = await mockInvoke('gmail-oauth', {
+    const result = await mockInvoke('email-oauth', {
       body: { action: 'refreshToken', accountId: 'acc-1' },
     });
 
@@ -184,7 +184,7 @@ describe('useGmailOAuthFlow — renovação de token', () => {
       error: null,
     });
 
-    const result = await mockInvoke('gmail-oauth', {
+    const result = await mockInvoke('email-oauth', {
       body: { action: 'refreshToken', accountId: 'acc-no-refresh' },
     });
 
@@ -192,7 +192,7 @@ describe('useGmailOAuthFlow — renovação de token', () => {
   });
 });
 
-describe('useGmailOAuthFlow — estado do hook', () => {
+describe('useEmailOAuthFlow — estado do hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFrom.mockReturnValue(makeQueryMock([]));
@@ -200,30 +200,30 @@ describe('useGmailOAuthFlow — estado do hook', () => {
   });
 
   it('deve inicializar sem erros', async () => {
-    const { result } = renderHook(() => useGmailOAuthFlow());
+    const { result } = renderHook(() => useEmailOAuthFlow());
     await waitFor(() => result.current !== null);
     expect(result.current).toBeDefined();
   });
 
   it('deve expor startOAuthFlow', async () => {
-    const { result } = renderHook(() => useGmailOAuthFlow());
+    const { result } = renderHook(() => useEmailOAuthFlow());
     await waitFor(() => result.current !== null);
     expect(typeof (result.current as any).startOAuthFlow).toBe('function');
   });
 
   it('deve expor exchangeCode', async () => {
-    const { result } = renderHook(() => useGmailOAuthFlow());
+    const { result } = renderHook(() => useEmailOAuthFlow());
     await waitFor(() => result.current !== null);
     expect(typeof (result.current as any).exchangeCode).toBe('function');
   });
 });
 
-describe('useGmailOAuthFlow — scopes necessários', () => {
-  it('scopes Gmail devem incluir mail.read e mail.send', () => {
+describe('useEmailOAuthFlow — scopes necessários', () => {
+  it('scopes Email devem incluir mail.read e mail.send', () => {
     const requiredScopes = [
       'https://mail.google.com/',
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/gmail.readonly',
+      'https://www.googleapis.com/auth/email.send',
+      'https://www.googleapis.com/auth/email.readonly',
     ];
 
     // Valida que cada scope está no conjunto esperado
@@ -234,7 +234,7 @@ describe('useGmailOAuthFlow — scopes necessários', () => {
 
   it('redirect_uri deve ser a URL do Supabase Edge Function', () => {
     const projectUrl = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:8000';
-    const expectedRedirect = `${projectUrl}/functions/v1/gmail-oauth`;
-    expect(expectedRedirect).toContain('/functions/v1/gmail-oauth');
+    const expectedRedirect = `${projectUrl}/functions/v1/email-oauth`;
+    expect(expectedRedirect).toContain('/functions/v1/email-oauth');
   });
 });

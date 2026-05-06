@@ -8,17 +8,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { motion } from '@/components/ui/motion';
-import { type GmailMessage } from '@/hooks/gmail/gmailTypes';
+import { type EmailMessage } from '@/hooks/email/emailTypes';
 import { EmailAttachmentPreview } from './EmailAttachmentPreview';
 import { EmailSLABadge } from './EmailSLABadge';
 import { type SLAStatus } from '@/hooks/useEmailSLA';
-import { gmailMarkRead, gmailTrashMessage, gmailModifyLabels } from '@/hooks/gmail/gmailApi';
+import { emailMarkRead, emailTrashMessage, emailModifyLabels } from '@/hooks/email/emailApi';
 import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface EmailChatBubbleProps {
-  message: GmailMessage;
+  message: EmailMessage;
   accountId: string;
   slaStatus?: SLAStatus | null;
   onReply?: () => void;
@@ -87,13 +87,13 @@ export function EmailChatBubble({
     : null;
 
   const hasHtml = !!message.body_html;
-  const hasQuote = message.body_html?.includes('gmail_quote') || message.body_html?.includes('blockquote');
+  const hasQuote = message.body_html?.includes('email_quote') || message.body_html?.includes('blockquote');
 
   const displayHtml = hasHtml
     ? sanitizeHtml(
         showFullHtml
           ? message.body_html ?? ''
-          : (message.body_html ?? '').replace(/<div class="gmail_quote"[\s\S]*/i, '').replace(/<blockquote[\s\S]*<\/blockquote>/i, '')
+          : (message.body_html ?? '').replace(/<div class="email_quote"[\s\S]*/i, '').replace(/<blockquote[\s\S]*<\/blockquote>/i, '')
       )
     : message.body_plain ?? message.snippet ?? '';
 
@@ -101,7 +101,7 @@ export function EmailChatBubble({
     const wasStarred = isStarred;
     setIsStarred(!wasStarred);
     try {
-      await gmailModifyLabels({
+      await emailModifyLabels({
         accountId,
         messageId: message.message_id,
         addLabels: wasStarred ? [] : ['STARRED'],
@@ -116,7 +116,7 @@ export function EmailChatBubble({
     const wasRead = isRead;
     setIsRead(!wasRead);
     try {
-      await gmailMarkRead({ accountId, messageIds: [message.message_id], read: !wasRead } as any);
+      await emailMarkRead({ accountId, messageIds: [message.message_id], read: !wasRead } as any);
     } catch (err) {
       setIsRead(wasRead);
     }
@@ -124,7 +124,7 @@ export function EmailChatBubble({
 
   const handleTrash = async () => {
     try {
-      await gmailTrashMessage({ accountId, messageId: message.message_id } as any);
+      await emailTrashMessage({ accountId, messageId: message.message_id } as any);
       toast.success('Mensagem movida para lixeira');
     } catch (err) {
       toast.error('Erro ao mover para lixeira');

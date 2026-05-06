@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Star, AlertCircle } from 'lucide-react';
-import type { EmailThread } from '@/hooks/useGmail';
+import type { EmailThread } from '@/hooks/useEmail';
 
 function getInitials(name: string | null | undefined, email?: string): string {
   if (name) return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();

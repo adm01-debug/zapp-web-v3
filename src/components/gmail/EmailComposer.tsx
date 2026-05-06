@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { gmailSendMessage } from '@/hooks/gmail/gmailApi';
+import { emailSendMessage } from '@/hooks/email/emailApi';
 import { useEmailSignature } from '@/hooks/useEmailSignature';
 import { useEmailDraft } from '@/hooks/useEmailDraft';
 
@@ -106,7 +106,7 @@ export function EmailComposer({
         }))
       );
 
-      await gmailSendMessage({
+      await emailSendMessage({
         accountId,
         to: toList,
         cc: parseEmails(cc),

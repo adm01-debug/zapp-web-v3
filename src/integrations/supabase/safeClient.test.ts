@@ -42,7 +42,7 @@ describe('safeClient Masking', () => {
   });
 
   it('should mask email strings', () => {
-    expect(safeClient.maskEmail('john.doe@gmail.com')).toBe('jo***@gmail.com');
+    expect(safeClient.maskEmail('john.doe@email.com')).toBe('jo***@email.com');
     expect(safeClient.maskEmail('a@b.com')).toBe('***@b.com');
   });
 

@@ -6,18 +6,18 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useGmail, type GmailThread } from '@/hooks/useGmail';
+import { useEmail, type EmailThread } from '@/hooks/useEmail';
 import { useEmailSignature } from '@/hooks/useEmailSignature';
 
-interface GmailReplyBarProps {
-  thread:          GmailThread;
+interface EmailReplyBarProps {
+  thread:          EmailThread;
   defaultTo?:      string;
   onSent?:         () => void;
   onCancel?:       () => void;
 }
 
-export function GmailReplyBar({ thread, defaultTo, onSent, onCancel }: GmailReplyBarProps) {
-  const { sendEmail, isSending, activeAccountId } = useGmail();
+export function EmailReplyBar({ thread, defaultTo, onSent, onCancel }: EmailReplyBarProps) {
+  const { sendEmail, isSending, activeAccountId } = useEmail();
   const { defaultSignature, ...sigRest } = useEmailSignature(activeAccountId);
   const injectSignature = (sigRest as any).injectSignature ?? ((body: string) => defaultSignature?.html_content ? `${body}\n\n${defaultSignature.html_content}` : body);
 
@@ -46,7 +46,7 @@ export function GmailReplyBar({ thread, defaultTo, onSent, onCancel }: GmailRepl
       bcc:      bcc ? bcc.split(',').map(e => e.trim()).filter(Boolean) : undefined,
       subject,
       bodyHtml: finalBody,
-      threadId: thread.gmail_thread_id,
+      threadId: thread.email_thread_id,
       signature: false, // Já injetamos manualmente
     });
 
@@ -187,4 +187,4 @@ export function GmailReplyBar({ thread, defaultTo, onSent, onCancel }: GmailRepl
   );
 }
 
-export default GmailReplyBar;
+export default EmailReplyBar;

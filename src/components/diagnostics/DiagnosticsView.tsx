@@ -17,7 +17,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useDiagnosticsData, type SystemHealth } from '@/features/admin';
-import { GmailStatusPanel } from '@/components/gmail/GmailStatusPanel';
+import { EmailStatusPanel } from '@/components/email/EmailStatusPanel';
 
 // ─── Helpers ───
 function StatusDot({ status }: { status: string }) {
@@ -134,7 +134,7 @@ export function DiagnosticsView() {
           <TabsTrigger value="connections" className="gap-2"><Wifi className="w-4 h-4" />Conexões</TabsTrigger>
           <TabsTrigger value="messages" className="gap-2"><MessageSquare className="w-4 h-4" />Mensagens</TabsTrigger>
           <TabsTrigger value="health" className="gap-2"><Server className="w-4 h-4" />System Health</TabsTrigger>
-          <TabsTrigger value="gmail-status" className="gap-2"><Mail className="w-4 h-4" />Gmail Status</TabsTrigger>
+          <TabsTrigger value="email-status" className="gap-2"><Mail className="w-4 h-4" />Email Status</TabsTrigger>
           <TabsTrigger value="connection-health" className="gap-2"><HeartPulse className="w-4 h-4" />Connection Health</TabsTrigger>
           <TabsTrigger value="logs" className="gap-2 relative">
             <FileWarning className="w-4 h-4" />Logs de Erros
@@ -283,9 +283,9 @@ export function DiagnosticsView() {
             <ConnectionHealthPanel />
           </TabsContent>
 
-          {/* Gmail Status */}
-          <TabsContent value="gmail-status" className="px-6 py-4">
-            <GmailStatusPanel />
+          {/* Email Status */}
+          <TabsContent value="email-status" className="px-6 py-4">
+            <EmailStatusPanel />
           </TabsContent>
 
           {/* Logs */}
