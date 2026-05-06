@@ -219,7 +219,7 @@ export async function sendExternalAudio(
       p_status: 'failed',
       p_latency_ms: latency,
       p_error_code: String(info.status),
-      p_metadata: { error: info, is_ptt: opts.isPtt ?? true }
+      p_metadata: JSON.parse(JSON.stringify({ error: info, is_ptt: opts.isPtt ?? true }))
     });
 
     throw new SendError(info.reason, info.detail, info.status);
@@ -237,7 +237,7 @@ export async function sendExternalAudio(
       p_status: 'failed',
       p_latency_ms: latency,
       p_error_code: String(info.status),
-      p_metadata: { envelope, is_ptt: opts.isPtt ?? true }
+      p_metadata: JSON.parse(JSON.stringify({ envelope, is_ptt: opts.isPtt ?? true }))
     });
 
     throw new SendError(info.reason, info.detail, info.status);
@@ -382,7 +382,7 @@ export async function sendExternalPtv(
       p_status: 'failed',
       p_latency_ms: latency,
       p_error_code: String(info.status),
-      p_metadata: { error: info }
+      p_metadata: JSON.parse(JSON.stringify({ error: info }))
     });
 
     throw new SendError(info.reason, info.detail, info.status);
@@ -400,7 +400,7 @@ export async function sendExternalPtv(
       p_status: 'failed',
       p_latency_ms: latency,
       p_error_code: String(info.status),
-      p_metadata: { envelope }
+      p_metadata: JSON.parse(JSON.stringify({ envelope }))
     });
 
     throw new SendError(info.reason, info.detail, info.status);
