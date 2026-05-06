@@ -7,7 +7,7 @@ import {
   EmailDayMetric, 
   EmailMetricsSummary, 
   EmailSLADashboard 
-} from '@/types/email';
+} from '@/types/gmail';
 
 const supabase = _supabase as any;
 

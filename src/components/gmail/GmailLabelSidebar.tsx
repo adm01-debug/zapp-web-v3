@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useEmailLabels, type EmailLabel } from '@/hooks/useEmailLabels';
+import { useEmailLabels, type EmailLabel } from '@/hooks/useGmailLabels';
 
 type EmailLabelId = 'INBOX' | 'STARRED' | 'IMPORTANT' | 'SENT' | 'DRAFTS' | 'SPAM' | 'TRASH' | string;
 

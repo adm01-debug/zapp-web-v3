@@ -7,12 +7,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from '@/lib/utils';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 const supabase = _supabase as any;
-import { type EmailMessage, type EmailThread } from '@/hooks/email/emailTypes';
+import { type EmailMessage, type EmailThread } from '@/hooks/gmail/gmailTypes';
 import { EmailChatBubble } from '../email/EmailChatBubble';
 import { EmailSLABadge, SLAProgressBar } from '../email/EmailSLABadge';
 import { EmailChatReplyBar } from '../email/EmailChatReplyBar';
 import { useEmailSLA } from '@/hooks/useEmailSLA';
-import { emailMarkRead } from '@/hooks/email/emailApi';
+import { emailMarkRead } from '@/hooks/gmail/gmailApi';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

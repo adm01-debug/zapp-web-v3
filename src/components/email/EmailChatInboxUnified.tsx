@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Mail, Building2, Layers } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { EmailInboxView } from '@/components/email/EmailInboxView';
+import { EmailInboxView } from '@/components/gmail/GmailInboxView';
 import { OutlookInboxView } from '@/components/email/OutlookInboxView';
 import { useEmailAccounts } from '@/hooks/useEmailAccounts';
 

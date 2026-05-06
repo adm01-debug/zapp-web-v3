@@ -5,8 +5,8 @@ import {
   EmailThread, 
   EmailDayMetric,
   SLAStatus
-} from '@/types/email';
-import { EmailMessage } from './emailTypes';
+} from '@/types/gmail';
+import { EmailMessage } from './gmailTypes';
 
 const MOCK_ACCOUNT_ID = 'mock-account-123';
 const MOCK_USER_ID = 'user-mock-456';

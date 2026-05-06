@@ -8,11 +8,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { motion } from '@/components/ui/motion';
-import { type EmailMessage } from '@/hooks/email/emailTypes';
+import { type EmailMessage } from '@/hooks/gmail/gmailTypes';
 import { EmailAttachmentPreview } from './EmailAttachmentPreview';
 import { EmailSLABadge } from './EmailSLABadge';
 import { type SLAStatus } from '@/hooks/useEmailSLA';
-import { emailMarkRead, emailTrashMessage, emailModifyLabels } from '@/hooks/email/emailApi';
+import { emailMarkRead, emailTrashMessage, emailModifyLabels } from '@/hooks/gmail/gmailApi';
 import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

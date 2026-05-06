@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useEmailHealth } from '../useEmailHealth';
+import { useEmailHealth } from '../useGmailHealth';
 import { emailHealthService } from '@/services/email/emailHealthService';
 
 vi.mock('@/services/email/emailHealthService', () => ({
