@@ -1,4 +1,26 @@
+/**
+ * Design System Auditor Configuration
+ * 
+ * HOW TO CONFIGURE:
+ * - WHITELIST: Allowed tokens that should not trigger violations.
+ * - VARIANTS: Tailwind variants to strip before checking patterns (e.g., hover, dark).
+ * - FORBIDDEN_PATTERNS: Regex patterns for prohibited styles (hex colors, literal colors, etc.).
+ * - IGNORE_DIRECTIVE: String to look for in a line to skip it (default: @ds-ignore).
+ * - IGNORED_FILES/DIRS: Paths to skip during scanning.
+ * 
+ * HOW TO RUN:
+ * - Basic Scan: `bun scripts/check-design-system.ts`
+ * - Target Folder: `bun scripts/check-design-system.ts src/components`
+ * - CI Mode (fails on violation): `bun scripts/check-design-system.ts --ci`
+ * - Dry Run (simulates fixes): `bun scripts/check-design-system.ts --dry-run`
+ * - Apply Patches (auto-fix): `bun scripts/check-design-system.ts --apply-patch`
+ * - Filter Priority: `bun scripts/check-design-system.ts --min-priority=High`
+ * 
+ * HOW TO TEST:
+ * - Run `bun test scripts/check-design-system.test.ts`
+ */
 export const DS_CONFIG = {
+
   WHITELIST: {
     colors: [
       'primary', 'primary-foreground',

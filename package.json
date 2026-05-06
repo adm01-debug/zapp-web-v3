@@ -29,6 +29,9 @@
     "check:domain": "bun run scripts/check-domain-boundaries.ts",
     "check:barrels": "bun run scripts/validate-barrels.ts",
     "report:coverage": "bun run scripts/generate-coverage-report.ts",
+    "ds:fix": "bun run scripts/check-design-system.ts --apply-patch",
+    "ds:check": "bun run scripts/check-design-system.ts --ci",
+    "ds:test": "bun test scripts/check-design-system.test.ts",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
