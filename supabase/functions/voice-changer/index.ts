@@ -28,6 +28,12 @@ const VOICE_PRESETS: Record<string, { voiceId: string; label: string }> = {
   'mrs_claus':  { voiceId: 'SAhdygBsjizE9aIj39dz', label: 'Mamãe Noel' },
   'elf':        { voiceId: 'e79twtVS2278lVZZQiAD', label: 'Elfo' },
   'reindeer':   { voiceId: 'h6u4tPKmcPlxUdZOaVpH', label: 'Rena' },
+  // Infantis
+  'crianca_f':  { voiceId: '21m00Tcm4TlvDq8ikWAM', label: 'Criança (Menina)' },
+  'crianca_m':  { voiceId: 'AZnzlk1XhkKW9D2mID8L', label: 'Criança (Menino)' },
+  // Idosos
+  'idoso':      { voiceId: 'N2lVS1w4EtoT3dr4eOWO', label: 'Idoso (Vovô)' },
+  'idosa':      { voiceId: 'XrExE9yKIg1WjnnlVkGX', label: 'Idosa (Vovó)' },
 };
 
 Deno.serve(async (req) => {
