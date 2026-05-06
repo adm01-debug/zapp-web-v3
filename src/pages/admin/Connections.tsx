@@ -158,17 +158,17 @@ export default function AdminConnectionsPage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label>URL da Instância</Label>
-                      <Input value="https://tdprnylgyrogbbhgdoik.supabase.co" readOnly className="font-mono text-xs" />
+                      <Input value={externalUrl} readOnly className="font-mono text-xs" />
                     </div>
                     <div className="space-y-2">
                       <Label>Chave Anon (Public)</Label>
-                      <Input type="password" value="********************************" readOnly className="font-mono text-xs" />
+                      <Input type="password" value={externalKey ? '•'.repeat(Math.min(externalKey.length, 32)) : ''} readOnly className="font-mono text-xs" />
                     </div>
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1 gap-2">
-                        <RefreshCw className="w-4 h-4" /> Testar Conexão
+                      <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => testConnection(externalUrl, externalKey)} disabled={testing}>
+                        {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Testar Conexão
                       </Button>
-                      <Button size="sm" className="flex-1 gap-2">
+                      <Button size="sm" className="flex-1 gap-2" onClick={openEditor}>
                         <Settings className="w-4 h-4" /> Editar Credenciais
                       </Button>
                     </div>
