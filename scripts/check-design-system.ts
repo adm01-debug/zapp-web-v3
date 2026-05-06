@@ -116,10 +116,31 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
       return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
     }
     if (cleanMatch === 'font-mono') {
-      return { cleanMatch, prefix, suggestion: 'Remove literal font; inherit from global typography', priority: 'Medium', replacement: '' };
+      // Logic for technical data: check context if possible, otherwise flag as Medium for review
+      return { cleanMatch, prefix, suggestion: 'Ensure font-mono is only for technical data (IDs, logs, metrics)', priority: 'Medium' };
     }
     return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low', replacement: '' };
   }
+  
+  // Custom justification for known valid technical cases
+  const technicalCases: Record<string, string> = {
+    '#f1592a': 'PDF brand color',
+    '#2b72c4': 'Microsoft Word brand color',
+    '#1d6f42': 'Microsoft Excel brand color',
+    '#d24726': 'Microsoft PowerPoint brand color',
+    '#f8bc34': 'Archive/Zip file color',
+    '#4285F4': 'Google brand color',
+    '#34A853': 'Google brand color',
+    '#FBBC05': 'Google brand color',
+    '#EA4335': 'Google brand color',
+    '#25D366': 'WhatsApp brand color',
+  };
+
+  const justification = technicalCases[cleanMatch.toLowerCase().replace(/bg-|text-|border-|\[|\]/g, '')];
+  if (justification) {
+    return { cleanMatch, prefix, suggestion: `VALID: ${justification}`, priority: 'Low' };
+  }
+
   return { cleanMatch, prefix, suggestion: 'Check design system tokens', priority: 'Low' };
 }
 
