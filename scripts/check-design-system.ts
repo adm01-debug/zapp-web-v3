@@ -35,6 +35,11 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
     // Handle Hex values by mapping them to closest tokens
     if (label === 'Raw Hex' || (label === 'Arbitrary Color' && cleanMatch.includes('#'))) {
       const hex = (cleanMatch.match(/#[0-9a-fA-F]{3,6}/) || [])[0]?.toLowerCase();
+      
+      const isBg = cleanMatch.startsWith('bg-') || !cleanMatch.includes('-');
+      const isText = cleanMatch.startsWith('text-');
+      const isBorder = cleanMatch.startsWith('border-');
+
       if (hex) {
         // Special case for white/black hex
         if (['#fff', '#ffffff'].includes(hex)) {
