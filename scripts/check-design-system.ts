@@ -201,9 +201,11 @@ export function scanContent(content: string, fileName: string, results: Violatio
       const fullPattern = new RegExp(`${variantsPart}${pattern.source}`, 'g');
       
       let match;
+      const seenOnLine = new Set<string>();
       while ((match = fullPattern.exec(line)) !== null) {
         const rawMatch = match[0].trim();
-        if (!rawMatch) continue;
+        if (!rawMatch || seenOnLine.has(rawMatch)) continue;
+        seenOnLine.add(rawMatch);
 
         const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch, fileName, line);
         
