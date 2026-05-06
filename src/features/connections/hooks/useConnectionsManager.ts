@@ -167,10 +167,51 @@ export function useConnectionsManager() {
   const handleDisconnect = async (connection: WhatsAppConnection) => {
     if (!connection.instance_id) return;
     try {
+      // 1. Log audit event before action
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await (externalClient as any).rpc("fn_safe_audit_log", {
+          p_entity_type: 'whatsapp_connection',
+          p_entity_id: connection.id,
+          p_action: 'disconnect',
+          p_performed_by: user.email,
+          p_details: { instance: connection.instance_id, source: 'manual_ui' }
+        });
+      }
+
+      // 2. Call disconnect API
       await disconnectInstance(connection.instance_id);
-      await whatsappConnectionRepository.updateConnection(connection.id, { status: 'disconnected', qr_code: null });
+
+      // 3. Update local state immediately for UX
+      setConnections(prev => prev.map(c => 
+        c.id === connection.id ? { ...c, status: 'disconnected', qr_code: null } : c
+      ));
+
+      // 4. Update repository
+      await whatsappConnectionRepository.updateConnection(connection.id, { 
+        status: 'disconnected', 
+        qr_code: null 
+      });
+
+      toast({ 
+        title: 'Sessão encerrada', 
+        description: `A instância "${connection.name}" foi desconectada com sucesso.` 
+      });
+
+      // 5. Guided Flow: Auto-open QR dialog
+      // Wait a tiny bit for the UI to settle
+      setTimeout(() => {
+        handleShowQrCode({ ...connection, status: 'disconnected', qr_code: null });
+      }, 500);
+
     } catch (error: any) {
-      toast({ title: 'Erro ao desconectar', description: error.message, variant: 'destructive' });
+      log.error('Error in handleDisconnect:', error);
+      toast({ 
+        title: 'Erro ao desconectar', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+      throw error;
     }
   };
 
