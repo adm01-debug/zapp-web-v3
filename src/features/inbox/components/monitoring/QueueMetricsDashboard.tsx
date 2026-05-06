@@ -165,7 +165,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.name === 'Sucesso' ? '#10b981' : '#ef4444'} />
+                    <Cell key={`cell-${index}`} fill={entry.name === 'Sucesso' ? 'hsl(var(--success))' : 'hsl(var(--destructive))'} />
                   ))}
                 </Pie>
                 <RechartsTooltip />
