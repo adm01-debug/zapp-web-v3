@@ -42,7 +42,7 @@ export default function AdminConnectionsPage() {
 
     if (!error && data) {
       setConnections(data as any[]);
-      const fatorX: any = (data as any[]).find((c: any) => c.provider === 'fator_x' || c.name === 'FATOR X');
+      const fatorX: any = (data as any[]).find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
       if (fatorX?.config?.url) { setExternalUrl(fatorX.config.url); setDraftUrl(fatorX.config.url); }
       if (fatorX?.config?.anon_key) { setExternalKey(fatorX.config.anon_key); setDraftKey(fatorX.config.anon_key); }
     }
@@ -84,11 +84,11 @@ export default function AdminConnectionsPage() {
     try {
       const payload: any = {
         name: 'FATOR X',
-        provider: 'fator_x',
+        provider: 'supabase_external',
         config: { url: draftUrl, anon_key: draftKey },
         is_active: true,
       };
-      const existing: any = connections.find((c: any) => c.provider === 'fator_x' || c.name === 'FATOR X');
+      const existing: any = connections.find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
       const { error } = existing
         ? await supabase.from('system_connections' as any).update(payload).eq('id', existing.id)
         : await supabase.from('system_connections' as any).insert(payload);
