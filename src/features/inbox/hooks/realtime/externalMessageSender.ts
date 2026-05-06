@@ -55,7 +55,7 @@ function makeOptimisticBubble(
   remoteJid: string,
   content: string,
   opts: { messageType?: string; mediaUrl?: string | null; contactAvatar?: string | null; media_meta?: any } = {},
-): RealtimeMessage {
+): any {
   const now = new Date().toISOString();
   // ID local começa com `optimistic:` pra reconciliação. O webhook insere
   // a mensagem real com outro id e o cursor/poll a substitui no merge.
