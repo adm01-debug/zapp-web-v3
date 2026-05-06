@@ -54,6 +54,7 @@ export default function AdminStressTestPage() {
   const [failurePolicy, setFailurePolicy] = useState<'stop_first' | 'continue' | 'stop_after_n'>('stop_first');
   const [agentCount, setAgentCount] = useState(1);
   const [targetQueue, setTargetQueue] = useState<string | null>(null);
+  const [simulateTokenExpiration, setSimulateTokenExpiration] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Data
@@ -95,7 +96,15 @@ export default function AdminStressTestPage() {
 
     // Check media accessibility if URL exists
     if (sample.url) {
-      const acc = await checkUrlAccessibility(sample.url);
+      let testUrl = sample.url;
+      // Simulate private URL with tokens if enabled
+      if (simulateTokenExpiration) {
+        // Randomly expire 10% of tokens
+        const isExpired = Math.random() < 0.1;
+        testUrl += (testUrl.includes('?') ? '&' : '?') + `token=${isExpired ? 'expired_test' : 'valid_test'}&expires=${Date.now() + 3600000}`;
+      }
+
+      const acc = await checkUrlAccessibility(testUrl);
       accessibility = {
         reachable: acc.reachable,
         latencyMs: acc.latencyMs,
