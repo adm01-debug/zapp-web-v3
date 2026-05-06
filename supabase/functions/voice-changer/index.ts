@@ -119,12 +119,29 @@ Deno.serve(async (req) => {
 
     try {
       if (taskId) {
+        // Use the DB function to "claim" the task and ensure order
+        const { data: claimData, error: claimErr } = await supabaseClient.rpc('claim_next_voice_task', { p_user_id: (await supabaseClient.auth.getUser()).data.user?.id || taskId });
+        
+        if (claimErr) log.error("Error claiming task", { claimErr });
+        
+        // If we couldn't claim it (maybe another is processing), and this was a direct request for this taskId
+        // we should either wait or inform the user it's queued.
+        // For simplicity, we'll proceed if we have a taskId and it's not 'processing' by another.
+        
         const { data: task } = await supabaseClient
           .from('voice_conversion_queue')
-          .select('attempts')
+          .select('attempts, status')
           .eq('id', taskId)
           .single();
         
+        if (task?.status === 'processing' && !telemetryData.metadata.is_retry) {
+           // Someone else is already on it
+           return new Response(JSON.stringify({ status: 'queued', message: 'Another conversion is in progress. This task is queued.' }), {
+             status: 202,
+             headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+           });
+        }
+
         const currentAttempts = (task?.attempts || 0) + 1;
         telemetryData.metadata.is_retry = currentAttempts > 1;
         telemetryData.metadata.attempt = currentAttempts;
