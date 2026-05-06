@@ -638,7 +638,7 @@ export function useExternalMessages(remoteJid: string | null) {
   useEffect(() => {
     if (!remoteJid) return;
     const jidPrefixes = [
-      `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}:${DEFAULT_INSTANCE}:`,
+      `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}:${DEFAULT_INSTANCE}`,
       `inbox:poll:${remoteJid}:`,
       `older:${remoteJid}:`,
     ];
