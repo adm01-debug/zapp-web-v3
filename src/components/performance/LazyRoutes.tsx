@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy loaded views
 export const LazyDashboardView = lazy(() => import('@/components/dashboard/DashboardView').then(m => ({ default: m.DashboardView })));
-export const LazyContactsView = lazy(() => import('@/components/contacts/ContactsView').then(m => ({ default: m.ContactsView })));
+export const LazyContactsView = lazy(() => import('@/components/contacts/ContactsRichView').then(m => ({ default: m.ContactsRichView })));
 export const LazyAgentsView = lazy(() => import('@/components/agents/AgentsView').then(m => ({ default: m.AgentsView })));
 export const LazyQueuesView = lazy(() => import('@/components/queues/QueuesView').then(m => ({ default: m.QueuesView })));
 export const LazyConnectionsView = lazy(() => import('@/components/connections/ConnectionsView').then(m => ({ default: m.ConnectionsView })));
