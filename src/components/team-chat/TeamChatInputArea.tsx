@@ -82,8 +82,8 @@ export function TeamChatInputArea({
     <>
       <AIRewriteButton inputValue={text} onRewrite={(newText) => setText(newText)} />
       <StickerPicker onSendSticker={onSendSticker} />
-      <AudioMemePicker onSendAudio={onSendAudioMeme} />
-      <VoiceChangerPicker onSendAudio={onSendAudioMeme} />
+      <AudioMemePicker onSendAudioMeme={(meme) => onSendAudioMeme(meme.audio_url)} />
+      <VoiceChangerPicker onSendAudio={(url) => onSendAudioMeme(url)} />
       <CustomEmojiPicker onSendEmoji={onSendCustomEmoji} />
       <RichTextToggle active={showRichToolbar} onToggle={() => setShowRichToolbar(!showRichToolbar)} />
       <VoiceDictationButton onTranscript={handleVoiceDictation} disabled={isRecordingAudio} />
