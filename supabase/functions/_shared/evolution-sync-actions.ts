@@ -157,8 +157,23 @@ export async function syncAllMessages(
           });
           if (!insertError) totalSynced++;
         }
-      } catch { totalErrors++; }
+      } catch (err) { 
+        totalErrors++; 
+        await supabase.from('audit_logs').insert({
+          action: 'message_sync_batch_failure',
+          entity_type: 'whatsapp_connection',
+          details: { instance_id: instanceName, error: err instanceof Error ? err.message : String(err) }
+        });
+      }
     }
+  }
+
+  if (totalSynced > 0 || totalErrors > 0) {
+    await supabase.from('audit_logs').insert({
+      action: 'message_sync_completed',
+      entity_type: 'whatsapp_connection',
+      details: { instance_id: instanceName, totalSynced, totalErrors, totalSkipped }
+    });
   }
 
   return jsonRes({ success: true, totalSynced, totalSkipped, totalErrors, totalContacts: allContacts.length }, corsHeaders);
