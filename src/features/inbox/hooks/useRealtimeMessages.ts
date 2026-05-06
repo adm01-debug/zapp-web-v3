@@ -197,14 +197,13 @@ export function useRealtimeMessages() {
       setError(null);
       const { data: seededContacts, error: contactsError } = await dbFrom('contacts')
         .select('*')
-        .eq('instance_name', DEFAULT_WHATSAPP_INSTANCE)
         .order('updated_at', { ascending: false })
         .limit(SEEDED_CONTACT_LIMIT);
       if (contactsError) throw contactsError;
       
       const { data: recentMessages, error: messagesError } = await dbFrom('messages')
         .select('*')
-        .eq('instance_name', DEFAULT_WHATSAPP_INSTANCE)
+        
         .order('created_at', { ascending: false })
         .limit(RECENT_MESSAGES_LIMIT);
       if (messagesError) throw messagesError;
@@ -230,14 +229,13 @@ export function useRealtimeMessages() {
         event: 'INSERT', 
         schema: 'public', 
         table: dbTable('messages'),
-        filter: `instance_name=eq.${DEFAULT_WHATSAPP_INSTANCE}` 
       },
         wrapMessagesHandler('useRealtimeMessages', handleNewMessage))
       .on('postgres_changes', { 
         event: 'UPDATE', 
         schema: 'public', 
         table: dbTable('messages'),
-        filter: `instance_name=eq.${DEFAULT_WHATSAPP_INSTANCE}`
+        
       },
         wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate))
       .subscribe((status) => { log.debug('Subscription status', { status }); });

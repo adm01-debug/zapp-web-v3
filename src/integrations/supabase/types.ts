@@ -3985,6 +3985,109 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          assigned_to: string | null
+          contact_id: string | null
+          created_at: string | null
+          department: string | null
+          first_message_at: string | null
+          first_response_at: string | null
+          first_response_seconds: number | null
+          id: string
+          instance_name: string | null
+          is_bot_active: boolean | null
+          labels: string[] | null
+          last_message_at: string | null
+          last_message_content: string | null
+          last_message_type: string | null
+          message_count: number | null
+          priority: string | null
+          remote_jid: string | null
+          resolution_at: string | null
+          resolution_seconds: number | null
+          satisfaction_score: number | null
+          status: string | null
+          subject: string | null
+          unread_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          department?: string | null
+          first_message_at?: string | null
+          first_response_at?: string | null
+          first_response_seconds?: number | null
+          id?: string
+          instance_name?: string | null
+          is_bot_active?: boolean | null
+          labels?: string[] | null
+          last_message_at?: string | null
+          last_message_content?: string | null
+          last_message_type?: string | null
+          message_count?: number | null
+          priority?: string | null
+          remote_jid?: string | null
+          resolution_at?: string | null
+          resolution_seconds?: number | null
+          satisfaction_score?: number | null
+          status?: string | null
+          subject?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          department?: string | null
+          first_message_at?: string | null
+          first_response_at?: string | null
+          first_response_seconds?: number | null
+          id?: string
+          instance_name?: string | null
+          is_bot_active?: boolean | null
+          labels?: string[] | null
+          last_message_at?: string | null
+          last_message_content?: string | null
+          last_message_type?: string | null
+          message_count?: number | null
+          priority?: string | null
+          remote_jid?: string | null
+          resolution_at?: string | null
+          resolution_seconds?: number | null
+          satisfaction_score?: number | null
+          status?: string | null
+          subject?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crisis_room_alerts: {
         Row: {
           acknowledged_at: string | null
@@ -4442,8 +4545,8 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
-          email_account_id: string
-          email_label_id: string
+          gmail_account_id: string
+          gmail_label_id: string
           id: string
           label_type: string
           message_count: number
@@ -4453,8 +4556,8 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string
-          email_account_id: string
-          email_label_id: string
+          gmail_account_id: string
+          gmail_label_id: string
           id?: string
           label_type?: string
           message_count?: number
@@ -4464,8 +4567,8 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string
-          email_account_id?: string
-          email_label_id?: string
+          gmail_account_id?: string
+          gmail_label_id?: string
           id?: string
           label_type?: string
           message_count?: number
@@ -4474,22 +4577,22 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "email_labels_email_account_id_fkey"
-            columns: ["email_account_id"]
+            foreignKeyName: "email_labels_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
             isOneToOne: false
-            referencedRelation: "email_accounts"
+            referencedRelation: "gmail_accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_labels_email_account_id_fkey"
-            columns: ["email_account_id"]
+            foreignKeyName: "email_labels_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
             isOneToOne: false
-            referencedRelation: "email_accounts_safe"
+            referencedRelation: "gmail_accounts_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_labels_email_account_id_fkey"
-            columns: ["email_account_id"]
+            foreignKeyName: "email_labels_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
             isOneToOne: false
             referencedRelation: "v_email_accounts_unified"
             referencedColumns: ["id"]
@@ -4506,8 +4609,8 @@ export type Database = {
           direction: string
           from_address: string
           from_name: string | null
-          email_account_id: string
-          email_message_id: string
+          gmail_account_id: string
+          gmail_message_id: string
           has_attachments: boolean
           id: string
           in_reply_to: string | null
@@ -4531,8 +4634,8 @@ export type Database = {
           direction?: string
           from_address?: string
           from_name?: string | null
-          email_account_id: string
-          email_message_id: string
+          gmail_account_id: string
+          gmail_message_id: string
           has_attachments?: boolean
           id?: string
           in_reply_to?: string | null
@@ -4556,8 +4659,8 @@ export type Database = {
           direction?: string
           from_address?: string
           from_name?: string | null
-          email_account_id?: string
-          email_message_id?: string
+          gmail_account_id?: string
+          gmail_message_id?: string
           has_attachments?: boolean
           id?: string
           in_reply_to?: string | null
@@ -4574,22 +4677,22 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "email_messages_email_account_id_fkey"
-            columns: ["email_account_id"]
+            foreignKeyName: "email_messages_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
             isOneToOne: false
-            referencedRelation: "email_accounts"
+            referencedRelation: "gmail_accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_messages_email_account_id_fkey"
-            columns: ["email_account_id"]
+            foreignKeyName: "email_messages_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
             isOneToOne: false
-            referencedRelation: "email_accounts_safe"
+            referencedRelation: "gmail_accounts_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_messages_email_account_id_fkey"
-            columns: ["email_account_id"]
+            foreignKeyName: "email_messages_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
             isOneToOne: false
             referencedRelation: "v_email_accounts_unified"
             referencedColumns: ["id"]
@@ -4608,8 +4711,8 @@ export type Database = {
           assigned_to: string | null
           contact_id: string | null
           created_at: string
-          email_account_id: string
-          email_thread_id: string
+          gmail_account_id: string
+          gmail_thread_id: string
           id: string
           is_important: boolean
           is_starred: boolean
@@ -4628,8 +4731,8 @@ export type Database = {
           assigned_to?: string | null
           contact_id?: string | null
           created_at?: string
-          email_account_id: string
-          email_thread_id: string
+          gmail_account_id: string
+          gmail_thread_id: string
           id?: string
           is_important?: boolean
           is_starred?: boolean
@@ -4648,8 +4751,8 @@ export type Database = {
           assigned_to?: string | null
           contact_id?: string | null
           created_at?: string
-          email_account_id?: string
-          email_thread_id?: string
+          gmail_account_id?: string
+          gmail_thread_id?: string
           id?: string
           is_important?: boolean
           is_starred?: boolean
@@ -4673,22 +4776,22 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_threads_email_account_id_fkey"
-            columns: ["email_account_id"]
+            foreignKeyName: "email_threads_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
             isOneToOne: false
-            referencedRelation: "email_accounts"
+            referencedRelation: "gmail_accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_threads_email_account_id_fkey"
-            columns: ["email_account_id"]
+            foreignKeyName: "email_threads_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
             isOneToOne: false
-            referencedRelation: "email_accounts_safe"
+            referencedRelation: "gmail_accounts_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_threads_email_account_id_fkey"
-            columns: ["email_account_id"]
+            foreignKeyName: "email_threads_gmail_account_id_fkey"
+            columns: ["gmail_account_id"]
             isOneToOne: false
             referencedRelation: "v_email_accounts_unified"
             referencedColumns: ["id"]
@@ -5303,7 +5406,7 @@ export type Database = {
         }
         Relationships: []
       }
-      email_accounts: {
+      gmail_accounts: {
         Row: {
           access_token_encrypted: string | null
           created_at: string
@@ -5348,7 +5451,7 @@ export type Database = {
         }
         Relationships: []
       }
-      email_health_logs: {
+      gmail_health_logs: {
         Row: {
           error_message: string | null
           id: string
@@ -5384,7 +5487,7 @@ export type Database = {
         }
         Relationships: []
       }
-      email_health_summary: {
+      gmail_health_summary: {
         Row: {
           failure_count_60m: number | null
           id: string
@@ -5411,7 +5514,7 @@ export type Database = {
         }
         Relationships: []
       }
-      email_revalidation_jobs: {
+      gmail_revalidation_jobs: {
         Row: {
           completed_at: string | null
           id: string
@@ -12418,7 +12521,7 @@ export type Database = {
           },
         ]
       }
-      email_accounts_safe: {
+      gmail_accounts_safe: {
         Row: {
           created_at: string | null
           email_address: string | null
@@ -13043,8 +13146,8 @@ export type Database = {
           count: number
         }[]
       }
-      decrypt_email_token: { Args: { p_encrypted: string }; Returns: string }
-      encrypt_email_token: { Args: { p_token: string }; Returns: string }
+      decrypt_gmail_token: { Args: { p_encrypted: string }; Returns: string }
+      encrypt_gmail_token: { Args: { p_token: string }; Returns: string }
       fn_accept_transfer: {
         Args: { p_operator_name: string; p_transfer_id: string }
         Returns: Json
@@ -13354,7 +13457,7 @@ export type Database = {
           verify_token: string
         }[]
       }
-      get_own_email_accounts: {
+      get_own_gmail_accounts: {
         Args: never
         Returns: {
           created_at: string
@@ -13611,7 +13714,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      rpc_check_and_trigger_email_revalidation: { Args: never; Returns: Json }
+      rpc_check_and_trigger_gmail_revalidation: { Args: never; Returns: Json }
       rpc_conversation_sla_panel: {
         Args: {
           p_assigned_to?: string
@@ -13768,7 +13871,7 @@ export type Database = {
           tags: string[]
         }[]
       }
-      rpc_get_email_health_summary: {
+      rpc_get_gmail_health_summary: {
         Args: { p_window_minutes?: number }
         Returns: Json
       }
@@ -13956,7 +14059,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
-      rpc_log_email_health: {
+      rpc_log_gmail_health: {
         Args: {
           p_error_message?: string
           p_is_failure?: boolean
@@ -14321,7 +14424,7 @@ export type Database = {
         Args: { p_channel_id: string; p_queue_id: string }
         Returns: boolean
       }
-      rpc_update_email_health_state: {
+      rpc_update_gmail_health_state: {
         Args: { p_failure_count: number; p_metadata?: Json; p_status: string }
         Returns: undefined
       }
