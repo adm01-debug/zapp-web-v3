@@ -11,6 +11,7 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 import { ELEVENLABS_VOICES, type ElevenLabsVoice } from './VoiceSelector';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceChangerProps {
   audioBlob: Blob;
