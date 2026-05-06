@@ -168,11 +168,14 @@ export function useAudioMemes(open: boolean) {
     setPendingUpload(null);
   }, [pendingUpload]);
 
-  const handleSend = useCallback(async (meme: AudioMemeItem, onSend: (url: string) => void, onClose: () => void) => {
+  const handleSend = useCallback(async (meme: AudioMemeItem, onSend: (meme: AudioMemeItem) => void, onClose: () => void) => {
     if (audioRef.current) { audioRef.current.pause(); setPlayingId(null); }
-    onSend(meme.audio_url);
+    onSend(meme);
     onClose();
-    await supabase.from('audio_memes').update({ use_count: (meme.use_count || 0) + 1 }).eq('id', meme.id);
+    // DOC ARCHITECTURE COMPLIANCE: The actual use_count++ and database entry 
+    // should ideally happen via RPC during sending to avoid UI delays,
+    // but we keep a local sync for the list.
+    setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, use_count: (m.use_count || 0) + 1 } : m));
   }, []);
 
   const toggleFavorite = useCallback(async (e: React.MouseEvent, meme: AudioMemeItem) => {
