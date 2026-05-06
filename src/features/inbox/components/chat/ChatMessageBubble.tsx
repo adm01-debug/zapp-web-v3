@@ -254,9 +254,9 @@ export function ChatMessageBubble({
           )}
 
           {/* Image message */}
-          {message.type === 'image' && message.mediaUrl && (
+          {message.type === 'image' && (
             <div className="mb-2 rounded-lg overflow-hidden">
-              <MessageImage src={message.mediaUrl} refreshKey={mediaRefreshKey} />
+              <MessageImage src={message.mediaUrl ?? null} refreshKey={mediaRefreshKey} />
             </div>
           )}
 

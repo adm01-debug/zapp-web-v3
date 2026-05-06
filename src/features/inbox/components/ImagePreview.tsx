@@ -99,7 +99,7 @@ export const ImagePreview = forwardRef<HTMLDivElement, ImagePreviewProps>(functi
 });
 
 interface MessageImageProps {
-  src: string;
+  src: string | null;
   alt?: string;
   /** When provided, allows auto-refreshing the image if WhatsApp URL expires (410/403). */
   refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
@@ -110,6 +110,19 @@ export function MessageImage({ src, alt = 'Image', refreshKey }: MessageImagePro
   const [isLoaded, setIsLoaded] = useState(false);
   const refresh = useMediaRefresh(src, refreshKey);
   const effectiveSrc = refresh.url ?? src;
+
+  // Handle missing URL (likely still downloading)
+  if (!effectiveSrc && !refresh.isRefreshing && !refresh.failed) {
+    return (
+      <div
+        className="max-w-[280px] rounded-lg border border-border bg-muted/20 p-4 flex flex-col items-center gap-2 text-center"
+      >
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" aria-hidden="true" />
+        <p className="text-sm font-medium text-foreground">Baixando imagem...</p>
+        <p className="text-xs text-muted-foreground">Aguarde enquanto processamos a mídia.</p>
+      </div>
+    );
+  }
 
   // Fallback: esgotamos retries automáticos. Substitui o <img> por um card
   // de erro com mensagem clara e botão de retry manual (zera o contador).
@@ -153,16 +166,18 @@ export function MessageImage({ src, alt = 'Image', refreshKey }: MessageImagePro
         {(!isLoaded || refresh.isRefreshing) && (
           <div className="absolute inset-0 bg-muted animate-pulse rounded-lg" aria-busy={refresh.isRefreshing || undefined} />
         )}
-        <motion.img
-          key={effectiveSrc}
-          src={effectiveSrc}
-          alt={alt}
-          onLoad={() => setIsLoaded(true)}
-          onError={refresh.onError}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isLoaded ? 1 : 0 }}
-          className="max-w-full w-auto max-h-[400px] object-cover rounded-md"
-        />
+        {effectiveSrc && (
+          <motion.img
+            key={effectiveSrc}
+            src={effectiveSrc}
+            alt={alt}
+            onLoad={() => setIsLoaded(true)}
+            onError={refresh.onError}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isLoaded ? 1 : 0 }}
+            className="max-w-full w-auto max-h-[400px] object-cover rounded-md"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
           <span className="text-primary-foreground text-xs font-medium">Clique para expandir</span>
         </div>
@@ -170,7 +185,9 @@ export function MessageImage({ src, alt = 'Image', refreshKey }: MessageImagePro
 
       <AnimatePresence>
         {showPreview && (
-          <ImagePreview src={effectiveSrc} alt={alt} onClose={() => setShowPreview(false)} />
+          {effectiveSrc && (
+            <ImagePreview src={effectiveSrc} alt={alt} onClose={() => setShowPreview(false)} />
+          )}
         )}
       </AnimatePresence>
     </>
