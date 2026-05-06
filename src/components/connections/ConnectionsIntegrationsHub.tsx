@@ -79,6 +79,11 @@ export function ConnectionsIntegrationsHub() {
         {tab === 'connections' && <ConnectionsView />}
         {tab === 'integrations' && <IntegrationsHub />}
         {tab === 'bridge' && isDev && <BridgeSupabaseView />}
+        {!isDev && tab === 'bridge' && (
+          <div className="p-8 text-center text-muted-foreground">
+            Acesso restrito a desenvolvedores.
+          </div>
+        )}
       </div>
     </div>
   );
