@@ -154,7 +154,10 @@ describe('ChatInputArea — Interaction Scenarios', () => {
     );
 
     const sendButton = screen.getByLabelText(/enviar mensagem/i);
+    // Should have neutral background when empty
     expect(sendButton.className).toContain('bg-muted');
+    expect(sendButton.className).not.toContain('bg-primary');
+    
     // Button should NOT be disabled because it can now trigger file picker
     expect(sendButton.hasAttribute('disabled')).toBe(false);
 
@@ -168,5 +171,21 @@ describe('ChatInputArea — Interaction Scenarios', () => {
 
     const activeSend = screen.getByLabelText(/enviar mensagem/i);
     expect(activeSend.className).toContain('bg-primary');
+    expect(activeSend.className).toContain('shadow-'); // Highlighting effect
+  });
+
+  it('Scenario 6: Microphone remains neutral when disabled by text', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ChatInputArea {...defaultProps} inputValue="Locked for text" />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+
+    const micButton = screen.getByLabelText(/gravar áudio/i);
+    expect(micButton.className).toContain('bg-muted');
+    expect(micButton.className).toContain('opacity-50');
+    expect(micButton.className).not.toContain('bg-rose-500');
   });
 });
