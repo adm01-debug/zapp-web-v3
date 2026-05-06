@@ -337,16 +337,7 @@ if (require.main === module) {
         totalSubstitutions += fileSubstitutions;
         if (!dryRun) {
           writeFileSync(file, currentContent);
-          console.log(`✅ Updated ${file} (${fileSubstitutions} unique patterns replaced)`);
-        }
-      }
-      
-      if (hasChanges) {
-        totalFilesChanged++;
-        totalSubstitutions += fileSubstitutions;
-        if (!dryRun) {
-          writeFileSync(file, lines.join('\n'));
-          console.log(`✅ Updated ${file} (${fileSubstitutions} changes)`);
+          console.log(`✅ Updated ${file} (${fileSubstitutions} changes applied)`);
         }
       }
     });
