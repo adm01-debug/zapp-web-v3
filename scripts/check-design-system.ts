@@ -55,6 +55,13 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
   }
 
   if (label === 'Literal Font') {
+    if (cleanMatch === 'font-sans') {
+      return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
+    }
+    if (cleanMatch === 'font-mono') {
+      // Often used for technical data, but let's flag as Medium to ensure it's intentional
+      return { cleanMatch, prefix, suggestion: 'Check if font-mono is intentional or should inherit global typography', priority: 'Medium' };
+    }
     return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low' };
   }
   return { cleanMatch, prefix, suggestion: 'Check design system tokens', priority: 'Low' };
