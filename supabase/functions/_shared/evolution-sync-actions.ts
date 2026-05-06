@@ -14,6 +14,11 @@ export async function syncContacts(
 
   if (!contactsResponse.ok) {
     const errText = await contactsResponse.text();
+    await supabase.from('audit_logs').insert({
+      action: 'contact_sync_failure',
+      entity_type: 'whatsapp_connection',
+      details: { instance_id: instanceName, status: contactsResponse.status, error: errText }
+    });
     throw new Error(`Evolution API error [${contactsResponse.status}]: ${errText}`);
   }
 
