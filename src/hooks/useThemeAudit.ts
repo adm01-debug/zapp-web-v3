@@ -58,9 +58,9 @@ export const useThemeAudit = () => {
       }
 
       const computedFont = getComputedStyle(root).getPropertyValue('--font-sans').trim();
-      if (!computedFont.includes('Outfit') && !shouldHaveInlineFont) {
+      if (!computedFont.includes('Inter') && !shouldHaveInlineFont) {
         console.warn(
-          `[ThemeAudit] ⚠️ Typography mismatch: --font-sans does not contain "Outfit". Current value: ${computedFont}`
+          `[ThemeAudit] ⚠️ Typography mismatch: --font-sans does not contain "Inter". Current value: ${computedFont}`
         );
       }
     };
