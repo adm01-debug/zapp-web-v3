@@ -3741,12 +3741,15 @@ export type Database = {
           context_summary: string | null
           created_at: string | null
           escalated_at: string | null
+          escalation_count: number | null
           expires_at: string | null
           first_response_at: string | null
+          handle_time_seconds: number | null
           id: string
           idempotency_key: string | null
           parent_transfer_id: string | null
           priority: number | null
+          queue_time_seconds: number | null
           reason: string
           remote_jid: string
           resolution_notes: string | null
@@ -3774,12 +3777,15 @@ export type Database = {
           context_summary?: string | null
           created_at?: string | null
           escalated_at?: string | null
+          escalation_count?: number | null
           expires_at?: string | null
           first_response_at?: string | null
+          handle_time_seconds?: number | null
           id?: string
           idempotency_key?: string | null
           parent_transfer_id?: string | null
           priority?: number | null
+          queue_time_seconds?: number | null
           reason: string
           remote_jid: string
           resolution_notes?: string | null
@@ -3807,12 +3813,15 @@ export type Database = {
           context_summary?: string | null
           created_at?: string | null
           escalated_at?: string | null
+          escalation_count?: number | null
           expires_at?: string | null
           first_response_at?: string | null
+          handle_time_seconds?: number | null
           id?: string
           idempotency_key?: string | null
           parent_transfer_id?: string | null
           priority?: number | null
+          queue_time_seconds?: number | null
           reason?: string
           remote_jid?: string
           resolution_notes?: string | null
@@ -12229,6 +12238,17 @@ export type Database = {
         }
         Relationships: []
       }
+      v_operator_efficiency: {
+        Row: {
+          avg_escalations: number | null
+          avg_handle_min: number | null
+          avg_queue_min: number | null
+          sla_breaches: number | null
+          target_operator: string | null
+          tickets_resolved: number | null
+        }
+        Relationships: []
+      }
       v_operator_unread_summary: {
         Row: {
           instance_name: string | null
@@ -12331,6 +12351,17 @@ export type Database = {
           query: string | null
           search_count: number | null
           zero_result_count: number | null
+        }
+        Relationships: []
+      }
+      v_transfer_audit_full: {
+        Row: {
+          action: string | null
+          instance_name: string | null
+          metadata: Json | null
+          ticket_number: number | null
+          timestamp: string | null
+          user_name: string | null
         }
         Relationships: []
       }
@@ -12581,12 +12612,15 @@ export type Database = {
           context_summary: string | null
           created_at: string | null
           escalated_at: string | null
+          escalation_count: number | null
           expires_at: string | null
           first_response_at: string | null
+          handle_time_seconds: number | null
           id: string
           idempotency_key: string | null
           parent_transfer_id: string | null
           priority: number | null
+          queue_time_seconds: number | null
           reason: string
           remote_jid: string
           resolution_notes: string | null
@@ -12635,12 +12669,15 @@ export type Database = {
           context_summary: string | null
           created_at: string | null
           escalated_at: string | null
+          escalation_count: number | null
           expires_at: string | null
           first_response_at: string | null
+          handle_time_seconds: number | null
           id: string
           idempotency_key: string | null
           parent_transfer_id: string | null
           priority: number | null
+          queue_time_seconds: number | null
           reason: string
           remote_jid: string
           resolution_notes: string | null
@@ -12707,12 +12744,15 @@ export type Database = {
           context_summary: string | null
           created_at: string | null
           escalated_at: string | null
+          escalation_count: number | null
           expires_at: string | null
           first_response_at: string | null
+          handle_time_seconds: number | null
           id: string
           idempotency_key: string | null
           parent_transfer_id: string | null
           priority: number | null
+          queue_time_seconds: number | null
           reason: string
           remote_jid: string
           resolution_notes: string | null
