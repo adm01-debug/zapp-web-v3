@@ -214,7 +214,9 @@ serve(async (req) => {
 
     if (action === 'status') {
       const response = await fetch(`${evolutionApiUrl}/instance/connectionState/${instance}`, { method: 'GET', headers: { 'apikey': evolutionApiKey } });
-      const data = await response.json().catch(() => ({}));
+      const text = await response.text();
+      let data: any = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
 
       if (response.status === 401 || response.status === 403) {
         recordAuthFailureAndMaybePause(supabase, String(instance), response.status === 401 ? 'auth_401' : 'auth_403', 'evolution-api', { http_status: response.status, message: 'status' });
@@ -230,9 +232,12 @@ serve(async (req) => {
         }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      const status = data?.state === 'open' ? 'connected' : 'disconnected';
+      // v2 returns { instance: { state: "open", ... } }, v1 might return { state: "open" }
+      const rawState = data?.instance?.state || data?.state;
+      const status = rawState === 'open' ? 'connected' : 'disconnected';
+      
       await supabase.from('whatsapp_connections').update({ status, qr_code: null }).eq('instance_id', instance);
-      return new Response(JSON.stringify({ ...data, status }), {
+      return new Response(JSON.stringify({ ...data, status, state: rawState }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
