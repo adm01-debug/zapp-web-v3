@@ -189,7 +189,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               <XAxis type="number" fontSize={10} />
               <YAxis dataKey="name" type="category" fontSize={10} width={60} />
               <RechartsTooltip />
-              <Bar dataKey="latency" name="Latência" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="latency" name="Latência" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
