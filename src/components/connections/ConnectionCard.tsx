@@ -150,6 +150,7 @@ export function ConnectionCard({
   };
 
   return (
+    <>
     <motion.div whileHover={{ y: -2, boxShadow: '0 8px 30px hsl(var(--primary) / 0.08)' }}>
       <Card className={cn(
         'border transition-all overflow-hidden',
@@ -386,7 +387,6 @@ export function ConnectionCard({
         />
       )}
     </motion.div>
-  );
       <AlertDialog open={confirmDisconnect} onOpenChange={setConfirmDisconnect}>
         <AlertDialogContent>
           <AlertDialogHeader>
