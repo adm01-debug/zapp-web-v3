@@ -156,7 +156,7 @@ export function BusinessHoursDialog({
                         transition={{ delay: hour.day_of_week * 0.05 }}
                         className={cn(
                           'flex items-center gap-4 p-3 rounded-lg border transition-colors',
-                          hour.is_open
+                          hour.is_enabled
                             ? 'border-primary/30 bg-primary/5'
                             : 'border-border bg-muted/30'
                         )}
@@ -164,12 +164,12 @@ export function BusinessHoursDialog({
                         <div className="w-32">
                           <div className="flex items-center gap-2">
                             <Switch
-                              checked={hour.is_open}
+                              checked={hour.is_enabled}
                               onCheckedChange={(checked) =>
-                                updateHour(hour.day_of_week, 'is_open', checked)
+                                updateHour(hour.day_of_week, 'is_enabled', checked)
                               }
                             />
-                            <span className={cn('font-medium', !hour.is_open && 'text-muted-foreground')}>
+                            <span className={cn('font-medium', !hour.is_enabled && 'text-muted-foreground')}>
                               {day?.label}
                             </span>
                           </div>
