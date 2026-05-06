@@ -12150,6 +12150,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_voice_task_attempt: {
+        Args: { task_id: string }
+        Returns: undefined
+      }
       is_account_locked: {
         Args: { check_email: string }
         Returns: {
