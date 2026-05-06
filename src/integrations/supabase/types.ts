@@ -12964,6 +12964,10 @@ export type Database = {
           unread_urgent: number
         }[]
       }
+      fn_is_instance_member: {
+        Args: { p_instance_name: string }
+        Returns: boolean
+      }
       fn_mark_conversation_as_read: {
         Args: { p_conversation_id: string; p_last_message_id: string }
         Returns: undefined
