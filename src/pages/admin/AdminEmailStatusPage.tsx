@@ -98,24 +98,32 @@ export default function AdminEmailStatusPage() {
         { event: '*', schema: 'public', table: 'email_health_summary' },
         (payload) => {
           const newSummary = payload.new as EmailHealthSummary;
-          setHealth(prev => prev ? {
-            ...prev,
-            status: castStatus(newSummary.status),
-            lastValidation: newSummary.last_validation ? new Date(newSummary.last_validation) : prev.lastValidation,
-            stats: {
-              ...prev.stats,
-              failedCalls: newSummary.failure_count_60m || 0
-            }
-          } : null);
+          if (newSummary) {
+            setHealth(prev => prev ? {
+              ...prev,
+              status: castStatus(newSummary.status),
+              lastValidation: newSummary.last_validation ? new Date(newSummary.last_validation) : prev.lastValidation,
+              stats: {
+                ...prev.stats,
+                failedCalls: newSummary.failure_count_60m || 0
+              }
+            } : null);
+          }
         }
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'email_revalidation_jobs' },
+        { event: '*', schema: 'public', table: 'email_revalidation_jobs' },
         (payload) => {
-          const newJob = payload.new as EmailRevalidationJob;
-          toast.info(`Nova solicitação de revalidação: ${newJob.status}`);
-          setTimeout(loadHealth, 3000);
+          const job = (payload.new || payload.old) as EmailRevalidationJob;
+          if (payload.eventType === 'INSERT') {
+            toast.info(`Nova solicitação de revalidação agendada`);
+          } else if (payload.eventType === 'UPDATE' && job.status === 'completed') {
+            toast.success(`Job ${job.id.split('-')[0]} concluído com sucesso`);
+          } else if (payload.eventType === 'UPDATE' && job.status === 'failed') {
+            toast.error(`Job ${job.id.split('-')[0]} falhou`);
+          }
+          loadHealth();
         }
       )
       .subscribe();
