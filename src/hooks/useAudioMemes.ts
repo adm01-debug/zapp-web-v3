@@ -180,9 +180,23 @@ export function useAudioMemes(open: boolean) {
 
   const toggleFavorite = useCallback(async (e: React.MouseEvent, meme: AudioMemeItem) => {
     e.stopPropagation();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error('Efetue login para favoritar'); return; }
+
     const newVal = !meme.is_favorite;
     setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, is_favorite: newVal } : m));
-    await supabase.from('audio_memes').update({ is_favorite: newVal }).eq('id', meme.id);
+
+    // DOC ARCHITECTURE COMPLIANCE: Individual favorite toggle via RPC
+    const { error } = await (supabase as any).rpc('fn_toggle_user_meme_favorite', {
+      p_user_id: user.id,
+      p_meme_id: meme.id
+    });
+
+    if (error) {
+      log.error('toggleFavorite error', error);
+      // Rollback UI if failed
+      setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, is_favorite: !newVal } : m));
+    }
   }, []);
 
   const handleCategoryChange = useCallback(async (meme: AudioMemeItem, newCategory: string) => {
