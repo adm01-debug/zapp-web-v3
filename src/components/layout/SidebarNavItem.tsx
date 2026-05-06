@@ -46,6 +46,8 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({ item, current
 
   const Icon = item.icon;
   const isActive = currentView === item.id;
+  const shortcut = item.shortcut || SHORTCUT_MAP[item.id];
+  const badgeCount = badge ?? item.badge;
 
   const handleMouseEnter = useCallback(() => {
     if (!isActive) prefetch(item.id);
