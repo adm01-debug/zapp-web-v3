@@ -92,9 +92,9 @@ export function useBusinessHours(connectionId: string) {
           .upsert({
             whatsapp_connection_id: connectionId,
             day_of_week: hour.day_of_week,
-            is_open: hour.is_open,
-            open_time: hour.open_time,
-            close_time: hour.close_time,
+            is_enabled: hour.is_enabled,
+            start_time: hour.start_time,
+            end_time: hour.end_time,
           }, { onConflict: 'whatsapp_connection_id,day_of_week' });
 
         if (error) throw error;
