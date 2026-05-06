@@ -60,7 +60,7 @@ const DEFAULT_FILTERS: ConversationFilters = {
   assigned_to:  null,
   priority:     null,
   search:       '',
-  instance_name:'wpp2',
+  instance_name: DEFAULT_WHATSAPP_INSTANCE,
   sort_field:   'last_message_at',
   sort_order:   'desc',
 };
