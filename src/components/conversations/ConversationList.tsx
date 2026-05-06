@@ -17,6 +17,7 @@ import {
   AlertTriangle, Clock, CheckCircle2, Check, CheckCheck
 } from 'lucide-react';
 import { useConversations, type Conversation, type ConversationFilters } from '@/hooks/useConversations';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { useContactTyping } from '@/hooks/useContactTyping';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatPhoneForDisplay } from '@/lib/phoneUtils';
