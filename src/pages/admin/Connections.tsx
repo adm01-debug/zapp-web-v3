@@ -10,9 +10,11 @@ import { Switch } from '@/components/ui/switch';
 import {
   Database, Globe, Webhook, Cpu, Plus, Settings, Save, Trash2,
   RefreshCw, AlertCircle, ExternalLink, ShieldCheck, Link, Loader2,
+  Activity
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { runConnectionDiagnostics } from '@/lib/diagnostics';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const APP_ENV = (import.meta.env.VITE_APP_ENV || 'production') as 'development' | 'staging' | 'production';
@@ -224,9 +226,31 @@ export default function AdminConnectionsPage() {
         subtitle="Gerencie integrações externas, webhooks e conectores inteligentes"
         breadcrumbs={[{ label: 'Admin' }, { label: 'Conexão' }]}
         actions={
-          <Button className="bg-primary hover:bg-primary/90">
-            <Plus className="w-4 h-4 mr-2" /> Nova Conexão
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={async () => {
+                toast({ title: "Iniciando Diagnóstico", description: "Verificando fluxo completo..." });
+                const res = await runConnectionDiagnostics();
+                const fails = res.steps.filter((s: any) => s.status === 'fail');
+                if (fails.length > 0) {
+                  toast({ 
+                    title: "Falha no Diagnóstico", 
+                    description: `${fails.length} etapa(s) falharam. Verifique o console.`,
+                    variant: "destructive"
+                  });
+                } else {
+                  toast({ title: "Diagnóstico OK", description: "Fluxo validado com sucesso." });
+                }
+              }}
+              className="gap-2"
+            >
+              <Activity className="w-4 h-4" /> Diagnóstico
+            </Button>
+            <Button className="bg-primary hover:bg-primary/90">
+              <Plus className="w-4 h-4 mr-2" /> Nova Conexão
+            </Button>
+          </div>
         }
       />
 
