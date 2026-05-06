@@ -143,9 +143,15 @@ const htmlReport = `<!DOCTYPE html>
 writeFileSync('design-system-audit.html', htmlReport);
 
 // CI check logic
-if (process.argv.includes('--ci') && violations.length > 0) {
-  process.stderr.write(`Found ${violations.length} Design System violations. Build failed.\n`);
-  process.exit(1);
+if (process.argv.includes('--ci')) {
+  if (violations.length > 0) {
+    process.stderr.write(`\n❌ ERROR: Found ${violations.length} Design System violations!\n`);
+    process.stderr.write(`New code must use design system tokens (e.g., bg-primary, text-muted-foreground) instead of arbitrary hex colors or literal Tailwind colors.\n`);
+    process.stderr.write(`See design-system-audit.html for details.\n\n`);
+    process.exit(1);
+  } else {
+    process.stdout.write(`✅ Success: No Design System violations found.\n`);
+  }
 } else {
   process.stdout.write(`✅ Audit complete. Reports: design-system-audit.md, design-system-audit.html\n`);
 }
