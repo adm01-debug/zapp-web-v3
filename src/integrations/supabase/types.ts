@@ -12170,6 +12170,23 @@ export type Database = {
         }
         Relationships: []
       }
+      v_operator_unread_summary: {
+        Row: {
+          instance_name: string | null
+          unread_transfers: number | null
+          unread_urgent: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instance_members_instance_name_fkey"
+            columns: ["instance_name"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
       v_pending_transfers: {
         Row: {
           alta: number | null
@@ -12432,6 +12449,10 @@ export type Database = {
         Args: { p_operator_name: string; p_transfer_id: string }
         Returns: Json
       }
+      fn_add_business_minutes: {
+        Args: { p_instance_name: string; p_minutes: number; p_start: string }
+        Returns: string
+      }
       fn_complete_transfer: {
         Args: { p_notes: string; p_transfer_id: string; p_type?: string }
         Returns: {
@@ -12527,6 +12548,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      fn_mark_transfer_as_read: {
+        Args: { p_transfer_id: string }
+        Returns: undefined
       }
       fn_register_sticky_assignment: {
         Args: {
