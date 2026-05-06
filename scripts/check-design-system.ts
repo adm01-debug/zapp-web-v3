@@ -23,6 +23,84 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
   const prefix = prefixMatch ? prefixMatch[0] : '';
   const cleanMatch = match.replace(variantPrefixRegex, '').trim();
 
+  // 1. Technical justifications first (Highest priority for preserving intentional non-standard colors)
+  const technicalCases: Record<string, string> = {
+    '#f1592a': 'PDF brand color',
+    '#2b72c4': 'Microsoft Word brand color',
+    '#1d6f42': 'Microsoft Excel brand color',
+    '#d24726': 'Microsoft PowerPoint brand color',
+    '#f8bc34': 'Archive/Zip file color',
+    '#000000': 'OLED Black (Intentional for Dark Mode)',
+    '#4285f4': 'Google Blue',
+    '#34a853': 'Google Green',
+    '#fbbc05': 'Google Yellow',
+    '#ea4335': 'Google Red',
+    '#25d366': 'WhatsApp Green',
+    '#1a73e8': 'Google UI Blue',
+    '#f29900': 'Google UI Warning',
+    '#e37400': 'Google UI Orange',
+    '#d93025': 'Google UI Error',
+    '#10b981': 'Chart Green',
+    '#ef4444': 'Chart Red',
+    '#f59e0b': 'Chart Amber',
+    '#3b82f6': 'Chart Blue',
+    '#8b5cf6': 'Chart Purple',
+    '#ec4899': 'Chart Pink',
+    '#06b6d4': 'Chart Cyan',
+    '#84cc16': 'Chart Lime',
+    '#f97316': 'Chart Orange',
+    '#22c55e': 'Chart Emerald',
+    '#6b7280': 'Chart Gray',
+    '#6366f1': 'Chart Indigo',
+    '#ccc': 'Canvas/Chart Neutral',
+    '#888': 'Log/Technical Neutral',
+    '#666': 'Log/Technical Dimmed',
+    '#310': 'Legacy Technical Value',
+    '#039': 'Legacy Link Color',
+    '#0088fe': 'Metric Primary',
+    '#00c49f': 'Metric Success',
+    '#ffbb28': 'Metric Warning',
+    '#ff8042': 'Metric Danger',
+    '#f0fdf4': 'Heatmap Level 1',
+    '#86efac': 'Heatmap Level 2',
+    '#22c55e': 'Heatmap Level 3',
+    '#15803d': 'Heatmap Level 4',
+    '#14532d': 'Heatmap Level 5',
+    '#fef9c3': 'Heatmap Amber 1',
+    '#fde047': 'Heatmap Amber 2',
+    '#facc15': 'Heatmap Amber 3',
+    '#eab308': 'Heatmap Amber 4',
+    '#ca8a04': 'Heatmap Amber 5',
+    '#fef2f2': 'Heatmap Red 1',
+    '#fecaca': 'Heatmap Red 2',
+    '#f87171': 'Heatmap Red 3',
+    '#ef4444': 'Heatmap Red 4',
+    '#dc2626': 'Heatmap Red 5',
+    '#9e9e9e': 'Gmail Muted Label',
+    '#777777': 'Gmail Dimmed Label',
+    '#16a34a': 'Log Success',
+    '#d97706': 'Log Warning',
+    '#251f33': 'Theme Background Constant',
+  };
+
+  const lookupMatch = cleanMatch.toLowerCase().replace(/bg-|text-|border-|\[|\]/g, '');
+  const justification = technicalCases[lookupMatch];
+  if (justification) {
+    // Exception: If it's OLED black but NOT in a CSS file, we might still want to map it to foreground
+    // BUT since it's in technicalCases, we assume it's intentional.
+    return { cleanMatch, prefix, suggestion: `VALID: ${justification}`, priority: 'Low' };
+  }
+
+  // Chart specific whitelist
+  if (fileName && fileName.includes('chart.tsx') && (cleanMatch === '#ccc' || cleanMatch === '#fff')) {
+    return { cleanMatch, prefix, suggestion: 'VALID: Chart selector constant', priority: 'Low' };
+  }
+
+  // OLED Black intent justification
+  if (cleanMatch === '#000000' && fileName && fileName.endsWith('.css')) {
+     return { cleanMatch, prefix, suggestion: 'VALID: OLED Black (Intentional)', priority: 'Low' };
+  }
+
   const isWhite = cleanMatch.includes('white') || cleanMatch.includes('#ffffff') || cleanMatch.includes('#fff');
   const isBlack = cleanMatch.includes('black') || cleanMatch.includes('#000000') || cleanMatch.includes('#000');
 
@@ -36,20 +114,21 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
     if (label === 'Raw Hex' || (label === 'Arbitrary Color' && cleanMatch.includes('#'))) {
       const hex = (cleanMatch.match(/#[0-9a-fA-F]{3,6}/) || [])[0]?.toLowerCase();
       
-      const isBg = cleanMatch.startsWith('bg-') || !cleanMatch.includes('-');
-      const isText = cleanMatch.startsWith('text-');
-      const isBorder = cleanMatch.startsWith('border-');
+      const isActuallyBg = cleanMatch.startsWith('bg-') || !cleanMatch.includes('-');
+      const isActuallyText = cleanMatch.startsWith('text-');
+      const isActuallyBorder = cleanMatch.startsWith('border-');
 
       if (hex) {
-        // Special case for white/black hex
+        // Special case for white/black hex (if not caught by technical cases above)
         if (['#fff', '#ffffff'].includes(hex)) {
-           const baseReplacement = isBg ? 'bg-background' : (isText ? 'text-foreground' : (isBorder ? 'border-border' : undefined));
+           const baseReplacement = isActuallyBg ? 'bg-background' : (isActuallyText ? 'text-foreground' : (isActuallyBorder ? 'border-border' : undefined));
            if (baseReplacement) return { cleanMatch, prefix, suggestion: baseReplacement, priority: 'High', replacement: `${prefix}${baseReplacement}` };
         }
         if (['#000', '#000000'].includes(hex)) {
-           const baseReplacement = isBg ? 'bg-foreground' : (isText ? 'text-background' : (isBorder ? 'border-border' : undefined));
+           const baseReplacement = isActuallyBg ? 'bg-foreground' : (isActuallyText ? 'text-background' : (isActuallyBorder ? 'border-border' : undefined));
            if (baseReplacement) return { cleanMatch, prefix, suggestion: baseReplacement, priority: 'High', replacement: `${prefix}${baseReplacement}` };
         }
+
 
         // Generic hex to semantic color mapping
         const hexMap: Record<string, string> = {
