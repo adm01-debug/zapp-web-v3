@@ -19,8 +19,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Copy, Palette, Type, Layout, MousePointer2, Settings, ExternalLink, MoreVertical, ShieldCheck, Database, Table as TableIcon } from "lucide-react";
+import { Copy, Palette, Type, Layout, MousePointer2, Settings, ExternalLink, MoreVertical, ShieldCheck, Database, Table as TableIcon, FileText } from "lucide-react";
+import { TypographyGuide } from "@/components/docs/TypographyGuide";
 import componentRegistry from "@/components/ui/registry.json";
+
 
 export default function DesignSystem() {
   return (
@@ -54,11 +56,15 @@ export default function DesignSystem() {
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Body & Details</p>
               <p className="text-base">Body Base - Texto padrão para parágrafos e leitura longa.</p>
               <p className="text-sm text-muted-foreground">Body Small - Texto secundário ou descrições auxiliares.</p>
-              <p className="text-xs font-mono bg-muted/30 p-2 rounded w-fit">Code - Mono font for technical data</p>
+              <p className="text-xs font-mono bg-muted/30 p-2 rounded w-fit">#ID-123456 - Mono font for technical data</p>
             </div>
           </div>
         </Card>
       </section>
+
+      {/* Typography Usage Rules */}
+      <TypographyGuide />
+
 
       {/* Colors */}
       <section className="space-y-8">

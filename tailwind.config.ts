@@ -5,19 +5,15 @@ export default {
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
-    extend: {
-      fontFamily: {
-        sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
-        display: ["var(--font-display)", "Inter", "system-ui", "sans-serif"],
-      },
-      fontSize: {
+// ... keep existing code
+15:     extend: {
+16:       fontFamily: {
+17:         sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+18:         display: ["var(--font-display)", "Inter", "system-ui", "sans-serif"],
+19:         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"],
+20:       },
+21:       fontSize: {
+
         // Fluid responsive sizes (CSS custom properties)
         "fluid-xs": "var(--text-xs)",
         "fluid-sm": "var(--text-sm)",
