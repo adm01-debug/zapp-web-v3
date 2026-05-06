@@ -20,9 +20,10 @@ interface VoiceChangerProps {
   disabled?: boolean;
   messageId?: string;
   conversationId?: string;
+  initialTaskId?: string | null;
 }
 
-export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, messageId, conversationId }: VoiceChangerProps) {
+export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, messageId, conversationId, initialTaskId }: VoiceChangerProps) {
   const [open, setOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<ElevenLabsVoice | null>(null);
   const [isConverting, setIsConverting] = useState(false);
@@ -30,6 +31,7 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [conversionProgress, setConversionProgress] = useState(0);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(initialTaskId || null);
   const [showCloneWarning, setShowCloneWarning] = useState(false);
 
   useEffect(() => {
@@ -81,20 +83,26 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
       if (!activeBlob) throw new Error('Áudio base não encontrado');
 
       // 1. Create or get task in queue
-      const { data: task, error: queueError } = await supabase
-        .from('voice_conversion_queue')
-        .insert({
-          input_audio_url: audioUrl || 'blob-input', 
-          voice_preset: voice.id,
-          status: 'pending',
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          message_id: messageId,
-          conversation_id: conversationId
-        })
-        .select()
-        .single();
+      let taskId = activeTaskId;
+      
+      if (!taskId) {
+        const { data: task, error: queueError } = await supabase
+          .from('voice_conversion_queue')
+          .insert({
+            input_audio_url: audioUrl || 'blob-input', 
+            voice_preset: voice.id,
+            status: 'pending',
+            user_id: (await supabase.auth.getUser()).data.user?.id,
+            message_id: messageId,
+            conversation_id: conversationId
+          })
+          .select()
+          .single();
 
-      if (queueError) throw queueError;
+        if (queueError) throw queueError;
+        taskId = task.id;
+        setActiveTaskId(taskId);
+      }
 
       // 2. Start STS via Edge Function
       const progressSteps = [15, 40, 65, 85];
@@ -104,12 +112,12 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
           setConversionProgress(progressSteps[currentStep]);
           currentStep++;
         }
-      }, 1000);
+      }, 1500);
 
       const formData = new FormData();
       formData.append('audio', activeBlob, 'audio.webm');
       formData.append('voice_preset', voice.id); 
-      formData.append('task_id', task.id);
+      formData.append('task_id', taskId!);
       if (showCloneWarning) formData.append('authorized', 'true');
 
       const response = await fetch(
