@@ -204,7 +204,7 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
     if (!existing) {
       contactMap.set(msg.remote_jid, {
         remoteJid: msg.remote_jid,
-        pushName: safePushName,
+        pushName: safePushName ?? null,
         phone: jidToPhone(msg.remote_jid),
         lastMessageAt: msg.created_at,
         messageCount: 1,
