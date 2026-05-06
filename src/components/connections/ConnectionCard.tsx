@@ -66,6 +66,7 @@ export function ConnectionCard({
   const status = statusConfig[connection.status] || statusConfig.disconnected;
   const isOfficial = (connection.api_type ?? 'evolution') === 'official';
   const [officialConfigOpen, setOfficialConfigOpen] = useState(false);
+  const [auditDialogOpen, setAuditDialogOpen] = useState(false);
   const [recheckingHealth, setRecheckingHealth] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const { restartInstance, getInstanceStatus } = useEvolutionApi();
