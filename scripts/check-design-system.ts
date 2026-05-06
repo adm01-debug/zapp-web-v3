@@ -18,7 +18,7 @@ export interface Violation {
 
 const variantPrefixRegex = new RegExp(`^(?:(?:${VARIANTS.join('|')}):)+`, 'g');
 
-export function getSuggestion(label: string, match: string): { suggestion: string, priority: Violation['priority'], replacement?: string, cleanMatch: string, prefix: string } {
+export function getSuggestion(label: string, match: string, fileName?: string): { suggestion: string, priority: Violation['priority'], replacement?: string, cleanMatch: string, prefix: string } {
   const prefixMatch = match.match(variantPrefixRegex);
   const prefix = prefixMatch ? prefixMatch[0] : '';
   const cleanMatch = match.replace(variantPrefixRegex, '').trim();
@@ -223,7 +223,7 @@ export function scanContent(content: string, fileName: string, results: Violatio
         const rawMatch = match[0].trim();
         if (!rawMatch) continue;
 
-        const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
+        const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch, fileName);
         
         // Safety check: Skip matches that are part of a CSS variable (e.g., --font-sans)
         const matchStart = match.index;
