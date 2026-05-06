@@ -55,23 +55,26 @@ class Logger {
   }
 
   debug(message: string, ...args: unknown[]): void {
-    if (!this.shouldLog('debug')) return;
-    console.debug(this.formatMessage('debug', message), ...args);
+    if (this.shouldLog('debug')) console.debug(this.formatMessage('debug', message), ...args);
+    this.addToSentryBreadcrumb('debug', message, ...args);
   }
 
   info(message: string, ...args: unknown[]): void {
-    if (!this.shouldLog('info')) return;
-    console.info(this.formatMessage('info', message), ...args);
+    if (this.shouldLog('info')) console.info(this.formatMessage('info', message), ...args);
+    this.addToSentryBreadcrumb('info', message, ...args);
   }
 
   warn(message: string, ...args: unknown[]): void {
-    if (!this.shouldLog('warn')) return;
-    console.warn(this.formatMessage('warn', message), ...args);
+    if (this.shouldLog('warn')) console.warn(this.formatMessage('warn', message), ...args);
+    this.addToSentryBreadcrumb('warn', message, ...args);
   }
 
   error(message: string, ...args: unknown[]): void {
-    if (!this.shouldLog('error')) return;
-    console.error(this.formatMessage('error', message), ...args);
+    if (this.shouldLog('error')) console.error(this.formatMessage('error', message), ...args);
+    this.addToSentryBreadcrumb('error', message, ...args);
+    if (import.meta.env.PROD) {
+      Sentry.captureException(new Error(`${this.module}: ${message}`), { extra: { args } });
+    }
   }
 
   /** Log with explicit correlation ID for request tracing */
