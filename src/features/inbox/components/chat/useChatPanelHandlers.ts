@@ -317,6 +317,41 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     }
   }, []);
 
+  const handleAudioVoiceChange = useCallback(async (messageId: string, newBlob: Blob) => {
+    try {
+      // Create a temporary URL to preview
+      const url = URL.createObjectURL(newBlob);
+      toast({ 
+        title: 'Voz alterada!', 
+        description: 'Enviando nova versão do áudio...',
+      });
+
+      // Update message in DB with new blob
+      // In a real scenario, we might want to upload to storage first and get a signed URL
+      // or use an RPC to swap the media attachment.
+      const filePath = `audios/${Date.now()}.mp3`;
+      const { error: uploadError } = await supabase.storage
+        .from('chat-media')
+        .upload(filePath, newBlob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-media')
+        .getPublicUrl(filePath);
+
+      await dbFrom('messages').update({
+        mediaUrl: publicUrl,
+        updated_at: new Date().toISOString()
+      }).eq('id', messageId);
+
+      toast({ title: 'Sucesso', description: 'Áudio atualizado com a nova voz.' });
+    } catch (err: any) {
+      log.error('Failed to change audio voice:', err);
+      toast({ title: 'Erro na conversão', description: err.message, variant: 'destructive' });
+    }
+  }, []);
+
   return {
     inputValue, setInputValue, isSending, sendProgress, isRecordingAudio, setIsRecordingAudio,
     replyToMessage, setReplyToMessage, forwardMessage, editingMessage,
