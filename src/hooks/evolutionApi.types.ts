@@ -25,6 +25,8 @@ export interface SendMessageParams {
   mentioned?: string[];
   /** Generate WhatsApp rich link preview when text contains a URL. */
   linkPreview?: boolean;
+  /** Opção para habilitar retry e deduplicação no backend. */
+  idempotencyKey?: string;
 }
 
 /**
@@ -42,6 +44,8 @@ export interface SendTextOptions {
   mentionsEveryOne?: boolean;
   /** Gerar link preview rich (default: true no servidor Evolution). */
   linkPreview?: boolean;
+  /** Opção para habilitar retry e deduplicação no backend. */
+  idempotencyKey?: string;
 }
 
 export interface GroupParams {
