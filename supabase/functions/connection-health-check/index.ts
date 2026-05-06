@@ -19,10 +19,12 @@ import { handleCors, errorResponse, jsonResponse, requireEnv, Logger } from "../
  */
 
 interface FetchInstanceShape {
-  instance?: { owner?: string; profileName?: string; profilePicUrl?: string; state?: string };
-  // versões mais novas devolvem o objeto raiz com esses campos
+  instance?: { owner?: string; ownerJid?: string; profileName?: string; profilePicUrl?: string; state?: string; connectionStatus?: string };
+  // Evolution v2 devolve esses campos no objeto raiz (ownerJid + connectionStatus)
   owner?: string;
+  ownerJid?: string;
   profileName?: string;
+  connectionStatus?: string;
 }
 
 const ACTIVITY_DEGRADED_MS = 30 * 60 * 1000;   // 30 min sem evento → silent
@@ -44,7 +46,7 @@ async function fetchOwnerJid(baseUrl: string, key: string, instanceName: string,
     // pode vir como array ou objeto
     const entry: FetchInstanceShape = Array.isArray(data) ? data[0] : data;
     if (!entry) return null;
-    const owner = entry.instance?.owner ?? entry.owner ?? null;
+    const owner = entry.instance?.ownerJid ?? entry.instance?.owner ?? entry.ownerJid ?? entry.owner ?? null;
     return owner && typeof owner === 'string' && owner.length > 0 ? owner : null;
   } catch (e) {
     log.warn('fetchInstances threw', { instanceName, error: e instanceof Error ? e.message : String(e) });
