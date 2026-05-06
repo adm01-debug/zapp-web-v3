@@ -24,16 +24,20 @@ export const emailApi = {
       query = query.lte('requested_at', filters.dateTo);
     }
 
-    return await query
+    const { data, count, error } = await query
       .order('requested_at', { ascending: false })
       .range(from, to);
+
+    return { data: data as EmailRevalidationJob[] | null, count, error };
   },
   getHealthSummary: async () => {
-    return await supabase
+    const { data, error } = await supabase
       .from('email_health_summary')
       .select('*')
       .eq('id', 'current')
       .maybeSingle();
+    
+    return { data: data as EmailHealthSummary | null, error };
   },
   markThreadRead: async (threadId: string, read: boolean) => {
     return await supabase.rpc('rpc_email_mark_thread_read', {
