@@ -32,6 +32,25 @@ interface Violation {
   line: number;
   match: string;
   label: string;
+  suggestion?: string;
+  priority: 'High' | 'Medium' | 'Low';
+}
+
+function getSuggestion(label: string, match: string): { suggestion: string, priority: Violation['priority'] } {
+  if (label === 'Hex Color' || label.includes('Arbitrary')) {
+    if (match.includes('white') || match.includes('#ffffff') || match.includes('#FFF')) return { suggestion: 'bg-background or text-foreground', priority: 'High' };
+    if (match.includes('black') || match.includes('#000000') || match.includes('#000')) return { suggestion: 'bg-foreground or text-background', priority: 'High' };
+    return { suggestion: 'Use theme tokens (primary, secondary, accent, etc.)', priority: 'High' };
+  }
+  if (label === 'Literal Color') {
+    if (match.includes('blue-600') || match.includes('blue-500')) return { suggestion: match.replace(/blue-(500|600)/, 'primary'), priority: 'Medium' };
+    if (match.includes('slate-') || match.includes('gray-')) return { suggestion: 'muted-foreground or border', priority: 'Medium' };
+    return { suggestion: 'Use semantic tokens (destructive, muted, popover, etc.)', priority: 'Medium' };
+  }
+  if (label === 'Literal Font') {
+    return { suggestion: 'Remove literal font class; use global typography', priority: 'Low' };
+  }
+  return { suggestion: 'Check design system tokens', priority: 'Low' };
 }
 
 function scanDir(dir: string, results: Violation[]) {
@@ -57,11 +76,14 @@ function scanDir(dir: string, results: Violation[]) {
         FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
           const match = line.match(pattern);
           if (match && !line.includes('// @ds-ignore')) {
+            const { suggestion, priority } = getSuggestion(label, match[0]);
             results.push({
               file: fullPath,
               line: index + 1,
               match: match[0],
-              label
+              label,
+              suggestion,
+              priority
             });
           }
         });
@@ -79,10 +101,13 @@ scanDir('./src', violations);
 let mdReport = '# Design System Violations Report\n';
 mdReport += 'Generated on: ' + new Date().toLocaleString() + '\n';
 mdReport += 'Total Violations: ' + violations.length + '\n\n';
-mdReport += '| File | Line | Violation Type | Value |\n';
-mdReport += '|------|------|----------------|-------|\n';
-violations.forEach(v => {
-  mdReport += '| `' + v.file + '` | ' + v.line + ' | ' + v.label + ' | `' + v.match + '` |\n';
+mdReport += '| Priority | File | Line | Violation Type | Value | Suggestion |\n';
+mdReport += '|----------|------|------|----------------|-------|------------|\n';
+violations.sort((a, b) => {
+  const p = { 'High': 0, 'Medium': 1, 'Low': 2 };
+  return p[a.priority] - p[b.priority];
+}).forEach(v => {
+  mdReport += '| ' + v.priority + ' | `' + v.file + '` | ' + v.line + ' | ' + v.label + ' | `' + v.match + '` | ' + v.suggestion + ' |\n';
 });
 
 writeFileSync('design-system-audit.md', mdReport);
@@ -115,6 +140,9 @@ const htmlReport = `<!DOCTYPE html>
         .label { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
         .label-Hex-Color { background: #fee2e2; color: #991b1b; }
         .label-Literal-Color { background: #ffedd5; color: #9a3412; }
+        .priority-High { color: #ef4444; font-weight: bold; }
+        .priority-Medium { color: #f59e0b; font-weight: bold; }
+        .priority-Low { color: #6b7280; }
         code { background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.875rem; }
     </style>
 </head>
@@ -127,14 +155,28 @@ const htmlReport = `<!DOCTYPE html>
     <table>
         <thead>
             <tr>
+                <th>Priority</th>
                 <th>File</th>
                 <th>Line</th>
                 <th>Type</th>
                 <th>Value</th>
+                <th>Suggestion</th>
             </tr>
         </thead>
         <tbody>
-            ${htmlRows}
+            ${violations.sort((a, b) => {
+              const p = { 'High': 0, 'Medium': 1, 'Low': 2 };
+              return p[a.priority] - p[b.priority];
+            }).map(v => `
+              <tr>
+                <td><span class="priority-${v.priority}">${v.priority}</span></td>
+                <td><code>${v.file}</code></td>
+                <td>${v.line}</td>
+                <td><span class="label label-${v.label.replace(' ', '-')}">${v.label}</span></td>
+                <td><code>${v.match}</code></td>
+                <td><em>${v.suggestion}</em></td>
+              </tr>
+            `).join('')}
         </tbody>
     </table>
 </body>
