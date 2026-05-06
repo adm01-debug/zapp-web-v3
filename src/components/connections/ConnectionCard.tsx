@@ -30,6 +30,7 @@ import type { WhatsAppConnection } from '@/features/connections';
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Wifi; bgClass: string }> = {
   connected: { label: 'Online', color: 'text-primary', icon: Wifi, bgClass: 'bg-primary/10 border-primary/20' },
   disconnected: { label: 'Desconectado', color: 'text-destructive-foreground', icon: WifiOff, bgClass: 'bg-destructive/10 border-destructive/20' },
+  disconnecting: { label: 'Desconectando...', color: 'text-destructive-foreground', icon: Loader2, bgClass: 'bg-destructive/10 border-destructive/20 animate-pulse' },
   connecting: { label: 'Conectando...', color: 'text-warning-foreground', icon: RefreshCw, bgClass: 'bg-warning/10 border-warning/20' },
   pending: { label: 'Aguardando QR', color: 'text-warning-foreground', icon: QrCode, bgClass: 'bg-warning/10 border-warning/20' },
 };
