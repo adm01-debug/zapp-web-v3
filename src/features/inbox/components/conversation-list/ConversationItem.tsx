@@ -154,15 +154,10 @@ export function ConversationItem({
   const avatarUrl = contact?.avatar || contact?.avatar_url;
   
   // Datas — sempre normalizar para Date válido (formatDistanceToNow lança em valores inválidos)
-  const toValidDate = (v: unknown): Date | null => {
-    if (!v) return null;
-    const d = v instanceof Date ? v : new Date(v as string | number);
-    return isNaN(d.getTime()) ? null : d;
-  };
   const displayDate =
-    toValidDate(conversation.updatedAt) ||
-    toValidDate(lastMessage?.created_at) ||
-    toValidDate(contact?.updated_at) ||
+    toValidDate(conversation.updatedAt, null as any) ||
+    toValidDate(lastMessage?.created_at, null as any) ||
+    toValidDate(contact?.updated_at, null as any) ||
     new Date();
 
   const StatusIcon = statusIcons[status as keyof typeof statusIcons] || AlertCircle;
