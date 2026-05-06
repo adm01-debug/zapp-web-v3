@@ -115,8 +115,15 @@ export function ConnectionAuditDialog({ open, onOpenChange, instanceId, connecti
                     </div>
                     
                     {log.details && (
-                      <div className="mt-2 text-xs text-muted-foreground bg-card p-2 rounded border font-mono overflow-x-auto">
-                        <pre>{JSON.stringify(log.details, null, 2)}</pre>
+                      <div className="mt-2 text-xs text-muted-foreground bg-card p-2 rounded border">
+                        {log.details.cause && (
+                          <p className="font-medium text-destructive mb-1">
+                            Motivo: {log.details.cause}
+                          </p>
+                        )}
+                        <pre className="font-mono overflow-x-auto whitespace-pre-wrap">
+                          {JSON.stringify(log.details, null, 2)}
+                        </pre>
                       </div>
                     )}
                   </div>
