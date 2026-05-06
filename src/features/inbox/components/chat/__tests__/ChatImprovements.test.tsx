@@ -90,9 +90,9 @@ describe('Chat Improvements Regression Tests', () => {
         </QueryClientProvider>
       );
 
-      const bubbleContainer = container.querySelector('.shadow-\\[0_1\\.5px_2px_rgba\\(0\\,0\\,0\\,0\\.15\\)\\]');
+      const bubbleContainer = container.querySelector('.bg-chat-sent') || container.querySelector('.bg-chat-received');
       expect(bubbleContainer).toBeTruthy();
-      expect(bubbleContainer?.className).toContain('font-medium');
+      expect(bubbleContainer?.className).toContain('rounded-2xl');
     });
 
     it('renders links with TextWithLinks enhancement', () => {
