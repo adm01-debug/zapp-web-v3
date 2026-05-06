@@ -61,7 +61,8 @@ export async function runConnectionDiagnostics() {
     if (saveError) {
       log('Database Persistence', 'fail', { error: saveError });
     } else {
-      log('Database Persistence', 'pass', { id: saveResult?.[0]?.id });
+      const savedData = saveResult as any[];
+      log('Database Persistence', 'pass', { id: savedData?.[0]?.id });
 
       // Passo 4: Verificação de Visibilidade (Read-back)
       const { data: verify, error: verifyError } = await supabase
@@ -70,12 +71,14 @@ export async function runConnectionDiagnostics() {
         .eq('name', testName)
         .maybeSingle();
 
-      if (verifyError || !verify) {
+      const verifyData = verify as any;
+
+      if (verifyError || !verifyData) {
         log('Data Visibility (RLS)', 'fail', { error: verifyError?.message || 'Registro não encontrado após save' });
       } else {
-        log('Data Visibility (RLS)', 'pass', { verified_id: verify.id });
+        log('Data Visibility (RLS)', 'pass', { verified_id: verifyData.id });
         
-        // Limpeza opcional (apenas se for ambiente de teste)
+        // Limpeza opcional
         await supabase.from('system_connections' as any).delete().eq('name', testName);
       }
     }
