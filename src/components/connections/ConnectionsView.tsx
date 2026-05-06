@@ -216,6 +216,29 @@ export function ConnectionsView() {
 
       <IdempotencyMissBanner />
 
+      <div className="flex flex-col md:flex-row gap-4 items-end md:items-center justify-between mb-4">
+        <div className="flex flex-1 gap-2 w-full md:max-w-md">
+          <Input 
+            placeholder="Buscar por nome ou ID..." 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-card border-secondary/20"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px] bg-card border-secondary/20">
+              <SelectValue placeholder="Filtrar status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="connected">Online</SelectItem>
+              <SelectItem value="pending">Aguardando QR</SelectItem>
+              <SelectItem value="disconnected">Desconectado</SelectItem>
+              <SelectItem value="disconnecting">Desconectando</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
