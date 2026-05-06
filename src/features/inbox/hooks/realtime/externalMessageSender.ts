@@ -180,29 +180,6 @@ export async function sendExternalAudio(
     log.warn('Instance mismatch detected, forcing conversation instance', { target: opts.conversationInstance, requested: opts.instanceName });
   }
 
-  // Sanitiza o JID para uso como pasta no bucket (sem `@`/`:` etc).
-  const safeKey = remoteJid.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const fileName = `${safeKey}/${Date.now()}.webm`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('audio-messages')
-    .upload(fileName, blob, { contentType: blob.type || 'audio/webm', upsert: false });
-  if (uploadError) {
-    log.error('audio upload failed', uploadError);
-    throw new Error(uploadError.message || 'Falha no upload do áudio');
-  }
-
-  if (opts.onProgress) opts.onProgress(50); // Simulation midpoint
-  
-  const { data: signed, error: signError } = await supabase.storage
-    .from('audio-messages')
-    .createSignedUrl(fileName, 3600);
-    
-  if (signError || !signed?.signedUrl) {
-    log.error('audio signed url failed', signError);
-    throw new Error(signError?.message || 'Falha ao gerar URL do áudio');
-  }
-
   // Use URL.createObjectURL for the optimistic bubble to avoid relying on a 1h signed URL
   // that might expire before reconciliation or if the message is revisited.
   const localAudioUrl = URL.createObjectURL(blob);
@@ -214,15 +191,21 @@ export async function sendExternalAudio(
     media_meta: { ptt: opts.isPtt ?? true, conversation_id: opts.conversationId }, // Store PTT intent and conversation context for telemetry
   });
 
+  // DOC ARCHITECTURE PERFECTION: Use multipart/form-data to send blob directly
+  // to the Edge Function, which proxies it to Evolution API. This eliminates the 
+  // intermediate Supabase Storage bucket for outgoing audio.
+  const formData = new FormData();
+  formData.append('action', 'send-audio');
+  formData.append('instanceName', instance);
+  formData.append('number', phone);
+  formData.append('encoding', 'true');
+  formData.append('isPtt', String(opts.isPtt ?? true));
+  
+  // Note: Evolution API expects the field name to be 'audio' for multipart files
+  formData.append('audio', blob, 'audio.webm');
+
   const { data, error } = await supabase.functions.invoke('evolution-api', {
-    body: {
-      action: 'send-audio',
-      instanceName: instance,
-      number: phone,
-      audio: signed.signedUrl,
-      encoding: true, 
-      isPtt: opts.isPtt ?? true,
-    },
+    body: formData,
   });
 
   if (error) {
