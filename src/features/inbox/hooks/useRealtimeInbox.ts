@@ -21,7 +21,7 @@ const log = getLogger('useRealtimeInbox');
 // O projeto migrou todo o domínio WhatsApp/CRM para FATOR X. O caminho
 // legado (public.messages/contacts) está desativado em produção e os envios
 // caíam para `failed_retries` sem refletir entradas vindas do webhook.
-const USE_EXTERNAL_DB = true;
+const USE_EXTERNAL_DB = false;
 
 export function useRealtimeInbox() {
   // Local DB source (original)
