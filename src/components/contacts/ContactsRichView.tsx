@@ -582,23 +582,25 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
         )}
       </AnimatePresence>
       <ContactDialogs
+        workspaceId="wpp2"
         isAddDialogOpen={isAddDialogOpen}
         setIsAddDialogOpen={setIsAddDialogOpen}
-        newContact={newContact}
-        handleNewContactChange={handleNewContactChange}
-        handleAddContact={handleAddContact}
-        handleCancelForm={handleCancelForm}
-        isSubmitting={isSubmitting}
+        onContactSaved={() => crud.refetch()}
         isEditDialogOpen={isEditDialogOpen}
         setIsEditDialogOpen={setIsEditDialogOpen}
         editingContact={editingContact}
-        handleEditContactChange={handleEditContactChange}
-        handleEditContact={handleEditContact}
         showSuccess={showSuccess}
         setShowSuccess={setShowSuccess}
         deleteTarget={deleteTarget}
         setDeleteTarget={setDeleteTarget}
         handleDeleteContact={handleDeleteContact}
+      />
+
+      <ContactImportDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        workspaceId="wpp2"
+        onImported={() => crud.refetch()}
       />
 
       <ContactQuickView
