@@ -14,6 +14,7 @@ export function useIndexNavigation(user: User | null, loading: boolean) {
     canGoForward, 
     breadcrumbTrail 
   } = useNavigationHistory('inbox');
+  const [searchParams] = useSearchParams();
   
   const navDirectionRef = useRef<'forward' | 'back'>('forward');
   const deepLinkViewHandledRef = useRef(false);
