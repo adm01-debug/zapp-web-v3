@@ -120,12 +120,43 @@ function scanDir(dir: string, results: Violation[]) {
 }
 
 if (require.main === module) {
+  const args = process.argv.slice(2);
+  const dryRun = args.includes('--dry-run');
+  const applyPatch = args.includes('--apply-patch') || dryRun;
+  const ci = args.includes('--ci');
+  const pathArg = args.find(a => !a.startsWith('--'));
+  const minPriorityArg = args.find(a => a.startsWith('--min-priority='))?.split('=')[1] || 'Low';
+  
+  const priorityMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
+  const minPriorityValue = priorityMap[minPriorityArg as keyof typeof priorityMap] || 1;
+
+  const scanPath = pathArg || './src';
   const violations: Violation[] = [];
-  scanDir('./src', violations);
+  
+  console.log(`🔍 Scanning ${scanPath} (min-priority: ${minPriorityArg})...`);
+
+  if (!existsSync(scanPath)) {
+    console.error(`❌ Path does not exist: ${scanPath}`);
+    process.exit(1);
+  }
+
+  if (statSync(scanPath).isDirectory()) {
+    scanDir(scanPath, violations);
+  } else {
+    const content = readFileSync(scanPath, 'utf-8');
+    scanContent(content, relative(process.cwd(), scanPath), violations);
+  }
+
+  const filteredViolations = violations.filter(v => priorityMap[v.priority] >= minPriorityValue);
+
+  if (filteredViolations.length === 0) {
+    console.log('✅ No violations found.');
+    process.exit(0);
+  }
 
   // Generate Reports
   const groupedViolations: Record<string, Violation[]> = {};
-  violations.forEach(v => {
+  filteredViolations.forEach(v => {
     if (!groupedViolations[v.file]) groupedViolations[v.file] = [];
     groupedViolations[v.file].push(v);
   });
@@ -192,24 +223,30 @@ if (require.main === module) {
   `;
   writeFileSync('design-system-audit.html', htmlReport);
 
-  if (process.argv.includes('--apply-patch')) {
+  if (applyPatch) {
+    console.log(dryRun ? '\n--- Dry Run: Proposed Changes ---' : '\n--- Applying Patches ---');
     Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
       let content = readFileSync(file, 'utf-8');
       let lines = content.split('\n');
       let hasChanges = false;
+      
       fileViolations.forEach(v => {
         if (v.replacement && lines[v.line-1].includes(v.match)) {
+          console.log(`[${file}:${v.line}] Replace "${v.match}" with "${v.replacement}"`);
           lines[v.line-1] = lines[v.line-1].replace(v.match, v.replacement);
           hasChanges = true;
         }
       });
-      if (hasChanges) writeFileSync(file, lines.join('\n'));
+      
+      if (hasChanges && !dryRun) {
+        writeFileSync(file, lines.join('\n'));
+      }
     });
-    console.log('✅ Applied patches.');
+    console.log(dryRun ? '--- End of Dry Run ---' : '✅ Applied patches.');
   }
 
-  if (process.argv.includes('--ci') && violations.length > 0) {
-    console.error(`❌ Found ${violations.length} violations.`);
+  if (ci && filteredViolations.length > 0) {
+    console.error(`❌ Found ${filteredViolations.length} violations.`);
     process.exit(1);
   }
 }
