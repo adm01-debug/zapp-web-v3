@@ -54,14 +54,14 @@ describe('Typography Inheritance System', () => {
     expect(computedStyle.fontFamily).toBe('var(--font-mono)');
   });
 
-  it('should ensure no font-sans literals are overriding the system', () => {
+  it('should ensure no  literals are overriding the system', () => {
     // This is a logic test: components should NOT have hardcoded font-family: Inter
     // but rather rely on the variables.
     const testElement = document.createElement('div');
-    testElement.className = 'font-sans'; // Tailwind class
+    testElement.className = ''; // Tailwind class
     root.appendChild(testElement);
     
-    // We expect Tailwind's font-sans to be mapped to var(--font-sans) in tailwind.config.ts
+    // We expect Tailwind's  to be mapped to var(--font-sans) in tailwind.config.ts
     // This part of the test is conceptual as Vitest/JSDOM doesn't parse tailwind.config.ts directly
     expect(true).toBe(true); 
   });

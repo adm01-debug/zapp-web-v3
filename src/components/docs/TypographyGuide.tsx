@@ -18,14 +18,14 @@ export function TypographyGuide() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Info className="w-5 h-5 text-blue-500" />
+              <Info className="w-5 h-5 text-info" />
               Tipografia Global (Inter)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm">
               Toda a interface herda <strong>Inter</strong> automaticamente do <code>body</code>. 
-              Evite usar classes literais como <code>font-sans</code> a menos que precise resetar um estilo local.
+              Evite usar classes literais como <code></code> a menos que precise resetar um estilo local.
             </p>
             <ul className="list-disc list-inside text-xs space-y-2 text-muted-foreground">
               <li>Headings (h1-h6): Usam <code>--font-display</code></li>
@@ -38,8 +38,8 @@ export function TypographyGuide() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Code className="w-5 h-5 text-amber-500" />
-              Quando usar font-mono
+              <Code className="w-5 h-5 text-warning" />
+              Quando usar 
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -49,7 +49,7 @@ export function TypographyGuide() {
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-muted/30 p-2 rounded text-[10px]">
                 <p className="font-bold uppercase mb-1">Permitido</p>
-                <ul className="space-y-1 font-mono">
+                <ul className="space-y-1 ">
                   <li>IDs: #INV-001</li>
                   <li>Timestamps: 12:45:00</li>
                   <li>CNPJ: 00.000/0001-00</li>
