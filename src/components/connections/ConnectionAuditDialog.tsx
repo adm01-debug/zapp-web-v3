@@ -53,10 +53,10 @@ export function ConnectionAuditDialog({ open, onOpenChange, instanceId, connecti
   };
 
   const getActionIcon = (action: string) => {
-    if (action.includes('failure') || action.includes('degraded') || action.includes('disconnected')) {
+    if (action.includes('failure') || action.includes('degraded') || action.includes('disconnected') || action === 'device_removed' || action === 'session_conflict') {
       return <AlertCircle className="w-4 h-4 text-destructive" />;
     }
-    if (action.includes('success') || action.includes('healthy') || action.includes('completed')) {
+    if (action.includes('success') || action.includes('healthy') || action.includes('completed') || action === 'instance_reconnected') {
       return <CheckCircle2 className="w-4 h-4 text-primary" />;
     }
     if (action.includes('attempt') || action.includes('restart')) {
@@ -66,7 +66,17 @@ export function ConnectionAuditDialog({ open, onOpenChange, instanceId, connecti
   };
 
   const formatActionName = (action: string) => {
-    return action
+    const labels: Record<string, string> = {
+      device_removed: 'Dispositivo Removido',
+      session_conflict: 'Conflito de Sessão',
+      instance_reconnected: 'Instância Reconectada',
+      instance_disconnected: 'Instância Desconectada',
+      instance_restart_attempt: 'Tentativa de Reinício',
+      instance_restart_success: 'Reinício com Sucesso',
+      session_expired: 'Sessão Expirada'
+    };
+    
+    return labels[action] || action
       .replace(/_/g, ' ')
       .replace(/\b\w/g, (l) => l.toUpperCase());
   };
