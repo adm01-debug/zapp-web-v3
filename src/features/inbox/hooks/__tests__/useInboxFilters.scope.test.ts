@@ -57,6 +57,27 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 describe('useInboxFilters - Scope Logic', () => {
+  it('reads scope from URL correctly and overrides localStorage', () => {
+    // Setup URL with 'department'
+    const searchParams = new URLSearchParams('scope=department');
+    vi.stubGlobal('location', { search: '?' + searchParams.toString(), hash: '' });
+    
+    // Setup localStorage with 'mine'
+    const localStorageMock = {
+      getItem: vi.fn((key) => key === 'inbox_scope' ? 'mine' : null),
+      setItem: vi.fn()
+    };
+    vi.stubGlobal('localStorage', localStorageMock);
+
+    const { result } = renderHook(() => useInboxFilters({ 
+      conversations: mockConversations as any, 
+      profileId: 'agent-1' 
+    }), { wrapper: ({ children }) => React.createElement(QueryClientProvider, { client: queryClient }, React.createElement(MemoryRouter, { initialEntries: ['/inbox?scope=department'] }, children)) });
+    
+    // Should favor URL 'department' over localStorage 'mine'
+    expect(result.current.scope).toBe('department');
+  });
+
   it('filters by "mine" scope correctly', () => {
     const { result } = renderHook(() => useInboxFilters({ 
       conversations: mockConversations as any, 
