@@ -5,13 +5,10 @@ import { getLogger } from '@/lib/logger';
 
 const log = getLogger('useEvolutionAutoReconnect');
 
-// Configuração da estratégia de reconexão
-const RECONNECT_INTERVAL = 30000; // 30 segundos
-const MAX_AUTO_ATTEMPTS = 5;
-
 /**
  * Hook que monitora as conexões e tenta reconectar instâncias que caíram
- * ou entraram em estado de 'phantom session' (sessão fantasma).
+ * ou entraram em estado de 'phantom session'.
+ * Inclui agora suporte a logs de auditoria e proteção de loop.
  */
 export function useEvolutionAutoReconnect() {
   const { restartInstance } = useEvolutionApi();
@@ -29,13 +26,15 @@ export function useEvolutionAutoReconnect() {
           const connection = payload.new as any;
           const oldConnection = payload.old as any;
           
-          // Se o status mudou para disconnected ou o motivo de saúde é crítico
+          // Verificações de política e segurança
+          if (!connection.auto_reconnect_enabled || connection.loop_protection_active) return;
+
           const isDisconnected = connection.status === 'disconnected';
           const isPhantom = connection.health_reason === 'phantom_session' || connection.health_reason === 'socket_closed';
           const wasConnected = oldConnection.status === 'connected';
           
           if ((isDisconnected || isPhantom) && connection.instance_id && wasConnected) {
-            void attemptReconnect(connection.id, connection.instance_id, connection.name);
+            void attemptReconnect(connection);
           }
         }
       )
@@ -46,39 +45,51 @@ export function useEvolutionAutoReconnect() {
     };
   }, []);
 
-  const attemptReconnect = async (id: string, instanceId: string, name: string) => {
+  const attemptReconnect = async (connection: any) => {
+    const id = connection.id;
     const now = Date.now();
     const lastTime = lastAttemptTime.current[id] || 0;
     const attempts = attemptMap.current[id] || 0;
+    
+    // Usa configurações da instância ou valores padrão
+    const intervalMs = (connection.reconnect_interval_seconds || 30) * 1000;
+    const maxAttempts = connection.max_reconnect_attempts || 5;
 
-    // Evita tentativas muito frequentes ou excessivas
-    if (now - lastTime < RECONNECT_INTERVAL) return;
-    if (attempts >= MAX_AUTO_ATTEMPTS) {
-      log.warn(`Limite de reconexão automática atingido para ${name}`, { id });
+    if (now - lastTime < intervalMs) return;
+    if (attempts >= maxAttempts) {
+      log.warn(`Limite de reconexão atingido para ${connection.name}`, { id });
       return;
     }
 
-    log.info(`Iniciando reconexão automática para ${name}`, { instanceId, attempt: attempts + 1 });
+    log.info(`Reconexão automática para ${connection.name}`, { attempt: attempts + 1 });
     
     lastAttemptTime.current[id] = now;
     attemptMap.current[id] = attempts + 1;
 
+    let result = 'success';
+    let errorMsg = null;
+
     try {
-      // 1. Tenta reiniciar a instância na Evolution API
-      await restartInstance(instanceId);
-      
-      // 2. Aguarda um tempo para processamento
+      await restartInstance(connection.instance_id);
       await new Promise(r => setTimeout(r, 5000));
-      
-      // 3. Dispara o health check no Supabase
       await supabase.functions.invoke('connection-health-check', {
-        body: { instanceName: instanceId },
+        body: { instanceName: connection.instance_id },
       });
-      
-      log.info(`Comando de reconexão enviado para ${name}`);
-    } catch (err) {
-      log.error(`Falha na reconexão automática de ${name}`, err);
+    } catch (err: any) {
+      result = 'failed';
+      errorMsg = err.message;
+      log.error(`Falha na reconexão de ${connection.name}`, err);
     }
+
+    // Registrar auditoria no banco via RPC para gatilhar detecção de loop
+    await supabase.rpc('fn_log_reconnection_attempt', {
+      p_connection_id: id,
+      p_attempt: attempts + 1,
+      p_status_before: connection.status,
+      p_reason_before: connection.health_reason,
+      p_result: result,
+      p_error: errorMsg
+    });
   };
 
   // Reset de tentativas caso a instância volte a ficar online
@@ -91,7 +102,7 @@ export function useEvolutionAutoReconnect() {
         (payload) => {
           const connection = payload.new as any;
           if (attemptMap.current[connection.id]) {
-            log.info(`Instância ${connection.name} normalizada. Resetando contador de reconexão.`);
+            log.info(`Instância ${connection.name} normalizada.`);
             delete attemptMap.current[connection.id];
             delete lastAttemptTime.current[connection.id];
           }
@@ -104,3 +115,4 @@ export function useEvolutionAutoReconnect() {
     };
   }, []);
 }
+
