@@ -60,7 +60,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<any
   'queues': Views.QueuesView,
   'contacts': Views.ContactsView,
   'groups': Views.GroupsView,
-  'connections': Views.ConnectionsView,
+  'connections': Views.ConnectionsIntegrationsHub,
   'wallet': Views.ClientWalletView,
   'catalog': Views.ProductManagement,
   'transcriptions': Views.TranscriptionsHistoryView,
