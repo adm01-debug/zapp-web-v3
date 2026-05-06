@@ -45,10 +45,11 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
   const cleanup = useCallback(() => {
     stopPlayback();
     if (convertedAudioUrl) {
-      URL.revokeObjectURL(convertedAudioUrl);
+      // Don't revoke here if we want to keep it while the popover is open
+      // URL.revokeObjectURL(convertedAudioUrl); 
       setConvertedAudioUrl(null);
     }
-  }, [convertedAudioUrl, stopPlayback]);
+  }, [stopPlayback]);
 
   const handleConvert = async (voice: ElevenLabsVoice) => {
     // Check if it's a "cloned" voice (placeholder logic - usually based on ID prefix or metadata)
