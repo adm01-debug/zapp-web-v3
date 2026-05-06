@@ -26,32 +26,55 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
   const isWhite = cleanMatch.includes('white') || cleanMatch.includes('#ffffff') || cleanMatch.includes('#fff');
   const isBlack = cleanMatch.includes('black') || cleanMatch.includes('#000000') || cleanMatch.includes('#000');
 
+  // Logic to determine base semantic tokens based on intent
   if (label === 'Raw Hex' || label === 'Arbitrary Color' || label === 'Literal Color') {
+    const isBg = cleanMatch.startsWith('bg-');
+    const isText = cleanMatch.startsWith('text-');
+    const isBorder = cleanMatch.startsWith('border-');
+
     if (isWhite) {
-       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-background' : (cleanMatch.startsWith('text-') ? 'text-foreground' : (cleanMatch.startsWith('border-') ? 'border-border' : undefined));
+       const baseReplacement = isBg ? 'bg-background' : (isText ? 'text-foreground' : (isBorder ? 'border-border' : undefined));
        const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
        return { cleanMatch, prefix, suggestion: `${prefix}${baseReplacement || 'bg-background'}`, priority: 'High', replacement };
     }
     if (isBlack) {
-       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-foreground' : (cleanMatch.startsWith('text-') ? 'text-background' : (cleanMatch.startsWith('border-') ? 'border-border' : undefined));
+       const baseReplacement = isBg ? 'bg-foreground' : (isText ? 'text-background' : (isBorder ? 'border-border' : undefined));
        const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
        return { cleanMatch, prefix, suggestion: `${prefix}${baseReplacement || 'bg-foreground'}`, priority: 'High', replacement };
+    }
+
+    // Mapping logic for standard literal colors to semantic tokens
+    const semanticMap: Record<string, string> = {
+      'red': 'destructive',
+      'blue': 'primary',
+      'amber': 'warning',
+      'orange': 'warning',
+      'emerald': 'success',
+      'green': 'success',
+      'slate': 'muted',
+      'gray': 'muted',
+      'zinc': 'muted',
+      'neutral': 'muted'
+    };
+
+    for (const [literal, semantic] of Object.entries(semanticMap)) {
+      if (cleanMatch.includes(literal)) {
+        let baseReplacement = '';
+        if (isBg) baseReplacement = `bg-${semantic}`;
+        else if (isText) baseReplacement = `text-${semantic}-foreground`;
+        else if (isBorder) baseReplacement = `border-${semantic}`;
+
+        if (baseReplacement) {
+          const replacement = `${prefix}${baseReplacement}`;
+          return { cleanMatch, prefix, suggestion: replacement, priority: 'Medium', replacement };
+        }
+      }
     }
   }
 
   if (label === 'Literal Color') {
     if (WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`))) return { cleanMatch, prefix, suggestion: '', priority: 'Low' };
-
-    if (cleanMatch.includes('blue-600') || cleanMatch.includes('blue-500')) {
-      const replacement = `${prefix}${cleanMatch.replace(/blue-(500|600)/, 'primary')}`;
-      return { cleanMatch, prefix, suggestion: replacement, priority: 'Medium', replacement };
-    }
-    if (cleanMatch.includes('slate-') || cleanMatch.includes('gray-') || cleanMatch.includes('zinc-')) {
-       const baseReplacement = cleanMatch.includes('bg-') ? 'bg-muted' : (cleanMatch.includes('text-') ? 'text-muted-foreground' : (cleanMatch.includes('border-') ? 'border-border' : undefined));
-       const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
-       return { cleanMatch, prefix, suggestion: replacement || 'muted/border', priority: 'Medium', replacement };
-    }
-    return { cleanMatch, prefix, suggestion: 'Use semantic tokens (destructive, muted, etc.)', priority: 'Medium' };
+    return { cleanMatch, prefix, suggestion: 'Use semantic tokens (destructive, muted, primary, etc.)', priority: 'Medium' };
   }
 
   if (label === 'Literal Font') {
@@ -59,7 +82,6 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
       return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
     }
     if (cleanMatch === 'font-mono') {
-      // Often used for technical data, but let's flag as Medium to ensure it's intentional
       return { cleanMatch, prefix, suggestion: 'Check if font-mono is intentional or should inherit global typography', priority: 'Medium' };
     }
     return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low' };
@@ -193,19 +215,12 @@ if (require.main === module) {
   });
 
   if (ci) {
-    console.log('\n--- 🚩 Design System Violations ---');
-    Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
-      console.log(`\n📄 ${file}:`);
-      fileViolations.forEach(v => {
-        const isFixable = v.replacement !== undefined;
-        const status = isFixable ? '🔧 [Fixable]' : '⚠️ [Manual]';
-        console.log(`  Line ${v.line.toString().padEnd(4)} | ${status.padEnd(11)} | Match: ${v.match.padEnd(20)} | Suggestion: ${v.replacement !== undefined ? v.replacement : v.suggestion}`);
-        if (isFixable) {
-          console.log(`               | Clean: ${v.cleanMatch.padEnd(20)} | Patch: ${v.replacement === '' ? '(remove)' : v.replacement}`);
-        }
-      });
+    console.log('\n| # | Priority | File:Line | Match | Clean Match | Suggestion/Replacement |');
+    console.log('|---|---|---|---|---|---|');
+    filteredViolations.forEach((v, idx) => {
+      const displayReplacement = v.replacement !== undefined ? (v.replacement === '' ? '(remove)' : `\`${v.replacement}\``) : (v.suggestion || '-');
+      console.log(`| ${idx + 1} | ${v.priority} | ${v.file}:${v.line} | \`${v.match}\` | \`${v.cleanMatch}\` | ${displayReplacement} |`);
     });
-    console.log('\n-----------------------------------');
   } else {
     // Generate Reports (Markdown/HTML)
     // ... (Keep existing report generation logic but condensed)
