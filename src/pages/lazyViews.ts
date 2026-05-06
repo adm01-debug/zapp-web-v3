@@ -76,6 +76,7 @@ export const AdminInboxSyncStatusPage = lazyWithRetry(() => import('@/pages/admi
 export const AdminEvoApiHealthPage = lazyWithRetry(() => import('@/pages/admin/AdminEvoApiHealthPage'));
 export const AdminEmailStatusPage = lazyWithRetry(() => import('@/pages/admin/AdminEmailStatusPage'));
 export const AdminEmailAuditPage = lazyWithRetry(() => import('@/pages/admin/AdminEmailAuditPage'));
+export const AdminConnectionsPage = lazyWithRetry(() => import('@/pages/admin/Connections'));
 
 export const InboxPage = lazyWithRetry(() => import('@/pages/inbox/InboxPage'));
 export const SLAHistory = lazyWithRetry(() => import('@/pages/SLAHistory'));
