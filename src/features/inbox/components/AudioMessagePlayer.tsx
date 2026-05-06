@@ -15,7 +15,7 @@ import { VoiceChanger } from './VoiceChanger';
 import { Badge } from '@/components/ui/badge';
 
 interface AudioMessagePlayerProps {
-  audioUrl: string;
+  audioUrl: string | null;
   messageId: string;
   isSent: boolean;
   existingTranscription?: string | null;
