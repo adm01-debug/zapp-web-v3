@@ -89,7 +89,7 @@ export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
         <div className="text-center">
           <p className="font-semibold text-base">Nenhuma conta de Email conectada</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Conecte sua conta de Email para usar o Email Chat
+            Conecte sua conta de Email para usar o Chat de Email
           </p>
         </div>
         <Button onClick={startOAuth} className="gap-2">
