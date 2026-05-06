@@ -37,12 +37,21 @@ export function useAudioMemes(open: boolean) {
 
   const fetchMemes = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('audio_memes')
-      .select('*')
-      .order('use_count', { ascending: false })
-      .limit(1000);
-    if (!error && data) setMemes(data as AudioMemeItem[]);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // DOC ARCHITECTURE COMPLIANCE: Use RPC to get per-user favorites and sorted catalog
+    // Using any to bypass strict type checking until types.ts is updated automatically
+    const { data, error } = await (supabase as any).rpc('fn_list_audio_memes_for_user', {
+      p_user_id: user?.id || null
+    });
+    
+    if (!error && data) {
+      setMemes(data as AudioMemeItem[]);
+    } else if (error) {
+      log.error('fetchMemes error', error);
+      const { data: basicData } = await supabase.from('audio_memes').select('*').order('use_count', { ascending: false });
+      if (basicData) setMemes(basicData as AudioMemeItem[]);
+    }
     setLoading(false);
   }, []);
 
@@ -134,15 +143,17 @@ export function useAudioMemes(open: boolean) {
   }, []);
 
   const handleConfirmUpload = useCallback(async (pending: PendingUpload) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error: insertError } = await supabase.from('audio_memes').insert({
-      name: pending.name, audio_url: pending.audioUrl,
-      category: pending.selectedCategory, duration_seconds: pending.duration,
-      uploaded_by: user?.id || null,
+    // DOC ARCHITECTURE COMPLIANCE: Use RPC to add meme
+    const { error: insertError } = await (supabase as any).rpc('fn_add_audio_meme', {
+      p_name: pending.name,
+      p_url: pending.audioUrl,
+      p_category: pending.selectedCategory,
+      p_duration: pending.duration
     });
+
     if (insertError) {
       log.error('[AudioMeme] Insert error:', insertError);
-      toast.error('Erro ao salvar áudio meme no banco de dados');
+      toast.error('Erro ao salvar áudio meme');
       return;
     }
     toast.success(`Áudio salvo como "${pending.selectedCategory}"!`);
@@ -157,18 +168,35 @@ export function useAudioMemes(open: boolean) {
     setPendingUpload(null);
   }, [pendingUpload]);
 
-  const handleSend = useCallback(async (meme: AudioMemeItem, onSend: (url: string) => void, onClose: () => void) => {
+  const handleSend = useCallback(async (meme: AudioMemeItem, onSend: (meme: AudioMemeItem) => void, onClose: () => void) => {
     if (audioRef.current) { audioRef.current.pause(); setPlayingId(null); }
-    onSend(meme.audio_url);
+    onSend(meme);
     onClose();
-    await supabase.from('audio_memes').update({ use_count: (meme.use_count || 0) + 1 }).eq('id', meme.id);
+    // DOC ARCHITECTURE COMPLIANCE: The actual use_count++ and database entry 
+    // should ideally happen via RPC during sending to avoid UI delays,
+    // but we keep a local sync for the list.
+    setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, use_count: (m.use_count || 0) + 1 } : m));
   }, []);
 
   const toggleFavorite = useCallback(async (e: React.MouseEvent, meme: AudioMemeItem) => {
     e.stopPropagation();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error('Efetue login para favoritar'); return; }
+
     const newVal = !meme.is_favorite;
     setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, is_favorite: newVal } : m));
-    await supabase.from('audio_memes').update({ is_favorite: newVal }).eq('id', meme.id);
+
+    // DOC ARCHITECTURE COMPLIANCE: Individual favorite toggle via RPC
+    const { error } = await (supabase as any).rpc('fn_toggle_user_meme_favorite', {
+      p_user_id: user.id,
+      p_meme_id: meme.id
+    });
+
+    if (error) {
+      log.error('toggleFavorite error', error);
+      // Rollback UI if failed
+      setMemes(prev => prev.map(m => m.id === meme.id ? { ...m, is_favorite: !newVal } : m));
+    }
   }, []);
 
   const handleCategoryChange = useCallback(async (meme: AudioMemeItem, newCategory: string) => {

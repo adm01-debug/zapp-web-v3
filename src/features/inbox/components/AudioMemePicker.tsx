@@ -10,7 +10,7 @@ import { Music, Search, Plus, Star, Trash2, Loader2, Upload, X, Play, Pause, Vol
 import { useAudioMemes, formatDuration, type AudioMemeItem, type PendingUpload } from '@/hooks/useAudioMemes';
 
 interface AudioMemePickerProps {
-  onSendAudio: (audioUrl: string) => void;
+  onSendAudioMeme: (meme: any) => void;
   disabled?: boolean;
 }
 
@@ -83,7 +83,7 @@ function UploadPreview({ pending, onConfirm, onCancel }: { pending: PendingUploa
   );
 }
 
-export function AudioMemePicker({ onSendAudio, disabled }: AudioMemePickerProps) {
+export function AudioMemePicker({ onSendAudioMeme, disabled }: AudioMemePickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -159,7 +159,7 @@ export function AudioMemePicker({ onSendAudio, disabled }: AudioMemePickerProps)
                   {filtered.map((meme) => (
                     <motion.div key={meme.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
                       className={cn('group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors hover:bg-muted/60 border border-transparent hover:border-border/40', playingId === meme.id && 'bg-primary/5 border-primary/20')}
-                      onClick={() => handleSend(meme, onSendAudio, () => setOpen(false))}>
+                      onClick={() => handleSend(meme, (url) => onSendAudioMeme(meme), () => setOpen(false))}>,search:
                       <button onClick={(e) => { e.stopPropagation(); handlePreview(meme); }} className={cn('w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors', playingId === meme.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary')}>
                         {playingId === meme.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
                       </button>

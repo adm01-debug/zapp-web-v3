@@ -98,7 +98,7 @@ export function SecondaryToolbar({
       )}
       <AIRewriteButton inputValue={inputValue} onRewrite={handleRewrite} contactName={contactName} />
       <StickerPicker onSendSticker={onSendSticker} />
-      <AudioMemePicker onSendAudio={onSendAudioMeme} />
+      <AudioMemePicker onSendAudioMeme={onSendAudioMeme} />
       <VoiceChangerPicker onSendAudio={onSendAudioMeme} />
       <CustomEmojiPicker onSendEmoji={onSendCustomEmoji} />
       <EmojiPicker onSelect={(emoji) => {
