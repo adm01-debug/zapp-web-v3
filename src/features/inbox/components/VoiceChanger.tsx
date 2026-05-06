@@ -61,6 +61,8 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
     // Check if it's a "cloned" voice (placeholder logic - usually based on ID prefix or metadata)
     const isCloned = voice.id.startsWith('cloned_') || voice.description.toLowerCase().includes('celebridade') || voice.description.toLowerCase().includes('dublagem');
     
+    const conversionStartTime = Date.now();
+    
     if (isCloned && !showCloneWarning) {
       setShowCloneWarning(true);
       setSelectedVoice(voice);
