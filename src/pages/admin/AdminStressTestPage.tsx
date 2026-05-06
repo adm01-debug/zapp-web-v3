@@ -63,6 +63,7 @@ export default function AdminStressTestPage() {
   const [confirmText, setConfirmText] = useState('');
   const [runId, setRunId] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<number>(0);
+  const [throughputData, setThroughputData] = useState<{ time: string, msgSec: number }[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   const evo = useEvolutionApi();
