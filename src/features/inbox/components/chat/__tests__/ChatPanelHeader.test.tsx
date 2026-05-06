@@ -57,10 +57,14 @@ const baseProps = {
   onSpeedChange: vi.fn(),
 };
 
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
-  <BrowserRouter>
-    <TooltipProvider>{children}</TooltipProvider>
-  </BrowserRouter>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <TooltipProvider>{children}</TooltipProvider>
+    </BrowserRouter>
+  </QueryClientProvider>
 );
 
 describe('ChatPanelHeader', () => {
