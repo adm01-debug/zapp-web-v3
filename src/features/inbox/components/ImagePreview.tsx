@@ -184,10 +184,8 @@ export function MessageImage({ src, alt = 'Image', refreshKey }: MessageImagePro
       </motion.div>
 
       <AnimatePresence>
-        {showPreview && (
-          {effectiveSrc && (
-            <ImagePreview src={effectiveSrc} alt={alt} onClose={() => setShowPreview(false)} />
-          )}
+        {showPreview && effectiveSrc && (
+          <ImagePreview src={effectiveSrc} alt={alt} onClose={() => setShowPreview(false)} />
         )}
       </AnimatePresence>
     </>
