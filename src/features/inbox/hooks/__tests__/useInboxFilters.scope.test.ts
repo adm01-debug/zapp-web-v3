@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useInboxFilters } from '../useInboxFilters';
 import { MemoryRouter } from 'react-router-dom';
@@ -8,6 +8,7 @@ import React from 'react';
 // Mocking dependencies
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
+    rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
@@ -57,12 +58,16 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 describe('useInboxFilters - Scope Logic', () => {
+  beforeEach(() => {
+    vi.stubGlobal('location', { search: '', hash: '' });
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn()
+    });
+  });
+
   it('reads scope from URL correctly and overrides localStorage', () => {
-    // Setup URL with 'department'
-    const searchParams = new URLSearchParams('scope=department');
-    vi.stubGlobal('location', { search: '?' + searchParams.toString(), hash: '' });
-    
-    // Setup localStorage with 'mine'
+    vi.stubGlobal('location', { search: '?scope=department', hash: '' });
     const localStorageMock = {
       getItem: vi.fn((key) => key === 'inbox_scope' ? 'mine' : null),
       setItem: vi.fn()
@@ -72,9 +77,8 @@ describe('useInboxFilters - Scope Logic', () => {
     const { result } = renderHook(() => useInboxFilters({ 
       conversations: mockConversations as any, 
       profileId: 'agent-1' 
-    }), { wrapper: ({ children }) => React.createElement(QueryClientProvider, { client: queryClient }, React.createElement(MemoryRouter, { initialEntries: ['/inbox?scope=department'] }, children)) });
+    }), { wrapper });
     
-    // Should favor URL 'department' over localStorage 'mine'
     expect(result.current.scope).toBe('department');
   });
 
@@ -118,6 +122,6 @@ describe('useInboxFilters - Scope Logic', () => {
     });
     
     const filtered = result.current.filteredConversations;
-    expect(filtered.length).toBe(3); // Mostra tudo (mine, dept, waiting) na aba abertos em scope='all'
+    expect(filtered.length).toBe(3);
   });
 });
