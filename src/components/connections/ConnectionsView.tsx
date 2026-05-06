@@ -192,7 +192,7 @@ export function ConnectionsView() {
                     <Loader2 className="w-3 h-3 animate-spin" />
                     <span className="font-medium">Aguardando leitura do QR Code...</span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Etapa 2 de 3: Conectando dispositivo via WhatsApp Web</p>
+                  <p className="text-[10px] text-muted-foreground" data-testid="reconnect-step-label">Etapa 2 de 3: Conectando dispositivo via WhatsApp Web</p>
                   <p className="text-[10px] text-muted-foreground italic">Mantenha o celular próximo e conectado à internet</p>
                 </div>
                 {qrCodeDialog.expiresAt && <QrCountdown expiresAt={qrCodeDialog.expiresAt} />}
