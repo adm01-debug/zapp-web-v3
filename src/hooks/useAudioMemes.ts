@@ -266,7 +266,7 @@ export function useAudioMemes(open: boolean) {
   }, []);
 
   return {
-    memes, loading, uploading, playingId, pendingUpload,
+    memes, loading, syncing, syncError, uploading, playingId, pendingUpload,
     audioRef, fileInputRef,
     handlePreview, handleFileSelect, handleConfirmUpload,
     handleCancelUpload, handleSend, toggleFavorite,
