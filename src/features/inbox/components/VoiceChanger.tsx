@@ -64,11 +64,9 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
     cleanup();
     setSelectedVoice(voice);
     setIsConverting(true);
-    setConversionProgress(5); // Início imediato
+    setConversionProgress(5);
 
     try {
-      // Progress simulation based on standard API lifecycle (STS doesn't have native progress hooks in standard fetch)
-      // but we can reflect phases
       const progressSteps = [15, 30, 45, 60, 75, 85];
       let currentStep = 0;
       const progressInterval = setInterval(() => {
@@ -80,7 +78,7 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
 
       const formData = new FormData();
       formData.append('audio', audioBlob, 'audio.webm');
-      formData.append('voice_preset', voice.id); // Adjusted to match backend 'voice_preset' key
+      formData.append('voice_preset', voice.id); 
       if (showCloneWarning) formData.append('authorized', 'true');
 
       const response = await fetch(
