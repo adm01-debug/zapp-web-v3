@@ -25,6 +25,8 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
   const [mainTab, setMainTab] = useState<MainTab>('open');
   const [subTab, setSubTab] = useState<SubTab>('attending');
   const [showAll, setShowAll] = useState(false);
+  const [scope, setScope] = useState<'mine' | 'department' | 'all'>('mine');
+  const [departmentAgentIds, setDepartmentAgentIds] = useState<string[]>([]);
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
   const [showOnlyRetrying, setShowOnlyRetrying] = useState(false);
@@ -185,9 +187,17 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
           if (statusFilter === 'unread' && c.unreadCount === 0) return false;
 
           if (subTab === 'attending') {
-            if (showAll) return true;
-            return assignedOf(c.contact.id, c.contact.assigned_to) === profileId;
-          } 
+            // Backwards-compat: showAll === true equivale a scope='all'
+            const effectiveScope = showAll ? 'all' : scope;
+            if (effectiveScope === 'all') return true;
+            const assignee = assignedOf(c.contact.id, c.contact.assigned_to);
+            if (effectiveScope === 'department') {
+              if (!assignee) return false;
+              return departmentAgentIds.includes(assignee);
+            }
+            // 'mine'
+            return assignee === profileId;
+          }
           
           if (subTab === 'waiting') {
             return !assignedOf(c.contact.id, c.contact.assigned_to);
@@ -329,6 +339,8 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     mainTab, 
     subTab, 
     showAll, 
+    scope,
+    departmentAgentIds,
     selectedQueueId, 
     selectedContactType, 
     showOnlyRetrying, 
@@ -380,6 +392,8 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     mainTab, setMainTab,
     subTab, setSubTab,
     showAll, setShowAll,
+    scope, setScope,
+    departmentAgentIds, setDepartmentAgentIds,
     selectedQueueId, setSelectedQueueId,
     selectedContactType, handleContactTypeChange,
     showOnlyRetrying, setShowOnlyRetrying,
