@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from 'fs';
-import { join, extname } from 'path';
+import { join, extname, relative } from 'path';
 import { DS_CONFIG } from './ds-config';
 
 const { WHITELIST, VARIANTS, FORBIDDEN_PATTERNS } = DS_CONFIG;
@@ -109,7 +109,7 @@ function scanDir(dir: string, results: Violation[]) {
           
           if (suggestion || priority === 'High') {
             results.push({
-              file: fullPath,
+              file: relative(process.cwd(), fullPath),
               line: index + 1,
               match: rawMatch,
               cleanMatch,
