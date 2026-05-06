@@ -303,44 +303,11 @@ export async function sendExternalMedia(
 export async function sendExternalPtv(
   remoteJid: string,
   blob: Blob,
-  opts: SendExternalOptions = {},
+  opts: SendExternalOptions & { conversationInstance?: string } = {},
 ): Promise<SendExternalResult> {
   const phone = jidToPhone(remoteJid);
   if (!phone) throw new Error('Contato sem JID válido para envio.');
-  const instance = opts.instanceName || DEFAULT_INSTANCE;
-
-  const safeKey = remoteJid.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const fileName = `${safeKey}/${Date.now()}.mp4`;
-
-  let signedUrl: string | null = null;
-  let attempts = 0;
-  const maxAttempts = 3;
-
-  while (attempts < maxAttempts) {
-    try {
-      attempts++;
-      const { error: uploadError } = await supabase.storage
-        .from('whatsapp-media')
-        .upload(fileName, blob, { contentType: 'video/mp4', upsert: true });
-        
-      if (uploadError) throw uploadError;
-
-      const { data: signed, error: signError } = await supabase.storage
-        .from('whatsapp-media')
-        .createSignedUrl(fileName, 3600);
-        
-      if (signError || !signed?.signedUrl) throw signError || new Error('Falha ao gerar URL assinada');
-      
-      signedUrl = signed.signedUrl;
-      break;
-    } catch (err) {
-      log.warn(`Tentativa ${attempts} de upload/sign PTV falhou`, err);
-      if (attempts >= maxAttempts) throw err;
-      await new Promise(r => setTimeout(r, 1000 * attempts));
-    }
-  }
-
-  if (opts.onProgress) opts.onProgress(50);
+  const instance = opts.instanceName || opts.conversationInstance || DEFAULT_INSTANCE;
 
   const localVideoUrl = URL.createObjectURL(blob);
   const optimistic = makeOptimisticBubble(remoteJid, '[Vídeo-nota]', {
@@ -349,13 +316,18 @@ export async function sendExternalPtv(
     contactAvatar: opts.contactAvatar,
   });
 
+  if (opts.onProgress) opts.onProgress(50);
+
+  // DOC ARCHITECTURE PERFECTION: Use multipart/form-data to send blob directly
+  // to the Edge Function, which proxies it to Evolution API.
+  const formData = new FormData();
+  formData.append('action', 'send-ptv');
+  formData.append('instanceName', instance);
+  formData.append('number', phone);
+  formData.append('video', blob, 'video.mp4');
+
   const { data, error } = await supabase.functions.invoke('evolution-api', {
-    body: {
-      action: 'send-ptv',
-      instanceName: instance,
-      number: phone,
-      video: signedUrl,
-    },
+    body: formData,
   });
 
   if (error) {
