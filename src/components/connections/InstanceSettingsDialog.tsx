@@ -18,7 +18,11 @@ import { ptBR } from 'date-fns/locale';
 const log = getLogger('InstanceSettingsDialog');
 
 interface InstanceSettingsDialogProps {
-  open: boolean; onOpenChange: (open: boolean) => void; instanceName: string; connectionName: string;
+  open: boolean; 
+  onOpenChange: (open: boolean) => void; 
+  instanceName: string; 
+  connectionName: string;
+  connectionId?: string;
 }
 
 const SETTINGS_ITEMS = [
