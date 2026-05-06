@@ -172,14 +172,14 @@ function AvatarGroup({ avatars, max = 4, size = 'default', className }: AvatarGr
         <Avatar 
           key={index} 
           size={size}
-          className="ring-2 ring-black border border-white/10"
+          className="ring-2 ring-black border border-border"
         >
           <AvatarImage src={avatar.src} alt={avatar.alt} />
           <AvatarFallback>{avatar.fallback}</AvatarFallback>
         </Avatar>
       ))}
       {remainingCount > 0 && (
-        <Avatar size={size} className="ring-2 ring-black border border-white/10">
+        <Avatar size={size} className="ring-2 ring-black border border-border">
           <AvatarFallback className="bg-white/5 text-muted-foreground">
             +{remainingCount}
           </AvatarFallback>
