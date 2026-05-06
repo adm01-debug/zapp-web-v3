@@ -56,13 +56,38 @@ export function useAudioMemes(open: boolean) {
   }, []);
 
   useEffect(() => {
-    if (open) fetchMemes();
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
+    if (open) {
+      fetchMemes();
+
+      // Realtime subscription for catalog updates and use_count increment
+      const catalogChannel = supabase
+        .channel('audio-memes-catalog')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'audio_memes' },
+          () => fetchMemes()
+        )
+        .subscribe();
+
+      // Realtime subscription for individual favorites
+      const favoritesChannel = supabase
+        .channel('audio-memes-favorites')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'audio_meme_favorites' },
+          () => fetchMemes()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(catalogChannel);
+        supabase.removeChannel(favoritesChannel);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+      };
+    }
   }, [open, fetchMemes]);
 
   const handlePreview = useCallback((meme: AudioMemeItem) => {
