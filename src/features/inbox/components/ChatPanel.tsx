@@ -470,7 +470,8 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
           onLoadOlder={failuresOnly ? undefined : onLoadOlder}
           onCancelLoadOlder={failuresOnly ? undefined : onCancelLoadOlder}
           loadingOlder={failuresOnly ? false : loadingOlder}
-          hasMoreOlder={failuresOnly ? false : hasMoreOlder} isLoading={isLoading} />
+          hasMoreOlder={failuresOnly ? false : hasMoreOlder} isLoading={isLoading}
+          onAudioVoiceChange={handlers.handleAudioVoiceChange} />
 
         <ChatQuickRepliesPopover show={dialogs.quickReplies} replies={filteredQuickReplies} onSelect={handleQuickReply} onClose={() => closeDialog('quickReplies')} selectedIndex={selectedQuickReplyIndex} />
 
