@@ -64,11 +64,36 @@ export function ConnectionCard({
   const isOfficial = (connection.api_type ?? 'evolution') === 'official';
   const [officialConfigOpen, setOfficialConfigOpen] = useState(false);
   const [recheckingHealth, setRecheckingHealth] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+  const { restartInstance, getInstanceStatus } = useEvolutionApi();
   const isConnected = connection.status === 'connected';
 
   const reasonInfo = connection.health_reason ? HEALTH_REASON_LABEL[connection.health_reason] : null;
   const isPhantomLike = reasonInfo?.severe && connection.health_status !== 'healthy';
   const needsAction = isPhantomLike || connection.status === 'disconnected';
+
+  const handleReconnect = async () => {
+    if (!connection.instance_id) return;
+    setReconnecting(true);
+    try {
+      // 1. Tentar reiniciar a instância na Evolution API
+      await restartInstance(connection.instance_id);
+      
+      // 2. Aguardar um pouco para o restart processar
+      await new Promise(r => setTimeout(r, 2000));
+      
+      // 3. Forçar um health check no Supabase para atualizar o status no painel
+      await supabase.functions.invoke('connection-health-check', {
+        body: { instanceName: connection.instance_id },
+      });
+      
+      toast({ title: 'Comando enviado', description: 'A instância está sendo reiniciada.' });
+    } catch (e: unknown) {
+      toast({ title: 'Erro ao reconectar', description: e instanceof Error ? e.message : 'Erro desconhecido', variant: 'destructive' });
+    } finally {
+      setReconnecting(false);
+    }
+  };
 
   const handleRecheckNow = async () => {
     if (!connection.instance_id) return;
