@@ -175,14 +175,14 @@ export function BusinessHoursDialog({
                           </div>
                         </div>
 
-                        {hour.is_open ? (
+                        {hour.is_enabled ? (
                           <>
                             <div className="flex items-center gap-2">
                               <Label className="text-xs text-muted-foreground">De</Label>
                               <Input
                                 type="time"
-                                value={hour.open_time}
-                                onChange={(e) => updateHour(hour.day_of_week, 'open_time', e.target.value)}
+                                value={hour.start_time}
+                                onChange={(e) => updateHour(hour.day_of_week, 'start_time', e.target.value)}
                                 className="w-28"
                               />
                             </div>
@@ -190,8 +190,8 @@ export function BusinessHoursDialog({
                               <Label className="text-xs text-muted-foreground">Até</Label>
                               <Input
                                 type="time"
-                                value={hour.close_time}
-                                onChange={(e) => updateHour(hour.day_of_week, 'close_time', e.target.value)}
+                                value={hour.end_time}
+                                onChange={(e) => updateHour(hour.day_of_week, 'end_time', e.target.value)}
                                 className="w-28"
                               />
                             </div>
