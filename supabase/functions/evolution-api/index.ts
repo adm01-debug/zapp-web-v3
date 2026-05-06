@@ -328,13 +328,13 @@ serve(async (req) => {
       if (typeof finalStickerUrl === 'string') finalStickerUrl = await resolvePrivateBucketUrl(supabase, finalStickerUrl, ['whatsapp-media']);
       return await proxy(`/message/sendSticker/${instance}`, 'POST', { number: (body as any).number, sticker: finalStickerUrl });
     }
-
     if (action === 'send-list') return await proxy(`/message/sendList/${instance}`, 'POST', { number: (body as any).number, title: (body as any).title, description: (body as any).description, footer: (body as any).footer, buttonText: (body as any).buttonText, sections: (body as any).sections });
     if (action === 'send-buttons') return await proxy(`/message/sendButtons/${instance}`, 'POST', { number: (body as any).number, title: (body as any).title, description: (body as any).description, footer: (body as any).footer, buttons: (body as any).buttons });
     if (action === 'send-status') return await proxy(`/message/sendStatus/${instance}`, 'POST', body);
     if (action === 'send-template') return await proxy(`/message/sendTemplate/${instance}`, 'POST', { number: (body as any).number, template: (body as any).template });
     if (action === 'mark-read') return await proxy(`/chat/markMessageAsRead/${instance}`, 'POST', { readMessages: (body as any).readMessages || [(body as any).key] });
     if (action === 'mark-unread') return await proxy(`/chat/markMessageAsUnread/${instance}`, 'POST', { readMessages: (body as any).readMessages || [(body as any).key] });
+
     if (action === 'read-messages') {
       const remoteJid = (body as any).remoteJid || (body as any).chat;
       if (!remoteJid) {
