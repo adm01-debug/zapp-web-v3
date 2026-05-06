@@ -13064,6 +13064,10 @@ export type Database = {
           success_count: number
         }[]
       }
+      fn_test_only_accept_transfer: {
+        Args: { p_operator_name: string; p_transfer_id: string }
+        Returns: Json
+      }
       fn_transfer_comment: {
         Args: {
           p_attachments?: Json
