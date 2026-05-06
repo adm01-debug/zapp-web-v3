@@ -497,41 +497,60 @@ export function EvolutionApiIntegrationView() {
             <CardContent className="p-0">
               <ScrollArea className="h-[400px]">
                 <div className="divide-y">
-                  {healthLogs.map((log) => (
-                    <div key={log.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full ${log.status === 'success' ? 'bg-whatsapp/10' : 'bg-destructive/10'}`}>
-                          {log.status === 'success' 
-                            ? <CheckCircle2 className="w-4 h-4 text-whatsapp" /> 
-                            : <XCircle className="w-4 h-4 text-destructive" />
-                          }
+                  {healthLogs.map((log) => {
+                    const creds = credentials.find(c => c.instance_name === log.instance_name);
+                    return (
+                      <div key={log.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${log.status === 'success' ? 'bg-whatsapp/10' : 'bg-destructive/10'}`}>
+                            {log.status === 'success' 
+                              ? <CheckCircle2 className="w-4 h-4 text-whatsapp" /> 
+                              : <XCircle className="w-4 h-4 text-destructive" />
+                            }
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{log.instance_name}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {format(new Date(log.performed_at), "HH:mm:ss - dd/MM/yyyy", { locale: ptBR })}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">{log.instance_name}</p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {format(new Date(log.performed_at), "HH:mm:ss - dd/MM/yyyy", { locale: ptBR })}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right space-y-1">
-                        <div className="flex items-center gap-2 justify-end">
-                          <Badge variant="outline" className="text-[9px] h-4 font-normal">
-                            {log.response_time_ms}ms
-                          </Badge>
-                          {log.status === 'success' && (
-                            <Badge variant="secondary" className="text-[9px] h-4 font-normal bg-whatsapp/5 text-whatsapp border-whatsapp/20">
-                              {log.online_instances}/{log.total_instances} online
+                        <div className="text-right space-y-1">
+                          <div className="flex items-center gap-2 justify-end">
+                            <Badge variant="outline" className="text-[9px] h-4 font-normal">
+                              {log.response_time_ms}ms
                             </Badge>
+                            {log.status === 'success' && (
+                              <Badge variant="secondary" className="text-[9px] h-4 font-normal bg-whatsapp/5 text-whatsapp border-whatsapp/20">
+                                {log.online_instances}/{log.total_instances} online
+                              </Badge>
+                            )}
+                            {creds && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 ml-1" 
+                                title="Repetir teste"
+                                onClick={() => handleTestConnection(creds)}
+                                disabled={testing === creds.id}
+                              >
+                                {testing === creds.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="w-3 h-3" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                          {log.error_message && (
+                            <p className="text-[10px] text-destructive truncate max-w-[200px]">
+                              {log.error_message}
+                            </p>
                           )}
                         </div>
-                        {log.error_message && (
-                          <p className="text-[10px] text-destructive truncate max-w-[200px]">
-                            {log.error_message}
-                          </p>
-                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {healthLogs.length === 0 && (
                     <div className="p-8 text-center text-muted-foreground italic">
                       Nenhum log registrado ainda. Realize um teste para começar.
