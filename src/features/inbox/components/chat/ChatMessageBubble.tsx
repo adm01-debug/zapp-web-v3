@@ -268,7 +268,7 @@ export function ChatMessageBubble({
                  caption={message.content}
                  isSent={isSent}
                  refreshKey={mediaRefreshKey}
-                 isPtv={message.message_type === 'ptvMessage' || (message.media_meta as any)?.ptt === true}
+                 isPtv={message.message_type === 'ptvMessage' || (message.media_meta as any)?.ptt === true || (message.media_meta as any)?.isPtv === true}
                />
              </div>
            )}

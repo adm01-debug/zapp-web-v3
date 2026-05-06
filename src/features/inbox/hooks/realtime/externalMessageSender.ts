@@ -169,7 +169,7 @@ export async function sendExternalText(
 export async function sendExternalAudio(
   remoteJid: string,
   blob: Blob,
-  opts: SendExternalOptions & { isPtt?: boolean; conversationInstance?: string } = {},
+  opts: SendExternalOptions & { isPtt?: boolean; conversationInstance?: string; conversationId?: string } = {},
 ): Promise<SendExternalResult> {
   const phone = jidToPhone(remoteJid);
   if (!phone) throw new Error('Contato sem JID válido para envio.');
@@ -211,7 +211,7 @@ export async function sendExternalAudio(
     messageType: 'audio',
     mediaUrl: localAudioUrl,
     contactAvatar: opts.contactAvatar,
-    media_meta: { ptt: opts.isPtt ?? true }, // Store PTT intent in optimistic bubble for telemetry
+    media_meta: { ptt: opts.isPtt ?? true, conversation_id: opts.conversationId }, // Store PTT intent and conversation context for telemetry
   });
 
   const { data, error } = await supabase.functions.invoke('evolution-api', {
@@ -220,7 +220,8 @@ export async function sendExternalAudio(
       instanceName: instance,
       number: phone,
       audio: signed.signedUrl,
-      encoding: true, // Aligned with architecture doc stage 3
+      encoding: true, 
+      isPtt: opts.isPtt ?? true,
     },
   });
 
