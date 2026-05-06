@@ -123,6 +123,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<any
   'inbox-sync-status': Views.AdminInboxSyncStatusPage,
   'evo-api-health': Views.AdminEvoApiHealthPage,
   'gmail-status': Views.AdminGmailStatusPage,
+  'gmail-audit': Views.AdminGmailAuditPage,
   'sla-history': Views.SLAHistory,
 };
 
