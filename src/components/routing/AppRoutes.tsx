@@ -64,6 +64,7 @@ const AdminDevDiagnosticsPage = lazyWithRetry(() => import("@/pages/admin/AdminD
 const Install = lazyWithRetry(() => import("@/pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("@/pages/ChatPopup"));
 const InboxPage = lazyWithRetry(() => import("@/pages/inbox/InboxPage"));
+const AdminConnectionsPage = lazyWithRetry(() => import("@/pages/admin/Connections"));
 
 
 
