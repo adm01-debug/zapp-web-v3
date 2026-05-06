@@ -61,6 +61,8 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
     // Check if it's a "cloned" voice (placeholder logic - usually based on ID prefix or metadata)
     const isCloned = voice.id.startsWith('cloned_') || voice.description.toLowerCase().includes('celebridade') || voice.description.toLowerCase().includes('dublagem');
     
+    const conversionStartTime = Date.now();
+    
     if (isCloned && !showCloneWarning) {
       setShowCloneWarning(true);
       setSelectedVoice(voice);
@@ -118,7 +120,7 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
       formData.append('audio', activeBlob, 'audio.webm');
       formData.append('voice_preset', voice.id); 
       formData.append('task_id', taskId!);
-      if (showCloneWarning) formData.append('authorized', 'true');
+      formData.append('authorized', isCloned ? 'true' : 'false');
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-changer`,
@@ -152,8 +154,27 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
 
       toast.success(`Voz convertida para ${voice.name}!`);
       setShowCloneWarning(false);
+      
+      // Update telemetry for successful local delivery
+      void supabase.rpc('record_voice_telemetry', {
+        p_queue_id: taskId,
+        p_duration_ms: Date.now() - conversionStartTime,
+        p_status: 'completed'
+      });
+      
     } catch (error: any) {
       const msg = error.message || 'Erro desconhecido';
+      const conversionDuration = Date.now() - conversionStartTime;
+      
+      // Update telemetry for local failure
+      void supabase.rpc('record_voice_telemetry', {
+        p_queue_id: activeTaskId || '00000000-0000-0000-0000-000000000000',
+        p_duration_ms: conversionDuration,
+        p_status: 'failed',
+        p_error_type: msg.substring(0, 50),
+        p_error_detail: msg
+      });
+
       const MAX_RETRIES = 2;
       
       if (retryCount < MAX_RETRIES && (msg.includes('502') || msg.includes('503') || msg.includes('504'))) {

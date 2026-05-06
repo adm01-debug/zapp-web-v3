@@ -10735,6 +10735,50 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_conversion_telemetry: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          duration_ms: number | null
+          error_detail: string | null
+          error_type: string | null
+          id: string
+          preset_id: string
+          queue_id: string | null
+          status: Database["public"]["Enums"]["voice_conversion_status"]
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_detail?: string | null
+          error_type?: string | null
+          id?: string
+          preset_id: string
+          queue_id?: string | null
+          status: Database["public"]["Enums"]["voice_conversion_status"]
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_detail?: string | null
+          error_type?: string | null
+          id?: string
+          preset_id?: string
+          queue_id?: string | null
+          status?: Database["public"]["Enums"]["voice_conversion_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_conversion_telemetry_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "voice_conversion_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       warroom_alerts: {
         Row: {
           alert_type: string
@@ -11957,7 +12001,33 @@ export type Database = {
         Args: { p_email: string; p_ip?: string }
         Returns: Json
       }
-      claim_next_voice_task: { Args: { p_user_id: string }; Returns: string }
+      claim_next_voice_task:
+        | { Args: { p_user_id: string }; Returns: string }
+        | {
+            Args: { p_worker_id: string }
+            Returns: {
+              attempts: number
+              conversation_id: string | null
+              created_at: string
+              error_message: string | null
+              id: string
+              input_audio_url: string
+              last_attempt_at: string | null
+              message_id: string | null
+              output_audio_url: string | null
+              started_at: string | null
+              status: Database["public"]["Enums"]["conversion_status"]
+              updated_at: string
+              user_id: string
+              voice_preset: string
+            }[]
+            SetofOptions: {
+              from: "*"
+              to: "voice_conversion_queue"
+              isOneToOne: false
+              isSetofReturn: true
+            }
+          }
       cleanup_connection_status_audit: { Args: never; Returns: number }
       cleanup_dispatch_error_logs: { Args: never; Returns: number }
       cleanup_evolution_fallback_events: { Args: never; Returns: number }
@@ -12300,6 +12370,16 @@ export type Database = {
           p_ip?: string
           p_success?: boolean
           p_user_agent?: string
+        }
+        Returns: undefined
+      }
+      record_voice_telemetry: {
+        Args: {
+          p_duration_ms: number
+          p_error_detail?: string
+          p_error_type?: string
+          p_queue_id: string
+          p_status: Database["public"]["Enums"]["voice_conversion_status"]
         }
         Returns: undefined
       }
@@ -13199,6 +13279,7 @@ export type Database = {
         | "google_calendar"
         | "google_drive"
         | "dropbox"
+      voice_conversion_status: "pending" | "processing" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -13381,6 +13462,7 @@ export const Constants = {
         "google_drive",
         "dropbox",
       ],
+      voice_conversion_status: ["pending", "processing", "completed", "failed"],
     },
   },
 } as const
