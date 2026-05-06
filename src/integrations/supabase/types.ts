@@ -11957,15 +11957,7 @@ export type Database = {
         Args: { p_email: string; p_ip?: string }
         Returns: Json
       }
-      claim_next_voice_task: {
-        Args: { p_user_id: string }
-        Returns: {
-          attempts: number
-          id: string
-          input_audio_url: string
-          voice_preset: string
-        }[]
-      }
+      claim_next_voice_task: { Args: { p_user_id: string }; Returns: string }
       cleanup_connection_status_audit: { Args: never; Returns: number }
       cleanup_dispatch_error_logs: { Args: never; Returns: number }
       cleanup_evolution_fallback_events: { Args: never; Returns: number }
