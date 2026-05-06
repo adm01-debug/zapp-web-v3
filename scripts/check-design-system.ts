@@ -2,12 +2,12 @@ import { readFileSync, readdirSync, statSync, writeFileSync } from 'fs';
 import { join, extname } from 'path';
 
 const FORBIDDEN_PATTERNS = [
-  { pattern: /#[0-9a-fA-F]{3,6}/, label: 'Hex Color' },
-  { pattern: /bg-\[(#[0-9a-fA-F]+|rgb|hsl)/, label: 'Arbitrary BG' },
-  { pattern: /text-\[(#[0-9a-fA-F]+|rgb|hsl)/, label: 'Arbitrary Text' },
-  { pattern: /border-\[(#[0-9a-fA-F]+|rgb|hsl)/, label: 'Arbitrary Border' },
-  { pattern: /bg-(white|black|red|blue|green|yellow|slate|gray|zinc|neutral|stone|orange|amber|lime|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose)-[0-9]+/, label: 'Literal Color' },
-  { pattern: /font-(inter|sans|mono|serif)/, label: 'Literal Font' },
+  { pattern: /#([0-9a-fA-F]{3,6})\b/, label: 'Hex Color' },
+  { pattern: /bg-\[(#(?:[0-9a-fA-F]{3,6})|rgb|hsl|rgba|hsla)/, label: 'Arbitrary BG' },
+  { pattern: /text-\[(#(?:[0-9a-fA-F]{3,6})|rgb|hsl|rgba|hsla)/, label: 'Arbitrary Text' },
+  { pattern: /border-\[(#(?:[0-9a-fA-F]{3,6})|rgb|hsl|rgba|hsla)/, label: 'Arbitrary Border' },
+  { pattern: /\b(bg|text|border)-(white|black|red|blue|green|yellow|slate|gray|zinc|neutral|stone|orange|amber|lime|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose)-[0-9]+\b/, label: 'Literal Color' },
+  { pattern: /\bfont-(inter|sans|mono|serif)\b/, label: 'Literal Font' },
 ];
 
 const IGNORED_FILES = [
