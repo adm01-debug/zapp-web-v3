@@ -145,7 +145,7 @@ describe('ChatInputArea Interaction Transitions', () => {
     expect(micButton).toBeDisabled();
   });
 
-  it('deve exibir estado de carregando durante o envio', () => {
+  it('deve exibir estado de carregando durante o envio', async () => {
     (useChatInputLogic as any).mockReturnValue({
       attachments: [],
       hasText: true,
@@ -159,7 +159,9 @@ describe('ChatInputArea Interaction Transitions', () => {
 
     renderWithProvider(<ChatInputArea {...defaultProps} isSending={true} />);
     
-    expect(screen.getByLabelText(/Enviar mensagem/i)).toBeDisabled();
+    // Send button should be disabled via props.isSending
+    const sendButton = screen.getByLabelText(/Enviando mensagem/i);
+    expect(sendButton).toBeDisabled();
     expect(screen.getByText(/Enviando/i)).toBeDefined();
   });
 });
