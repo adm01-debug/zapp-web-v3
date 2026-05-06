@@ -23,22 +23,20 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
   const prefix = prefixMatch ? prefixMatch[0] : '';
   const cleanMatch = match.replace(variantPrefixRegex, '').trim();
 
-  if (label === 'Raw Hex' || label === 'Arbitrary Color') {
-    const lowerClean = cleanMatch.toLowerCase();
-    const isWhite = lowerClean.includes('white') || lowerClean.includes('#ffffff') || lowerClean.includes('#fff');
-    const isBlack = lowerClean.includes('black') || lowerClean.includes('#000000') || lowerClean.includes('#000');
-    
+  const isWhite = cleanMatch.includes('white') || cleanMatch.includes('#ffffff') || cleanMatch.includes('#fff');
+  const isBlack = cleanMatch.includes('black') || cleanMatch.includes('#000000') || cleanMatch.includes('#000');
+
+  if (label === 'Raw Hex' || label === 'Arbitrary Color' || label === 'Literal Color') {
     if (isWhite) {
        const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-background' : (cleanMatch.startsWith('text-') ? 'text-foreground' : (cleanMatch.startsWith('border-') ? 'border-border' : undefined));
        const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
        return { cleanMatch, prefix, suggestion: `${prefix}${baseReplacement || 'bg-background'}`, priority: 'High', replacement };
     }
     if (isBlack) {
-       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-foreground' : (cleanMatch.startsWith('text-') ? 'text-background' : undefined);
+       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-foreground' : (cleanMatch.startsWith('text-') ? 'text-background' : (cleanMatch.startsWith('border-') ? 'border-border' : undefined));
        const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
        return { cleanMatch, prefix, suggestion: `${prefix}${baseReplacement || 'bg-foreground'}`, priority: 'High', replacement };
     }
-    return { cleanMatch, prefix, suggestion: 'Use theme tokens (primary, secondary, etc.)', priority: 'High' };
   }
 
   if (label === 'Literal Color') {
