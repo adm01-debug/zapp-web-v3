@@ -279,6 +279,8 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             onSubTabChange={inboxFilters.setSubTab}
             showAll={inboxFilters.showAll}
             onShowAllChange={inboxFilters.setShowAll}
+            scope={inboxFilters.scope}
+            onScopeChange={inboxFilters.setScope}
             selectedQueueId={inboxFilters.selectedQueueId}
             onQueueChange={inboxFilters.setSelectedQueueId}
           />
