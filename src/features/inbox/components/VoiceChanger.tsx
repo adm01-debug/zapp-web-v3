@@ -91,10 +91,11 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
       clearInterval(progressInterval);
 
       if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+        const err = await response.json().catch(() => ({ error: 'Erro na conversão' }));
         throw new Error(err.error || `Erro ${response.status}`);
       }
 
+      setConversionProgress(100);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       setConvertedAudioUrl(url);
