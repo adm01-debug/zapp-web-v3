@@ -12085,9 +12085,11 @@ export type Database = {
           qr_code: string | null
           reconnect_interval_seconds: number | null
           retry_count: number | null
+          retry_strategy: Json | null
           routing_mode: string
           status: string | null
           updated_at: string
+          webhook_url: string | null
           whatsapp_instance_id: string | null
         }
         Insert: {
@@ -12117,9 +12119,11 @@ export type Database = {
           qr_code?: string | null
           reconnect_interval_seconds?: number | null
           retry_count?: number | null
+          retry_strategy?: Json | null
           routing_mode?: string
           status?: string | null
           updated_at?: string
+          webhook_url?: string | null
           whatsapp_instance_id?: string | null
         }
         Update: {
@@ -12149,9 +12153,11 @@ export type Database = {
           qr_code?: string | null
           reconnect_interval_seconds?: number | null
           retry_count?: number | null
+          retry_strategy?: Json | null
           routing_mode?: string
           status?: string | null
           updated_at?: string
+          webhook_url?: string | null
           whatsapp_instance_id?: string | null
         }
         Relationships: [
