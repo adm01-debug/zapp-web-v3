@@ -40,11 +40,16 @@ export default function AdminConnectionsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id ?? null);
       if (user?.id) {
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id);
-        setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
+        try {
+          const { data: roles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id);
+          setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
+        } catch (e) {
+          console.error("Erro ao verificar roles:", e);
+          setIsAdmin(false);
+        }
       } else {
         setIsAdmin(false);
       }
