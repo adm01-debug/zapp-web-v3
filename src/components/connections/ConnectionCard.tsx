@@ -51,7 +51,7 @@ interface ConnectionCardProps {
   syncingHistory: string | null;
   onShowQrCode: (c: WhatsAppConnection) => void;
   onCopyId: (id: string) => void;
-  onDisconnect: (c: WhatsAppConnection) => void;
+  onDisconnect: (c: WhatsAppConnection) => Promise<void>;
   onSetDefault: (id: string) => void;
   onSetApiType?: (c: WhatsAppConnection, api_type: 'evolution' | 'official') => void;
   onDelete: (c: WhatsAppConnection) => void;
