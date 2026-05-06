@@ -83,6 +83,7 @@ export async function runStressTest(opts: RunOptions): Promise<RunSummary> {
           messageId: out.messageId,
           detail: out.detail,
           ts: Date.now(),
+          accessibility: out.accessibility,
         });
       } catch (err) {
         failed++;
