@@ -20,11 +20,11 @@ export function useEvolutionMessaging(
   const sendMediaMessage = useCallback((params: SendMessageParams) =>
     callApi('send-media', params), [callApi]);
 
-  const sendAudioMessage = useCallback((instanceName: string, number: string, mediaUrl: string, options?: { encoding?: boolean; delay?: number }) =>
+  const sendAudioMessage = useCallback((instanceName: string, number: string, mediaUrl: string, options?: { encoding?: boolean; delay?: number; idempotencyKey?: string }) =>
     callApi('send-audio', { instanceName, number, mediaUrl, ...options }), [callApi]);
 
-  const sendStickerMessage = useCallback((instanceName: string, number: string, sticker: string) =>
-    callApi('send-sticker', { instanceName, number, sticker }), [callApi]);
+  const sendStickerMessage = useCallback((instanceName: string, number: string, sticker: string, options?: { idempotencyKey?: string }) =>
+    callApi('send-sticker', { instanceName, number, sticker, ...options }), [callApi]);
 
   const sendLocationMessage = useCallback((params: SendMessageParams) =>
     callApi('send-location', params), [callApi]);
