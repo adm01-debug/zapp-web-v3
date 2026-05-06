@@ -145,8 +145,15 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
 
     return (
       <div ref={ref}>
-        <div className="space-y-2">
-          <motion.div whileHover={{ scale: 1.02 }} className="relative rounded-md overflow-hidden max-w-full w-auto cursor-pointer bg-card" onClick={() => setShowFullscreen(true)}>
+        <div className={cn("space-y-2", isPtv && "flex flex-col items-center")}>
+          <motion.div 
+            whileHover={{ scale: 1.02 }} 
+            className={cn(
+              "relative overflow-hidden w-auto cursor-pointer bg-card",
+              isPtv ? "w-[240px] h-[240px] rounded-full border-2 border-primary/20" : "rounded-md max-w-full"
+            )} 
+            onClick={() => setShowFullscreen(true)}
+          >
             {(!isLoaded || refresh.isRefreshing) && (
               <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center" aria-busy={refresh.isRefreshing || undefined}>
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -155,7 +162,14 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
             {effectiveUrl && (
               <video
                 key={effectiveUrl}
-                src={effectiveUrl} className="w-full max-h-[400px] object-cover rounded-md" muted={isMuted} loop playsInline
+                src={effectiveUrl} 
+                className={cn(
+                  "object-cover",
+                  isPtv ? "w-full h-full" : "w-full max-h-[400px] rounded-md"
+                )} 
+                muted={isMuted} 
+                loop 
+                playsInline
                 onLoadedData={() => setIsLoaded(true)}
                 onError={refresh.onError}
                 onMouseEnter={(e) => { e.currentTarget.play(); setIsPlaying(true); }}
