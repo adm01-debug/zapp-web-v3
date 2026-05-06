@@ -9,7 +9,7 @@ describe("Design System Auditor", () => {
 
   test("should map hex colors to semantic tokens", () => {
     const { replacement } = getSuggestion("Raw Hex", "#ef4444");
-    expect(replacement).toBe("destructive");
+    expect(replacement).toBe("bg-destructive");
   });
 
   test("should justify known technical cases as VALID", () => {
