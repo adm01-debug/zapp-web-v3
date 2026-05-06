@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useInboxFilters } from '../useInboxFilters';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
 // Mocking dependencies
@@ -39,8 +40,20 @@ const mockConversations = [
   }
 ];
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 const wrapper = ({ children }: { children: React.ReactNode }) => {
-  return React.createElement(MemoryRouter, null, children);
+  return React.createElement(
+    QueryClientProvider,
+    { client: queryClient },
+    React.createElement(MemoryRouter, null, children)
+  );
 };
 
 describe('useInboxFilters - Scope Logic', () => {
