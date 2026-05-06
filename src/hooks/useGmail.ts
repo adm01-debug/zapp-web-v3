@@ -14,11 +14,12 @@
  * - Watch renewal check
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
 import { gmailMappers } from '@/utils/gmailMappers';
 import { type GmailMessage } from './gmail/gmailTypes';
+import { GMAIL_MOCKS } from './gmail/gmailMocks';
 import { 
   GmailAccount, 
   GmailTokenInfo, 
