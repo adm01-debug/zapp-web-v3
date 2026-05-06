@@ -46,15 +46,23 @@ serve(async (req) => {
   const pathAction = pathParts[pathParts.length - 1];
 
   let _bodyCache: Record<string, unknown> | null = null;
-  const json = async () => {
-    if (_bodyCache !== null) return _bodyCache;
+  let _formDataCache: FormData | null = null;
+
+  const getParsedBody = async () => {
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("multipart/form-data")) {
+      if (_formDataCache) return { isMultipart: true, data: _formDataCache };
+      _formDataCache = await req.formData();
+      return { isMultipart: true, data: _formDataCache };
+    }
+    if (_bodyCache !== null) return { isMultipart: false, data: _bodyCache };
     try { _bodyCache = await req.json(); } catch { _bodyCache = {}; }
-    return _bodyCache!;
+    return { isMultipart: false, data: _bodyCache! };
   };
 
-  const bodyForAction = await json();
-  const action = (pathAction === 'evolution-api' && bodyForAction.action)
-    ? String(bodyForAction.action) : pathAction;
+  const { isMultipart, data: bodyForAction } = await getParsedBody();
+  const action = (pathAction === 'evolution-api' && !isMultipart && (bodyForAction as Record<string, unknown>).action)
+    ? String((bodyForAction as Record<string, unknown>).action) : pathAction;
 
   // Idempotency key for `/message/*` sends. Accepts (in priority):
   //  1. `Idempotency-Key` HTTP header (frontend → invokeEvolutionWithRetry)
