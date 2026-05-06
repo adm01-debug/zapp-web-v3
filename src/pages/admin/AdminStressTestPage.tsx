@@ -35,6 +35,7 @@ import {
   type StressResult, type StressRunStatus, type StressTaskType,
 } from '@/lib/stressTest/types';
 import { buildBalancedPlan, preloadLibraries, sampleFor } from '@/lib/stressTest/mediaSamplers';
+import { checkUrlAccessibility } from '@/lib/stressTest/accessibilityChecker';
 import { getLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 
