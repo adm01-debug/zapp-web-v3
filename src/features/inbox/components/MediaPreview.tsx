@@ -83,6 +83,8 @@ interface VideoPreviewProps {
   isSent: boolean;
   /** When provided, allows auto-refreshing the video src on 410/403 errors. */
   refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
+  /** Whether this is a circular video-note (ptv) */
+  isPtv?: boolean;
 }
 
 export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
