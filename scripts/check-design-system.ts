@@ -94,30 +94,30 @@ function scanDir(dir: string, results: Violation[]) {
 
       FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
         const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
-        // Pattern inside quotes or delimiters
-        const fullPattern = new RegExp(`(?<=['"\`\\s])${variantsPart}${pattern.source}(?=['"\`\\s])|(?<=['"\`\\s])${variantsPart}${pattern.source}$|^${variantsPart}${pattern.source}(?=['"\`\\s])|^${variantsPart}${pattern.source}$`, 'g');
-        const matches = line.matchAll(fullPattern);
+        // Match word-like chunks and check if they match our pattern
+        const words = line.matchAll(/[a-zA-Z0-9:#\-\[\]]+/g);
         
-        for (const match of matches) {
-          const rawMatch = match[0].trim();
-          if (!rawMatch) continue;
-
-          const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
-          
-          if (label === 'Literal Color' && WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`))) continue;
-          
-          if (suggestion || priority === 'High') {
-            results.push({
-              file: fullPath,
-              line: index + 1,
-              match: rawMatch,
-              cleanMatch,
-              prefix,
-              label,
-              suggestion,
-              replacement,
-              priority
-            });
+        for (const match of words) {
+          const rawMatch = match[0];
+          const fullPattern = new RegExp(`^${variantsPart}${pattern.source}$`);
+          if (fullPattern.test(rawMatch)) {
+            const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
+            
+            if (label === 'Literal Color' && WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`))) continue;
+            
+            if (suggestion || priority === 'High') {
+              results.push({
+                file: fullPath,
+                line: index + 1,
+                match: rawMatch,
+                cleanMatch,
+                prefix,
+                label,
+                suggestion,
+                replacement,
+                priority
+              });
+            }
           }
         }
       });
