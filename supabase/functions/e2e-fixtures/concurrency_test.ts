@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!
+const supabaseUrl = "https://allrjhkpuscmgbsnmjlv.supabase.co"
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsbHJqaGtwdXNjbWdic25tamx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NDc3NDQsImV4cCI6MjA4MTMyMzc0NH0.7S2yN87sjm22J9DXC7Njo7UaXQ2tHk6XMJheNVqHA74"
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 Deno.test("fn_accept_transfer atomicity test", async () => {
@@ -24,8 +24,6 @@ Deno.test("fn_accept_transfer atomicity test", async () => {
     )
   )
 
-  console.log(`First result sample: ${JSON.stringify(results[0])}`)
-
   const successes = results.filter(r => r.data && r.data.ok === true)
   const failures = results.filter(r => r.data && r.data.ok === false)
   const errors = results.filter(r => r.error)
@@ -35,6 +33,8 @@ Deno.test("fn_accept_transfer atomicity test", async () => {
   console.log(`Errors: ${errors.length}`)
 
   if (successes.length !== 1) {
-    throw new Error(`Race condition detected! Successes: ${successes.length}. Errors sample: ${JSON.stringify(errors[0])}`)
+    throw new Error(`Race condition detected! Successes: ${successes.length}. Error sample: ${JSON.stringify(errors[0])}`)
   }
+  
+  console.log("Test Passed: Atomicity confirmed.")
 })
