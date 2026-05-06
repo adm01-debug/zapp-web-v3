@@ -3459,6 +3459,27 @@ export type Database = {
           },
         ]
       }
+      conversation_reads: {
+        Row: {
+          conversation_id: string
+          last_read_message_id: string | null
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          last_read_message_id?: string | null
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          last_read_message_id?: string | null
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_sla: {
         Row: {
           contact_id: string | null
@@ -3708,6 +3729,130 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      conversation_transfers: {
+        Row: {
+          accepted_at: string | null
+          category: string | null
+          completed_at: string | null
+          contact_id: string | null
+          contact_name: string | null
+          context_messages: Json | null
+          context_summary: string | null
+          created_at: string | null
+          escalated_at: string | null
+          expires_at: string | null
+          first_response_at: string | null
+          id: string
+          idempotency_key: string | null
+          parent_transfer_id: string | null
+          priority: number | null
+          reason: string
+          remote_jid: string
+          resolution_notes: string | null
+          resolution_type: string | null
+          source_conversation_id: string | null
+          source_instance: string
+          source_message_id: string | null
+          source_operator: string | null
+          status: string | null
+          tags: string[] | null
+          target_conversation_id: string | null
+          target_instance: string
+          target_operator: string | null
+          ticket_number: number
+          transfer_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          category?: string | null
+          completed_at?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          context_messages?: Json | null
+          context_summary?: string | null
+          created_at?: string | null
+          escalated_at?: string | null
+          expires_at?: string | null
+          first_response_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          parent_transfer_id?: string | null
+          priority?: number | null
+          reason: string
+          remote_jid: string
+          resolution_notes?: string | null
+          resolution_type?: string | null
+          source_conversation_id?: string | null
+          source_instance: string
+          source_message_id?: string | null
+          source_operator?: string | null
+          status?: string | null
+          tags?: string[] | null
+          target_conversation_id?: string | null
+          target_instance: string
+          target_operator?: string | null
+          ticket_number?: number
+          transfer_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          category?: string | null
+          completed_at?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          context_messages?: Json | null
+          context_summary?: string | null
+          created_at?: string | null
+          escalated_at?: string | null
+          expires_at?: string | null
+          first_response_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          parent_transfer_id?: string | null
+          priority?: number | null
+          reason?: string
+          remote_jid?: string
+          resolution_notes?: string | null
+          resolution_type?: string | null
+          source_conversation_id?: string | null
+          source_instance?: string
+          source_message_id?: string | null
+          source_operator?: string | null
+          status?: string | null
+          tags?: string[] | null
+          target_conversation_id?: string | null
+          target_instance?: string
+          target_operator?: string | null
+          ticket_number?: number
+          transfer_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_parent_transfer_id_fkey"
+            columns: ["parent_transfer_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_source_instance_fkey"
+            columns: ["source_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
       }
       crisis_room_alerts: {
         Row: {
@@ -5292,6 +5437,38 @@ export type Database = {
         }
         Relationships: []
       }
+      instance_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          instance_name: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          instance_name: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          instance_name?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instance_members_instance_name_fkey"
+            columns: ["instance_name"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
       instance_processing_pauses: {
         Row: {
           auto_paused: boolean
@@ -5334,6 +5511,93 @@ export type Database = {
           reason?: string
           trigger_count?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      instance_registry: {
+        Row: {
+          auto_reply_enabled: boolean | null
+          auto_reply_message: string | null
+          bitrix_integration: Json | null
+          business_hours_enabled: boolean | null
+          config: Json | null
+          created_at: string | null
+          department: string | null
+          display_name: string | null
+          id: string
+          instance_name: string
+          is_active: boolean | null
+          max_concurrent_chats: number | null
+          n8n_workflows: Json | null
+          notes: string | null
+          operator_email: string | null
+          operator_name: string | null
+          operator_phone: string | null
+          operator_since: string | null
+          phone_number: string | null
+          sla_first_response_minutes: number | null
+          sla_resolution_hours: number | null
+          slot_name: string | null
+          updated_at: string | null
+          usage_type: string | null
+          webhook_enabled: boolean | null
+          webhook_url: string | null
+        }
+        Insert: {
+          auto_reply_enabled?: boolean | null
+          auto_reply_message?: string | null
+          bitrix_integration?: Json | null
+          business_hours_enabled?: boolean | null
+          config?: Json | null
+          created_at?: string | null
+          department?: string | null
+          display_name?: string | null
+          id?: string
+          instance_name: string
+          is_active?: boolean | null
+          max_concurrent_chats?: number | null
+          n8n_workflows?: Json | null
+          notes?: string | null
+          operator_email?: string | null
+          operator_name?: string | null
+          operator_phone?: string | null
+          operator_since?: string | null
+          phone_number?: string | null
+          sla_first_response_minutes?: number | null
+          sla_resolution_hours?: number | null
+          slot_name?: string | null
+          updated_at?: string | null
+          usage_type?: string | null
+          webhook_enabled?: boolean | null
+          webhook_url?: string | null
+        }
+        Update: {
+          auto_reply_enabled?: boolean | null
+          auto_reply_message?: string | null
+          bitrix_integration?: Json | null
+          business_hours_enabled?: boolean | null
+          config?: Json | null
+          created_at?: string | null
+          department?: string | null
+          display_name?: string | null
+          id?: string
+          instance_name?: string
+          is_active?: boolean | null
+          max_concurrent_chats?: number | null
+          n8n_workflows?: Json | null
+          notes?: string | null
+          operator_email?: string | null
+          operator_name?: string | null
+          operator_phone?: string | null
+          operator_since?: string | null
+          phone_number?: string | null
+          sla_first_response_minutes?: number | null
+          sla_resolution_hours?: number | null
+          slot_name?: string | null
+          updated_at?: string | null
+          usage_type?: string | null
+          webhook_enabled?: boolean | null
+          webhook_url?: string | null
         }
         Relationships: []
       }
@@ -10403,6 +10667,47 @@ export type Database = {
           },
         ]
       }
+      transfer_comments: {
+        Row: {
+          attachments: Json | null
+          author_instance: string
+          author_name: string
+          content: string
+          created_at: string | null
+          id: string
+          mentioned_users: string[] | null
+          transfer_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          author_instance: string
+          author_name: string
+          content: string
+          created_at?: string | null
+          id?: string
+          mentioned_users?: string[] | null
+          transfer_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          author_instance?: string
+          author_name?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          mentioned_users?: string[] | null
+          transfer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_comments_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_devices: {
         Row: {
           browser: string | null
@@ -11865,6 +12170,25 @@ export type Database = {
         }
         Relationships: []
       }
+      v_pending_transfers: {
+        Row: {
+          alta: number | null
+          mais_antiga: string | null
+          pending: number | null
+          sla_estourado: number | null
+          target_instance: string | null
+          urgente: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
       v_top_searches_7d: {
         Row: {
           any_vector: boolean | null
@@ -11876,6 +12200,26 @@ export type Database = {
           zero_result_count: number | null
         }
         Relationships: []
+      }
+      v_transfer_metrics: {
+        Row: {
+          avg_min: number | null
+          completed: number | null
+          missed_sla: number | null
+          pending: number | null
+          target_instance: string | null
+          total: number | null
+          within_sla: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
       }
       whatsapp_connections_agent: {
         Row: {
@@ -12084,6 +12428,106 @@ export type Database = {
       }
       decrypt_gmail_token: { Args: { p_encrypted: string }; Returns: string }
       encrypt_gmail_token: { Args: { p_token: string }; Returns: string }
+      fn_accept_transfer: {
+        Args: { p_operator_name: string; p_transfer_id: string }
+        Returns: Json
+      }
+      fn_complete_transfer: {
+        Args: { p_notes: string; p_transfer_id: string; p_type?: string }
+        Returns: {
+          accepted_at: string | null
+          category: string | null
+          completed_at: string | null
+          contact_id: string | null
+          contact_name: string | null
+          context_messages: Json | null
+          context_summary: string | null
+          created_at: string | null
+          escalated_at: string | null
+          expires_at: string | null
+          first_response_at: string | null
+          id: string
+          idempotency_key: string | null
+          parent_transfer_id: string | null
+          priority: number | null
+          reason: string
+          remote_jid: string
+          resolution_notes: string | null
+          resolution_type: string | null
+          source_conversation_id: string | null
+          source_instance: string
+          source_message_id: string | null
+          source_operator: string | null
+          status: string | null
+          tags: string[] | null
+          target_conversation_id: string | null
+          target_instance: string
+          target_operator: string | null
+          ticket_number: number
+          transfer_type: string | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversation_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      fn_create_transfer: {
+        Args: {
+          p_category?: string
+          p_idempotency_key?: string
+          p_jid: string
+          p_operator?: string
+          p_priority?: number
+          p_reason: string
+          p_source: string
+          p_summary?: string
+          p_tags?: string[]
+          p_target: string
+          p_type?: string
+        }
+        Returns: {
+          accepted_at: string | null
+          category: string | null
+          completed_at: string | null
+          contact_id: string | null
+          contact_name: string | null
+          context_messages: Json | null
+          context_summary: string | null
+          created_at: string | null
+          escalated_at: string | null
+          expires_at: string | null
+          first_response_at: string | null
+          id: string
+          idempotency_key: string | null
+          parent_transfer_id: string | null
+          priority: number | null
+          reason: string
+          remote_jid: string
+          resolution_notes: string | null
+          resolution_type: string | null
+          source_conversation_id: string | null
+          source_instance: string
+          source_message_id: string | null
+          source_operator: string | null
+          status: string | null
+          tags: string[] | null
+          target_conversation_id: string | null
+          target_instance: string
+          target_operator: string | null
+          ticket_number: number
+          transfer_type: string | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversation_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       fn_register_sticky_assignment: {
         Args: {
           p_agent_profile_id: string
@@ -12100,6 +12544,48 @@ export type Database = {
           p_queue_id?: string
         }
         Returns: Json
+      }
+      fn_return_transfer: {
+        Args: { p_reason: string; p_transfer_id: string }
+        Returns: {
+          accepted_at: string | null
+          category: string | null
+          completed_at: string | null
+          contact_id: string | null
+          contact_name: string | null
+          context_messages: Json | null
+          context_summary: string | null
+          created_at: string | null
+          escalated_at: string | null
+          expires_at: string | null
+          first_response_at: string | null
+          id: string
+          idempotency_key: string | null
+          parent_transfer_id: string | null
+          priority: number | null
+          reason: string
+          remote_jid: string
+          resolution_notes: string | null
+          resolution_type: string | null
+          source_conversation_id: string | null
+          source_instance: string
+          source_message_id: string | null
+          source_operator: string | null
+          status: string | null
+          tags: string[] | null
+          target_conversation_id: string | null
+          target_instance: string
+          target_operator: string | null
+          ticket_number: number
+          transfer_type: string | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversation_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       fn_sticky_upsert: {
         Args: {
