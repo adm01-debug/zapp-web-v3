@@ -3480,6 +3480,68 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_registry: {
+        Row: {
+          created_at: string | null
+          current_instance_name: string | null
+          external_id: string
+          id: string
+          last_transfer_id: string | null
+          metadata: Json | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_instance_name?: string | null
+          external_id: string
+          id?: string
+          last_transfer_id?: string | null
+          metadata?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_instance_name?: string | null
+          external_id?: string
+          id?: string
+          last_transfer_id?: string | null
+          metadata?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_registry_current_instance_name_fkey"
+            columns: ["current_instance_name"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "conversation_registry_current_instance_name_fkey"
+            columns: ["current_instance_name"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "conversation_registry_last_transfer_id_fkey"
+            columns: ["last_transfer_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_registry_last_transfer_id_fkey"
+            columns: ["last_transfer_id"]
+            isOneToOne: false
+            referencedRelation: "v_sla_breach_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_sla: {
         Row: {
           contact_id: string | null
@@ -3764,6 +3826,7 @@ export type Database = {
           target_instance: string
           target_operator: string | null
           ticket_number: number
+          transfer_reason_key: string | null
           transfer_type: string | null
           updated_at: string | null
         }
@@ -3800,6 +3863,7 @@ export type Database = {
           target_instance: string
           target_operator?: string | null
           ticket_number?: number
+          transfer_reason_key?: string | null
           transfer_type?: string | null
           updated_at?: string | null
         }
@@ -3836,6 +3900,7 @@ export type Database = {
           target_instance?: string
           target_operator?: string | null
           ticket_number?: number
+          transfer_reason_key?: string | null
           transfer_type?: string | null
           updated_at?: string | null
         }
@@ -5646,6 +5711,45 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "departments"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      instance_supervisors: {
+        Row: {
+          created_at: string | null
+          id: string
+          instance_name: string | null
+          notification_preferences: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          instance_name?: string | null
+          notification_preferences?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          instance_name?: string | null
+          notification_preferences?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instance_supervisors_instance_name_fkey"
+            columns: ["instance_name"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+          {
+            foreignKeyName: "instance_supervisors_instance_name_fkey"
+            columns: ["instance_name"]
+            isOneToOne: false
+            referencedRelation: "v_admin_sla_dashboard"
+            referencedColumns: ["instance_name"]
           },
         ]
       }
@@ -12776,6 +12880,7 @@ export type Database = {
           target_instance: string
           target_operator: string | null
           ticket_number: number
+          transfer_reason_key: string | null
           transfer_type: string | null
           updated_at: string | null
         }
@@ -12833,6 +12938,7 @@ export type Database = {
           target_instance: string
           target_operator: string | null
           ticket_number: number
+          transfer_reason_key: string | null
           transfer_type: string | null
           updated_at: string | null
         }
@@ -12908,6 +13014,7 @@ export type Database = {
           target_instance: string
           target_operator: string | null
           ticket_number: number
+          transfer_reason_key: string | null
           transfer_type: string | null
           updated_at: string | null
         }
