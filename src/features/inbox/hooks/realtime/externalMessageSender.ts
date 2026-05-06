@@ -79,6 +79,7 @@ function makeOptimisticBubble(
     transcription_status: null,
     is_deleted: false,
     contactAvatar: opts.contactAvatar ?? null,
+    media_meta: opts.media_meta ?? null,
   };
 }
 
