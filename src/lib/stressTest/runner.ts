@@ -17,6 +17,7 @@ export interface DispatchInput {
 export interface DispatchOutput {
   messageId?: string;
   detail?: string;
+  accessibility?: StressResult['accessibility'];
 }
 
 export interface RunOptions {
