@@ -29,7 +29,7 @@
       "@/sla": ["./src/features/sla"]
     },
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "strictFunctionTypes": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
