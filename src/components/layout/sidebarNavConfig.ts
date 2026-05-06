@@ -143,7 +143,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'webhook-overview', icon: BarChart3, label: 'Overview Webhook', requiredRoles: ['admin'] },
   { id: 'ai-usage', icon: BrainCircuit, label: 'Consumo IA' },
   { id: 'public-api', icon: Code2, label: 'API Pública' },
-  { id: 'gmail-webhook', icon: Webhook, label: 'Gmail Webhook' },
+  { id: 'gmail-webhook', icon: Webhook, label: 'Email Webhook' },
   { id: 'media-migration', icon: HardDrive, label: 'Migração Mídia' },
   { id: 'sicoob-bridge', icon: Landmark, label: 'Sicoob Bridge' },
   { id: 'evolution-monitor', icon: Activity, label: 'Monitor Evolution' },
@@ -156,8 +156,8 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'dispatch-errors-history', icon: ScrollText, label: 'Histórico Erros Dispatch', requiredRoles: ['supervisor'] },
   { id: 'inbox-sync-status', icon: Activity, label: 'Status do Inbox', requiredRoles: ['supervisor'] },
   { id: 'evo-api-health', icon: HeartPulse, label: 'Evo API Health', requiredRoles: ['admin'] },
-  { id: 'gmail-status', icon: Mail, label: 'Status Gmail', requiredRoles: ['admin'] },
-  { id: 'gmail-audit', icon: ScrollText, label: 'Auditoria Gmail', requiredRoles: ['admin'] },
+  { id: 'email-status', icon: Mail, label: 'Status Email', requiredRoles: ['admin'] },
+  { id: 'email-audit', icon: ScrollText, label: 'Auditoria Email', requiredRoles: ['admin'] },
 ] as const;
 
 // ── Backward-compat re-exports ────────────────────────────

@@ -65,7 +65,7 @@ export default function AdminGmailAuditPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Auditoria do Gmail</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Auditoria do Email</h1>
         <p className="text-muted-foreground">Histórico de solicitações de revalidação e integridade.</p>
       </div>
 

@@ -50,7 +50,7 @@ export function GmailWebhookMonitor() {
 
       setStats({ total: totalThreads || 0, unread: unreadThreads || 0 });
     } catch (err) {
-      log.warn('Failed to load Gmail data:', err);
+      log.warn('Failed to load Email data:', err);
     } finally {
       setLoading(false);
     }
@@ -101,7 +101,7 @@ export function GmailWebhookMonitor() {
         <Card>
           <CardContent className="pt-4 pb-4 text-center">
             <p className="text-2xl font-bold text-primary">{accounts.length}</p>
-            <p className="text-xs text-muted-foreground">Contas Gmail</p>
+            <p className="text-xs text-muted-foreground">Contas de Email</p>
           </CardContent>
         </Card>
         <Card>
@@ -132,7 +132,7 @@ export function GmailWebhookMonitor() {
         <CardContent>
           {accounts.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Nenhuma conta Gmail conectada. Configure em Integrações → Gmail.
+              Nenhuma conta de Email conectada. Configure em Integrações → Email.
             </p>
           ) : (
             <div className="space-y-3">
