@@ -163,7 +163,7 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
         
         {isSent && onVoiceChange && (
           <VoiceChanger 
-            audioBlob={new Blob([])} // Will need real blob from URL or trigger download
+            audioUrl={resolvedUrl}
             onVoiceChanged={(blob) => onVoiceChange(messageId, blob)}
           />
         )}
