@@ -60,6 +60,8 @@ export function useAudioMemes(open: boolean) {
   useEffect(() => {
     if (open) {
       fetchMemes();
+      setSyncing(true);
+      setSyncError(null);
 
       // Realtime subscription for catalog updates and use_count increment
       const catalogChannel = supabase
@@ -67,9 +69,19 @@ export function useAudioMemes(open: boolean) {
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'audio_memes' },
-          () => fetchMemes()
+          () => {
+            log.info('Catalog update received');
+            fetchMemes();
+          }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            setSyncing(false);
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            setSyncError('Erro na sincronização do catálogo');
+            setSyncing(false);
+          }
+        });
 
       // Realtime subscription for individual favorites
       const favoritesChannel = supabase
@@ -77,9 +89,16 @@ export function useAudioMemes(open: boolean) {
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'audio_meme_favorites' },
-          () => fetchMemes()
+          () => {
+            log.info('Favorites update received');
+            fetchMemes();
+          }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            setSyncError('Erro na sincronização de favoritos');
+          }
+        });
 
       return () => {
         supabase.removeChannel(catalogChannel);
