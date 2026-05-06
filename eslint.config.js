@@ -21,7 +21,6 @@ export default tseslint.config(
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
-      "tailwindcss": tailwind,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
