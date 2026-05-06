@@ -123,8 +123,8 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               <YAxis fontSize={10} />
               <RechartsTooltip />
               <Legend wrapperStyle={{ fontSize: '10px' }} />
-              <Bar dataKey="sent" name="Sucesso" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="failed" name="Falha" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="sent" name="Sucesso" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="failed" name="Falha" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -141,7 +141,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               <XAxis dataKey="name" fontSize={10} />
               <YAxis fontSize={10} />
               <RechartsTooltip />
-              <Line type="monotone" dataKey="latency" name="Latência" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="latency" name="Latência" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -165,7 +165,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.name === 'Sucesso' ? '#10b981' : '#ef4444'} />
+                    <Cell key={`cell-${index}`} fill={entry.name === 'Sucesso' ? 'hsl(var(--success))' : 'hsl(var(--destructive))'} />
                   ))}
                 </Pie>
                 <RechartsTooltip />
@@ -189,7 +189,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               <XAxis type="number" fontSize={10} />
               <YAxis dataKey="name" type="category" fontSize={10} width={60} />
               <RechartsTooltip />
-              <Bar dataKey="latency" name="Latência" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="latency" name="Latência" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -235,8 +235,8 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
                     <XAxis dataKey="voice_preset" fontSize={10} />
                     <YAxis fontSize={10} />
                     <RechartsTooltip />
-                    <Bar dataKey="total_requests" name="Total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="failed_requests" name="Falhas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="total_requests" name="Total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="failed_requests" name="Falhas" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

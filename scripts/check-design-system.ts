@@ -116,10 +116,41 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
       return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
     }
     if (cleanMatch === 'font-mono') {
-      return { cleanMatch, prefix, suggestion: 'Remove literal font; inherit from global typography', priority: 'Medium', replacement: '' };
+      // Logic for technical data: check context if possible, otherwise flag as Medium for review
+      return { cleanMatch, prefix, suggestion: 'Ensure font-mono is only for technical data (IDs, logs, metrics)', priority: 'Medium' };
     }
     return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low', replacement: '' };
   }
+  
+  // Custom justification for known valid technical cases
+  const technicalCases: Record<string, string> = {
+    '#f1592a': 'PDF brand color',
+    '#2b72c4': 'Microsoft Word brand color',
+    '#1d6f42': 'Microsoft Excel brand color',
+    '#d24726': 'Microsoft PowerPoint brand color',
+    '#f8bc34': 'Archive/Zip file color',
+    '#000000': 'OLED Black (Intentional for Dark Mode)',
+    '#4285f4': 'Google Blue',
+    '#34a853': 'Google Green',
+    '#fbbc05': 'Google Yellow',
+    '#ea4335': 'Google Red',
+    '#25d366': 'WhatsApp Green',
+    '#4285F4': 'Google Blue',
+    '#34A853': 'Google Green',
+    '#FBBC05': 'Google Yellow',
+    '#EA4335': 'Google Red',
+    '#25D366': 'WhatsApp Green',
+    '#1a73e8': 'Google UI Blue',
+    '#f29900': 'Google UI Warning',
+    '#e37400': 'Google UI Orange',
+    '#d93025': 'Google UI Error',
+  };
+
+  const justification = technicalCases[cleanMatch.toLowerCase().replace(/bg-|text-|border-|\[|\]/g, '')];
+  if (justification) {
+    return { cleanMatch, prefix, suggestion: `VALID: ${justification}`, priority: 'Low' };
+  }
+
   return { cleanMatch, prefix, suggestion: 'Check design system tokens', priority: 'Low' };
 }
 
@@ -307,16 +338,7 @@ if (require.main === module) {
         totalSubstitutions += fileSubstitutions;
         if (!dryRun) {
           writeFileSync(file, currentContent);
-          console.log(`✅ Updated ${file} (${fileSubstitutions} unique patterns replaced)`);
-        }
-      }
-      
-      if (hasChanges) {
-        totalFilesChanged++;
-        totalSubstitutions += fileSubstitutions;
-        if (!dryRun) {
-          writeFileSync(file, lines.join('\n'));
-          console.log(`✅ Updated ${file} (${fileSubstitutions} changes)`);
+          console.log(`✅ Updated ${file} (${fileSubstitutions} changes applied)`);
         }
       }
     });
