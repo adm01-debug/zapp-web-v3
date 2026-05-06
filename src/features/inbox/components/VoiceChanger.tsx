@@ -152,8 +152,27 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
 
       toast.success(`Voz convertida para ${voice.name}!`);
       setShowCloneWarning(false);
+      
+      // Update telemetry for successful local delivery
+      void supabase.rpc('record_voice_telemetry', {
+        p_queue_id: taskId,
+        p_duration_ms: Date.now() - conversionStartTime,
+        p_status: 'completed'
+      });
+      
     } catch (error: any) {
       const msg = error.message || 'Erro desconhecido';
+      const conversionDuration = Date.now() - conversionStartTime;
+      
+      // Update telemetry for local failure
+      void supabase.rpc('record_voice_telemetry', {
+        p_queue_id: activeTaskId || '00000000-0000-0000-0000-000000000000',
+        p_duration_ms: conversionDuration,
+        p_status: 'failed',
+        p_error_type: msg.substring(0, 50),
+        p_error_detail: msg
+      });
+
       const MAX_RETRIES = 2;
       
       if (retryCount < MAX_RETRIES && (msg.includes('502') || msg.includes('503') || msg.includes('504'))) {
