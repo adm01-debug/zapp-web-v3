@@ -40,10 +40,6 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({ item, current
   
   const hasAccess = !item.requiredRoles || item.requiredRoles.some(role => hasRole(role));
 
-  if (!hasAccess) {
-    return null;
-  }
-
   const Icon = item.icon;
   const isActive = currentView === item.id;
   const shortcut = item.shortcut || SHORTCUT_MAP[item.id];
@@ -52,6 +48,10 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({ item, current
   const handleMouseEnter = useCallback(() => {
     if (!isActive) prefetch(item.id);
   }, [isActive, item.id, prefetch]);
+
+  if (!hasAccess) {
+    return null;
+  }
 
   const button = (
     <button
