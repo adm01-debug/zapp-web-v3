@@ -331,7 +331,6 @@ serve(async (req) => {
     if (action === 'mark-unread') return await proxy(`/chat/markMessageAsUnread/${instance}`, 'POST', { readMessages: (body as any).readMessages || [(body as any).key] });
 
     if (action === 'read-messages') {
-
       const remoteJid = (body as any).remoteJid || (body as any).chat;
       if (!remoteJid) {
         return new Response(JSON.stringify({ ok: false, skipped: true, reason: 'missing remoteJid' }), {
@@ -351,6 +350,7 @@ serve(async (req) => {
         });
       }
     }
+
     if (action === 'archive-chat') return await proxy(`/message/archiveChat/${instance}`, 'POST', { lastMessage: (body as any).lastMessage, chat: (body as any).chat, archive: (body as any).archive ?? true });
     if (action === 'delete-message') return await proxy(`/message/delete/${instance}`, 'DELETE', { id: (body as any).id, remoteJid: (body as any).remoteJid, fromMe: (body as any).fromMe });
     if (action === 'update-message') return await proxy(`/message/update/${instance}`, 'PUT', { number: (body as any).number, key: (body as any).key, text: (body as any).text });
