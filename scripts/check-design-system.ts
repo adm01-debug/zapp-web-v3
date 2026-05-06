@@ -76,11 +76,14 @@ function scanDir(dir: string, results: Violation[]) {
         FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
           const match = line.match(pattern);
           if (match && !line.includes('// @ds-ignore')) {
+            const { suggestion, priority } = getSuggestion(label, match[0]);
             results.push({
               file: fullPath,
               line: index + 1,
               match: match[0],
-              label
+              label,
+              suggestion,
+              priority
             });
           }
         });
