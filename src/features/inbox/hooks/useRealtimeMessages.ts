@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, externalSupabase } from '@/integrations/supabase/external';
 import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { getLogger } from '@/lib/logger';
@@ -122,7 +122,9 @@ export function useRealtimeMessages() {
     if (uniqueIds.length === 0) return [] as ConversationContact[];
     const fetchedContacts: ConversationContact[] = [];
     for (const idsChunk of chunkArray(uniqueIds, CONTACT_FETCH_CHUNK_SIZE)) {
-      const { data, error: contactsError } = await dbFrom('contacts')
+      const client = externalSupabase || supabase;
+      const { data, error: contactsError } = await client
+        .from('contacts')
         .select('*')
         .in('id', idsChunk);
       if (contactsError) throw contactsError;
@@ -192,18 +194,20 @@ export function useRealtimeMessages() {
   );
 
   const fetchConversations = useCallback(async () => {
+    const client = externalSupabase || supabase;
     try {
       setLoading(true);
       setError(null);
-      const { data: seededContacts, error: contactsError } = await dbFrom('contacts')
+      const { data: seededContacts, error: contactsError } = await client
+        .from('contacts')
         .select('*')
         .order('updated_at', { ascending: false })
         .limit(SEEDED_CONTACT_LIMIT);
       if (contactsError) throw contactsError;
       
-      const { data: recentMessages, error: messagesError } = await dbFrom('messages')
+      const { data: recentMessages, error: messagesError } = await client
+        .from('messages')
         .select('*')
-        
         .order('created_at', { ascending: false })
         .limit(RECENT_MESSAGES_LIMIT);
       if (messagesError) throw messagesError;
@@ -222,9 +226,12 @@ export function useRealtimeMessages() {
 
   useEffect(() => {
     fetchConversations();
+    const client = externalSupabase || supabase;
+    log.info('Subscribing to realtime', { source: externalSupabase ? 'external' : 'internal' });
+    
     logMessagesSubscribe('useRealtimeMessages', { event: 'INSERT', table: dbTable('messages') });
     logMessagesSubscribe('useRealtimeMessages', { event: 'UPDATE', table: dbTable('messages') });
-    const channel = supabase.channel('messages-realtime')
+    const channel = client.channel('messages-realtime')
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
@@ -239,7 +246,7 @@ export function useRealtimeMessages() {
       },
         wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate))
       .subscribe((status) => { log.debug('Subscription status', { status }); });
-    return () => { supabase.removeChannel(channel); };
+    return () => { client.removeChannel(channel); };
   }, [fetchConversations, handleNewMessage, handleMessageUpdate]);
 
   const sendMessage = async (contactId: string, content: string, messageType: string = 'text', mediaUrl?: string, mediaPayload?: string) => {
@@ -265,7 +272,8 @@ export function useRealtimeMessages() {
   };
 
   const markAsRead = async (contactId: string) => {
-    const { error } = await dbFrom('messages')
+    const client = externalSupabase || supabase;
+    const { error } = await client.from('messages')
       .update({ is_read: true })
       .eq('contact_id', contactId)
       .eq('sender', 'contact')

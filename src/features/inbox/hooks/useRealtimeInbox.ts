@@ -4,7 +4,7 @@ import { useMessages } from '@/features/inbox';
 import { useRealtimeMessages, type ConversationWithMessages, type ConversationContact, type RealtimeMessage } from '@/features/inbox';
 import { useExternalConversations, useExternalMessages } from '@/hooks/useExternalEvolution';
 import { useAuth } from '@/features/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, externalSupabase } from '@/integrations/supabase/external';
 import { getLogger } from '@/lib/logger';
 import { Conversation, Message } from '@/types/chat';
 import { toast } from 'sonner';
@@ -204,7 +204,9 @@ export function useRealtimeInbox() {
     if (USE_EXTERNAL_DB) { setSelectedContactFallback(null); return; }
     let cancelled = false;
     const loadSelectedContact = async () => {
-      const { data, error } = await dbFrom('contacts')
+      const client = externalSupabase || supabase;
+      const { data, error } = await client
+        .from('contacts')
         .select('*')
         .eq('id', selectedContactId)
         .maybeSingle();
