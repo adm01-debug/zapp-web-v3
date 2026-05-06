@@ -83,10 +83,11 @@ export const useThemeAudit = () => {
       }
     };
 
-    // Delay audit to allow all initializers to run
-    const timer = setTimeout(runAudit, 2500);
+    const timer = setTimeout(runAudit, 2000);
     return () => clearTimeout(timer);
   }, [resolvedTheme]);
+
+  return result;
 };
 
 function getElementPath(el: Element): string {
