@@ -28,6 +28,8 @@ export function QrCountdown({ expiresAt }: QrCountdownProps) {
 
   return (
     <div
+      data-testid="qr-countdown"
+      data-seconds={seconds}
       className={
         'flex items-center justify-center gap-1.5 text-xs font-medium ' +
         (isLow ? 'text-destructive' : 'text-muted-foreground')
