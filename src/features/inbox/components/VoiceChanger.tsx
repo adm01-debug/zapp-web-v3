@@ -18,9 +18,11 @@ interface VoiceChangerProps {
   audioUrl?: string;
   onVoiceChanged: (newBlob: Blob) => void;
   disabled?: boolean;
+  messageId?: string;
+  conversationId?: string;
 }
 
-export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: VoiceChangerProps) {
+export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, messageId, conversationId }: VoiceChangerProps) {
   const [open, setOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<ElevenLabsVoice | null>(null);
   const [isConverting, setIsConverting] = useState(false);
@@ -82,10 +84,12 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: 
       const { data: task, error: queueError } = await supabase
         .from('voice_conversion_queue')
         .insert({
-          input_audio_url: 'blob-input', 
+          input_audio_url: audioUrl || 'blob-input', 
           voice_preset: voice.id,
           status: 'pending',
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          message_id: messageId,
+          conversation_id: conversationId
         })
         .select()
         .single();

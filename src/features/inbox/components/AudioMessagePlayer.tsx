@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Loader2, FileText, Volume2, RefreshCw, Sparkles, CheckCircle2, AlertCircle, Wand2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -11,6 +12,7 @@ import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogg
 import { AudioVolumeControl } from './AudioVolumeControl';
 import { dbFrom, dbTable } from '@/integrations/datasource/db';
 import { VoiceChanger } from './VoiceChanger';
+import { Badge } from '@/components/ui/badge';
 
 interface AudioMessagePlayerProps {
   audioUrl: string;
@@ -21,11 +23,14 @@ interface AudioMessagePlayerProps {
   /** When provided, enables Evolution `getMediaBase64` fallback for expired URLs (410/403). */
   refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
   onVoiceChange?: (messageId: string, newBlob: Blob) => void;
+  conversationId?: string;
 }
 
-export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey, onVoiceChange }: AudioMessagePlayerProps) {
+export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTranscription, transcriptionStatus: initialStatus, refreshKey, onVoiceChange, conversationId }: AudioMessagePlayerProps) {
   const [transcription, setTranscription] = useState<string | null>(existingTranscription || null);
   const [transcriptionStatus, setTranscriptionStatus] = useState<string>(initialStatus || 'pending');
+  const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [showTranscription, setShowTranscription] = useState(!!existingTranscription);
 
@@ -51,6 +56,49 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
       ).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [messageId]);
+
+  // Realtime subscription for voice conversion status
+  useEffect(() => {
+    const channel = supabase
+      .channel(`voice-conversion-${messageId}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'voice_conversion_queue', 
+        filter: `message_id=eq.${messageId}` 
+      }, (payload) => {
+        const newData = payload.new as any;
+        if (newData.status) setVoiceStatus(newData.status);
+        if (newData.error_message) setVoiceError(newData.error_message);
+        
+        if (newData.status === 'completed' && newData.output_audio_url && onVoiceChange) {
+          // If it's a new audio, we might want to refresh?
+          // For now just show it's done
+          toast({ title: 'Conversão concluída', description: 'A voz do áudio foi alterada com sucesso.' });
+        }
+      })
+      .subscribe();
+      
+    // Initial fetch for current status
+    const fetchStatus = async () => {
+      const { data } = await supabase
+        .from('voice_conversion_queue')
+        .select('status, error_message')
+        .eq('message_id', messageId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (data) {
+        setVoiceStatus(data.status);
+        setVoiceError(data.error_message);
+      }
+    };
+    
+    fetchStatus();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [messageId, onVoiceChange]);
 
   const handleTranscribe = async () => {
     if (isTranscribing || transcriptionStatus === 'processing') return;
@@ -164,8 +212,35 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
         {isSent && onVoiceChange && (
           <VoiceChanger 
             audioUrl={resolvedUrl}
+            messageId={messageId}
+            conversationId={conversationId}
             onVoiceChanged={(blob) => onVoiceChange(messageId, blob)}
           />
+        )}
+
+        {voiceStatus && voiceStatus !== 'completed' && (
+          <div className="flex items-center gap-2 ml-1">
+            {voiceStatus === 'processing' ? (
+              <Badge variant="outline" className="animate-pulse bg-primary/10 text-primary border-primary/20 text-[9px] h-5">
+                <Wand2 className="w-2.5 h-2.5 mr-1" /> Alterando voz...
+              </Badge>
+            ) : voiceStatus === 'pending' ? (
+              <Badge variant="outline" className="bg-muted text-muted-foreground text-[9px] h-5">
+                Na fila...
+              </Badge>
+            ) : voiceStatus === 'failed' ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="destructive" className="text-[9px] h-5 cursor-pointer">
+                    <AlertCircle className="w-2.5 h-2.5 mr-1" /> Falhou
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{voiceError || 'Erro na conversão'}</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
+          </div>
         )}
 
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>

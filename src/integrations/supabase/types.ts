@@ -10687,12 +10687,15 @@ export type Database = {
       voice_conversion_queue: {
         Row: {
           attempts: number
+          conversation_id: string | null
           created_at: string
           error_message: string | null
           id: string
           input_audio_url: string
           last_attempt_at: string | null
+          message_id: string | null
           output_audio_url: string | null
+          started_at: string | null
           status: Database["public"]["Enums"]["conversion_status"]
           updated_at: string
           user_id: string
@@ -10700,12 +10703,15 @@ export type Database = {
         }
         Insert: {
           attempts?: number
+          conversation_id?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
           input_audio_url: string
           last_attempt_at?: string | null
+          message_id?: string | null
           output_audio_url?: string | null
+          started_at?: string | null
           status?: Database["public"]["Enums"]["conversion_status"]
           updated_at?: string
           user_id: string
@@ -10713,12 +10719,15 @@ export type Database = {
         }
         Update: {
           attempts?: number
+          conversation_id?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
           input_audio_url?: string
           last_attempt_at?: string | null
+          message_id?: string | null
           output_audio_url?: string | null
+          started_at?: string | null
           status?: Database["public"]["Enums"]["conversion_status"]
           updated_at?: string
           user_id?: string
@@ -11947,6 +11956,15 @@ export type Database = {
       check_login_rate_limit: {
         Args: { p_email: string; p_ip?: string }
         Returns: Json
+      }
+      claim_next_voice_task: {
+        Args: { p_user_id: string }
+        Returns: {
+          attempts: number
+          id: string
+          input_audio_url: string
+          voice_preset: string
+        }[]
       }
       cleanup_connection_status_audit: { Args: never; Returns: number }
       cleanup_dispatch_error_logs: { Args: never; Returns: number }

@@ -112,4 +112,26 @@ describe('VoiceChanger Component - End-to-End Integration', () => {
       );
     });
   });
+  it('blocks cloned voices without explicit user authorization', async () => {
+    renderComponent();
+    
+    fireEvent.click(screen.getByTitle(/Alterar voz/i));
+    const clonedBtn = screen.getByTestId('voice-btn-cloned_sample');
+    fireEvent.click(clonedBtn);
+    
+    // Check for warning message
+    expect(screen.getByText(/Aviso de Voz Clonada/i)).toBeInTheDocument();
+    
+    // Ensure conversion hasn't started yet (no progress %)
+    expect(screen.queryByText(/[0-9]+%/)).not.toBeInTheDocument();
+    
+    // Authorize
+    const authBtn = screen.getByText(/Eu tenho autorização/i);
+    fireEvent.click(authBtn);
+    
+    // Now it should start converting
+    await waitFor(() => {
+      expect(screen.getByText(/[0-9]+%/)).toBeInTheDocument();
+    });
+  });
 });
