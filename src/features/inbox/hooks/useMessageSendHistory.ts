@@ -52,8 +52,12 @@ export function useMessageSendHistory(messageId: string | undefined, enabled: bo
     queryFn: async () => {
       if (!messageId) return { metric: null, auditEntries: [] };
 
+      // Se for um ID otimista (FATOR X), não temos métricas persistidas ainda.
+      // Tentamos extrair o ID real se disponível.
+      const isOptimistic = messageId.startsWith('optimistic:');
+
       const idempotencyKey = `msg:${messageId}`;
-      const [metricRes, auditRes] = await Promise.all([
+      const [metricRes, auditRes, outboundAuditRes] = await Promise.all([
         supabase
           .from('evolution_retry_metrics')
           .select('*')
@@ -68,9 +72,14 @@ export function useMessageSendHistory(messageId: string | undefined, enabled: bo
           .eq('entity_id', messageId)
           .order('created_at', { ascending: false })
           .limit(20),
+        supabase
+          .from('outbound_delivery_audit')
+          .select('*')
+          .or(`conversation_id.eq.${messageId},metadata->>external_id.eq.${messageId}`)
+          .order('created_at', { ascending: false })
+          .limit(10)
       ]);
 
-      const row = metricRes.data;
       const auditEntries = (auditRes.data ?? []).map((e) => ({
         id: e.id,
         action: e.action,
@@ -78,7 +87,26 @@ export function useMessageSendHistory(messageId: string | undefined, enabled: bo
         details: e.details,
       }));
 
-      if (!row) return { metric: null, auditEntries };
+      // Adiciona entradas do outbound_delivery_audit (FATOR X) ao histórico
+      const outboundEntries = (outboundAuditRes.data ?? []).map((e) => ({
+        id: e.id,
+        action: `OUTBOUND_${e.message_type.toUpperCase()}`,
+        createdAt: e.created_at,
+        details: {
+          status: e.status,
+          latency: e.latency_ms,
+          instance: e.instance_name,
+          error_code: e.error_code,
+          ...(typeof e.metadata === 'object' && e.metadata !== null ? e.metadata : {})
+        },
+      }));
+
+      const combinedAudit = [...auditEntries, ...outboundEntries].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      const row = metricRes.data;
+      if (!row) return { metric: null, auditEntries: combinedAudit };
 
       const reasons = Array.isArray(row.retry_reasons)
         ? (row.retry_reasons as unknown as RetryAttempt[])
@@ -99,7 +127,7 @@ export function useMessageSendHistory(messageId: string | undefined, enabled: bo
           createdAt: row.created_at,
           rawJson: row,
         },
-        auditEntries,
+        auditEntries: combinedAudit,
       };
     },
   });
