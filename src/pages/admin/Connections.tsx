@@ -7,33 +7,34 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Database, 
-  Globe, 
-  Webhook, 
-  Cpu, 
-  Plus, 
-  Settings, 
-  Save, 
-  Trash2, 
-  RefreshCw,
-  AlertCircle,
-  ExternalLink,
-  ShieldCheck,
-  Link
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Database, Globe, Webhook, Cpu, Plus, Settings, Save, Trash2,
+  RefreshCw, AlertCircle, ExternalLink, ShieldCheck, Link, Loader2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const DEFAULT_EXTERNAL_URL = (import.meta.env.VITE_EXTERNAL_SUPABASE_URL as string | undefined) ?? 'https://tdprnylgyrogbbhgdoik.supabase.co';
+const DEFAULT_EXTERNAL_KEY = (import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY as string | undefined) ?? '';
 
 export default function AdminConnectionsPage() {
   const [activeTab, setActiveTab] = useState('external-db');
   const [connections, setConnections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchConnections();
-  }, []);
+  const [externalUrl, setExternalUrl] = useState(DEFAULT_EXTERNAL_URL);
+  const [externalKey, setExternalKey] = useState(DEFAULT_EXTERNAL_KEY);
+  const [editOpen, setEditOpen] = useState(false);
+  const [draftUrl, setDraftUrl] = useState(DEFAULT_EXTERNAL_URL);
+  const [draftKey, setDraftKey] = useState(DEFAULT_EXTERNAL_KEY);
+  const [testing, setTesting] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { fetchConnections(); }, []);
 
   async function fetchConnections() {
     setLoading(true);
@@ -41,9 +42,73 @@ export default function AdminConnectionsPage() {
       .from('system_connections' as any)
       .select('*')
       .order('created_at', { ascending: false });
-    
-    if (!error && data) setConnections(data);
+
+    if (!error && data) {
+      setConnections(data as any[]);
+      const fatorX: any = (data as any[]).find((c: any) => c.provider === 'fator_x' || c.name === 'FATOR X');
+      if (fatorX?.config?.url) { setExternalUrl(fatorX.config.url); setDraftUrl(fatorX.config.url); }
+      if (fatorX?.config?.anon_key) { setExternalKey(fatorX.config.anon_key); setDraftKey(fatorX.config.anon_key); }
+    }
     setLoading(false);
+  }
+
+  function openEditor() {
+    setDraftUrl(externalUrl);
+    setDraftKey(externalKey);
+    setEditOpen(true);
+  }
+
+  async function testConnection(url: string, key: string): Promise<boolean> {
+    if (!url || !key) {
+      toast({ title: 'Preencha URL e chave', variant: 'destructive' });
+      return false;
+    }
+    setTesting(true);
+    try {
+      const res = await fetch(`${url.replace(/\/$/, '')}/rest/v1/?apikey=${encodeURIComponent(key)}`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}` },
+      });
+      if (res.status < 500) {
+        toast({ title: 'Conexão OK', description: `Resposta ${res.status} do endpoint.` });
+        return true;
+      }
+      toast({ title: 'Falha na conexão', description: `HTTP ${res.status}`, variant: 'destructive' });
+      return false;
+    } catch (e: any) {
+      toast({ title: 'Erro de rede', description: e?.message ?? 'falha desconhecida', variant: 'destructive' });
+      return false;
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  async function saveCredentials() {
+    setSaving(true);
+    try {
+      const payload: any = {
+        name: 'FATOR X',
+        provider: 'fator_x',
+        config: { url: draftUrl, anon_key: draftKey },
+        is_active: true,
+      };
+      const existing: any = connections.find((c: any) => c.provider === 'fator_x' || c.name === 'FATOR X');
+      const { error } = existing
+        ? await supabase.from('system_connections' as any).update(payload).eq('id', existing.id)
+        : await supabase.from('system_connections' as any).insert(payload);
+      if (error) throw error;
+      setExternalUrl(draftUrl);
+      setExternalKey(draftKey);
+      setEditOpen(false);
+      toast({
+        title: 'Credenciais salvas',
+        description: 'Para o cliente em runtime usar a nova chave, atualize também os secrets VITE_EXTERNAL_SUPABASE_URL/KEY e republique.',
+      });
+      await fetchConnections();
+    } catch (e: any) {
+      toast({ title: 'Erro ao salvar', description: e?.message ?? 'falha', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
