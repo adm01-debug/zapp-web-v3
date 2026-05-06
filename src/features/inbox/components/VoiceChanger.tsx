@@ -14,12 +14,13 @@ import { ELEVENLABS_VOICES, type ElevenLabsVoice } from './VoiceSelector';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceChangerProps {
-  audioBlob: Blob;
+  audioBlob?: Blob;
+  audioUrl?: string;
   onVoiceChanged: (newBlob: Blob) => void;
   disabled?: boolean;
 }
 
-export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChangerProps) {
+export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: VoiceChangerProps) {
   const [open, setOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<ElevenLabsVoice | null>(null);
   const [isConverting, setIsConverting] = useState(false);
