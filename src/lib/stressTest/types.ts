@@ -37,6 +37,12 @@ export interface StressResult {
   /** Detalhe leve do payload (ex.: nome do sticker, primeiros 40 chars de texto). */
   detail?: string;
   ts: number;
+  /** Accessibility check for media URLs. */
+  accessibility?: {
+    reachable: boolean;
+    latencyMs: number;
+    error?: string;
+  };
 }
 
 export type StressRunStatus = 'idle' | 'running' | 'completed' | 'aborted' | 'failed';
