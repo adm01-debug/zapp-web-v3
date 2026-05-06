@@ -75,9 +75,11 @@ Deno.serve(async (req) => {
 
     try {
       if (taskId) {
+        await supabaseClient.rpc('increment_voice_task_attempt', { task_id: taskId });
+        
         await supabaseClient
           .from('voice_conversion_queue')
-          .update({ status: 'processing' })
+          .update({ status: 'processing', last_attempt_at: new Date().toISOString() })
           .eq('id', taskId);
       }
 

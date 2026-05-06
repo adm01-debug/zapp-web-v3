@@ -53,11 +53,11 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: 
     }
   }, [stopPlayback]);
 
-  const handleConvert = async (voice: ElevenLabsVoice) => {
+  const handleConvert = async (voice: ElevenLabsVoice, retryCount = 0) => {
     // Check if it's a "cloned" voice (placeholder logic - usually based on ID prefix or metadata)
     const isCloned = voice.id.startsWith('cloned_') || voice.description.toLowerCase().includes('celebridade') || voice.description.toLowerCase().includes('dublagem');
     
-    if (isCloned) {
+    if (isCloned && !showCloneWarning) {
       setShowCloneWarning(true);
       setSelectedVoice(voice);
       return;
@@ -78,11 +78,11 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: 
       
       if (!activeBlob) throw new Error('Áudio base não encontrado');
 
-      // 1. Create task in queue
+      // 1. Create or get task in queue
       const { data: task, error: queueError } = await supabase
         .from('voice_conversion_queue')
         .insert({
-          input_audio_url: 'blob-input', // Placeholder as it's binary in this flow
+          input_audio_url: 'blob-input', 
           voice_preset: voice.id,
           status: 'pending',
           user_id: (await supabase.auth.getUser()).data.user?.id
@@ -142,9 +142,18 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: 
       setShowCloneWarning(false);
     } catch (error: any) {
       const msg = error.message || 'Erro desconhecido';
+      const MAX_RETRIES = 2;
+      
+      if (retryCount < MAX_RETRIES && (msg.includes('502') || msg.includes('503') || msg.includes('504'))) {
+        const backoff = Math.pow(2, retryCount) * 1000;
+        toast.info(`Falha temporária. Tentando novamente em ${backoff/1000}s... (Tentativa ${retryCount + 1}/${MAX_RETRIES})`);
+        setTimeout(() => handleConvert(voice, retryCount + 1), backoff);
+        return;
+      }
+
       toast.error(`Falha técnica: ${msg}`, {
         action: {
-          label: 'Tentar novamente',
+          label: 'Tentar agora',
           onClick: () => handleConvert(voice)
         }
       });
