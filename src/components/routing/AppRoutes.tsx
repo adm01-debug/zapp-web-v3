@@ -52,6 +52,7 @@ const AdminStressTestPage = lazyWithRetry(() => import("@/pages/admin/AdminStres
 const AdminInboxSyncStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminInboxSyncStatusPage"));
 const AdminExternalDbExplorerPage = lazyWithRetry(() => import("@/pages/admin/AdminExternalDbExplorerPage"));
 const AdminEvoApiHealthPage = lazyWithRetry(() => import("@/pages/admin/AdminEvoApiHealthPage"));
+const ZappWebbDemoPage = lazyWithRetry(() => import("@/pages/admin/ZappWebbDemoPage"));
 const AdminAutomationsPage = lazyWithRetry(() => import("@/pages/admin/AdminAutomationsPage"));
 const AdminAutomationLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminAutomationLogsPage"));
 const AdminWhatsAppModePage = lazyWithRetry(() => import("@/pages/admin/AdminWhatsAppModePage"));
@@ -123,6 +124,7 @@ export function AppRoutes() {
         <Route path="/admin/inbox-sync-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminInboxSyncStatusPage /></ProtectedRoute>} />
         <Route path="/admin/external-db-explorer" element={<ProtectedRoute requiredRoles={['admin', 'dev']}><AdminExternalDbExplorerPage /></ProtectedRoute>} />
         <Route path="/admin/evo-api-health" element={<ProtectedRoute requiredRoles={['admin', 'dev']}><AdminEvoApiHealthPage /></ProtectedRoute>} />
+        <Route path="/admin/zappweb-demo" element={<ProtectedRoute requiredRoles={['admin', 'dev', 'manager']}><ZappWebbDemoPage /></ProtectedRoute>} />
         <Route path="/admin/automations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationsPage /></ProtectedRoute>} />
         <Route path="/admin/automations/logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationLogsPage /></ProtectedRoute>} />
         <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
