@@ -47,7 +47,7 @@ export interface SendExternalOptions {
 }
 
 export interface SendExternalResult {
-  optimistic: RealtimeMessage;
+  optimistic: any;
   externalId: string | null;
 }
 
