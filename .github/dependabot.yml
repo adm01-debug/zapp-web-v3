@@ -1,51 +1,7 @@
-# Dependabot — atualização automática de dependências
-# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
 version: 2
 updates:
-  # NPM/pnpm/bun dependencies
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "America/Sao_Paulo"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "automated"
-    commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
-    groups:
-      production-minor-patch:
-        applies-to: version-updates
-        dependency-type: "production"
-        update-types:
-          - "minor"
-          - "patch"
-      development-all:
-        applies-to: version-updates
-        dependency-type: "development"
-        update-types:
-          - "minor"
-          - "patch"
-          - "major"
-    ignore:
-      # Ignorar majors em prod (revisar caso a caso)
-      - dependency-name: "*"
-        dependency-type: "production"
-        update-types: ["version-update:semver-major"]
-
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    labels:
-      - "dependencies"
-      - "ci"
-      - "automated"
-    commit-message:
-      prefix: "chore(ci)"
+    open-pull-requests-limit: 10
