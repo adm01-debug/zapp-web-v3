@@ -330,6 +330,7 @@ serve(async (req) => {
     if (action === 'mark-read') return await proxy(`/chat/markMessageAsRead/${instance}`, 'POST', { readMessages: (body as any).readMessages || [(body as any).key] });
     if (action === 'mark-unread') return await proxy(`/chat/markMessageAsUnread/${instance}`, 'POST', { readMessages: (body as any).readMessages || [(body as any).key] });
 
+
     if (action === 'read-messages') {
 
       const remoteJid = (body as any).remoteJid || (body as any).chat;
