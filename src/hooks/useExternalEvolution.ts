@@ -17,6 +17,7 @@ import {
 import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
 import { playerStateStore } from '@/features/inbox';
 import { recordMatch } from '@/features/inbox';
@@ -249,7 +250,7 @@ export function applyReconciliation(
 }
 
 const POLL_INTERVAL = 5000; // 5s polling
-const DEFAULT_INSTANCE = 'wpp2';
+const DEFAULT_INSTANCE = DEFAULT_WHATSAPP_INSTANCE;
 const SIDEBAR_DAYS_BACK = 7;
 const SIDEBAR_LIMIT = 200;
 const CONVERSATION_PAGE_SIZE = 100;
