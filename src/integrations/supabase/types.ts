@@ -12170,6 +12170,25 @@ export type Database = {
         }
         Relationships: []
       }
+      v_pending_transfers: {
+        Row: {
+          alta: number | null
+          mais_antiga: string | null
+          pending: number | null
+          sla_estourado: number | null
+          target_instance: string | null
+          urgente: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
       v_top_searches_7d: {
         Row: {
           any_vector: boolean | null
@@ -12181,6 +12200,26 @@ export type Database = {
           zero_result_count: number | null
         }
         Relationships: []
+      }
+      v_transfer_metrics: {
+        Row: {
+          avg_min: number | null
+          completed: number | null
+          missed_sla: number | null
+          pending: number | null
+          target_instance: string | null
+          total: number | null
+          within_sla: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
       }
       whatsapp_connections_agent: {
         Row: {
@@ -12393,6 +12432,102 @@ export type Database = {
         Args: { p_operator_name: string; p_transfer_id: string }
         Returns: Json
       }
+      fn_complete_transfer: {
+        Args: { p_notes: string; p_transfer_id: string; p_type?: string }
+        Returns: {
+          accepted_at: string | null
+          category: string | null
+          completed_at: string | null
+          contact_id: string | null
+          contact_name: string | null
+          context_messages: Json | null
+          context_summary: string | null
+          created_at: string | null
+          escalated_at: string | null
+          expires_at: string | null
+          first_response_at: string | null
+          id: string
+          idempotency_key: string | null
+          parent_transfer_id: string | null
+          priority: number | null
+          reason: string
+          remote_jid: string
+          resolution_notes: string | null
+          resolution_type: string | null
+          source_conversation_id: string | null
+          source_instance: string
+          source_message_id: string | null
+          source_operator: string | null
+          status: string | null
+          tags: string[] | null
+          target_conversation_id: string | null
+          target_instance: string
+          target_operator: string | null
+          ticket_number: number
+          transfer_type: string | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversation_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      fn_create_transfer: {
+        Args: {
+          p_category?: string
+          p_idempotency_key?: string
+          p_jid: string
+          p_operator?: string
+          p_priority?: number
+          p_reason: string
+          p_source: string
+          p_summary?: string
+          p_tags?: string[]
+          p_target: string
+          p_type?: string
+        }
+        Returns: {
+          accepted_at: string | null
+          category: string | null
+          completed_at: string | null
+          contact_id: string | null
+          contact_name: string | null
+          context_messages: Json | null
+          context_summary: string | null
+          created_at: string | null
+          escalated_at: string | null
+          expires_at: string | null
+          first_response_at: string | null
+          id: string
+          idempotency_key: string | null
+          parent_transfer_id: string | null
+          priority: number | null
+          reason: string
+          remote_jid: string
+          resolution_notes: string | null
+          resolution_type: string | null
+          source_conversation_id: string | null
+          source_instance: string
+          source_message_id: string | null
+          source_operator: string | null
+          status: string | null
+          tags: string[] | null
+          target_conversation_id: string | null
+          target_instance: string
+          target_operator: string | null
+          ticket_number: number
+          transfer_type: string | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversation_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       fn_register_sticky_assignment: {
         Args: {
           p_agent_profile_id: string
@@ -12409,6 +12544,48 @@ export type Database = {
           p_queue_id?: string
         }
         Returns: Json
+      }
+      fn_return_transfer: {
+        Args: { p_reason: string; p_transfer_id: string }
+        Returns: {
+          accepted_at: string | null
+          category: string | null
+          completed_at: string | null
+          contact_id: string | null
+          contact_name: string | null
+          context_messages: Json | null
+          context_summary: string | null
+          created_at: string | null
+          escalated_at: string | null
+          expires_at: string | null
+          first_response_at: string | null
+          id: string
+          idempotency_key: string | null
+          parent_transfer_id: string | null
+          priority: number | null
+          reason: string
+          remote_jid: string
+          resolution_notes: string | null
+          resolution_type: string | null
+          source_conversation_id: string | null
+          source_instance: string
+          source_message_id: string | null
+          source_operator: string | null
+          status: string | null
+          tags: string[] | null
+          target_conversation_id: string | null
+          target_instance: string
+          target_operator: string | null
+          ticket_number: number
+          transfer_type: string | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversation_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       fn_sticky_upsert: {
         Args: {
