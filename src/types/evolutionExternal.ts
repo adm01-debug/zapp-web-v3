@@ -69,6 +69,7 @@ export type EvolutionMessageLite = Pick<EvolutionMessage,
   | 'created_at'
   | 'status_at'
   | 'deleted_at'
+  | 'reactions'
 >;
 
 /**
