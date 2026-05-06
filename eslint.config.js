@@ -31,7 +31,6 @@ export default tseslint.config(
       // Tailwind specific rules
       "tailwindcss/no-arbitrary-value": "error",
       "tailwindcss/classnames-order": "warn",
-      "tailwindcss/enforce-shorthand": "warn",
       "tailwindcss/no-custom-classname": "off",
       // Estratégia gradual de strict typing
       "@typescript-eslint/no-explicit-any": "warn",
