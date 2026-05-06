@@ -154,6 +154,8 @@ Deno.serve(async (req) => {
     recipient_type: "individual",
     to: p.to,
     type: p.type,
+    // Note: Official Cloud API does not natively support idempotency keys in the same way 
+    // as Evolution, but we can track it in logs if needed.
   };
 
   switch (p.type) {
