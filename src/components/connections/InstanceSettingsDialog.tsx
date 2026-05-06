@@ -63,7 +63,76 @@ export function InstanceSettingsDialog({ open, onOpenChange, instanceName, conne
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loadingTab, setLoadingTab] = useState('');
 
-  useEffect(() => { if (open && instanceName) { loadSettings(); loadProfile(); } }, [open, instanceName]);
+  useEffect(() => { 
+    if (open && instanceName) { 
+      loadSettings(); 
+      loadProfile();
+      if (connectionId) {
+        loadReconnectConfig();
+      }
+    } 
+  }, [open, instanceName, connectionId]);
+
+  const loadReconnectConfig = async () => {
+    if (!connectionId) return;
+    try {
+      const { data, error } = await supabase
+        .from('whatsapp_connections')
+        .select('auto_reconnect_enabled, reconnect_interval_seconds, max_reconnect_attempts, loop_protection_active')
+        .eq('id', connectionId)
+        .single();
+      
+      if (!error && data) {
+        setReconnectConfig({
+          enabled: data.auto_reconnect_enabled ?? true,
+          interval: data.reconnect_interval_seconds ?? 30,
+          maxAttempts: data.max_reconnect_attempts ?? 5,
+          loopProtection: data.loop_protection_active ?? false
+        });
+      }
+    } catch (err) {
+      log.error('Error loading reconnect config:', err);
+    }
+  };
+
+  const saveReconnectConfig = async () => {
+    if (!connectionId) return;
+    try {
+      const { error } = await supabase
+        .from('whatsapp_connections')
+        .update({
+          auto_reconnect_enabled: reconnectConfig.enabled,
+          reconnect_interval_seconds: reconnectConfig.interval,
+          max_reconnect_attempts: reconnectConfig.maxAttempts,
+          loop_protection_active: reconnectConfig.loopProtection
+        })
+        .eq('id', connectionId);
+      
+      if (error) throw error;
+      toast.success('Política de reconexão salva!');
+    } catch (err) {
+      log.error('Error saving reconnect config:', err);
+      toast.error('Falha ao salvar política');
+    }
+  };
+
+  const loadAuditLogs = async () => {
+    if (!connectionId) return;
+    setLoadingTab('audit');
+    try {
+      const { data, error } = await supabase
+        .from('reconnection_logs')
+        .select('*')
+        .eq('connection_id', connectionId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (!error && data) setAuditLogs(data);
+    } catch (err) {
+      log.error('Error loading audit logs:', err);
+    }
+    setLoadingTab('');
+  };
 
   const loadSettings = async () => {
     setLoadingTab('settings');
