@@ -226,9 +226,12 @@ export function useRealtimeMessages() {
 
   useEffect(() => {
     fetchConversations();
+    const client = externalSupabase || supabase;
+    log.info('Subscribing to realtime', { source: externalSupabase ? 'external' : 'internal' });
+    
     logMessagesSubscribe('useRealtimeMessages', { event: 'INSERT', table: dbTable('messages') });
     logMessagesSubscribe('useRealtimeMessages', { event: 'UPDATE', table: dbTable('messages') });
-    const channel = supabase.channel('messages-realtime')
+    const channel = client.channel('messages-realtime')
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
@@ -243,7 +246,7 @@ export function useRealtimeMessages() {
       },
         wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate))
       .subscribe((status) => { log.debug('Subscription status', { status }); });
-    return () => { supabase.removeChannel(channel); };
+    return () => { client.removeChannel(channel); };
   }, [fetchConversations, handleNewMessage, handleMessageUpdate]);
 
   const sendMessage = async (contactId: string, content: string, messageType: string = 'text', mediaUrl?: string, mediaPayload?: string) => {
