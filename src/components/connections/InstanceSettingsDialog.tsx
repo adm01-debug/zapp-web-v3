@@ -45,13 +45,22 @@ const PRIVACY_OPTIONS = [
   { value: 'contact_blacklist', label: 'Contatos exceto...' }, { value: 'none', label: 'Ninguém' },
 ];
 
-export function InstanceSettingsDialog({ open, onOpenChange, instanceName, connectionName }: InstanceSettingsDialogProps) {
+export function InstanceSettingsDialog({ open, onOpenChange, instanceName, connectionName, connectionId }: InstanceSettingsDialogProps) {
   const { getSettings, setSettings, fetchProfile, updateProfileName, updateProfileStatus, updateProfilePicture, removeProfilePicture, updatePrivacySettings, findLabels, isLoading } = useEvolutionApi();
 
   const [settingsData, setSettingsData] = useState<Record<string, boolean | string>>({ rejectCall: false, msgCall: '', groupsIgnore: false, alwaysOnline: false, readMessages: false, readStatus: false, syncFullHistory: false });
   const [profile, setProfile] = useState({ name: '', status: '', pictureUrl: '' });
   const [privacy, setPrivacy] = useState<Record<string, string>>({ readreceipts: 'all', profile: 'all', status: 'contacts', online: 'all', last: 'contacts', groupadd: 'contacts' });
   const [labels, setLabels] = useState<{ id: string; name: string; color: string }[]>([]);
+  
+  // Reconnection & Audit state
+  const [reconnectConfig, setReconnectConfig] = useState({ 
+    enabled: true, 
+    interval: 30, 
+    maxAttempts: 5,
+    loopProtection: false 
+  });
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loadingTab, setLoadingTab] = useState('');
 
   useEffect(() => { if (open && instanceName) { loadSettings(); loadProfile(); } }, [open, instanceName]);
