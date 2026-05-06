@@ -117,6 +117,7 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
       setIsPlaying(true);
 
       toast.success(`Voz convertida para ${voice.name}!`);
+      setShowCloneWarning(false);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Erro desconhecido';
       toast.error(`Conversão falhou: ${msg}`, {
