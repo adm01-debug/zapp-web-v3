@@ -54,8 +54,7 @@ export function useIndexNavigation(user: User | null, loading: boolean) {
   // Deep-link: ?view=<viewId>
   useEffect(() => {
     if (deepLinkViewHandledRef.current || loading || !user) return;
-    const params = new URLSearchParams(window.location.search);
-    const targetView = params.get('view');
+    const targetView = searchParams.get('view');
     
     // Se o targetView for uma rota que agora é interna (como connections ou integrations)
     // mapeamos para o novo hub unificado.
