@@ -50,6 +50,8 @@ export default function AdminStressTestPage() {
   const [total, setTotal] = useState(200);
   const [intervalSec, setIntervalSec] = useState(5);
   const [failurePolicy, setFailurePolicy] = useState<'stop_first' | 'continue' | 'stop_after_n'>('stop_first');
+  const [agentCount, setAgentCount] = useState(1);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Run state
   const [status, setStatus] = useState<StressRunStatus>('idle');
@@ -202,7 +204,7 @@ export default function AdminStressTestPage() {
       plan,
       phone,
       instance,
-      intervalMs: intervalSec * 1000,
+      intervalMs: (intervalSec * 1000) / agentCount,
       failurePolicy,
       failureThreshold: 5,
       signal: ctrl.signal,
@@ -350,7 +352,17 @@ export default function AdminStressTestPage() {
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <Label>Política em caso de falha</Label>
+            <div className="flex items-center justify-between">
+              <Label>Política em caso de falha</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="text-xs h-6 px-2"
+              >
+                {showAdvanced ? 'Esconder Avançado' : 'Configurações Avançadas'}
+              </Button>
+            </div>
             <Select value={failurePolicy} onValueChange={(v: any) => setFailurePolicy(v)} disabled={isRunning}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -360,6 +372,24 @@ export default function AdminStressTestPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {showAdvanced && (
+            <div className="space-y-2 md:col-span-2 p-4 border rounded-lg bg-muted/30">
+              <Label htmlFor="agentCount">Simular Múltiplos Atendentes (Paralelismo)</Label>
+              <Input 
+                id="agentCount" 
+                type="number" 
+                min={1} 
+                max={5} 
+                value={agentCount}
+                onChange={(e) => setAgentCount(Math.max(1, Math.min(5, Number(e.target.value) || 1)))}
+                disabled={isRunning}
+              />
+              <p className="text-xs text-muted-foreground">
+                Divide o lote entre {agentCount} "threads" de envio simultâneo.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
