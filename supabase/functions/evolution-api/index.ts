@@ -112,12 +112,12 @@ serve(async (req) => {
       }
     }
 
-
     if (action === 'create-instance') return await proxy('/instance/create', 'POST', { instanceName: instance, qrcode: (body as any).qrcode ?? true, integration: (body as any).integration || 'WHATSAPP-BAILEYS', token: (body as any).token, number: (body as any).number, businessId: (body as any).businessId, wabaId: (body as any).wabaId, phoneNumberId: (body as any).phoneNumberId, webhook: (body as any).webhook, chatwoot: (body as any).chatwoot, typebot: (body as any).typebot, proxy: (body as any).proxy });
     if (action === 'list-instances') return await proxy(`/instance/fetchInstances${(body as any).instanceName ? `?instanceName=${(body as any).instanceName}` : ''}`, 'GET');
 
     if (action === 'connect') {
       const connectUrl = `${evolutionApiUrl}/instance/connect/${instance}`;
+
       const doConnect = async () => {
         const response = await fetch(connectUrl, { method: 'GET', headers: { 'apikey': evolutionApiKey } });
         const text = await response.text();
