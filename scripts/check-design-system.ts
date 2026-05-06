@@ -155,14 +155,28 @@ const htmlReport = `<!DOCTYPE html>
     <table>
         <thead>
             <tr>
+                <th>Priority</th>
                 <th>File</th>
                 <th>Line</th>
                 <th>Type</th>
                 <th>Value</th>
+                <th>Suggestion</th>
             </tr>
         </thead>
         <tbody>
-            ${htmlRows}
+            ${violations.sort((a, b) => {
+              const p = { 'High': 0, 'Medium': 1, 'Low': 2 };
+              return p[a.priority] - p[b.priority];
+            }).map(v => `
+              <tr>
+                <td><span class="priority-${v.priority}">${v.priority}</span></td>
+                <td><code>${v.file}</code></td>
+                <td>${v.line}</td>
+                <td><span class="label label-${v.label.replace(' ', '-')}">${v.label}</span></td>
+                <td><code>${v.match}</code></td>
+                <td><em>${v.suggestion}</em></td>
+              </tr>
+            `).join('')}
         </tbody>
     </table>
 </body>
