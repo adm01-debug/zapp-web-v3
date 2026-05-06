@@ -276,28 +276,40 @@ if (require.main === module) {
 
     Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
       const originalContent = readFileSync(file, 'utf-8');
-      const lines = originalContent.split('\n');
+      let currentContent = originalContent;
       let hasChanges = false;
       let fileSubstitutions = 0;
       
-      // Sort violations by line descending to avoid offset issues if we were adding lines, 
-      // but here we just replace content within same line.
-      fileViolations.forEach(v => {
-        if (v.replacement !== undefined && lines[v.line-1].includes(v.match)) {
-          const oldLine = lines[v.line-1];
-          lines[v.line-1] = oldLine.replace(v.match, v.replacement);
+      // Sort violations by match length descending to replace longer matches first (more specific)
+      const sortedViolations = [...fileViolations].sort((a, b) => b.match.length - a.match.length);
+
+      sortedViolations.forEach(v => {
+        if (v.replacement !== undefined && currentContent.includes(v.match)) {
+          // Use global replacement for each match in the file to catch duplicates
+          const escapedMatch = v.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`(?<!-)${escapedMatch}(?!-)`, 'g');
           
-          if (oldLine !== lines[v.line-1]) {
+          const newContent = currentContent.replace(regex, v.replacement);
+          
+          if (currentContent !== newContent) {
             if (dryRun) {
-              console.log(`\nDIFF in ${file}:${v.line}`);
-              console.log(`- ${oldLine.trim()}`);
-              console.log(`+ ${lines[v.line-1].trim()}`);
+              console.log(`\nDIFF in ${file} for match "${v.match}" -> "${v.replacement}"`);
             }
+            currentContent = newContent;
             hasChanges = true;
             fileSubstitutions++;
           }
         }
       });
+      
+      if (hasChanges) {
+        totalFilesChanged++;
+        totalSubstitutions += fileSubstitutions;
+        if (!dryRun) {
+          writeFileSync(file, currentContent);
+          console.log(`✅ Updated ${file} (${fileSubstitutions} unique patterns replaced)`);
+        }
+      }
       
       if (hasChanges) {
         totalFilesChanged++;
