@@ -1,15 +1,15 @@
 
-import { GmailHealthInfo, GmailHealthFilters, GmailFailure } from './types';
-import { GmailHealthRepository } from './gmailHealthRepository';
+import { EmailHealthInfo, EmailHealthFilters, EmailFailure } from './types';
+import { EmailHealthRepository } from './emailHealthRepository';
 
-export class GmailHealthService {
-  private repository: GmailHealthRepository;
+export class EmailHealthService {
+  private repository: EmailHealthRepository;
 
-  constructor(repository: GmailHealthRepository) {
+  constructor(repository: EmailHealthRepository) {
     this.repository = repository;
   }
 
-  async getHealthStatus(): Promise<GmailHealthInfo> {
+  async getHealthStatus(): Promise<EmailHealthInfo> {
     const summary = await this.repository.getRemoteSummary();
     const telemetry = this.repository.getLocalTelemetry();
     const cacheInfo = this.repository.getLocalCacheInfo();
@@ -33,9 +33,9 @@ export class GmailHealthService {
     };
   }
 
-  getFailures(filters: GmailHealthFilters = {}): { items: GmailFailure[], total: number } {
+  getFailures(filters: EmailHealthFilters = {}): { items: EmailFailure[], total: number } {
     const telemetry = this.repository.getLocalTelemetry();
-    let failures: GmailFailure[] = Array.isArray(telemetry?.recentFailures) ? telemetry.recentFailures : [];
+    let failures: EmailFailure[] = Array.isArray(telemetry?.recentFailures) ? telemetry.recentFailures : [];
 
     if (filters.requestId) {
       failures = failures.filter(f => f.requestId.includes(filters.requestId!));
@@ -56,11 +56,11 @@ export class GmailHealthService {
   }
 
   async forceRevalidation(): Promise<void> {
-    const criticalResources = ['gmail_accounts', 'gmail_threads', 'rpc_gmail_token_status'];
+    const criticalResources = ['email_accounts', 'email_threads', 'rpc_email_token_status'];
     await this.repository.forceRevalidation(criticalResources);
   }
 
-  calculateStatus(failures: GmailFailure[] | null | undefined): 'healthy' | 'degraded' | 'error' {
+  calculateStatus(failures: EmailFailure[] | null | undefined): 'healthy' | 'degraded' | 'error' {
     if (!Array.isArray(failures)) return 'error';
     const count = failures.length;
     if (count > 10) return 'error';
@@ -70,4 +70,4 @@ export class GmailHealthService {
 }
 
 // Singleton instance for convenience, matching original export pattern
-export const gmailHealthService = new GmailHealthService(new GmailHealthRepository());
+export const emailHealthService = new EmailHealthService(new EmailHealthRepository());

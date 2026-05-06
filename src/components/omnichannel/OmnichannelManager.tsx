@@ -24,7 +24,7 @@ const channelConfig = {
   telegram: { label: 'Telegram', icon: Send, color: 'text-info', bg: 'bg-info/10' },
   messenger: { label: 'Messenger', icon: MessagesSquare, color: 'text-primary', bg: 'bg-primary/10' },
   webchat: { label: 'Web Chat', icon: Globe, color: 'text-warning', bg: 'bg-warning/10' },
-  email: { label: 'Gmail', icon: MessageSquare, color: 'text-destructive', bg: 'bg-destructive/10' },
+  email: { label: 'Email', icon: MessageSquare, color: 'text-destructive', bg: 'bg-destructive/10' },
 };
 
 type ChannelType = keyof typeof channelConfig;

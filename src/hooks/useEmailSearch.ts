@@ -1,9 +1,9 @@
 /**
- * useEmailSearch.ts — Busca full-text em emails (local + Gmail API)
+ * useEmailSearch.ts — Busca full-text em emails (local + Email API)
  *
  * Estratégia dual:
  * 1. Busca local imediata no Supabase (FTS via tsvector) — < 100ms
- * 2. Busca remota na Gmail API para resultados não sincronizados — async
+ * 2. Busca remota na Email API para resultados não sincronizados — async
  *
  * NOTA: Sem dependência de use-debounce — usa setTimeout nativo.
  */
@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 const supabase = _supabase as any;
-import { gmailListThreads } from './gmail/gmailApi';
+import { emailListThreads } from './email/emailApi';
 
 export interface EmailSearchResult {
   id: string;
@@ -43,7 +43,7 @@ export function useEmailSearch(accountId: string | null) {
     const ftsQuery = q.trim();
 
     const { data, error: dbErr } = await supabase
-      .from('gmail_threads')
+      .from('email_threads')
       .select(`
         id,
         thread_id,
@@ -51,7 +51,7 @@ export function useEmailSearch(accountId: string | null) {
         snippet,
         last_message_at,
         unread_count,
-        gmail_messages!inner ( from_email, from_name )
+        email_messages!inner ( from_email, from_name )
       `)
       .eq('account_id', accountId)
       .textSearch('subject', ftsQuery, { config: 'portuguese', type: 'websearch' })
@@ -61,7 +61,7 @@ export function useEmailSearch(accountId: string | null) {
     if (dbErr) return [];
 
     return (data ?? []).map((row: Record<string, unknown>) => {
-      const msgs = Array.isArray(row.gmail_messages) ? row.gmail_messages : [];
+      const msgs = Array.isArray(row.email_messages) ? row.email_messages : [];
       const first = (msgs[0] ?? {}) as Record<string, unknown>;
       return {
         id: row.id as string,
@@ -81,7 +81,7 @@ export function useEmailSearch(accountId: string | null) {
     if (!accountId) return [];
 
     try {
-      const res = await gmailListThreads({ accountId, q, maxResults: 10 });
+      const res = await emailListThreads({ accountId, q, maxResults: 10 });
       return (((res as any).threads as Record<string, unknown>[]) ?? []).map((t) => ({
         id: String(t.id ?? ''),
         thread_id: String(t.id ?? ''),

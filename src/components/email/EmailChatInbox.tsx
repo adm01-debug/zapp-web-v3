@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { useGmail } from '@/hooks/useGmail';
+import { useEmail } from '@/hooks/useEmail';
 import { EmailThreadList } from './EmailThreadList';
 import { EmailChatThread } from './EmailChatThread';
 import { EmailSearchBar } from './EmailSearchBar';
-import { GmailAccountSelector } from '../gmail/GmailAccountSelector';
-import { type GmailThread } from '@/hooks/gmail/gmailTypes';
+import { EmailAccountSelector } from '../email/EmailAccountSelector';
+import { type EmailThread } from '@/hooks/email/emailTypes';
 import { type EmailSearchResult } from '@/hooks/useEmailSearch';
 
 interface EmailChatInboxProps {
@@ -35,7 +35,7 @@ export function EmailChatInbox({ className }: EmailChatInboxProps) {
     loadMore,
     startOAuth,
     disconnect,
-  } = useGmail();
+  } = useEmail();
 
   const totalUnread = threads.filter(t => t.unread_count > 0).length;
 
@@ -58,9 +58,9 @@ export function EmailChatInbox({ className }: EmailChatInboxProps) {
             <div className="absolute -top-1 -right-1 h-5 w-5 bg-primary rounded-full border-2 border-background animate-bounce" />
           </div>
           <div className="text-center space-y-2">
-            <h3 className="font-bold text-2xl tracking-tight font-display">Gmail não conectado</h3>
+            <h3 className="font-bold text-2xl tracking-tight font-display">Email não conectado</h3>
             <p className="text-muted-foreground text-sm max-w-[320px] leading-relaxed">
-              Conecte sua conta Gmail para gerenciar e-mails diretamente pela plataforma, com interface de chat.
+              Conecte sua conta Email para gerenciar e-mails diretamente pela plataforma, com interface de chat.
             </p>
           </div>
         </div>
@@ -70,7 +70,7 @@ export function EmailChatInbox({ className }: EmailChatInboxProps) {
           className="gap-2.5 h-12 px-8 rounded-xl font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           <Mail className="h-5 w-5" />
-          Conectar Gmail
+          Conectar Email
         </Button>
 
         <p className="text-[11px] font-medium text-muted-foreground/60 text-center max-w-[280px]">
@@ -86,7 +86,7 @@ export function EmailChatInbox({ className }: EmailChatInboxProps) {
       <div className="w-[340px] shrink-0 flex flex-col border-r h-full bg-background/50">
         {/* Account selector + search */}
         <div className="p-3 space-y-3 border-b bg-muted/5">
-          <GmailAccountSelector
+          <EmailAccountSelector
             accounts={accounts}
             activeAccountId={activeAccountId}
             tokenStatus={Object.fromEntries(tokenStatus.map(s => [s.account_id, s.token_status])) as any}

@@ -41,7 +41,7 @@ export function AdminView() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
   const [savingUser, setSavingUser] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', nickname: '', signature: '', jobTitle: '', email: '', password: '', role: 'agent' as AppRole, gmail: '', dropboxEmail: '' });
+  const [newUser, setNewUser] = useState({ name: '', nickname: '', signature: '', jobTitle: '', email: '', password: '', role: 'agent' as AppRole, email: '', dropboxEmail: '' });
   const [newUserAvatarFile, setNewUserAvatarFile] = useState<File | null>(null);
   const [newUserGoogleServices, setNewUserGoogleServices] = useState({ google_sheets: false, google_docs: false, google_calendar: false, google_drive: false });
   const [creatingUser, setCreatingUser] = useState(false);
@@ -63,14 +63,14 @@ export function AdminView() {
     const ok = await handleCreateUser({
       name: newUser.name, nickname: newUser.nickname || undefined, signature: newUser.signature || undefined,
       job_title: newUser.jobTitle || undefined, avatarFile: newUserAvatarFile, email: newUser.email,
-      password: newUser.password, role: newUser.role, gmail_email: newUser.gmail || undefined,
+      password: newUser.password, role: newUser.role, email_email: newUser.email || undefined,
       google_services: Object.entries(newUserGoogleServices).filter(([, v]) => v).map(([k]) => k),
       dropbox_email: newUser.dropboxEmail || undefined,
     });
     setCreatingUser(false);
     if (ok) {
       setIsAddDialogOpen(false);
-      setNewUser({ name: '', nickname: '', signature: '', jobTitle: '', email: '', password: '', role: 'agent', gmail: '', dropboxEmail: '' });
+      setNewUser({ name: '', nickname: '', signature: '', jobTitle: '', email: '', password: '', role: 'agent', email: '', dropboxEmail: '' });
       setNewUserAvatarFile(null);
       setNewUserGoogleServices({ google_sheets: false, google_docs: false, google_calendar: false, google_drive: false });
     }
@@ -235,9 +235,9 @@ export function AdminView() {
             </div>
             <div className="space-y-2">
               <Label>Conta Google (opcional)</Label>
-              <Input type="email" placeholder="usuario@gmail.com" value={newUser.gmail} onChange={(e) => setNewUser(p => ({ ...p, gmail: e.target.value }))} />
+              <Input type="email" placeholder="usuario@email.com" value={newUser.email} onChange={(e) => setNewUser(p => ({ ...p, email: e.target.value }))} />
             </div>
-            {newUser.gmail && (
+            {newUser.email && (
               <div className="space-y-3 rounded-lg border border-secondary/30 p-3">
                 <Label className="text-sm font-medium">Serviços Google vinculados</Label>
                 <div className="grid grid-cols-2 gap-2">

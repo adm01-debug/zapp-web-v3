@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-describe('Gmail Health API Contract', () => {
+describe('Email Health API Contract', () => {
   it('should maintain the expected contract from edge function', async () => {
     // Simular o que o frontend espera da Edge Function
     const mockResponse = {

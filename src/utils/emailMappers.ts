@@ -1,23 +1,23 @@
 
 import { 
-  GmailAccount, 
-  GmailTokenInfo, 
-  GmailThread, 
-  GmailDayMetric, 
-  GmailLabelInfo,
+  EmailAccount, 
+  EmailTokenInfo, 
+  EmailThread, 
+  EmailDayMetric, 
+  EmailLabelInfo,
   UnifiedEmailAccount,
   SLAStatus
-} from '@/types/gmail';
+} from '@/types/email';
 
 /**
- * Mapeia dados brutos do Supabase/RPC para interfaces tipadas do Gmail.
+ * Mapeia dados brutos do Supabase/RPC para interfaces tipadas do Email.
  * Elimina a necessidade de casts 'as any' ou transformações repetitivas nos hooks.
  */
-export const gmailMappers = {
+export const emailMappers = {
   /**
-   * Mapeia uma linha da tabela 'gmail_accounts'
+   * Mapeia uma linha da tabela 'email_accounts'
    */
-  account: (data: any): GmailAccount => ({
+  account: (data: any): EmailAccount => ({
     id:            data.id,
     user_id:       data.user_id,
     email:         data.email,
@@ -30,9 +30,9 @@ export const gmailMappers = {
   }),
 
   /**
-   * Mapeia o retorno do RPC 'rpc_gmail_token_status'
+   * Mapeia o retorno do RPC 'rpc_email_token_status'
    */
-  tokenInfo: (data: any): GmailTokenInfo => ({
+  tokenInfo: (data: any): EmailTokenInfo => ({
     account_id:            data.account_id,
     email:                 data.email,
     is_active:             data.is_active ?? true,
@@ -44,13 +44,13 @@ export const gmailMappers = {
   }),
 
   /**
-   * Mapeia uma linha da tabela 'gmail_threads' ou retorno de rpc_gmail_search_threads
+   * Mapeia uma linha da tabela 'email_threads' ou retorno de rpc_email_search_threads
    */
-  thread: (data: any): GmailThread => ({
+  thread: (data: any): EmailThread => ({
     id:              data.id,
     account_id:      data.account_id,
-    gmail_thread_id: data.gmail_thread_id || data.thread_id,
-    thread_id:       data.gmail_thread_id || data.thread_id, // Alias legado
+    email_thread_id: data.email_thread_id || data.thread_id,
+    thread_id:       data.email_thread_id || data.thread_id, // Alias legado
     subject:         data.subject,
     snippet:         data.snippet,
     from_email:      data.from_email,
@@ -71,9 +71,9 @@ export const gmailMappers = {
   }),
 
   /**
-   * Mapeia uma linha da tabela 'gmail_daily_metrics'
+   * Mapeia uma linha da tabela 'email_daily_metrics'
    */
-  metric: (data: any): GmailDayMetric => ({
+  metric: (data: any): EmailDayMetric => ({
     date:                    data.date,
     threads_received:        data.threads_received || 0,
     threads_replied:         data.threads_replied || 0,
@@ -83,12 +83,12 @@ export const gmailMappers = {
   }),
 
   /**
-   * Mapeia uma linha da tabela 'gmail_labels'
+   * Mapeia uma linha da tabela 'email_labels'
    */
-  label: (data: any): GmailLabelInfo => ({
+  label: (data: any): EmailLabelInfo => ({
     id:             data.id,
     account_id:     data.account_id,
-    gmail_label_id: data.gmail_label_id,
+    email_label_id: data.email_label_id,
     name:           data.name,
     type:           data.type || 'user',
     color:          data.color,
@@ -116,10 +116,10 @@ export const gmailMappers = {
   /**
    * Helpers para arrays
    */
-  accounts: (data: any[]): GmailAccount[] => (data || []).map(gmailMappers.account),
-  tokenInfos: (data: any[]): GmailTokenInfo[] => (data || []).map(gmailMappers.tokenInfo),
-  threads: (data: any[]): GmailThread[] => (data || []).map(gmailMappers.thread),
-  metrics: (data: any[]): GmailDayMetric[] => (data || []).map(gmailMappers.metric),
-  labels: (data: any[]): GmailLabelInfo[] => (data || []).map(gmailMappers.label),
-  unifiedAccounts: (data: any[]): UnifiedEmailAccount[] => (data || []).map(gmailMappers.unifiedAccount),
+  accounts: (data: any[]): EmailAccount[] => (data || []).map(emailMappers.account),
+  tokenInfos: (data: any[]): EmailTokenInfo[] => (data || []).map(emailMappers.tokenInfo),
+  threads: (data: any[]): EmailThread[] => (data || []).map(emailMappers.thread),
+  metrics: (data: any[]): EmailDayMetric[] => (data || []).map(emailMappers.metric),
+  labels: (data: any[]): EmailLabelInfo[] => (data || []).map(emailMappers.label),
+  unifiedAccounts: (data: any[]): UnifiedEmailAccount[] => (data || []).map(emailMappers.unifiedAccount),
 };

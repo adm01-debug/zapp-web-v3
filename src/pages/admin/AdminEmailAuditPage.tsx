@@ -32,7 +32,7 @@ export default function AdminEmailAuditPage() {
       const to = from + pageSize - 1;
 
       const { data, count, error } = await supabase
-        .from('gmail_revalidation_jobs')
+        .from('email_revalidation_jobs')
         .select('*', { count: 'exact' })
         .order('requested_at', { ascending: false })
         .range(from, to);

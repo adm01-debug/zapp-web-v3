@@ -1,5 +1,5 @@
 /**
- * gmail.integration.test.ts — Testes de integração E2E do módulo Gmail
+ * email.integration.test.ts — Testes de integração E2E do módulo Email
  *
  * Testa todos os fluxos críticos de ponta a ponta:
  * 1. OAuth flow completo (getAuthUrl → exchangeCode → loadAccounts)
@@ -35,7 +35,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 // ── Dados de teste ────────────────────────────────────────────────────────
 
 const TEST_ACCOUNT = {
-  id: 'acc-1', user_id: 'user-1', email: 'test@gmail.com',
+  id: 'acc-1', user_id: 'user-1', email: 'test@email.com',
   display_name: 'Test User', is_active: true,
   token_expiry: new Date(Date.now() + 3600_000).toISOString(),
   watch_expiry: new Date(Date.now() + 3 * 86400_000).toISOString(),
@@ -43,7 +43,7 @@ const TEST_ACCOUNT = {
 
 const TEST_THREADS = Array.from({ length: 5 }, (_, i) => ({
   id: `thread-${i}`, account_id: 'acc-1',
-  thread_id: `gt-${i}`, gmail_thread_id: `gt-${i}`,
+  thread_id: `gt-${i}`, email_thread_id: `gt-${i}`,
   subject: `Email ${i}: ${['Proposta', 'Fatura', 'Suporte', 'Newsletter', 'Reunião'][i]}`,
   snippet: `Conteúdo do email ${i}...`,
   from_email: `sender${i}@exemplo.com`,
@@ -73,10 +73,10 @@ function setupMocks() {
   });
 
   mockRpc.mockImplementation((fn: string) => {
-    if (fn === 'rpc_gmail_token_status') {
+    if (fn === 'rpc_email_token_status') {
       return Promise.resolve({
         data: [{
-          account_id: 'acc-1', email: 'test@gmail.com', is_active: true,
+          account_id: 'acc-1', email: 'test@email.com', is_active: true,
           token_status: 'valid', watch_status: 'active',
           token_expiry: TEST_ACCOUNT.token_expiry,
           watch_expiry: TEST_ACCOUNT.watch_expiry,
@@ -85,7 +85,7 @@ function setupMocks() {
         error: null,
       });
     }
-    if (fn === 'rpc_gmail_search_threads') {
+    if (fn === 'rpc_email_search_threads') {
       return Promise.resolve({ data: TEST_THREADS, error: null });
     }
     return Promise.resolve({ data: null, error: null });
@@ -99,7 +99,7 @@ afterEach(() => vi.clearAllMocks());
 
 // ── Testes ─────────────────────────────────────────────────────────────────
 
-describe('Gmail Integration — OAuth Flow', () => {
+describe('Email Integration — OAuth Flow', () => {
   it('deve gerar URL de autorização Google válida', async () => {
     mockInvoke.mockResolvedValue({
       data: {
@@ -109,30 +109,30 @@ describe('Gmail Integration — OAuth Flow', () => {
       error: null,
     });
 
-    const res = await mockInvoke('gmail-oauth', { body: { action: 'getAuthUrl' } });
+    const res = await mockInvoke('email-oauth', { body: { action: 'getAuthUrl' } });
     expect(res.data.authUrl).toContain('accounts.google.com');
     expect(res.data.state).toBeDefined();
   });
 
   it('deve trocar code por tokens OAuth', async () => {
     mockInvoke.mockResolvedValue({
-      data: { success: true, accountId: 'acc-new', email: 'new@gmail.com' },
+      data: { success: true, accountId: 'acc-new', email: 'new@email.com' },
       error: null,
     });
 
-    const res = await mockInvoke('gmail-oauth', {
+    const res = await mockInvoke('email-oauth', {
       body: { action: 'exchangeCode', code: 'auth-code', userId: 'user-1' },
     });
     expect(res.data.success).toBe(true);
-    expect(res.data.email).toContain('gmail.com');
+    expect(res.data.email).toContain('email.com');
   });
 });
 
-describe('Gmail Integration — Sincronização', () => {
+describe('Email Integration — Sincronização', () => {
   it('deve sincronizar inbox com sucesso', async () => {
     mockInvoke.mockResolvedValue({ data: { success: true, synced: 12 }, error: null });
 
-    const res = await mockInvoke('gmail-sync', {
+    const res = await mockInvoke('email-sync', {
       body: { action: 'syncInbox', accountId: 'acc-1', maxResults: 100 },
     });
     expect(res.data.success).toBe(true);
@@ -140,7 +140,7 @@ describe('Gmail Integration — Sincronização', () => {
   });
 
   it('deve retornar 5 threads após sync', async () => {
-    const res = await mockRpc('rpc_gmail_search_threads', {
+    const res = await mockRpc('rpc_email_search_threads', {
       p_account_id: 'acc-1', p_label_id: 'INBOX', p_limit: 50, p_offset: 0,
     });
     expect(res.data).toHaveLength(5);
@@ -148,12 +148,12 @@ describe('Gmail Integration — Sincronização', () => {
 
   it('deve sincronizar labels', async () => {
     mockInvoke.mockResolvedValue({ data: { success: true, synced: 8 }, error: null });
-    const res = await mockInvoke('gmail-sync', { body: { action: 'syncLabels', accountId: 'acc-1' } });
+    const res = await mockInvoke('email-sync', { body: { action: 'syncLabels', accountId: 'acc-1' } });
     expect(res.data.success).toBe(true);
   });
 });
 
-describe('Gmail Integration — SLA Tracking', () => {
+describe('Email Integration — SLA Tracking', () => {
   it('deve calcular status SLA correto', () => {
     const THRESHOLD = 480; // minutos
 
@@ -175,41 +175,41 @@ describe('Gmail Integration — SLA Tracking', () => {
 
   it('deve atualizar SLA via RPC', async () => {
     mockRpc.mockResolvedValue({ data: { success: true, breached_updated: 2 }, error: null });
-    const res = await mockRpc('rpc_gmail_update_sla_status', { p_threshold_min: 480 });
+    const res = await mockRpc('rpc_email_update_sla_status', { p_threshold_min: 480 });
     expect(res.data.success).toBe(true);
   });
 });
 
-describe('Gmail Integration — Ciclo de vida da thread', () => {
+describe('Email Integration — Ciclo de vida da thread', () => {
   it('deve estrelar thread', async () => {
     mockRpc.mockResolvedValue({ data: { success: true, starred: true }, error: null });
-    const res = await mockRpc('rpc_gmail_star_thread', { p_thread_id: 'thread-0', p_starred: true });
+    const res = await mockRpc('rpc_email_star_thread', { p_thread_id: 'thread-0', p_starred: true });
     expect(res.data.success).toBe(true);
   });
 
   it('deve arquivar thread', async () => {
     mockRpc.mockResolvedValue({ data: { success: true, archived: true }, error: null });
-    const res = await mockRpc('rpc_gmail_archive_thread', { p_thread_id: 'thread-0', p_archived: true });
+    const res = await mockRpc('rpc_email_archive_thread', { p_thread_id: 'thread-0', p_archived: true });
     expect(res.data.success).toBe(true);
   });
 
   it('deve marcar como lida', async () => {
     mockRpc.mockResolvedValue({ data: { success: true }, error: null });
-    const res = await mockRpc('rpc_gmail_mark_thread_read', { p_thread_id: 'thread-0', p_read: true });
+    const res = await mockRpc('rpc_email_mark_thread_read', { p_thread_id: 'thread-0', p_read: true });
     expect(res.data.success).toBe(true);
   });
 
   it('deve atribuir a agente', async () => {
     mockRpc.mockResolvedValue({ data: { success: true, assigned_agent_id: 'agent-1' }, error: null });
-    const res = await mockRpc('rpc_gmail_assign_thread', { p_thread_id: 'thread-0', p_agent_id: 'agent-1' });
+    const res = await mockRpc('rpc_email_assign_thread', { p_thread_id: 'thread-0', p_agent_id: 'agent-1' });
     expect(res.data.success).toBe(true);
   });
 });
 
-describe('Gmail Integration — Envio de email', () => {
+describe('Email Integration — Envio de email', () => {
   it('deve enviar email simples', async () => {
     mockInvoke.mockResolvedValue({ data: { success: true, messageId: 'msg-123' }, error: null });
-    const res = await mockInvoke('gmail-send', {
+    const res = await mockInvoke('email-send', {
       body: {
         action: 'send', accountId: 'acc-1',
         to: ['dest@exemplo.com'],
@@ -223,7 +223,7 @@ describe('Gmail Integration — Envio de email', () => {
 
   it('deve enviar reply na mesma thread', async () => {
     mockInvoke.mockResolvedValue({ data: { success: true, messageId: 'reply-123' }, error: null });
-    const res = await mockInvoke('gmail-send', {
+    const res = await mockInvoke('email-send', {
       body: {
         action: 'send', accountId: 'acc-1',
         to: ['sender@exemplo.com'],
@@ -236,7 +236,7 @@ describe('Gmail Integration — Envio de email', () => {
   });
 });
 
-describe('Gmail Integration — Token Management', () => {
+describe('Email Integration — Token Management', () => {
   it('deve detectar token próximo do vencimento', () => {
     const expiringAt = new Date(Date.now() + 4 * 60_000); // 4 minutos
     const minutesLeft = (expiringAt.getTime() - Date.now()) / 60_000;
@@ -249,7 +249,7 @@ describe('Gmail Integration — Token Management', () => {
       data: { success: true, newExpiry: new Date(Date.now() + 3600_000).toISOString() },
       error: null,
     });
-    const res = await mockInvoke('gmail-oauth', { body: { action: 'refreshToken', accountId: 'acc-1' } });
+    const res = await mockInvoke('email-oauth', { body: { action: 'refreshToken', accountId: 'acc-1' } });
     expect(res.data.success).toBe(true);
     expect(res.data.newExpiry).toBeDefined();
   });
@@ -259,15 +259,15 @@ describe('Gmail Integration — Token Management', () => {
       data: { success: true, watchExpiry: new Date(Date.now() + 7 * 86400_000).toISOString() },
       error: null,
     });
-    const res = await mockInvoke('gmail-webhook', { body: { action: 'renewWatch', accountId: 'acc-1' } });
+    const res = await mockInvoke('email-webhook', { body: { action: 'renewWatch', accountId: 'acc-1' } });
     expect(res.data.success).toBe(true);
   });
 });
 
-describe('Gmail Integration — Bulk Operations', () => {
+describe('Email Integration — Bulk Operations', () => {
   it('deve marcar múltiplas threads como lidas', async () => {
     mockRpc.mockResolvedValue({ data: { success: true, updated: 3 }, error: null });
-    const res = await mockRpc('rpc_gmail_bulk_mark_read', {
+    const res = await mockRpc('rpc_email_bulk_mark_read', {
       p_thread_ids: ['thread-0', 'thread-1', 'thread-2'],
       p_read: true,
     });
@@ -275,7 +275,7 @@ describe('Gmail Integration — Bulk Operations', () => {
   });
 });
 
-describe('Gmail Integration — Métricas diárias', () => {
+describe('Email Integration — Métricas diárias', () => {
   it('deve ter estrutura de métricas correta', () => {
     const metrics = {
       account_id: 'acc-1',

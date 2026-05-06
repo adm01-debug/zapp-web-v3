@@ -12,7 +12,7 @@ export * from './FailedMessageTableRow';
 export * from './CrisisRoom';
 export * from './EvolutionFallbackStatusCard';
 export * from './ForceLogoutButton';
-export * from './GmailWebhookMonitor';
+export * from './EmailWebhookMonitor';
 export * from './MediaMigrationTool';
 export * from './PlaybooksManager';
 export * from './PublicApiDashboard';

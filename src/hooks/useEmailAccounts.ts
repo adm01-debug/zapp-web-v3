@@ -2,8 +2,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { gmailMappers } from '@/utils/gmailMappers';
-import { UnifiedEmailAccount } from '@/types/gmail';
+import { emailMappers } from '@/utils/emailMappers';
+import { UnifiedEmailAccount } from '@/types/email';
 
 const supabase = _supabase as any;
 
@@ -13,7 +13,7 @@ interface UseEmailAccountsReturn {
   error:            string | null;
   totalUnread:      number;
   totalSlaBreached: number;
-  hasGmail:         boolean;
+  hasEmail:         boolean;
   hasOutlook:       boolean;
   refresh:          () => Promise<void>;
 }
@@ -34,7 +34,7 @@ export function useEmailAccounts(): UseEmailAccountsReturn {
     if (dbErr) {
       setError(dbErr.message);
     } else {
-      setAccounts(gmailMappers.unifiedAccounts(data ?? []));
+      setAccounts(emailMappers.unifiedAccounts(data ?? []));
     }
     setIsLoading(false);
   }, []);
@@ -47,7 +47,7 @@ export function useEmailAccounts(): UseEmailAccountsReturn {
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'gmail_accounts',
+        table: 'email_accounts',
       }, fetch)
       .on('postgres_changes', {
         event: '*',
@@ -61,7 +61,7 @@ export function useEmailAccounts(): UseEmailAccountsReturn {
 
   const totalUnread      = accounts.reduce((s, a) => s + (a.unread_threads ?? 0), 0);
   const totalSlaBreached = accounts.reduce((s, a) => s + (a.sla_breached ?? 0), 0);
-  const hasGmail         = accounts.some(a => a.provider === 'gmail');
+  const hasEmail         = accounts.some(a => a.provider === 'email');
   const hasOutlook       = accounts.some(a => a.provider === 'outlook');
 
   return {
@@ -70,7 +70,7 @@ export function useEmailAccounts(): UseEmailAccountsReturn {
     error,
     totalUnread,
     totalSlaBreached,
-    hasGmail,
+    hasEmail,
     hasOutlook,
     refresh: fetch,
   };

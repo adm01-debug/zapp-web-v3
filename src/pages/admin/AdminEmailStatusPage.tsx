@@ -9,15 +9,15 @@ import {
   Search, RefreshCcw, AlertTriangle, ChevronLeft, ChevronRight,
   Filter, History as HistoryIcon
 } from 'lucide-react';
-import { useGmail } from '@/hooks/useGmail';
-import { gmailHealthService } from '@/services/gmail/gmailHealthService';
-import type { GmailHealthInfo, GmailFailure } from '@/services/gmail/types';
+import { useEmail } from '@/hooks/useEmail';
+import { emailHealthService } from '@/services/email/emailHealthService';
+import type { EmailHealthInfo, EmailFailure } from '@/services/email/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export default function AdminEmailStatusPage() {
-  const { accounts, schemaStatus, lastRequestId } = useGmail();
-  const [health, setHealth] = useState<GmailHealthInfo | null>(null);
+  const { accounts, schemaStatus, lastRequestId } = useEmail();
+  const [health, setHealth] = useState<EmailHealthInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     requestId: '',
@@ -25,12 +25,12 @@ export default function AdminEmailStatusPage() {
     operation: '',
     page: 1
   });
-  const [failuresData, setFailuresData] = useState<{ items: GmailFailure[], total: number }>({ items: [], total: 0 });
+  const [failuresData, setFailuresData] = useState<{ items: EmailFailure[], total: number }>({ items: [], total: 0 });
 
   const loadHealth = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('gmail-health', {
+      const { data, error } = await supabase.functions.invoke('email-health', {
         headers: {
           'Content-Type': 'application/json'
         },
@@ -42,7 +42,7 @@ export default function AdminEmailStatusPage() {
       // but for status we can just call basic invoke.
       // Re-invoking with full URL to support filters:
       const projectUrl = import.meta.env.VITE_SUPABASE_URL;
-      const functionUrl = `${projectUrl}/functions/v1/gmail-health?page=${filters.page}&pageSize=5${filters.requestId ? `&requestId=${filters.requestId}` : ''}${filters.resource ? `&resource=${filters.resource}` : ''}${filters.operation ? `&operation=${filters.operation}` : ''}`;
+      const functionUrl = `${projectUrl}/functions/v1/email-health?page=${filters.page}&pageSize=5${filters.requestId ? `&requestId=${filters.requestId}` : ''}${filters.resource ? `&resource=${filters.resource}` : ''}${filters.operation ? `&operation=${filters.operation}` : ''}`;
       
       const fetchResponse = await fetch(functionUrl, {
         headers: {
@@ -72,7 +72,7 @@ export default function AdminEmailStatusPage() {
       
       try {
         const { data: summary } = await supabase
-          .from('gmail_health_summary')
+          .from('email_health_summary')
           .select('*')
           .eq('id', 'current')
           .maybeSingle();
@@ -99,7 +99,7 @@ export default function AdminEmailStatusPage() {
     const interval = setInterval(async () => {
       try {
         const projectUrl = import.meta.env.VITE_SUPABASE_URL;
-        await fetch(`${projectUrl}/functions/v1/gmail-health?action=auto_check`, {
+        await fetch(`${projectUrl}/functions/v1/email-health?action=auto_check`, {
           headers: {
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           }
@@ -116,7 +116,7 @@ export default function AdminEmailStatusPage() {
   const handleRevalidate = async () => {
     const revalidatePromise = async () => {
       const projectUrl = import.meta.env.VITE_SUPABASE_URL;
-      const res = await fetch(`${projectUrl}/functions/v1/gmail-health?action=revalidate`, {
+      const res = await fetch(`${projectUrl}/functions/v1/email-health?action=revalidate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
@@ -125,7 +125,7 @@ export default function AdminEmailStatusPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       
-      await gmailHealthService.forceRevalidation();
+      await emailHealthService.forceRevalidation();
       return data;
     };
 
@@ -142,14 +142,14 @@ export default function AdminEmailStatusPage() {
     setIsRetrying(prev => ({ ...prev, [id]: true }));
     try {
       if (action === 'markRead') {
-        const { error } = await (supabase as any).rpc('rpc_gmail_mark_thread_read', {
+        const { error } = await (supabase as any).rpc('rpc_email_mark_thread_read', {
           p_thread_id: id,
           p_read: true
         });
         if (error) throw error;
         toast.success('Thread marcada como lida no servidor.');
       } else if (action === 'rpc_test') {
-        const { error } = await (supabase as any).rpc('rpc_gmail_token_status');
+        const { error } = await (supabase as any).rpc('rpc_email_token_status');
         if (error) throw error;
         toast.success('RPC de status de token validada com sucesso.');
       }
@@ -294,7 +294,7 @@ export default function AdminEmailStatusPage() {
               <div className="relative">
                 <Filter className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Recurso (gmail_...)" 
+                  placeholder="Recurso (email_...)" 
                   className="pl-9"
                   value={filters.resource}
                   onChange={(e) => setFilters(prev => ({ ...prev, resource: e.target.value, page: 1 }))}

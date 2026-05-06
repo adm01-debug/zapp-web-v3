@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { SLAStatus } from '@/types/gmail';
+import { SLAStatus } from '@/types/email';
 
 export type { SLAStatus };
 
@@ -136,7 +136,7 @@ export function useEmailSLA(accountId: string | null, config: Partial<SLAConfig>
         slaConfig
       );
 
-      safeClient.from('gmail_threads', (q) =>
+      safeClient.from('email_threads', (q) =>
         q.update({
           first_reply_at: replyAt,
           frt_minutes:    frt,
@@ -175,7 +175,7 @@ export function useEmailSLA(accountId: string | null, config: Partial<SLAConfig>
   useEffect(() => {
     if (!accountId) return;
 
-    safeClient.from<any>('gmail_threads', (q) =>
+    safeClient.from<any>('email_threads', (q) =>
       q.select('thread_id, last_message_at, unread_count')
        .eq('account_id', accountId)
        .gt('unread_count', 0)

@@ -83,7 +83,7 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
   const load = async () => {
     setIsLoading(true);
     const { data: rows , error } = await (supabase
-      .from('v_gmail_sla_dashboard' as any) as any)
+      .from('v_email_sla_dashboard' as any) as any)
       .select('*');
     setData((rows ?? []) as SLADashboardData[]);
     setLastRefresh(new Date());
@@ -237,7 +237,7 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
         <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
           <BarChart3 className="h-8 w-8 opacity-20" />
           <p className="text-sm">Sem dados de SLA</p>
-          <p className="text-xs">Conecte uma conta Gmail para ver as métricas</p>
+          <p className="text-xs">Conecte uma conta Email para ver as métricas</p>
         </div>
       )}
     </div>

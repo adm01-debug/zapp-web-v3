@@ -4442,8 +4442,8 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
-          gmail_account_id: string
-          gmail_label_id: string
+          email_account_id: string
+          email_label_id: string
           id: string
           label_type: string
           message_count: number
@@ -4453,8 +4453,8 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string
-          gmail_account_id: string
-          gmail_label_id: string
+          email_account_id: string
+          email_label_id: string
           id?: string
           label_type?: string
           message_count?: number
@@ -4464,8 +4464,8 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string
-          gmail_account_id?: string
-          gmail_label_id?: string
+          email_account_id?: string
+          email_label_id?: string
           id?: string
           label_type?: string
           message_count?: number
@@ -4474,22 +4474,22 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "email_labels_gmail_account_id_fkey"
-            columns: ["gmail_account_id"]
+            foreignKeyName: "email_labels_email_account_id_fkey"
+            columns: ["email_account_id"]
             isOneToOne: false
-            referencedRelation: "gmail_accounts"
+            referencedRelation: "email_accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_labels_gmail_account_id_fkey"
-            columns: ["gmail_account_id"]
+            foreignKeyName: "email_labels_email_account_id_fkey"
+            columns: ["email_account_id"]
             isOneToOne: false
-            referencedRelation: "gmail_accounts_safe"
+            referencedRelation: "email_accounts_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_labels_gmail_account_id_fkey"
-            columns: ["gmail_account_id"]
+            foreignKeyName: "email_labels_email_account_id_fkey"
+            columns: ["email_account_id"]
             isOneToOne: false
             referencedRelation: "v_email_accounts_unified"
             referencedColumns: ["id"]
@@ -4506,8 +4506,8 @@ export type Database = {
           direction: string
           from_address: string
           from_name: string | null
-          gmail_account_id: string
-          gmail_message_id: string
+          email_account_id: string
+          email_message_id: string
           has_attachments: boolean
           id: string
           in_reply_to: string | null
@@ -4531,8 +4531,8 @@ export type Database = {
           direction?: string
           from_address?: string
           from_name?: string | null
-          gmail_account_id: string
-          gmail_message_id: string
+          email_account_id: string
+          email_message_id: string
           has_attachments?: boolean
           id?: string
           in_reply_to?: string | null
@@ -4556,8 +4556,8 @@ export type Database = {
           direction?: string
           from_address?: string
           from_name?: string | null
-          gmail_account_id?: string
-          gmail_message_id?: string
+          email_account_id?: string
+          email_message_id?: string
           has_attachments?: boolean
           id?: string
           in_reply_to?: string | null
@@ -4574,22 +4574,22 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "email_messages_gmail_account_id_fkey"
-            columns: ["gmail_account_id"]
+            foreignKeyName: "email_messages_email_account_id_fkey"
+            columns: ["email_account_id"]
             isOneToOne: false
-            referencedRelation: "gmail_accounts"
+            referencedRelation: "email_accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_messages_gmail_account_id_fkey"
-            columns: ["gmail_account_id"]
+            foreignKeyName: "email_messages_email_account_id_fkey"
+            columns: ["email_account_id"]
             isOneToOne: false
-            referencedRelation: "gmail_accounts_safe"
+            referencedRelation: "email_accounts_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_messages_gmail_account_id_fkey"
-            columns: ["gmail_account_id"]
+            foreignKeyName: "email_messages_email_account_id_fkey"
+            columns: ["email_account_id"]
             isOneToOne: false
             referencedRelation: "v_email_accounts_unified"
             referencedColumns: ["id"]
@@ -4608,8 +4608,8 @@ export type Database = {
           assigned_to: string | null
           contact_id: string | null
           created_at: string
-          gmail_account_id: string
-          gmail_thread_id: string
+          email_account_id: string
+          email_thread_id: string
           id: string
           is_important: boolean
           is_starred: boolean
@@ -4628,8 +4628,8 @@ export type Database = {
           assigned_to?: string | null
           contact_id?: string | null
           created_at?: string
-          gmail_account_id: string
-          gmail_thread_id: string
+          email_account_id: string
+          email_thread_id: string
           id?: string
           is_important?: boolean
           is_starred?: boolean
@@ -4648,8 +4648,8 @@ export type Database = {
           assigned_to?: string | null
           contact_id?: string | null
           created_at?: string
-          gmail_account_id?: string
-          gmail_thread_id?: string
+          email_account_id?: string
+          email_thread_id?: string
           id?: string
           is_important?: boolean
           is_starred?: boolean
@@ -4673,22 +4673,22 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_threads_gmail_account_id_fkey"
-            columns: ["gmail_account_id"]
+            foreignKeyName: "email_threads_email_account_id_fkey"
+            columns: ["email_account_id"]
             isOneToOne: false
-            referencedRelation: "gmail_accounts"
+            referencedRelation: "email_accounts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_threads_gmail_account_id_fkey"
-            columns: ["gmail_account_id"]
+            foreignKeyName: "email_threads_email_account_id_fkey"
+            columns: ["email_account_id"]
             isOneToOne: false
-            referencedRelation: "gmail_accounts_safe"
+            referencedRelation: "email_accounts_safe"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "email_threads_gmail_account_id_fkey"
-            columns: ["gmail_account_id"]
+            foreignKeyName: "email_threads_email_account_id_fkey"
+            columns: ["email_account_id"]
             isOneToOne: false
             referencedRelation: "v_email_accounts_unified"
             referencedColumns: ["id"]
@@ -5303,7 +5303,7 @@ export type Database = {
         }
         Relationships: []
       }
-      gmail_accounts: {
+      email_accounts: {
         Row: {
           access_token_encrypted: string | null
           created_at: string
@@ -5348,7 +5348,7 @@ export type Database = {
         }
         Relationships: []
       }
-      gmail_health_logs: {
+      email_health_logs: {
         Row: {
           error_message: string | null
           id: string
@@ -5384,7 +5384,7 @@ export type Database = {
         }
         Relationships: []
       }
-      gmail_health_summary: {
+      email_health_summary: {
         Row: {
           failure_count_60m: number | null
           id: string
@@ -5411,7 +5411,7 @@ export type Database = {
         }
         Relationships: []
       }
-      gmail_revalidation_jobs: {
+      email_revalidation_jobs: {
         Row: {
           completed_at: string | null
           id: string
@@ -12418,7 +12418,7 @@ export type Database = {
           },
         ]
       }
-      gmail_accounts_safe: {
+      email_accounts_safe: {
         Row: {
           created_at: string | null
           email_address: string | null
@@ -13043,8 +13043,8 @@ export type Database = {
           count: number
         }[]
       }
-      decrypt_gmail_token: { Args: { p_encrypted: string }; Returns: string }
-      encrypt_gmail_token: { Args: { p_token: string }; Returns: string }
+      decrypt_email_token: { Args: { p_encrypted: string }; Returns: string }
+      encrypt_email_token: { Args: { p_token: string }; Returns: string }
       fn_accept_transfer: {
         Args: { p_operator_name: string; p_transfer_id: string }
         Returns: Json
@@ -13354,7 +13354,7 @@ export type Database = {
           verify_token: string
         }[]
       }
-      get_own_gmail_accounts: {
+      get_own_email_accounts: {
         Args: never
         Returns: {
           created_at: string
@@ -13611,7 +13611,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      rpc_check_and_trigger_gmail_revalidation: { Args: never; Returns: Json }
+      rpc_check_and_trigger_email_revalidation: { Args: never; Returns: Json }
       rpc_conversation_sla_panel: {
         Args: {
           p_assigned_to?: string
@@ -13768,7 +13768,7 @@ export type Database = {
           tags: string[]
         }[]
       }
-      rpc_get_gmail_health_summary: {
+      rpc_get_email_health_summary: {
         Args: { p_window_minutes?: number }
         Returns: Json
       }
@@ -13956,7 +13956,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
-      rpc_log_gmail_health: {
+      rpc_log_email_health: {
         Args: {
           p_error_message?: string
           p_is_failure?: boolean
@@ -14321,7 +14321,7 @@ export type Database = {
         Args: { p_channel_id: string; p_queue_id: string }
         Returns: boolean
       }
-      rpc_update_gmail_health_state: {
+      rpc_update_email_health_state: {
         Args: { p_failure_count: number; p_metadata?: Json; p_status: string }
         Returns: undefined
       }

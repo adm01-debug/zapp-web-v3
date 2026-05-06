@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useGmail, type GmailThread } from '@/hooks/useGmail';
-import { GmailLabelSidebar } from './GmailLabelSidebar';
-import { GmailAccountSelector } from './GmailAccountSelector';
+import { useEmail, type EmailThread } from '@/hooks/useEmail';
+import { EmailLabelSidebar } from './EmailLabelSidebar';
+import { EmailAccountSelector } from './EmailAccountSelector';
 
-interface GmailInboxViewProps {
-  onSelectThread?: (thread: GmailThread) => void;
+interface EmailInboxViewProps {
+  onSelectThread?: (thread: EmailThread) => void;
 }
 
 function formatDate(iso: string | null): string {
@@ -38,7 +38,7 @@ function SLABadge({ status }: { status: string | null }) {
   );
 }
 
-export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
+export function EmailInboxView({ onSelectThread }: EmailInboxViewProps) {
   const {
     accounts,
     tokenStatus,
@@ -61,7 +61,7 @@ export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
     markAsRead,
     starThread,
     archiveThread,
-  } = useGmail();
+  } = useEmail();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -75,7 +75,7 @@ export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
       )
     : threads;
 
-  const handleSelectThread = (thread: GmailThread) => {
+  const handleSelectThread = (thread: EmailThread) => {
     setSelectedId(thread.id);
     if (thread.unread_count > 0) markAsRead(thread.id, true);
     onSelectThread?.(thread);
@@ -109,7 +109,7 @@ export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
           {/* Seletor de conta */}
           {accounts.length > 0 && (
             <div className="p-2 border-b">
-              <GmailAccountSelector
+              <EmailAccountSelector
                 accounts={accounts}
                 activeAccountId={activeAccountId}
                 tokenStatus={Object.fromEntries(tokenStatus.map(s => [s.account_id, s.token_status])) as any}
@@ -129,7 +129,7 @@ export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
               {hasTokenWarning ? 'Token expirado' : 'Watch expirando'}
             </div>
           )}
-          <GmailLabelSidebar
+          <EmailLabelSidebar
             accountId={activeAccountId}
             activeLabel={activeLabel}
             unreadCounts={{ INBOX: unreadCount }}
@@ -281,4 +281,4 @@ export function GmailInboxView({ onSelectThread }: GmailInboxViewProps) {
   );
 }
 
-export default GmailInboxView;
+export default EmailInboxView;

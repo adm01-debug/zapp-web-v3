@@ -1,15 +1,15 @@
 
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { GmailHealthInfo, GmailFailure, GmailHealthFilters } from './types';
+import { EmailHealthInfo, EmailFailure, EmailHealthFilters } from './types';
 
-export class GmailHealthRepository {
+export class EmailHealthRepository {
   async getRemoteSummary() {
     try {
-      const { data, error } = await safeClient.rpc('rpc_get_gmail_health_summary');
+      const { data, error } = await safeClient.rpc('rpc_get_email_health_summary');
       if (error) throw error;
       return data;
     } catch (err) {
-      console.warn('[GmailHealthRepository] Error fetching summary:', err);
+      console.warn('[EmailHealthRepository] Error fetching summary:', err);
       return null;
     }
   }
@@ -31,8 +31,8 @@ export class GmailHealthRepository {
 
   async forceRevalidation(resources: string[]) {
     if ((safeClient as any).clearCache) {
-      (safeClient as any).clearCache('gmail_');
-      (safeClient as any).clearCache('rpc_gmail_');
+      (safeClient as any).clearCache('email_');
+      (safeClient as any).clearCache('rpc_email_');
     }
     
     for (const res of resources) {

@@ -7,15 +7,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useGmailLabels, type GmailLabel } from '@/hooks/useGmailLabels';
+import { useEmailLabels, type EmailLabel } from '@/hooks/useEmailLabels';
 
-type GmailLabelId = 'INBOX' | 'STARRED' | 'IMPORTANT' | 'SENT' | 'DRAFTS' | 'SPAM' | 'TRASH' | string;
+type EmailLabelId = 'INBOX' | 'STARRED' | 'IMPORTANT' | 'SENT' | 'DRAFTS' | 'SPAM' | 'TRASH' | string;
 
-interface GmailLabelSidebarProps {
+interface EmailLabelSidebarProps {
   accountId:      string | null;
-  activeLabel:    GmailLabelId;
+  activeLabel:    EmailLabelId;
   unreadCounts?:  Record<string, number>;
-  onSelectLabel:  (labelId: GmailLabelId) => void;
+  onSelectLabel:  (labelId: EmailLabelId) => void;
 }
 
 const LABEL_ICONS: Record<string, React.ReactNode> = {
@@ -34,12 +34,12 @@ function LabelItem({
   unread,
   onClick,
 }: {
-  label:   { gmail_label_id: string; name: string; color?: string | null };
+  label:   { email_label_id: string; name: string; color?: string | null };
   active:  boolean;
   unread?: number;
   onClick: () => void;
 }) {
-  const icon = LABEL_ICONS[label.gmail_label_id] ?? <Tag className="h-4 w-4" />;
+  const icon = LABEL_ICONS[label.email_label_id] ?? <Tag className="h-4 w-4" />;
 
   return (
     <button
@@ -69,42 +69,42 @@ function LabelItem({
   );
 }
 
-export function GmailLabelSidebar({
+export function EmailLabelSidebar({
   accountId,
   activeLabel,
   unreadCounts = {},
   onSelectLabel,
-}: GmailLabelSidebarProps) {
+}: EmailLabelSidebarProps) {
   const {
     systemLabels,
     userLabels,
     isLoading,
     syncLabels,
-  } = useGmailLabels(accountId);
+  } = useEmailLabels(accountId);
 
   const [showCustom, setShowCustom] = useState(true);
 
   if (!accountId) {
     return (
       <div className="p-3 text-xs text-muted-foreground text-center">
-        Conecte uma conta Gmail
+        Conecte uma conta Email
       </div>
     );
   }
 
   return (
     <ScrollArea className="h-full py-2">
-      <nav aria-label="Pastas Gmail">
+      <nav aria-label="Pastas Email">
 
         {/* Labels do sistema */}
         <div className="px-2 space-y-0.5">
           {systemLabels.map(label => (
             <LabelItem
-              key={label.gmail_label_id}
+              key={label.email_label_id}
               label={label}
-              active={activeLabel === label.gmail_label_id}
-              unread={unreadCounts[label.gmail_label_id]}
-              onClick={() => onSelectLabel(label.gmail_label_id)}
+              active={activeLabel === label.email_label_id}
+              unread={unreadCounts[label.email_label_id]}
+              onClick={() => onSelectLabel(label.email_label_id)}
             />
           ))}
         </div>
@@ -132,11 +132,11 @@ export function GmailLabelSidebar({
                 <div className="mt-1 space-y-0.5">
                   {userLabels.map(label => (
                     <LabelItem
-                      key={label.gmail_label_id}
+                      key={label.email_label_id}
                       label={label}
-                      active={activeLabel === label.gmail_label_id}
-                      unread={unreadCounts[label.gmail_label_id]}
-                      onClick={() => onSelectLabel(label.gmail_label_id as GmailLabelId)}
+                      active={activeLabel === label.email_label_id}
+                      unread={unreadCounts[label.email_label_id]}
+                      onClick={() => onSelectLabel(label.email_label_id as EmailLabelId)}
                     />
                   ))}
                 </div>
@@ -163,4 +163,4 @@ export function GmailLabelSidebar({
   );
 }
 
-export default GmailLabelSidebar;
+export default EmailLabelSidebar;

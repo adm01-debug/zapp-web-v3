@@ -2,13 +2,13 @@
  * Módulo Email Chat — Barrel exports v3 (FINAL)
  *
  * Cobertura completa:
- * - Gmail (Google OAuth2) — useGmail, useGmailOAuthFlow
+ * - Email (Google OAuth2) — useEmail, useEmailOAuthFlow
  * - Outlook (Microsoft Graph API) — useOutlookEmail
  * - IMAP/SMTP genérico — email-imap-bridge Edge Function
  * - Interface unificada — EmailChatInboxUnified, useEmailAccounts
  */
 
-// ── Gmail Components ──────────────────────────────────────────────────────
+// ── Email Components ──────────────────────────────────────────────────────
 export { EmailChatInbox }         from './EmailChatInbox';
 export { EmailChatThread }        from './EmailChatThread';
 export { EmailChatBubble }        from './EmailChatBubble';
@@ -25,7 +25,7 @@ export { EmailSLADashboard }      from './EmailSLADashboard';
 // ── Outlook Components ────────────────────────────────────────────────────
 export { OutlookInboxView }       from './OutlookInboxView';
 
-// ── Unified (Gmail + Outlook) ─────────────────────────────────────────────
+// ── Unified (Email + Outlook) ─────────────────────────────────────────────
 export { EmailChatInboxUnified }  from './EmailChatInboxUnified';
 
 // ── Settings ──────────────────────────────────────────────────────────────

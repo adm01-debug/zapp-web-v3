@@ -1,21 +1,21 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { gmailHealthService } from '@/services/gmail/gmailHealthService';
-import type { GmailHealthInfo } from '@/services/gmail/types';
+import { emailHealthService } from '@/services/email/emailHealthService';
+import type { EmailHealthInfo } from '@/services/email/types';
 import { useToast } from '@/hooks/use-toast';
 
-export function useGmailHealth() {
-  const [health, setHealth] = useState<GmailHealthInfo | null>(null);
+export function useEmailHealth() {
+  const [health, setHealth] = useState<EmailHealthInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   const loadHealth = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await gmailHealthService.getHealthStatus();
+      const data = await emailHealthService.getHealthStatus();
       setHealth(data);
     } catch (err) {
-      console.error('Falha ao carregar saúde do Gmail:', err);
+      console.error('Falha ao carregar saúde do Email:', err);
     } finally {
       setIsLoading(false);
     }
@@ -23,7 +23,7 @@ export function useGmailHealth() {
 
   const forceRevalidation = async () => {
     try {
-      await gmailHealthService.forceRevalidation();
+      await emailHealthService.forceRevalidation();
       toast({
         title: 'Cache atualizado',
         description: 'A revalidação do schema foi forçada com sucesso.',

@@ -33,10 +33,10 @@ vi.mock('@/integrations/supabase/client', () => {
 import { supabase as mockedSupabase } from '@/integrations/supabase/client';
 const mockSupabase = mockedSupabase as any;
 
-// Mock gmailApi
-vi.mock('../gmail/gmailApi', () => ({
-  gmailSaveDraft: vi.fn().mockResolvedValue({ draftId: 'gmail-draft-1' }),
-  gmailDeleteDraft: vi.fn().mockResolvedValue({}),
+// Mock emailApi
+vi.mock('../email/emailApi', () => ({
+  emailSaveDraft: vi.fn().mockResolvedValue({ draftId: 'email-draft-1' }),
+  emailDeleteDraft: vi.fn().mockResolvedValue({}),
 }));
 
 describe('useEmailDraft', () => {

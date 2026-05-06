@@ -6,11 +6,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { type GmailAccount } from '@/hooks/gmail/gmailTypes';
-import { type TokenStatus } from '@/hooks/useGmailOAuthFlow';
+import { type EmailAccount } from '@/hooks/email/emailTypes';
+import { type TokenStatus } from '@/hooks/useEmailOAuthFlow';
 
-interface GmailAccountSelectorProps {
-  accounts: GmailAccount[];
+interface EmailAccountSelectorProps {
+  accounts: EmailAccount[];
   activeAccountId: string | null;
   tokenStatus: Record<string, TokenStatus>;
   isSyncing: boolean;
@@ -31,7 +31,7 @@ const TOKEN_STATUS_CONFIG: Record<TokenStatus, { icon: typeof Wifi; color: strin
   disconnected: { icon: WifiOff, color: 'text-muted-foreground', label: 'Desconectado' },
 };
 
-export function GmailAccountSelector({
+export function EmailAccountSelector({
   accounts,
   activeAccountId,
   tokenStatus,
@@ -43,7 +43,7 @@ export function GmailAccountSelector({
   onSettings,
   totalUnread = 0,
   className,
-}: GmailAccountSelectorProps) {
+}: EmailAccountSelectorProps) {
   const activeAccount = accounts.find(a => a.id === activeAccountId);
   const activeStatus = activeAccountId ? (tokenStatus[activeAccountId] ?? 'disconnected') : 'disconnected';
   const statusConfig = TOKEN_STATUS_CONFIG[activeStatus];
@@ -58,7 +58,7 @@ export function GmailAccountSelector({
         onClick={onAddAccount}
       >
         <Plus className="h-4 w-4" />
-        Conectar Gmail
+        Conectar Email
       </Button>
     );
   }
@@ -140,7 +140,7 @@ export function GmailAccountSelector({
 
           <DropdownMenuItem onClick={onAddAccount} className="gap-2">
             <Plus className="h-4 w-4" />
-            Adicionar conta Gmail
+            Adicionar conta Email
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={onSync} disabled={isSyncing} className="gap-2">
@@ -151,7 +151,7 @@ export function GmailAccountSelector({
           {onSettings && (
             <DropdownMenuItem onClick={onSettings} className="gap-2">
               <Settings className="h-4 w-4" />
-              Configurar Gmail
+              Configurar Email
             </DropdownMenuItem>
           )}
 

@@ -15,14 +15,14 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useGmailHealth } from '@/hooks/useGmailHealth';
+import { useEmailHealth } from '@/hooks/useEmailHealth';
 import { cn } from '@/lib/utils';
 
-export function GmailStatusPanel() {
-  const { health, isLoading, refresh, forceRevalidation } = useGmailHealth();
+export function EmailStatusPanel() {
+  const { health, isLoading, refresh, forceRevalidation } = useEmailHealth();
 
   if (isLoading && !health) {
-    return <div className="p-8 text-center text-muted-foreground">Carregando telemetria do Gmail...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Carregando telemetria do Email...</div>;
   }
 
   const statusConfig = {
@@ -42,7 +42,7 @@ export function GmailStatusPanel() {
             <StatusIcon className={cn('w-6 h-6', currentStatus.color)} />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Status do Gmail</h2>
+            <h2 className="text-xl font-bold">Status do Email</h2>
             <p className="text-sm text-muted-foreground">Integridade de Schema e Telemetria de RPCs</p>
           </div>
         </div>

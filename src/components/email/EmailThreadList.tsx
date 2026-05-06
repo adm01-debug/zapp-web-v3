@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { type GmailThread } from '@/hooks/gmail/gmailTypes';
+import { type EmailThread } from '@/hooks/email/emailTypes';
 import { SLADot } from './EmailSLABadge';
 import { useEmailSLA } from '@/hooks/useEmailSLA';
 import { formatDistanceToNow } from 'date-fns';
@@ -14,12 +14,12 @@ import { ptBR } from 'date-fns/locale';
 type FilterValue = 'all' | 'unread' | 'starred' | 'sent';
 
 interface EmailThreadListProps {
-  threads: GmailThread[];
+  threads: EmailThread[];
   selectedThreadId?: string | null;
   accountId: string | null;
   isLoading?: boolean;
   hasMore?: boolean;
-  onSelectThread: (thread: GmailThread) => void;
+  onSelectThread: (thread: EmailThread) => void;
   onLoadMore?: () => void;
   onRefresh?: () => void;
   className?: string;
@@ -31,7 +31,7 @@ function ThreadListItem({
   slaStatus,
   onClick,
 }: {
-  thread: GmailThread;
+  thread: EmailThread;
   selected: boolean;
   slaStatus: ReturnType<ReturnType<typeof useEmailSLA>['getStatus']>;
   onClick: () => void;

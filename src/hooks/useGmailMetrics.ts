@@ -2,18 +2,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { gmailMappers } from '@/utils/gmailMappers';
+import { emailMappers } from '@/utils/emailMappers';
 import { 
-  GmailDayMetric, 
-  GmailMetricsSummary, 
-  GmailSLADashboard 
-} from '@/types/gmail';
+  EmailDayMetric, 
+  EmailMetricsSummary, 
+  EmailSLADashboard 
+} from '@/types/email';
 
 const supabase = _supabase as any;
 
-export function useGmailMetrics(accountId: string | null, days = 7) {
-  const [summary, setSummary]     = useState<GmailMetricsSummary | null>(null);
-  const [slaDash, setSlaDash]     = useState<GmailSLADashboard | null>(null);
+export function useEmailMetrics(accountId: string | null, days = 7) {
+  const [summary, setSummary]     = useState<EmailMetricsSummary | null>(null);
+  const [slaDash, setSlaDash]     = useState<EmailSLADashboard | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState<string | null>(null);
 
@@ -25,7 +25,7 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
     try {
       const sinceDate = new Date(Date.now() - days * 86400_000).toISOString().split('T')[0];
 
-      const { data: dailyData, error: dbErr, requestId } = await safeClient.from('gmail_daily_metrics', (q) =>
+      const { data: dailyData, error: dbErr, requestId } = await safeClient.from('email_daily_metrics', (q) =>
         q.select('date, threads_received, threads_replied, avg_first_reply_minutes, sla_met_count, sla_breached_count')
          .eq('account_id', accountId)
          .gte('date', sinceDate)
@@ -33,11 +33,11 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
       );
 
       if (dbErr) {
-        console.warn(`[useGmailMetrics][${requestId}] Falha ao carregar métricas:`, dbErr.message);
+        console.warn(`[useEmailMetrics][${requestId}] Falha ao carregar métricas:`, dbErr.message);
         throw dbErr;
       }
 
-      const daily = gmailMappers.metrics(Array.isArray(dailyData) ? dailyData : []);
+      const daily = emailMappers.metrics(Array.isArray(dailyData) ? dailyData : []);
 
       const total_received   = daily.reduce((s, d) => s + (d.threads_received ?? 0), 0);
       const total_replied    = daily.reduce((s, d) => s + (d.threads_replied ?? 0), 0);
@@ -65,13 +65,13 @@ export function useGmailMetrics(accountId: string | null, days = 7) {
         daily,
       });
 
-      const { data: threadsData } = await safeClient.from('gmail_threads', (q) =>
+      const { data: threadsData } = await safeClient.from('email_threads', (q) =>
         q.select('sla_status')
          .eq('account_id', accountId)
          .not('sla_status', 'is', null)
       );
 
-      const allThreads = gmailMappers.threads(Array.isArray(threadsData) ? threadsData : []);
+      const allThreads = emailMappers.threads(Array.isArray(threadsData) ? threadsData : []);
       setSlaDash({
         ok_count:       allThreads.filter(t => t.sla_status === 'ok').length,
         warning_count:  allThreads.filter(t => t.sla_status === 'warning').length,

@@ -2,7 +2,7 @@
  * email-flow.test.ts — Testes de integração para fluxo de email
  *
  * Cobre os cenários críticos end-to-end:
- * 1. Conexão OAuth Gmail
+ * 1. Conexão OAuth Email
  * 2. Sincronização de inbox
  * 3. Envio de email
  * 4. SLA tracking
@@ -41,7 +41,7 @@ const makeQueryMock = (data: unknown[], error = null) => ({
 
 // ── Tests ─────────────────────────────────────────────────────────────────
 
-describe('Email Flow — Gmail OAuth', () => {
+describe('Email Flow — Email OAuth', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('getAuthUrl deve retornar URL válida do Google', async () => {
@@ -50,23 +50,23 @@ describe('Email Flow — Gmail OAuth', () => {
       error: null,
     });
 
-    const result = await mockInvoke('gmail-oauth', { body: { action: 'getAuthUrl' } });
+    const result = await mockInvoke('email-oauth', { body: { action: 'getAuthUrl' } });
     expect(result.data.authUrl).toContain('accounts.google.com');
     expect(result.data.state).toBeDefined();
   });
 
   it('exchangeCode deve salvar tokens na base de dados', async () => {
     mockInvoke.mockResolvedValue({
-      data: { success: true, accountId: 'acc-gmail-1', email: 'user@gmail.com' },
+      data: { success: true, accountId: 'acc-email-1', email: 'user@email.com' },
       error: null,
     });
 
-    const result = await mockInvoke('gmail-oauth', {
+    const result = await mockInvoke('email-oauth', {
       body: { action: 'exchangeCode', code: 'auth-code-123', userId: 'user-123' }
     });
 
     expect(result.data.success).toBe(true);
-    expect(result.data.email).toBe('user@gmail.com');
+    expect(result.data.email).toBe('user@email.com');
   });
 
   it('listThreads deve retornar lista de threads', async () => {
@@ -81,8 +81,8 @@ describe('Email Flow — Gmail OAuth', () => {
       error: null,
     });
 
-    const result = await mockInvoke('gmail-sync', {
-      body: { action: 'listThreads', accountId: 'acc-gmail-1', maxResults: 50 }
+    const result = await mockInvoke('email-sync', {
+      body: { action: 'listThreads', accountId: 'acc-email-1', maxResults: 50 }
     });
 
     expect(result.data.threads).toHaveLength(2);
@@ -95,10 +95,10 @@ describe('Email Flow — Gmail OAuth', () => {
       error: null,
     });
 
-    const result = await mockInvoke('gmail-send', {
+    const result = await mockInvoke('email-send', {
       body: {
         action: 'send',
-        accountId: 'acc-gmail-1',
+        accountId: 'acc-email-1',
         to: ['destinatario@exemplo.com'],
         subject: 'Teste de envio',
         body: '<p>Corpo do email de teste</p>',
@@ -207,8 +207,8 @@ describe('Email Accounts — Unificado', () => {
   it('rpc_unified_email_send deve retornar provider correto', async () => {
     mockRpc.mockResolvedValue({
       data: {
-        provider: 'gmail',
-        edge_function: 'gmail-send',
+        provider: 'email',
+        edge_function: 'email-send',
         action: 'send',
         ready: true,
       },
@@ -216,12 +216,12 @@ describe('Email Accounts — Unificado', () => {
     });
 
     const result = await mockRpc('rpc_unified_email_send', {
-      p_account_id: 'acc-gmail-1',
+      p_account_id: 'acc-email-1',
       p_to: ['dest@exemplo.com'],
       p_subject: 'Teste',
     });
 
-    expect(result.data.provider).toBe('gmail');
-    expect(result.data.edge_function).toBe('gmail-send');
+    expect(result.data.provider).toBe('email');
+    expect(result.data.edge_function).toBe('email-send');
   });
 });

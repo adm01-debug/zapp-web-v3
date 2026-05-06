@@ -29,11 +29,11 @@ vi.mock('@/integrations/supabase/client', () => {
 
 const MOCK_ACCOUNTS = [
   {
-    account_id: 'gmail-1',
+    account_id: 'email-1',
     user_id: 'user-1',
-    email: 'joao@gmail.com',
+    email: 'joao@email.com',
     display_name: 'João Silva',
-    provider: 'gmail',
+    provider: 'email',
     auth_method: 'Google OAuth2',
     is_active: true,
     token_expired: false,
@@ -63,11 +63,11 @@ describe('useEmailAccounts', () => {
     mockQueryResult.error = null;
   });
 
-  it('deve carregar contas Gmail e Outlook', async () => {
+  it('deve carregar contas Email e Outlook', async () => {
     const { result } = renderHook(() => useEmailAccounts());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.accounts).toHaveLength(2);
-    expect(result.current.hasGmail).toBe(true);
+    expect(result.current.hasEmail).toBe(true);
     expect(result.current.hasOutlook).toBe(true);
   });
 
@@ -77,11 +77,11 @@ describe('useEmailAccounts', () => {
     expect(result.current.totalUnread).toBe(8);
   });
 
-  it('deve retornar hasGmail=false quando não há contas Gmail', async () => {
+  it('deve retornar hasEmail=false quando não há contas Email', async () => {
     mockQueryResult.data = [MOCK_ACCOUNTS[1]];
     const { result } = renderHook(() => useEmailAccounts());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.hasGmail).toBe(false);
+    expect(result.current.hasEmail).toBe(false);
     expect(result.current.hasOutlook).toBe(true);
   });
 
@@ -89,7 +89,7 @@ describe('useEmailAccounts', () => {
     mockQueryResult.data = [MOCK_ACCOUNTS[0]];
     const { result } = renderHook(() => useEmailAccounts());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.hasGmail).toBe(true);
+    expect(result.current.hasEmail).toBe(true);
     expect(result.current.hasOutlook).toBe(false);
   });
 

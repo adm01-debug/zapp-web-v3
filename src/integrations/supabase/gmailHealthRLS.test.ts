@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-describe('Gmail Health RLS Logic', () => {
+describe('Email Health RLS Logic', () => {
   it('should verify access restricted to admin/moderator roles', async () => {
     // This is a logic test for the RLS expression we implemented:
     // role IN ('admin', 'moderator')

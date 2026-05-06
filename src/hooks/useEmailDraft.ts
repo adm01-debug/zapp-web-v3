@@ -2,15 +2,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { gmailSaveDraft, gmailDeleteDraft } from './gmail/gmailApi';
-import { GmailDraft } from '@/types/gmail';
+import { emailSaveDraft, emailDeleteDraft } from './email/emailApi';
+import { EmailDraft } from '@/types/email';
 
 const supabase = _supabase as any;
 const AUTO_SAVE_DELAY_MS = 30_000;
 
 export interface DraftState {
   id?: string;
-  gmail_draft_id?: string;
+  email_draft_id?: string;
   to: string[];
   cc: string[];
   subject: string;
@@ -44,19 +44,19 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
       let localId = state.id;
 
       if (localId) {
-        await safeClient.from('gmail_drafts', (q) => q.update(payload).eq('id', localId));
+        await safeClient.from('email_drafts', (q) => q.update(payload).eq('id', localId));
       } else {
         const { data, error } = await supabase
-          .from('gmail_drafts')
+          .from('email_drafts')
           .insert(payload)
           .select('id')
           .single();
         localId = data?.id;
       }
 
-      const gmailResult = await gmailSaveDraft({
+      const emailResult = await emailSaveDraft({
         accountId,
-        draftId: state.gmail_draft_id,
+        draftId: state.email_draft_id,
         to: state.to,
         cc: state.cc,
         subject: state.subject,
@@ -67,7 +67,7 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
       setDraft(prev => ({
         ...prev,
         id: localId,
-        gmail_draft_id: (gmailResult as any)?.draftId,
+        email_draft_id: (emailResult as any)?.draftId,
         isDirty: false,
         lastSaved: new Date(),
       }));
@@ -91,10 +91,10 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     if (draft.id) {
-      await safeClient.from('gmail_drafts', (q) => q.delete().eq('id', draft.id));
+      await safeClient.from('email_drafts', (q) => q.delete().eq('id', draft.id));
     }
-    if (accountId && draft.gmail_draft_id) {
-      await gmailDeleteDraft(accountId, draft.gmail_draft_id);
+    if (accountId && draft.email_draft_id) {
+      await emailDeleteDraft(accountId, draft.email_draft_id);
     }
 
     setDraft({ to: [], cc: [], subject: '', bodyHtml: '', isDirty: false });

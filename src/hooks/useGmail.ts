@@ -1,14 +1,14 @@
 /**
- * useGmail.ts — Hook principal de gerenciamento Gmail
+ * useEmail.ts — Hook principal de gerenciamento Email
  *
  * Funcionalidades completas:
- * - Carrega contas Gmail ativas
- * - Monitora status de tokens via rpc_gmail_token_status
- * - Sincronização via gmail-sync Edge Function
+ * - Carrega contas Email ativas
+ * - Monitora status de tokens via rpc_email_token_status
+ * - Sincronização via email-sync Edge Function
  * - Carrega threads com filtro de label
  * - Star/unstar, archive, assign a agente
  * - Marcar como lida/não lida
- * - Envio de emails via gmail-send
+ * - Envio de emails via email-send
  * - Realtime subscription nas threads
  * - Refresh automático de tokens expirados
  * - Watch renewal check
@@ -17,45 +17,45 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { gmailMappers } from '@/utils/gmailMappers';
-import { type GmailMessage } from './gmail/gmailTypes';
-import { GMAIL_MOCKS } from './gmail/gmailMocks';
+import { emailMappers } from '@/utils/emailMappers';
+import { type EmailMessage } from './email/emailTypes';
+import { GMAIL_MOCKS } from './email/emailMocks';
 import { 
-  GmailAccount, 
-  GmailTokenInfo, 
-  GmailThread, 
-  GmailSendParams,
-  GmailLabel,
+  EmailAccount, 
+  EmailTokenInfo, 
+  EmailThread, 
+  EmailSendParams,
+  EmailLabel,
   EmailThread,
   SLAStatus
-} from '@/types/gmail';
+} from '@/types/email';
 
 export type { 
-  GmailAccount, 
-  GmailTokenInfo, 
-  GmailThread, 
-  GmailSendParams,
-  GmailLabel,
+  EmailAccount, 
+  EmailTokenInfo, 
+  EmailThread, 
+  EmailSendParams,
+  EmailLabel,
   EmailThread,
   SLAStatus
 };
 
-export type GmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
-export type GmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
-export type TokenStatus = GmailTokenStatus;
+export type EmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
+export type EmailWatchStatus = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
+export type TokenStatus = EmailTokenStatus;
 
 const supabase = _supabase as any;
 
 // ── Hook Principal ─────────────────────────────────────────────────────────
 
-export function useGmail() {
-  const [accounts, setAccounts]               = useState<GmailAccount[]>([]);
-  const [tokenStatus, setTokenStatus]         = useState<GmailTokenInfo[]>([]);
-  const [threads, setThreads]                 = useState<GmailThread[]>([]);
-  const [selectedThread, setSelectedThread]   = useState<GmailThread | null>(null);
-  const [messages, setMessages]               = useState<GmailMessage[]>([]);
+export function useEmail() {
+  const [accounts, setAccounts]               = useState<EmailAccount[]>([]);
+  const [tokenStatus, setTokenStatus]         = useState<EmailTokenInfo[]>([]);
+  const [threads, setThreads]                 = useState<EmailThread[]>([]);
+  const [selectedThread, setSelectedThread]   = useState<EmailThread | null>(null);
+  const [messages, setMessages]               = useState<EmailMessage[]>([]);
   const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
-  const [activeLabel, setActiveLabel]         = useState<GmailLabel>('INBOX');
+  const [activeLabel, setActiveLabel]         = useState<EmailLabel>('INBOX');
   const [isLoading, setIsLoading]             = useState(true);
   const [isLoadingThreads, setIsLoadingThreads] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -69,12 +69,12 @@ export function useGmail() {
 
   const tokenCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── Carregar contas Gmail ───────────────────────────────────────────────
+  // ── Carregar contas Email ───────────────────────────────────────────────
   const loadAccounts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
-    const { data, error: dbErr, requestId } = await safeClient.from('gmail_accounts', (q) => 
+    const { data, error: dbErr, requestId } = await safeClient.from('email_accounts', (q) => 
       q.select('id, user_id, email, display_name, is_active, token_expiry, watch_expiry')
        .eq('is_active', true)
        .order('created_at', { ascending: true })
@@ -82,7 +82,7 @@ export function useGmail() {
 
     if (dbErr) {
       if (dbErr.message.includes('disponível') || dbErr.message.includes('not found')) {
-        console.info('[useGmail] Usando dados mock para contas (schema não disponível)');
+        console.info('[useEmail] Usando dados mock para contas (schema não disponível)');
         setAccounts(GMAIL_MOCKS.accounts);
         if (GMAIL_MOCKS.accounts.length > 0 && !activeAccountId) {
           setActiveAccountId(GMAIL_MOCKS.accounts[0].id);
@@ -90,11 +90,11 @@ export function useGmail() {
         setSchemaStatus({ ok: false, lastChecked: new Date() });
       } else {
         setLastRequestId(requestId || null);
-        setError(`Não foi possível carregar as contas Gmail. ${dbErr.message}`);
+        setError(`Não foi possível carregar as contas Email. ${dbErr.message}`);
       }
     } else {
       setSchemaStatus({ ok: true, lastChecked: new Date() });
-      const accs = gmailMappers.accounts(Array.isArray(data) ? data : []);
+      const accs = emailMappers.accounts(Array.isArray(data) ? data : []);
       setAccounts(accs);
       if (accs.length > 0 && !activeAccountId) {
         setActiveAccountId(accs[0].id);
@@ -105,11 +105,11 @@ export function useGmail() {
 
   // ── Verificar status dos tokens ─────────────────────────────────────────
   const checkTokenStatus = useCallback(async () => {
-    const { data, error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_token_status');
+    const { data, error: rpcErr, requestId } = await safeClient.rpc('rpc_email_token_status');
     if (rpcErr && (rpcErr.message.includes('disponível') || rpcErr.message.includes('not found'))) {
       setTokenStatus(GMAIL_MOCKS.tokenStatus);
     } else if (!rpcErr && data) {
-      const tokenInfos = gmailMappers.tokenInfos(Array.isArray(data) ? data : []);
+      const tokenInfos = emailMappers.tokenInfos(Array.isArray(data) ? data : []);
       setTokenStatus(tokenInfos);
       
       const statusMap: Record<string, string> = {};
@@ -121,12 +121,12 @@ export function useGmail() {
   }, []);
 
   // ── Carregar threads ────────────────────────────────────────────────────
-  const loadThreads = useCallback(async (accountId?: string, label: GmailLabel = 'INBOX', append = false) => {
+  const loadThreads = useCallback(async (accountId?: string, label: EmailLabel = 'INBOX', append = false) => {
     const id = accountId ?? activeAccountId;
     if (!id) return;
 
     setIsLoadingThreads(true);
-    const { data, error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_search_threads', {
+    const { data, error: rpcErr, requestId } = await safeClient.rpc('rpc_email_search_threads', {
       p_account_id: id,
       p_query:      null,
       p_label_id:   label,
@@ -136,16 +136,16 @@ export function useGmail() {
 
     if (rpcErr) {
       if (rpcErr.message.includes('disponível') || rpcErr.message.includes('not found')) {
-        console.info('[useGmail] Usando threads mock');
+        console.info('[useEmail] Usando threads mock');
         setThreads(GMAIL_MOCKS.threads);
         setHasMore(false);
       } else {
         setLastRequestId(requestId || null);
-        setError(`Erro ao carregar mensagens do Gmail. ${rpcErr.message}`);
+        setError(`Erro ao carregar mensagens do Email. ${rpcErr.message}`);
       }
     } else {
       setSchemaStatus({ ok: true, lastChecked: new Date() });
-      const mappedThreads = gmailMappers.threads(Array.isArray(data) ? data : []);
+      const mappedThreads = emailMappers.threads(Array.isArray(data) ? data : []);
       setThreads(prev => append ? [...prev, ...mappedThreads] : mappedThreads);
       setHasMore(mappedThreads.length === 50);
     }
@@ -155,7 +155,7 @@ export function useGmail() {
   // ── Carregar mensagens de uma thread ────────────────────────────────────
   const loadMessages = useCallback(async (threadId: string) => {
     setIsLoadingMessages(true);
-    const { data, error: dbErr } = await safeClient.from('gmail_messages', (q) =>
+    const { data, error: dbErr } = await safeClient.from('email_messages', (q) =>
       q.select('*')
        .eq('thread_id', threadId)
        .order('date', { ascending: true })
@@ -166,7 +166,7 @@ export function useGmail() {
         setMessages(GMAIL_MOCKS.messages.filter(m => m.thread_id === threadId));
       } else {
         const rid = (dbErr as any).requestId || 'N/A';
-        console.error(`[useGmail][${rid}] Erro ao carregar mensagens:`, dbErr);
+        console.error(`[useEmail][${rid}] Erro ao carregar mensagens:`, dbErr);
       }
     } else {
       setMessages(Array.isArray(data) ? data : []);
@@ -175,7 +175,7 @@ export function useGmail() {
   }, []);
 
   // ── Selecionar thread ────────────────────────────────────────────────────
-  const selectThread = useCallback(async (thread: GmailThread | null) => {
+  const selectThread = useCallback(async (thread: EmailThread | null) => {
     setSelectedThread(thread);
     if (thread) {
       await loadMessages(thread.id);
@@ -191,7 +191,7 @@ export function useGmail() {
     }
   }, [hasMore, isLoadingThreads, activeAccountId, activeLabel, loadThreads]);
 
-  // ── Sincronizar inbox via gmail-sync ────────────────────────────────────
+  // ── Sincronizar inbox via email-sync ────────────────────────────────────
   const syncNow = useCallback(async (accountId?: string) => {
     const id = accountId ?? activeAccountId;
     if (!id || isSyncing) return;
@@ -199,11 +199,11 @@ export function useGmail() {
     setIsSyncing(true);
     setError(null);
     try {
-      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-sync', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('email-sync', {
         body: { action: 'syncInbox', accountId: id, maxResults: 100 },
       });
 
-      if (fnErr) throw new Error('Falha ao sincronizar Gmail');
+      if (fnErr) throw new Error('Falha ao sincronizar Email');
 
       await Promise.all([
         loadThreads(id, activeLabel),
@@ -224,12 +224,12 @@ export function useGmail() {
     if (!id) return;
 
     try {
-      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-oauth', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('email-oauth', {
         body: { action: 'refreshToken', accountId: id },
       });
 
       if (fnErr || !data?.success) {
-        setError('Token expirado — reconecte sua conta Gmail nas configurações.');
+        setError('Token expirado — reconecte sua conta Email nas configurações.');
         return false;
       }
 
@@ -246,7 +246,7 @@ export function useGmail() {
     if (!id) return;
 
     try {
-      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-webhook', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('email-webhook', {
         body: { action: 'renewWatch', accountId: id },
       });
 
@@ -259,12 +259,12 @@ export function useGmail() {
   }, [activeAccountId, checkTokenStatus]);
 
   // ── Enviar email ────────────────────────────────────────────────────────
-  const sendEmail = useCallback(async (params: GmailSendParams): Promise<{ success: boolean; error?: string }> => {
-    if (!activeAccountId) return { success: false, error: 'Nenhuma conta Gmail ativa' };
+  const sendEmail = useCallback(async (params: EmailSendParams): Promise<{ success: boolean; error?: string }> => {
+    if (!activeAccountId) return { success: false, error: 'Nenhuma conta Email ativa' };
 
     setIsSending(true);
     try {
-      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-send', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('email-send', {
         body: {
           action: 'send',
           accountId: activeAccountId,
@@ -288,7 +288,7 @@ export function useGmail() {
 
   // ── Marcar thread como lida/não lida ───────────────────────────────────
   const markAsRead = useCallback(async (threadId: string, read = true) => {
-    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_mark_thread_read', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_email_mark_thread_read', {
       p_thread_id: threadId,
       p_read:      read,
       p_message_ids: null
@@ -303,7 +303,7 @@ export function useGmail() {
 
   // ── Star/Unstar thread ──────────────────────────────────────────────────
   const starThread = useCallback(async (threadId: string, starred = true) => {
-    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_star_thread', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_email_star_thread', {
       p_thread_id: threadId,
       p_starred:   starred,
     });
@@ -317,7 +317,7 @@ export function useGmail() {
 
   // ── Archive thread ──────────────────────────────────────────────────────
   const archiveThread = useCallback(async (threadId: string) => {
-    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_archive_thread', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_email_archive_thread', {
       p_thread_id: threadId,
       p_archived:  true,
     });
@@ -330,7 +330,7 @@ export function useGmail() {
 
   // ── Assign thread a agente ──────────────────────────────────────────────
   const assignThread = useCallback(async (threadId: string, agentId: string | null) => {
-    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_gmail_assign_thread', {
+    const { error: rpcErr, requestId } = await safeClient.rpc('rpc_email_assign_thread', {
       p_thread_id: threadId,
       p_agent_id:  agentId,
     });
@@ -340,13 +340,13 @@ export function useGmail() {
         t.id === threadId ? { ...t, assigned_to: agentId } : t
       ));
     } else {
-      console.warn(`[useGmail][${requestId}] Falha ao atribuir thread:`, rpcErr.message);
+      console.warn(`[useEmail][${requestId}] Falha ao atribuir thread:`, rpcErr.message);
     }
   }, []);
 
   // ── Desconectar conta ───────────────────────────────────────────────────
   const disconnect = useCallback(async (accountId: string) => {
-    const { requestId, error: dbErr } = await safeClient.from('gmail_accounts', (q) =>
+    const { requestId, error: dbErr } = await safeClient.from('email_accounts', (q) =>
       q.update({ is_active: false, updated_at: new Date().toISOString() })
        .eq('id', accountId)
     );
@@ -362,7 +362,7 @@ export function useGmail() {
   const startOAuth = useCallback(async () => {
     setError(null);
     try {
-      const { data, error: fnErr } = await (supabase as any).functions.invoke('gmail-oauth', {
+      const { data, error: fnErr } = await (supabase as any).functions.invoke('email-oauth', {
         body: { action: 'getAuthUrl' },
       });
 
@@ -371,7 +371,7 @@ export function useGmail() {
         return;
       }
 
-      const popup = window.open(data.authUrl, 'gmail_oauth', 'width=500,height=600,scrollbars=yes');
+      const popup = window.open(data.authUrl, 'email_oauth', 'width=500,height=600,scrollbars=yes');
       if (!popup) {
         setError('Popup bloqueado. Permita popups para este site.');
         return;
@@ -379,7 +379,7 @@ export function useGmail() {
 
       // Escutar callback do popup
       const handler = async (event: MessageEvent) => {
-        if (event.data?.type !== 'gmail_oauth_callback') return;
+        if (event.data?.type !== 'email_oauth_callback') return;
         window.removeEventListener('message', handler);
 
         const { code } = event.data;
@@ -388,7 +388,7 @@ export function useGmail() {
         const { data: { user } } = await (supabase as any).auth.getUser();
         if (!user) return;
 
-        const { data: exchangeData, error: exchangeErr } = await (supabase as any).functions.invoke('gmail-oauth', {
+        const { data: exchangeData, error: exchangeErr } = await (supabase as any).functions.invoke('email-oauth', {
           body: { action: 'exchangeCode', code, userId: user.id },
         });
 
@@ -413,23 +413,23 @@ export function useGmail() {
     if (!activeAccountId) return;
 
     const channel = (supabase as any)
-      .channel(`gmail-threads-${activeAccountId}`)
+      .channel(`email-threads-${activeAccountId}`)
       .on('postgres_changes', {
         event:  '*',
         schema: 'public',
-        table:  'gmail_threads',
+        table:  'email_threads',
         filter: `account_id=eq.${activeAccountId}`,
       }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          const nt = { ...(payload.new as GmailThread), thread_id: (payload.new as any).gmail_thread_id, is_unread: (payload.new as any).unread_count > 0 };
+          const nt = { ...(payload.new as EmailThread), thread_id: (payload.new as any).email_thread_id, is_unread: (payload.new as any).unread_count > 0 };
           setThreads(prev => [nt, ...prev]);
         } else if (payload.eventType === 'UPDATE') {
-          setThreads(prev => prev.map(t => t.id === (payload.new as GmailThread).id
-            ? { ...t, ...(payload.new as GmailThread), thread_id: (payload.new as any).gmail_thread_id, is_unread: (payload.new as any).unread_count > 0 }
+          setThreads(prev => prev.map(t => t.id === (payload.new as EmailThread).id
+            ? { ...t, ...(payload.new as EmailThread), thread_id: (payload.new as any).email_thread_id, is_unread: (payload.new as any).unread_count > 0 }
             : t
           ));
         } else if (payload.eventType === 'DELETE') {
-          setThreads(prev => prev.filter(t => t.id !== (payload.old as GmailThread).id));
+          setThreads(prev => prev.filter(t => t.id !== (payload.old as EmailThread).id));
         }
       })
       .subscribe();

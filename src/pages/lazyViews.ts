@@ -57,10 +57,10 @@ export const AdminWebhookOverviewPage = lazyWithRetry(() => import('@/pages/Admi
 export const NPSDashboard = lazyWithRetry(() => import('@/components/nps/NPSDashboard').then(m => ({ default: m.NPSDashboard })));
 export const SLADashboardView = lazyWithRetry(() => import('@/components/queues/SLADashboard').then(m => ({ default: m.SLADashboard })));
 export const TeamChatView = lazyWithRetry(() => import('@/components/team-chat/TeamChatView').then(m => ({ default: m.TeamChatView })));
-export const GmailInboxView = lazyWithRetry(() => import('@/components/gmail/GmailInboxView'));
+export const EmailInboxView = lazyWithRetry(() => import('@/components/email/EmailInboxView'));
 export const EmailChatView = lazyWithRetry(() => import('@/components/email/EmailChatInbox').then(m => ({ default: m.EmailChatInbox })));
 export const PublicApiDashboard = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.PublicApiDashboard })));
-export const GmailWebhookMonitor = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.GmailWebhookMonitor })));
+export const EmailWebhookMonitor = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.EmailWebhookMonitor })));
 export const MediaMigrationTool = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.MediaMigrationTool })));
 export const SicoobBridgeDashboard = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.SicoobBridgeDashboard })));
 export const CRM360ExplorerView = lazyWithRetry(() => import('@/components/crm360/CRM360ExplorerView').then(m => ({ default: m.CRM360ExplorerView })));

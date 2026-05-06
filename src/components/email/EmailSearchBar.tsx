@@ -73,7 +73,7 @@ export function EmailSearchBar({ accountId, onSelectThread, className }: EmailSe
                   </span>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {result.source === 'remote' && (
-                      <Badge variant="outline" className="text-[9px] py-0 px-1 h-4">Gmail</Badge>
+                      <Badge variant="outline" className="text-[9px] py-0 px-1 h-4">Email</Badge>
                     )}
                     {result.unread_count > 0 && (
                       <Badge className="h-4 min-w-4 rounded-full text-[10px] px-1">{result.unread_count}</Badge>

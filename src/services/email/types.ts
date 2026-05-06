@@ -1,5 +1,5 @@
 
-export interface GmailFailure {
+export interface EmailFailure {
   requestId: string;
   operation: string;
   resource: string;
@@ -7,11 +7,11 @@ export interface GmailFailure {
   timestamp: string;
 }
 
-export interface GmailHealthInfo {
+export interface EmailHealthInfo {
   status: 'healthy' | 'degraded' | 'error';
   lastValidation: Date | null;
   cacheExpiration: number | null;
-  recentFailures: GmailFailure[];
+  recentFailures: EmailFailure[];
   stats: {
     totalCalls: number;
     failedCalls: number;
@@ -19,7 +19,7 @@ export interface GmailHealthInfo {
   };
 }
 
-export interface GmailHealthFilters {
+export interface EmailHealthFilters {
   requestId?: string;
   operation?: string;
   resource?: string;

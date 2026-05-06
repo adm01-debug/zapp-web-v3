@@ -7,24 +7,24 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from '@/lib/utils';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 const supabase = _supabase as any;
-import { type GmailMessage, type GmailThread } from '@/hooks/gmail/gmailTypes';
+import { type EmailMessage, type EmailThread } from '@/hooks/email/emailTypes';
 import { EmailChatBubble } from '../email/EmailChatBubble';
 import { EmailSLABadge, SLAProgressBar } from '../email/EmailSLABadge';
 import { EmailChatReplyBar } from '../email/EmailChatReplyBar';
 import { useEmailSLA } from '@/hooks/useEmailSLA';
-import { gmailMarkRead } from '@/hooks/gmail/gmailApi';
+import { emailMarkRead } from '@/hooks/email/emailApi';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface EmailThreadViewProps {
-  thread: GmailThread | null;
+  thread: EmailThread | null;
   accountId: string;
   onBack?: () => void;
   className?: string;
 }
 
 export function EmailThreadView({ thread, accountId, onBack, className }: EmailThreadViewProps) {
-  const [messages, setMessages] = useState<GmailMessage[]>([]);
+  const [messages, setMessages] = useState<EmailMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [replyMode, setReplyMode] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -36,21 +36,21 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
 
     setIsLoading(true);
     (supabase as any)
-      .from('gmail_messages')
-      .select('*, gmail_attachments(*)')
+      .from('email_messages')
+      .select('*, email_attachments(*)')
       .eq('thread_id_ref', thread.id)
       .order('internal_date', { ascending: true })
       .then(({ data, error }: any) => {
         setIsLoading(false);
         if (error || !data) return;
-        setMessages(data as GmailMessage[]);
+        setMessages(data as EmailMessage[]);
 
         // Auto-marcar como lido
-        const unreadIds = (data as GmailMessage[]).filter((m) => !m.is_read).map((m) => m.message_id);
+        const unreadIds = (data as EmailMessage[]).filter((m) => !m.is_read).map((m) => m.message_id);
         if (unreadIds.length > 0) {
-          gmailMarkRead({ accountId, messageIds: unreadIds, read: true } as any).catch(() => {});
-          (supabase as any).from('gmail_messages').update({ is_read: true }).in('message_id', unreadIds).then(() => {});
-          (supabase as any).from('gmail_threads').update({ unread_count: 0 }).eq('id', thread.id).then(() => {});
+          emailMarkRead({ accountId, messageIds: unreadIds, read: true } as any).catch(() => {});
+          (supabase as any).from('email_messages').update({ is_read: true }).in('message_id', unreadIds).then(() => {});
+          (supabase as any).from('email_threads').update({ unread_count: 0 }).eq('id', thread.id).then(() => {});
         }
       });
   }, [thread?.id, accountId]);
@@ -63,10 +63,10 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'gmail_messages',
+        table: 'email_messages',
         filter: `thread_id_ref=eq.${thread.id}`,
       }, payload => {
-        const newMsg = payload.new as GmailMessage;
+        const newMsg = payload.new as EmailMessage;
         setMessages(prev => {
           if (prev.some(m => m.id === newMsg.id)) return prev;
           return [...prev, newMsg];
@@ -219,7 +219,7 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
         <EmailChatReplyBar
           accountId={accountId}
           threadId={thread.id}
-          threadGmailId={thread.thread_id}
+          threadEmailId={thread.thread_id}
           toEmails={replyTo}
           subject={thread.subject ?? ''}
           onSent={() => {

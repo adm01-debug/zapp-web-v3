@@ -10,23 +10,23 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { GmailAccountSelector } from '@/components/gmail/GmailAccountSelector';
+import { EmailAccountSelector } from '@/components/email/EmailAccountSelector';
 import { EmailSignatureEditor } from '@/components/email/EmailSignatureEditor';
 import { EmailSLADashboard } from '@/components/email/EmailSLADashboard';
-import { useGmail } from '@/hooks/useGmail';
+import { useEmail } from '@/hooks/useEmail';
 import { useOutlookEmail } from '@/hooks/useOutlookEmail';
 
 export function EmailSettingsPage() {
   const {
-    accounts: gmailAccounts,
+    accounts: emailAccounts,
     tokenStatus,
-    activeAccountId: gmailActiveId,
-    setActiveAccountId: setGmailActiveId,
-    startOAuth: startGmailOAuth,
-    disconnect: disconnectGmail,
+    activeAccountId: emailActiveId,
+    setActiveAccountId: setEmailActiveId,
+    startOAuth: startEmailOAuth,
+    disconnect: disconnectEmail,
     syncNow,
-    isSyncing: isGmailSyncing,
-  } = useGmail();
+    isSyncing: isEmailSyncing,
+  } = useEmail();
 
   const {
     accounts: outlookAccounts,
@@ -44,7 +44,7 @@ export function EmailSettingsPage() {
   const [businessStart, setBusinessStart] = useState('8');
   const [businessEnd, setBusinessEnd] = useState('18');
 
-  const totalAccounts = gmailAccounts.length + outlookAccounts.length;
+  const totalAccounts = emailAccounts.length + outlookAccounts.length;
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -55,7 +55,7 @@ export function EmailSettingsPage() {
             Configurações de Email
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Gerencie contas Gmail, Outlook, assinaturas, SLA e notificações do Email Chat.
+            Gerencie contas Email, Outlook, assinaturas, SLA e notificações do Email Chat.
           </p>
         </div>
         {totalAccounts > 0 && (
@@ -68,7 +68,7 @@ export function EmailSettingsPage() {
       <Tabs defaultValue="accounts">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="accounts" className="gap-1.5 text-xs">
-            <Key className="h-3.5 w-3.5" />Gmail
+            <Key className="h-3.5 w-3.5" />Email
           </TabsTrigger>
           <TabsTrigger value="outlook" className="gap-1.5 text-xs">
             <Building2 className="h-3.5 w-3.5" />Outlook
@@ -84,39 +84,39 @@ export function EmailSettingsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* ── Tab: Gmail ─────────────────────────────────────────────── */}
+        {/* ── Tab: Email ─────────────────────────────────────────────── */}
         <TabsContent value="accounts" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Contas Gmail Conectadas</CardTitle>
+              <CardTitle className="text-base">Contas Email Conectadas</CardTitle>
               <CardDescription>
                 Autenticação OAuth2 segura. Tokens renovados automaticamente a cada 60s.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {gmailAccounts.length === 0 ? (
+              {emailAccounts.length === 0 ? (
                 <div className="flex flex-col items-center gap-4 py-8">
                   <Mail className="h-12 w-12 text-muted-foreground/30" />
                   <div className="text-center">
-                    <p className="font-medium">Nenhuma conta Gmail conectada</p>
+                    <p className="font-medium">Nenhuma conta Email conectada</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Conecte sua conta Gmail para usar o Email Chat
+                      Conecte sua conta Email para usar o Email Chat
                     </p>
                   </div>
-                  <Button onClick={startGmailOAuth} className="gap-2">
+                  <Button onClick={startEmailOAuth} className="gap-2">
                     <Plus className="h-4 w-4" />
-                    Conectar Gmail
+                    Conectar Email
                   </Button>
                 </div>
               ) : (
-                <GmailAccountSelector
-                  accounts={gmailAccounts}
-                  activeAccountId={gmailActiveId}
+                <EmailAccountSelector
+                  accounts={emailAccounts}
+                  activeAccountId={emailActiveId}
                   tokenStatus={Object.fromEntries(tokenStatus.map(s => [s.account_id, s.token_status])) as any}
-                  isSyncing={isGmailSyncing}
-                  onSelectAccount={setGmailActiveId}
-                  onAddAccount={startGmailOAuth}
-                  onDisconnect={disconnectGmail}
+                  isSyncing={isEmailSyncing}
+                  onSelectAccount={setEmailActiveId}
+                  onAddAccount={startEmailOAuth}
+                  onDisconnect={disconnectEmail}
                   onSync={syncNow}
                 />
               )}
@@ -221,7 +221,7 @@ export function EmailSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EmailSignatureEditor accountId={gmailActiveId} />
+              <EmailSignatureEditor accountId={emailActiveId} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -311,7 +311,7 @@ export function EmailSettingsPage() {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              Para <strong>Gmail</strong>, use a aba Gmail (OAuth2). Para <strong>Outlook</strong>, use a aba Outlook (Microsoft Graph API).
+              Para <strong>Email</strong>, use a aba Email (OAuth2). Para <strong>Outlook</strong>, use a aba Outlook (Microsoft Graph API).
               IMAP/SMTP é para Yahoo Mail e servidores customizados.
             </AlertDescription>
           </Alert>
@@ -321,7 +321,7 @@ export function EmailSettingsPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                { name: 'Gmail', method: 'OAuth2 (Google)', status: 'Suportado', color: 'green' },
+                { name: 'Email', method: 'OAuth2 (Google)', status: 'Suportado', color: 'green' },
                 { name: 'Outlook / Office 365', method: 'OAuth2 (Microsoft Graph API)', status: 'Suportado', color: 'green' },
                 { name: 'Yahoo Mail', method: 'IMAP + App Password', status: 'Worker externo necessário', color: 'yellow' },
                 { name: 'Servidor SMTP/IMAP', method: 'IMAP + credenciais', status: 'Worker externo necessário', color: 'yellow' },

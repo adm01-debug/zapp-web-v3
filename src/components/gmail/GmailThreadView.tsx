@@ -9,12 +9,12 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 const supabase = _supabase as any;
-import type { GmailThread } from '@/hooks/useGmail';
+import type { EmailThread } from '@/hooks/useEmail';
 
-interface GmailMessage {
+interface EmailMessage {
   id:           string;
   thread_id:    string;
-  gmail_msg_id: string;
+  email_msg_id: string;
   from_email:   string | null;
   from_name:    string | null;
   to_emails:    string[] | null;
@@ -28,9 +28,9 @@ interface GmailMessage {
   has_attachments: boolean;
 }
 
-interface GmailThreadViewProps {
-  thread:        GmailThread;
-  onReply?:      (thread: GmailThread) => void;
+interface EmailThreadViewProps {
+  thread:        EmailThread;
+  onReply?:      (thread: EmailThread) => void;
   onStar?:       (threadId: string, starred: boolean) => void;
   onArchive?:    (threadId: string) => void;
   onAssign?:     (threadId: string, agentId: string | null) => void;
@@ -49,7 +49,7 @@ function MessageBubble({
   expanded,
   onToggle,
 }: {
-  msg:      GmailMessage;
+  msg:      EmailMessage;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -108,14 +108,14 @@ function MessageBubble({
   );
 }
 
-export function GmailThreadView({
+export function EmailThreadView({
   thread,
   onReply,
   onStar,
   onArchive,
   onAssign,
-}: GmailThreadViewProps) {
-  const [messages, setMessages]       = useState<GmailMessage[]>([]);
+}: EmailThreadViewProps) {
+  const [messages, setMessages]       = useState<EmailMessage[]>([]);
   const [isLoading, setIsLoading]     = useState(true);
   const [expandedMsgs, setExpandedMsgs] = useState<Set<string>>(new Set());
 
@@ -123,12 +123,12 @@ export function GmailThreadView({
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('gmail_messages')
+        .from('email_messages')
         .select('*')
         .eq('thread_id', thread.id)
         .order('date', { ascending: true });
 
-      const msgs = (data ?? []) as GmailMessage[];
+      const msgs = (data ?? []) as EmailMessage[];
       setMessages(msgs);
       // Expandir automaticamente a última mensagem
       if (msgs.length > 0) {
@@ -281,4 +281,4 @@ export function GmailThreadView({
   );
 }
 
-export default GmailThreadView;
+export default EmailThreadView;

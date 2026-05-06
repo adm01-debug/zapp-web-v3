@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useGmailHealth } from '../useGmailHealth';
-import { gmailHealthService } from '@/services/gmail/gmailHealthService';
+import { useEmailHealth } from '../useEmailHealth';
+import { emailHealthService } from '@/services/email/emailHealthService';
 
-vi.mock('@/services/gmail/gmailHealthService', () => ({
-  gmailHealthService: {
+vi.mock('@/services/email/emailHealthService', () => ({
+  emailHealthService: {
     getHealthStatus: vi.fn(),
     forceRevalidation: vi.fn(),
   }
@@ -16,7 +16,7 @@ vi.mock('@/hooks/use-toast', () => ({
   }),
 }));
 
-describe('useGmailHealth hook', () => {
+describe('useEmailHealth hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -29,9 +29,9 @@ describe('useGmailHealth hook', () => {
       recentFailures: [],
       stats: { totalCalls: 0, failedCalls: 0, cacheHits: 0 }
     };
-    (gmailHealthService.getHealthStatus as any).mockResolvedValue(mockData);
+    (emailHealthService.getHealthStatus as any).mockResolvedValue(mockData);
 
-    const { result } = renderHook(() => useGmailHealth());
+    const { result } = renderHook(() => useEmailHealth());
 
     expect(result.current.isLoading).toBe(true);
     expect(result.current.health).toBe(null);
@@ -44,9 +44,9 @@ describe('useGmailHealth hook', () => {
   });
 
   it('should handle errors during data fetch', async () => {
-    (gmailHealthService.getHealthStatus as any).mockRejectedValue(new Error('Fetch failed'));
+    (emailHealthService.getHealthStatus as any).mockRejectedValue(new Error('Fetch failed'));
 
-    const { result } = renderHook(() => useGmailHealth());
+    const { result } = renderHook(() => useEmailHealth());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -56,15 +56,15 @@ describe('useGmailHealth hook', () => {
   });
 
   it('should call forceRevalidation and show success toast', async () => {
-    (gmailHealthService.getHealthStatus as any).mockResolvedValue({});
-    (gmailHealthService.forceRevalidation as any).mockResolvedValue(undefined);
+    (emailHealthService.getHealthStatus as any).mockResolvedValue({});
+    (emailHealthService.forceRevalidation as any).mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => useGmailHealth());
+    const { result } = renderHook(() => useEmailHealth());
     
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await result.current.forceRevalidation();
 
-    expect(gmailHealthService.forceRevalidation).toHaveBeenCalled();
+    expect(emailHealthService.forceRevalidation).toHaveBeenCalled();
   });
 });

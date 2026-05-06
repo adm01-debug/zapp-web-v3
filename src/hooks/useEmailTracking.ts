@@ -129,13 +129,13 @@ export function useEmailTracking() {
   // ── Criar tracking para um email enviado ───────────────────────────────
   const createTracking = useCallback(async (params: {
     accountId:      string;
-    provider?:      'gmail' | 'outlook';
+    provider?:      'email' | 'outlook';
     recipientEmail: string;
     recipientName?: string;
     senderEmail:    string;
     subject:        string;
     threadId?:      string;
-    gmailMessageId?: string;
+    emailMessageId?: string;
     bodyHtml:       string;
     trackLinks?:    boolean;
   }): Promise<{
@@ -154,13 +154,13 @@ export function useEmailTracking() {
         .insert({
           user_id:         user.id,
           account_id:      params.accountId,
-          provider:        params.provider ?? 'gmail',
+          provider:        params.provider ?? 'email',
           recipient_email: params.recipientEmail,
           recipient_name:  params.recipientName ?? null,
           sender_email:    params.senderEmail,
           subject:         params.subject,
           thread_id:       params.threadId ?? null,
-          gmail_message_id: params.gmailMessageId ?? null,
+          email_message_id: params.emailMessageId ?? null,
           has_tracking_pixel: true,
           has_tracked_links:  params.trackLinks !== false,
         })

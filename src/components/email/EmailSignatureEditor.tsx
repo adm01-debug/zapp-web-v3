@@ -46,7 +46,7 @@ export function EmailSignatureEditor({ accountId }: EmailSignatureEditorProps) {
   };
 
   if (!accountId) {
-    return <p className="text-sm text-muted-foreground">Conecte uma conta Gmail para gerenciar assinaturas.</p>;
+    return <p className="text-sm text-muted-foreground">Conecte uma conta Email para gerenciar assinaturas.</p>;
   }
 
   return (

@@ -1,5 +1,5 @@
 /**
- * gmailOAuth.ts — Utilitários OAuth2 Gmail para o cliente
+ * emailOAuth.ts — Utilitários OAuth2 Email para o cliente
  *
  * Constrói URLs de autorização, verifica estados PKCE e
  * processa callbacks OAuth de forma segura.
@@ -8,10 +8,10 @@
 const GMAIL_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 
 const GMAIL_SCOPES = [
-  'https://www.googleapis.com/auth/gmail.modify',
-  'https://www.googleapis.com/auth/gmail.send',
-  'https://www.googleapis.com/auth/gmail.compose',
-  'https://www.googleapis.com/auth/gmail.labels',
+  'https://www.googleapis.com/auth/email.modify',
+  'https://www.googleapis.com/auth/email.send',
+  'https://www.googleapis.com/auth/email.compose',
+  'https://www.googleapis.com/auth/email.labels',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile',
 ].join(' ');
@@ -54,7 +54,7 @@ export interface OAuthURLOptions {
   loginHint?: string;
 }
 
-export function buildGmailAuthURL(opts: OAuthURLOptions): string {
+export function buildEmailAuthURL(opts: OAuthURLOptions): string {
   const params = new URLSearchParams({
     client_id: opts.clientId,
     redirect_uri: opts.redirectUri,
@@ -73,8 +73,8 @@ export function buildGmailAuthURL(opts: OAuthURLOptions): string {
 
 // ── Session Storage helpers (PKCE state) ───────────────────────────────
 
-const PKCE_KEY = 'gmail_oauth_pkce';
-const STATE_KEY = 'gmail_oauth_state';
+const PKCE_KEY = 'email_oauth_pkce';
+const STATE_KEY = 'email_oauth_state';
 
 export function savePKCEState(state: string, verifier: string): void {
   try {
@@ -140,7 +140,7 @@ export function openOAuthPopup(opts: PopupOAuthOptions): Window | null {
 
   const popup = window.open(
     url,
-    'gmail-oauth',
+    'email-oauth',
     `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
   );
 
@@ -148,11 +148,11 @@ export function openOAuthPopup(opts: PopupOAuthOptions): Window | null {
     // Valida origin para segurança
     if (event.origin !== window.location.origin) return;
 
-    if (event.data?.type === 'gmail-oauth-success') {
+    if (event.data?.type === 'email-oauth-success') {
       window.removeEventListener('message', handleMessage);
       popup?.close();
       opts.onSuccess(event.data.email, event.data.accountId);
-    } else if (event.data?.type === 'gmail-oauth-error') {
+    } else if (event.data?.type === 'email-oauth-error') {
       window.removeEventListener('message', handleMessage);
       popup?.close();
       opts.onError?.(event.data.error ?? 'OAuth falhou');
