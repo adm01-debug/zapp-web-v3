@@ -5,10 +5,15 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Settings, Shield, User, Tag } from 'lucide-react';
+import { Loader2, Settings, Shield, User, Tag, History, RotateCcw } from 'lucide-react';
 import { getLogger } from '@/lib/logger';
 import { SettingsTabContent, PrivacyTabContent, LabelsTabContent } from './InstanceSettingsTabContent';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const log = getLogger('InstanceSettingsDialog');
 
