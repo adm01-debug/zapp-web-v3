@@ -55,6 +55,7 @@ export interface RealtimeMessage {
   retry_total?: number | null;
   /** Cache do avatar do contato para mensagens recebidas. Propagado durante a hidratação/reconciliação. */
   contactAvatar?: string | null;
+  reactions?: any[] | null;
 }
 
 export interface ConversationContact {
