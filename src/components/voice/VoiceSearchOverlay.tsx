@@ -118,8 +118,8 @@ export function VoiceSearchOverlay({
 
           <div className="relative z-10 flex flex-col items-center gap-5 w-full">
             <div className="text-center">
-              <motion.h2 className="text-lg font-bold text-white/90" key={meta.title} initial={{ opacity: 0, y: prefersReduced ? 0 : -5 }} animate={{ opacity: 1, y: 0 }}>{meta.title}</motion.h2>
-              <motion.p className="text-xs text-white/40 mt-1" key={meta.subtitle} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>{meta.subtitle}</motion.p>
+              <motion.h2 className="text-lg font-bold text-foreground/90" key={meta.title} initial={{ opacity: 0, y: prefersReduced ? 0 : -5 }} animate={{ opacity: 1, y: 0 }}>{meta.title}</motion.h2>
+              <motion.p className="text-xs text-muted-foreground mt-1" key={meta.subtitle} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>{meta.subtitle}</motion.p>
             </div>
             <button onClick={handleOrbClick} className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-full"
               aria-label={phase === 'listening' ? 'Parar de ouvir' : phase === 'speaking' ? 'Interromper resposta' : 'Começar a ouvir'}>
@@ -129,9 +129,9 @@ export function VoiceSearchOverlay({
             <VoiceTranscriptArea phase={phase} partialTranscript={partialTranscript} finalTranscript={finalTranscript} agentResponse={agentResponse} error={error} colors={colors} />
             <VoiceSuggestions visible={showSuggestions && phase === 'idle' && !agentResponse} />
             <div className="flex items-center justify-between w-full pt-1">
-              <span className="text-[10px] text-white/20"><kbd className="px-1 py-0.5 rounded bg-white/[0.05] border border-white/10 text-[9px] font-mono">ESC</kbd>{' '}para fechar</span>
-              <button ref={closeButtonRef} onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent border border-white/10" aria-label="Fechar assistente de voz">
-                <X className="w-4 h-4 text-white/40" />
+              <span className="text-[10px] text-muted-foreground/30"><kbd className="px-1 py-0.5 rounded bg-muted/20 border border-border text-[9px] font-mono">ESC</kbd>{' '}para fechar</span>
+              <button ref={closeButtonRef} onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center bg-muted/20 hover:bg-muted/30 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background border border-border" aria-label="Fechar assistente de voz">
+                <X className="w-4 h-4 text-muted-foreground/60" />
               </button>
             </div>
           </div>
