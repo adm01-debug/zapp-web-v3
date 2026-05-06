@@ -10,9 +10,13 @@ export function normalizeMessage(message: RealtimeMessage): RealtimeMessage {
 }
 
 export function sortMessagesByCreatedAt(messages: RealtimeMessage[]): RealtimeMessage[] {
-  return [...messages].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
+  return [...messages].sort((a, b) => {
+    const dateA = new Date(a.created_at || 0).getTime();
+    const dateB = new Date(b.created_at || 0).getTime();
+    if (dateA !== dateB) return dateA - dateB;
+    // Tie-break with ID for stable sort if timestamps are identical
+    return (a.id || "").localeCompare(b.id || "");
+  });
 }
 
 export function buildConversation(
