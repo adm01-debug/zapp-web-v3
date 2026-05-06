@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface FeatureFlag {
-  key: string;
+  name: string;
   enabled: boolean;
-  metadata: Record<string, any>;
+  metadata: any;
 }
 
 export function useFeatureFlags() {
@@ -13,20 +13,20 @@ export function useFeatureFlags() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("feature_flags")
-        .select("key, enabled, metadata");
+        .select("name, enabled, metadata");
       
       if (error) throw error;
       
       return (data || []).reduce((acc, flag) => {
-        acc[flag.key] = { enabled: flag.enabled, metadata: flag.metadata };
+        acc[flag.name] = { enabled: flag.enabled, metadata: flag.metadata };
         return acc;
-      }, {} as Record<string, { enabled: boolean; metadata: Record<string, any> }>);
+      }, {} as Record<string, { enabled: boolean; metadata: any }>);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
-export function useFlag(key: string) {
+export function useFlag(name: string) {
   const { data: flags } = useFeatureFlags();
-  return flags?.[key]?.enabled ?? false;
+  return flags?.[name]?.enabled ?? false;
 }
