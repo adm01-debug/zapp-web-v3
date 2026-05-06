@@ -116,6 +116,36 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     }
   }, [showOnlyRetrying, failureCategoryFilter]);
 
+  // Sync scope/showAll with URL and localStorage
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    let changed = false;
+
+    if (showAll) {
+      if (params.get('showAll') !== 'true') {
+        params.set('showAll', 'true');
+        changed = true;
+      }
+      localStorage.setItem('inbox_show_all', 'true');
+    } else {
+      if (params.has('showAll')) {
+        params.delete('showAll');
+        changed = true;
+      }
+      localStorage.setItem('inbox_show_all', 'false');
+    }
+
+    if (params.get('scope') !== scope) {
+      params.set('scope', scope);
+      changed = true;
+    }
+    localStorage.setItem('inbox_scope', scope);
+
+    if (changed) {
+      window.history.replaceState(null, '', `?${params.toString()}${window.location.hash}`);
+    }
+  }, [showAll, scope]);
+
   // Load contact_tags mapping
   const { data: contactTagsMap = {} } = useQuery({
     queryKey: ['contact-tags-map'],
