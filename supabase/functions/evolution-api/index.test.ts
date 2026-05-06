@@ -1,5 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import "https://deno.land/std@0.224.0/dotenv/load.ts";
+// Dotenv loading disabled in CI simulation to avoid missing .env.example vars error
+// import "https://deno.land/std@0.224.0/dotenv/load.ts";
 
 const SUPABASE_URL = Deno.env.get("VITE_SUPABASE_URL") ?? "https://placeholder.supabase.co";
 const SUPABASE_ANON_KEY = Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY") ?? "placeholder";
