@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Copy, Palette, Type, Layout, MousePointer2, Settings, ExternalLink, MoreVertical, ShieldCheck, Database, Table as TableIcon } from "lucide-react";
+import componentRegistry from "@/components/ui/registry.json";
 
 export default function DesignSystem() {
   return (
@@ -110,6 +111,40 @@ export default function DesignSystem() {
             </div>
           </div>
         </Card>
+      </section>
+      {/* Automated Component Registry */}
+      <section className="space-y-8">
+        <div className="flex items-center gap-3 border-b border-border pb-4">
+          <Settings className="w-6 h-6 text-primary" />
+          <h2 className="text-2xl font-semibold italic">Registro de Componentes (Auto-Gerado)</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Object.entries(componentRegistry).map(([key, value]: [string, any]) => (
+            <Card key={key} variant="glass" padding="default" className="flex flex-col">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  {value.name}
+                  <Badge variant="outline" className="font-mono text-[10px] uppercase">shadcn/ui</Badge>
+                </CardTitle>
+                <CardDescription>Exploração automática de variantes.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow space-y-4">
+                {Object.entries(value.variants).map(([variantName, options]: [string, any]) => (
+                  <div key={variantName} className="space-y-1.5">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{variantName}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {options.map((opt: string) => (
+                        <Badge key={opt} variant="secondary" className="text-[10px] py-0 px-1.5 h-5">
+                          {opt}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
 
       {/* Inputs */}
