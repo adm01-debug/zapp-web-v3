@@ -79,6 +79,13 @@ export function RealtimeInboxView() {
     sortBy: inbox.sortBy,
     statusFilter: inbox.statusFilter
   });
+  // Sync IDs do departamento → permite escopo "Departamento" no Inbox
+  // (coordenador/supervisor vê conversas atribuídas aos colegas do mesmo depto).
+  const { agentIds: departmentAgentIds } = useDepartmentAgents();
+  useEffect(() => {
+    inboxFilters.setDepartmentAgentIds(departmentAgentIds);
+  }, [departmentAgentIds, inboxFilters.setDepartmentAgentIds]);
+
   const bulkActions = useInboxBulkActions({ refetch: inbox.refetch, filteredConversations: inboxFilters.filteredConversations });
   const pullToRefresh = usePullToRefresh({ onRefresh: async () => { await inbox.refetch(); }, disabled: !isMobile || !!inbox.selectedContactId });
 
