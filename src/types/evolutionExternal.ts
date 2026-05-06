@@ -38,6 +38,7 @@ export interface EvolutionMessage {
   instance_name: string;
   push_name: string | null;
   deleted_at: string | null;
+  reactions?: any[] | null;
 }
 
 // ─── evolution_messages (lite) ────────────────────────────────
