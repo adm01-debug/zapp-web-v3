@@ -35,10 +35,10 @@ interface ConversationListProps {
 // ── Priority badge ─────────────────────────────────────────────────────────
 
 const PRIORITY_COLORS: Record<string, string> = {
-  urgent: 'bg-red-100 text-red-700 border-red-300',
-  high:   'bg-orange-100 text-orange-700 border-orange-300',
-  normal: 'bg-blue-100 text-blue-700 border-blue-300',
-  low:    'bg-gray-100 text-gray-600',
+  urgent: 'text-destructive bg-destructive/10 border-destructive/20',
+  high:   'text-warning bg-warning/10 border-warning/20',
+  normal: 'text-primary bg-primary/10 border-primary/20',
+  low:    'text-muted-foreground bg-muted border-border',
 };
 
 // ── Conversation Item ──────────────────────────────────────────────────────
