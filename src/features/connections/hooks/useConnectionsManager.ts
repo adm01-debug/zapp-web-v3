@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
-import { externalClient } from '@/integrations/supabase/externalClient';
+import { externalSupabase } from '@/integrations/supabase/externalClient';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { whatsappConnectionRepository } from '@/features/connections/data-access/whatsappConnectionRepository';
@@ -170,8 +170,8 @@ export function useConnectionsManager() {
     try {
       // 1. Log audit event before action
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await (externalClient as any).rpc("fn_safe_audit_log", {
+      if (user && externalSupabase) {
+        await (externalSupabase as any).rpc("fn_safe_audit_log", {
           p_entity_type: 'whatsapp_connection',
           p_entity_id: connection.id,
           p_action: 'disconnect',
