@@ -13,7 +13,7 @@ const IGNORED_FILES = [
   'test-audit.ts'
 ];
 
-const IGNORED_DIRS = ['node_modules', '.git', 'dist', 'stories', '__tests__'];
+const IGNORED_DIRS = ['node_modules', '.git', 'dist', 'stories', '__tests__', '.workspace'];
 
 interface Violation {
   file: string;
