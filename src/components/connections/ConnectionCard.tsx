@@ -18,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { BusinessHoursIndicator } from './BusinessHoursIndicator';
 import { OfficialApiConfigDialog } from './OfficialApiConfigDialog';
+import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import type { WhatsAppConnection } from '@/features/connections';
 
 /** Human-friendly status — no jargon. */
@@ -63,11 +64,36 @@ export function ConnectionCard({
   const isOfficial = (connection.api_type ?? 'evolution') === 'official';
   const [officialConfigOpen, setOfficialConfigOpen] = useState(false);
   const [recheckingHealth, setRecheckingHealth] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+  const { restartInstance, getInstanceStatus } = useEvolutionApi();
   const isConnected = connection.status === 'connected';
 
   const reasonInfo = connection.health_reason ? HEALTH_REASON_LABEL[connection.health_reason] : null;
   const isPhantomLike = reasonInfo?.severe && connection.health_status !== 'healthy';
   const needsAction = isPhantomLike || connection.status === 'disconnected';
+
+  const handleReconnect = async () => {
+    if (!connection.instance_id) return;
+    setReconnecting(true);
+    try {
+      // 1. Tentar reiniciar a instância na Evolution API
+      await restartInstance(connection.instance_id);
+      
+      // 2. Aguardar um pouco para o restart processar
+      await new Promise(r => setTimeout(r, 2000));
+      
+      // 3. Forçar um health check no Supabase para atualizar o status no painel
+      await supabase.functions.invoke('connection-health-check', {
+        body: { instanceName: connection.instance_id },
+      });
+      
+      toast({ title: 'Comando enviado', description: 'A instância está sendo reiniciada.' });
+    } catch (e: unknown) {
+      toast({ title: 'Erro ao reconectar', description: e instanceof Error ? e.message : 'Erro desconhecido', variant: 'destructive' });
+    } finally {
+      setReconnecting(false);
+    }
+  };
 
   const handleRecheckNow = async () => {
     if (!connection.instance_id) return;
@@ -183,12 +209,26 @@ export function ConnectionCard({
             {/* Right: single primary action + menu */}
             <div className="flex items-center gap-2 shrink-0">
               {(connection.status !== 'connected' || isPhantomLike) && !isOfficial && (
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button size="sm" onClick={() => onShowQrCode(connection)}
-                    className="bg-whatsapp text-primary-foreground hover:bg-whatsapp/90 shadow-lg shadow-whatsapp/20">
-                    <QrCode className="w-4 h-4 mr-1.5" />Reconectar
-                  </Button>
-                </motion.div>
+                <div className="flex gap-2">
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      disabled={reconnecting}
+                      onClick={handleReconnect}
+                      className="border-whatsapp text-whatsapp hover:bg-whatsapp/5"
+                    >
+                      {reconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
+                      Reconectar
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                    <Button size="sm" onClick={() => onShowQrCode(connection)}
+                      className="bg-whatsapp text-primary-foreground hover:bg-whatsapp/90 shadow-lg shadow-whatsapp/20">
+                      <QrCode className="w-4 h-4 mr-1.5" />QR Code
+                    </Button>
+                  </motion.div>
+                </div>
               )}
               {connection.status !== 'connected' && isOfficial && connection.instance_id && (
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
