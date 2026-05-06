@@ -37,6 +37,16 @@ class Logger {
     return `[${timestamp}] [${level.toUpperCase()}] [${this.module}] [sid:${sessionId.slice(0, 8)}] ${message}`;
   }
 
+  private addToSentryBreadcrumb(level: LogLevel, message: string, ...args: unknown[]): void {
+    if (!import.meta.env.PROD) return;
+    Sentry.addBreadcrumb({
+      category: 'log',
+      message: `${this.module}: ${message}`,
+      level: level === 'error' ? 'error' : level === 'warn' ? 'warning' : 'info',
+      data: args.length > 0 ? { args: JSON.stringify(args) } : undefined,
+    });
+  }
+
   private shouldLog(level: LogLevel): boolean {
     if (!isDev && (level === 'debug' || level === 'info')) {
       return false;
