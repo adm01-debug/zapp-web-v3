@@ -187,7 +187,7 @@ export default function AdminGmailStatusPage() {
           <p className="text-muted-foreground">Monitoramento de integridade do schema e conexões Email.</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => window.location.hash = '#admin/gmail-audit'} variant="outline" className="gap-2">
+          <Button onClick={() => window.location.hash = '#admin/email-audit'} variant="outline" className="gap-2">
             <HistoryIcon className="w-4 h-4" />
             Ver Auditoria
           </Button>
