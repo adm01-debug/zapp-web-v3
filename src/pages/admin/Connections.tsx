@@ -30,8 +30,26 @@ export default function AdminConnectionsPage() {
   const [draftKey, setDraftKey] = useState(DEFAULT_EXTERNAL_KEY);
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
-  useEffect(() => { fetchConnections(); }, []);
+  useEffect(() => {
+    fetchConnections();
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id ?? null);
+      if (user?.id) {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+        setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
+      } else {
+        setIsAdmin(false);
+      }
+    })();
+  }, []);
 
   async function fetchConnections() {
     setLoading(true);
@@ -90,6 +108,16 @@ export default function AdminConnectionsPage() {
     }
 
     setSaving(true);
+    setSaveError(null);
+
+    if (isAdmin === false) {
+      const msg = 'Você precisa ser admin para salvar conexões do sistema. Faça login com uma conta admin.';
+      setSaveError(msg);
+      toast({ title: 'Sem permissão', description: msg, variant: 'destructive' });
+      setSaving(false);
+      return;
+    }
+
     const payload: any = {
       name: 'FATOR X',
       provider: 'supabase_external',
@@ -99,29 +127,34 @@ export default function AdminConnectionsPage() {
 
     try {
       const existing: any = connections.find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
-      
+
+      const insertPayload = currentUserId ? { ...payload, created_by: currentUserId } : payload;
+
       const { data, error, status } = existing
         ? await supabase.from('system_connections' as any).update(payload).eq('id', existing.id).select()
-        : await supabase.from('system_connections' as any).insert(payload).select();
+        : await supabase.from('system_connections' as any).insert(insertPayload).select();
 
       if (error) {
-        console.error('Erro ao salvar conexão:', error);
-        toast({ 
-          title: 'Erro ao salvar', 
-          description: `Erro: ${error.message} (Código: ${error.code}). Campo: ${error.details || 'N/A'}. Payload: ${JSON.stringify(payload)}`, 
-          variant: 'destructive' 
-        });
+        const msg = `${error.message}${error.code ? ` (código: ${error.code})` : ''}${error.details ? ` — ${error.details}` : ''}${error.hint ? ` | hint: ${error.hint}` : ''}`;
+        setSaveError(msg);
+        toast({ title: 'Erro ao salvar', description: msg, variant: 'destructive' });
         return;
       }
 
-      // Verificação de persistência (resposta 200 mas sem dados retornados)
-      if (status >= 200 && status < 300 && (!data || data.length === 0)) {
-        toast({
-          title: 'Aviso de persistência',
-          description: `Resposta ${status} recebida, mas o registro não foi retornado. Verifique as políticas de RLS. Payload: ${JSON.stringify(payload)}`,
-          variant: 'destructive'
-        });
-        return;
+      if (!data || data.length === 0) {
+        // Verifica se realmente persistiu via SELECT (pode ser RLS bloqueando o RETURNING)
+        const { data: verify } = await supabase
+          .from('system_connections' as any)
+          .select('id')
+          .eq('provider', 'supabase_external')
+          .limit(1);
+
+        if (!verify || verify.length === 0) {
+          const msg = `A requisição retornou ${status} mas nenhum registro foi persistido. Provavelmente as políticas de RLS estão bloqueando a escrita. Verifique se você está autenticado como admin.`;
+          setSaveError(msg);
+          toast({ title: 'Não foi salvo', description: msg, variant: 'destructive' });
+          return;
+        }
       }
 
       setExternalUrl(draftUrl);
@@ -133,12 +166,9 @@ export default function AdminConnectionsPage() {
       });
       await fetchConnections();
     } catch (e: any) {
-      console.error('Exceção ao salvar:', e);
-      toast({ 
-        title: 'Erro inesperado', 
-        description: e?.message ?? 'Falha desconhecida ao processar a requisição.', 
-        variant: 'destructive' 
-      });
+      const msg = e?.message ?? 'Falha desconhecida ao processar a requisição.';
+      setSaveError(msg);
+      toast({ title: 'Erro inesperado', description: msg, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -213,6 +243,21 @@ export default function AdminConnectionsPage() {
                       <p className="text-[11px] text-muted-foreground">
                         Editando inline. Após salvar, atualize também os secrets <code>VITE_EXTERNAL_SUPABASE_URL/KEY</code> e republique para o runtime usar.
                       </p>
+                    )}
+                    {isAdmin === false && (
+                      <div className="flex items-start gap-2 p-3 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-600 text-xs">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <span>Você não está autenticado como admin. As políticas de segurança bloqueiam a escrita em <code>system_connections</code> para não-admins.</span>
+                      </div>
+                    )}
+                    {saveError && (
+                      <div className="flex items-start gap-2 p-3 rounded-md border border-destructive/30 bg-destructive/10 text-destructive text-xs">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <div className="flex-1 break-all">
+                          <strong className="block mb-1">Falha ao salvar:</strong>
+                          {saveError}
+                        </div>
+                      </div>
                     )}
                     <div className="flex gap-2 pt-2">
                       <Button variant="outline" size="sm" className="flex-1 gap-2"
