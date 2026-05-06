@@ -7,7 +7,7 @@ const log = getLogger('Prefetcher');
 // Route prefetch configuration
 const routePrefetchConfig: Record<string, () => Promise<unknown>> = {
   dashboard: () => import('@/components/dashboard/DashboardView'),
-  contacts: () => import('@/components/contacts/ContactsView'),
+  contacts: () => import('@/components/contacts/ContactsRichView'),
   agents: () => import('@/components/agents/AgentsView'),
   queues: () => import('@/components/queues/QueuesView'),
   settings: () => import('@/components/settings/SettingsView'),
