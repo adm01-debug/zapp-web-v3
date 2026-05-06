@@ -57,19 +57,27 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
     cleanup();
     setSelectedVoice(voice);
     setIsConverting(true);
-    setConversionProgress(10);
+    setConversionProgress(5); // Início imediato
 
     try {
+      // Progress simulation based on standard API lifecycle (STS doesn't have native progress hooks in standard fetch)
+      // but we can reflect phases
+      const progressSteps = [15, 30, 45, 60, 75, 85];
+      let currentStep = 0;
       const progressInterval = setInterval(() => {
-        setConversionProgress(prev => (prev < 90 ? prev + 5 : prev));
-      }, 500);
+        if (currentStep < progressSteps.length) {
+          setConversionProgress(progressSteps[currentStep]);
+          currentStep++;
+        }
+      }, 800);
 
       const formData = new FormData();
       formData.append('audio', audioBlob, 'audio.webm');
-      formData.append('voiceId', voice.id);
+      formData.append('voice_preset', voice.id); // Adjusted to match backend 'voice_preset' key
+      if (showCloneWarning) formData.append('authorized', 'true');
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-sts`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-changer`,
         {
           method: 'POST',
           headers: {
@@ -79,6 +87,8 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
           body: formData,
         }
       );
+
+      clearInterval(progressInterval);
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
