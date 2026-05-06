@@ -3741,12 +3741,15 @@ export type Database = {
           context_summary: string | null
           created_at: string | null
           escalated_at: string | null
+          escalation_count: number | null
           expires_at: string | null
           first_response_at: string | null
+          handle_time_seconds: number | null
           id: string
           idempotency_key: string | null
           parent_transfer_id: string | null
           priority: number | null
+          queue_time_seconds: number | null
           reason: string
           remote_jid: string
           resolution_notes: string | null
@@ -3774,12 +3777,15 @@ export type Database = {
           context_summary?: string | null
           created_at?: string | null
           escalated_at?: string | null
+          escalation_count?: number | null
           expires_at?: string | null
           first_response_at?: string | null
+          handle_time_seconds?: number | null
           id?: string
           idempotency_key?: string | null
           parent_transfer_id?: string | null
           priority?: number | null
+          queue_time_seconds?: number | null
           reason: string
           remote_jid: string
           resolution_notes?: string | null
@@ -3807,12 +3813,15 @@ export type Database = {
           context_summary?: string | null
           created_at?: string | null
           escalated_at?: string | null
+          escalation_count?: number | null
           expires_at?: string | null
           first_response_at?: string | null
+          handle_time_seconds?: number | null
           id?: string
           idempotency_key?: string | null
           parent_transfer_id?: string | null
           priority?: number | null
+          queue_time_seconds?: number | null
           reason?: string
           remote_jid?: string
           resolution_notes?: string | null
@@ -3836,6 +3845,13 @@ export type Database = {
             columns: ["parent_transfer_id"]
             isOneToOne: false
             referencedRelation: "conversation_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_parent_transfer_id_fkey"
+            columns: ["parent_transfer_id"]
+            isOneToOne: false
+            referencedRelation: "v_sla_breach_alerts"
             referencedColumns: ["id"]
           },
           {
@@ -10667,6 +10683,51 @@ export type Database = {
           },
         ]
       }
+      transfer_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          instance_name: string | null
+          metadata: Json | null
+          transfer_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          instance_name?: string | null
+          metadata?: Json | null
+          transfer_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          instance_name?: string | null
+          metadata?: Json | null
+          transfer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_audit_log_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_audit_log_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "v_sla_breach_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transfer_comments: {
         Row: {
           attachments: Json | null
@@ -10704,6 +10765,13 @@ export type Database = {
             columns: ["transfer_id"]
             isOneToOne: false
             referencedRelation: "conversation_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_comments_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "v_sla_breach_alerts"
             referencedColumns: ["id"]
           },
         ]
@@ -12170,6 +12238,17 @@ export type Database = {
         }
         Relationships: []
       }
+      v_operator_efficiency: {
+        Row: {
+          avg_escalations: number | null
+          avg_handle_min: number | null
+          avg_queue_min: number | null
+          sla_breaches: number | null
+          target_operator: string | null
+          tickets_resolved: number | null
+        }
+        Relationships: []
+      }
       v_operator_unread_summary: {
         Row: {
           instance_name: string | null
@@ -12225,6 +12304,44 @@ export type Database = {
           },
         ]
       }
+      v_sla_breach_alerts: {
+        Row: {
+          expires_at: string | null
+          id: string | null
+          overdue_minutes: number | null
+          priority: number | null
+          status: string | null
+          target_instance: string | null
+          ticket_number: number | null
+        }
+        Insert: {
+          expires_at?: string | null
+          id?: string | null
+          overdue_minutes?: never
+          priority?: number | null
+          status?: string | null
+          target_instance?: string | null
+          ticket_number?: number | null
+        }
+        Update: {
+          expires_at?: string | null
+          id?: string | null
+          overdue_minutes?: never
+          priority?: number | null
+          status?: string | null
+          target_instance?: string | null
+          ticket_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_target_instance_fkey"
+            columns: ["target_instance"]
+            isOneToOne: false
+            referencedRelation: "instance_registry"
+            referencedColumns: ["instance_name"]
+          },
+        ]
+      }
       v_top_searches_7d: {
         Row: {
           any_vector: boolean | null
@@ -12234,6 +12351,17 @@ export type Database = {
           query: string | null
           search_count: number | null
           zero_result_count: number | null
+        }
+        Relationships: []
+      }
+      v_transfer_audit_full: {
+        Row: {
+          action: string | null
+          instance_name: string | null
+          metadata: Json | null
+          ticket_number: number | null
+          timestamp: string | null
+          user_name: string | null
         }
         Relationships: []
       }
@@ -12484,12 +12612,15 @@ export type Database = {
           context_summary: string | null
           created_at: string | null
           escalated_at: string | null
+          escalation_count: number | null
           expires_at: string | null
           first_response_at: string | null
+          handle_time_seconds: number | null
           id: string
           idempotency_key: string | null
           parent_transfer_id: string | null
           priority: number | null
+          queue_time_seconds: number | null
           reason: string
           remote_jid: string
           resolution_notes: string | null
@@ -12538,12 +12669,15 @@ export type Database = {
           context_summary: string | null
           created_at: string | null
           escalated_at: string | null
+          escalation_count: number | null
           expires_at: string | null
           first_response_at: string | null
+          handle_time_seconds: number | null
           id: string
           idempotency_key: string | null
           parent_transfer_id: string | null
           priority: number | null
+          queue_time_seconds: number | null
           reason: string
           remote_jid: string
           resolution_notes: string | null
@@ -12568,6 +12702,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      fn_escalate_overdue_transfers: { Args: never; Returns: number }
       fn_get_my_unread_summary: {
         Args: never
         Returns: {
@@ -12609,12 +12744,15 @@ export type Database = {
           context_summary: string | null
           created_at: string | null
           escalated_at: string | null
+          escalation_count: number | null
           expires_at: string | null
           first_response_at: string | null
+          handle_time_seconds: number | null
           id: string
           idempotency_key: string | null
           parent_transfer_id: string | null
           priority: number | null
+          queue_time_seconds: number | null
           reason: string
           remote_jid: string
           resolution_notes: string | null
@@ -12663,6 +12801,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      fn_test_concurrency_accept: {
+        Args: { p_iterations: number; p_transfer_id: string }
+        Returns: {
+          failure_count: number
+          success_count: number
+        }[]
       }
       fn_transfer_comment: {
         Args: {
