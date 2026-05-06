@@ -1,8 +1,8 @@
 
 # Design System Audit Report
-Generated on: 5/6/2026, 5:07:24 PM
+Generated on: 5/6/2026, 5:10:06 PM
 
-Total violations found: 829
+Total violations found: 820
 
 | File | Line | Type | Content |
 |------|------|------|---------|
@@ -164,12 +164,8 @@ Total violations found: 829
 | src/components/conversations/ConversationsDashboard.tsx | 197 | Literal Tailwind Color (bg-gray-100) | `<div key={priority} className={`flex items-center ...` |
 | src/components/conversations/InboxView.tsx | 103 | Literal Tailwind Color (bg-blue-100) | `<Badge className="text-[10px] bg-blue-100 text-blu...` |
 | src/components/conversations/InboxView.tsx | 103 | Literal Tailwind Color (text-blue-700) | `<Badge className="text-[10px] bg-blue-100 text-blu...` |
-| src/components/conversations/MessageItem.tsx | 86 | Literal Tailwind Color (bg-white) | `<div className="mb-1 p-2 rounded bg-black/5 dark:b...` |
-| src/components/conversations/MessageItem.tsx | 86 | Literal Tailwind Color (bg-black) | `<div className="mb-1 p-2 rounded bg-black/5 dark:b...` |
-| src/components/conversations/MessageItem.tsx | 109 | Literal Tailwind Color (text-red-300) | `<AlertCircle className="h-3 w-3 text-red-300" />` |
-| src/components/conversations/MessageItem.tsx | 117 | Literal Tailwind Color (text-yellow-400) | `{msg.is_starred && <Star className="h-3 w-3 fill-y...` |
-| src/components/conversations/MessageItem.tsx | 142 | Literal Tailwind Color (text-red-300) | `<AlertCircle className="h-3 w-3 text-red-300" />` |
-| src/components/conversations/MessageItem.tsx | 172 | Literal Tailwind Color (text-yellow-400) | `<Star className={cn("h-4 w-4", msg.is_starred && "...` |
+| src/components/conversations/MessageItem.tsx | 130 | Literal Tailwind Color (text-yellow-400) | `{msg.is_starred && <Star className="h-3 w-3 fill-y...` |
+| src/components/conversations/MessageItem.tsx | 185 | Literal Tailwind Color (text-yellow-400) | `<Star className={cn("h-4 w-4", msg.is_starred && "...` |
 | src/components/conversations/MessageList.tsx | 226 | Literal Tailwind Color (text-white) | `<span className="absolute -top-1 -right-1 bg-prima...` |
 | src/components/csat/CSATWidget.tsx | 28 | Literal Tailwind Color (text-red-600) | `return 'text-red-600';` |
 | src/components/csat/CSATWidget.tsx | 129 | Literal Tailwind Color (text-red-600) | `? <TrendingDown className="h-3.5 w-3.5 text-red-60...` |
@@ -419,12 +415,7 @@ Total violations found: 829
 | src/components/ui/stories/Card.stories.tsx | 69 | Literal Tailwind Color (text-white) | `<CardDescription className="text-white/70">Backdro...` |
 | src/components/ui/stories/Card.stories.tsx | 71 | Literal Tailwind Color (text-white) | `<CardContent className="text-white/90">` |
 | src/components/voice/ElevenLabsDialogue.tsx | 111 | Hardcoded Font Family | `<div className="flex items-center gap-1 text-xs te...` |
-| src/components/voice/VoiceOrb.tsx | 144 | Literal Tailwind Color (text-white) | `<Mic className="w-6 h-6 text-white/60 drop-shadow-...` |
-| src/components/voice/VoiceOrb.tsx | 147 | Literal Tailwind Color (text-white) | `<Loader2 className="w-6 h-6 text-white animate-spi...` |
-| src/components/voice/VoiceOrb.tsx | 154 | Literal Tailwind Color (text-white) | `<Mic className="w-6 h-6 text-white drop-shadow-lg"...` |
-| src/components/voice/VoiceOrb.tsx | 162 | Literal Tailwind Color (text-white) | `<Zap className="w-6 h-6 text-white drop-shadow-lg"...` |
-| src/components/voice/VoiceOrb.tsx | 170 | Literal Tailwind Color (text-white) | `<Volume2 className="w-6 h-6 text-white drop-shadow...` |
-| src/components/voice/VoiceSearchOverlay.tsx | 132 | Hardcoded Font Family | `<span className="text-[10px] text-muted-foreground...` |
+| src/components/voice/VoiceSearchOverlay.tsx | 131 | Hardcoded Font Family | `<span className="text-[10px] text-muted-foreground...` |
 | src/components/voice/VoiceSuggestions.tsx | 27 | Literal Tailwind Color (text-white) | `<p className="text-[10px] text-white/25 text-cente...` |
 | src/components/voice/VoiceSuggestions.tsx | 37 | Literal Tailwind Color (bg-white, bg-white) | `className="text-xs text-white/35 px-4 py-1.5 round...` |
 | src/components/voice/VoiceSuggestions.tsx | 37 | Literal Tailwind Color (text-white, text-white) | `className="text-xs text-white/35 px-4 py-1.5 round...` |
