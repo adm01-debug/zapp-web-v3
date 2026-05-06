@@ -18,17 +18,16 @@ import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
 import { emailMappers } from '@/utils/emailMappers';
-import { type EmailMessage } from './email/emailTypes';
-import { GMAIL_MOCKS } from './email/emailMocks';
+import { type EmailMessage } from './gmail/gmailTypes';
+import { GMAIL_MOCKS } from './gmail/gmailMocks';
 import { 
   EmailAccount, 
   EmailTokenInfo, 
   EmailThread, 
   EmailSendParams,
   EmailLabel,
-  EmailThread,
   SLAStatus
-} from '@/types/email';
+} from '@/types/gmail';
 
 export type { 
   EmailAccount, 
@@ -36,8 +35,8 @@ export type {
   EmailThread, 
   EmailSendParams,
   EmailLabel,
-  EmailThread,
   SLAStatus
+};
 };
 
 export type EmailTokenStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
