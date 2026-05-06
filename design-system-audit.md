@@ -6,9 +6,9 @@
 | Low | 10 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
 | Low | 14 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
 | Low | 14 | `#45829` | `#45829` | Check design system tokens | - |
-| Medium | 15 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
-| Medium | 17 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
-| Medium | 20 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
+| Low | 15 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
+| Low | 17 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
+| Low | 20 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
 | Medium | 25 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
 | Medium | 27 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
 | Low | 34 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
@@ -22,8 +22,8 @@
 | High | 52 | `font-sans` | `font-sans` | Remove redundant font-sans; inherits from global | - |
 | Medium | 53 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
 | Medium | 54 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
-| High | 55 | `font-sans` | `font-sans` | Remove redundant font-sans; inherits from global | - |
-| High | 55 | `font-sans` | `font-sans` | Remove redundant font-sans; inherits from global | - |
+| Low | 55 | `font-sans` | `font-sans` | VALID: Intentional font reset | - |
+| Low | 55 | `font-sans` | `font-sans` | VALID: Intentional font reset | - |
 | Medium | 58 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
 | Medium | 61 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
 | Medium | 61 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
