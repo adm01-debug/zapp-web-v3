@@ -1,24 +1,36 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { getLogger } from '@/lib/logger';
+import { useQueryClient } from '@tanstack/react-query';
+import { eventBus } from '@/lib/eventBus';
 
 const log = getLogger('useEvolutionAutoReconnect');
 
+const INITIAL_BACKOFF_MS = 2000;
+const MAX_BACKOFF_MS = 60000; 
+
 /**
- * Hook que monitora as conexões e tenta reconectar instâncias que caíram
- * ou entraram em estado de 'phantom session'.
- * Inclui agora suporte a logs de auditoria e proteção de loop.
+ * useEvolutionAutoReconnect — Definitive Reconnection Hook
+ * Consolidates global monitoring via Realtime (Supabase) 
+ * and specific instance polling with backoff for the Inbox.
  */
-export function useEvolutionAutoReconnect() {
-  const { restartInstance } = useEvolutionApi();
+export function useEvolutionAutoReconnect(instanceName?: string) {
+  const { restartInstance, getInstanceStatus, connectInstance } = useEvolutionApi();
+  const queryClient = useQueryClient();
   const attemptMap = useRef<Record<string, number>>({});
   const lastAttemptTime = useRef<Record<string, number>>({});
 
+  // Local state for specific instance monitoring (e.g. in Inbox)
+  const [status, setStatus] = useState<string>('unknown');
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const backoffRef = useRef(INITIAL_BACKOFF_MS);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Global Realtime Monitoring ───────────────────────────────────────────
   useEffect(() => {
-    // Escuta mudanças em tempo real na tabela de conexões
     const channel = supabase
-      .channel('reconnect-monitor')
+      .channel('evolution-reconnect-monitor')
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'whatsapp_connections' },
@@ -26,7 +38,6 @@ export function useEvolutionAutoReconnect() {
           const connection = payload.new as any;
           const oldConnection = payload.old as any;
           
-          // Verificações de política e segurança
           if (!connection.auto_reconnect_enabled || connection.loop_protection_active) return;
 
           const isDisconnected = connection.status === 'disconnected';
@@ -34,34 +45,31 @@ export function useEvolutionAutoReconnect() {
           const wasConnected = oldConnection.status === 'connected';
           
           if ((isDisconnected || isPhantom) && connection.instance_id && wasConnected) {
-            void attemptReconnect(connection);
+            void performReconnect(connection);
           }
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const attemptReconnect = async (connection: any) => {
+  const performReconnect = async (connection: any) => {
     const id = connection.id;
     const now = Date.now();
     const lastTime = lastAttemptTime.current[id] || 0;
     const attempts = attemptMap.current[id] || 0;
     
-    // Usa configurações da instância ou valores padrão
     const intervalMs = (connection.reconnect_interval_seconds || 30) * 1000;
     const maxAttempts = connection.max_reconnect_attempts || 5;
 
     if (now - lastTime < intervalMs) return;
     if (attempts >= maxAttempts) {
-      log.warn(`Limite de reconexão atingido para ${connection.name}`, { id });
+      log.warn(`Reconnection limit reached for ${connection.name}`, { id });
       return;
     }
 
-    log.info(`Reconexão automática para ${connection.name}`, { attempt: attempts + 1 });
+    log.info(`Auto-reconnecting ${connection.name}`, { attempt: attempts + 1 });
     
     lastAttemptTime.current[id] = now;
     attemptMap.current[id] = attempts + 1;
@@ -71,17 +79,19 @@ export function useEvolutionAutoReconnect() {
 
     try {
       await restartInstance(connection.instance_id);
+      // Wait for instance to boot
       await new Promise(r => setTimeout(r, 5000));
+      // Trigger a health check function if exists
       await supabase.functions.invoke('connection-health-check', {
         body: { instanceName: connection.instance_id },
       });
     } catch (err: any) {
       result = 'failed';
       errorMsg = err.message;
-      log.error(`Falha na reconexão de ${connection.name}`, err);
+      log.error(`Reconnection failed for ${connection.name}`, err);
     }
 
-    // Registrar auditoria no banco via RPC para gatilhar detecção de loop
+    // Log to DB
     await supabase.rpc('fn_log_reconnection_attempt', {
       p_connection_id: id,
       p_attempt: attempts + 1,
@@ -92,27 +102,70 @@ export function useEvolutionAutoReconnect() {
     });
   };
 
-  // Reset de tentativas caso a instância volte a ficar online
-  useEffect(() => {
-    const channel = supabase
-      .channel('reconnect-reset')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'whatsapp_connections', filter: 'status=eq.connected' },
-        (payload) => {
-          const connection = payload.new as any;
-          if (attemptMap.current[connection.id]) {
-            log.info(`Instância ${connection.name} normalizada.`);
-            delete attemptMap.current[connection.id];
-            delete lastAttemptTime.current[connection.id];
-          }
+  // ── Specific Instance Polling (Legacy/Inbox Support) ──────────────────────
+  const attemptSpecificReconnect = useCallback(async () => {
+    if (!instanceName || isReconnecting) return;
+    
+    setIsReconnecting(true);
+    log.info(`Attempting to reconnect specific instance ${instanceName}...`);
+    
+    try {
+      await connectInstance(instanceName);
+      setTimeout(async () => {
+        const currentStatus = await getInstanceStatus(instanceName);
+        const state = currentStatus?.instance?.state || currentStatus?.state || 'unknown';
+        setStatus(state);
+        
+        if (state === 'open') {
+          log.info(`Successfully reconnected instance ${instanceName}`);
+          backoffRef.current = INITIAL_BACKOFF_MS;
+          setIsReconnecting(false);
+          queryClient.invalidateQueries({ queryKey: ['external-evolution'] });
+          eventBus.emit('connection:recovered', { instanceName });
+        } else {
+          scheduleNextAttempt();
         }
-      )
-      .subscribe();
+      }, 5000);
+    } catch (err) {
+      log.error(`Failed to reconnect instance ${instanceName}:`, err);
+      scheduleNextAttempt();
+    }
+  }, [instanceName, connectInstance, getInstanceStatus, queryClient, isReconnecting]);
 
+  const scheduleNextAttempt = useCallback(() => {
+    setIsReconnecting(false);
+    const nextDelay = Math.min(backoffRef.current * 2, 60000);
+    backoffRef.current = nextDelay;
+    
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(attemptSpecificReconnect, nextDelay);
+  }, [attemptSpecificReconnect]);
+
+  const checkStatus = useCallback(async () => {
+    if (!instanceName) return;
+    try {
+      const currentStatus = await getInstanceStatus(instanceName);
+      const state = currentStatus?.instance?.state || currentStatus?.state || 'unknown';
+      setStatus(state);
+      
+      if (state !== 'open' && state !== 'connecting' && !isReconnecting) {
+        attemptSpecificReconnect();
+      }
+    } catch (err) {
+      log.error(`Error checking status for ${instanceName}:`, err);
+    }
+  }, [instanceName, getInstanceStatus, attemptSpecificReconnect, isReconnecting]);
+
+  useEffect(() => {
+    if (!instanceName) return;
+    checkStatus();
+    const interval = setInterval(checkStatus, 30000);
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, []);
+  }, [checkStatus, instanceName]);
+
+  return { status, isReconnecting };
 }
 

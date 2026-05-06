@@ -27,6 +27,7 @@ import { ContactBirthdayPanel } from './ContactBirthdayPanel';
 import { ContactToolbar } from './ContactToolbar';
 import { ContactContentArea } from './ContactContentArea';
 import { ContactDialogs } from './ContactDialogs';
+import { ContactImportDialog } from './ContactImportDialog';
 import { ContactQuickView } from './ContactQuickView';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
 import type { Contact } from './types';
@@ -581,23 +582,25 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
         )}
       </AnimatePresence>
       <ContactDialogs
+        workspaceId="wpp2"
         isAddDialogOpen={isAddDialogOpen}
         setIsAddDialogOpen={setIsAddDialogOpen}
-        newContact={newContact}
-        handleNewContactChange={handleNewContactChange}
-        handleAddContact={handleAddContact}
-        handleCancelForm={handleCancelForm}
-        isSubmitting={isSubmitting}
+        onContactSaved={() => crud.refetch()}
         isEditDialogOpen={isEditDialogOpen}
         setIsEditDialogOpen={setIsEditDialogOpen}
         editingContact={editingContact}
-        handleEditContactChange={handleEditContactChange}
-        handleEditContact={handleEditContact}
         showSuccess={showSuccess}
         setShowSuccess={setShowSuccess}
         deleteTarget={deleteTarget}
         setDeleteTarget={setDeleteTarget}
         handleDeleteContact={handleDeleteContact}
+      />
+
+      <ContactImportDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        workspaceId="wpp2"
+        onImportComplete={() => crud.refetch()}
       />
 
       <ContactQuickView
