@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { VoiceChanger } from '../VoiceChanger';
+import { VoiceChanger } from '../../VoiceChanger';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import React from 'react';
 
