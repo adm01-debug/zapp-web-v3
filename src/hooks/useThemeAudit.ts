@@ -1,6 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { STORAGE_KEY, DEFAULT_PRESET_ID, PRESETS } from '@/components/settings/theme/presets';
+
+export interface AuditResult {
+  oledPass: boolean;
+  fontPass: boolean;
+  colorPass: boolean;
+  violations: string[];
+}
 
 /**
  * Hook para detecção automática de inconsistências visuais (cores fixas hardcoded)
@@ -9,6 +16,12 @@ import { STORAGE_KEY, DEFAULT_PRESET_ID, PRESETS } from '@/components/settings/t
  */
 export const useThemeAudit = () => {
   const { resolvedTheme } = useTheme();
+  const [result, setResult] = useState<AuditResult>({
+    oledPass: true,
+    fontPass: true,
+    colorPass: true,
+    violations: []
+  });
 
   useEffect(() => {
     // Audit logic
