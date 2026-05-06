@@ -147,7 +147,7 @@ const MessageItem = memo(({
                           )}
                           {msg.status >= 3 && (
                             <motion.div key="check3" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0 }}>
-                              <CheckCheck className="h-3 w-3 text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]" />
+                              <CheckCheck className="h-3 w-3 text-primary drop-shadow-[0_0_5px_hsl(var(--primary)/0.5)]" />
                             </motion.div>
                           )}
                           {msg.status === 0 && (

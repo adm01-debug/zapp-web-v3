@@ -1,6 +1,9 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { log } from '@/lib/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, AlertTriangle, ShieldAlert } from 'lucide-react';
+
 
 interface Props {
   children: ReactNode;
