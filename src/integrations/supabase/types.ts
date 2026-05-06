@@ -12964,6 +12964,10 @@ export type Database = {
           unread_urgent: number
         }[]
       }
+      fn_mark_conversation_as_read: {
+        Args: { p_conversation_id: string; p_last_message_id: string }
+        Returns: undefined
+      }
       fn_mark_transfer_as_read: {
         Args: { p_transfer_id: string }
         Returns: undefined
