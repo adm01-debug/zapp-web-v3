@@ -8,9 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog';
-import {
   Database, Globe, Webhook, Cpu, Plus, Settings, Save, Trash2,
   RefreshCw, AlertCircle, ExternalLink, ShieldCheck, Link, Loader2,
 } from 'lucide-react';
@@ -158,19 +155,49 @@ export default function AdminConnectionsPage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label>URL da Instância</Label>
-                      <Input value={externalUrl} readOnly className="font-mono text-xs" />
+                      <Input
+                        value={editOpen ? draftUrl : externalUrl}
+                        onChange={(e) => setDraftUrl(e.target.value)}
+                        readOnly={!editOpen}
+                        className="font-mono text-xs"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Chave Anon (Public)</Label>
-                      <Input type="password" value={externalKey ? '•'.repeat(Math.min(externalKey.length, 32)) : ''} readOnly className="font-mono text-xs" />
+                      <Input
+                        type={editOpen ? 'text' : 'password'}
+                        value={editOpen ? draftKey : (externalKey ? '•'.repeat(Math.min(externalKey.length, 32)) : '')}
+                        onChange={(e) => setDraftKey(e.target.value)}
+                        readOnly={!editOpen}
+                        placeholder={editOpen ? 'eyJhbGciOi...' : ''}
+                        className="font-mono text-xs"
+                      />
                     </div>
+                    {editOpen && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Editando inline. Após salvar, atualize também os secrets <code>VITE_EXTERNAL_SUPABASE_URL/KEY</code> e republique para o runtime usar.
+                      </p>
+                    )}
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => testConnection(externalUrl, externalKey)} disabled={testing}>
+                      <Button variant="outline" size="sm" className="flex-1 gap-2"
+                        onClick={() => testConnection(editOpen ? draftUrl : externalUrl, editOpen ? draftKey : externalKey)}
+                        disabled={testing}>
                         {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Testar Conexão
                       </Button>
-                      <Button size="sm" className="flex-1 gap-2" onClick={openEditor}>
-                        <Settings className="w-4 h-4" /> Editar Credenciais
-                      </Button>
+                      {!editOpen ? (
+                        <Button size="sm" className="flex-1 gap-2" onClick={openEditor}>
+                          <Settings className="w-4 h-4" /> Editar Credenciais
+                        </Button>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="sm" className="gap-2" onClick={() => { setEditOpen(false); setDraftUrl(externalUrl); setDraftKey(externalKey); }} disabled={saving}>
+                            Cancelar
+                          </Button>
+                          <Button size="sm" className="flex-1 gap-2" onClick={saveCredentials} disabled={saving}>
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -354,37 +381,6 @@ export default function AdminConnectionsPage() {
           </TabsContent>
         </AnimatePresence>
       </Tabs>
-
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Editar credenciais — FATOR X</DialogTitle>
-            <DialogDescription>
-              Altera URL e chave anon do Supabase externo. As mudanças são gravadas em <code>system_connections</code>.
-              Para que o app passe a usar essas credenciais em runtime, atualize também os secrets
-              <code> VITE_EXTERNAL_SUPABASE_URL</code> e <code>VITE_EXTERNAL_SUPABASE_ANON_KEY</code> e republique.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="ext-url">URL</Label>
-              <Input id="ext-url" value={draftUrl} onChange={(e) => setDraftUrl(e.target.value)} placeholder="https://xxxx.supabase.co" className="font-mono text-xs" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ext-key">Chave Anon</Label>
-              <Input id="ext-key" value={draftKey} onChange={(e) => setDraftKey(e.target.value)} placeholder="eyJhbGciOi..." className="font-mono text-xs" />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => testConnection(draftUrl, draftKey)} disabled={testing}>
-              {testing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />} Testar
-            </Button>
-            <Button onClick={saveCredentials} disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
