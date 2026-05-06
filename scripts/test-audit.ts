@@ -35,6 +35,8 @@ try {
   execSync('bun run scripts/check-design-system.ts', { stdio: 'inherit' });
   
   const report = readFileSync('design-system-audit.md', 'utf-8');
+  console.log('DEBUG: Report Content length:', report.length);
+  console.log('DEBUG: Found bg-[#ffffff] in report:', report.includes('bg-[#ffffff]'));
   
   const expectedMatches = [
     'bg-[#ffffff]',
@@ -49,6 +51,7 @@ try {
 
   expectedMatches.forEach(match => {
     if (!report.includes(match)) {
+      console.error(`Missing match: ${match}`);
       throw new Error(`Test Failed: Expected match "${match}" not found in report.`);
     }
   });
