@@ -5,6 +5,7 @@ import { ConnectionsView } from '@/components/connections/ConnectionsView';
 import { IntegrationsHub } from '@/components/integrations/IntegrationsHub';
 import { BridgeSupabaseView } from '@/components/connections/BridgeSupabaseView';
 import { useHubTabNavigation } from '@/hooks/connections/useHubTabNavigation';
+import { HubTab } from './types';
 
 /**
  * Hub unificado de Conexões + Integrações.
@@ -16,13 +17,13 @@ export function ConnectionsIntegrationsHub() {
 
   return (
     <div className="flex flex-col h-full">
-      <Header tab={tab} onTabChange={setTab} isDev={isDev} />
+      <Header tab={tab} onTabChange={(v) => setTab(v as HubTab)} isDev={isDev} />
       <Content tab={tab} isDev={isDev} />
     </div>
   );
 }
 
-function Header({ tab, onTabChange, isDev }: { tab: string; onTabChange: (v: string) => void; isDev: boolean }) {
+function Header({ tab, onTabChange, isDev }: { tab: HubTab; onTabChange: (v: string) => void; isDev: boolean }) {
   return (
     <div className="px-6 pt-6 pb-2 border-b border-border/40">
       <h1 className="font-display text-2xl font-bold text-foreground mb-1">
