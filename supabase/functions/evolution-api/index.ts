@@ -61,8 +61,14 @@ serve(async (req) => {
   };
 
   const { isMultipart, data: bodyForAction } = await getParsedBody();
-  const action = (pathAction === 'evolution-api' && !isMultipart && (bodyForAction as Record<string, unknown>).action)
-    ? String((bodyForAction as Record<string, unknown>).action) : pathAction;
+  let action = pathAction;
+  if (pathAction === 'evolution-api') {
+    if (isMultipart) {
+      action = String((bodyForAction as FormData).get('action') || '');
+    } else {
+      action = String((bodyForAction as Record<string, unknown>).action || '');
+    }
+  }
 
   // Idempotency key for `/message/*` sends. Accepts (in priority):
   //  1. `Idempotency-Key` HTTP header (frontend → invokeEvolutionWithRetry)
