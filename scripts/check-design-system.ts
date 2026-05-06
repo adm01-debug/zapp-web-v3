@@ -87,6 +87,10 @@ export function scanContent(content: string, fileName: string, results: Violatio
 
         const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
         
+        // Safety check: Skip matches that are part of a CSS variable (e.g., --font-sans)
+        const matchStart = match.index;
+        if (matchStart > 1 && line.substring(matchStart - 2, matchStart) === '--') continue;
+        
         // Skip if whitelisted
         if (label === 'Literal Color' && WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`))) continue;
         
