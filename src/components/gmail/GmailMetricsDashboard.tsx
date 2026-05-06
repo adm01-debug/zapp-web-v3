@@ -128,7 +128,7 @@ export function EmailMetricsDashboard({ accountId, days = 7 }: EmailMetricsDashb
             <SLABar label="Dentro do prazo" value={slaDash.ok_count} total={slaDash.total} color="bg-primary" />
             <SLABar label="Atenção (>80% do prazo)" value={slaDash.warning_count} total={slaDash.total} color="bg-amber-500" />
             <SLABar label="SLA Violado" value={slaDash.breached_count} total={slaDash.total} color="bg-red-500" />
-            <SLABar label="Respondido no prazo" value={slaDash.met_count} total={slaDash.total} color="bg-blue-500" />
+            <SLABar label="Respondido no prazo" value={slaDash.met_count} total={slaDash.total} color="bg-primary" />
           </CardContent>
         </Card>
       )}

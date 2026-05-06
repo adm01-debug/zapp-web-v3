@@ -105,7 +105,7 @@ export function ThemeDebugger() {
               <span className="text-muted-foreground">{key}</span>
               <span className={`text-[8px] px-1 rounded ${
                 data.source === 'inline' ? 'bg-orange-500/20 text-orange-500' : 
-                data.source === 'css' ? 'bg-blue-500/20 text-blue-500' : 'bg-muted text-muted-foreground'
+                data.source === 'css' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
               }`}>
                 {data.source}
               </span>

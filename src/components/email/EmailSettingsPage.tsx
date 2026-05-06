@@ -159,7 +159,7 @@ export function EmailSettingsPage() {
                   {outlookAccounts.map(acc => (
                     <div key={acc.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
-                        <Building2 className="h-5 w-5 text-blue-500" />
+                        <Building2 className="h-5 w-5 text-primary" />
                         <div>
                           <p className="font-medium text-sm">{acc.email}</p>
                           <Badge variant="secondary" className="text-xs mt-0.5">

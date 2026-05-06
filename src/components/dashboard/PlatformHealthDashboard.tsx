@@ -101,16 +101,16 @@ export const PlatformHealthDashboard: React.FC<Props> = ({
 
   const modules = [
     // Contacts
-    { label: 'Contatos', value: data.contacts.total_active.toLocaleString('pt-BR'), sub: `+${data.contacts.new_today} hoje`, icon: Users, color: 'bg-blue-100 text-blue-600' },
+    { label: 'Contatos', value: data.contacts.total_active.toLocaleString('pt-BR'), sub: `+${data.contacts.new_today} hoje`, icon: Users, color: 'bg-blue-100 text-primary' },
     { label: 'Duplicatas', value: data.contacts.duplicates.toLocaleString('pt-BR'), sub: hasDuplicates ? 'Mesclar aba Duplicados' : '✓ Nenhuma', icon: AlertTriangle, color: hasDuplicates ? 'bg-amber-100 text-amber-600' : 'bg-primary text-primary' },
     // Conversations
-    { label: 'Conversas abertas', value: data.conversations.open.toLocaleString('pt-BR'), sub: `${data.conversations.unread} não lidas`, icon: MessageCircle, color: 'bg-blue-100 text-blue-600' },
+    { label: 'Conversas abertas', value: data.conversations.open.toLocaleString('pt-BR'), sub: `${data.conversations.unread} não lidas`, icon: MessageCircle, color: 'bg-blue-100 text-primary' },
     { label: 'Bots ativos', value: data.conversations.bot_active.toLocaleString('pt-BR'), sub: `TMP: ${formatSeconds(data.conversations.avg_response_s)}`, icon: Bot, color: 'bg-purple-100 text-purple-600' },
     // Messages
     { label: 'Mensagens hoje', value: data.messages.total_today.toLocaleString('pt-BR'), sub: `${data.messages.inbound_today} recebidas`, icon: MessageSquare, color: 'bg-primary text-primary' },
     { label: 'Follow-ups', value: data.messages.follow_ups.toLocaleString('pt-BR'), sub: data.messages.follow_ups > 0 ? '⚠️ Pendentes' : '✓ Em dia', icon: Bell, color: data.messages.follow_ups > 0 ? 'bg-amber-100 text-amber-600' : 'bg-primary text-primary' },
     // Webhooks
-    { label: 'Webhooks hoje', value: data.webhooks.total_events.toLocaleString('pt-BR'), sub: `${data.webhooks.pending_events} pendentes`, icon: Webhook, color: 'bg-gray-100 text-gray-600' },
+    { label: 'Webhooks hoje', value: data.webhooks.total_events.toLocaleString('pt-BR'), sub: `${data.webhooks.pending_events} pendentes`, icon: Webhook, color: 'bg-muted text-muted-foreground' },
     { label: 'DLQ', value: data.webhooks.dlq_pending.toLocaleString('pt-BR'), sub: webhookHealth ? '✓ Saudável' : '⚠️ Reprocessar', icon: AlertTriangle, color: webhookHealth ? 'bg-primary text-primary' : 'bg-red-100 text-red-600' },
   ];
 

@@ -83,7 +83,7 @@ export function OutlookInboxView({ onSelectMessage }: OutlookInboxViewProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-blue-500" />
+          <Building2 className="h-5 w-5 text-primary" />
           <h2 className="font-semibold text-sm">Outlook</h2>
           {unreadCount > 0 && (
             <Badge variant="default" className="text-xs h-5 px-1.5">{unreadCount}</Badge>
@@ -152,7 +152,7 @@ export function OutlookInboxView({ onSelectMessage }: OutlookInboxViewProps) {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                       {!msg.isRead
-                        ? <Mail className="h-4 w-4 text-blue-500 shrink-0" />
+                        ? <Mail className="h-4 w-4 text-primary shrink-0" />
                         : <MailOpen className="h-4 w-4 text-muted-foreground shrink-0" />
                       }
                       <span className={`text-sm truncate ${!msg.isRead ? 'font-semibold' : 'font-normal text-muted-foreground'}`}>

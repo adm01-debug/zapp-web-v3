@@ -181,14 +181,14 @@ export default function RoutePermissionsPage() {
                 <span>• Supervisão Chat</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-bold border-b pb-1 text-blue-500">SUPERVISOR</span>
+                <span className="font-bold border-b pb-1 text-primary">SUPERVISOR</span>
                 <span>• Monitoramento</span>
                 <span>• Canais & Filas</span>
                 <span>• Logs WhatsApp</span>
                 <span>• Histórico SLA</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-bold border-b pb-1 text-gray-500">AGENT</span>
+                <span className="font-bold border-b pb-1 text-muted-foreground">AGENT</span>
                 <span>• Inbox (Chat)</span>
                 <span>• Contatos</span>
                 <span>• SLA Alert (Rec.)</span>

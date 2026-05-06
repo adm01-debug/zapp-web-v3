@@ -110,7 +110,7 @@ export const ContactsStatsBar: React.FC<ContactsStatsBarProps> = ({
               >
                 <Badge
                   variant="outline"
-                  className="gap-1 py-0 text-[10.5px] border-border text-slate-600 bg-slate-50 dark:text-muted-foreground dark:bg-muted/10"
+                  className="gap-1 py-0 text-[10.5px] border-border text-muted-foreground bg-muted dark:text-muted-foreground dark:bg-muted/10"
                 >
                   <Trash2 className="h-3 w-3" />
                   {stats.deletedPending} na lixeira

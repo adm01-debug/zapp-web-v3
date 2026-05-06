@@ -580,7 +580,7 @@ export default function AdminStressTestPage() {
               </span>
               {results.some(r => r.accessibility) && (
                 <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-blue-500" /> Acesso OK: <strong className="tabular-nums">{results.filter(r => r.accessibility?.reachable).length}</strong>
+                  <ShieldCheck className="h-4 w-4 text-primary" /> Acesso OK: <strong className="tabular-nums">{results.filter(r => r.accessibility?.reachable).length}</strong>
                 </span>
               )}
               {results.length > 0 && (
@@ -633,7 +633,7 @@ export default function AdminStressTestPage() {
                     <span className="tabular-nums text-muted-foreground shrink-0">{r.ms}ms</span>
                     {r.accessibility && (
                       <span className="shrink-0" title={r.accessibility.reachable ? 'URL acessível' : `Erro de acesso: ${r.accessibility.error}`}>
-                        {r.accessibility.reachable ? <ShieldCheck className="h-3 w-3 text-blue-500" /> : <ShieldAlert className="h-3 w-3 text-destructive" />}
+                        {r.accessibility.reachable ? <ShieldCheck className="h-3 w-3 text-primary" /> : <ShieldAlert className="h-3 w-3 text-destructive" />}
                       </span>
                     )}
                     <span className="truncate">{r.error ?? r.detail ?? ''}</span>

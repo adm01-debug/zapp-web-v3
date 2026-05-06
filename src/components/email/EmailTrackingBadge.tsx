@@ -63,7 +63,7 @@ export function EmailTrackingBadge({
       {clickCount > 0 && (
         <Badge
           variant="default"
-          className={`gap-1 bg-blue-600 hover:bg-blue-700 ${size === 'sm' ? 'text-[10px] h-4 px-1' : 'text-xs h-5 px-1.5'}`}
+          className={`gap-1 bg-primary hover:bg-blue-700 ${size === 'sm' ? 'text-[10px] h-4 px-1' : 'text-xs h-5 px-1.5'}`}
         >
           <MousePointerClick className={size === 'sm' ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
           {clickCount}

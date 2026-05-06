@@ -80,7 +80,7 @@ export function EmailAccountSelector({
                 activeStatus === 'valid' && 'bg-emerald-500',
                 activeStatus === 'expiring' && 'bg-amber-500',
                 activeStatus === 'expired' && 'bg-rose-500',
-                (activeStatus === 'loading' || activeStatus === 'disconnected') && 'bg-slate-400',
+                (activeStatus === 'loading' || activeStatus === 'disconnected') && 'bg-muted',
               )} />
             </div>
 

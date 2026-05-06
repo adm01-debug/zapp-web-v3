@@ -100,10 +100,10 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
         </CardContent>
       </Card>
 
-      <Card className="bg-blue-500/5 border-blue-500/20">
+      <Card className="bg-primary/5 border-blue-500/20">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Latência Média</CardTitle>
-          <Clock className="h-4 w-4 text-blue-500" />
+          <Clock className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{Math.round(metrics.averageLatency)}ms</div>

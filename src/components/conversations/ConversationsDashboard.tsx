@@ -38,7 +38,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   urgent: 'bg-red-100 text-red-700',
   high:   'bg-orange-100 text-orange-700',
   normal: 'bg-blue-100 text-blue-700',
-  low:    'bg-gray-100 text-gray-600',
+  low:    'bg-muted text-muted-foreground',
 };
 
 export const ConversationsDashboard: React.FC<{
@@ -91,7 +91,7 @@ export const ConversationsDashboard: React.FC<{
           </span>
         )}
         {stats.bot_active > 0 && (
-          <span className="flex items-center gap-1 text-blue-600">
+          <span className="flex items-center gap-1 text-primary">
             <Bot className="h-3.5 w-3.5" />{stats.bot_active} bot ativo
           </span>
         )}
@@ -114,7 +114,7 @@ export const ConversationsDashboard: React.FC<{
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <MessageCircle className="h-4 w-4 text-blue-600" />
+                <MessageCircle className="h-4 w-4 text-primary" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.total_open.toLocaleString('pt-BR')}</p>
@@ -181,7 +181,7 @@ export const ConversationsDashboard: React.FC<{
           <p className="text-muted-foreground">TMP Resolução</p>
         </div>
         <div className="rounded-lg border p-2 text-center">
-          <p className="font-bold text-lg text-blue-600">{stats.bot_active}</p>
+          <p className="font-bold text-lg text-primary">{stats.bot_active}</p>
           <p className="text-muted-foreground">Bot ativo</p>
         </div>
       </div>
@@ -194,7 +194,7 @@ export const ConversationsDashboard: React.FC<{
             {Object.entries(stats.by_priority ?? {})
               .sort(([, a], [, b]) => (b as number) - (a as number))
               .map(([priority, count]) => (
-                <div key={priority} className={`flex items-center gap-1 text-xs rounded-full border px-2.5 py-0.5 ${PRIORITY_COLORS[priority] ?? 'bg-gray-100'}`}>
+                <div key={priority} className={`flex items-center gap-1 text-xs rounded-full border px-2.5 py-0.5 ${PRIORITY_COLORS[priority] ?? 'bg-muted'}`}>
                   {priority === 'urgent' && <AlertTriangle className="h-3 w-3" />}
                   <span className="font-medium">{count as number}</span>
                   <span>{priority}</span>

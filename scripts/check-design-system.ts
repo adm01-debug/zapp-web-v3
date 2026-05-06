@@ -35,21 +35,34 @@ interface Violation {
   match: string;
   label: string;
   suggestion?: string;
+  replacement?: string;
   priority: 'High' | 'Medium' | 'Low';
 }
 
-function getSuggestion(label: string, match: string): { suggestion: string, priority: Violation['priority'] } {
+function getSuggestion(label: string, match: string): { suggestion: string, priority: Violation['priority'], replacement?: string } {
   if (label === 'Hex Color' || label.includes('Arbitrary')) {
-    if (match.includes('white') || match.includes('#ffffff') || match.includes('#FFF')) return { suggestion: 'bg-background or text-foreground', priority: 'High' };
-    if (match.includes('black') || match.includes('#000000') || match.includes('#000')) return { suggestion: 'bg-foreground or text-background', priority: 'High' };
+    if (match.includes('white') || match.includes('#ffffff') || match.includes('#FFF')) {
+       const replacement = match.startsWith('bg-') ? 'bg-background' : (match.startsWith('text-') ? 'text-foreground' : undefined);
+       return { suggestion: 'bg-background or text-foreground', priority: 'High', replacement };
+    }
+    if (match.includes('black') || match.includes('#000000') || match.includes('#000')) {
+       const replacement = match.startsWith('bg-') ? 'bg-foreground' : (match.startsWith('text-') ? 'text-background' : undefined);
+       return { suggestion: 'bg-foreground or text-background', priority: 'High', replacement };
+    }
     return { suggestion: 'Use theme tokens (primary, secondary, accent, etc.)', priority: 'High' };
   }
   if (label === 'Literal Color') {
     const isAllowed = WHITELIST.colors.some(c => match.includes(c));
     if (isAllowed) return { suggestion: '', priority: 'Low' };
 
-    if (match.includes('blue-600') || match.includes('blue-500')) return { suggestion: match.replace(/blue-(500|600)/, 'primary'), priority: 'Medium' };
-    if (match.includes('slate-') || match.includes('gray-')) return { suggestion: 'muted-foreground or border', priority: 'Medium' };
+    if (match.includes('blue-600') || match.includes('blue-500')) {
+      const replacement = match.replace(/blue-(500|600)/, 'primary');
+      return { suggestion: replacement, priority: 'Medium', replacement };
+    }
+    if (match.includes('slate-') || match.includes('gray-')) {
+       const replacement = match.includes('bg-') ? 'bg-muted' : (match.includes('text-') ? 'text-muted-foreground' : (match.includes('border-') ? 'border-border' : undefined));
+       return { suggestion: 'muted, muted-foreground or border', priority: 'Medium', replacement };
+    }
     return { suggestion: 'Use semantic tokens (destructive, muted, popover, etc.)', priority: 'Medium' };
   }
   if (label === 'Literal Font') {
@@ -82,7 +95,7 @@ function scanDir(dir: string, results: Violation[]) {
           const matches = line.matchAll(new RegExp(pattern, 'g'));
           for (const match of matches) {
             if (!line.includes('// @ds-ignore')) {
-              const { suggestion, priority } = getSuggestion(label, match[0]);
+              const { suggestion, priority, replacement } = getSuggestion(label, match[0]);
               // For Literal Color, only add if it's NOT in whitelist
               if (label === 'Literal Color' && WHITELIST.colors.some(c => match[0].endsWith(`-${c}`))) continue;
               
@@ -93,6 +106,7 @@ function scanDir(dir: string, results: Violation[]) {
                   match: match[0],
                   label,
                   suggestion,
+                  replacement,
                   priority
                 });
               }
@@ -195,6 +209,33 @@ const htmlReport = `<!DOCTYPE html>
 </html>`;
 
 writeFileSync('design-system-audit.html', htmlReport);
+
+if (process.argv.includes('--apply-patch')) {
+  console.log('Applying suggested patches...');
+  Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
+    let content = readFileSync(file, 'utf-8');
+    let hasChanges = false;
+    
+    // Sort violations by line descending to avoid index shifting if we were to multi-line replace,
+    // but here we replace patterns within lines. To be safe, we process each line once.
+    const lines = content.split('\n');
+    fileViolations.forEach(v => {
+      if (v.replacement) {
+        const lineIdx = v.line - 1;
+        if (lines[lineIdx].includes(v.match)) {
+          lines[lineIdx] = lines[lineIdx].replace(v.match, v.replacement);
+          hasChanges = true;
+          console.log(`  [${file}:${v.line}] Fixed: ${v.match} -> ${v.replacement}`);
+        }
+      }
+    });
+
+    if (hasChanges) {
+      writeFileSync(file, lines.join('\n'));
+    }
+  });
+  console.log('Patch applied successfully.');
+}
 
 if (process.argv.includes('--ci')) {
   if (violations.length > 0) {

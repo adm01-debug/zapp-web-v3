@@ -56,7 +56,7 @@ export default function AdminEmailAuditPage() {
     switch (status) {
       case 'completed': return <Badge variant="default" className="bg-primary">Concluído</Badge>;
       case 'pending': return <Badge variant="secondary">Pendente</Badge>;
-      case 'processing': return <Badge variant="secondary" className="bg-blue-500">Processando</Badge>;
+      case 'processing': return <Badge variant="secondary" className="bg-primary">Processando</Badge>;
       case 'failed': return <Badge variant="destructive">Falhou</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }

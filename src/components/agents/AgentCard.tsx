@@ -27,7 +27,7 @@ export const AgentCard: React.FC<Props> = ({
   agent, onPromote, onDeprecate, onEdit, onView, isLoading = false,
 }) => {
   const statusLabel = AGENT_STATUS_LABELS[agent.status] ?? agent.status;
-  const statusColor = AGENT_STATUS_COLORS[agent.status] ?? 'bg-gray-100 text-gray-700';
+  const statusColor = AGENT_STATUS_COLORS[agent.status] ?? 'bg-muted text-muted-foreground';
   const canPromote  = ['configured','testing','staging','review'].includes(agent.status);
   const isProduction = agent.status === 'production';
   const isDeprecated = ['deprecated','archived'].includes(agent.status);

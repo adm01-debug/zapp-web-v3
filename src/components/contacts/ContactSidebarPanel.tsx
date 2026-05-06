@@ -23,7 +23,7 @@ const LEAD_LABELS: Record<string, string> = {
   proposta: '📋 Proposta', negociacao: '🤝 Negociação', fechado: '🏆 Fechado', perdido: '❌ Perdido',
 };
 const LEAD_COLORS: Record<string, string> = {
-  novo: 'bg-gray-100 text-gray-700', em_contato: 'bg-blue-100 text-blue-700',
+  novo: 'bg-muted text-muted-foreground', em_contato: 'bg-blue-100 text-blue-700',
   qualificado: 'bg-primary text-primary', proposta: 'bg-purple-100 text-purple-700',
   negociacao: 'bg-amber-100 text-amber-700', fechado: 'bg-primary text-primary',
   perdido: 'bg-red-100 text-red-700',
@@ -61,7 +61,7 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
             <h2 className="font-semibold text-base truncate">{displayName}</h2>
             {contact.company && <p className="text-sm text-muted-foreground truncate">{sanitizeText(contact.company)}</p>}
             <div className="flex flex-wrap gap-1 mt-1">
-              <Badge className={`text-xs ${LEAD_COLORS[safeContact.lead_status] ?? 'bg-gray-100 text-gray-700'}`}>
+              <Badge className={`text-xs ${LEAD_COLORS[safeContact.lead_status] ?? 'bg-muted text-muted-foreground'}`}>
                 {LEAD_LABELS[safeContact.lead_status] ?? safeContact.lead_status}
               </Badge>
               {safeContact.lead_score > 0 && (

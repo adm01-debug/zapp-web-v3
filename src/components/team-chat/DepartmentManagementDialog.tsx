@@ -359,7 +359,7 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
                   onClick={() => setWhatsappMode('official')}
                 >
                   <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2", whatsappMode === 'official' ? "bg-primary/20" : "bg-muted")}>
-                    <Shield className="w-5 h-5 text-blue-500" />
+                    <Shield className="w-5 h-5 text-primary" />
                   </div>
                   <p className="text-xs font-bold">API Oficial</p>
                   <p className="text-[10px] text-muted-foreground text-center mt-1">WhatsApp Cloud API</p>

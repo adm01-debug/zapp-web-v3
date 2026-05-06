@@ -180,7 +180,7 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
           value={formatMinutes(avgFrt)}
           subtitle="1ª resposta"
           icon={Clock}
-          color="text-blue-500"
+          color="text-primary"
           tooltip="Tempo médio de primeira resposta (FRT)"
         />
       </div>

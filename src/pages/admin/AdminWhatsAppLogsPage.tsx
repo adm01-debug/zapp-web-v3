@@ -66,7 +66,7 @@ function modeOfProvider(provider: string | null | undefined): ModeFilter {
 }
 
 function modeBadge(mode: ModeFilter) {
-  if (mode === "official") return <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">Cloud API</Badge>;
+  if (mode === "official") return <Badge variant="default" className="bg-primary hover:bg-blue-700">Cloud API</Badge>;
   if (mode === "unofficial") return <Badge variant="secondary">Evolution</Badge>;
   return <Badge variant="outline">—</Badge>;
 }

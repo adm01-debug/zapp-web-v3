@@ -81,7 +81,7 @@ export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
     : null;
 
   const stageColor: Record<string, string> = {
-    unknown: 'bg-gray-100 text-gray-700',
+    unknown: 'bg-muted text-muted-foreground',
     lead: 'bg-blue-100 text-blue-700',
     prospect: 'bg-indigo-100 text-indigo-700',
     customer: 'bg-primary text-primary',
@@ -110,7 +110,7 @@ export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
           href={bitrixUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+          className="flex items-center gap-2 text-sm text-primary hover:text-blue-800 hover:underline"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           Bitrix24 #{contact.bitrix_contact_id}
