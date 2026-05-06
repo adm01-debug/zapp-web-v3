@@ -323,15 +323,12 @@ serve(async (req) => {
     if (action === 'send-reaction') return await proxy(`/message/sendReaction/${instance}`, 'POST', { key: (body as any).key, reaction: (body as any).reaction });
 
     if (action === 'send-poll') return await proxy(`/message/sendPoll/${instance}`, 'POST', { number: (body as any).number, name: (body as any).name || (body as any).question, selectableCount: (body as any).selectableCount || 1, values: (body as any).values || (body as any).options });
+    if (action === 'send-sticker') {
       let finalStickerUrl = (body as any).sticker || (body as any).mediaUrl;
       if (typeof finalStickerUrl === 'string') finalStickerUrl = await resolvePrivateBucketUrl(supabase, finalStickerUrl, ['whatsapp-media']);
       return await proxy(`/message/sendSticker/${instance}`, 'POST', { number: (body as any).number, sticker: finalStickerUrl });
     }
 
-    if (action === 'send-location') return await proxy(`/message/sendLocation/${instance}`, 'POST', { number: (body as any).number, name: (body as any).locationName || (body as any).name, address: (body as any).locationAddress || (body as any).address, latitude: (body as any).latitude, longitude: (body as any).longitude });
-    if (action === 'send-contact') return await proxy(`/message/sendContact/${instance}`, 'POST', { number: (body as any).number, contact: (body as any).contact });
-    if (action === 'send-reaction') return await proxy(`/message/sendReaction/${instance}`, 'POST', { key: (body as any).key, reaction: (body as any).reaction });
-    if (action === 'send-poll') return await proxy(`/message/sendPoll/${instance}`, 'POST', { number: (body as any).number, name: (body as any).name || (body as any).question, selectableCount: (body as any).selectableCount || 1, values: (body as any).values || (body as any).options });
     if (action === 'send-list') return await proxy(`/message/sendList/${instance}`, 'POST', { number: (body as any).number, title: (body as any).title, description: (body as any).description, footer: (body as any).footer, buttonText: (body as any).buttonText, sections: (body as any).sections });
     if (action === 'send-buttons') return await proxy(`/message/sendButtons/${instance}`, 'POST', { number: (body as any).number, title: (body as any).title, description: (body as any).description, footer: (body as any).footer, buttons: (body as any).buttons });
     if (action === 'send-status') return await proxy(`/message/sendStatus/${instance}`, 'POST', body);
