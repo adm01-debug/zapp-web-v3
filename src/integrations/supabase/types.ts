@@ -12843,10 +12843,24 @@ export type Database = {
         Args: { p_operator_name: string; p_transfer_id: string }
         Returns: Json
       }
-      fn_add_business_minutes: {
-        Args: { p_instance_name: string; p_minutes: number; p_start: string }
-        Returns: string
-      }
+      fn_add_business_minutes:
+        | {
+            Args: {
+              p_instance_name: string
+              p_minutes_to_add: number
+              p_start_time: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_instance_name: string
+              p_minutes: number
+              p_start: string
+            }
+            Returns: string
+          }
+      fn_auto_escalate_sla: { Args: never; Returns: undefined }
       fn_check_transfer_access: {
         Args: { p_transfer_id: string }
         Returns: boolean
