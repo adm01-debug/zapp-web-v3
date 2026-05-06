@@ -4,15 +4,15 @@ import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 
 const inputVariants = cva(
-  "flex w-full rounded-xl border bg-background text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 md:text-sm",
+  "flex w-full rounded-xl border bg-background text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary/50 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 md:text-sm",
   {
     variants: {
       variant: {
-        default: "border-white/10 bg-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary/50 focus-visible:shadow-[0_0_15px_rgba(var(--primary),0.1)]",
-        glow: "border-white/10 bg-black focus-visible:outline-none focus-visible:border-primary/50 focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:shadow-[0_0_20px_rgba(var(--primary),0.15)]",
-        neon: "border-secondary/20 bg-black focus-visible:outline-none focus-visible:border-secondary/50 focus-visible:ring-1 focus-visible:ring-secondary/30 focus-visible:shadow-[0_0_15px_rgba(var(--secondary),0.1)]",
-        ghost: "border-transparent bg-white/5 focus-visible:outline-none focus-visible:bg-black focus-visible:border-primary/50 focus-visible:shadow-[0_0_10px_rgba(var(--primary),0.05)]",
-        underline: "border-0 border-b-2 border-input rounded-none px-0 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0",
+        default: "border-border bg-background focus-visible:ring-ring",
+        glow: "border-border bg-background focus-visible:ring-primary/30 focus-visible:shadow-glow-primary",
+        neon: "border-secondary/20 bg-background focus-visible:border-secondary/50 focus-visible:ring-secondary/30",
+        ghost: "border-transparent bg-muted/30 focus-visible:bg-background focus-visible:border-border",
+        underline: "border-0 border-b-2 border-input rounded-none px-0 focus-visible:border-primary focus-visible:ring-0",
       },
       inputSize: {
         sm: "h-9 px-3 text-sm",
@@ -21,7 +21,7 @@ const inputVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "glow",
+      variant: "default",
       inputSize: "default",
     },
   }
