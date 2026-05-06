@@ -152,7 +152,7 @@ const ToastItem = React.forwardRef<HTMLDivElement, ToastItemProps>(function Toas
       aria-atomic="true"
       className={cn(
         'relative overflow-hidden rounded-xl border p-4 shadow-none pointer-events-auto',
-        'bg-black',
+        'bg-background',
         backgrounds[toast.type]
       )}
     >

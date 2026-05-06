@@ -4,18 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "rounded-2xl border text-card-foreground transition-all duration-300",
+  "rounded-2xl border bg-card text-card-foreground transition-all duration-300",
   {
     variants: {
       variant: {
-        default: "border-white/10 bg-black shadow-none",
-        elevated: "border-white/10 bg-black shadow-none hover:shadow-[0_0_25px_rgba(255,255,255,0.02)]",
-        interactive: "border-white/10 bg-black hover:border-primary/50 cursor-pointer shadow-none hover:shadow-[0_0_30px_rgba(var(--primary),0.05)]",
+        default: "border-border shadow-sm",
+        elevated: "border-border shadow-md hover:shadow-lg hover:border-border/80",
+        interactive: "border-border hover:border-primary/50 cursor-pointer shadow-sm hover:shadow-md",
         selected: "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.1)]",
-        ghost: "border-transparent bg-transparent",
-        glass: "border-white/15 bg-black/40 backdrop-blur-md", /* OLED Glass effect */
-        neon: "border-secondary/40 bg-black shadow-[0_0_15px_rgba(var(--secondary),0.05)]",
-        gradient: "border-white/10 bg-black",
+        ghost: "border-transparent bg-transparent shadow-none",
+        glass: "border-border/10 bg-background/40 backdrop-blur-md", /* OLED Glass effect */
+        neon: "border-secondary/40 shadow-sm",
+        gradient: "border-border",
       },
       padding: {
         none: "",
@@ -57,7 +57,6 @@ const MotionCardComponent = React.forwardRef<HTMLDivElement, MotionCardProps>(
       whileHover={hover ? { 
         y: hoverY, 
         scale: hoverScale,
-        boxShadow: "none",
         borderColor: "hsl(var(--primary) / 0.5)",
         transition: { duration: 0.2, ease: "easeOut" }
       } : undefined}

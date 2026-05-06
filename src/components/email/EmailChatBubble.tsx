@@ -143,7 +143,7 @@ export function EmailChatBubble({
       >
         {/* Avatar com Animação */}
         <motion.div whileHover={{ scale: 1.1 }} className="relative shrink-0">
-          <Avatar className="h-[38px] w-[44px] ring-2 ring-background shadow-lg border border-white/10">
+          <Avatar className="h-[38px] w-[44px] ring-2 ring-background shadow-lg border border-border">
             <AvatarFallback className={cn('text-white text-[11px] font-black uppercase tracking-wider', getAvatarColor(message.from_email))}>
               {getInitials(message.from_name, message.from_email)}
             </AvatarFallback>
@@ -240,7 +240,7 @@ export function EmailChatBubble({
       {expanded && (
         <div className="px-4 pb-4 pl-15 animate-in slide-in-from-top-2 duration-300">
           <div className="pl-11">
-            <div className="bg-background/60 backdrop-blur-xl rounded-2xl p-5 border border-border/10 shadow-2xl relative">
+            <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-5 border border-border/50 shadow-xl relative">
               {hasHtml ? (
                 <div
                   ref={contentRef}

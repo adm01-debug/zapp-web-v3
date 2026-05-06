@@ -113,6 +113,10 @@
     @apply text-sm font-medium leading-none;
   }
 
+  a {
+    @apply text-primary transition-colors hover:text-primary/80;
+  }
+
   code, pre {
     font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
     @apply text-sm;
