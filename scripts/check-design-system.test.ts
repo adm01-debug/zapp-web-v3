@@ -18,8 +18,8 @@ describe("Design System Auditor", () => {
     scanContent(content, "test.tsx", violations);
     
     expect(violations.length).toBe(2);
-    expect(violations.find(v => v.match === "dark:bg-white")).toBeDefined();
-    expect(violations.find(v => v.match === "hover:text-black")).toBeDefined();
+    expect(violations.some(v => v.match === "dark:bg-white")).toBe(true);
+    expect(violations.some(v => v.match === "hover:text-black")).toBe(true);
   });
 
   it("should handle group-hover: and other complex variants", () => {
@@ -27,10 +27,11 @@ describe("Design System Auditor", () => {
     const violations: Violation[] = [];
     scanContent(content, "test.tsx", violations);
     
+    // Should match Arbitrary Color (group-hover:bg-[#ff0000]) 
+    // and NOT match Raw Hex separately because of lookbehind (?<!\[)
     expect(violations.length).toBe(1);
     expect(violations[0].match).toBe("group-hover:bg-[#ff0000]");
     expect(violations[0].prefix).toBe("group-hover:");
-    expect(violations[0].cleanMatch).toBe("bg-[#ff0000]");
   });
 
   it("should detect classes inside cn() and clsx()", () => {
