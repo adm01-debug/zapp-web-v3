@@ -244,6 +244,21 @@ export default function AdminConnectionsPage() {
                         Editando inline. Após salvar, atualize também os secrets <code>VITE_EXTERNAL_SUPABASE_URL/KEY</code> e republique para o runtime usar.
                       </p>
                     )}
+                    {isAdmin === false && (
+                      <div className="flex items-start gap-2 p-3 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-600 text-xs">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <span>Você não está autenticado como admin. As políticas de segurança bloqueiam a escrita em <code>system_connections</code> para não-admins.</span>
+                      </div>
+                    )}
+                    {saveError && (
+                      <div className="flex items-start gap-2 p-3 rounded-md border border-destructive/30 bg-destructive/10 text-destructive text-xs">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <div className="flex-1 break-all">
+                          <strong className="block mb-1">Falha ao salvar:</strong>
+                          {saveError}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex gap-2 pt-2">
                       <Button variant="outline" size="sm" className="flex-1 gap-2"
                         onClick={() => testConnection(editOpen ? draftUrl : externalUrl, editOpen ? draftKey : externalKey)}
