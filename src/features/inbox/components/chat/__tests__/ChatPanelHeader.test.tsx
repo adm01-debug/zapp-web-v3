@@ -4,12 +4,20 @@ import { ChatPanelHeader } from '@/features/inbox/components/chat/ChatPanelHeade
 import { Conversation } from '@/types/chat';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { BrowserRouter } from 'react-router-dom';
+import React from 'react';
 
+// Optimized mocks
 vi.mock('@/hooks/use-mobile', () => ({ useIsMobile: () => false }));
 vi.mock('@/lib/popupManager', () => ({ openChatPopup: vi.fn() }));
-vi.mock('../..', () => ({ SLAIndicator: () => null }));
-vi.mock('../..', () => ({ VoiceSelector: () => null }));
-vi.mock('../..', () => ({ SpeedSelector: () => null }));
+vi.mock('@/features/inbox', () => ({ useContactAvatar: () => ({ avatarUrl: null }) }));
+vi.mock('../..', () => ({ 
+  SLAIndicator: () => null,
+  SLAIndicatorForContact: () => null,
+  VoiceSelector: () => null,
+  SpeedSelector: () => null,
+  TypingIndicatorCompact: () => null,
+  TypingIndicatorInline: () => null
+}));
 
 const mockConversation = {
   id: 'conv-1',
@@ -128,14 +136,14 @@ describe('ChatPanelHeader', () => {
   });
 
   it('calls onOpenSearch when search button is clicked', () => {
+    const onSearch = vi.fn();
     render(
       <Wrapper>
-        <ChatPanelHeader {...baseProps} />
+        <ChatPanelHeader {...baseProps} onOpenSearch={onSearch} />
       </Wrapper>
     );
-    const buttons = screen.getAllByRole('button');
-    const searchBtn = buttons.find(b => b.querySelector('.lucide-search'));
-    fireEvent.click(searchBtn!);
-    expect(baseProps.onOpenSearch).toHaveBeenCalledTimes(1);
+    const searchBtn = screen.getByLabelText(/buscar/i);
+    fireEvent.click(searchBtn);
+    expect(onSearch).toHaveBeenCalledTimes(1);
   });
 });
