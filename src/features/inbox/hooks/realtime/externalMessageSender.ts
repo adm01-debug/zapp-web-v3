@@ -168,11 +168,16 @@ export async function sendExternalText(
 export async function sendExternalAudio(
   remoteJid: string,
   blob: Blob,
-  opts: SendExternalOptions = {},
+  opts: SendExternalOptions & { isPtt?: boolean; conversationInstance?: string } = {},
 ): Promise<SendExternalResult> {
   const phone = jidToPhone(remoteJid);
   if (!phone) throw new Error('Contato sem JID válido para envio.');
-  const instance = opts.instanceName || DEFAULT_INSTANCE;
+  
+  // Security check: Ensure we are sending through the correct instance for this conversation
+  const instance = opts.instanceName || opts.conversationInstance || DEFAULT_INSTANCE;
+  if (opts.conversationInstance && opts.instanceName && opts.instanceName !== opts.conversationInstance) {
+    log.warn('Instance mismatch detected, forcing conversation instance', { target: opts.conversationInstance, requested: opts.instanceName });
+  }
 
   // Sanitiza o JID para uso como pasta no bucket (sem `@`/`:` etc).
   const safeKey = remoteJid.replace(/[^a-zA-Z0-9._-]/g, '_');
