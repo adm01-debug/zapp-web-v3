@@ -83,12 +83,14 @@ interface VideoPreviewProps {
   isSent: boolean;
   /** When provided, allows auto-refreshing the video src on 410/403 errors. */
   refreshKey?: import('@/types/mediaRefresh').MediaRefreshKey;
+  /** Whether this is a circular video-note (ptv) */
+  isPtv?: boolean;
 }
 
 export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
-  function VideoPreview({ url, caption, isSent, refreshKey }, ref) {
+  function VideoPreview({ url, caption, isSent, refreshKey, isPtv }, ref) {
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isMuted, setIsMuted] = useState(true);
+    const [isMuted, setIsMuted] = useState(!isPtv); // Auto-play ptv with audio often, but standard video muted
     const [showFullscreen, setShowFullscreen] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
     const refresh = useMediaRefresh(url, refreshKey);
@@ -99,11 +101,13 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
       return (
         <div
           ref={ref}
-          className="max-w-[300px] rounded-lg border border-border bg-muted/20 p-4 flex flex-col items-center gap-2 text-center"
+          className={cn(
+            "rounded-lg border border-border bg-muted/20 p-4 flex flex-col items-center gap-2 text-center",
+            isPtv ? "w-[200px] h-[200px] rounded-full justify-center" : "max-w-[300px]"
+          )}
         >
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground">Baixando vídeo...</p>
-          <p className="text-xs text-muted-foreground">Aguarde enquanto processamos a mídia.</p>
+          <p className="text-sm font-medium text-foreground">Baixando {isPtv ? 'vídeo-nota' : 'vídeo'}...</p>
         </div>
       );
     }
@@ -141,8 +145,15 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
 
     return (
       <div ref={ref}>
-        <div className="space-y-2">
-          <motion.div whileHover={{ scale: 1.02 }} className="relative rounded-md overflow-hidden max-w-full w-auto cursor-pointer bg-card" onClick={() => setShowFullscreen(true)}>
+        <div className={cn("space-y-2", isPtv && "flex flex-col items-center")}>
+          <motion.div 
+            whileHover={{ scale: 1.02 }} 
+            className={cn(
+              "relative overflow-hidden w-auto cursor-pointer bg-card",
+              isPtv ? "w-[240px] h-[240px] rounded-full border-2 border-primary/20" : "rounded-md max-w-full"
+            )} 
+            onClick={() => setShowFullscreen(true)}
+          >
             {(!isLoaded || refresh.isRefreshing) && (
               <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center" aria-busy={refresh.isRefreshing || undefined}>
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -151,7 +162,14 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
             {effectiveUrl && (
               <video
                 key={effectiveUrl}
-                src={effectiveUrl} className="w-full max-h-[400px] object-cover rounded-md" muted={isMuted} loop playsInline
+                src={effectiveUrl} 
+                className={cn(
+                  "object-cover",
+                  isPtv ? "w-full h-full" : "w-full max-h-[400px] rounded-md"
+                )} 
+                muted={isMuted} 
+                loop 
+                playsInline
                 onLoadedData={() => setIsLoaded(true)}
                 onError={refresh.onError}
                 onMouseEnter={(e) => { e.currentTarget.play(); setIsPlaying(true); }}

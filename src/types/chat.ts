@@ -119,6 +119,8 @@ export interface Message {
   isWhisper?: boolean;
   /** @internal Flag used for optimistic updates in the UI */
   _optimistic?: boolean;
+  /** Meta-informações brutas (Evolution/WhatsApp API). */
+  media_meta?: any;
 }
 
 

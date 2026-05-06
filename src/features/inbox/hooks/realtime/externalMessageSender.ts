@@ -308,3 +308,72 @@ export async function sendExternalMedia(
   optimistic.status = 'sent';
   return { optimistic, externalId };
 }
+
+/**
+ * sendExternalPtv — envia vídeo-nota circular (ptv) no modo FATOR X.
+ */
+export async function sendExternalPtv(
+  remoteJid: string,
+  blob: Blob,
+  opts: SendExternalOptions = {},
+): Promise<SendExternalResult> {
+  const phone = jidToPhone(remoteJid);
+  if (!phone) throw new Error('Contato sem JID válido para envio.');
+  const instance = opts.instanceName || DEFAULT_INSTANCE;
+
+  const safeKey = remoteJid.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const fileName = `${safeKey}/${Date.now()}.mp4`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('whatsapp-media')
+    .upload(fileName, blob, { contentType: 'video/mp4', upsert: false });
+  if (uploadError) {
+    log.error('ptv upload failed', uploadError);
+    throw new Error(uploadError.message || 'Falha no upload do vídeo');
+  }
+
+  if (opts.onProgress) opts.onProgress(50);
+
+  const { data: signed, error: signError } = await supabase.storage
+    .from('whatsapp-media')
+    .createSignedUrl(fileName, 3600);
+    
+  if (signError || !signed?.signedUrl) {
+    log.error('ptv signed url failed', signError);
+    throw new Error(signError?.message || 'Falha ao gerar URL do vídeo');
+  }
+
+  const localVideoUrl = URL.createObjectURL(blob);
+  const optimistic = makeOptimisticBubble(remoteJid, '[Vídeo-nota]', {
+    messageType: 'video', // Map to video internally for bubble logic
+    mediaUrl: localVideoUrl,
+    contactAvatar: opts.contactAvatar,
+  });
+
+  const { data, error } = await supabase.functions.invoke('evolution-api', {
+    body: {
+      action: 'send-ptv',
+      instanceName: instance,
+      number: phone,
+      video: signed.signedUrl,
+    },
+  });
+
+  if (error) {
+    log.error('evolution-api send-ptv failed', error);
+    const info = parseEvolutionError(error);
+    throw new SendError(info.reason, info.detail, info.status);
+  }
+
+  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
+  if (envelope?.error) {
+    log.error('evolution-api send-ptv error envelope', envelope);
+    const info = parseEvolutionError(envelope);
+    throw new SendError(info.reason, info.detail, info.status);
+  }
+
+  const externalId = envelope?.key?.id ?? null;
+  optimistic.external_id = externalId;
+  optimistic.status = 'sent';
+  return { optimistic, externalId };
+}

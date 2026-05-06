@@ -261,16 +261,17 @@ export function ChatMessageBubble({
           )}
 
           {/* Video message */}
-          {message.type === 'video' && (
-            <div className="mb-2">
-              <VideoPreview
-                url={message.mediaUrl ?? null}
-                caption={message.content}
-                isSent={isSent}
-                refreshKey={mediaRefreshKey}
-              />
-            </div>
-          )}
+           {message.type === 'video' && (
+             <div className="mb-2">
+               <VideoPreview
+                 url={message.mediaUrl ?? null}
+                 caption={message.content}
+                 isSent={isSent}
+                 refreshKey={mediaRefreshKey}
+                 isPtv={message.message_type === 'ptvMessage' || (message.media_meta as any)?.ptt === true}
+               />
+             </div>
+           )}
 
           {/* Audio message */}
           {message.type === 'audio' && message.mediaUrl && (
