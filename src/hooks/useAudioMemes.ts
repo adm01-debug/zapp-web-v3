@@ -143,15 +143,17 @@ export function useAudioMemes(open: boolean) {
   }, []);
 
   const handleConfirmUpload = useCallback(async (pending: PendingUpload) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error: insertError } = await supabase.from('audio_memes').insert({
-      name: pending.name, audio_url: pending.audioUrl,
-      category: pending.selectedCategory, duration_seconds: pending.duration,
-      uploaded_by: user?.id || null,
+    // DOC ARCHITECTURE COMPLIANCE: Use RPC to add meme
+    const { error: insertError } = await (supabase as any).rpc('fn_add_audio_meme', {
+      p_name: pending.name,
+      p_url: pending.audioUrl,
+      p_category: pending.selectedCategory,
+      p_duration: pending.duration
     });
+
     if (insertError) {
       log.error('[AudioMeme] Insert error:', insertError);
-      toast.error('Erro ao salvar áudio meme no banco de dados');
+      toast.error('Erro ao salvar áudio meme');
       return;
     }
     toast.success(`Áudio salvo como "${pending.selectedCategory}"!`);
