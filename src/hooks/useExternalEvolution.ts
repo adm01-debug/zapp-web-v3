@@ -264,7 +264,7 @@ const SLIM_MESSAGE_COLUMNS = [
   'sentiment', 'tags', 'notes', 'follow_up_at', 'follow_up_done',
   'created_at', 'contact_id', 'conversation_id', 'direction', 'status',
   'status_at', 'sent_by_bot', 'template_name', 'instance_name', 'push_name',
-  'deleted_at',
+  'deleted_at', 'reactions',
 ].join(',');
 
 // ─── Sidebar: recent window across all conversations ──────────
