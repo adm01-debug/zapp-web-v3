@@ -318,6 +318,7 @@ serve(async (req) => {
     if (action === 'send-reaction') return await proxy(`/message/sendReaction/${instance}`, 'POST', { key: (body as any).key, reaction: (body as any).reaction });
     
     if (action === 'send-poll') return await proxy(`/message/sendPoll/${instance}`, 'POST', { number: (body as any).number, name: (body as any).name || (body as any).question, selectableCount: (body as any).selectableCount || 1, values: (body as any).values || (body as any).options });
+
     if (action === 'send-sticker') {
       let finalStickerUrl = (body as any).sticker || (body as any).mediaUrl;
       if (typeof finalStickerUrl === 'string') finalStickerUrl = await resolvePrivateBucketUrl(supabase, finalStickerUrl, ['whatsapp-media']);
